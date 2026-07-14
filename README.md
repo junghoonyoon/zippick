@@ -57,14 +57,6 @@ PYTHONPATH=pipeline python3 pipeline/import_molit_price_bands.py /path/to/offici
 http://127.0.0.1:8766
 ```
 
-R-ONE 지수 DB(`REB_INDEX_DB`, 기본값 `~/maesu/data.db`)가 준비되어 있으면 최근
-국토부 실거래를 시군구 월간 아파트 매매가격지수로 보정한 가격 범위를 조회할 수 있다.
-
-```text
-GET /api/price-estimate?name=은마&region=서울%20강남구&area_label=84
-GET /estimate?apt=은마&region=서울%20강남구&area=84
-```
-
 ## 설정
 
 우선 부모 폴더의 `beaver-v2/설정.txt`를 읽고, 필요하면 `beaver-v2/부동산/설정.txt`로 덮어쓸 수 있다.

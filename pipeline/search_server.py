@@ -5,7 +5,6 @@ import hashlib
 import json
 import mimetypes
 import os
-import sqlite3
 import threading
 import time
 import uuid
@@ -17,7 +16,6 @@ import budget_candidates
 import molit_transactions
 import momentum_signals
 import policy_evaluator
-import reb_price_estimator
 import real_estate_search
 
 ROOT = config.ROOT
@@ -495,10 +493,6 @@ class Handler(BaseHTTPRequestHandler):
         params = parse_qs(parsed.query)
         if parsed.path == "/api/status":
             index = real_estate_search.load_index()
-            try:
-                reb_index_status = reb_price_estimator.status()
-            except (OSError, sqlite3.Error):
-                reb_index_status = {"ready": False, "rowCount": 0, "latestPeriod": None}
             self._json({
                 "ready": bool(index.get("videos")),
                 "indexVersion": index.get("version"),
@@ -512,7 +506,6 @@ class Handler(BaseHTTPRequestHandler):
                 "molitConfigured": molit_transactions.configured(),
                 "molitAvailable": molit_transactions.enabled(),
                 "molitLastError": molit_transactions.last_error(),
-                "rebIndex": reb_index_status,
                 "budgetPrewarm": dict(BUDGET_PREWARM_STATE),
             })
             return
@@ -600,51 +593,6 @@ class Handler(BaseHTTPRequestHandler):
                 skip_months=config.MOLIT_TRANSACTION_LOOKBACK_MONTHS,
             )
             self._json({"lastDeal": last_deal})
-            return
-        if parsed.path in {"/api/price-estimate", "/estimate"}:
-            name = (params.get("name") or params.get("apt") or [""])[0].strip()
-            region = params.get("region", [""])[0].strip()
-            area_label = (params.get("area_label") or params.get("area") or [""])[0].strip()
-            if len(name) < 2:
-                self._json({"error": "단지명을 확인해 주세요."}, 400)
-                return
-            if len(region) < 2:
-                self._json({"error": "R-ONE 지수보정에 사용할 시군구를 입력해 주세요."}, 400)
-                return
-            if not molit_transactions.enabled():
-                self._json({"error": molit_transactions.last_error() or "공공데이터키가 설정되어 있지 않아요."}, 503)
-                return
-            transactions = molit_transactions.transactions_for_apartment(
-                name,
-                region=region,
-                area_label=area_label,
-            )
-            if not transactions:
-                last_deal = molit_transactions.latest_transaction_for_apartment(
-                    name,
-                    region=region,
-                    area_label=area_label,
-                    skip_months=config.MOLIT_TRANSACTION_LOOKBACK_MONTHS,
-                )
-                transactions = [last_deal] if last_deal else []
-            if not transactions:
-                self._json({"error": "지수보정에 사용할 실거래를 찾지 못했어요."}, 404)
-                return
-            try:
-                payload = reb_price_estimator.estimate_transactions(transactions, region)
-            except reb_price_estimator.AmbiguousRegionError as exc:
-                self._json({"error": str(exc), "regionCandidates": exc.candidates}, 400)
-                return
-            except (reb_price_estimator.RebIndexError, sqlite3.Error) as exc:
-                self._json({"error": str(exc)}, 503)
-                return
-            payload.update({
-                "apartment": name,
-                "region": region,
-                "areaLabel": area_label,
-                "latestTrade": transactions[0],
-            })
-            self._json(payload)
             return
         if parsed.path == "/api/budget-candidates/progress":
             job_id = params.get("id", [""])[0].strip()
