@@ -1,0 +1,78 @@
+{
+  "activeCsvPaths": [
+    "/Users/jay/Documents/매수할까요?/outputs/seoul_apartments_20260703/서울시_아파트_단지_목록_한국부동산원_20250918.csv",
+    "/Users/jay/Documents/매수할까요?/data/경기도_아파트_단지_목록_한국부동산원_20250918.csv"
+  ],
+  "csvRows": 17851,
+  "usableRows": 17522,
+  "apartmentMasterCount": 13317,
+  "representedRows": 17522,
+  "missingRowsCount": 0,
+  "missingRows": [],
+  "byPath": [
+    {
+      "path": "/Users/jay/Documents/매수할까요?/outputs/seoul_apartments_20260703/서울시_아파트_단지_목록_한국부동산원_20250918.csv",
+      "csvRows": 9458,
+      "usableRows": 9141,
+      "representedRows": 9141,
+      "missingRows": []
+    },
+    {
+      "path": "/Users/jay/Documents/매수할까요?/data/경기도_아파트_단지_목록_한국부동산원_20250918.csv",
+      "csvRows": 8393,
+      "usableRows": 8381,
+      "representedRows": 8381,
+      "missingRows": []
+    }
+  ],
+  "qualityNotes": {
+    "genericEntityCount": 6,
+    "genericEntities": [
+      {
+        "name": "우성아파트",
+        "category": "강남구 아파트",
+        "city": "서울시",
+        "households": 1874,
+        "aliasesCount": 27
+      },
+      {
+        "name": "현대아파트",
+        "category": "강남구 아파트",
+        "city": "서울시",
+        "households": 1729,
+        "aliasesCount": 104
+      },
+      {
+        "name": "신동아아파트",
+        "category": "강남구 아파트",
+        "city": "서울시",
+        "households": 3169,
+        "aliasesCount": 14
+      },
+      {
+        "name": "한양아파트",
+        "category": "강남구 아파트",
+        "city": "서울시",
+        "households": 2419,
+        "aliasesCount": 15
+      },
+      {
+        "name": "주공아파트",
+        "category": "금천구 아파트",
+        "city": "서울시",
+        "households": 4930,
+        "aliasesCount": 57
+      },
+      {
+        "name": "아이파크",
+        "category": "성남분당구 아파트",
+        "city": "성남시",
+        "households": 270,
+        "aliasesCount": 1
+      }
+    ],
+    "manualNewBuildsNeeded": [
+      "산성역 헤리스톤 등 최신 분양/입주예정 단지는 현재 CSV 원본에 없어서 수동 메타 또는 별도 분양 CSV가 필요"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "asOf": "2026-07-12",
+  "version": "2026.07.12-1",
+  "status": "effective",
+  "capitalRegionMortgageCaps": [
+    {"maxHomePriceEok": 15, "maxLoanEok": 6},
+    {"maxHomePriceEok": 25, "maxLoanEok": 4},
+    {"maxHomePriceEok": null, "maxLoanEok": 2}
+  ],
+  "ltv": {
+    "regulatedGeneral": 0.4,
+    "capitalGeneral": 0.7,
+    "capitalFirstTime": 0.7,
+    "additionalHomeInCapital": 0.0
+  },
+  "stressRatePercent": 3.0,
+  "moveInMonths": 6,
+  "regulatedRegions": {
+    "allSeoul": true,
+    "gyeonggi": [
+      "과천시",
+      "광명시",
+      "의왕시",
+      "하남시",
+      "구리시",
+      "성남시 분당구",
+      "성남시 수정구",
+      "성남시 중원구",
+      "수원시 영통구",
+      "수원시 장안구",
+      "수원시 팔달구",
+      "안양시 동안구",
+      "용인시 수지구",
+      "용인시 기흥구",
+      "화성시 동탄구"
+    ]
+  },
+  "sources": [
+    {
+      "id": "fsc-regions-20260630",
+      "agency": "금융위원회",
+      "title": "규제지역 추가 지정 관련 긴급 가계부채 점검회의",
+      "publishedAt": "2026-06-30",
+      "url": "https://www.fsc.go.kr/no010101/87222"
+    },
+    {
+      "id": "fsc-housing-stability-qa-202510",
+      "agency": "금융위원회",
+      "title": "주택시장 안정화 대책 주요정책문답",
+      "publishedAt": "2025-10-15",
+      "url": "https://www.fsc.go.kr/po020201/85518"
+    },
+    {
+      "id": "fsc-debt-plan-qa-202604",
+      "agency": "금융위원회",
+      "title": "2026년도 가계부채 관리방안 관련 FAQ",
+      "publishedAt": "2026-04-01",
+      "url": "https://www.fsc.go.kr/po020201/87058"
+    },
+    {
+      "id": "nts-multihome-tax-202603",
+      "agency": "국세청",
+      "title": "다주택 중과유예 종료 안내",
+      "publishedAt": "2026-03-01",
+      "url": "https://www.nts.go.kr/nts/na/ntt/selectNttInfo.do?mi=2201&nttSn=1349339"
+    }
+  ]
+}
