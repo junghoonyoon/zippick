@@ -28,6 +28,7 @@ class BudgetResultCacheTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, \
              mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
              mock.patch.object(search_server, "BUDGET_JOBS", {}), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
              mock.patch.object(search_server.budget_candidates, "budget_candidates", side_effect=calculate):
             initial = search_server._start_staged_budget_payload("staged", {"budget": "7.9"})
             self.assertTrue(initial["enrichmentPending"])
@@ -44,6 +45,44 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertTrue(completed["done"])
         self.assertFalse(completed["enrichmentPending"])
         self.assertEqual(completed["candidates"][0]["name"], "보강 후보")
+
+    def test_staged_result_skips_enrichment_without_molit_configuration(self):
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server, "BUDGET_JOBS", {}), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=False), \
+             mock.patch.object(
+                 search_server.budget_candidates,
+                 "budget_candidates",
+                 return_value={"candidates": [{"name": "1차 후보"}], "initialStage": True},
+             ) as calculate:
+            payload = search_server._start_staged_budget_payload("staged", {"budget": "7.9"})
+
+        self.assertFalse(payload["enrichmentPending"])
+        self.assertEqual(payload["enrichmentStage"], "complete")
+        self.assertNotIn("enrichmentJobId", payload)
+        self.assertEqual(payload["candidates"][0]["name"], "1차 후보")
+        self.assertEqual(payload["candidates"][0]["signals"]["status"], "unavailable")
+        calculate.assert_called_once_with(budget="7.9", fast_mode=True)
+
+    def test_staged_job_timeout_returns_initial_payload(self):
+        job_id = "stuck-job"
+        initial = {"candidates": [{"name": "1차 후보"}], "initialStage": True}
+        with mock.patch.object(search_server, "BUDGET_JOBS", {
+            job_id: {
+                "cacheKey": "stuck",
+                "startedAt": time.time() - 10,
+                "done": False,
+                "initial": initial,
+                "result": None,
+            },
+        }), mock.patch.object(search_server, "BUDGET_JOB_TIMEOUT_SECONDS", 1):
+            payload = search_server._budget_job_snapshot(job_id)
+
+        self.assertTrue(payload["done"])
+        self.assertFalse(payload["enrichmentPending"])
+        self.assertEqual(payload["enrichmentStage"], "timeout")
+        self.assertEqual(payload["candidates"][0]["name"], "1차 후보")
 
     def test_budget_prewarm_only_schedules_configured_regions(self):
         rows = [
@@ -117,7 +156,21 @@ class BudgetResultCacheTest(unittest.TestCase):
 
         def repair(rows):
             for row in rows:
-                row["signals"] = {"status": "ok", "score": 50}
+                signals = {
+                    "status": "ok",
+                    "momentumPct": 0.0,
+                    "turnoverRatio": 1.0,
+                    "districtRelativePct": 0.0,
+                    "recent3Pct": 1.0,
+                }
+                details = search_server.momentum_signals._score_details(signals)
+                signals.update({
+                    "score": details["score"],
+                    "scoreFormulaVersion": details["formulaVersion"],
+                    "scoreBreakdown": details["breakdown"],
+                    "scoreCaps": details["caps"],
+                })
+                row["signals"] = signals
 
         with tempfile.TemporaryDirectory() as directory, \
              mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
@@ -137,6 +190,39 @@ class BudgetResultCacheTest(unittest.TestCase):
             # 보강된 시그널이 캐시에도 반영되어 다음 히트에서는 보강이 필요 없다.
             repaired = search_server._read_budget_cache("missing-signal")
             self.assertEqual(repaired[0]["candidates"][0]["signals"]["status"], "ok")
+
+    def test_outdated_signal_formula_is_repaired_on_cache_hit(self):
+        payload = {
+            "candidates": [{
+                "name": "테스트",
+                "signals": {"status": "ok", "score": 75, "scoreFormulaVersion": 1},
+            }],
+        }
+
+        def repair(rows):
+            for row in rows:
+                row["signals"] = {
+                    "status": "ok",
+                    "score": 44,
+                    "scoreFormulaVersion": search_server.momentum_signals.SCORE_FORMULA_VERSION,
+                    "scoreBreakdown": {"priceMomentum": {"points": 20, "maxPoints": 40}},
+                }
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(search_server.momentum_signals, "attach_signals", side_effect=repair) as attach:
+            search_server._write_budget_cache("old-formula", payload)
+            result = search_server._load_budget_payload("old-formula", {})
+
+        attach.assert_called_once()
+        signals = result["candidates"][0]["signals"]
+        self.assertEqual(signals["score"], 44)
+        self.assertEqual(
+            signals["scoreFormulaVersion"],
+            search_server.momentum_signals.SCORE_FORMULA_VERSION,
+        )
+        self.assertIn("priceMomentum", signals["scoreBreakdown"])
 
     def test_error_signal_result_is_cached_without_recompute(self):
         payload = {"allCandidates": [{"name": "테스트", "signals": {"status": "error", "score": None}}]}

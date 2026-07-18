@@ -2,7 +2,6 @@ import sys
 import unittest
 from pathlib import Path
 from unittest import mock
-from urllib.parse import unquote
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +21,213 @@ class BudgetCandidatesTest(unittest.TestCase):
 
     def tearDown(self):
         self.live_price_patch.stop()
+
+    def test_purchase_power_stretch_includes_up_to_five_percent(self):
+        self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
+        self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
+
+    def test_region_adjacency_normalizes_general_districts_and_prefixed_regions(self):
+        adjacency = budget_candidates.region_adjacency
+
+        self.assertEqual(adjacency.normalize_region("경기도 성남시 분당구"), "성남시")
+        self.assertEqual(adjacency.normalize_region("서울특별시 강남구"), "강남구")
+        self.assertEqual(adjacency.normalize_region("서울시"), "")
+        self.assertIn("서초구", adjacency.adjacent_to(["강남구"]))
+
+    def test_map_address_prefers_precise_master_address(self):
+        address = budget_candidates._map_address(
+            {"region": "성남중원구", "legalDong": "금광동", "jibun": "2600"},
+            {"address": "경기도 성남시 중원구 금광동 2600"},
+        )
+
+        self.assertEqual(address, "경기도 성남시 중원구 금광동 2600")
+
+    def test_map_address_falls_back_to_candidate_location_fields(self):
+        address = budget_candidates._map_address(
+            {"region": "성남중원구", "legalDong": "금광동", "jibun": "2600"},
+        )
+
+        self.assertEqual(address, "성남중원구 금광동 2600")
+
+    def test_nearby_collection_uses_cheapest_band_and_deduplicates_complex(self):
+        bucket = {}
+        nearby_keys = {budget_candidates.real_estate_search.compact("서초구")}
+        base = {
+            "name": "테스트아파트",
+            "region": "서초구",
+            "priceSource": "molit_csv",
+            "areaLabel": "전용 59㎡",
+        }
+
+        budget_candidates._collect_nearby_candidate(
+            bucket, nearby_keys, {**base, "midPriceEok": 9.0}, None, 0, 0, 0,
+        )
+        budget_candidates._collect_nearby_candidate(
+            bucket, nearby_keys, {**base, "midPriceEok": 8.5, "areaLabel": "전용 84㎡"}, None, 0, 0, 0,
+        )
+        budget_candidates._collect_nearby_candidate(
+            bucket, nearby_keys,
+            {**base, "name": "수동가격단지", "midPriceEok": 7.0, "priceSource": "manual"},
+            None, 0, 0, 0,
+        )
+
+        entries = list(bucket["서초구"].values())
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(next(item for item in entries if item["name"] == "테스트아파트")["price"], 8.5)
+        self.assertFalse(next(item for item in entries if item["name"] == "수동가격단지")["verifiedPrice"])
+
+    def test_nearby_suggestions_use_each_regions_own_purchase_ceiling(self):
+        bucket = {
+            "서초구": {("name", "a"): {"name": "A", "price": 8.0}},
+            "송파구": {("name", "b"): {"name": "B", "price": 8.0}},
+        }
+        ceilings = {"서초구": 0.0, "송파구": 8.0}
+
+        with mock.patch.object(
+            budget_candidates.policy_evaluator,
+            "estimated_purchase_ceiling",
+            side_effect=lambda _profile, regions: ceilings[regions[0]],
+        ) as estimate:
+            suggestions = budget_candidates._nearby_region_suggestions(
+                bucket, ["서초구", "송파구"], {}, True, 10.0,
+            )
+
+        self.assertEqual([item["region"] for item in suggestions], ["송파구"])
+        self.assertEqual(suggestions[0]["hop"], 1)
+        self.assertEqual(estimate.call_count, 2)
+
+    def test_empty_budget_result_includes_nearby_region_candidates(self):
+        price_rows = [
+            {
+                "name": "서초테스트",
+                "region": "서초구",
+                "midPriceEok": 4.8,
+                "averagePriceEok": 4.8,
+                "minPriceEok": 4.7,
+                "maxPriceEok": 4.9,
+                "priceSource": "manual",
+                "areaLabel": "전용 59㎡",
+            },
+        ]
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=price_rows), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", []), \
+             mock.patch.object(budget_candidates, "_find_entities", return_value=[]):
+            result = budget_candidates.budget_candidates(
+                "5억", region="강남구", fast_mode=True,
+            )
+
+        self.assertEqual(result["candidates"], [])
+        self.assertEqual(result["nearbyRegionsVersion"], 3)
+        self.assertEqual(result["nearbyRegions"][0]["region"], "서초구")
+        self.assertEqual(result["nearbyRegions"][0]["count"], 1)
+        self.assertEqual(result["nearbyRegions"][0]["minPriceEok"], 4.8)
+
+    def test_all_matches_response_suggests_nearby_when_policy_rows_are_hidden(self):
+        price_rows = [
+            {
+                "name": "강남테스트",
+                "region": "강남구",
+                "midPriceEok": 8.0,
+                "averagePriceEok": 8.0,
+                "minPriceEok": 7.8,
+                "maxPriceEok": 8.2,
+                "priceSource": "molit_csv",
+                "areaLabel": "전용 59㎡",
+            },
+            {
+                "name": "서초테스트",
+                "region": "서초구",
+                "midPriceEok": 5.0,
+                "averagePriceEok": 5.0,
+                "minPriceEok": 4.8,
+                "maxPriceEok": 5.2,
+                "priceSource": "manual",
+                "areaLabel": "전용 59㎡",
+            },
+        ]
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=price_rows), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", []), \
+             mock.patch.object(budget_candidates, "_find_entities", return_value=[]):
+            result = budget_candidates.budget_candidates(
+                "10억", region="강남구", all_matches=True, fast_mode=True,
+            )
+
+        self.assertEqual(len(result["candidates"]), 1)
+        self.assertEqual(result["candidates"][0]["policyImpact"]["status"], "needs_input")
+        self.assertEqual(result["nearbyRegions"][0]["region"], "서초구")
+        self.assertEqual(result["nearbyRegions"][0]["referencePriceCount"], 1)
+
+    def test_aggregate_master_row_can_signal_a_nearby_region(self):
+        price_rows = [{
+            "name": "서초집계단지",
+            "region": "서초구",
+            "midPriceEok": 5.0,
+            "averagePriceEok": 5.0,
+            "minPriceEok": 4.8,
+            "maxPriceEok": 5.2,
+            "priceSource": "manual",
+            "areaLabel": "전용 84㎡",
+        }]
+        aggregate_entity = {
+            "name": "서초집계단지",
+            "district": "서초구",
+            "households": 1000,
+            "aggregate": True,
+        }
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=price_rows), mock.patch.object(
+            budget_candidates, "_find_entities", return_value=[aggregate_entity],
+        ):
+            result = budget_candidates.budget_candidates(
+                "5억", region="강남구", min_area=84, min_households=500, fast_mode=True,
+            )
+
+        self.assertEqual(result["candidates"], [])
+        self.assertEqual(result["nearbyRegions"][0]["region"], "서초구")
+        self.assertEqual(result["nearbyRegions"][0]["referencePriceCount"], 1)
+
+    def test_full_empty_result_uses_cached_live_prices_for_nearby_regions(self):
+        entity = {
+            "name": "서초캐시단지",
+            "district": "서초구",
+            "households": 700,
+            "constructionYear": 2015,
+        }
+        live_band = {
+            "name": "서초캐시단지",
+            "region": "서초구",
+            "areaLabel": "전용 84~85㎡",
+            "midPriceEok": 4.8,
+            "averagePriceEok": 4.8,
+            "minPriceEok": 4.7,
+            "maxPriceEok": 4.9,
+            "transactionCount": 3,
+            "latestDealDate": "2026-07-01",
+        }
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=[]), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", [entity]), \
+             mock.patch.object(
+                 budget_candidates.molit_transactions,
+                 "cached_price_band_for_apartment",
+                 return_value=live_band,
+             ) as cached_lookup:
+            result = budget_candidates.budget_candidates(
+                "5억",
+                region="강남구",
+                min_area=84,
+                min_households=500,
+                fast_mode=False,
+            )
+
+        self.assertEqual(result["candidates"], [])
+        self.assertEqual(result["nearbyRegionsVersion"], 3)
+        self.assertEqual(result["nearbyRegions"][0]["region"], "서초구")
+        self.assertEqual(result["nearbyRegions"][0]["verifiedPriceCount"], 1)
+        cached_lookup.assert_called_once_with(
+            "서초캐시단지",
+            region="서초구",
+            area_label="전용 84~85㎡",
+            entity=entity,
+        )
 
     def test_missing_purchase_power_inputs_are_rejected(self):
         result = budget_candidates.budget_candidates("예산 미정")
@@ -299,7 +505,7 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(len(result["candidates"]), 3)
         self.assertTrue(all(row["policyImpact"]["status"] == "possible" for row in result["candidates"]))
 
-    def test_candidate_has_naver_property_search_link_with_location(self):
+    def test_candidate_uses_direct_naver_complex_link_or_stays_disabled(self):
         result = budget_candidates.budget_candidates(
             "9억",
             region="서울시",
@@ -310,11 +516,11 @@ class BudgetCandidatesTest(unittest.TestCase):
         candidate = result["candidates"][0]
         kind = candidate.get("naverLinkKind")
         if kind == "complex":
-            self.assertTrue(candidate["naverPropertyUrl"].startswith("https://new.land.naver.com/complexes/"))
+            self.assertTrue(candidate["naverPropertyUrl"].startswith("https://fin.land.naver.com/complexes/"))
+            self.assertIn("tab=article", candidate["naverPropertyUrl"])
         else:
-            self.assertTrue(candidate["naverPropertyUrl"].startswith("https://fin.land.naver.com/search?q="))
-            decoded = unquote(candidate["naverPropertyUrl"])
-            self.assertIn(candidate["naverPropertyQuery"], decoded)
+            self.assertEqual(kind, "unresolved")
+            self.assertEqual(candidate["naverPropertyUrl"], "")
 
     def test_naver_link_uses_unique_name_without_internal_region_tokens(self):
         entity = budget_candidates._find_entity("산성역 헤리스톤", "성남수정구")

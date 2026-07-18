@@ -50,7 +50,7 @@ def _time_context(row):
 
 def _rank_suffix(row, ctx):
     if ctx.get("scoredCount", 0) >= 3 and ctx.get("signalRank", {}).get(id(row)) == 1:
-        return " · 이번 결과 상승 시그널 1위"
+        return " · 이번 결과 최근 가격·거래 흐름 1위"
     if ctx.get("count", 0) >= 3 and ctx.get("ppsmRank", {}).get(id(row)) == 1:
         return " · 이번 결과 ㎡당가 최저"
     return ""
@@ -62,7 +62,7 @@ def _rank_verdict(row, ctx):
         return f"이번 결과 {total}곳 중 ㎡당 가격이 가장 낮아 같은 예산에서 면적 효율 1위"
     scored = ctx.get("scoredCount", 0)
     if scored >= 3 and ctx.get("signalRank", {}).get(id(row)) == 1:
-        return f"후보 {scored}곳 중 상승 시그널 1위 — 가격 흐름·거래량이 가장 좋은 조합"
+        return f"후보 {scored}곳 중 최근 가격·거래 흐름 1위 — 가격 흐름·거래량이 가장 좋은 조합"
     return None
 
 

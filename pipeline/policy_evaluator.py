@@ -185,7 +185,12 @@ def evaluate_candidate(candidate, entity=None, profile=None):
     regulated = _is_regulated(region, snapshot)
     min_price = _float(candidate.get("minPriceEok"))
     max_price = _float(candidate.get("maxPriceEok"))
-    price = _float(candidate.get("midPriceEok") or max_price or min_price)
+    latest_deal_price = _float(candidate.get("latestDealPriceEok"))
+    recent3_average_price = _float(
+        candidate.get("recent3AdjustedAveragePriceEok")
+        or candidate.get("recent3AveragePriceEok")
+    )
+    price = _float(latest_deal_price or recent3_average_price or candidate.get("midPriceEok") or max_price or min_price)
     ltv_rate, ltv_basis = _ltv(profile, region, regulated, snapshot)
     ltv_limit = round(price * ltv_rate, 2)
     price_cap = _price_cap(price, snapshot) if region["isCapitalRegion"] else None
@@ -220,6 +225,40 @@ def evaluate_candidate(candidate, entity=None, profile=None):
 
     low_financing = financing_at(min_price)
     high_financing = financing_at(max_price)
+    latest_deal_financing = financing_at(latest_deal_price)
+    recent3_average_financing = financing_at(recent3_average_price)
+    cash_scenarios = []
+    if latest_deal_financing:
+        cash_scenarios.append({
+            "type": "latest_deal",
+            "label": "최근 실거래 그대로 사면",
+            **latest_deal_financing,
+            "cashGapEok": (
+                round(cash - latest_deal_financing["requiredCashEok"], 2)
+                if cash
+                else None
+            ),
+            "excludedTradeCount": 0,
+        })
+    if recent3_average_financing:
+        cash_scenarios.append({
+            "type": "recent3_average",
+            "label": "3개월 평균 실거래로 산다면",
+            **recent3_average_financing,
+            "cashGapEok": (
+                round(cash - recent3_average_financing["requiredCashEok"], 2)
+                if cash
+                else None
+            ),
+            "tradeCount": int(_float(
+                candidate.get("recent3AdjustedTradeCount")
+                or candidate.get("recent3TradeCount")
+            )),
+            "excludedTradeCount": int(_float(candidate.get("recent3ExcludedTradeCount"))),
+        })
+    if cash_scenarios:
+        required_cash = max(row["requiredCashEok"] for row in cash_scenarios)
+        cash_gap = round(cash - required_cash, 2) if cash else None
 
     missing = []
     warnings = []
@@ -250,14 +289,14 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         missing.append("보유 현금")
     elif cash_gap >= 0:
         status = "possible"
-        status_label = "정책상 자금 범위"
+        status_label = "구매 가능"
     else:
         status = "short"
         status_label = f"추가 자금 {_money(abs(cash_gap))} 필요"
 
     if ltv_rate == 0 and cash and cash >= price:
         status = "possible"
-        status_label = "대출 없이 자금 범위"
+        status_label = "대출 없이 구매 가능"
     elif ltv_rate == 0 and (not cash or cash < price):
         status = "restricted"
         status_label = "주담대 제한 확인"
@@ -283,6 +322,7 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         "maxRequiredCashEok": high_financing["requiredCashEok"] if high_financing else required_cash,
         "minPriceLoanLimitEok": low_financing["loanLimitEok"] if low_financing else estimated_loan,
         "maxPriceLoanLimitEok": high_financing["loanLimitEok"] if high_financing else estimated_loan,
+        "cashScenarios": cash_scenarios,
         "cashGapEok": cash_gap,
         "dsrAnnualRoomManwon": dsr_room,
         "stressRatePercent": snapshot.get("stressRatePercent"),

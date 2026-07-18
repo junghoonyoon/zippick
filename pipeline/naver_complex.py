@@ -12,6 +12,7 @@ import json
 import re
 import time
 import threading
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -19,8 +20,10 @@ import requests
 import config
 import real_estate_search
 
-SEARCH_ENDPOINT = "https://new.land.naver.com/api/search"
+SEARCH_ENDPOINT = "https://fin.land.naver.com/front-api/v1/search/autocomplete/complexes"
+MOBILE_COMPLEX_LIST_ENDPOINT = "https://m.land.naver.com/complex/ajax/complexListByCortarNo"
 CACHE_DIR = config.CACHE_DIR / "naver_complex"
+CACHE_VERSION = "v5"
 NEGATIVE_TTL_SECONDS = 60 * 60 * 24 * 7  # 못 찾은 단지는 7일 후 재시도
 TIMEOUT_SECONDS = float(getattr(config, "NAVER_COMPLEX_TIMEOUT_SECONDS", 4))
 MAX_WORKERS = int(getattr(config, "NAVER_COMPLEX_MAX_WORKERS", 6))
@@ -30,9 +33,11 @@ HEADERS = {
         "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
     ),
     "Accept": "application/json",
-    "Referer": "https://new.land.naver.com/",
+    "Referer": "https://fin.land.naver.com/",
 }
 _CACHE_LOCK = threading.Lock()
+_CORTAR_CACHE_LOCK = threading.Lock()
+_CORTAR_COMPLEX_CACHE = {}
 _DISABLED_UNTIL = 0
 
 # 네이버 검색 API가 일시적으로 제한돼도 확실히 검증된 중복명 단지는
@@ -53,12 +58,19 @@ VERIFIED_COMPLEX_OVERRIDES = {
         "complexNo": "576",
         "complexName": "돈암삼부(삼부컨비니언)",
     },
+    # 공공데이터의 178세대·2006-11-30 사용승인 정보와 네이버 단지정보를
+    # 대조해 1차로 확인했다. 2차는 139세대·2011-10-28 사용승인 단지다.
+    ("은평신사두산위브", "신사동", "370"): {
+        "complexNo": "25766",
+        "complexName": "은평신사두산위브1차",
+    },
 }
 
 
 def _cache_key(name, legal_dong, jibun):
     compact = real_estate_search.compact
-    return f"{compact(name)}_{compact(legal_dong)}_{compact(jibun)}" or "unknown"
+    identity = f"{compact(name)}_{compact(legal_dong)}_{compact(jibun)}" or "unknown"
+    return f"{CACHE_VERSION}_{identity}"
 
 
 def _cache_path(key):
@@ -94,26 +106,59 @@ def _write_cache(key, payload):
 def _search(keyword):
     global _DISABLED_UNTIL
     if time.time() < _DISABLED_UNTIL:
-        return []
+        return None
     try:
         response = requests.get(
             SEARCH_ENDPOINT,
-            params={"keyword": keyword},
+            params={"keyword": keyword, "size": 20, "page": 0},
             headers=HEADERS,
             timeout=TIMEOUT_SECONDS,
         )
         response.raise_for_status()
         data = response.json()
     except Exception:
-        # 차단·형식 변경 시 잠시 끄고 폴백 링크로만 동작
+        # 조회 제한을 '검색 결과 없음'으로 캐시하면 이후 정상화돼도 일주일간
+        # 검색창 링크만 남는다. 장애는 None으로 구분해 캐시하지 않는다.
         _DISABLED_UNTIL = time.time() + 60 * 10
-        return []
-    complexes = data.get("complexes") or data.get("complexList") or []
+        return None
+    result = data.get("result") if isinstance(data, dict) else None
+    complexes = (
+        (result.get("list") if isinstance(result, dict) else None)
+        or data.get("complexes")
+        or data.get("complexList")
+        or []
+    )
     return complexes if isinstance(complexes, list) else []
 
 
+def _search_by_cortar(cortar_no):
+    """법정동 코드로 해당 동의 네이버 단지 목록을 조회한다."""
+    cortar_no = re.sub(r"\D", "", str(cortar_no or ""))[:10]
+    if len(cortar_no) != 10:
+        return None
+    with _CORTAR_CACHE_LOCK:
+        if cortar_no in _CORTAR_COMPLEX_CACHE:
+            return _CORTAR_COMPLEX_CACHE[cortar_no]
+        try:
+            response = requests.get(
+                MOBILE_COMPLEX_LIST_ENDPOINT,
+                params={"cortarNo": cortar_no},
+                headers={**HEADERS, "Referer": "https://m.land.naver.com/"},
+                timeout=TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except Exception:
+            return None
+        complexes = data.get("result") if isinstance(data, dict) else None
+        if not isinstance(complexes, list):
+            return None
+        _CORTAR_COMPLEX_CACHE[cortar_no] = complexes
+        return complexes
+
+
 def _entry_complex_no(entry):
-    for field in ("complexNo", "hscpNo", "complexNumber"):
+    for field in ("complexNumber", "complexNo", "hscpNo"):
         value = str(entry.get(field) or "").strip()
         if value.isdigit():
             return value
@@ -121,16 +166,87 @@ def _entry_complex_no(entry):
 
 
 def _entry_name(entry):
-    return str(entry.get("complexName") or entry.get("name") or "").strip()
+    return str(
+        entry.get("complexName")
+        or entry.get("hscpNm")
+        or entry.get("name")
+        or ""
+    ).strip()
 
 
 def _entry_address(entry):
-    return str(entry.get("cortarAddress") or entry.get("address") or "")
+    address = entry.get("address")
+    if isinstance(address, dict):
+        address = " ".join(
+            str(value or "").strip()
+            for value in (
+                address.get("roadAddress"),
+                address.get("jibunAddress"),
+            )
+            if str(value or "").strip()
+        )
+    return str(
+        entry.get("legalDivisionName")
+        or entry.get("cortarAddress")
+        or address
+        or ""
+    )
 
 
-def _pick(complexes, name, legal_dong):
+def _name_variants(value, legal_dong=""):
+    key = real_estate_search.compact(value)
+    variants = [key] if key else []
+    without_apartment = re.sub(r"아파트$", "", key)
+    if without_apartment and without_apartment not in variants:
+        variants.append(without_apartment)
+    dong_key = real_estate_search.compact(legal_dong)
+    if dong_key.endswith("동"):
+        for candidate in list(variants):
+            if candidate.startswith(dong_key):
+                without_dong_suffix = dong_key[:-1] + candidate[len(dong_key):]
+                if without_dong_suffix and without_dong_suffix not in variants:
+                    variants.append(without_dong_suffix)
+    return variants
+
+
+def _character_similarity(left, right):
+    """단어 순서만 바뀐 네이버 등록명까지 잡는 문자 구성 유사도."""
+    if len(left) < 5 or len(right) < 5:
+        return 0
+    overlap = sum((Counter(left) & Counter(right)).values())
+    return (2 * overlap) / (len(left) + len(right))
+
+
+def _name_match_score(query, entry_name, legal_dong=""):
+    best = 0
+    for name_key in _name_variants(query, legal_dong):
+        for entry_key in _name_variants(entry_name):
+            if name_key == entry_key:
+                best = max(best, 4)
+                continue
+            if name_key in entry_key or entry_key in name_key:
+                shorter = name_key if len(name_key) <= len(entry_key) else entry_key
+                longer = entry_key if shorter == name_key else name_key
+                if len(shorter) >= 5:
+                    best = max(best, 3)
+                elif len(shorter) >= 4 and longer.startswith(shorter):
+                    best = max(best, 2)
+                continue
+            similarity = _character_similarity(name_key, entry_key)
+            if similarity >= 0.82:
+                best = max(best, 1 + similarity)
+    return best
+
+
+def _pick(complexes, name, legal_dong, alternate_names=()):
     compact = real_estate_search.compact
-    name_key = compact(name)
+    query_names = []
+    seen_names = set()
+    for value in (name, *alternate_names):
+        key = compact(value)
+        if key and key not in seen_names:
+            seen_names.add(key)
+            query_names.append(value)
     dong_key = compact(legal_dong)
     scored = []
     for entry in complexes:
@@ -140,12 +256,18 @@ def _pick(complexes, name, legal_dong):
         entry_name = compact(_entry_name(entry))
         if not entry_name:
             continue
-        name_match = name_key == entry_name or name_key in entry_name or entry_name in name_key
+        name_score = max(
+            (
+                _name_match_score(query, entry_name, legal_dong)
+                for query in query_names
+            ),
+            default=0,
+        )
         dong_match = bool(dong_key) and dong_key in compact(_entry_address(entry))
-        if not name_match and not dong_match:
+        if not name_score and not dong_match:
             continue
         scored.append((
-            (2 if name_match else 0) + (1 if dong_match else 0),
+            name_score + (1 if dong_match else 0),
             complex_no,
             _entry_name(entry),
         ))
@@ -154,13 +276,20 @@ def _pick(complexes, name, legal_dong):
     scored.sort(reverse=True)
     top_score = scored[0][0]
     top = [item for item in scored if item[0] == top_score]
-    # 동 정보 없이 이름만 걸린 후보가 여러 개면 오링크 위험 → 포기하고 폴백
-    if len(top) > 1 and top_score < 3:
+    # 같은 점수의 후보가 여러 개면 오링크 위험 → 포기하고 폴백
+    if len(top) > 1:
         return None
     return {"complexNo": top[0][1], "complexName": top[0][2]}
 
 
-def resolve(name, legal_dong="", jibun="", region=""):
+def resolve(
+    name,
+    legal_dong="",
+    jibun="",
+    region="",
+    cortar_no="",
+    alternate_names=(),
+):
     """단지 번호 조회. 실패 시 None (호출부가 주소 검색으로 폴백)."""
     name = str(name or "").strip()
     if not name:
@@ -178,6 +307,18 @@ def resolve(name, legal_dong="", jibun="", region=""):
         cached = _read_cache(key)
     if cached is not None:
         return cached if cached.get("complexNo") else None
+    cortar_complexes = _search_by_cortar(cortar_no)
+    if cortar_complexes is not None:
+        result = _pick(
+            cortar_complexes,
+            name,
+            legal_dong,
+            alternate_names=alternate_names,
+        )
+        if result:
+            with _CACHE_LOCK:
+                _write_cache(key, result)
+            return result
     queries = []
     if legal_dong:
         queries.append(f"{legal_dong} {name}")
@@ -185,18 +326,30 @@ def resolve(name, legal_dong="", jibun="", region=""):
     if region and region != legal_dong:
         queries.append(f"{region} {name}")
     result = None
+    search_available = True
     for query in queries:
-        picked = _pick(_search(query), name, legal_dong)
+        complexes = _search(query)
+        if complexes is None:
+            search_available = False
+            break
+        picked = _pick(
+            complexes,
+            name,
+            legal_dong,
+            alternate_names=alternate_names,
+        )
         if picked:
             result = picked
             break
-    with _CACHE_LOCK:
-        _write_cache(key, result or {"complexNo": None})
+    if result or search_available:
+        with _CACHE_LOCK:
+            _write_cache(key, result or {"complexNo": None})
     return result
 
 
 def complex_url(complex_no):
-    return f"https://new.land.naver.com/complexes/{complex_no}"
+    """네이버페이 부동산에서 해당 단지의 매물 지도를 바로 여는 URL."""
+    return f"https://fin.land.naver.com/complexes/{complex_no}?tab=article"
 
 
 def search_url(query):
@@ -215,6 +368,12 @@ def attach_links(rows):
                 legal_dong=row.get("legalDong", ""),
                 jibun=row.get("jibun", ""),
                 region=row.get("region", ""),
+                cortar_no=row.get("cortarNo", ""),
+                alternate_names=(
+                    row.get("displayName", ""),
+                    row.get("searchQuery", ""),
+                    row.get("naverPropertyQuery", ""),
+                ),
             )
         except Exception:
             resolved = None
@@ -228,9 +387,8 @@ def attach_links(rows):
                 row["displayName"] = complex_name
                 row["displayNameSource"] = "naver_complex"
             return
-        # 지번 검색은 네이버부동산에서 단지로 연결되지 않는 경우가 많다.
-        # 후보 생성 단계에서 만든 단지명 검색어를 유지하고, 없는 경우에만
-        # 표시용 검색어/단지명으로 새 이름 검색 링크를 만든다.
+        # 확정되지 않은 단지를 검색 화면으로 보내면 네이버페이 오류 화면이
+        # 열리거나 동명이인 단지로 연결될 수 있으므로 링크를 비활성화한다.
         query = str(
             row.get("naverPropertyQuery")
             or row.get("searchQuery")
@@ -240,8 +398,9 @@ def attach_links(rows):
         ).strip()
         if query:
             row["naverPropertyQuery"] = query
-            row["naverPropertyUrl"] = search_url(query)
-        row["naverLinkKind"] = "name"
+        row["naverComplexNo"] = None
+        row["naverPropertyUrl"] = ""
+        row["naverLinkKind"] = "unresolved"
 
     targets = [row for row in rows if row.get("name")]
     if not targets:

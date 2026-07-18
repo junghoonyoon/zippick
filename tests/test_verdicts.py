@@ -50,7 +50,7 @@ class VerdictsTest(unittest.TestCase):
             _row({"score": 30, "currentPpsm": 1200}, name="삼위"),
         ]
         verdicts.attach_verdicts(rows, budget_eok=20)
-        self.assertIn("상승 시그널 1위", rows[0]["verdict"])
+        self.assertIn("최근 가격·거래 흐름 1위", rows[0]["verdict"])
         self.assertIn("2025년 1월", rows[0]["verdict"])
 
     def test_rank_only_when_no_time_context(self):

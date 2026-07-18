@@ -17,17 +17,23 @@ import requests
 import config
 import real_estate_search
 
-ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade"
+APARTMENT_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade"
+PRESALE_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade"
+TRANSACTION_KIND_APARTMENT = "apartment"
+TRANSACTION_KIND_PRESALE = "presale"
+PRESALE_STATUSES = {"분양권", "입주권", "입주예정"}
 TRANSACTION_CACHE_DIR = config.CACHE_DIR / "molit_transactions"
 PRICE_BAND_CACHE_DIR = config.CACHE_DIR / "molit_price_bands"
 MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 2
+PRICE_BAND_CACHE_SCHEMA_VERSION = 7
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
-_DISABLED_UNTIL = 0
-_LAST_ERROR = ""
+_CIRCUIT_STATE = {
+    TRANSACTION_KIND_APARTMENT: {"disabledUntil": 0, "lastError": ""},
+    TRANSACTION_KIND_PRESALE: {"disabledUntil": 0, "lastError": ""},
+}
 _PRICE_BAND_CACHE_LOCK = threading.Lock()
 _MONTH_MEMORY_CACHE = {}
 _MONTH_ADDRESS_INDEX = {}
@@ -35,48 +41,67 @@ _MONTH_MEMORY_CACHE_LOCK = threading.Lock()
 _SOURCE_INDEX = None
 _SOURCE_INDEX_SIGNATURE = None
 _SOURCE_INDEX_LOCK = threading.Lock()
+_PRESALE_ENTITY_INDEX = None
+_PRESALE_ENTITY_INDEX_SIGNATURE = None
 
 
-def _service_key():
-    key = (config.MOLIT_APARTMENT_TRADE_API_KEY or "").strip()
+def _service_key(transaction_kind=TRANSACTION_KIND_APARTMENT):
+    configured_key = (
+        config.MOLIT_PRESALE_TRADE_API_KEY
+        if transaction_kind == TRANSACTION_KIND_PRESALE
+        else config.MOLIT_APARTMENT_TRADE_API_KEY
+    )
+    key = (configured_key or "").strip()
     return urllib.parse.unquote(key) if "%" in key else key
 
 
-def configured():
+def configured(transaction_kind=TRANSACTION_KIND_APARTMENT):
     """인증키가 설정됐는지 반환한다.
 
     enabled()는 일시적인 회로 차단 상태까지 반영하므로, 디스크 캐시만으로도
     가능한 시그널 계산 여부를 판단할 때는 configured()를 사용해야 한다.
     """
-    return bool(_service_key())
+    return bool(_service_key(transaction_kind))
 
 
-def enabled():
-    if not configured():
+def enabled(transaction_kind=TRANSACTION_KIND_APARTMENT):
+    if not configured(transaction_kind):
         return False
-    if time.time() < _DISABLED_UNTIL:
+    state = _circuit_state(transaction_kind)
+    if time.time() < state["disabledUntil"]:
         return False
     # 대기 시간이 끝나면 회로와 경고를 함께 닫는다. 다음 조회는 새 요청 또는
     # 저장 데이터로 정상 진행되며, 과거 경고가 결과 캐시를 계속 막지 않는다.
-    if _DISABLED_UNTIL:
-        _mark_success()
+    if state["disabledUntil"]:
+        _mark_success(transaction_kind)
     return True
 
 
-def last_error():
-    return _LAST_ERROR
+def _circuit_state(transaction_kind):
+    return _CIRCUIT_STATE.setdefault(
+        transaction_kind,
+        {"disabledUntil": 0, "lastError": ""},
+    )
 
 
-def _disable_temporarily(message, seconds=60 * 10):
-    global _DISABLED_UNTIL, _LAST_ERROR
-    _DISABLED_UNTIL = time.time() + seconds
-    _LAST_ERROR = message
+def last_error(transaction_kind=TRANSACTION_KIND_APARTMENT):
+    return _circuit_state(transaction_kind)["lastError"]
 
 
-def _mark_success():
-    global _DISABLED_UNTIL, _LAST_ERROR
-    _DISABLED_UNTIL = 0
-    _LAST_ERROR = ""
+def _disable_temporarily(
+    message,
+    seconds=60 * 10,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
+    state = _circuit_state(transaction_kind)
+    state["disabledUntil"] = time.time() + seconds
+    state["lastError"] = message
+
+
+def _mark_success(transaction_kind=TRANSACTION_KIND_APARTMENT):
+    state = _circuit_state(transaction_kind)
+    state["disabledUntil"] = 0
+    state["lastError"] = ""
 
 
 def compact(text):
@@ -112,8 +137,9 @@ def _deal_months(months=RECENT_LOOKBACK_MONTHS):
     return values
 
 
-def _cache_path(lawd_cd, deal_ymd):
-    return TRANSACTION_CACHE_DIR / f"{lawd_cd}_{deal_ymd}.json"
+def _cache_path(lawd_cd, deal_ymd, transaction_kind=TRANSACTION_KIND_APARTMENT):
+    prefix = "presale_" if transaction_kind == TRANSACTION_KIND_PRESALE else ""
+    return TRANSACTION_CACHE_DIR / f"{prefix}{lawd_cd}_{deal_ymd}.json"
 
 
 def _month_cache_ttl(deal_ymd):
@@ -128,8 +154,13 @@ def _month_cache_ttl(deal_ymd):
     return SETTLED_MONTH_CACHE_TTL_SECONDS
 
 
-def _read_cached_month(lawd_cd, deal_ymd, allow_stale=False):
-    path = _cache_path(lawd_cd, deal_ymd)
+def _read_cached_month(
+    lawd_cd,
+    deal_ymd,
+    allow_stale=False,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
+    path = _cache_path(lawd_cd, deal_ymd, transaction_kind)
     if not path.exists():
         return None
     try:
@@ -142,17 +173,45 @@ def _read_cached_month(lawd_cd, deal_ymd, allow_stale=False):
     return payload.get("items") or []
 
 
-def _write_cached_month(lawd_cd, deal_ymd, items):
+def _write_cached_month(
+    lawd_cd,
+    deal_ymd,
+    items,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
     TRANSACTION_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _cache_path(lawd_cd, deal_ymd)
+    path = _cache_path(lawd_cd, deal_ymd, transaction_kind)
     tmp = path.with_suffix(f".{time.monotonic_ns()}.tmp")
     tmp.write_text(json.dumps({
         "fetchedAt": time.time(),
         "lawdCd": lawd_cd,
         "dealYmd": deal_ymd,
+        "transactionKind": transaction_kind,
         "items": items,
     }, ensure_ascii=False), encoding="utf-8")
     tmp.replace(path)
+
+
+def _read_cached_month_memory(
+    lawd_cd,
+    deal_ymd,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
+    """Read a fresh month cache and reuse it across cache-only lookups."""
+    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
+    with _MONTH_MEMORY_CACHE_LOCK:
+        memory_cached = _MONTH_MEMORY_CACHE.get(memory_key)
+        if memory_cached and time.time() - memory_cached[0] <= _month_cache_ttl(deal_ymd):
+            return memory_cached[1]
+    cached = _read_cached_month(
+        lawd_cd,
+        deal_ymd,
+        transaction_kind=transaction_kind,
+    )
+    if cached is not None:
+        with _MONTH_MEMORY_CACHE_LOCK:
+            _MONTH_MEMORY_CACHE[memory_key] = (time.time(), cached)
+    return cached
 
 
 def _price_band_cache_key(name, region, area_label, lookback_months):
@@ -170,6 +229,7 @@ def _price_band_cache_key(name, region, area_label, lookback_months):
         "region": str(region or "").strip(),
         "areaLabel": str(area_label or "").strip(),
         "lookbackMonths": int(lookback_months or RECENT_LOOKBACK_MONTHS),
+        "transactionKind": transaction_kind_for_apartment(name, region),
         "dealMonths": _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS)),
         "revisions": revisions,
     }
@@ -218,7 +278,7 @@ def _xml_text(item, names):
     return ""
 
 
-def _parse_items(xml_text):
+def _parse_items(xml_text, transaction_kind=TRANSACTION_KIND_APARTMENT):
     root = ET.fromstring(xml_text)
     result_code = _xml_text(root.find("header") or root, ["resultCode"])
     result_message = _xml_text(root.find("header") or root, ["resultMsg"])
@@ -247,33 +307,55 @@ def _parse_items(xml_text):
             "dealType": _xml_text(item, ["거래유형", "dealingGbn"]),
             "estateAgentRegion": _xml_text(item, ["중개사소재지", "estateAgentSggNm"]),
             "cancellationDate": _xml_text(item, ["해제사유발생일", "cdealDay"]),
+            "cancellationType": _xml_text(item, ["해제여부", "cdealType"]),
+            "transactionKind": transaction_kind,
         })
     return rows
 
 
-def fetch_month(lawd_cd, deal_ymd):
-    memory_key = (str(lawd_cd), str(deal_ymd))
+def fetch_month(
+    lawd_cd,
+    deal_ymd,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
+    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
     with _MONTH_MEMORY_CACHE_LOCK:
         memory_cached = _MONTH_MEMORY_CACHE.get(memory_key)
         if memory_cached and time.time() - memory_cached[0] <= _month_cache_ttl(deal_ymd):
             return memory_cached[1]
-    cached = _read_cached_month(lawd_cd, deal_ymd)
+    cached = _read_cached_month(
+        lawd_cd,
+        deal_ymd,
+        transaction_kind=transaction_kind,
+    )
     if cached is not None:
         with _MONTH_MEMORY_CACHE_LOCK:
             _MONTH_MEMORY_CACHE[memory_key] = (time.time(), cached)
         return cached
     # 국토부 API의 순간 지연 때문에 이미 확보한 실거래 데이터까지 버리지 않는다.
     # 새 요청이 실패하거나 회로가 잠시 열린 경우에만 이 만료 캐시를 사용한다.
-    stale_cached = _read_cached_month(lawd_cd, deal_ymd, allow_stale=True)
-    if not enabled():
+    stale_cached = _read_cached_month(
+        lawd_cd,
+        deal_ymd,
+        allow_stale=True,
+        transaction_kind=transaction_kind,
+    )
+    if not enabled(transaction_kind):
         if stale_cached is not None:
             return stale_cached
-        raise RuntimeError(_LAST_ERROR or "공공데이터키가 설정되어 있지 않아요.")
+        raise RuntimeError(
+            last_error(transaction_kind)
+            or "공공데이터키가 설정되어 있지 않아요."
+        )
     try:
         response = requests.get(
-            ENDPOINT,
+            (
+                PRESALE_ENDPOINT
+                if transaction_kind == TRANSACTION_KIND_PRESALE
+                else APARTMENT_ENDPOINT
+            ),
             params={
-                "serviceKey": _service_key(),
+                "serviceKey": _service_key(transaction_kind),
                 "LAWD_CD": lawd_cd,
                 "DEAL_YMD": deal_ymd,
                 "numOfRows": 1000,
@@ -282,34 +364,54 @@ def fetch_month(lawd_cd, deal_ymd):
             timeout=config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
-        items = _parse_items(response.text)
+        items = _parse_items(response.text, transaction_kind)
     except requests.HTTPError as exc:
         status = getattr(exc.response, "status_code", None)
         if status in {401, 403}:
-            _disable_temporarily("국토부 실거래가 API 권한이 없거나 인증키가 승인되지 않았어요.")
+            _disable_temporarily(
+                "국토부 실거래가 API 권한이 없거나 인증키가 승인되지 않았어요.",
+                transaction_kind=transaction_kind,
+            )
         if stale_cached is not None:
             return stale_cached
         raise
     except requests.RequestException:
         # 긴 전역 차단은 정상 단지의 시그널까지 누락시킨다. 짧은 회로 차단으로
         # 동시 요청 폭주만 막고, 그동안에는 위의 만료 캐시를 계속 사용한다.
-        _disable_temporarily("국토부 실거래가 API 응답이 지연되어 저장된 데이터로 계산합니다.", seconds=15)
+        _disable_temporarily(
+            "국토부 실거래가 API 응답이 지연되어 저장된 데이터로 계산합니다.",
+            seconds=15,
+            transaction_kind=transaction_kind,
+        )
         if stale_cached is not None:
             return stale_cached
         raise
     except (ET.ParseError, RuntimeError, ValueError):
-        _disable_temporarily("국토부 실거래가 응답을 해석하지 못해 저장된 데이터로 계산합니다.", seconds=15)
+        _disable_temporarily(
+            "국토부 실거래가 응답을 해석하지 못해 저장된 데이터로 계산합니다.",
+            seconds=15,
+            transaction_kind=transaction_kind,
+        )
         if stale_cached is not None:
             return stale_cached
         raise
-    _mark_success()
-    _write_cached_month(lawd_cd, deal_ymd, items)
+    _mark_success(transaction_kind)
+    _write_cached_month(
+        lawd_cd,
+        deal_ymd,
+        items,
+        transaction_kind=transaction_kind,
+    )
     with _MONTH_MEMORY_CACHE_LOCK:
         _MONTH_MEMORY_CACHE[memory_key] = (time.time(), items)
     return items
 
 
-def prefetch_months(pairs, max_workers=None):
+def prefetch_months(
+    pairs,
+    max_workers=None,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
     """(lawd_cd, deal_ymd) 쌍을 병렬로 받아 월별 캐시를 미리 채운다.
 
     이미 캐시된 쌍은 fetch_month가 즉시 반환하므로 중복 제출 비용이 거의 없다.
@@ -323,12 +425,15 @@ def prefetch_months(pairs, max_workers=None):
             continue
         seen.add(key)
         pending.append(key)
-    if not pending or not enabled():
+    if not pending or not enabled(transaction_kind):
         return 0
     workers = max(1, min(max_workers or config.MOLIT_PREFETCH_MAX_WORKERS, len(pending)))
     done = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(fetch_month, lawd_cd, deal_ymd) for lawd_cd, deal_ymd in pending]
+        futures = [
+            pool.submit(fetch_month, lawd_cd, deal_ymd, transaction_kind)
+            for lawd_cd, deal_ymd in pending
+        ]
         for future in futures:
             try:
                 future.result()
@@ -338,9 +443,18 @@ def prefetch_months(pairs, max_workers=None):
     return done
 
 
-def _items_for_source_row(lawd_cd, deal_ymd, items, row):
-    """Narrow a district-month payload by parcel before matching names."""
-    memory_key = (str(lawd_cd), str(deal_ymd))
+def _items_for_source_row(lawd_cd, deal_ymd, items, row, dong_only=False):
+    """Narrow a district-month payload by parcel before matching names.
+
+    dong_only=True면 지번 좁히기를 건너뛴다. 'N단지' 조회처럼 마스터 지번
+    표기가 틀려도 이름의 단지 번호로 정확히 귀속할 수 있는 경우에 쓴다.
+    """
+    transaction_kind = (
+        str(items[0].get("transactionKind") or TRANSACTION_KIND_APARTMENT)
+        if items
+        else TRANSACTION_KIND_APARTMENT
+    )
+    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
     with _MONTH_MEMORY_CACHE_LOCK:
         cached_index = _MONTH_ADDRESS_INDEX.get(memory_key)
         if cached_index is None or cached_index[0] != id(items):
@@ -353,7 +467,7 @@ def _items_for_source_row(lawd_cd, deal_ymd, items, row):
             address_index = cached_index[1]
     dong = compact(row.get("법정동") or row.get("읍면동"))
     jibun = compact(row.get("지번"))
-    if dong and jibun:
+    if dong and jibun and not dong_only:
         return address_index.get((dong, jibun), [])
     if dong:
         return [item for (item_dong, _), values in address_index.items() if item_dong == dong for item in values]
@@ -364,6 +478,10 @@ def _row_lawd_cd(row):
     parcel_id = str(row.get("필지고유번호") or "").strip()
     if len(parcel_id) >= 5 and parcel_id[:5].isdigit():
         return parcel_id[:5]
+    for column in ("법정동코드", "lawdCd"):
+        value = re.sub(r"\D", "", str(row.get(column) or ""))
+        if len(value) >= 5:
+            return value[:5]
     return ""
 
 
@@ -392,7 +510,10 @@ def _matches_region(row, region):
     if not region:
         return True
     region_key = compact(region)
-    return any(region_key and region_key in compact(value) for value in _row_region_values(row))
+    return any(
+        value_key and (region_key in value_key or value_key in region_key)
+        for value_key in (compact(value) for value in _row_region_values(row))
+    )
 
 
 def _matches_name(row, name):
@@ -418,7 +539,10 @@ def _entity_region_matches(entity, region):
         entity.get("category", ""),
         entity.get("address", ""),
     ]
-    return any(region_key and region_key in compact(value) for value in values)
+    return any(
+        value_key and (region_key in value_key or value_key in region_key)
+        for value_key in (compact(value) for value in values)
+    )
 
 
 def _entity_alias_values(entity):
@@ -437,6 +561,39 @@ def _matching_master_entities(name, region):
         if name_key in alias_keys:
             matches.append(entity)
     return matches
+
+
+def _presale_entity_index():
+    global _PRESALE_ENTITY_INDEX, _PRESALE_ENTITY_INDEX_SIGNATURE
+    master = real_estate_search.APARTMENT_MASTER
+    signature = (id(master), len(master))
+    if _PRESALE_ENTITY_INDEX is not None and _PRESALE_ENTITY_INDEX_SIGNATURE == signature:
+        return _PRESALE_ENTITY_INDEX
+    index = {}
+    for entity in master:
+        if str(entity.get("status") or "").strip() not in PRESALE_STATUSES:
+            continue
+        for value in _entity_alias_values(entity):
+            key = compact(value)
+            if key:
+                index.setdefault(key, []).append(entity)
+    _PRESALE_ENTITY_INDEX = index
+    _PRESALE_ENTITY_INDEX_SIGNATURE = signature
+    return index
+
+
+def transaction_kind_for_apartment(name, region=""):
+    """Select the official transaction feed for a known complex.
+
+    Pre-construction complexes must use the presale/occupancy-right feed.
+    Unknown or completed complexes keep the standard apartment trade feed.
+    """
+    entities = _presale_entity_index().get(compact(name), [])
+    return (
+        TRANSACTION_KIND_PRESALE
+        if any(_entity_region_matches(entity, region) for entity in entities)
+        else TRANSACTION_KIND_APARTMENT
+    )
 
 
 def _row_matches_entity(row, entity):
@@ -503,6 +660,37 @@ def _source_row_index():
                         value_key = compact(value)
                         if value_key:
                             exact.setdefault(value_key, []).append(row)
+        # CSV 스냅샷에 없는 신축 단지: 수동 마스터에 필지 정보(lawdCd·법정동·지번)가
+        # 있으면 합성 소스 행을 만들어 실거래를 정확히 연결한다. 필지 정보가 없으면
+        # 퍼지 매칭이 다른 지역 유사 이름 거래를 물어오므로 등록하지 않는다.
+        for entity in real_estate_search.MANUAL_APARTMENT_MASTER:
+            lawd_cd = str(entity.get("lawdCd") or "").strip()
+            dong = str(entity.get("legalDong") or "").strip()
+            jibun = str(entity.get("jibun") or "").strip()
+            if not (lawd_cd and dong and jibun):
+                continue
+            aliases = [str(alias or "").strip() for alias in (entity.get("aliases") or []) if str(alias or "").strip()]
+            row = {
+                "대표단지명": entity.get("name", ""),
+                "단지명_공시가격": aliases[0] if aliases else "",
+                "단지명_건축물대장": aliases[1] if len(aliases) > 1 else "",
+                "단지명_도로명주소": aliases[2] if len(aliases) > 2 else "",
+                "시도": entity.get("province", ""),
+                "시군구": entity.get("district", ""),
+                "읍면동": dong,
+                "법정동": dong,
+                "지번": jibun,
+                "필지고유번호": f"{lawd_cd}{'0' * 14}",
+            }
+            key = (lawd_cd, compact(dong), compact(jibun), compact(row["대표단지명"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            all_rows.append(row)
+            for value in [entity.get("name", ""), *aliases]:
+                value_key = compact(value)
+                if value_key:
+                    exact.setdefault(value_key, []).append(row)
         _SOURCE_INDEX = (all_rows, exact)
         _SOURCE_INDEX_SIGNATURE = signature
         return _SOURCE_INDEX
@@ -545,6 +733,38 @@ def source_rows(name, region=""):
     # complexes in the same district. When the requested complex has an exact
     # public-data alias, do not mix those fuzzy matches into its transactions.
     return _dedupe_rows(exact_rows or rows)
+
+
+def source_rows_for_entity(entity, region=""):
+    """Resolve public source rows for a known master entity without rescanning masters."""
+    entity = entity or {}
+    name = str(entity.get("name") or "").strip()
+    region = region or entity.get("district") or entity.get("city") or ""
+    all_rows, exact_index = _source_row_index()
+    search_names = [name, *_entity_alias_values(entity)]
+    search_keys = []
+    seen_keys = set()
+    for value in search_names:
+        value_key = compact(value)
+        if value_key and value_key not in seen_keys:
+            seen_keys.add(value_key)
+            search_keys.append(value_key)
+    exact_rows = [
+        row
+        for key in search_keys
+        for row in exact_index.get(key, [])
+        if _matches_region(row, region) and _row_matches_entity(row, entity)
+    ]
+    if exact_rows:
+        return _dedupe_rows(exact_rows)
+    rows = [
+        row
+        for row in all_rows
+        if any(_matches_name(row, value) for value in search_names)
+        and _matches_region(row, region)
+        and _row_matches_entity(row, entity)
+    ]
+    return _dedupe_rows(rows)
 
 
 def _minimum_area_transactions(transactions, min_area):
@@ -595,7 +815,10 @@ def _is_market_transaction(item):
     """Exclude direct and cancelled deals from market-price calculations."""
     if compact(item.get("dealType")) == compact("직거래"):
         return False
-    return not str(item.get("cancellationDate") or "").strip()
+    # 해제 신고: 해제사유발생일이 있거나, 날짜 없이 해제여부(O)만 찍힌 건 모두 제외
+    if str(item.get("cancellationDate") or "").strip():
+        return False
+    return str(item.get("cancellationType") or "").strip().upper() != "O"
 
 
 def _transaction_recency_weight(item):
@@ -658,6 +881,130 @@ def _current_price_estimate(transactions):
     }
 
 
+def _shift_month(period, offset):
+    value = str(period or "")
+    if not re.fullmatch(r"\d{6}", value):
+        return ""
+    year = int(value[:4])
+    month = int(value[4:]) - 1 + int(offset)
+    year += month // 12
+    month %= 12
+    return f"{year}{month + 1:02d}"
+
+
+def _exclude_price_outliers(prices):
+    """Remove isolated prices without erasing a genuinely wide market range."""
+    values = [_float_value(value) for value in prices if _float_value(value) > 0]
+    if len(values) < 3:
+        return values, 0
+    middle = statistics.median(values)
+    deviations = [abs(value - middle) for value in values]
+    median_deviation = statistics.median(deviations)
+    tolerance = max(middle * 0.2, median_deviation * 3)
+    typical = [value for value in values if abs(value - middle) <= tolerance]
+    if len(typical) < 2:
+        return values, 0
+    return typical, len(values) - len(typical)
+
+
+def _quarter_trade_stats(transactions):
+    trades = [
+        row for row in transactions
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(row.get("dealDate") or ""))
+        and _float_value(row.get("dealAmountEok")) > 0
+    ]
+    if not trades:
+        return {
+            "statsThrough": "",
+            "recent3AveragePriceEok": 0,
+            "recent3TradeCount": 0,
+            "recent3AdjustedAveragePriceEok": 0,
+            "recent3AdjustedTradeCount": 0,
+            "recent3ExcludedTradeCount": 0,
+            "previous3AveragePriceEok": 0,
+            "previous3TradeCount": 0,
+        }
+    stats_through = max(str(row["dealDate"]) for row in trades)
+    end_period = stats_through[:7].replace("-", "")
+    recent_periods = {_shift_month(end_period, offset) for offset in (-2, -1, 0)}
+    previous_periods = {_shift_month(end_period, offset) for offset in (-5, -4, -3)}
+
+    def prices_for(periods):
+        return [
+            _float_value(row.get("dealAmountEok"))
+            for row in trades
+            if str(row.get("dealDate") or "")[:7].replace("-", "") in periods
+        ]
+
+    recent_prices = prices_for(recent_periods)
+    previous_prices = prices_for(previous_periods)
+    adjusted_recent_prices, excluded_recent_count = _exclude_price_outliers(recent_prices)
+    return {
+        "statsThrough": stats_through,
+        "recent3AveragePriceEok": round(statistics.mean(recent_prices), 2) if recent_prices else 0,
+        "recent3TradeCount": len(recent_prices),
+        "recent3AdjustedAveragePriceEok": (
+            round(statistics.mean(adjusted_recent_prices), 2)
+            if adjusted_recent_prices
+            else 0
+        ),
+        "recent3AdjustedTradeCount": len(adjusted_recent_prices),
+        "recent3ExcludedTradeCount": excluded_recent_count,
+        "previous3AveragePriceEok": round(statistics.mean(previous_prices), 2) if previous_prices else 0,
+        "previous3TradeCount": len(previous_prices),
+    }
+
+
+def quarter_trade_stats(transactions):
+    """Return the shared recent/previous three-month trade summary."""
+    return _quarter_trade_stats(transactions)
+
+
+def _half_year_trade_stats(transactions):
+    """최근 거래월 기준 최근 6개월과 직전 6개월의 평균·표본 수."""
+    trades = [
+        row for row in transactions
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(row.get("dealDate") or ""))
+        and _float_value(row.get("dealAmountEok")) > 0
+    ]
+    if not trades:
+        return {
+            "recent6AveragePriceEok": 0,
+            "recent6TradeCount": 0,
+            "previous6AveragePriceEok": 0,
+            "previous6TradeCount": 0,
+        }
+    end_period = max(str(row["dealDate"]) for row in trades)[:7].replace("-", "")
+    recent_periods = {_shift_month(end_period, offset) for offset in range(-5, 1)}
+    previous_periods = {_shift_month(end_period, offset) for offset in range(-11, -5)}
+
+    def prices_for(periods):
+        return [
+            _float_value(row.get("dealAmountEok"))
+            for row in trades
+            if str(row.get("dealDate") or "")[:7].replace("-", "") in periods
+        ]
+
+    recent_prices = prices_for(recent_periods)
+    previous_prices = prices_for(previous_periods)
+    return {
+        "recent6AveragePriceEok": round(statistics.mean(recent_prices), 2) if recent_prices else 0,
+        "recent6TradeCount": len(recent_prices),
+        "previous6AveragePriceEok": round(statistics.mean(previous_prices), 2) if previous_prices else 0,
+        "previous6TradeCount": len(previous_prices),
+    }
+
+
+_UNIT_NUMBER_RE = re.compile(r"(\d+)\s*단지")
+
+
+def _unit_number(value):
+    match = _UNIT_NUMBER_RE.search(str(value or ""))
+    if not match:
+        return ""
+    return match.group(1).lstrip("0") or match.group(1)
+
+
 def _matches_transaction(row, item, name):
     item_name = compact(item.get("apartment"))
     if not item_name:
@@ -670,6 +1017,13 @@ def _matches_transaction(row, item, name):
     item_dong = compact(item.get("legalDong"))
     if row_dong and item_dong and row_dong not in item_dong and item_dong not in row_dong:
         return False
+    # 'N단지'가 조회명과 실거래명 양쪽에 있으면 번호 일치가 최우선 기준이다.
+    # 마스터의 지번 표기 오류가 있어도 다른 단지 거래가 섞이지 않도록,
+    # 번호가 다르면 제외하고 번호가 같으면 지번 검사 없이 인정한다.
+    query_unit = _unit_number(name)
+    item_unit = _unit_number(item.get("apartment"))
+    if query_unit and item_unit:
+        return query_unit == item_unit
     row_jibun = compact(row.get("지번"))
     item_jibun = compact(item.get("jibun"))
     if row_jibun and item_jibun and row_jibun != item_jibun:
@@ -677,27 +1031,15 @@ def _matches_transaction(row, item, name):
     return True
 
 
-def transactions_for_apartment(name, region="", area_label="", lookback_months=RECENT_LOOKBACK_MONTHS):
-    rows = source_rows(name, region)
-    if not rows:
-        return []
-    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
-    month_values = _deal_months(lookback_months)
-    prefetch_months((lawd_cd, deal_ymd) for lawd_cd in lawd_cds for deal_ymd in month_values)
-    monthly = {}
-    for lawd_cd in lawd_cds:
-        for deal_ymd in month_values:
-            try:
-                monthly[(lawd_cd, deal_ymd)] = fetch_month(lawd_cd, deal_ymd)
-            except Exception:
-                continue
+def _matching_transactions(rows, name, area_label, lookback_months, monthly):
     matches = []
     seen = set()
+    unit_query = bool(_unit_number(name))
     for row in rows:
         lawd_cd = _row_lawd_cd(row)
         for deal_ymd in _deal_months(lookback_months):
             items = monthly.get((lawd_cd, deal_ymd), [])
-            for item in _items_for_source_row(lawd_cd, deal_ymd, items, row):
+            for item in _items_for_source_row(lawd_cd, deal_ymd, items, row, dong_only=unit_query):
                 if not _is_market_transaction(item):
                     continue
                 if not _matches_area(item, area_label):
@@ -719,6 +1061,132 @@ def transactions_for_apartment(name, region="", area_label="", lookback_months=R
     return matches
 
 
+def transactions_for_apartment(name, region="", area_label="", lookback_months=RECENT_LOOKBACK_MONTHS):
+    rows = source_rows(name, region)
+    if not rows:
+        return []
+    transaction_kind = transaction_kind_for_apartment(name, region)
+    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    month_values = _deal_months(lookback_months)
+    prefetch_months(
+        ((lawd_cd, deal_ymd) for lawd_cd in lawd_cds for deal_ymd in month_values),
+        transaction_kind=transaction_kind,
+    )
+    monthly = {}
+    for lawd_cd in lawd_cds:
+        for deal_ymd in month_values:
+            try:
+                monthly[(lawd_cd, deal_ymd)] = (
+                    fetch_month(
+                        lawd_cd,
+                        deal_ymd,
+                        transaction_kind=transaction_kind,
+                    )
+                    if transaction_kind == TRANSACTION_KIND_PRESALE
+                    else fetch_month(lawd_cd, deal_ymd)
+                )
+            except Exception:
+                continue
+    return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def transactions_for_apartment_cached(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    """Return matching transactions using only fresh local month caches.
+
+    Empty-state nearby suggestions must not fan out into additional public API
+    requests. This mirrors transactions_for_apartment's matching rules while
+    deliberately skipping both prefetch_months and fetch_month.
+    """
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
+    if not rows:
+        return []
+    transaction_kind = transaction_kind_for_apartment(name, region)
+    monthly = {}
+    month_values = _deal_months(lookback_months)
+    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    for lawd_cd in lawd_cds:
+        for deal_ymd in month_values:
+            items = _read_cached_month_memory(
+                lawd_cd,
+                deal_ymd,
+                transaction_kind=transaction_kind,
+            )
+            if items is not None:
+                monthly[(lawd_cd, deal_ymd)] = items
+    return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def area_options_for_apartment(name, region="", lookback_months=RECENT_LOOKBACK_MONTHS):
+    """Return recently traded exclusive-area types for a complex.
+
+    Public transaction records often express the same marketed unit type with
+    slightly different decimals (for example 59.82㎡ and 59.98㎡). Nearby
+    values are grouped so the UI presents useful choices instead of a long list
+    of nearly identical buttons.
+    """
+    transactions = transactions_for_apartment(
+        name,
+        region=region,
+        area_label="",
+        lookback_months=lookback_months,
+    )
+    clusters = []
+    for transaction in sorted(
+        transactions,
+        key=lambda item: float(item.get("exclusiveArea") or 0),
+    ):
+        area = float(transaction.get("exclusiveArea") or 0)
+        if area <= 0:
+            continue
+        cluster = next(
+            (
+                candidate
+                for candidate in clusters
+                if abs(area - candidate["representative"]) <= 1.25
+            ),
+            None,
+        )
+        if cluster is None:
+            cluster = {
+                "areas": [],
+                "transactions": [],
+                "representative": area,
+            }
+            clusters.append(cluster)
+        cluster["areas"].append(area)
+        cluster["transactions"].append(transaction)
+        ordered_areas = sorted(cluster["areas"])
+        cluster["representative"] = ordered_areas[len(ordered_areas) // 2]
+
+    options = []
+    for cluster in clusters:
+        areas = cluster["areas"]
+        representative = float(cluster["representative"])
+        low_label = int(min(areas))
+        high_label = int(max(areas))
+        label = (
+            f"전용 {low_label}㎡"
+            if low_label == high_label
+            else f"전용 {low_label}~{high_label}㎡"
+        )
+        options.append({
+            "value": f"{representative:.2f}".rstrip("0").rstrip("."),
+            "label": label,
+            "transactionCount": len(cluster["transactions"]),
+            "latestDealDate": max(
+                str(item.get("dealDate") or "")
+                for item in cluster["transactions"]
+            ),
+        })
+    return options
+
+
 def latest_transaction_for_apartment(
     name,
     region="",
@@ -731,6 +1199,7 @@ def latest_transaction_for_apartment(
     rows = source_rows(name, region)
     if not rows:
         return None
+    transaction_kind = transaction_kind_for_apartment(name, region)
     lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
     month_values = _deal_months(lookback_months)[skip_months:]
     batch_size = max(1, config.MOLIT_STALE_PREFETCH_BATCH_MONTHS)
@@ -738,8 +1207,18 @@ def latest_transaction_for_apartment(
         month_batch = month_values[batch_start:batch_start + batch_size]
         # 최신 월부터 순서대로 훑되, 배치 단위로 병렬 프리페치해서
         # 거래가 뜸한 단지의 한 달씩 순차 조회(최대 수십 회)를 제거한다.
-        prefetch_months((lawd_cd, deal_ymd) for lawd_cd in lawd_cds for deal_ymd in month_batch)
-        matched = _scan_months_for_latest(month_batch, lawd_cds, rows, name, area_label)
+        prefetch_months(
+            ((lawd_cd, deal_ymd) for lawd_cd in lawd_cds for deal_ymd in month_batch),
+            transaction_kind=transaction_kind,
+        )
+        matched = _scan_months_for_latest(
+            month_batch,
+            lawd_cds,
+            rows,
+            name,
+            area_label,
+            transaction_kind=transaction_kind,
+        )
         if matched:
             return {
                 "name": name,
@@ -754,18 +1233,33 @@ def latest_transaction_for_apartment(
     return None
 
 
-def _scan_months_for_latest(month_values, lawd_cds, rows, name, area_label):
+def _scan_months_for_latest(
+    month_values,
+    lawd_cds,
+    rows,
+    name,
+    area_label,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
     for deal_ymd in month_values:
         month_matches = []
         for lawd_cd in lawd_cds:
             try:
-                items = fetch_month(lawd_cd, deal_ymd)
+                items = (
+                    fetch_month(
+                        lawd_cd,
+                        deal_ymd,
+                        transaction_kind=transaction_kind,
+                    )
+                    if transaction_kind == TRANSACTION_KIND_PRESALE
+                    else fetch_month(lawd_cd, deal_ymd)
+                )
             except Exception:
                 continue
             for source_row in rows:
                 if _row_lawd_cd(source_row) != lawd_cd:
                     continue
-                for item in _items_for_source_row(lawd_cd, deal_ymd, items, source_row):
+                for item in _items_for_source_row(lawd_cd, deal_ymd, items, source_row, dong_only=bool(_unit_number(name))):
                     if not _is_market_transaction(item):
                         continue
                     if not _matches_area(item, area_label):
@@ -779,32 +1273,27 @@ def _scan_months_for_latest(month_values, lawd_cds, rows, name, area_label):
     return None
 
 
-def price_band_for_apartment(name, region="", area_label="", lookback_months=RECENT_LOOKBACK_MONTHS):
-    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
-    with _PRICE_BAND_CACHE_LOCK:
-        cache_hit, cached_band = _read_cached_price_band(cache_key)
-    if cache_hit:
-        return cached_band
-
-    transactions = transactions_for_apartment(name, region=region, area_label=area_label, lookback_months=lookback_months)
+def _price_band_payload(name, region, area_label, lookback_months, transactions):
     prices = sorted(float(row.get("dealAmountEok") or 0) for row in transactions if row.get("dealAmountEok"))
     if not prices:
-        with _PRICE_BAND_CACHE_LOCK:
-            _write_cached_price_band(cache_key, None)
         return None
     latest = next((row for row in transactions if row.get("dealAmountEok")), {})
+    previous = next((row for row in transactions[1:] if row.get("dealAmountEok")), {})
     estimate = _current_price_estimate(transactions)
-    band = {
+    return {
         "name": name,
         "region": region,
         "areaLabel": area_label,
+        "lookbackMonths": lookback_months,
         "minPriceEok": round(min(prices), 2),
         "midPriceEok": round(statistics.median(prices), 2),
+        "averagePriceEok": round(statistics.mean(prices), 2),
         "maxPriceEok": round(max(prices), 2),
         "latestDealPriceEok": round(float(latest.get("dealAmountEok") or 0), 2),
         "latestDealExclusiveArea": latest.get("exclusiveArea"),
         "latestDealFloor": latest.get("floor", ""),
+        "previousDealPriceEok": round(float(previous.get("dealAmountEok") or 0), 2),
+        "previousDealDate": previous.get("dealDate", ""),
         "transactionCount": len(prices),
         "latestDealDate": latest.get("dealDate", ""),
         "sourceNote": f"국토부 실거래가 최근 {lookback_months}개월",
@@ -814,10 +1303,104 @@ def price_band_for_apartment(name, region="", area_label="", lookback_months=REC
         "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
         "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
         "currentEstimateMethod": (estimate or {}).get("method", ""),
+        **_quarter_trade_stats(transactions),
+        **_half_year_trade_stats(transactions),
     }
+
+
+def price_band_for_apartment(name, region="", area_label="", lookback_months=RECENT_LOOKBACK_MONTHS):
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
+    with _PRICE_BAND_CACHE_LOCK:
+        cache_hit, cached_band = _read_cached_price_band(cache_key)
+    if cache_hit:
+        return cached_band
+
+    band = _price_band_payload(
+        name,
+        region,
+        area_label,
+        lookback_months,
+        transactions_for_apartment(
+            name,
+            region=region,
+            area_label=area_label,
+            lookback_months=lookback_months,
+        ),
+    )
     with _PRICE_BAND_CACHE_LOCK:
         _write_cached_price_band(cache_key, band)
     return band
+
+
+def cached_price_band_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    """Return a price band without making any network request."""
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
+    with _PRICE_BAND_CACHE_LOCK:
+        cache_hit, cached_band = _read_cached_price_band(cache_key)
+    if cache_hit:
+        return cached_band
+    return _price_band_payload(
+        name,
+        region,
+        area_label,
+        lookback_months,
+        transactions_for_apartment_cached(
+            name,
+            region=region,
+            area_label=area_label,
+            lookback_months=lookback_months,
+            entity=entity,
+        ),
+    )
+
+
+def _minimum_area_price_band_payload(name, region, minimum, lookback_months, transactions):
+    minimum = float(minimum or 0)
+    transactions = _minimum_area_transactions(
+        transactions,
+        minimum,
+    )
+    prices = sorted(float(row.get("dealAmountEok") or 0) for row in transactions if row.get("dealAmountEok"))
+    if not prices:
+        return None
+    latest = transactions[0]
+    previous = next((row for row in transactions[1:] if row.get("dealAmountEok")), {})
+    estimate = _current_price_estimate(transactions)
+    display_area = max(int(minimum), int(float(latest.get("exclusiveArea") or 0)))
+    return {
+        "name": name,
+        "region": region,
+        "areaLabel": f"전용 {display_area}㎡",
+        "lookbackMonths": lookback_months,
+        "minPriceEok": round(min(prices), 2),
+        "midPriceEok": round(statistics.median(prices), 2),
+        "averagePriceEok": round(statistics.mean(prices), 2),
+        "maxPriceEok": round(max(prices), 2),
+        "latestDealPriceEok": round(float(latest.get("dealAmountEok") or 0), 2),
+        "latestDealExclusiveArea": latest.get("exclusiveArea"),
+        "latestDealFloor": latest.get("floor", ""),
+        "previousDealPriceEok": round(float(previous.get("dealAmountEok") or 0), 2),
+        "previousDealDate": previous.get("dealDate", ""),
+        "transactionCount": len(prices),
+        "latestDealDate": latest.get("dealDate", ""),
+        "sourceNote": f"국토부 실거래가 최근 {lookback_months}개월 · 최소 {minimum:g}㎡ 이상 중 확인된 최소 평형",
+        "currentEstimateMinPriceEok": (estimate or {}).get("minPriceEok"),
+        "currentEstimateMidPriceEok": (estimate or {}).get("midPriceEok"),
+        "currentEstimateMaxPriceEok": (estimate or {}).get("maxPriceEok"),
+        "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
+        "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
+        "currentEstimateMethod": (estimate or {}).get("method", ""),
+        **_quarter_trade_stats(transactions),
+        **_half_year_trade_stats(transactions),
+    }
 
 
 def price_band_for_apartment_min_area(name, region="", min_area=0, lookback_months=RECENT_LOOKBACK_MONTHS):
@@ -831,38 +1414,49 @@ def price_band_for_apartment_min_area(name, region="", min_area=0, lookback_mont
     if cache_hit:
         return cached_band
 
-    transactions = _minimum_area_transactions(
-        transactions_for_apartment(name, region=region, area_label="", lookback_months=lookback_months),
+    band = _minimum_area_price_band_payload(
+        name,
+        region,
         minimum,
+        lookback_months,
+        transactions_for_apartment(
+            name,
+            region=region,
+            area_label="",
+            lookback_months=lookback_months,
+        ),
     )
-    prices = sorted(float(row.get("dealAmountEok") or 0) for row in transactions if row.get("dealAmountEok"))
-    if not prices:
-        with _PRICE_BAND_CACHE_LOCK:
-            _write_cached_price_band(cache_key, None)
-        return None
-    latest = transactions[0]
-    estimate = _current_price_estimate(transactions)
-    display_area = max(int(minimum), int(float(latest.get("exclusiveArea") or 0)))
-    band = {
-        "name": name,
-        "region": region,
-        "areaLabel": f"전용 {display_area}㎡",
-        "minPriceEok": round(min(prices), 2),
-        "midPriceEok": round(statistics.median(prices), 2),
-        "maxPriceEok": round(max(prices), 2),
-        "latestDealPriceEok": round(float(latest.get("dealAmountEok") or 0), 2),
-        "latestDealExclusiveArea": latest.get("exclusiveArea"),
-        "latestDealFloor": latest.get("floor", ""),
-        "transactionCount": len(prices),
-        "latestDealDate": latest.get("dealDate", ""),
-        "sourceNote": f"국토부 실거래가 최근 {lookback_months}개월 · 최소 {minimum:g}㎡ 이상 중 확인된 최소 평형",
-        "currentEstimateMinPriceEok": (estimate or {}).get("minPriceEok"),
-        "currentEstimateMidPriceEok": (estimate or {}).get("midPriceEok"),
-        "currentEstimateMaxPriceEok": (estimate or {}).get("maxPriceEok"),
-        "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
-        "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
-        "currentEstimateMethod": (estimate or {}).get("method", ""),
-    }
     with _PRICE_BAND_CACHE_LOCK:
         _write_cached_price_band(cache_key, band)
     return band
+
+
+def cached_price_band_for_apartment_min_area(
+    name,
+    region="",
+    min_area=0,
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    """Return a minimum-area price band using only local caches."""
+    minimum = float(min_area or 0)
+    cache_label = f"최소 전용 {minimum:g}㎡"
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    cache_key = _price_band_cache_key(name, region, cache_label, lookback_months)
+    with _PRICE_BAND_CACHE_LOCK:
+        cache_hit, cached_band = _read_cached_price_band(cache_key)
+    if cache_hit:
+        return cached_band
+    return _minimum_area_price_band_payload(
+        name,
+        region,
+        minimum,
+        lookback_months,
+        transactions_for_apartment_cached(
+            name,
+            region=region,
+            area_label="",
+            lookback_months=lookback_months,
+            entity=entity,
+        ),
+    )

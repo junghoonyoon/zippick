@@ -10,11 +10,13 @@ import naver_complex
 import verdicts
 import policy_evaluator
 import real_estate_search
+import region_adjacency
 
 PRICE_BANDS_CSV = config.ROOT / "data" / "apartment_price_bands.csv"
 MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_bands.csv"
 PRICE_BAND_CSV_PATHS = [PRICE_BANDS_CSV, MOLIT_PRICE_BANDS_CSV]
 VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
+MAX_PURCHASE_POWER_RATIO = 1.05
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -40,6 +42,10 @@ GYEONGGI_REGIONS = {
     "이천시", "파주시", "평택시", "포천시", "하남시", "화성시",
 }
 GYEONGGI_REGION_KEYS = {real_estate_search.compact(item) for item in GYEONGGI_REGIONS}
+BROAD_REGION_KEYS = {
+    real_estate_search.compact(item)
+    for item in ("서울", "서울시", "서울특별시", "경기", "경기도")
+}
 
 PURPOSE_LABELS = {
     "live": "실거주",
@@ -274,6 +280,28 @@ def _display_region(row, entity=None):
     return region or legal_dong
 
 
+def _map_address(row, entity=None):
+    """Return the most precise public address available for map geocoding."""
+    entity = entity or {}
+    address = str(entity.get("address") or row.get("address") or "").strip()
+    if address:
+        return address
+    parts = []
+    for value in (
+        entity.get("province"),
+        entity.get("city"),
+        entity.get("district") or row.get("region"),
+        row.get("legalDong") or entity.get("legalDong"),
+        row.get("jibun") or _entity_jibun(entity),
+    ):
+        text = str(value or "").strip()
+        if text and real_estate_search.compact(text) not in {
+            real_estate_search.compact(part) for part in parts
+        }:
+            parts.append(text)
+    return " ".join(parts)
+
+
 def _apartment_name_base(name):
     return re.sub(r"(?:아파트|apt)$", "", real_estate_search.compact(name), flags=re.IGNORECASE)
 
@@ -440,6 +468,11 @@ def _load_price_bands():
                 name = str(row.get("name") or "").strip()
                 if not name:
                     continue
+                price_source = str(row.get("price_source") or "manual").strip()
+                # 예전 국토부 집계 CSV는 직거래 제외 여부를 확인할 수 없다.
+                # 새 importer가 검증 표식을 기록한 데이터만 가격 계산에 사용한다.
+                if price_source == "molit_csv" and str(row.get("market_transaction_only") or "").strip().lower() not in {"1", "true", "yes"}:
+                    continue
                 rows.append({
                     "name": name,
                     "region": str(row.get("region") or "").strip(),
@@ -447,11 +480,14 @@ def _load_price_bands():
                     "jibun": str(row.get("jibun") or "").strip(),
                     "minPriceEok": _float_value(row.get("min_price_억")),
                     "midPriceEok": _float_value(row.get("mid_price_억")),
+                    # 이전에 만든 CSV에는 평균 컬럼이 없어서, 다음 데이터 갱신 전까지는
+                    # 중앙값을 호환값으로 사용한다.
+                    "averagePriceEok": _float_value(row.get("average_price_억")) or _float_value(row.get("mid_price_억")),
                     "maxPriceEok": _float_value(row.get("max_price_억")),
                     "areaLabel": str(row.get("area_label") or "").strip(),
                     "updatedAt": str(row.get("updated_at") or "").strip(),
                     "sourceNote": str(row.get("source_note") or "").strip(),
-                    "priceSource": str(row.get("price_source") or "manual").strip(),
+                    "priceSource": price_source,
                     "transactionCount": int(_float_value(row.get("transaction_count"))),
                     "latestDealDate": str(row.get("latest_deal_date") or "").strip(),
                     "latestDealPriceEok": _float_value(row.get("latest_deal_price_억") or row.get("latest_deal_price_eok")),
@@ -478,10 +514,17 @@ def _apply_fit(row, budget_eok):
     if not mid_price:
         has_last_deal = bool(row.get("lastObservedDealDate"))
         last_price = _float_value(row.get("lastObservedDealPriceEok"))
+        budget_gap = round(budget_eok - last_price, 2) if last_price else 0
+        budget_over_percent = (
+            round(max(0, last_price / budget_eok - 1) * 100, 1)
+            if last_price and budget_eok
+            else 0
+        )
         row.update({
             "midPriceEok": 0,
             "priceRangeText": f"마지막 실거래 {_deal_price_text(last_price)}" if last_price else ("6개월 내 거래 없음" if has_last_deal else "최근 거래 없음"),
-            "budgetGapEok": 0,
+            "budgetGapEok": budget_gap,
+            "budgetOverPercent": budget_over_percent,
             "fitStatus": "가격 확인 필요",
             "fitClass": "wait",
             "action": "마지막 실거래와 현재 매물가 차이를 확인해 주세요." if has_last_deal else "최근 실거래 또는 현재 매물가를 확인해 주세요.",
@@ -507,6 +550,7 @@ def _apply_fit(row, budget_eok):
             else f"{_price_text(row.get('minPriceEok'))}~{_price_text(row.get('maxPriceEok'))}"
         ),
         "budgetGapEok": round(budget_eok - mid_price, 2),
+        "budgetOverPercent": round(max(0, mid_price / budget_eok - 1) * 100, 1) if budget_eok else 0,
         "fitStatus": status,
         "fitClass": status_class,
         "action": _action(status),
@@ -529,47 +573,85 @@ def _preferred_area_label(min_area):
 
 def _apply_live_price(row, preferred_min_area=0):
     minimum = _float_value(preferred_min_area)
-    if minimum:
-        live = molit_transactions.price_band_for_apartment(
-            row["name"],
-            region=row.get("region", ""),
-            area_label=_preferred_area_label(minimum),
-        )
-        if not live:
-            live = molit_transactions.price_band_for_apartment_min_area(
+    def price_band(lookback_months=None):
+        options = {"region": row.get("region", "")}
+        if lookback_months:
+            options["lookback_months"] = lookback_months
+        if minimum:
+            live_row = molit_transactions.price_band_for_apartment(
                 row["name"],
-                region=row.get("region", ""),
-                min_area=minimum,
+                area_label=_preferred_area_label(minimum),
+                **options,
             )
-    else:
-        live = molit_transactions.price_band_for_apartment(
-            row["name"],
-            region=row.get("region", ""),
-            area_label=row.get("areaLabel", ""),
+            if live_row:
+                return live_row
+            return molit_transactions.price_band_for_apartment_min_area(
+                row["name"], min_area=minimum, **options
+            )
+        return molit_transactions.price_band_for_apartment(
+            row["name"], area_label=row.get("areaLabel", ""), **options
         )
+
+    live = price_band()
+    if live and _int_value(live.get("transactionCount")) < 3:
+        extended = price_band(12)
+        if extended and _int_value(extended.get("transactionCount")) >= _int_value(live.get("transactionCount")):
+            live = extended
     if not live:
         return row
+    comparison = live
+    if (
+        _int_value(live.get("recent3TradeCount")) < 5
+        and _int_value(live.get("lookbackMonths") or molit_transactions.RECENT_LOOKBACK_MONTHS) < 12
+    ):
+        extended = price_band(12)
+        if extended:
+            comparison = extended
+    return _apply_live_band(row, live, comparison)
+
+
+def _apply_live_band(row, live, comparison=None):
+    """Apply an already-fetched or cached MOLIT price-band payload."""
+    if not live:
+        return row
+    comparison = comparison or live
     latest_price = _float_value(live.get("latestDealPriceEok")) or _float_value(live.get("midPriceEok"))
     row.update({
         "areaLabel": live.get("areaLabel") or row.get("areaLabel", ""),
-        "recentMinPriceEok": live["minPriceEok"],
-        "recentMedianPriceEok": live["midPriceEok"],
-        "recentMaxPriceEok": live["maxPriceEok"],
+        "recentMinPriceEok": live.get("minPriceEok"),
+        "recentMedianPriceEok": live.get("midPriceEok"),
+        "recentAveragePriceEok": live.get("averagePriceEok"),
+        "recentMaxPriceEok": live.get("maxPriceEok"),
         "currentEstimateMinPriceEok": live.get("currentEstimateMinPriceEok"),
         "currentEstimateMidPriceEok": live.get("currentEstimateMidPriceEok"),
         "currentEstimateMaxPriceEok": live.get("currentEstimateMaxPriceEok"),
         "currentEstimateSampleCount": live.get("currentEstimateSampleCount", 0),
         "currentEstimateTrimmedCount": live.get("currentEstimateTrimmedCount", 0),
         "currentEstimateMethod": live.get("currentEstimateMethod", ""),
-        "minPriceEok": live["minPriceEok"],
-        "midPriceEok": live["midPriceEok"],
-        "maxPriceEok": live["maxPriceEok"],
+        "minPriceEok": live.get("minPriceEok"),
+        "midPriceEok": live.get("midPriceEok"),
+        "maxPriceEok": live.get("maxPriceEok"),
         "latestDealPriceEok": latest_price,
         "latestDealExclusiveArea": live.get("latestDealExclusiveArea"),
         "latestDealFloor": live.get("latestDealFloor", ""),
-        "transactionCount": live["transactionCount"],
-        "latestDealDate": live["latestDealDate"],
-        "sourceNote": live["sourceNote"],
+        "previousDealPriceEok": live.get("previousDealPriceEok"),
+        "previousDealDate": live.get("previousDealDate", ""),
+        "transactionCount": live.get("transactionCount", 0),
+        "tradeLookbackMonths": live.get("lookbackMonths", molit_transactions.RECENT_LOOKBACK_MONTHS),
+        "latestDealDate": live.get("latestDealDate", ""),
+        "statsThrough": live.get("statsThrough", ""),
+        "recent3AveragePriceEok": live.get("recent3AveragePriceEok"),
+        "recent3TradeCount": live.get("recent3TradeCount", 0),
+        "recent3AdjustedAveragePriceEok": live.get("recent3AdjustedAveragePriceEok"),
+        "recent3AdjustedTradeCount": live.get("recent3AdjustedTradeCount", 0),
+        "recent3ExcludedTradeCount": live.get("recent3ExcludedTradeCount", 0),
+        "previous3AveragePriceEok": live.get("previous3AveragePriceEok"),
+        "previous3TradeCount": live.get("previous3TradeCount", 0),
+        "recent6AveragePriceEok": comparison.get("recent6AveragePriceEok"),
+        "recent6TradeCount": comparison.get("recent6TradeCount", 0),
+        "previous6AveragePriceEok": comparison.get("previous6AveragePriceEok"),
+        "previous6TradeCount": comparison.get("previous6TradeCount", 0),
+        "sourceNote": live.get("sourceNote", ""),
         "priceSource": "molit",
     })
     return _apply_recent_trade_estimate(row)
@@ -623,6 +705,7 @@ def _candidate_from_entity(entity, region, min_area, budget_eok, purpose, priori
         "region": seed_region,
         "legalDong": entity.get("legalDong", ""),
         "jibun": _entity_jibun(entity),
+        "cortarNo": entity.get("cortarNo", ""),
         "areaLabel": area_label,
         "minPriceEok": 0,
         "midPriceEok": 0,
@@ -648,6 +731,163 @@ def _candidate_from_entity(entity, region, min_area, budget_eok, purpose, priori
     candidate["_fitRank"] = 2
     candidate["_score"] = _candidate_score(candidate, entity, purpose, priority, commute, price_strategy)
     return candidate
+
+
+def _cached_live_band_for_seed(row, entity, min_area):
+    """Return a locally cached price band without triggering an API request."""
+    try:
+        live = molit_transactions.cached_price_band_for_apartment(
+            row["name"],
+            region=row.get("region", ""),
+            area_label=row.get("areaLabel", ""),
+            entity=entity,
+        )
+        if not live and min_area:
+            live = molit_transactions.cached_price_band_for_apartment_min_area(
+                row["name"],
+                region=row.get("region", ""),
+                min_area=min_area,
+                entity=entity,
+            )
+        return live
+    except Exception:
+        return None
+
+
+def _seed_region_key(row):
+    raw_region = row.get("region", "")
+    return region_adjacency.normalize_region(raw_region) or str(raw_region or "").strip()
+
+
+def _balanced_live_seed_entities(entities, limit):
+    """Cheaply shortlist master entities before building full candidate rows."""
+    limit = max(1, int(limit or 1))
+    buckets = {}
+    for entity in entities:
+        raw_region = entity.get("district") or entity.get("city") or ""
+        region = region_adjacency.normalize_region(raw_region) or str(raw_region or "").strip()
+        buckets.setdefault(region, []).append(entity)
+    for bucket in buckets.values():
+        bucket.sort(key=lambda entity: (
+            -real_estate_search._int_value(entity.get("households")),
+            _building_profile(entity)["buildingAge"] or 999,
+            str(entity.get("name") or ""),
+        ))
+
+    ordered_regions = sorted(buckets, key=lambda region: (-len(buckets[region]), region))
+    selected = []
+    offset = 0
+    while len(selected) < limit:
+        added = False
+        for region in ordered_regions:
+            bucket = buckets[region]
+            if offset >= len(bucket):
+                continue
+            selected.append(bucket[offset])
+            added = True
+            if len(selected) >= limit:
+                break
+        if not added:
+            break
+        offset += 1
+    return selected
+
+
+def _balanced_live_seed_rows(entries, limit):
+    """Select broad-region lookup seeds without letting one city dominate."""
+    limit = max(1, int(limit or 1))
+    buckets = {}
+    for row, entity in entries:
+        buckets.setdefault(_seed_region_key(row), []).append((row, entity))
+    for bucket in buckets.values():
+        bucket.sort(key=lambda item: (
+            -item[0]["_score"],
+            -(item[0].get("households") or 0),
+            item[0].get("buildingAge") or 999,
+            item[0]["name"],
+        ))
+
+    ordered_regions = sorted(buckets, key=lambda region: (-len(buckets[region]), region))
+    selected = []
+    offset = 0
+    while len(selected) < limit:
+        added = False
+        for region in ordered_regions:
+            bucket = buckets[region]
+            if offset >= len(bucket):
+                continue
+            selected.append(bucket[offset])
+            added = True
+            if len(selected) >= limit:
+                break
+        if not added:
+            break
+        offset += 1
+    return selected
+
+
+def _broad_region_live_seed_rows(
+    entries,
+    min_area,
+    budget_eok,
+    purpose,
+    priority,
+    commute,
+    price_strategy,
+    fast_mode=False,
+):
+    """Use cached prices first, then keep a bounded, region-balanced lookup set."""
+    seed_limit = max(1, config.BUDGET_BROAD_REGION_LIVE_SEED_LIMIT)
+    if fast_mode:
+        return [
+            row for row, _entity in _balanced_live_seed_rows(entries, seed_limit)
+        ]
+
+    # 광역 마스터 전체(경기도 약 7천 단지)의 파일 캐시를 모두 열면 1차
+    # 응답도 수십 초가 걸린다. 실제 보강 상한만큼 지역별 후보를 선별해
+    # 캐시를 확인하고, 미확인 조회 후보는 남은 마스터에서 다시 보충한다.
+    cache_scan_limit = seed_limit
+    cache_scan_entries = _balanced_live_seed_rows(entries, cache_scan_limit)
+    scanned_ids = {id(row) for row, _entity in cache_scan_entries}
+    cached_rows = []
+    lookup_entries = []
+    for row, entity in cache_scan_entries:
+        live = _cached_live_band_for_seed(row, entity, min_area)
+        if not live:
+            lookup_entries.append((row, entity))
+            continue
+        _apply_live_band(row, live)
+        _apply_fit(row, budget_eok)
+        if row["fitStatus"] == "제외":
+            continue
+        row["_score"] = _candidate_score(row, entity, purpose, priority, commute, price_strategy)
+        row.pop("_liveLookup", None)
+        cached_rows.append(row)
+
+    if len(lookup_entries) < seed_limit:
+        unscanned_entries = [
+            (row, entity) for row, entity in entries
+            if id(row) not in scanned_ids
+        ]
+        lookup_entries.extend(_balanced_live_seed_rows(
+            unscanned_entries,
+            seed_limit - len(lookup_entries),
+        ))
+
+    cached_rows.sort(key=lambda row: (
+        row["_fitRank"],
+        -row["_score"],
+        abs(row["budgetGapEok"]),
+        row["name"],
+    ))
+    balanced_lookup = _balanced_live_seed_rows(lookup_entries, seed_limit)
+    # 캐시 후보는 이미 가격 검증이 끝났으므로 결과 상한만큼 유지한다.
+    # 미확인 후보만 별도 상한으로 제한해 실제 국토부 조회량을 통제한다.
+    cached_limit = max(1, config.BUDGET_ALL_MATCHES_RESULT_LIMIT)
+    return [
+        *cached_rows[:cached_limit],
+        *(row for row, _entity in balanced_lookup),
+    ]
 
 
 def _entity_alias_keys(entity):
@@ -718,6 +958,10 @@ def _matches_region(row, entity, region):
     return any(_matches_one_region(row, entity, term) for term in terms)
 
 
+def _contains_broad_region(region):
+    return any(real_estate_search.compact(term) in BROAD_REGION_KEYS for term in _region_terms(region))
+
+
 def _matches_one_region(row, entity, region):
     region_key = real_estate_search.compact(region)
     if region_key in {"서울", "서울시", "서울특별시"}:
@@ -778,7 +1022,7 @@ def _fit_status(mid_price, budget):
         return ("예산 여유", "up", 1)
     if ratio <= 1.0:
         return ("예산 안", "up", 0)
-    if ratio <= 1.05:
+    if ratio <= MAX_PURCHASE_POWER_RATIO:
         return ("상한 근접", "wait", 2)
     return ("제외", "mention", 3)
 
@@ -904,7 +1148,9 @@ def _decision_support(row, entity, purpose, priority, commute, move_timing, pric
         risks.append(f"{'·'.join(commutes)}까지 실제 출근 시간은 지도 경로로 재확인 필요")
     elif commutes:
         risks.append(f"{'·'.join(commutes)}까지 실제 이동시간 데이터는 아직 연결되지 않았어요.")
-        breakdown.append({"label": "생활권", "score": 0, "outOf": 12, "detail": "실제 경로 확인 필요", "kind": "fit"})
+        # 경로 데이터가 없어 판단하지 못한 것이므로 적합도(fit) 분모에 넣지 않는다.
+        # kind="fit"으로 0점을 주면 결측이 곧 감점이 되어 적합도 라벨이 왜곡된다.
+        breakdown.append({"label": "생활권", "score": 0, "outOf": 12, "detail": "실제 경로 확인 필요", "kind": "confidence"})
     elif region:
         reasons.append(f"선호 지역({', '.join(_region_terms(region))}) 안에서만 비교")
     priority_reason = _priority_reason(row, priority)
@@ -1053,6 +1299,222 @@ def _action(status):
     }.get(status, "가격 데이터를 더 보강해야 해요.")
 
 
+NEARBY_REGION_SUGGESTION_LIMIT = 3
+NEARBY_REGION_SAMPLE_LIMIT = 3
+NEARBY_REGIONS_SCHEMA_VERSION = 3
+
+
+def _nearby_row_price(row):
+    return (
+        _float_value(row.get("midPriceEok"))
+        or _float_value(row.get("averagePriceEok"))
+        or _float_value(row.get("minPriceEok"))
+    )
+
+
+def _collect_nearby_candidate(bucket, nearby_keys, row, entity, min_area, min_households, max_building_age):
+    """지역 조건 탈락 행이 인접 지역 소속이면 추천용 버킷에 담는다.
+
+    메인 필터 루프에서 어차피 버려지는 행을 재활용하므로 추가 순회 비용이 없다.
+    지역 외 조건(면적·세대수·연식)은 동일하게 적용해 추천 숫자의 신뢰를 지킨다.
+    """
+    entity = entity or {}
+    raw_region = entity.get("district") or row.get("region") or entity.get("city") or ""
+    region = region_adjacency.normalize_region(raw_region)
+    if not region or real_estate_search.compact(region) not in nearby_keys:
+        return
+    price = _nearby_row_price(row)
+    if not price:
+        return
+    if min_area:
+        _, area_max = _area_range(row.get("areaLabel"))
+        if area_max and area_max < min_area:
+            return
+    if min_households:
+        households = real_estate_search._int_value(entity.get("households")) if entity else 0
+        if households < min_households:
+            return
+    if max_building_age:
+        building_age = _building_profile(entity)["buildingAge"]
+        if not building_age or building_age > max_building_age:
+            return
+    entity_key = str(entity.get("dedupeKey") or "").strip()
+    legal_dong = str(row.get("legalDong") or entity.get("legalDong") or "").strip()
+    jibun = str(row.get("jibun") or _entity_jibun(entity) or "").strip()
+    if entity_key:
+        key = ("entity", entity_key)
+    elif legal_dong or jibun:
+        key = (
+            "address",
+            real_estate_search.compact(raw_region),
+            real_estate_search.compact(legal_dong),
+            real_estate_search.compact(jibun),
+        )
+    else:
+        key = ("name", _apartment_name_base(row.get("name", "")), real_estate_search.compact(raw_region))
+    entries = bucket.setdefault(region, {})
+    # 같은 단지의 여러 면적 밴드 중 가장 낮은 가격을 기준으로 적합 여부를 본다.
+    if key not in entries or price < entries[key]["price"]:
+        entries[key] = {
+            "name": str(row.get("name") or "").strip(),
+            "price": price,
+            "verifiedPrice": row.get("priceSource") in VERIFIED_PRICE_SOURCES,
+        }
+
+
+def _nearby_region_suggestions(bucket, nearby_scope, policy_profile, can_estimate_budget, fallback_budget_eok):
+    """인접 지역별 '예산 안 후보' 수를 계산해 추천 목록으로 정리한다.
+
+    지역별 대출 규제(LTV 등)가 달라 매수 상한이 지역마다 다르므로,
+    프로필 계산이 가능하면 지역별 상한을 다시 계산해 적합 여부를 판정한다.
+    """
+    suggestions = []
+    ceiling_cache = {}
+    for order, region in enumerate(nearby_scope):
+        entries = bucket.get(region)
+        if not entries:
+            continue
+        if can_estimate_budget:
+            if region not in ceiling_cache:
+                try:
+                    ceiling_cache[region] = policy_evaluator.estimated_purchase_ceiling(
+                        policy_profile, [region],
+                    )
+                except Exception:
+                    ceiling_cache[region] = fallback_budget_eok
+            region_budget = ceiling_cache[region]
+        else:
+            region_budget = fallback_budget_eok
+        if not region_budget or region_budget <= 0:
+            continue
+        fits = [
+            item for item in entries.values()
+            if _fit_status(item["price"], region_budget)[0] != "제외"
+        ]
+        if not fits:
+            continue
+        fits.sort(key=lambda item: (item["price"], item["name"]))
+        suggestions.append({
+            "region": region,
+            "hop": 1,
+            "count": len(fits),
+            "verifiedPriceCount": sum(1 for item in fits if item.get("verifiedPrice")),
+            "referencePriceCount": sum(1 for item in fits if not item.get("verifiedPrice")),
+            "budgetEok": region_budget,
+            "budgetText": _price_text(region_budget),
+            "minPriceEok": fits[0]["price"],
+            "maxFitPriceEok": fits[-1]["price"],
+            "samples": [item["name"] for item in fits[:NEARBY_REGION_SAMPLE_LIMIT]],
+            "_order": order,
+        })
+    suggestions.sort(key=lambda item: (item["hop"], -item["count"], item["_order"]))
+    result = suggestions[:NEARBY_REGION_SUGGESTION_LIMIT]
+    for item in result:
+        item.pop("_order", None)
+    return result
+
+
+def _collect_cached_nearby_candidates(
+    bucket,
+    nearby_keys,
+    min_area,
+    min_households,
+    max_building_age,
+):
+    """Enrich nearby buckets from local transaction caches only."""
+    preferred_area = _preferred_area_label(min_area)
+    for entity in real_estate_search.APARTMENT_MASTER:
+        if entity.get("aggregate"):
+            continue
+        raw_region = entity.get("district") or entity.get("city") or ""
+        normalized_region = region_adjacency.normalize_region(raw_region)
+        if real_estate_search.compact(normalized_region) not in nearby_keys:
+            continue
+        seed_row = {
+            "name": str(entity.get("name") or "").strip(),
+            "region": raw_region,
+            "areaLabel": preferred_area,
+        }
+        if not seed_row["name"] or _is_rental_apartment(seed_row, entity):
+            continue
+        households = real_estate_search._int_value(entity.get("households"))
+        if min_households and households < min_households:
+            continue
+        if max_building_age:
+            building_age = _building_profile(entity)["buildingAge"]
+            if not building_age or building_age > max_building_age:
+                continue
+        try:
+            live = molit_transactions.cached_price_band_for_apartment(
+                seed_row["name"],
+                region=raw_region,
+                area_label=preferred_area,
+                entity=entity,
+            )
+            if not live and min_area:
+                live = molit_transactions.cached_price_band_for_apartment_min_area(
+                    seed_row["name"],
+                    region=raw_region,
+                    min_area=min_area,
+                    entity=entity,
+                )
+        except Exception:
+            continue
+        if not live:
+            continue
+        live_price = (
+            _float_value(live.get("currentEstimateMidPriceEok"))
+            or _float_value(live.get("midPriceEok"))
+            or _float_value(live.get("averagePriceEok"))
+            or _float_value(live.get("minPriceEok"))
+        )
+        if not live_price:
+            continue
+        _collect_nearby_candidate(
+            bucket,
+            nearby_keys,
+            {
+                **seed_row,
+                **live,
+                "midPriceEok": live_price,
+                "priceSource": "molit",
+            },
+            entity,
+            min_area,
+            min_households,
+            max_building_age,
+        )
+
+
+def _nearby_suggestions_with_cached_fallback(
+    bucket,
+    nearby_scope,
+    nearby_keys,
+    policy_profile,
+    can_estimate_budget,
+    fallback_budget_eok,
+    min_area,
+    min_households,
+    max_building_age,
+    use_cached_live,
+):
+    if use_cached_live and nearby_keys:
+        _collect_cached_nearby_candidates(
+            bucket,
+            nearby_keys,
+            min_area,
+            min_households,
+            max_building_age,
+        )
+    return _nearby_region_suggestions(
+        bucket,
+        nearby_scope,
+        policy_profile,
+        can_estimate_budget,
+        fallback_budget_eok,
+    )
+
+
 def budget_candidates(
     budget,
     region="",
@@ -1128,6 +1590,10 @@ def budget_candidates(
         "rental": 0,
         "noLastDeal": 0,
     }
+    # 결과 0건일 때 추천할 인접 지역 후보를 메인 루프에서 함께 수집한다.
+    nearby_scope = region_adjacency.adjacent_to(_region_terms(region)) if region else []
+    nearby_keys = {real_estate_search.compact(item) for item in nearby_scope}
+    nearby_bucket = {}
     for row in _load_price_bands():
         entity_matches = _find_entities(
             row["name"],
@@ -1140,6 +1606,17 @@ def budget_candidates(
             continue
         entity = entity_matches[0] if entity_matches else None
         if entity and entity.get("aggregate"):
+            if (
+                nearby_keys
+                and not _is_rental_apartment(row, entity)
+                and not _matches_region(row, entity, region)
+            ):
+                # 집계형 마스터 행은 메인 후보에서는 제외하되, 인접 지역에
+                # 조건대가 존재한다는 참고 신호로는 재사용한다.
+                _collect_nearby_candidate(
+                    nearby_bucket, nearby_keys, row, entity,
+                    min_area, min_households, max_building_age,
+                )
             filtered["identity"] += 1
             continue
         if _is_rental_apartment(row, entity):
@@ -1147,6 +1624,11 @@ def budget_candidates(
             continue
         if not _matches_region(row, entity, region):
             filtered["region"] += 1
+            if nearby_keys:
+                _collect_nearby_candidate(
+                    nearby_bucket, nearby_keys, row, entity,
+                    min_area, min_households, max_building_age,
+                )
             continue
         households = real_estate_search._int_value(entity.get("households")) if entity else 0
         building = _building_profile(entity)
@@ -1169,9 +1651,11 @@ def budget_candidates(
             "region": row.get("region", ""),
             "legalDong": row.get("legalDong") or (entity or {}).get("legalDong", ""),
             "jibun": row.get("jibun") or _entity_jibun(entity),
+            "cortarNo": (entity or {}).get("cortarNo", ""),
             "areaLabel": row.get("areaLabel", ""),
             "minPriceEok": row.get("minPriceEok"),
             "midPriceEok": row.get("midPriceEok"),
+            "averagePriceEok": row.get("averagePriceEok"),
             "maxPriceEok": row.get("maxPriceEok"),
             "households": households,
             "searchQuery": search_query,
@@ -1199,7 +1683,9 @@ def budget_candidates(
         rows.append(candidate)
 
     live_seed_count = 0
-    if not fast_mode and region and (molit_transactions.enabled() or all_matches):
+    # fast_mode에서도 시드 후보를 포함한다. 정적 가격대가 없는 지역에서
+    # 1차 응답이 0건이 되어 전체 보강을 빈 화면으로 기다리지 않게 한다.
+    if region and (molit_transactions.enabled() or all_matches):
         seen_seed_keys = {
             (
                 real_estate_search.compact(row.get("name")),
@@ -1207,7 +1693,38 @@ def budget_candidates(
             )
             for row in rows
         }
-        for entity in real_estate_search.APARTMENT_MASTER:
+        broad_region = _contains_broad_region(region)
+        master_entities = real_estate_search.APARTMENT_MASTER
+        if broad_region:
+            eligible_entities = []
+            broad_seed_keys = set(seen_seed_keys)
+            for entity in master_entities:
+                name_key = real_estate_search.compact(entity.get("name"))
+                seed_region = entity.get("district") or entity.get("city") or ""
+                seed_key = (name_key, real_estate_search.compact(seed_region))
+                if not name_key or seed_key in broad_seed_keys or entity.get("aggregate"):
+                    continue
+                seed_row = {"name": entity.get("name", ""), "region": seed_region}
+                if not _matches_region(seed_row, entity, region):
+                    continue
+                if _is_rental_apartment(seed_row, entity):
+                    filtered["rental"] += 1
+                    continue
+                households = real_estate_search._int_value(entity.get("households"))
+                building = _building_profile(entity)
+                if min_households and households < min_households:
+                    continue
+                if max_building_age and (not building["buildingAge"] or building["buildingAge"] > max_building_age):
+                    continue
+                broad_seed_keys.add(seed_key)
+                eligible_entities.append(entity)
+            master_entities = _balanced_live_seed_entities(
+                eligible_entities,
+                config.BUDGET_BROAD_REGION_LIVE_SEED_LIMIT,
+            )
+
+        live_seed_entries = []
+        for entity in master_entities:
             name_key = real_estate_search.compact(entity.get("name"))
             seed_region = entity.get("district") or entity.get("city") or ""
             seed_key = (name_key, real_estate_search.compact(seed_region))
@@ -1235,8 +1752,23 @@ def budget_candidates(
             if not candidate:
                 continue
             seen_seed_keys.add(seed_key)
-            rows.append(candidate)
-            live_seed_count += 1
+            live_seed_entries.append((candidate, entity))
+
+        if broad_region:
+            live_seed_rows = _broad_region_live_seed_rows(
+                live_seed_entries,
+                min_area,
+                budget_eok,
+                purpose,
+                priority,
+                commute,
+                price_strategy,
+                fast_mode=fast_mode,
+            )
+        else:
+            live_seed_rows = [row for row, _entity in live_seed_entries]
+        rows.extend(live_seed_rows)
+        live_seed_count = len(live_seed_rows)
 
     if not rows:
         return {
@@ -1257,6 +1789,7 @@ def budget_candidates(
             "filterSummary": filtered,
             "noLastDealCount": 0,
             "rentalExcludedCount": filtered["rental"],
+            "liveSeedCount": live_seed_count,
             "priceBandCount": len(_load_price_bands()),
             "policySnapshot": {
                 **policy_evaluator.summarize([], policy_profile),
@@ -1264,6 +1797,19 @@ def budget_candidates(
                 "budgetSource": budget_source,
             },
             "message": "입력한 필수 조건을 모두 통과한 후보를 찾지 못했어요. 면적·세대수·연식 조건을 하나씩 완화해 보세요.",
+            "nearbyRegionsVersion": NEARBY_REGIONS_SCHEMA_VERSION,
+            "nearbyRegions": _nearby_suggestions_with_cached_fallback(
+                nearby_bucket,
+                nearby_scope,
+                nearby_keys,
+                policy_profile,
+                can_estimate_budget,
+                budget_eok,
+                min_area,
+                min_households,
+                max_building_age,
+                use_cached_live=not fast_mode,
+            ),
         }
 
     if not fast_mode and molit_transactions.enabled():
@@ -1347,12 +1893,18 @@ def budget_candidates(
     last_deal_over_budget_count = 0
     no_last_deal_count = 0
     for row in rows:
-        if _float_value(row.get("lastObservedDealPriceEok")) > budget_eok:
+        last_observed_price = _float_value(row.get("lastObservedDealPriceEok"))
+        if last_observed_price and _fit_status(last_observed_price, budget_eok)[0] == "제외":
             filtered["price"] += 1
             last_deal_over_budget_count += 1
             continue
         if row.get("priceSource") not in VERIFIED_PRICE_SOURCES:
             if not _float_value(row.get("lastObservedDealPriceEok")):
+                if fast_mode:
+                    # 1차 응답에서는 가격 미확인 후보도 '확인 중' 상태로 먼저
+                    # 노출한다. 2차(보강) 결과가 실제 실거래로 대체·정리한다.
+                    verified_rows.append(row)
+                    continue
                 filtered["noLastDeal"] += 1
                 no_last_deal_count += 1
                 continue
@@ -1403,8 +1955,15 @@ def budget_candidates(
     policy_excluded_candidates = [] if all_matches else policy_excluded_rows[:limit]
     for row in [*candidates, *policy_excluded_candidates]:
         entity = _find_entity(row["name"], row.get("region", ""))
+        map_entity = _find_entity(
+            row["name"],
+            row.get("region", ""),
+            row.get("legalDong", ""),
+            row.get("jibun", ""),
+        ) or entity
         row["displayName"] = _candidate_display_name(row, entity)
         row["displayRegion"] = _display_region(row, entity)
+        row["mapAddress"] = _map_address(row, map_entity)
         row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
         row.update(_decision_support(row, entity, purpose, priority, commute, move_timing, price_strategy, region))
         row.pop("_fitRank", None)
@@ -1412,21 +1971,22 @@ def budget_candidates(
         row.pop("_budgetEok", None)
 
     display_rows = [*candidates, *policy_excluded_candidates]
-    if not fast_mode and display_rows and molit_transactions.configured():
-        # 시그널 계산에 필요한 (지역코드, 월)을 후보 전체 기준으로 병렬 선적재
-        signal_months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
-        signal_pairs = set()
-        for row in display_rows:
-            try:
-                for source_row in molit_transactions.source_rows(row["name"], row.get("region", "")):
-                    lawd_cd = molit_transactions._row_lawd_cd(source_row)
-                    if lawd_cd:
-                        signal_pairs.update((lawd_cd, deal_ymd) for deal_ymd in signal_months)
-            except Exception:
-                continue
-        # 회로 차단 중이면 prefetch_months는 즉시 반환하고, attach_signals가
-        # 기존 월별 캐시를 사용해 점수 계산을 계속한다.
-        molit_transactions.prefetch_months(signal_pairs)
+    if not fast_mode and display_rows:
+        if molit_transactions.configured():
+            # 시그널 계산에 필요한 (지역코드, 월)을 후보 전체 기준으로 병렬 선적재
+            signal_months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
+            signal_pairs = set()
+            for row in display_rows:
+                try:
+                    for source_row in molit_transactions.source_rows(row["name"], row.get("region", "")):
+                        lawd_cd = molit_transactions._row_lawd_cd(source_row)
+                        if lawd_cd:
+                            signal_pairs.update((lawd_cd, deal_ymd) for deal_ymd in signal_months)
+                except Exception:
+                    continue
+            # 회로 차단 중이면 prefetch_months는 즉시 반환하고, attach_signals가
+            # 기존 월별 캐시를 사용해 점수 계산을 계속한다.
+            molit_transactions.prefetch_months(signal_pairs)
         try:
             momentum_signals.attach_signals(display_rows)
         except Exception:
@@ -1442,6 +2002,31 @@ def budget_candidates(
             verdicts.attach_verdicts(display_rows, budget_eok)
         except Exception:
             pass
+
+    # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.
+    # all_matches 응답은 정책상 needs_input/restricted 후보도 candidates에 담지만,
+    # 화면에서는 possible/short 및 가격 확인 후보만 노출한다.
+    visible_candidates = candidates
+    if all_matches:
+        visible_candidates = [
+            row for row in candidates
+            if not row.get("policyImpact")
+            or row["policyImpact"].get("status") in {"possible", "short"}
+        ]
+    nearby_suggestions = []
+    if not visible_candidates:
+        nearby_suggestions = _nearby_suggestions_with_cached_fallback(
+            nearby_bucket,
+            nearby_scope,
+            nearby_keys,
+            policy_profile,
+            can_estimate_budget,
+            budget_eok,
+            min_area,
+            min_households,
+            max_building_age,
+            use_cached_live=not fast_mode,
+        )
 
     result_message = ""
     if policy_profile["cashEok"] and not candidates and policy_excluded_candidates:
@@ -1501,4 +2086,6 @@ def budget_candidates(
         ),
         "signalNote": momentum_signals.SIGNAL_NOTE,
         "message": result_message,
+        "nearbyRegionsVersion": NEARBY_REGIONS_SCHEMA_VERSION,
+        "nearbyRegions": nearby_suggestions,
     }

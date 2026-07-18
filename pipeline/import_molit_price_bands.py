@@ -54,6 +54,17 @@ def _deal_date(row):
     return f"{year_month[:4]}-{year_month[4:]}-{int(day):02d}"
 
 
+def _is_market_transaction(row):
+    deal_type = str(
+        row.get("거래유형")
+        or row.get("거래 유형")
+        or row.get("dealingGbn")
+        or ""
+    ).replace(" ", "").strip()
+    cancellation = str(row.get("해제사유발생일") or row.get("cdealDay") or "").strip()
+    return deal_type != "직거래" and cancellation in {"", "-"}
+
+
 def _percentile(values, ratio):
     ordered = sorted(values)
     if not ordered:
@@ -70,10 +81,9 @@ def build_price_bands(source_path, min_transactions=3, min_area=50.0, max_area=6
         name = str(row.get("단지명") or "").strip()
         area = _number(row.get("전용면적(㎡)"))
         price_manwon = _number(row.get("거래금액(만원)"))
-        cancellation = str(row.get("해제사유발생일") or "").strip()
         if not real_estate_search._is_usable_apartment_name(name):
             continue
-        if cancellation not in {"", "-"}:
+        if not _is_market_transaction(row):
             continue
         if not min_area <= area <= max_area:
             continue
@@ -116,11 +126,13 @@ def build_price_bands(source_path, min_transactions=3, min_area=50.0, max_area=6
             "jibun": rows[0]["jibun"],
             "min_price_억": round(_percentile(prices, 0.1), 2),
             "mid_price_억": round(statistics.median(prices), 2),
+            "average_price_억": round(statistics.mean(prices), 2),
             "max_price_억": round(_percentile(prices, 0.9), 2),
             "area_label": f"전용 {round(min(areas))}~{round(max(areas))}㎡",
             "updated_at": latest or datetime.date.today().isoformat(),
             "source_note": f"국토부 실거래 {len(rows)}건 · 10~90백분위",
             "price_source": "molit_csv",
+            "market_transaction_only": "true",
             "transaction_count": len(rows),
             "latest_deal_date": latest,
             "latest_deal_price_억": round(latest_row["priceEok"], 2) if latest_row else "",
@@ -134,8 +146,9 @@ def write_price_bands(rows, output_path):
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     fields = [
-        "name", "region", "legal_dong", "jibun", "min_price_억", "mid_price_억", "max_price_억",
+        "name", "region", "legal_dong", "jibun", "min_price_억", "mid_price_억", "average_price_억", "max_price_억",
         "area_label", "updated_at", "source_note", "price_source",
+        "market_transaction_only",
         "transaction_count", "latest_deal_date", "latest_deal_price_억", "source_url",
     ]
     with output.open("w", encoding="utf-8-sig", newline="") as handle:

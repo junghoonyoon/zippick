@@ -57,6 +57,14 @@ ENTITY_MASTER = [
 ]
 
 MANUAL_APARTMENT_MASTER = [
+    # lawdCd·legalDong·jibun까지 있으면 CSV에 없는 신축 단지도
+    # molit_transactions가 합성 소스 행으로 실거래를 연결한다.
+    {
+        "name": "리버센SK뷰롯데캐슬", "category": "아파트",
+        "aliases": ["리버센", "리버센 SK뷰", "리버센 SK VIEW 롯데캐슬", "리버센SKVIEW롯데캐슬", "중화동 리버센"],
+        "province": "서울특별시", "district": "중랑구", "legalDong": "중화동",
+        "jibun": "462", "lawdCd": "11260", "households": 1055,
+    },
     {"name": "올림픽파크포레온", "category": "아파트", "aliases": ["둔촌주공", "올파포"]},
     {"name": "헬리오시티", "category": "아파트", "aliases": ["송파 헬리오시티"]},
     {"name": "래미안 원베일리", "category": "아파트", "aliases": ["래미안원베일리", "원베일리", "반포 원베일리"]},
@@ -90,7 +98,13 @@ MANUAL_APARTMENT_MASTER = [
     {"name": "판교푸르지오그랑블", "category": "아파트", "aliases": []},
     {"name": "백현마을", "category": "아파트", "aliases": []},
     {"name": "위례자이더시티", "category": "아파트", "aliases": []},
-    {"name": "산성역 헤리스톤", "category": "성남수정구 아파트", "aliases": ["산성역헤리스톤", "헤리스톤", "헤리스톤아파트"], "province": "경기도", "city": "성남시", "district": "성남수정구", "households": 3487},
+    {
+        "name": "산성역 헤리스톤", "category": "성남수정구 아파트",
+        "aliases": ["산성역헤리스톤", "헤리스톤", "헤리스톤아파트"],
+        "province": "경기도", "city": "성남시", "district": "성남수정구",
+        "legalDong": "산성동", "jibun": "1336", "lawdCd": "41131",
+        "households": 3487, "status": "분양권",
+    },
     {"name": "산성역 포레스티아", "category": "아파트", "aliases": ["산성역포레스티아", "산성역포레스티아아파트", "포레스티아"]},
     {"name": "산성역 자이푸르지오", "category": "아파트", "aliases": ["산자푸", "산성역자이푸르지오", "산성역자이푸르지오1단지", "산성역자이푸르지오 1단지", "산성역자이푸르지오2단지", "산성역자이푸르지오 2단지", "산성역자이푸르지오3단지", "산성역자이푸르지오 3단지", "산성역자이푸르지오4단지", "산성역자이푸르지오 4단지"]},
     {"name": "이문 아이파크 자이", "category": "아파트", "aliases": ["이문아이파크자이"]},
@@ -326,6 +340,8 @@ def _load_apartment_csv_entities(limit=None):
                 aliases.extend(_local_apartment_aliases(row, [name, *aliases]))
                 district = row.get("자치구") or row.get("시군구") or ""
                 legal_dong = _clean_entity_name(row.get("법정동"))
+                pnu = re.sub(r"\D", "", str(row.get("필지고유번호") or ""))
+                cortar_no = pnu[:10] if len(pnu) >= 10 else ""
                 entities.append({
                     "name": name,
                     "category": f"{district} 아파트".strip(),
@@ -334,6 +350,8 @@ def _load_apartment_csv_entities(limit=None):
                     "city": _region_city(row),
                     "district": district,
                     "legalDong": legal_dong,
+                    "jibun": str(row.get("지번") or "").strip(),
+                    "cortarNo": cortar_no,
                     "address": str(row.get("주소") or "").strip(),
                     "dedupeKey": "|".join(compact(value) for value in (
                         name,
@@ -343,6 +361,8 @@ def _load_apartment_csv_entities(limit=None):
                     )),
                     "households": _int_value(row.get("세대수")),
                     "approvedAt": str(row.get("사용승인일") or "").strip(),
+                    "lawdCd": str(row.get("법정동코드") or row.get("lawdCd") or "").strip(),
+                    "status": str(row.get("상태") or "").strip(),
                 })
                 base = _numbered_complex_base(name)
                 if base:
@@ -355,9 +375,13 @@ def _load_apartment_csv_entities(limit=None):
                         "city": _region_city(row),
                         "district": district,
                         "legalDong": legal_dong,
+                        "jibun": str(row.get("지번") or "").strip(),
+                        "cortarNo": cortar_no,
                         "address": str(row.get("주소") or "").strip(),
                         "households": 0,
                         "approvedAt": str(row.get("사용승인일") or "").strip(),
+                        "lawdCd": str(row.get("법정동코드") or row.get("lawdCd") or "").strip(),
+                        "status": str(row.get("상태") or "").strip(),
                     })
                     group["aliases"].extend([name, *aliases])
                     group["households"] += _int_value(row.get("세대수"))
@@ -385,14 +409,18 @@ def _merge_entities(*groups):
                     "city": entity.get("city", ""),
                     "district": entity.get("district", ""),
                     "legalDong": entity.get("legalDong", ""),
+                    "jibun": entity.get("jibun", ""),
+                    "cortarNo": entity.get("cortarNo", ""),
                     "address": entity.get("address", ""),
                     "dedupeKey": entity.get("dedupeKey", ""),
                     "households": _int_value(entity.get("households")),
                     "approvedAt": entity.get("approvedAt", ""),
                     "aggregate": bool(entity.get("aggregate")),
+                    "lawdCd": entity.get("lawdCd", ""),
+                    "status": entity.get("status", ""),
                 }
             else:
-                for field in ("province", "city", "district", "legalDong", "address"):
+                for field in ("province", "city", "district", "legalDong", "jibun", "cortarNo", "address", "lawdCd", "status"):
                     if entity.get(field) and not merged[key].get(field):
                         merged[key][field] = entity.get(field)
                 merged[key]["aggregate"] = bool(merged[key].get("aggregate") or entity.get("aggregate"))
@@ -584,6 +612,193 @@ def _fallback_search_terms(query, aliases):
         if len(terms) >= 4:
             break
     return terms or [query.strip()]
+
+
+_UNIT_ALIAS_RE = re.compile(r"\d+\s*단지")
+
+
+def _unit_alias_display(alias):
+    return re.sub(r"\s+", " ", re.sub(r"[()]", " ", str(alias or ""))).strip()
+
+
+def suggest_apartments(query, limit=8):
+    """단지 자동완성. 묶음(aggregate)이 아닌 개별 단지만 주소와 함께 반환한다.
+
+    '한솔주공' 같은 축약 검색어도 순서 유지 부분 일치로 개별 단지에 매칭한다.
+    로딩 시 이름 정규화로 별칭에 흡수된 'N단지' 개별 단지(예:
+    '한솔마을(4단지)(주공)')는 검색 단위로 되살려 따로 보여준다.
+    세대수 큰 단지를 먼저 보여준다.
+    """
+    key = compact(query)
+    if not key or len(key) < 2:
+        return []
+    rows = []
+    for order, entity in enumerate(APARTMENT_MASTER):
+        if entity.get("aggregate"):
+            continue
+        aliases = entity.get("aliases") or []
+        unit_aliases = []
+        base_aliases = []
+        seen_units = set()
+        for alias in aliases:
+            if _UNIT_ALIAS_RE.search(str(alias or "")):
+                unit_key = compact(alias)
+                if unit_key and unit_key not in seen_units:
+                    seen_units.add(unit_key)
+                    unit_aliases.append(alias)
+            else:
+                base_aliases.append(alias)
+        unit_matches = [
+            (score, alias)
+            for alias in unit_aliases
+            for score in [_alias_match_score(key, compact(alias))]
+            if score is not None
+        ]
+        base_best = None
+        for alias in [entity.get("name", ""), *base_aliases]:
+            score = _alias_match_score(key, compact(alias))
+            if score is not None:
+                base_best = score if base_best is None else min(base_best, score)
+                if base_best == 0:
+                    break
+        if unit_matches:
+            # 개별 단지가 검색어에 맞으면 묶인 대표 이름 대신 단지별로 보여준다.
+            for score, alias in unit_matches:
+                virtual = dict(entity)
+                virtual["name"] = _unit_alias_display(alias)
+                virtual["households"] = 0  # 병합 합계 세대수를 개별 단지에 붙이지 않는다
+                virtual["aliases"] = [alias]
+                rows.append((score, 0, order, virtual))
+            continue
+        if base_best is not None and unit_aliases:
+            # '상계주공아파트'처럼 묶인 대표 이름으로 검색해도 개별 단지로 펼친다.
+            for alias in unit_aliases:
+                virtual = dict(entity)
+                virtual["name"] = _unit_alias_display(alias)
+                virtual["households"] = 0
+                virtual["aliases"] = [alias]
+                rows.append((base_best, 0, order, virtual))
+            continue
+        if base_best is None:
+            continue
+        rows.append((base_best, -_int_value(entity.get("households")), order, entity))
+    rows.sort(key=lambda row: row[:3])
+
+    # 같은 단지가 마스터 CSV·수동 등록마다 다른 표기(자치구 vs 법정동, 세대수
+    # 개정, 필드 공백)로 등재된 중복을 병합한다. 이름이 같고 시도·시·법정동이
+    # 서로 충돌하지 않으면(비어 있으면 호환) 같은 단지로 본다. 세대수는 둘 다
+    # 있고 30% 넘게 차이날 때만 다른 단지로 판정한다.
+    def _cluster_compatible(entity, cluster):
+        for field in ("province", "city", "legalDong"):
+            value_a = compact(entity.get(field, ""))
+            value_b = compact(cluster.get(field, ""))
+            if value_a and value_b and value_a != value_b:
+                return False
+        households_a = _int_value(entity.get("households"))
+        households_b = _int_value(cluster.get("households"))
+        if households_a and households_b:
+            larger = max(households_a, households_b)
+            if (larger - min(households_a, households_b)) / larger > 0.3:
+                return False
+        return True
+
+    clusters = []
+    buckets = {}
+    for _best, _households, _order, entity in rows:
+        name_key = compact(entity.get("name", ""))
+        bucket = buckets.setdefault(name_key, [])
+        target = next((cluster for cluster in bucket if _cluster_compatible(entity, cluster)), None)
+        if target is None:
+            cluster = dict(entity)
+            bucket.append(cluster)
+            clusters.append(cluster)
+            continue
+        for field in (
+            "province",
+            "city",
+            "district",
+            "legalDong",
+            "jibun",
+            "cortarNo",
+            "lawdCd",
+            "address",
+            "status",
+        ):
+            if not str(target.get(field) or "").strip() and str(entity.get(field) or "").strip():
+                target[field] = entity[field]
+        target["households"] = max(
+            _int_value(target.get("households")), _int_value(entity.get("households")),
+        )
+
+    suggestions = []
+    for entity in clusters[:limit * 3]:
+        city = str(entity.get("city") or "").strip()
+        district = str(entity.get("district") or "").strip()
+        # '성남수정구'처럼 시 이름이 접두사로 붙은 자치구 표기는 '수정구'로 정리한다.
+        # 남는 부분이 구/군으로 끝나는 두 글자 이상일 때만 잘라 '군포시'→'시' 오류를 막는다.
+        city_stem = re.sub(r"시$", "", city)
+        district_display = district
+        if city_stem and district.startswith(city_stem):
+            remainder = district[len(city_stem):]
+            if len(remainder) >= 2 and re.search(r"[구군]$", remainder):
+                district_display = remainder
+        address_parts = []
+        stripped_parts = []
+        for part in (entity.get("province"), city, district_display, entity.get("legalDong")):
+            part = str(part or "").strip()
+            if not part:
+                continue
+            # '서울특별시'와 '서울시'처럼 접미사만 다른 중복 표기를 제거한다.
+            stripped = re.sub(r"(특별자치시|특별자치도|특별시|광역시|시|도|구|군|동)$", "", part)
+            if stripped and stripped in stripped_parts:
+                continue
+            address_parts.append(part)
+            stripped_parts.append(stripped)
+        suggestions.append({
+            "name": entity.get("name", ""),
+            # 일부 공공 원본은 자치구가 비어 있고 시·법정동만 있다. 검색 결과가
+            # 빈 지역으로 넘어가면 전용면적 API가 단지를 식별하지 못하므로 가장
+            # 구체적으로 남아 있는 지역값을 순서대로 사용한다.
+            "region": district or city or str(entity.get("legalDong") or "").strip(),
+            "address": " ".join(address_parts) or str(entity.get("address") or "").strip(),
+            "legalDong": str(entity.get("legalDong") or "").strip(),
+            "jibun": str(entity.get("jibun") or "").strip(),
+            "cortarNo": str(entity.get("cortarNo") or "").strip(),
+            "lawdCd": str(entity.get("lawdCd") or "").strip(),
+            "households": _int_value(entity.get("households")),
+            "status": str(entity.get("status") or "").strip(),
+            "category": "아파트",
+        })
+    # 주소 없는 항목이 주소 있는 동명 단지와 겹치면 중복이므로 제거한다.
+    named_with_address = {compact(item["name"]) for item in suggestions if item["address"]}
+    suggestions = [
+        item for item in suggestions
+        if item["address"] or compact(item["name"]) not in named_with_address
+    ]
+    # '상계주공아파트'처럼 단지 번호 없는 묶음 이름은, 같은 지역에 번호 붙은
+    # 형제 단지가 2곳 이상 함께 검색되면 숨긴다. 묶음 이름의 결과값은 여러
+    # 단지 실거래가 섞여 단지별 리포트와 1:1이 되지 않기 때문이다.
+    def _base_stem(value):
+        return re.sub(r"(아파트|단지)+$", "", compact(value))
+
+    def _has_unit_number(value):
+        return bool(re.search(r"\d+\s*단지", str(value or "")) or _UNIT_ALIAS_RE.search(str(value or "")))
+
+    filtered = []
+    for item in suggestions:
+        if not _has_unit_number(item["name"]):
+            stem = _base_stem(item["name"])
+            siblings = [
+                other for other in suggestions
+                if other is not item
+                and _has_unit_number(other["name"])
+                and other["region"] == item["region"]
+                and stem and compact(other["name"]).startswith(stem)
+            ]
+            if len(siblings) >= 2:
+                continue
+        filtered.append(item)
+    return filtered[:limit]
 
 
 def suggest_entities(query, limit=12):

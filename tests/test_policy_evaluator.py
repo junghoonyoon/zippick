@@ -123,6 +123,47 @@ class PolicyEvaluatorTest(unittest.TestCase):
         self.assertEqual(impact["minRequiredCashEok"], 3.59)
         self.assertEqual(impact["maxRequiredCashEok"], 4.34)
 
+    def test_candidate_exposes_latest_and_outlier_adjusted_average_cash_scenarios(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home",
+            first_time=True,
+            cash_eok="4.7",
+            annual_income="9000",
+            mortgage_rate="4.2",
+            loan_term_years="30",
+        )
+        impact = policy_evaluator.evaluate_candidate(
+            {
+                "region": "동대문구",
+                "midPriceEok": 8.8,
+                "latestDealPriceEok": 8.99,
+                "recent3AveragePriceEok": 7.76,
+                "recent3AdjustedAveragePriceEok": 8.89,
+                "recent3TradeCount": 3,
+                "recent3AdjustedTradeCount": 2,
+                "recent3ExcludedTradeCount": 1,
+            },
+            profile=profile,
+        )
+
+        scenarios = {row["type"]: row for row in impact["cashScenarios"]}
+        self.assertEqual(scenarios["latest_deal"]["priceEok"], 8.99)
+        self.assertEqual(scenarios["recent3_average"]["priceEok"], 8.89)
+        self.assertEqual(scenarios["recent3_average"]["tradeCount"], 2)
+        self.assertEqual(scenarios["recent3_average"]["excludedTradeCount"], 1)
+        self.assertEqual(
+            scenarios["latest_deal"]["cashGapEok"],
+            round(profile["cashEok"] - scenarios["latest_deal"]["requiredCashEok"], 2),
+        )
+        self.assertEqual(
+            scenarios["recent3_average"]["cashGapEok"],
+            round(profile["cashEok"] - scenarios["recent3_average"]["requiredCashEok"], 2),
+        )
+        self.assertEqual(impact["requiredCashEok"], max(
+            scenarios["latest_deal"]["requiredCashEok"],
+            scenarios["recent3_average"]["requiredCashEok"],
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()

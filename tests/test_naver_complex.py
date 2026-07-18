@@ -23,6 +23,7 @@ class NaverComplexTest(unittest.TestCase):
         self._patch_cache = mock.patch.object(naver_complex, "CACHE_DIR", Path(self._tmp.name))
         self._patch_cache.start()
         naver_complex._DISABLED_UNTIL = 0
+        naver_complex._CORTAR_COMPLEX_CACHE.clear()
 
     def tearDown(self):
         self._patch_cache.stop()
@@ -36,6 +37,101 @@ class NaverComplexTest(unittest.TestCase):
         with mock.patch.object(naver_complex.requests, "get", return_value=_response(complexes)):
             resolved = naver_complex.resolve("둔촌주공", legal_dong="둔촌동")
         self.assertEqual(resolved["complexNo"], "111")
+
+    def test_resolves_current_naver_pay_autocomplete_shape(self):
+        response = _response([])
+        response.json.return_value = {
+            "result": {
+                "list": [{
+                    "complexNumber": "333",
+                    "complexName": "동탄역린스트라우스",
+                    "legalDivisionName": "경기도 화성시 오산동",
+                }],
+            },
+        }
+        with mock.patch.object(naver_complex.requests, "get", return_value=response):
+            resolved = naver_complex.resolve("동탄역린스트라우스", legal_dong="오산동")
+
+        self.assertEqual(resolved["complexNo"], "333")
+        self.assertEqual(
+            naver_complex.complex_url(resolved["complexNo"]),
+            "https://fin.land.naver.com/complexes/333?tab=article",
+        )
+
+    def test_resolves_by_legal_dong_code_when_autocomplete_is_limited(self):
+        response = _response([])
+        response.json.return_value = {
+            "result": [{
+                "hscpNo": "444",
+                "hscpNm": "북한산현대힐스테이트3차",
+                "cortarNo": "1138010300",
+            }],
+        }
+        with mock.patch.object(naver_complex.requests, "get", return_value=response) as request:
+            resolved = naver_complex.resolve(
+                "북한산현대힐스테이트3차아파트",
+                legal_dong="불광동",
+                jibun="641",
+                cortar_no="1138010300",
+            )
+
+        self.assertEqual(resolved["complexNo"], "444")
+        self.assertEqual(request.call_args.args[0], naver_complex.MOBILE_COMPLEX_LIST_ENDPOINT)
+
+    def test_resolves_reordered_naver_name_within_legal_dong(self):
+        response = _response([])
+        response.json.return_value = {
+            "result": [
+                {"hscpNo": "555", "hscpNm": "녹번현대2차"},
+                {"hscpNo": "556", "hscpNm": "현대"},
+            ],
+        }
+        with mock.patch.object(naver_complex.requests, "get", return_value=response):
+            resolved = naver_complex.resolve(
+                "녹번2차 현대아파트",
+                legal_dong="녹번동",
+                jibun="278-1",
+                cortar_no="1138010200",
+            )
+
+        self.assertEqual(resolved["complexNo"], "555")
+
+    def test_alternate_display_name_resolves_short_public_name(self):
+        response = _response([])
+        response.json.return_value = {
+            "result": [{"hscpNo": "557", "hscpNm": "DMC청구"}],
+        }
+        with mock.patch.object(naver_complex.requests, "get", return_value=response):
+            resolved = naver_complex.resolve(
+                "청구",
+                legal_dong="수색동",
+                jibun="413",
+                cortar_no="1138010100",
+                alternate_names=("DMC청구아파트",),
+            )
+
+        self.assertEqual(resolved["complexNo"], "557")
+
+    def test_legal_dong_suffix_difference_still_resolves(self):
+        complexes = [
+            {"hscpNo": "558", "hscpNm": "응암금호"},
+            {"hscpNo": "559", "hscpNm": "응암우성"},
+        ]
+
+        self.assertEqual(
+            naver_complex._pick(complexes, "응암동금호", "응암동")["complexNo"],
+            "558",
+        )
+
+    def test_equally_similar_phase_names_are_not_guessed(self):
+        complexes = [
+            {"hscpNo": "601", "hscpNm": "은평뉴타운제각말5-1단지"},
+            {"hscpNo": "602", "hscpNm": "은평뉴타운제각말5-2단지"},
+        ]
+
+        self.assertIsNone(
+            naver_complex._pick(complexes, "은평뉴타운 제각말", "")
+        )
 
     def test_ambiguous_name_without_dong_falls_back(self):
         complexes = [
@@ -74,15 +170,17 @@ class NaverComplexTest(unittest.TestCase):
         with mock.patch.object(naver_complex, "resolve", side_effect=fake_resolve):
             naver_complex.attach_links(rows)
 
-        self.assertEqual(rows[0]["naverPropertyUrl"], "https://new.land.naver.com/complexes/12345")
+        self.assertEqual(
+            rows[0]["naverPropertyUrl"],
+            "https://fin.land.naver.com/complexes/12345?tab=article",
+        )
         self.assertEqual(rows[0]["naverLinkKind"], "complex")
         self.assertEqual(rows[0]["displayName"], "직링크단지")
         self.assertEqual(rows[0]["displayNameSource"], "naver_complex")
-        self.assertIn("%EC%84%B1%EB%82%B4%EB%8F%99%20%EC%9D%B4%EB%A6%84%ED%8F%B4%EB%B0%B1%EB%8B%A8%EC%A7%80", rows[1]["naverPropertyUrl"])
-        self.assertNotIn("55-1", rows[1]["naverPropertyUrl"])
-        self.assertEqual(rows[1]["naverLinkKind"], "name")
-        self.assertIn("%EC%9D%B4%EB%A6%84%ED%8F%B4%EB%B0%B1%EB%8B%A8%EC%A7%80", rows[2]["naverPropertyUrl"])
-        self.assertEqual(rows[2]["naverLinkKind"], "name")
+        self.assertEqual(rows[1]["naverPropertyUrl"], "")
+        self.assertEqual(rows[1]["naverLinkKind"], "unresolved")
+        self.assertEqual(rows[2]["naverPropertyUrl"], "")
+        self.assertEqual(rows[2]["naverLinkKind"], "unresolved")
 
     def test_attach_links_uses_verified_naver_name_as_display_name(self):
         row = {
@@ -126,6 +224,21 @@ class NaverComplexTest(unittest.TestCase):
         with mock.patch.object(naver_complex.requests, "get", side_effect=RuntimeError("blocked")):
             self.assertIsNone(naver_complex.resolve("아무단지", legal_dong="둔촌동"))
         self.assertGreater(naver_complex._DISABLED_UNTIL, 0)
+
+    def test_api_error_is_not_cached_as_missing_complex(self):
+        with mock.patch.object(naver_complex.requests, "get", side_effect=RuntimeError("blocked")):
+            self.assertIsNone(naver_complex.resolve("재시도단지", legal_dong="둔촌동"))
+
+        naver_complex._DISABLED_UNTIL = 0
+        complexes = [{
+            "complexNumber": "54321",
+            "complexName": "재시도단지",
+            "legalDivisionName": "서울시 강동구 둔촌동",
+        }]
+        with mock.patch.object(naver_complex.requests, "get", return_value=_response(complexes)):
+            resolved = naver_complex.resolve("재시도단지", legal_dong="둔촌동")
+
+        self.assertEqual(resolved["complexNo"], "54321")
 
 
 if __name__ == "__main__":
