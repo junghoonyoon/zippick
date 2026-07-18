@@ -57,6 +57,33 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("void enrichAptCards(items);", body)
         self.assertIn("void enrichAptAffordability(items);", body)
 
+    def test_pending_budget_enrichment_is_not_labeled_as_insufficient(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        score_match = re.search(
+            r"function candidateSignalScoreLabel\b(?P<body>.*?)"
+            r"\n    function signalBadgesHtml",
+            html,
+            re.DOTALL,
+        )
+        badge_match = re.search(
+            r"function signalBadgesHtml\b(?P<body>.*?)"
+            r"\n    function candidateSignalReportHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(score_match)
+        self.assertIsNotNone(badge_match)
+        score_body = score_match.group("body")
+        badge_body = badge_match.group("body")
+        self.assertIn('if (currentBudgetData?.enrichmentPending) return "갱신 중";', score_body)
+        self.assertLess(
+            score_body.index("currentBudgetData?.enrichmentPending"),
+            score_body.index('item.marketInsightState === "ready"'),
+        )
+        self.assertIn("currentBudgetData?.enrichmentPending", badge_body)
+        self.assertIn('? "loading"', badge_body)
+
     def test_report_cache_shares_an_in_flight_request_and_retries_failures(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(

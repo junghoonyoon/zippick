@@ -37,6 +37,7 @@ BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
 BUDGET_MAX_JOBS = 20
 BUDGET_JOB_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_TIMEOUT_SECONDS", "150"))
+BUDGET_JOB_HARD_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_HARD_TIMEOUT_SECONDS", "600"))
 BUDGET_PREWARM_STATE = {"running": False, "done": False, "pairCount": 0, "finishedAt": None}
 
 
@@ -630,13 +631,16 @@ def _budget_job_snapshot(job_id):
             return None
         if not job.get("done"):
             elapsed = time.time() - float(job.get("startedAt") or 0)
-            if elapsed >= BUDGET_JOB_TIMEOUT_SECONDS:
+            # 보강 스레드는 계속 돌고 있으므로 소프트 타임아웃에는 작업을
+            # 끝내지 않고 '오래 걸리는 중' 신호만 보낸다. 콜드 캐시 지역에서
+            # 가격 없는 1차 결과가 최종으로 굳는 문제를 막는다.
+            if elapsed >= BUDGET_JOB_HARD_TIMEOUT_SECONDS:
                 payload = json.loads(json.dumps(job.get("initial") or {}, ensure_ascii=False))
                 payload.update({
                     "done": True,
                     "enrichmentPending": False,
                     "enrichmentStage": "timeout",
-                    "error": "최신 실거래 확인이 오래 걸려 현재 확보한 결과만 표시합니다.",
+                    "error": "최신 실거래 확인이 오래 걸려 현재 확보한 결과만 표시합니다. 잠시 후 다시 검색하면 이어서 확인돼요.",
                 })
                 job["done"] = True
                 job["result"] = payload
@@ -645,7 +649,11 @@ def _budget_job_snapshot(job_id):
             return {
                 "done": False,
                 "enrichmentPending": True,
-                "enrichmentStage": "live_data",
+                "enrichmentStage": (
+                    "live_data_slow"
+                    if elapsed >= BUDGET_JOB_TIMEOUT_SECONDS
+                    else "live_data"
+                ),
             }
         payload = json.loads(json.dumps(job.get("result") or {}, ensure_ascii=False))
         payload["done"] = True
@@ -725,11 +733,27 @@ def _prewarm_budget_transaction_cache():
             for value in config.BUDGET_PREWARM_REGIONS
             if real_estate_search.compact(value)
         }
+        # 색인은 '성남분당구'처럼 구 단위 표기라 '성남시' 같은 시 단위 설정은
+        # 접두어('성남')로도 매칭한다.
+        prefix_keys = {
+            key[:-1]
+            for key in region_keys
+            if key.endswith("시") and len(key) >= 3
+        }
+
+        def _region_matches(value):
+            key = real_estate_search.compact(value)
+            if not key:
+                return False
+            if key in region_keys:
+                return True
+            return any(key.startswith(prefix) for prefix in prefix_keys)
+
         lawd_codes = {
             molit_transactions._row_lawd_cd(row)
             for row in source_rows
             if any(
-                real_estate_search.compact(value) in region_keys
+                _region_matches(value)
                 for value in (
                     row.get("시도", ""),
                     row.get("자치구", ""),

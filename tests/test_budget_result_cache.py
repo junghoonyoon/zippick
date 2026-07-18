@@ -65,7 +65,7 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertEqual(payload["candidates"][0]["signals"]["status"], "unavailable")
         calculate.assert_called_once_with(budget="7.9", fast_mode=True)
 
-    def test_staged_job_timeout_returns_initial_payload(self):
+    def test_staged_job_soft_timeout_keeps_enrichment_running(self):
         job_id = "stuck-job"
         initial = {"candidates": [{"name": "1차 후보"}], "initialStage": True}
         with mock.patch.object(search_server, "BUDGET_JOBS", {
@@ -76,7 +76,27 @@ class BudgetResultCacheTest(unittest.TestCase):
                 "initial": initial,
                 "result": None,
             },
-        }), mock.patch.object(search_server, "BUDGET_JOB_TIMEOUT_SECONDS", 1):
+        }), mock.patch.object(search_server, "BUDGET_JOB_TIMEOUT_SECONDS", 1), \
+             mock.patch.object(search_server, "BUDGET_JOB_HARD_TIMEOUT_SECONDS", 30):
+            payload = search_server._budget_job_snapshot(job_id)
+
+        self.assertFalse(payload["done"])
+        self.assertTrue(payload["enrichmentPending"])
+        self.assertEqual(payload["enrichmentStage"], "live_data_slow")
+
+    def test_staged_job_hard_timeout_returns_initial_payload(self):
+        job_id = "stuck-job"
+        initial = {"candidates": [{"name": "1차 후보"}], "initialStage": True}
+        with mock.patch.object(search_server, "BUDGET_JOBS", {
+            job_id: {
+                "cacheKey": "stuck",
+                "startedAt": time.time() - 10,
+                "done": False,
+                "initial": initial,
+                "result": None,
+            },
+        }), mock.patch.object(search_server, "BUDGET_JOB_TIMEOUT_SECONDS", 1), \
+             mock.patch.object(search_server, "BUDGET_JOB_HARD_TIMEOUT_SECONDS", 5):
             payload = search_server._budget_job_snapshot(job_id)
 
         self.assertTrue(payload["done"])
@@ -102,6 +122,33 @@ class BudgetResultCacheTest(unittest.TestCase):
         pairs = set(prefetch.call_args.args[0])
         self.assertEqual(len(pairs), 2)
         self.assertTrue(all(code == "11110" for code, _month in pairs))
+
+    def test_budget_prewarm_city_setting_matches_district_index_names(self):
+        rows = [
+            {
+                "시도": "경기도",
+                "자치구": "성남분당구",
+                "필지고유번호": "4113510100100010000",
+            },
+            {
+                "시도": "경기도",
+                "자치구": "수원영통구",
+                "필지고유번호": "4111710100100010000",
+            },
+        ]
+        with mock.patch.object(search_server.config, "BUDGET_PREWARM_ENABLED", True), \
+             mock.patch.object(search_server.config, "BUDGET_PREWARM_DELAY_SECONDS", 0), \
+             mock.patch.object(search_server.config, "BUDGET_PREWARM_MONTHS", 2), \
+             mock.patch.object(search_server.config, "BUDGET_PREWARM_MAX_WORKERS", 2), \
+             mock.patch.object(search_server.config, "BUDGET_PREWARM_REGIONS", ("성남시",)), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(search_server.molit_transactions, "_source_row_index", return_value=(rows, {})), \
+             mock.patch.object(search_server.molit_transactions, "prefetch_months", return_value=2) as prefetch:
+            search_server._prewarm_budget_transaction_cache()
+
+        pairs = set(prefetch.call_args.args[0])
+        self.assertEqual(len(pairs), 2)
+        self.assertTrue(all(code == "41135" for code, _month in pairs))
 
     def test_key_is_stable_and_changes_with_search_conditions(self):
         first = search_server._budget_cache_key({"region": "성남시", "min_area": "59"})

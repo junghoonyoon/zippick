@@ -7177,6 +7177,10 @@
     function candidateSignalScoreLabel(item) {
       const signals = item.signals;
       if (!signals) {
+        // 1차 후보를 보여준 뒤 서버의 점수 보강과 카드별 실거래 그래프
+        // 보강이 동시에 돈다. 그래프가 먼저 ready가 되더라도 전체 점수
+        // 보강이 진행 중이면 '자료 부족'으로 확정하지 않는다.
+        if (currentBudgetData?.enrichmentPending) return "갱신 중";
         if (item.marketInsightState === "error") return "확인 실패";
         if (item.marketInsightState === "ready") return "점수 자료 부족";
         return "갱신 중";
@@ -7196,7 +7200,9 @@
     function signalBadgesHtml(item) {
       const signals = item.signals;
       if (!signals) {
-        const state = item.marketInsightState || "loading";
+        const state = currentBudgetData?.enrichmentPending
+          ? "loading"
+          : (item.marketInsightState || "loading");
         const failed = state === "error";
         const readyWithoutScore = state === "ready";
         const title = failed ? "최근 가격·거래 흐름 확인 실패" : readyWithoutScore ? "최근 가격·거래 흐름 점수 자료 부족" : "최근 가격·거래 흐름 갱신 중";
@@ -8138,14 +8144,20 @@
         if (data.enrichmentPending && data.enrichmentJobId) {
           let enrichmentCompleted = false;
           try {
-            for (let attempt = 0; attempt < 400 && !controller.signal.aborted; attempt += 1) {
+            for (let attempt = 0; attempt < 820 && !controller.signal.aborted; attempt += 1) {
               await new Promise(resolve => setTimeout(resolve, 750));
               if (attempt === 5) updateBudgetEnrichmentProgress(2);
               const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(data.enrichmentJobId)}`, { signal:controller.signal });
-              if (!next.done) continue;
+              if (!next.done) {
+                if (next.enrichmentStage === "live_data_slow") {
+                  const slowCopy = budgetResultEl.querySelector("[data-budget-enrichment-copy]");
+                  if (slowCopy) slowCopy.textContent = "최신 실거래 확인이 평소보다 오래 걸리고 있어요 · 계속 확인하는 중";
+                }
+                continue;
+              }
               enrichmentCompleted = true;
               if (next.error) {
-                updateBudgetEnrichmentMessage("최신 실거래와 흐름 분석을 완료하지 못했어요. 현재 확보한 결과만 먼저 보여드려요.");
+                updateBudgetEnrichmentMessage(next.error || "최신 실거래와 흐름 분석을 완료하지 못했어요. 현재 확보한 결과만 먼저 보여드려요.");
                 break;
               }
               writeBudgetBrowserCache(url, next);
