@@ -109,6 +109,30 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertIn("removeOverCapCandidate(item);", refresh_match.group("body"))
 
+    def test_rone_latest_trade_fills_price_before_score_enrichment_finishes(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        fallback_match = re.search(
+            r"function applyRoneLatestTradeFallback\b(?P<body>.*?)"
+            r"\n    async function loadMarketInsight",
+            html,
+            re.DOTALL,
+        )
+        load_match = re.search(
+            r"async function loadMarketInsight\b(?P<body>.*?)"
+            r"\n    function enrichMarketInsights",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(fallback_match)
+        self.assertIsNotNone(load_match)
+        fallback_body = fallback_match.group("body")
+        load_body = load_match.group("body")
+        self.assertIn("item.roneEstimate?.latestTrade", fallback_body)
+        self.assertIn("trade?.dealAmountEok", fallback_body)
+        self.assertIn("!Number(item.latestDealPriceEok || 0)", fallback_body)
+        self.assertEqual(load_body.count("applyRoneLatestTradeFallback(item);"), 2)
+
     def test_report_cache_shares_an_in_flight_request_and_retries_failures(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(

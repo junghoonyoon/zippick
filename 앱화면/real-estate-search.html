@@ -5579,10 +5579,26 @@
       }
     }
 
+    function applyRoneLatestTradeFallback(item) {
+      // 카드별 R-ONE 조회는 전체 후보 점수 보강보다 먼저 끝난다. 서버가
+      // 아직 대표 실거래를 채우지 못했더라도 이미 확인된 최신 거래는 즉시
+      // 카드에 반영해 '확인 중' 가격이 수분간 남지 않게 한다.
+      const trade = item.roneEstimate?.latestTrade;
+      const price = Number(trade?.dealAmountEok || 0);
+      if (!trade || !price) return;
+      if (!Number(item.latestDealPriceEok || 0)) item.latestDealPriceEok = price;
+      if (!item.latestDealDate) item.latestDealDate = String(trade.dealDate || "");
+      if (!Number(item.latestDealExclusiveArea || 0)) {
+        item.latestDealExclusiveArea = Number(trade.exclusiveArea || 0) || null;
+      }
+      if (!item.latestDealFloor) item.latestDealFloor = String(trade.floor || "");
+    }
+
     async function loadMarketInsight(item) {
       const cached = roneEstimateCache.get(roneEstimateKey(item));
       if (cached) {
         item.roneEstimate = cached.payload;
+        applyRoneLatestTradeFallback(item);
         item.marketInsightState = "ready";
         refreshMarketInsight(item);
         return;
@@ -5592,6 +5608,7 @@
       try {
         const result = await requestRoneEstimate(item);
         item.roneEstimate = result.payload;
+        applyRoneLatestTradeFallback(item);
         item.marketInsightState = "ready";
       } catch (_) {
         item.roneEstimate = null;
