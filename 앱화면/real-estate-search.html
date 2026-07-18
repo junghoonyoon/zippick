@@ -622,6 +622,26 @@
       border-radius:50%; animation:candidateSpin .9s linear infinite;
     }
     .budget-enrichment-note.is-compact .budget-enrichment-compact-copy { color:#2563a6; font-size:14px; font-weight:750; line-height:1.45; word-break:keep-all }
+    .pending-candidates { margin-top:14px; border:1px dashed #cfd8e3; border-radius:14px; background:#fafcff }
+    .pending-candidates-toggle {
+      display:flex; align-items:center; gap:10px; width:100%; border:0; padding:14px 16px;
+      background:transparent; color:#5f7fa8; font:inherit; font-size:14px; font-weight:800; cursor:pointer;
+    }
+    .pending-candidates-title { flex:1; text-align:left }
+    .pending-candidates-chevron { width:8px; height:8px; border-right:2px solid #9db1c9; border-bottom:2px solid #9db1c9; transform:rotate(45deg); transition:transform .15s ease }
+    .pending-candidates-toggle[aria-expanded="true"] .pending-candidates-chevron { transform:rotate(-135deg) }
+    .pending-candidates-list { display:grid; gap:0; border-top:1px dashed #dde5ee; padding:6px 16px 12px }
+    .pending-candidate { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid #eef2f7 }
+    .pending-candidate:last-child { border-bottom:0 }
+    .pending-candidate-main { display:grid; gap:3px; min-width:0 }
+    .pending-candidate-name { color:#4e5968; font-size:14px; font-weight:800 }
+    .pending-candidate-meta { color:#98a4b3; font-size:12px; font-weight:650 }
+    .pending-candidate-skeleton {
+      flex:0 0 64px; height:12px; border-radius:6px;
+      background:linear-gradient(90deg,#eef2f7 25%,#e2e9f2 50%,#eef2f7 75%); background-size:200% 100%;
+      animation:pendingShimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes pendingShimmer { to { background-position:-200% 0 } }
     .condition-stage-results .budget-enrichment-note.is-compact {
       position:sticky; top:62px; z-index:18;
       width:auto; margin:0 0 16px; border:1px solid #cfe1fb; border-radius:12px; padding:12px 16px;
@@ -3325,7 +3345,8 @@
     // 이전 응답은 같은 조건에서도 추천이 비어 있을 수 있어 재사용하지 않는다.
     // v12부터 지도 지오코딩에 쓰는 원주소(mapAddress)를 포함한다.
     // v16부터 광역 지역도 분산 선별한 실거래 후보를 포함한다.
-    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v16.f${SIGNAL_FORMULA_VERSION}:`;
+    // v17부터 화면에 보이는 모든 구매 시나리오에 +5% 상한을 적용한다.
+    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v17.f${SIGNAL_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
     try {
       Object.keys(localStorage)
@@ -5511,31 +5532,56 @@
       </div>`;
     }
 
-    function unverifiedCandidateOverCap(item) {
-      // 서버가 가격을 검증하지 못한 후보(가격 확인 중)가 클라이언트 보강으로
-      // 가격이 드러났을 때, 매수 가능 상한(+5%)을 넘으면 목록에서 제외한다.
-      // 서버 검증 가격이 있는 후보는 서버의 판정을 그대로 따른다.
-      const budget = Number(currentBudgetData?.budgetEok || 0);
-      if (!budget || Number(item.midPriceEok || 0)) return false;
-      const payload = item.roneEstimate;
-      const price = Number(
-        payload?.estimate?.midPriceEok
-        || payload?.latestTrade?.dealAmountEok
+    function candidatePurchaseCapPrices(item) {
+      const recent3Price = Number(
+        item?.recent3AdjustedAveragePriceEok
+        || item?.recent3AveragePriceEok
         || 0
       );
-      return price > budget * 1.05;
+      const scenarioPrices = Array.isArray(item?.policyImpact?.cashScenarios)
+        ? item.policyImpact.cashScenarios.map(row => Number(row?.priceEok || 0))
+        : [];
+      const payload = item.roneEstimate;
+      const prices = [
+        Number(item?.latestDealPriceEok || 0),
+        Number(item?.lastObservedDealPriceEok || 0),
+        recent3Price,
+        Number(item?.estimatedMidPriceEok || 0),
+        Number(item?.currentEstimateMidPriceEok || 0),
+        Number(item?.midPriceEok || 0),
+        Number(item?.averagePriceEok || 0),
+        Number(payload?.estimate?.midPriceEok || 0),
+        Number(payload?.latestTrade?.dealAmountEok || 0),
+        ...scenarioPrices,
+      ].filter(price => Number.isFinite(price) && price > 0);
+      if (!prices.length) {
+        const fallback = Number(item?.maxPriceEok || item?.minPriceEok || 0);
+        if (Number.isFinite(fallback) && fallback > 0) prices.push(fallback);
+      }
+      return prices;
+    }
+
+    function candidateWithinPurchaseCap(item, budgetEok = currentBudgetData?.budgetEok) {
+      const budget = Number(budgetEok || 0);
+      if (!budget) return true;
+      const cap = budget * 1.05;
+      return candidatePurchaseCapPrices(item).every(price => price <= cap + 1e-9);
+    }
+
+    function unverifiedCandidateOverCap(item) {
+      // 서버 응답 이후 R-ONE 보강이나 이전 세션 복원에서 가격이 드러나는
+      // 경우에도 같은 +5% 상한을 마지막 방어선으로 적용한다.
+      return !candidateWithinPurchaseCap(item);
     }
 
     function removeOverCapCandidate(item) {
       const key = candidateIdentityKey(item);
-      ["allCandidates", "policyDefaultCandidates", "candidates"].forEach(field => {
+      ["allCandidates", "policyDefaultCandidates", "candidates", "policyExcludedCandidates"].forEach(field => {
         if (Array.isArray(currentBudgetData?.[field])) {
           currentBudgetData[field] = currentBudgetData[field].filter(row => candidateIdentityKey(row) !== key);
         }
       });
-      [...budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-key]")]
-        .filter(card => card.dataset.candidateKey === key)
-        .forEach(card => card.remove());
+      renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
     }
 
     function refreshMarketInsight(item) {
@@ -6233,6 +6279,8 @@
     }
 
     async function renderCandidateMap(rows) {
+      // 보강 중에는 가격이 확인된 후보만 지도에 올린다(목록과 동일 기준).
+      if (currentBudgetData?.enrichmentPending) rows = rows.filter(candidateRowPriceReady);
       resetCandidateMap();
       const generation = candidateMapRenderGeneration;
       const container = candidateMapQuery("[data-candidate-map]");
@@ -7910,12 +7958,39 @@
       if (!data.enrichmentPending) return "";
       // 결과가 이미 보이는 화면에서는 큰 단계형 로딩 대신 한 줄 배너만 쓴다.
       if (options.compact) {
+        const copy = Number(options.pendingCount || 0) > 0
+          ? `단지 ${Number(options.readyCount || 0).toLocaleString("ko-KR")}곳 확인됨 · ${Number(options.pendingCount).toLocaleString("ko-KR")}곳 실거래 확인 중 · 완료되면 자동으로 갱신돼요`
+          : budgetEnrichmentCompactCopy(1);
         return `<section class="budget-enrichment-note is-compact" data-budget-enrichment-note role="status" aria-live="polite">
           <span class="budget-enrichment-spinner" aria-hidden="true"></span>
-          <span class="budget-enrichment-compact-copy" data-budget-enrichment-copy>${esc(budgetEnrichmentCompactCopy(1))}</span>
+          <span class="budget-enrichment-compact-copy" data-budget-enrichment-copy>${esc(copy)}</span>
         </section>`;
       }
       return `<section class="budget-enrichment-note" data-budget-enrichment-note role="status" aria-live="polite">${budgetEnrichmentProgressHtml(1)}</section>`;
+    }
+
+    function candidateRowPriceReady(row) {
+      return Number(row?.midPriceEok || 0) > 0 || Number(row?.lastObservedDealPriceEok || 0) > 0;
+    }
+
+    function pendingCandidatesHtml(pendingRows) {
+      if (!pendingRows.length) return "";
+      return `<section class="pending-candidates" data-pending-candidates>
+        <button class="pending-candidates-toggle" type="button" data-pending-toggle aria-expanded="false">
+          <span class="budget-enrichment-spinner" aria-hidden="true"></span>
+          <span class="pending-candidates-title">실거래 확인 중인 단지 ${esc(pendingRows.length.toLocaleString("ko-KR"))}곳</span>
+          <span class="pending-candidates-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="pending-candidates-list" data-pending-list hidden>
+          ${pendingRows.map(item => `<div class="pending-candidate">
+            <div class="pending-candidate-main">
+              <span class="pending-candidate-name">${esc(candidateDisplayName(item))}</span>
+              <span class="pending-candidate-meta">${candidateListMetaHtml(item)}</span>
+            </div>
+            <span class="pending-candidate-skeleton" aria-hidden="true"></span>
+          </div>`).join("")}
+        </div>
+      </section>`;
     }
 
     function nearbyRegionSuggestHtml(nearbyRegions) {
@@ -7950,8 +8025,10 @@
       document.body.classList.remove("candidate-sort-sheet-open");
       removeCandidateMapPortal();
       resetCandidateMap();
-      const allRows = data.allCandidates || data.policyDefaultCandidates || data.candidates || [];
-      const excludedRows = data.policyExcludedCandidates || [];
+      const allRows = (data.allCandidates || data.policyDefaultCandidates || data.candidates || [])
+        .filter(row => candidateWithinPurchaseCap(row, data.budgetEok));
+      const excludedRows = (data.policyExcludedCandidates || [])
+        .filter(row => candidateWithinPurchaseCap(row, data.budgetEok));
       const viewingExcluded = showPolicyExcludedCandidates && excludedRows.length > 0;
       const possibleRows = data.allMatches
         ? allRows.filter(row => row.policyImpact?.status === "possible")
@@ -7963,7 +8040,9 @@
       const defaultRows = [...possibleRows, ...needsPriceRows];
       const fundingRows = includeAdditionalFundingCandidates ? [...defaultRows, ...shortRows] : defaultRows;
       const rows = sortCandidateRows(viewingExcluded ? excludedRows : fundingRows, budgetSort, data.budgetEok);
-      const policyExcludedCount = Number(data.policyExcludedCount || 0);
+      const policyExcludedCount = excludedRows.length
+        ? Number(data.policyExcludedCount || excludedRows.length)
+        : 0;
       const policySnapshot = data.allMatches
         ? {
             ...(data.policySnapshot || {}),
@@ -7974,14 +8053,25 @@
           }
         : data.policySnapshot;
       const shortCount = Number(policySnapshot?.counts?.short || 0);
-      currentBudgetData = { ...data, policySnapshot, allCandidates: allRows, policyDefaultCandidates: defaultRows, candidates: rows };
+      currentBudgetData = {
+        ...data,
+        policySnapshot,
+        allCandidates: allRows,
+        policyDefaultCandidates: defaultRows,
+        policyExcludedCandidates: excludedRows,
+        candidates: rows,
+      };
       setConditionStage("results", false);
       if (!options.preserveSelection) selectedCandidateNames.clear();
       syncCompareSelection();
       budgetResultEl.classList.add("show");
-      if (data.enrichmentPending && !rows.length) {
-        // 1차(빠른) 결과에 아직 보여줄 후보가 없을 때만 진행 화면을 띄운다.
-        // 후보가 있으면 아래 전체 렌더로 즉시 노출하고, 보강 완료 시 갱신한다.
+      // 1차 응답에서는 가격이 확인된 후보만 정식 카드로 보여주고,
+      // 가격 미확인 후보는 하단 '실거래 확인 중' 그룹으로 분리한다.
+      // 미완성 카드가 정식 결과처럼 보이는 혼란을 막는다.
+      const pendingPriceRows = data.enrichmentPending ? rows.filter(row => !candidateRowPriceReady(row)) : [];
+      const displayRows = data.enrichmentPending ? rows.filter(candidateRowPriceReady) : rows;
+      if (data.enrichmentPending && !displayRows.length) {
+        // 완성된 후보가 아직 하나도 없을 때만 진행 화면을 띄운다.
         // 재검색 중에도 사용자가 보던 뷰 모드(지도/목록)를 유지한다.
         document.body.classList.remove("candidate-map-open");
         budgetResultEl.innerHTML = budgetEnrichmentHtml(data);
@@ -8002,10 +8092,10 @@
       const profile = [
         data.purposeLabel === "매수 검토" ? "" : data.purposeLabel,
       ].filter(Boolean);
-      const resultCount = rows.length;
+      const resultCount = displayRows.length;
       const resultTitleHtml = `조건에 맞는 주요 단지 <span class="title-count">${esc(resultCount)}곳</span>을 찾았어요`;
       budgetResultEl.innerHTML = `
-        ${budgetEnrichmentHtml(data, { compact:true })}
+        ${budgetEnrichmentHtml(data, { compact:true, readyCount:displayRows.length, pendingCount:pendingPriceRows.length })}
         <div class="budget-head">
           <div class="budget-title-row">
             <div class="budget-title">${resultTitleHtml}</div>
@@ -8019,7 +8109,7 @@
           ${candidateSortHtml(budgetSort, (includeAdditionalFundingCandidates && shortCount > 0) || viewingExcluded)}
         </div>
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
-          ${rows.map((item, candidateIndex) => `
+          ${displayRows.map((item, candidateIndex) => `
             <article class="budget-candidate" data-candidate-name="${esc(item.name)}" data-candidate-key="${esc(candidateIdentityKey(item))}">
               <div class="candidate-top">
                 <div class="budget-main">
@@ -8060,10 +8150,11 @@
             </article>`).join("")}
         </div>
         ${candidateMapFloatingButtonHtml()}
-        ${candidateMapViewHtml(rows, (includeAdditionalFundingCandidates && shortCount > 0) || viewingExcluded)}
+        ${pendingCandidatesHtml(pendingPriceRows)}
+        ${candidateMapViewHtml(displayRows, (includeAdditionalFundingCandidates && shortCount > 0) || viewingExcluded)}
         ${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>${viewingExcluded ? "자금 조건 통과 후보로 돌아가기" : `추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기`}</button></div>` : ""}`;
       mountCandidateMapPortal();
-      enrichMarketInsights(rows);
+      enrichMarketInsights(displayRows);
       document.body.classList.toggle("candidate-map-open", candidateViewMode === "map");
       if (candidateViewMode === "map") {
         if (!candidateMapTrigger?.isConnected) {
@@ -8071,7 +8162,7 @@
         }
         requestAnimationFrame(() => {
           candidateMapQuery("[data-candidate-map-close]")?.focus({ preventScroll:true });
-          renderCandidateMap(rows);
+          renderCandidateMap(displayRows);
         });
       }
     }
@@ -8887,6 +8978,14 @@
         includeAdditionalFundingCandidates = additionalFundingToggle.checked;
         if (!includeAdditionalFundingCandidates && budgetSort === "cash_gap") budgetSort = "budget_near";
         renderBudgetCandidates(currentBudgetData);
+        return;
+      }
+      const pendingToggle = event.target.closest("[data-pending-toggle]");
+      if (pendingToggle) {
+        const pendingList = budgetResultEl.querySelector("[data-pending-list]");
+        const expanded = pendingToggle.getAttribute("aria-expanded") === "true";
+        pendingToggle.setAttribute("aria-expanded", String(!expanded));
+        if (pendingList) pendingList.hidden = expanded;
         return;
       }
       const policyToggle = event.target.closest("[data-policy-excluded-toggle]");

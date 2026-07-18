@@ -86,9 +86,15 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
     def test_unverified_candidate_over_cap_is_removed_after_price_enrichment(self):
         html = APP_HTML.read_text(encoding="utf-8")
+        prices_match = re.search(
+            r"function candidatePurchaseCapPrices\b(?P<body>.*?)"
+            r"\n    function candidateWithinPurchaseCap",
+            html,
+            re.DOTALL,
+        )
         cap_match = re.search(
-            r"function unverifiedCandidateOverCap\b(?P<body>.*?)"
-            r"\n    function removeOverCapCandidate",
+            r"function candidateWithinPurchaseCap\b(?P<body>.*?)"
+            r"\n    function unverifiedCandidateOverCap",
             html,
             re.DOTALL,
         )
@@ -99,15 +105,39 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             re.DOTALL,
         )
 
+        self.assertIsNotNone(prices_match)
         self.assertIsNotNone(cap_match)
         self.assertIsNotNone(refresh_match)
-        self.assertIn("price > budget * 1.05", cap_match.group("body"))
-        self.assertIn("Number(item.midPriceEok || 0)", cap_match.group("body"))
+        price_body = prices_match.group("body")
+        self.assertIn("item?.latestDealPriceEok", price_body)
+        self.assertIn("item?.recent3AdjustedAveragePriceEok", price_body)
+        self.assertIn("item?.estimatedMidPriceEok", price_body)
+        self.assertIn("item?.policyImpact?.cashScenarios", price_body)
+        self.assertIn("budget * 1.05", cap_match.group("body"))
+        self.assertIn("candidatePurchaseCapPrices(item).every", cap_match.group("body"))
         self.assertIn(
             "item.marketInsightState === \"ready\" && unverifiedCandidateOverCap(item)",
             refresh_match.group("body"),
         )
         self.assertIn("removeOverCapCandidate(item);", refresh_match.group("body"))
+
+    def test_budget_render_filters_all_server_and_cached_rows_by_purchase_cap(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        match = re.search(
+            r"function renderBudgetCandidates\b(?P<body>.*?)"
+            r"\n    const budgetLoadingStages",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertGreaterEqual(
+            body.count(".filter(row => candidateWithinPurchaseCap(row, data.budgetEok))"),
+            2,
+        )
+        self.assertIn("policyExcludedCandidates: excludedRows", body)
+        self.assertIn("realEstateSearch.budgetCandidates.v17", html)
 
     def test_rone_latest_trade_fills_price_before_score_enrichment_finishes(self):
         html = APP_HTML.read_text(encoding="utf-8")

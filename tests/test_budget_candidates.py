@@ -26,6 +26,41 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
+    def test_every_actionable_candidate_price_obeys_five_percent_cap(self):
+        price_fields = (
+            "latestDealPriceEok",
+            "lastObservedDealPriceEok",
+            "recent3AdjustedAveragePriceEok",
+            "recent3AveragePriceEok",
+            "estimatedMidPriceEok",
+            "currentEstimateMidPriceEok",
+            "midPriceEok",
+            "averagePriceEok",
+        )
+        for field in price_fields:
+            with self.subTest(field=field, boundary="included"):
+                self.assertFalse(budget_candidates._candidate_over_purchase_cap(
+                    {field: 10.5}, 10,
+                ))
+            with self.subTest(field=field, boundary="excluded"):
+                self.assertTrue(budget_candidates._candidate_over_purchase_cap(
+                    {field: 10.51}, 10,
+                ))
+
+    def test_candidate_cap_uses_highest_visible_scenario_but_not_range_ceiling(self):
+        self.assertTrue(budget_candidates._candidate_over_purchase_cap({
+            "latestDealPriceEok": 10.4,
+            "recent3AdjustedAveragePriceEok": 10.6,
+            "estimatedMidPriceEok": 10.0,
+        }, 10))
+        self.assertFalse(budget_candidates._candidate_over_purchase_cap({
+            "midPriceEok": 10.0,
+            "maxPriceEok": 12.0,
+        }, 10))
+        self.assertTrue(budget_candidates._candidate_over_purchase_cap({
+            "maxPriceEok": 10.51,
+        }, 10))
+
     def test_fast_cached_seed_rows_exclude_prices_over_stretch_cap(self):
         entries = [
             (
@@ -50,6 +85,16 @@ class BudgetCandidatesTest(unittest.TestCase):
             ),
             (
                 {
+                    "name": "최근거래상한초과",
+                    "region": "은평구",
+                    "midPriceEok": 0,
+                    "_budgetEok": 10,
+                    "_liveLookup": True,
+                },
+                {"name": "최근거래상한초과"},
+            ),
+            (
+                {
                     "name": "가격미확인",
                     "region": "은평구",
                     "midPriceEok": 0,
@@ -62,6 +107,10 @@ class BudgetCandidatesTest(unittest.TestCase):
         live_bands = {
             "상한초과": {"midPriceEok": 10.51},
             "상한근접": {"midPriceEok": 10.5},
+            "최근거래상한초과": {
+                "midPriceEok": 10.0,
+                "latestDealPriceEok": 12.0,
+            },
             "가격미확인": None,
         }
         filtered = {"price": 0}
@@ -100,7 +149,7 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual([row["name"] for row in rows], ["상한근접", "가격미확인"])
         self.assertNotIn("_liveLookup", rows[0])
         self.assertTrue(rows[1]["_liveLookup"])
-        self.assertEqual(filtered["price"], 1)
+        self.assertEqual(filtered["price"], 2)
 
     def test_region_adjacency_normalizes_general_districts_and_prefixed_regions(self):
         adjacency = budget_candidates.region_adjacency

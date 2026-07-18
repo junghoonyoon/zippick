@@ -114,6 +114,49 @@ def _float_value(value):
         return 0.0
 
 
+def _candidate_purchase_cap_price(row):
+    """Return the highest actionable price used to present a candidate.
+
+    A candidate card can present the latest deal and the adjusted three-month
+    average as concrete purchase scenarios even when its smoothed estimate is
+    much lower.  The +5% result cap must therefore cover every actionable
+    scenario, not only ``midPriceEok``.
+
+    ``maxPriceEok`` is only a distribution boundary when a representative or
+    scenario price exists, so it is used solely as a final fallback.
+    """
+    recent3_price = (
+        _float_value(row.get("recent3AdjustedAveragePriceEok"))
+        or _float_value(row.get("recent3AveragePriceEok"))
+    )
+    prices = [
+        _float_value(row.get("latestDealPriceEok")),
+        _float_value(row.get("lastObservedDealPriceEok")),
+        recent3_price,
+        _float_value(row.get("estimatedMidPriceEok")),
+        _float_value(row.get("currentEstimateMidPriceEok")),
+        _float_value(row.get("midPriceEok")),
+        _float_value(row.get("averagePriceEok")),
+    ]
+    actionable_prices = [price for price in prices if price > 0]
+    if not actionable_prices:
+        fallback = (
+            _float_value(row.get("maxPriceEok"))
+            or _float_value(row.get("minPriceEok"))
+        )
+        if fallback > 0:
+            actionable_prices.append(fallback)
+    return max(actionable_prices, default=0.0)
+
+
+def _candidate_over_purchase_cap(row, budget_eok):
+    cap_price = _candidate_purchase_cap_price(row)
+    return bool(
+        cap_price
+        and _fit_status(cap_price, budget_eok)[0] == "제외"
+    )
+
+
 def _budget_eok(value):
     text = str(value or "").strip().lower()
     if not text:
@@ -839,7 +882,7 @@ def _fast_cached_seed_rows(entries, min_area, budget_eok, purpose, priority, com
         if live:
             _apply_live_band(row, live)
             _apply_fit(row, budget_eok)
-            if row["fitStatus"] == "제외":
+            if _candidate_over_purchase_cap(row, budget_eok):
                 if filtered is not None:
                     filtered["price"] += 1
                 continue
@@ -887,7 +930,7 @@ def _broad_region_live_seed_rows(
             continue
         _apply_live_band(row, live)
         _apply_fit(row, budget_eok)
-        if row["fitStatus"] == "제외":
+        if _candidate_over_purchase_cap(row, budget_eok):
             continue
         row["_score"] = _candidate_score(row, entity, purpose, priority, commute, price_strategy)
         row.pop("_liveLookup", None)
@@ -1702,7 +1745,7 @@ def budget_candidates(
         }
         _apply_fit(candidate, budget_eok)
         if (
-            candidate["fitStatus"] == "제외"
+            _candidate_over_purchase_cap(candidate, budget_eok)
             and candidate["priceSource"] in VERIFIED_PRICE_SOURCES
             and not (molit_transactions.enabled() and min_area)
         ):
@@ -1934,10 +1977,12 @@ def budget_candidates(
     last_deal_over_budget_count = 0
     no_last_deal_count = 0
     for row in rows:
+        _apply_fit(row, budget_eok)
         last_observed_price = _float_value(row.get("lastObservedDealPriceEok"))
-        if last_observed_price and _fit_status(last_observed_price, budget_eok)[0] == "제외":
+        if _candidate_over_purchase_cap(row, budget_eok):
             filtered["price"] += 1
-            last_deal_over_budget_count += 1
+            if last_observed_price and _fit_status(last_observed_price, budget_eok)[0] == "제외":
+                last_deal_over_budget_count += 1
             continue
         if row.get("priceSource") not in VERIFIED_PRICE_SOURCES:
             if not _float_value(row.get("lastObservedDealPriceEok")):
@@ -1951,12 +1996,7 @@ def budget_candidates(
                 continue
             unverified_price_count += 1
             if all_matches:
-                _apply_fit(row, budget_eok)
                 verified_rows.append(row)
-            continue
-        _apply_fit(row, budget_eok)
-        if row["fitStatus"] == "제외":
-            filtered["price"] += 1
             continue
         verified_rows.append(row)
     rows = verified_rows

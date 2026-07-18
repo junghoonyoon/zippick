@@ -435,6 +435,51 @@ class BudgetLiveSeedTest(unittest.TestCase):
         self.assertEqual(result["candidates"], [])
         self.assertEqual(result["excludedCount"], 1)
 
+    def test_all_matches_excludes_latest_deal_over_cap_when_smoothed_estimate_is_lower(self):
+        entity = {
+            "name": "삼익파크형회귀단지",
+            "city": "서울시",
+            "district": "강동구",
+            "legalDong": "길동",
+            "households": 1092,
+            "approvedAt": "1982-01-01",
+        }
+        live = {
+            "areaLabel": "전용 59~60㎡",
+            "minPriceEok": 8.3,
+            "midPriceEok": 8.9,
+            "maxPriceEok": 12.55,
+            "latestDealPriceEok": 12.0,
+            "latestDealDate": "2026-02-07",
+            "transactionCount": 12,
+            "currentEstimateMinPriceEok": 8.5,
+            "currentEstimateMidPriceEok": 8.9,
+            "currentEstimateMaxPriceEok": 9.9,
+            "currentEstimateSampleCount": 12,
+            "currentEstimateTrimmedCount": 0,
+            "recent3AdjustedAveragePriceEok": 12.28,
+            "recent3AdjustedTradeCount": 2,
+            "sourceNote": "국토부",
+        }
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=[]), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", [entity]), \
+             mock.patch.object(budget_candidates.molit_transactions, "enabled", return_value=True), \
+             mock.patch.object(budget_candidates.molit_transactions, "price_band_for_apartment", return_value=live), \
+             mock.patch.object(budget_candidates.molit_transactions, "last_error", return_value=""):
+            budget_candidates._ENTITY_LOOKUP = None
+            result = budget_candidates.budget_candidates(
+                "8.9억",
+                region="강동구",
+                min_area="59",
+                min_households="1000",
+                max_building_age="50",
+                all_matches=True,
+            )
+
+        self.assertEqual(result["candidates"], [])
+        self.assertEqual(result["excludedCount"], 1)
+        self.assertEqual(result["filterSummary"]["price"], 1)
+
     def test_broad_region_enriches_region_balanced_live_seeds_within_limit(self):
         entities = [
             {
