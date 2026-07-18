@@ -26,6 +26,82 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
+    def test_fast_cached_seed_rows_exclude_prices_over_stretch_cap(self):
+        entries = [
+            (
+                {
+                    "name": "상한초과",
+                    "region": "은평구",
+                    "midPriceEok": 0,
+                    "_budgetEok": 10,
+                    "_liveLookup": True,
+                },
+                {"name": "상한초과"},
+            ),
+            (
+                {
+                    "name": "상한근접",
+                    "region": "은평구",
+                    "midPriceEok": 0,
+                    "_budgetEok": 10,
+                    "_liveLookup": True,
+                },
+                {"name": "상한근접"},
+            ),
+            (
+                {
+                    "name": "가격미확인",
+                    "region": "은평구",
+                    "midPriceEok": 0,
+                    "_budgetEok": 10,
+                    "_liveLookup": True,
+                },
+                {"name": "가격미확인"},
+            ),
+        ]
+        live_bands = {
+            "상한초과": {"midPriceEok": 10.51},
+            "상한근접": {"midPriceEok": 10.5},
+            "가격미확인": None,
+        }
+        filtered = {"price": 0}
+
+        def cached(row, _entity, _min_area):
+            return live_bands[row["name"]]
+
+        def apply_band(row, live):
+            row.update(live)
+            return row
+
+        with mock.patch.object(
+            budget_candidates,
+            "_cached_live_band_for_seed",
+            side_effect=cached,
+        ), mock.patch.object(
+            budget_candidates,
+            "_apply_live_band",
+            side_effect=apply_band,
+        ), mock.patch.object(
+            budget_candidates,
+            "_candidate_score",
+            return_value=1,
+        ):
+            rows = budget_candidates._fast_cached_seed_rows(
+                entries,
+                min_area=0,
+                budget_eok=10,
+                purpose="",
+                priority="",
+                commute="",
+                price_strategy="stretch",
+                filtered=filtered,
+            )
+
+        self.assertEqual([row["name"] for row in rows], ["상한근접", "가격미확인"])
+        self.assertNotIn("_liveLookup", rows[0])
+        self.assertTrue(rows[1]["_liveLookup"])
+        self.assertEqual(filtered["price"], 1)
+
     def test_region_adjacency_normalizes_general_districts_and_prefixed_regions(self):
         adjacency = budget_candidates.region_adjacency
 

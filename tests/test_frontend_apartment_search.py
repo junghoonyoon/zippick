@@ -84,6 +84,31 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("currentBudgetData?.enrichmentPending", badge_body)
         self.assertIn('? "loading"', badge_body)
 
+    def test_unverified_candidate_over_cap_is_removed_after_price_enrichment(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        cap_match = re.search(
+            r"function unverifiedCandidateOverCap\b(?P<body>.*?)"
+            r"\n    function removeOverCapCandidate",
+            html,
+            re.DOTALL,
+        )
+        refresh_match = re.search(
+            r"function refreshMarketInsight\b(?P<body>.*?)"
+            r"\n    async function loadMarketInsight",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(cap_match)
+        self.assertIsNotNone(refresh_match)
+        self.assertIn("price > budget * 1.05", cap_match.group("body"))
+        self.assertIn("Number(item.midPriceEok || 0)", cap_match.group("body"))
+        self.assertIn(
+            "item.marketInsightState === \"ready\" && unverifiedCandidateOverCap(item)",
+            refresh_match.group("body"),
+        )
+        self.assertIn("removeOverCapCandidate(item);", refresh_match.group("body"))
+
     def test_report_cache_shares_an_in_flight_request_and_retries_failures(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(

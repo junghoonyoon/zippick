@@ -5511,7 +5511,38 @@
       </div>`;
     }
 
+    function unverifiedCandidateOverCap(item) {
+      // 서버가 가격을 검증하지 못한 후보(가격 확인 중)가 클라이언트 보강으로
+      // 가격이 드러났을 때, 매수 가능 상한(+5%)을 넘으면 목록에서 제외한다.
+      // 서버 검증 가격이 있는 후보는 서버의 판정을 그대로 따른다.
+      const budget = Number(currentBudgetData?.budgetEok || 0);
+      if (!budget || Number(item.midPriceEok || 0)) return false;
+      const payload = item.roneEstimate;
+      const price = Number(
+        payload?.estimate?.midPriceEok
+        || payload?.latestTrade?.dealAmountEok
+        || 0
+      );
+      return price > budget * 1.05;
+    }
+
+    function removeOverCapCandidate(item) {
+      const key = candidateIdentityKey(item);
+      ["allCandidates", "policyDefaultCandidates", "candidates"].forEach(field => {
+        if (Array.isArray(currentBudgetData?.[field])) {
+          currentBudgetData[field] = currentBudgetData[field].filter(row => candidateIdentityKey(row) !== key);
+        }
+      });
+      [...budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-key]")]
+        .filter(card => card.dataset.candidateKey === key)
+        .forEach(card => card.remove());
+    }
+
     function refreshMarketInsight(item) {
+      if (item.marketInsightState === "ready" && unverifiedCandidateOverCap(item)) {
+        removeOverCapCandidate(item);
+        return;
+      }
       const card = [...budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-name]")]
         .find(element => element.dataset.candidateName === item.name);
       const verdict = card?.querySelector(".candidate-verdict");

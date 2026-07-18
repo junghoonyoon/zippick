@@ -826,6 +826,29 @@ def _balanced_live_seed_rows(entries, limit):
     return selected
 
 
+def _fast_cached_seed_rows(entries, min_area, budget_eok, purpose, priority, commute, price_strategy, filtered=None):
+    """1차(빠른) 응답용: 네트워크 없이 로컬 캐시로만 시드 가격을 붙인다.
+
+    가격이 확인된 시드는 즉시 매수 가능 상한(+5%) 필터를 적용해 초과 단지가
+    '확인 중' 상태로 노출되는 것을 막고, 캐시에 없는 시드는 가격 미확인
+    상태로 유지해 2차 보강이 채우게 한다.
+    """
+    rows_out = []
+    for row, entity in entries:
+        live = _cached_live_band_for_seed(row, entity, min_area)
+        if live:
+            _apply_live_band(row, live)
+            _apply_fit(row, budget_eok)
+            if row["fitStatus"] == "제외":
+                if filtered is not None:
+                    filtered["price"] += 1
+                continue
+            row["_score"] = _candidate_score(row, entity, purpose, priority, commute, price_strategy)
+            row.pop("_liveLookup", None)
+        rows_out.append(row)
+    return rows_out
+
+
 def _broad_region_live_seed_rows(
     entries,
     min_area,
@@ -839,9 +862,15 @@ def _broad_region_live_seed_rows(
     """Use cached prices first, then keep a bounded, region-balanced lookup set."""
     seed_limit = max(1, config.BUDGET_BROAD_REGION_LIVE_SEED_LIMIT)
     if fast_mode:
-        return [
-            row for row, _entity in _balanced_live_seed_rows(entries, seed_limit)
-        ]
+        return _fast_cached_seed_rows(
+            _balanced_live_seed_rows(entries, seed_limit),
+            min_area,
+            budget_eok,
+            purpose,
+            priority,
+            commute,
+            price_strategy,
+        )
 
     # 광역 마스터 전체(경기도 약 7천 단지)의 파일 캐시를 모두 열면 1차
     # 응답도 수십 초가 걸린다. 실제 보강 상한만큼 지역별 후보를 선별해
@@ -1764,6 +1793,18 @@ def budget_candidates(
                 commute,
                 price_strategy,
                 fast_mode=fast_mode,
+            )
+        elif fast_mode:
+            # 1차 응답에서도 캐시로 가격을 붙여 상한(+5%) 초과 단지를 걸러낸다.
+            live_seed_rows = _fast_cached_seed_rows(
+                live_seed_entries,
+                min_area,
+                budget_eok,
+                purpose,
+                priority,
+                commute,
+                price_strategy,
+                filtered=filtered,
             )
         else:
             live_seed_rows = [row for row, _entity in live_seed_entries]
