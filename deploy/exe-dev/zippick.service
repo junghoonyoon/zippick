@@ -1,0 +1,18 @@
+[Unit]
+Description=Zippick real-estate search server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/exedev/apps/zippick/current
+Environment=PYTHONUNBUFFERED=1
+Environment=REAL_ESTATE_HOST=0.0.0.0
+Environment=REAL_ESTATE_PORT=8766
+Environment=BEAVER_V2_SETTINGS=/home/exedev/maesuhalkkayo/설정.txt
+ExecStart=/home/exedev/maesuhalkkayo/.venv/bin/python pipeline/search_server.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

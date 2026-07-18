@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly REPO_DIR="/home/exedev/zippick"
+readonly APP_ROOT="/home/exedev/apps/zippick"
+readonly RELEASES_DIR="$APP_ROOT/releases"
+readonly SHARED_DIR="$APP_ROOT/shared"
+readonly CURRENT_LINK="$APP_ROOT/current"
+readonly SERVICE_NAME="zippick.service"
+readonly HEALTH_URL="http://127.0.0.1:8766/"
+readonly LOCK_FILE="$APP_ROOT/deploy.lock"
+readonly SETTINGS_FILE="/home/exedev/maesuhalkkayo/설정.txt"
+readonly VENV_DIR="/home/exedev/maesuhalkkayo/.venv"
+readonly LEGACY_CACHE_DIR="/home/exedev/maesuhalkkayo/pipeline/cache"
+
+expected_commit="${1:-}"
+if [[ ! "$expected_commit" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "오류: 배포할 40자리 Git 커밋 SHA가 필요합니다." >&2
+  exit 2
+fi
+
+mkdir -p "$APP_ROOT" "$RELEASES_DIR" "$SHARED_DIR"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "오류: 다른 배포가 진행 중입니다." >&2
+  exit 1
+fi
+
+if [[ ! -d "$REPO_DIR/.git" ]]; then
+  echo "오류: GitHub 미러 저장소가 없습니다: $REPO_DIR" >&2
+  exit 1
+fi
+if [[ ! -f "$SETTINGS_FILE" ]]; then
+  echo "오류: 서버 설정 파일이 없습니다: $SETTINGS_FILE" >&2
+  exit 1
+fi
+if [[ ! -x "$VENV_DIR/bin/python" ]]; then
+  echo "오류: 서버 Python 가상환경이 없습니다: $VENV_DIR" >&2
+  exit 1
+fi
+
+echo "GitHub origin/main 갱신"
+git -C "$REPO_DIR" fetch --quiet origin main
+github_commit="$(git -C "$REPO_DIR" rev-parse origin/main)"
+if [[ "$github_commit" != "$expected_commit" ]]; then
+  echo "오류: 요청한 커밋이 GitHub origin/main의 최신 커밋이 아닙니다." >&2
+  echo "요청:   $expected_commit" >&2
+  echo "GitHub: $github_commit" >&2
+  exit 1
+fi
+
+release_dir="$RELEASES_DIR/$expected_commit"
+if [[ ! -d "$release_dir" ]]; then
+  staging_dir="$(mktemp -d "$RELEASES_DIR/.staging.XXXXXX")"
+  cleanup_staging() {
+    if [[ -n "${staging_dir:-}" && -d "$staging_dir" ]]; then
+      rm -rf -- "$staging_dir"
+    fi
+  }
+  trap cleanup_staging EXIT
+
+  git -C "$REPO_DIR" archive "$expected_commit" | tar -x -C "$staging_dir"
+
+  mkdir -p "$SHARED_DIR/cache"
+  if [[ -d "$LEGACY_CACHE_DIR" && ! -e "$SHARED_DIR/cache-migrated" ]]; then
+    rsync -a "$LEGACY_CACHE_DIR/" "$SHARED_DIR/cache/"
+    touch "$SHARED_DIR/cache-migrated"
+  fi
+
+  rm -rf -- "$staging_dir/pipeline/cache"
+  ln -s "$SHARED_DIR/cache" "$staging_dir/pipeline/cache"
+  ln -s "$SETTINGS_FILE" "$staging_dir/설정.txt"
+  mv "$staging_dir" "$release_dir"
+  staging_dir=""
+  trap - EXIT
+fi
+
+previous_target=""
+if [[ -L "$CURRENT_LINK" ]]; then
+  previous_target="$(readlink -f "$CURRENT_LINK")"
+fi
+
+next_link="$APP_ROOT/.current.next"
+ln -sfn "$release_dir" "$next_link"
+mv -Tf "$next_link" "$CURRENT_LINK"
+
+mkdir -p "$HOME/.config/systemd/user"
+install -m 0644 "$release_dir/deploy/exe-dev/zippick.service" \
+  "$HOME/.config/systemd/user/$SERVICE_NAME"
+systemctl --user daemon-reload
+systemctl --user enable "$SERVICE_NAME" >/dev/null
+systemctl --user restart "$SERVICE_NAME"
+
+healthy=0
+for _ in {1..20}; do
+  if curl --fail --silent --show-error --output /dev/null "$HEALTH_URL"; then
+    healthy=1
+    break
+  fi
+  sleep 1
+done
+
+if [[ "$healthy" -ne 1 ]]; then
+  echo "오류: 새 릴리스 상태 확인에 실패했습니다. 이전 릴리스로 되돌립니다." >&2
+  systemctl --user --no-pager --full status "$SERVICE_NAME" >&2 || true
+  if [[ -n "$previous_target" && -d "$previous_target" ]]; then
+    ln -sfn "$previous_target" "$next_link"
+    mv -Tf "$next_link" "$CURRENT_LINK"
+    systemctl --user restart "$SERVICE_NAME"
+  fi
+  exit 1
+fi
+
+echo "exe.dev 배포 성공: $expected_commit"
