@@ -954,6 +954,22 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             body.index("enrichMarketInsights(rows);"),
         )
 
+    def test_budget_candidate_cards_render_compare_controls(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        render_match = re.search(
+            r"function renderBudgetCandidates\b(?P<body>.*?)"
+            r"\n    function budgetLoadingStageIndex",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(render_match)
+        body = render_match.group("body")
+        self.assertIn('class="compare-toggle"', body)
+        self.assertIn('data-compare-name="${esc(item.name)}"', body)
+        self.assertIn('aria-pressed="${selectedCandidateNames.has(item.name)}"', body)
+        self.assertIn('"비교에서 빼기" : "+ 비교 담기"', body)
+
     def test_rone_latest_trade_fills_price_before_score_enrichment_finishes(self):
         html = APP_HTML.read_text(encoding="utf-8")
         fallback_match = re.search(
@@ -1185,7 +1201,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIsNotNone(sync_match)
         self.assertIn(
-            '".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden])"',
+            '".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden]), .listing-review-sheet:not([hidden])"',
             sync_match.group("body"),
         )
         self.assertIn(
@@ -1365,6 +1381,20 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('rel="noopener noreferrer"', body)
         self.assertNotIn("뒤로가기로 결과에 복귀", html)
         self.assertNotIn("뒤로가기로 지도에 복귀", html)
+
+    def test_listing_review_can_be_saved_shared_and_printed(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('id="listingReviewEntry"', html)
+        self.assertIn('id="listingReportHistoryEntry"', html)
+        self.assertIn('data-listing-review-name=', html)
+        self.assertIn('getJson("/api/listing-review"', html)
+        self.assertIn('"X-Report-Owner-Token":ownerToken', html)
+        self.assertIn("data-listing-review-share", html)
+        self.assertIn("data-listing-review-print", html)
+        self.assertIn("window.print();", html)
+        self.assertIn('<option value="3" selected>매매가의 3%</option>', html)
+        self.assertIn("let includeAdditionalFundingCandidates = false;", html)
 
 
 if __name__ == "__main__":

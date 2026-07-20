@@ -18,12 +18,15 @@ from urllib.parse import parse_qs, unquote, urlparse
 import config
 import apartment_leaders
 import budget_candidates
+import listing_review
 import molit_transactions
 import momentum_signals
 import naver_complex
 import news_catalysts
+import paid_access
 import policy_evaluator
 import real_estate_search
+import report_store
 import rone_estimates
 
 ROOT = config.ROOT
@@ -1430,6 +1433,34 @@ def _apartment_affordability(arguments):
     return response, 200
 
 
+def _listing_review(arguments):
+    """같은 단지 가격 파이프라인으로 특정 매물 검토 리포트를 만든다."""
+    affordability, status = _apartment_affordability({
+        **arguments,
+        "area": arguments.get("area") or "",
+        "months": arguments.get("months") or 24,
+    })
+    if status >= 400:
+        return affordability, status
+    if affordability.get("state") != "ready":
+        return {
+            "error": affordability.get("error")
+            or "현재 매물가격을 비교할 실거래 자료가 부족해요.",
+        }, 422
+    try:
+        review = listing_review.build_review(arguments, affordability)
+    except ValueError as exc:
+        return {"error": str(exc)}, 400
+    payload = {"review": review}
+    owner_token = str(arguments.get("owner_token") or "").strip()
+    if owner_token:
+        try:
+            payload["saved"] = report_store.save(review, owner_token)
+        except ValueError as exc:
+            return {"error": str(exc)}, 400
+    return payload, 200
+
+
 def _trim_budget_jobs_locked():
     if len(BUDGET_JOBS) <= BUDGET_MAX_JOBS:
         return
@@ -1771,11 +1802,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        report_share_match = re.fullmatch(
+            r"/api/reports/([a-f0-9-]{16,64})/share",
+            parsed.path,
+        )
         if parsed.path not in {
             "/api/apartment-affordability",
             "/api/apartment-catalysts",
+            "/api/listing-review",
             "/api/admin/apartment-leaders/recalculate",
-        }:
+        } and not report_share_match:
             self._json({"error": "지원하지 않는 요청이에요."}, 404)
             return
         try:
@@ -1786,6 +1822,20 @@ class Handler(BaseHTTPRequestHandler):
             return
         if not isinstance(arguments, dict):
             self._json({"error": "요청 내용을 확인해 주세요."}, 400)
+            return
+        if report_share_match:
+            try:
+                saved = report_store.create_share(
+                    report_share_match.group(1),
+                    arguments.get("owner_token"),
+                )
+            except PermissionError as exc:
+                self._json({"error": str(exc)}, 403)
+                return
+            if not saved:
+                self._json({"error": "저장된 리포트를 찾지 못했어요."}, 404)
+                return
+            self._json({"saved": saved})
             return
         if parsed.path == "/api/admin/apartment-leaders/recalculate":
             configured_token = os.environ.get("APARTMENT_LEADER_ADMIN_TOKEN", "").strip()
@@ -1834,12 +1884,54 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(news_catalysts.catalysts_for_apartments(apartments))
             return
+        if parsed.path == "/api/listing-review":
+            allowed, access_payload = paid_access.authorize(
+                self.headers.get("X-Report-Access-Token", ""),
+            )
+            if not allowed:
+                self._json(access_payload, 402)
+                return
+            payload, status = _listing_review(arguments)
+            self._json(payload, status)
+            return
         payload, status = _apartment_affordability(arguments)
         self._json(payload, status)
 
     def do_GET(self):
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
+        report_match = re.fullmatch(r"/api/reports/([a-f0-9-]{16,64})", parsed.path)
+        if report_match:
+            try:
+                report = report_store.get(
+                    report_match.group(1),
+                    owner_token=(
+                        self.headers.get("X-Report-Owner-Token", "").strip()
+                        or params.get("owner_token", [""])[0].strip()
+                    ),
+                    share_token=params.get("token", [""])[0].strip(),
+                )
+            except PermissionError as exc:
+                self._json({"error": str(exc)}, 403)
+                return
+            except ValueError as exc:
+                self._json({"error": str(exc)}, 400)
+                return
+            if not report:
+                self._json({"error": "저장된 리포트를 찾지 못했어요."}, 404)
+                return
+            self._json({"review": report})
+            return
+        if parsed.path == "/api/reports":
+            owner_token = (
+                self.headers.get("X-Report-Owner-Token", "").strip()
+                or params.get("owner_token", [""])[0].strip()
+            )
+            self._json({"reports": report_store.list_owned(owner_token)})
+            return
+        if parsed.path == "/api/paid-access/status":
+            self._json(paid_access.status())
+            return
         if parsed.path == "/api/map-config":
             self._json({
                 "provider": "kakao",

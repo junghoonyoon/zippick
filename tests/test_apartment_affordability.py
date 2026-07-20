@@ -45,6 +45,56 @@ ESTIMATE_PAYLOAD = {
 
 
 class ApartmentAffordabilityTest(unittest.TestCase):
+    def test_listing_review_reuses_ready_affordability_payload(self):
+        affordability = {
+            "state": "ready",
+            "selectedArea": "59.4",
+            "areaBasis": "전용 59.4㎡ 최근 거래 기준",
+            "estimate": {
+                "minPriceEok": 8.5,
+                "midPriceEok": 8.8,
+                "maxPriceEok": 9.1,
+                "sampleCount": 8,
+                "confidence": "높음",
+                "latestTradeDate": "2026-06-20",
+                "latestTradeAgeDays": 30,
+                "method": "최근 동일 평형 실거래",
+                "source": "molit",
+            },
+            "market": {"adjustedTransactions": []},
+        }
+        with mock.patch.object(
+            search_server,
+            "_apartment_affordability",
+            return_value=(affordability, 200),
+        ):
+            payload, status = search_server._listing_review({
+                "name": "꿈의숲해링턴플레이스",
+                "region": "강북구",
+                "asking_price_eok": 8.9,
+            })
+
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["review"]["pricing"]["askingPriceEok"], 8.9)
+
+    def test_listing_review_returns_market_error_when_price_is_unavailable(self):
+        with mock.patch.object(
+            search_server,
+            "_apartment_affordability",
+            return_value=(
+                {"state": "unavailable", "error": "실거래 없음"},
+                200,
+            ),
+        ):
+            payload, status = search_server._listing_review({
+                "name": "테스트아파트",
+                "region": "강북구",
+                "asking_price_eok": 8.9,
+            })
+
+        self.assertEqual(status, 422)
+        self.assertEqual(payload["error"], "실거래 없음")
+
     def test_apartment_report_keeps_exact_entity_location_for_dong_leader(self):
         entity = {
             "name": "한솔마을(4단지)(주공)",

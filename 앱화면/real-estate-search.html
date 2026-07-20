@@ -3052,6 +3052,141 @@
     .leader-method summary { padding:18px 0; color:#344054; font-size:15px; font-weight:850; cursor:pointer }
     .leader-method-copy { display:grid; gap:10px; padding:0 0 20px; color:#667085; font-size:14px; font-weight:650; line-height:1.65 }
     .leader-method-copy p { margin:0 }
+
+    /* 계약 전 매물 검증 */
+    .hero-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px }
+    .hero-actions .leader-entry { margin-top:0 }
+    .listing-report-history-entry {
+      border:1px solid #d7deea; border-radius:14px; padding:13px 18px; background:#fff;
+      color:#4e5968; font:inherit; font-size:14px; font-weight:900; cursor:pointer;
+    }
+    .listing-review-entry {
+      display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:50px;
+      border:0; border-radius:14px; padding:0 20px; background:#191f28; color:#fff;
+      font-size:16px; font-weight:900; cursor:pointer;
+    }
+    .listing-review-entry::after { content:"→"; font-size:18px }
+    .listing-review-entry:hover { background:#2b3440 }
+    .listing-review-trigger {
+      appearance:none; display:inline-flex; align-items:center; justify-content:center; min-height:46px;
+      border:0; border-radius:14px; padding:0 17px; background:#3182f6; color:#fff;
+      font:inherit; font-size:14px; font-weight:900; cursor:pointer;
+    }
+    .listing-review-trigger:hover { background:#1b64da }
+    .candidate-primary-actions .listing-review-trigger { flex:1 1 100%; width:100% }
+    .condition-stage-results .candidate-primary-actions .listing-review-trigger {
+      flex:1 1 100%; width:100%; min-height:52px; background:#3182f6;
+    }
+    .condition-stage-results .candidate-primary-actions .naver-land-action {
+      flex:1 1 auto; width:auto; min-height:46px; border:0; background:#f2f4f6;
+      color:#4e5968; box-shadow:none;
+    }
+    .condition-stage-results .candidate-primary-actions .naver-land-action:hover {
+      background:#e9edf2; color:#333d4b;
+    }
+    .listing-review-sheet { z-index:260 }
+    .listing-review-sheet .result-info-panel {
+      width:min(780px,100vw); max-height:min(94vh,940px); max-height:min(94svh,940px);
+    }
+    .listing-review-content { padding:0 28px 36px; overflow:auto }
+    .listing-review-intro {
+      margin:0 0 22px; border-radius:16px; padding:16px 18px; background:#f4f8ff;
+      color:#344054; font-size:15px; font-weight:700; line-height:1.6;
+    }
+    .listing-review-form { display:grid; gap:22px }
+    .listing-review-section { display:grid; gap:14px }
+    .listing-review-section h3 { margin:0; color:#191f28; font-size:19px }
+    .listing-review-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px }
+    .listing-review-field { display:grid; gap:7px; min-width:0 }
+    .listing-review-field.full { grid-column:1 / -1 }
+    .listing-review-field label { color:#4e5968; font-size:14px; font-weight:800 }
+    .listing-review-field input,
+    .listing-review-field select,
+    .listing-review-field textarea {
+      width:100%; border:1px solid #d8dee7; border-radius:13px; padding:0 14px;
+      background:#fff; color:#191f28; font:inherit; font-size:16px; font-weight:700;
+    }
+    .listing-review-field input,.listing-review-field select { min-height:52px }
+    .listing-review-field textarea { min-height:92px; padding-top:13px; resize:vertical; line-height:1.5 }
+    .listing-review-field small { color:#8b95a1; font-size:13px; font-weight:650; line-height:1.45 }
+    .listing-review-submit {
+      min-height:56px; border:0; border-radius:15px; background:#3182f6; color:#fff;
+      font:inherit; font-size:17px; font-weight:900; cursor:pointer;
+    }
+    .listing-review-submit:disabled { background:#aabbd2; cursor:wait }
+    .listing-review-error {
+      border-radius:13px; padding:13px 15px; background:#fff0ed; color:#b42318;
+      font-size:14px; font-weight:750; line-height:1.55;
+    }
+    .listing-review-profile-note {
+      display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+      border:1px solid #e2e7ee; border-radius:14px; padding:14px 16px; color:#596273;
+      font-size:14px; font-weight:700; line-height:1.5;
+    }
+    .listing-review-profile-note button {
+      flex:0 0 auto; border:0; background:transparent; color:#1767c5;
+      font:inherit; font-size:14px; font-weight:900; cursor:pointer;
+    }
+    .listing-report { display:grid; gap:24px; color:#333d4b }
+    .listing-report-hero {
+      border-radius:22px; padding:24px; background:#191f28; color:#fff;
+    }
+    .listing-report-verdict {
+      display:inline-flex; min-height:30px; align-items:center; border-radius:999px; padding:0 11px;
+      background:#fff; color:#191f28; font-size:13px; font-weight:900;
+    }
+    .listing-report-verdict[data-tone="good"] { background:#dff7e9; color:#147a55 }
+    .listing-report-verdict[data-tone="warning"] { background:#fff1c7; color:#8a5a00 }
+    .listing-report-verdict[data-tone="danger"] { background:#ffe5e0; color:#b42318 }
+    .listing-report-hero h3 { margin:16px 0 8px; color:#fff; font-size:28px; line-height:1.25 }
+    .listing-report-hero p { margin:0; color:#d1d8e1; font-size:15px; font-weight:650; line-height:1.6 }
+    .listing-report-price-grid {
+      display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px;
+    }
+    .listing-report-metric {
+      display:grid; gap:5px; border:1px solid #e3e8ef; border-radius:15px; padding:15px;
+      background:#fff;
+    }
+    .listing-report-metric span { color:#667085; font-size:13px; font-weight:750 }
+    .listing-report-metric strong { color:#191f28; font-size:20px; font-weight:950 }
+    .listing-report-metric small { color:#8b95a1; font-size:12px; font-weight:650; line-height:1.4 }
+    .listing-report-section { display:grid; gap:12px }
+    .listing-report-section h4 { margin:0; color:#191f28; font-size:19px }
+    .listing-report-list { display:grid; gap:9px; margin:0; padding:0; list-style:none }
+    .listing-report-list li {
+      border-radius:14px; padding:14px 16px; background:#f7f8fa;
+      color:#4e5968; font-size:14px; font-weight:650; line-height:1.55;
+    }
+    .listing-report-list li strong { display:block; margin-bottom:3px; color:#191f28; font-size:15px }
+    .listing-report-risk-high { background:#fff0ed !important }
+    .listing-report-risk-medium { background:#fff8e8 !important }
+    .listing-report-comparables { overflow:auto; border:1px solid #e3e8ef; border-radius:15px }
+    .listing-report-comparables table { width:100%; min-width:520px; border-collapse:collapse }
+    .listing-report-comparables th,.listing-report-comparables td {
+      border-bottom:1px solid #edf0f4; padding:12px 14px; text-align:left; font-size:13px;
+    }
+    .listing-report-comparables th { background:#f8fafc; color:#667085; font-weight:850 }
+    .listing-report-comparables td { color:#344054; font-weight:650 }
+    .listing-report-actions {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:10px; position:sticky; bottom:-36px;
+      margin:0 -28px -36px; border-top:1px solid #e7ebf0; padding:14px 28px 18px;
+      background:rgba(255,255,255,.97);
+    }
+    .listing-report-actions button {
+      min-height:48px; border:1px solid #d7deea; border-radius:13px; background:#fff;
+      color:#4e5968; font:inherit; font-size:14px; font-weight:900; cursor:pointer;
+    }
+    .listing-report-actions .primary { border-color:#3182f6; background:#3182f6; color:#fff }
+    .listing-report-disclaimer { margin:0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.55 }
+    .listing-report-history { display:grid; gap:10px }
+    .listing-report-history button {
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px 16px; width:100%;
+      border:1px solid #e3e8ef; border-radius:16px; padding:17px; background:#fff;
+      color:#191f28; text-align:left; font:inherit; cursor:pointer;
+    }
+    .listing-report-history button strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:16px }
+    .listing-report-history button span { color:#3182f6; font-size:13px; font-weight:850 }
+    .listing-report-history button small { grid-column:1 / -1; color:#8b95a1; font-size:12px; font-weight:650 }
     @media (max-width:620px) {
       .leader-heading { margin-top:22px }
       .leader-heading h1 { font-size:35px }
@@ -3064,6 +3199,29 @@
       .leader-winner-body { padding:0 20px 22px }
       .leader-score-grid { grid-template-columns:1fr }
       .leader-list-item { grid-template-columns:30px minmax(0,1fr) auto; padding:16px 14px }
+      .hero-actions { display:grid }
+      .listing-review-entry,.listing-report-history-entry,.hero-actions .leader-entry { width:100% }
+      .listing-review-content { padding:0 18px 28px }
+      .listing-review-fields { grid-template-columns:1fr }
+      .listing-review-field.full { grid-column:1 }
+      .listing-report-price-grid { grid-template-columns:1fr }
+      .listing-report-actions { margin:0 -18px -28px; padding:12px 18px calc(14px + env(safe-area-inset-bottom)) }
+    }
+    @media print {
+      body * { visibility:hidden !important }
+      .listing-review-sheet,.listing-review-sheet * { visibility:visible !important }
+      .listing-review-sheet {
+        position:static !important; display:block !important; overflow:visible !important;
+        background:#fff !important;
+      }
+      .listing-review-sheet .result-info-backdrop,
+      .listing-review-sheet .result-info-sheet-close,
+      .listing-report-actions { display:none !important }
+      .listing-review-sheet .result-info-panel {
+        position:static !important; width:100% !important; max-height:none !important;
+        transform:none !important; border-radius:0 !important; box-shadow:none !important;
+      }
+      .listing-review-content { overflow:visible !important }
     }
   </style>
 </head>
@@ -3132,6 +3290,21 @@
       </div>
     </div>
 
+    <div class="result-info-sheet listing-review-sheet" id="listingReviewSheet" role="dialog" aria-modal="true" aria-labelledby="listingReviewTitle" aria-hidden="true" hidden>
+      <button class="result-info-backdrop" type="button" data-listing-review-close aria-label="매물 검증 닫기"></button>
+      <div class="result-info-panel">
+        <div class="result-info-grabber" aria-hidden="true"></div>
+        <div class="result-info-sheet-head">
+          <div>
+            <h4 class="result-info-sheet-title" id="listingReviewTitle">보고 온 매물 검증하기</h4>
+            <p class="apt-report-meta" id="listingReviewMeta"></p>
+          </div>
+          <button class="result-info-sheet-close" type="button" data-listing-review-close aria-label="매물 검증 닫기"></button>
+        </div>
+        <div class="listing-review-content" id="listingReviewContent"></div>
+      </div>
+    </div>
+
     <div class="app-view leader-view" id="leaderView" role="region" aria-labelledby="leaderPageTitle" hidden>
       <button class="leader-back" id="leaderBack" type="button">내 조건으로 돌아가기</button>
       <header class="leader-heading">
@@ -3178,7 +3351,11 @@
       <div class="hero-copy" id="heroCopy">
         <h1>내 예산으로 살 수 있는 집,<br>한 번에 찾기</h1>
         <p class="lead">구매 가능한 금액부터 조건에 맞는 매물 후보까지 한 번에 계산하고 비교해보세요.</p>
-        <button class="leader-entry" id="leaderEntry" type="button">지역별 대장아파트 보기</button>
+        <div class="hero-actions">
+          <button class="listing-review-entry" id="listingReviewEntry" type="button">보고 온 매물 검증하기</button>
+          <button class="listing-report-history-entry" id="listingReportHistoryEntry" type="button">내 검증 리포트</button>
+          <button class="leader-entry" id="leaderEntry" type="button">지역별 대장아파트 보기</button>
+        </div>
       </div>
 
       <nav class="condition-flow" id="conditionFlow" aria-label="내 조건 진행 단계">
@@ -3351,18 +3528,18 @@
                     <ul class="info-popover-list">
                       <li><strong>포함 항목</strong> 취득세, 중개보수, 등기비, 이사비처럼 계약·잔금 전후에 드는 비용을 보수적으로 잡아요.</li>
                       <li><strong>산정 방식</strong> 선택한 비율을 매매가에 곱해 필요 자기자금에 더합니다. 예를 들어 4%를 선택하면 8억 매수 기준 약 0.32억을 추가로 봅니다.</li>
-                      <li><strong>사용 기준</strong> 기본값은 반영 안 함이에요. 실제 잔금 여유까지 확인하고 싶을 때 3~5%를 선택하세요.</li>
+                      <li><strong>사용 기준</strong> 기본값은 3%예요. 실제 세금·중개보수·등기비가 다르면 4~5%로 높여 잡으세요.</li>
                       <li><strong>주의</strong> 실제 세금과 비용은 주택 수, 가격, 면적, 중개 조건에 따라 달라질 수 있습니다.</li>
                     </ul>
                   </div>
                   <select id="policyPurchaseCostRate" aria-label="취득 부대비용 여유율">
-                    <option value="0" selected>반영 안 함</option>
-                    <option value="3">매매가의 3%</option>
+                    <option value="0">반영 안 함</option>
+                    <option value="3" selected>매매가의 3%</option>
                     <option value="4">매매가의 4%</option>
                     <option value="5">매매가의 5%</option>
                   </select>
                   <details class="single-picker power-single-picker" id="purchaseCostRatePicker" data-power-single-picker="purchaseCostRate">
-                    <summary><span id="purchaseCostRateSummary">반영 안 함</span></summary>
+                    <summary><span id="purchaseCostRateSummary">매매가의 3%</span></summary>
                     <div class="multi-option-panel">
                       <div class="multi-sheet-grabber" aria-hidden="true"></div>
                       <p class="multi-sheet-title">부대비용 여유를 선택해주세요</p>
@@ -3682,6 +3859,15 @@
     const comparisonOverlay = $("comparisonOverlay");
     const comparisonClose = $("comparisonClose");
     const comparisonContent = $("comparisonContent");
+    const listingReviewSheet = $("listingReviewSheet");
+    const listingReviewTitle = $("listingReviewTitle");
+    const listingReviewMeta = $("listingReviewMeta");
+    const listingReviewContent = $("listingReviewContent");
+    const listingReviewEntry = $("listingReviewEntry");
+    const listingReportHistoryEntry = $("listingReportHistoryEntry");
+    let currentListingReviewTarget = null;
+    let currentListingReview = null;
+    let currentListingReviewSaved = null;
     let progressTimer = null;
     let budgetLoadingTimer = null;
     let budgetBackgroundRefreshController = null;
@@ -3698,6 +3884,7 @@
     let leaderRequestController = null;
     let currentLeaderPayload = null;
     const purchasePowerStorageKey = "realEstateSearch.purchasePower.v1";
+    const listingReportOwnerStorageKey = "realEstateSearch.listingReportOwner.v1";
     let areaDisplayUnit = "sqm";
     // 점수 공식 버전. pipeline/momentum_signals.py의 SCORE_FORMULA_VERSION과 맞춘다.
     // 브라우저 캐시에 구버전 공식으로 계산된 결과가 남아 재사용되는 것을 막는다.
@@ -3823,7 +4010,7 @@
     }
     function syncCandidateDetailScrollLock() {
       const openSheet = document.querySelector(
-        ".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden])",
+        ".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden]), .listing-review-sheet:not([hidden])",
       );
       document.body.classList.toggle("candidate-detail-sheet-open", Boolean(openSheet));
     }
@@ -4013,7 +4200,7 @@
         renderPreferenceSinglePickers();
         savePurchasePowerForm();
         showPolicyExcludedCandidates = Boolean(saved.showPolicyExcludedCandidates);
-        includeAdditionalFundingCandidates = saved.includeAdditionalFundingCandidates !== false;
+        includeAdditionalFundingCandidates = saved.includeAdditionalFundingCandidates === true;
         budgetSort = saved.budgetSort || "budget_near";
         candidateViewMode = saved.candidateViewMode === "map" ? "map" : "list";
         candidateVisibleCount = Math.max(
@@ -4032,7 +4219,7 @@
     let currentBudgetData = null;
     let currentPurchasePower = null;
     let showPolicyExcludedCandidates = false;
-    let includeAdditionalFundingCandidates = true;
+    let includeAdditionalFundingCandidates = false;
     let budgetSort = "budget_near";
     let candidateViewMode = "list";
     const CANDIDATE_PAGE_SIZE = 10;
@@ -9772,7 +9959,13 @@
               </div>
               ${policyImpactHtml(item.policyImpact, item, data.budgetEok)}
               <div class="candidate-primary-actions">
+                <button class="listing-review-trigger" type="button" data-listing-review-name="${esc(item.name)}" data-listing-review-region="${esc(item.region || item.displayRegion || "")}" data-listing-review-area="${esc(item.displayAreaLabel || item.areaLabel || "")}" data-listing-review-price="${esc(item.latestDealPriceEok || item.recent3AdjustedAveragePriceEok || item.recent3AveragePriceEok || item.midPriceEok || "")}">
+                  이 매물 계약 전 분석
+                </button>
                 ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기, 새 탭으로 열기`)}
+                <button class="compare-toggle" type="button" data-compare-name="${esc(item.name)}" aria-pressed="${selectedCandidateNames.has(item.name)}">
+                  ${selectedCandidateNames.has(item.name) ? "비교에서 빼기" : "+ 비교 담기"}
+                </button>
               </div>
               <button class="candidate-detail-trigger" type="button" data-candidate-detail-open aria-expanded="false">
                 ${candidateSignalRankBadgeHtml(item)}
@@ -9941,7 +10134,7 @@
       budgetSubmit.disabled = true;
       resetComparisonState();
       showPolicyExcludedCandidates = false;
-      includeAdditionalFundingCandidates = true;
+      includeAdditionalFundingCandidates = false;
       budgetSort = "budget_near";
       candidateVisibleCount = CANDIDATE_PAGE_SIZE;
       budgetSearchController?.abort();
@@ -10467,6 +10660,11 @@
       }
     });
     async function handleBudgetResultClick(event) {
+      const listingReviewButton = event.target.closest("[data-listing-review-name]");
+      if (listingReviewButton) {
+        openListingReview(listingReviewTargetFromTrigger(listingReviewButton));
+        return;
+      }
       const candidateMapSheetHandle = event.target.closest("[data-candidate-map-sheet-handle]");
       if (candidateMapSheetHandle) {
         if (performance.now() < candidateMapSheetSuppressClickUntil) return;
@@ -11005,6 +11203,9 @@
         <div class="apt-affordability is-loading" data-apt-affordability aria-live="polite">예상 매수가와 필요한 자금을 계산하고 있어요…</div>
         <div class="apt-result-actions">
           <div class="candidate-primary-actions">
+            <button class="listing-review-trigger" type="button" data-listing-review-name="${esc(item.name)}" data-listing-review-region="${esc(item.region || "")}">
+              이 매물 계약 전 분석
+            </button>
             ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "apt-result-naver")}
           </div>
           <button class="apt-result-report candidate-detail-trigger" type="button" data-apt-card-signal data-signal-tone="loading" data-apt-report-name="${esc(item.name)}" data-apt-report-region="${esc(item.region || "")}">최근 가격·거래 흐름 확인 중…</button>
@@ -11201,6 +11402,341 @@
     function aptPurchaseProfile() {
       if (!hasCompleteAptPurchaseProfile()) return null;
       return Object.fromEntries(purchasePowerParams().entries());
+    }
+
+    function listingReportOwnerToken() {
+      try {
+        const saved = localStorage.getItem(listingReportOwnerStorageKey);
+        if (saved && saved.length >= 16) return saved;
+        const token = globalThis.crypto?.randomUUID
+          ? `${crypto.randomUUID()}${crypto.randomUUID()}`
+          : `${Date.now()}-${Math.random()}-${Math.random()}`;
+        localStorage.setItem(listingReportOwnerStorageKey, token);
+        return token;
+      } catch (_) {
+        return `temporary-${Date.now()}-${Math.random()}`;
+      }
+    }
+
+    function showListingReviewReport(review, saved = null) {
+      currentListingReview = review;
+      currentListingReviewSaved = saved;
+      currentListingReviewTarget = {
+        name:review?.apartment?.name || "",
+        region:review?.apartment?.region || "",
+        area:listingReviewAreaValue(review?.listing?.area),
+        referencePriceEok:Number(review?.pricing?.askingPriceEok || 0),
+      };
+      listingReviewTitle.textContent = "계약 전 매수검증 리포트";
+      listingReviewMeta.textContent = `${review?.apartment?.name || ""} · ${review?.asOf || ""} 기준`;
+      listingReviewContent.innerHTML = listingReviewReportHtml(review);
+      listingReviewSheet.hidden = false;
+      listingReviewSheet.setAttribute("aria-hidden", "false");
+      listingReviewContent.scrollTop = 0;
+      const panel = listingReviewSheet.querySelector(".result-info-panel");
+      if (panel) panel.scrollTop = 0;
+      syncCandidateDetailScrollLock();
+    }
+
+    function listingReviewShareUrl() {
+      if (!currentListingReview?.id || !currentListingReviewSaved?.shareToken) return "";
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
+      url.searchParams.set("report", currentListingReview.id);
+      url.searchParams.set("token", currentListingReviewSaved.shareToken);
+      return url.toString();
+    }
+
+    async function copyListingReviewShareLink(button) {
+      const shareUrl = listingReviewShareUrl();
+      if (!shareUrl) return;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        button.textContent = "공유 링크 복사됨";
+        setTimeout(() => { button.textContent = "공유 링크 복사"; }, 1800);
+      } catch (_) {
+        window.prompt("아래 링크를 복사해 주세요.", shareUrl);
+      }
+    }
+
+    async function openListingReportHistory() {
+      listingReviewTitle.textContent = "내 검증 리포트";
+      listingReviewMeta.textContent = "이 브라우저에서 만든 리포트";
+      listingReviewContent.innerHTML = `<div class="apt-report-loading">저장된 리포트를 불러오고 있어요…</div>`;
+      listingReviewSheet.hidden = false;
+      listingReviewSheet.setAttribute("aria-hidden", "false");
+      const panel = listingReviewSheet.querySelector(".result-info-panel");
+      if (panel) panel.scrollTop = 0;
+      syncCandidateDetailScrollLock();
+      try {
+        const ownerToken = listingReportOwnerToken();
+        const payload = await getJson("/api/reports", {
+          headers:{ "X-Report-Owner-Token":ownerToken },
+        });
+        const reports = Array.isArray(payload.reports) ? payload.reports : [];
+        listingReviewContent.innerHTML = reports.length
+          ? `<div class="listing-report-history">${reports.map(row => `<button type="button" data-listing-report-open="${esc(row.id)}">
+              <strong>${esc(row.name || "이름 없는 리포트")}</strong>
+              <span>${esc(row.verdict || "검토")}</span>
+              <small>${esc(row.region || "")} · 제시가격 ${esc(policyMoney(row.askingPriceEok))} · ${esc(row.asOf || "")}</small>
+            </button>`).join("")}</div>`
+          : `<div class="empty-card"><strong>아직 저장된 리포트가 없어요.</strong><p>관심 매물에서 ‘계약 전 분석’을 실행하면 자동으로 저장됩니다.</p></div>`;
+      } catch (error) {
+        listingReviewContent.innerHTML = `<div class="empty-card"><strong>리포트를 불러오지 못했어요.</strong><p>${esc(error.error || "잠시 후 다시 시도해 주세요.")}</p></div>`;
+      }
+    }
+
+    async function openStoredListingReport(reportId, shareToken = "") {
+      const ownerToken = listingReportOwnerToken();
+      const params = new URLSearchParams({ token:shareToken });
+      const payload = await getJson(`/api/reports/${encodeURIComponent(reportId)}?${params}`, {
+        headers:shareToken ? {} : { "X-Report-Owner-Token":ownerToken },
+      });
+      showListingReviewReport(payload.review, shareToken ? { shareToken } : null);
+    }
+
+    async function restoreListingReportFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const reportId = params.get("report") || "";
+      if (!reportId) return;
+      try {
+        await openStoredListingReport(reportId, params.get("token") || "");
+      } catch (error) {
+        listingReviewTitle.textContent = "저장 리포트";
+        listingReviewMeta.textContent = "";
+        listingReviewContent.innerHTML = `<div class="empty-card"><strong>리포트를 열지 못했어요.</strong><p>${esc(error.error || "공유 주소를 다시 확인해 주세요.")}</p></div>`;
+        listingReviewSheet.hidden = false;
+        listingReviewSheet.setAttribute("aria-hidden", "false");
+        syncCandidateDetailScrollLock();
+      }
+    }
+
+    function listingReviewAreaValue(value) {
+      const match = String(value || "").match(/\d+(?:\.\d+)?/);
+      return match ? match[0] : "";
+    }
+
+    function listingReviewTargetFromTrigger(trigger) {
+      return {
+        name:String(trigger?.dataset?.listingReviewName || "").trim(),
+        region:String(trigger?.dataset?.listingReviewRegion || "").trim(),
+        area:listingReviewAreaValue(trigger?.dataset?.listingReviewArea),
+        referencePriceEok:Number(trigger?.dataset?.listingReviewPrice || 0) || 0,
+      };
+    }
+
+    function listingReviewFormHtml(target) {
+      const price = target.referencePriceEok
+        ? Number(target.referencePriceEok).toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1")
+        : "";
+      const profileReady = hasCompleteAptPurchaseProfile();
+      return `<p class="listing-review-intro">중개사에게 받은 제시가격과 현장 조건을 입력하면 같은 평형 실거래, 내 자금 조건, 계약 전 확인사항을 한 번에 검토합니다.</p>
+        <form class="listing-review-form" id="listingReviewForm">
+          <section class="listing-review-section">
+            <h3>매물 조건</h3>
+            <div class="listing-review-fields">
+              <div class="listing-review-field">
+                <label for="listingReviewPrice">매도인 제시가격</label>
+                <input id="listingReviewPrice" name="asking_price_eok" type="number" min="0.1" step="0.01" inputmode="decimal" value="${esc(price)}" placeholder="예: 8.9" required>
+                <small>억원 단위로 입력해 주세요.</small>
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewArea">전용면적</label>
+                <input id="listingReviewArea" name="area" type="number" min="1" step="0.01" inputmode="decimal" value="${esc(target.area)}" placeholder="예: 59.4">
+                <small>비우면 단지의 대표 거래 평형을 사용합니다.</small>
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewBuilding">동</label>
+                <input id="listingReviewBuilding" name="building" type="text" maxlength="30" placeholder="예: 105동">
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewFloor">층</label>
+                <input id="listingReviewFloor" name="floor" type="number" min="-5" max="100" step="1" inputmode="numeric" placeholder="예: 12">
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewOrientation">향</label>
+                <select id="listingReviewOrientation" name="orientation">
+                  <option value="unknown">확인 전</option>
+                  <option value="south">남향</option>
+                  <option value="southeast">남동향</option>
+                  <option value="southwest">남서향</option>
+                  <option value="east">동향</option>
+                  <option value="west">서향</option>
+                  <option value="north">북향</option>
+                </select>
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewCondition">내부 상태</label>
+                <select id="listingReviewCondition" name="condition">
+                  <option value="unknown">확인 전</option>
+                  <option value="original">수리 필요</option>
+                  <option value="partial">부분 수리</option>
+                  <option value="renovated">전체 수리 완료</option>
+                </select>
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewRepair">예상 수리비</label>
+                <input id="listingReviewRepair" name="repair_cost_manwon" type="number" min="0" step="100" inputmode="numeric" placeholder="예: 3000">
+                <small>만원 단위이며 총 필요 현금과 협상 기준에 반영됩니다.</small>
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewTenancy">점유 상태</label>
+                <select id="listingReviewTenancy" name="tenancy">
+                  <option value="unknown">확인 전</option>
+                  <option value="vacant">공실·즉시 입주</option>
+                  <option value="owner">소유자 거주</option>
+                  <option value="occupied">세입자 거주</option>
+                </select>
+              </div>
+              <div class="listing-review-field">
+                <label for="listingReviewMoveIn">희망 입주일</label>
+                <input id="listingReviewMoveIn" name="move_in_date" type="date">
+              </div>
+              <div class="listing-review-field full">
+                <label for="listingReviewNotes">현장에서 들은 내용</label>
+                <textarea id="listingReviewNotes" name="notes" maxlength="500" placeholder="예: 샷시 교체 필요, 주차 1대, 10월 말 입주 가능"></textarea>
+              </div>
+            </div>
+          </section>
+          <div class="listing-review-profile-note">
+            <span>${profileReady
+              ? `저장된 구매력 조건을 함께 반영합니다. 자기자금 ${esc(policyMoney(policyCash.value))} · 연소득 ${Number(policyAnnualIncome.value || 0).toLocaleString("ko-KR")}만원`
+              : "구매력 조건이 없어 먼저 가격만 검토합니다. 자기자금과 소득을 입력하면 월 상환액과 안전예산도 계산할 수 있어요."}</span>
+            <button type="button" data-listing-review-profile>${profileReady ? "조건 수정" : "조건 입력"}</button>
+          </div>
+          <div class="listing-review-error" data-listing-review-error hidden></div>
+          <button class="listing-review-submit" type="submit">계약 전 분석 리포트 만들기</button>
+        </form>`;
+    }
+
+    function listingReviewComparableRows(review) {
+      const rows = Array.isArray(review?.comparables) ? review.comparables : [];
+      if (!rows.length) return `<p class="listing-report-disclaimer">표시할 수 있는 개별 실거래가 부족합니다.</p>`;
+      return `<div class="listing-report-comparables"><table>
+        <thead><tr><th>거래일</th><th>실거래가</th><th>전용면적</th><th>층</th></tr></thead>
+        <tbody>${rows.slice(0, 8).map(row => `<tr>
+          <td>${esc(row.dealDate || "-")}</td>
+          <td><strong>${esc(policyMoney(row.priceEok))}</strong></td>
+          <td>${row.exclusiveArea ? `${esc(Number(row.exclusiveArea).toFixed(1).replace(/\.0$/, ""))}㎡` : "-"}</td>
+          <td>${esc(row.floor || "-")}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`;
+    }
+
+    function listingReviewReportHtml(review) {
+      const pricing = review.pricing || {};
+      const financing = review.financing || {};
+      const verdict = review.verdict || {};
+      const gap = Number(financing.cashGapEok);
+      const premium = Number(pricing.premiumEok || 0);
+      const premiumCopy = premium > 0
+        ? `최근 거래 중앙값보다 ${readableGapMoney(premium)} 높음`
+        : premium < 0
+          ? `최근 거래 중앙값보다 ${readableGapMoney(Math.abs(premium))} 낮음`
+          : "최근 거래 중앙값과 비슷함";
+      const risks = Array.isArray(review.risks) ? review.risks : [];
+      const checklist = Array.isArray(review.checklist) ? review.checklist : [];
+      return `<article class="listing-report" data-listing-report-id="${esc(review.id || "")}">
+        <section class="listing-report-hero">
+          <span class="listing-report-verdict" data-tone="${esc(verdict.tone || "neutral")}">${esc(verdict.label || "검토 결과")}</span>
+          <h3>${esc(verdict.summary || "입력한 매물 조건을 확인했어요.")}</h3>
+          <p>${esc(review.apartment?.name || "")} · ${esc(review.apartment?.region || "")} · ${esc(review.apartment?.areaBasis || "")}</p>
+        </section>
+        <section class="listing-report-section">
+          <h4>가격 판단</h4>
+          <div class="listing-report-price-grid">
+            <div class="listing-report-metric"><span>매도인 제시가격</span><strong>${esc(policyMoney(pricing.askingPriceEok))}</strong><small>${esc(premiumCopy)}</small></div>
+            <div class="listing-report-metric"><span>협상 시작 기준</span><strong>${esc(policyMoney(pricing.negotiationStartPriceEok))}</strong><small>실거래 중앙값과 수리비 반영</small></div>
+            <div class="listing-report-metric"><span>검토 상한가격</span><strong>${esc(policyMoney(pricing.reviewCeilingPriceEok))}</strong><small>시장 상단과 안전예산 중 낮은 값</small></div>
+          </div>
+          <p class="listing-report-disclaimer">최근 동일 평형 예상 범위 ${esc(policyMoney(pricing.marketLowPriceEok))}~${esc(policyMoney(pricing.marketHighPriceEok))} · 표본 ${esc(pricing.sampleCount || 0)}건 · 신뢰도 ${esc(pricing.confidence || "확인 필요")}</p>
+        </section>
+        <section class="listing-report-section">
+          <h4>자금 계획</h4>
+          ${financing.profileComplete ? `<div class="listing-report-price-grid">
+            <div class="listing-report-metric"><span>총 필요 현금</span><strong>${esc(policyMoney(financing.totalCashCostEok - financing.financedLoanEok))}</strong><small>부대비용 ${esc(policyMoney(financing.purchaseCostEok))} · 수리비 ${esc(policyMoney(financing.repairCostEok))}</small></div>
+            <div class="listing-report-metric"><span>예상 월 상환액</span><strong>${Number(financing.monthlyPaymentManwon || 0).toLocaleString("ko-KR")}만원</strong><small>금리 +1%p 시 ${Number(financing.stressMonthlyPaymentManwon || 0).toLocaleString("ko-KR")}만원</small></div>
+            <div class="listing-report-metric"><span>비상자금 남기는 안전예산</span><strong>${esc(policyMoney(financing.safeBudgetEok))}</strong><small>소득 6개월분 ${esc(policyMoney(financing.emergencyFundEok))} 보유 가정</small></div>
+          </div>
+          <p class="listing-report-disclaimer">${gap >= 0 ? `자금 조건상 ${esc(readableGapMoney(gap))} 여유` : `추가 자금 ${esc(readableGapMoney(Math.abs(gap)))} 필요`} · 월 상환액은 원리금균등상환 가정</p>` : `<div class="listing-review-profile-note"><span>구매력 조건을 입력하면 대출한도, 월 상환액, 부대비용과 비상자금을 남기는 안전예산을 계산할 수 있어요.</span><button type="button" data-listing-review-profile>구매력 입력</button></div>`}
+        </section>
+        <section class="listing-report-section">
+          <h4>주의할 점</h4>
+          <ul class="listing-report-list">${risks.length ? risks.map(row => `<li class="listing-report-risk-${esc(row.level || "low")}"><strong>${esc(row.title)}</strong>${esc(row.detail)}</li>`).join("") : "<li><strong>현재 입력에서 큰 경고는 없어요.</strong>계약서와 현장 상태는 별도로 확인하세요.</li>"}</ul>
+        </section>
+        <section class="listing-report-section">
+          <h4>계약 전 체크리스트</h4>
+          <ul class="listing-report-list">${checklist.map(row => `<li><strong>${esc(row.category)} · ${esc(row.title)}</strong>${esc(row.detail)}</li>`).join("")}</ul>
+        </section>
+        <section class="listing-report-section">
+          <h4>비교한 최근 실거래</h4>
+          ${listingReviewComparableRows(review)}
+        </section>
+        <p class="listing-report-disclaimer">${esc(review.disclaimer || "")} · ${esc(review.asOf || "")} 기준</p>
+        <div class="listing-report-actions">
+          <button type="button" data-listing-review-edit>매물 조건 수정</button>
+          <button type="button" data-listing-review-share>${currentListingReviewSaved?.shareToken ? "공유 링크 복사" : "공유 링크 만들기"}</button>
+          <button class="primary" type="button" data-listing-review-print>인쇄·PDF 저장</button>
+        </div>
+      </article>`;
+    }
+
+    function openListingReview(target) {
+      if (!target?.name) {
+        openAptSearchLanding();
+        return;
+      }
+      currentListingReviewTarget = target;
+      currentListingReview = null;
+      currentListingReviewSaved = null;
+      listingReviewTitle.textContent = "보고 온 매물 검증하기";
+      listingReviewMeta.textContent = [target.name, target.region, target.area ? `전용 ${target.area}㎡` : ""].filter(Boolean).join(" · ");
+      listingReviewContent.innerHTML = listingReviewFormHtml(target);
+      listingReviewSheet.hidden = false;
+      listingReviewSheet.setAttribute("aria-hidden", "false");
+      const panel = listingReviewSheet.querySelector(".result-info-panel");
+      if (panel) panel.scrollTop = 0;
+      syncCandidateDetailScrollLock();
+      requestAnimationFrame(() => $("listingReviewPrice")?.focus({ preventScroll:true }));
+    }
+
+    function closeListingReview() {
+      listingReviewSheet.hidden = true;
+      listingReviewSheet.setAttribute("aria-hidden", "true");
+      syncCandidateDetailScrollLock();
+    }
+
+    async function submitListingReview(form) {
+      const submit = form.querySelector(".listing-review-submit");
+      const error = form.querySelector("[data-listing-review-error]");
+      const formData = new FormData(form);
+      const body = Object.fromEntries(formData.entries());
+      body.name = currentListingReviewTarget?.name || "";
+      body.region = currentListingReviewTarget?.region || "";
+      body.months = 24;
+      body.profile = aptPurchaseProfile();
+      body.owner_token = listingReportOwnerToken();
+      submit.disabled = true;
+      submit.textContent = "실거래와 자금 조건을 검토하고 있어요…";
+      error.hidden = true;
+      try {
+        const payload = await getJson("/api/listing-review", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify(body),
+        });
+        showListingReviewReport(payload.review, payload.saved || null);
+      } catch (requestError) {
+        if (requestError.code === "payment_required" && requestError.checkoutUrl) {
+          error.innerHTML = `${esc(requestError.error)} <a href="${esc(requestError.checkoutUrl)}" target="_blank" rel="noopener">이용권 확인</a>`;
+        } else {
+          error.textContent = requestError.error || "리포트를 만들지 못했어요. 잠시 후 다시 시도해 주세요.";
+        }
+        error.hidden = false;
+        submit.disabled = false;
+        submit.textContent = "계약 전 분석 리포트 만들기";
+      }
     }
 
     function aptMoneyRange(lowValue, highValue) {
@@ -11519,6 +12055,7 @@
       const slot = card.querySelector("[data-apt-affordability]");
       const meta = card.querySelector("[data-apt-result-meta]");
       const signalEl = card.querySelector("[data-apt-card-signal]");
+      const reviewButton = card.querySelector("[data-listing-review-name]");
       aptCandidateResults.set(index, candidate);
       const resolvedArea = String(data?.resolvedArea || "");
       if (resolvedArea) {
@@ -11535,6 +12072,11 @@
         }
       }
       if (meta) meta.innerHTML = candidateListMetaHtml(candidate);
+      if (reviewButton) {
+        reviewButton.dataset.listingReviewRegion = candidate.region || item.region || "";
+        reviewButton.dataset.listingReviewArea = resolvedArea || candidate.displayAreaLabel || "";
+        reviewButton.dataset.listingReviewPrice = data?.estimate?.midPriceEok || candidate.midPriceEok || "";
+      }
       if (signalEl) {
         const state = aptCardSignalState(candidate, candidate.latestDealDate);
         signalEl.textContent = state.text;
@@ -11748,6 +12290,11 @@
       if (!event.target.closest("#aptSearchBox")) hideAptSuggest();
     });
     aptSearchResults.addEventListener("click", event => {
+      const listingReviewButton = event.target.closest("[data-listing-review-name]");
+      if (listingReviewButton) {
+        openListingReview(listingReviewTargetFromTrigger(listingReviewButton));
+        return;
+      }
       const areaChange = event.target.closest("[data-apt-area-change]");
       if (areaChange) {
         const card = areaChange.closest("[data-apt-card-index]");
@@ -11837,6 +12384,8 @@
     });
     aptSearchPageBack.addEventListener("click", closeAptSearchView);
     aptSearchBack.addEventListener("click", closeAptSearchView);
+    listingReviewEntry.addEventListener("click", () => openAptSearchLanding());
+    listingReportHistoryEntry.addEventListener("click", () => void openListingReportHistory());
     leaderEntry.addEventListener("click", () => {
       setActiveView("leader");
       window.scrollTo({ top:0, behavior:"smooth" });
@@ -11889,8 +12438,76 @@
         });
       }
     });
+    listingReviewSheet.addEventListener("submit", event => {
+      if (event.target.id !== "listingReviewForm") return;
+      event.preventDefault();
+      if (!event.target.reportValidity()) return;
+      void submitListingReview(event.target);
+    });
+    listingReviewSheet.addEventListener("click", event => {
+      if (event.target.closest("[data-listing-review-close]")) {
+        closeListingReview();
+        return;
+      }
+      const storedReportButton = event.target.closest("[data-listing-report-open]");
+      if (storedReportButton) {
+        listingReviewContent.innerHTML = `<div class="apt-report-loading">저장된 리포트를 여는 중이에요…</div>`;
+        void openStoredListingReport(storedReportButton.dataset.listingReportOpen).catch(error => {
+          listingReviewContent.innerHTML = `<div class="empty-card"><strong>리포트를 열지 못했어요.</strong><p>${esc(error.error || "잠시 후 다시 시도해 주세요.")}</p></div>`;
+        });
+        return;
+      }
+      if (event.target.closest("[data-listing-review-profile]")) {
+        closeListingReview();
+        closeAptSearchView();
+        setActiveView("condition");
+        setConditionStage("power");
+        window.scrollTo({ top:0, behavior:"smooth" });
+        return;
+      }
+      if (event.target.closest("[data-listing-review-edit]")) {
+        listingReviewTitle.textContent = "보고 온 매물 검증하기";
+        listingReviewMeta.textContent = [
+          currentListingReviewTarget?.name,
+          currentListingReviewTarget?.region,
+          currentListingReviewTarget?.area ? `전용 ${currentListingReviewTarget.area}㎡` : "",
+        ].filter(Boolean).join(" · ");
+        listingReviewContent.innerHTML = listingReviewFormHtml(currentListingReviewTarget);
+        requestAnimationFrame(() => $("listingReviewPrice")?.focus({ preventScroll:true }));
+        return;
+      }
+      if (event.target.closest("[data-listing-review-print]")) {
+        window.print();
+        return;
+      }
+      const shareButton = event.target.closest("[data-listing-review-share]");
+      if (shareButton) {
+        void (async () => {
+          shareButton.disabled = true;
+          try {
+            if (!currentListingReviewSaved?.shareToken) {
+              const payload = await getJson(`/api/reports/${encodeURIComponent(currentListingReview.id)}/share`, {
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify({ owner_token:listingReportOwnerToken() }),
+              });
+              currentListingReviewSaved = payload.saved;
+            }
+            await copyListingReviewShareLink(shareButton);
+          } catch (error) {
+            window.alert(error.error || "공유 링크를 만들지 못했어요.");
+          } finally {
+            shareButton.disabled = false;
+          }
+        })();
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !listingReviewSheet.hidden) closeListingReview();
+    });
 
     homeButton.addEventListener("click", () => {
+      closeListingReview();
       document.body.classList.remove("candidate-map-open");
       candidateViewMode = "list";
       resetCandidateMap();
@@ -11914,6 +12531,7 @@
     window.addEventListener("pageshow", () => restoreNaverReturnState());
     loadStatus();
     renderRegionTabs();
+    void restoreListingReportFromUrl();
   </script>
 </body>
 </html>
