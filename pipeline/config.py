@@ -39,6 +39,10 @@ def _load_settings_file(path):
         ("국토부키", "PUBLIC_DATA_API_KEY"),
         ("실거래가키", "PUBLIC_DATA_API_KEY"),
         ("카카오지도키", "KAKAO_MAP_JAVASCRIPT_KEY"),
+        ("네이버API허브아이디", "NAVER_API_HUB_CLIENT_ID"),
+        ("네이버API허브시크릿", "NAVER_API_HUB_CLIENT_SECRET"),
+        ("네이버검색아이디", "NAVER_SEARCH_CLIENT_ID"),
+        ("네이버검색시크릿", "NAVER_SEARCH_CLIENT_SECRET"),
         ("분석방식", "ANALYSIS_PROVIDER"),
         ("로컬모델", "OLLAMA_MODEL"),
         ("오픈라우터키", "OPENROUTER_API_KEY"),
@@ -80,6 +84,10 @@ PUBLIC_DATA_API_KEY = os.environ.get("PUBLIC_DATA_API_KEY", os.environ.get("MOLI
 MOLIT_APARTMENT_TRADE_API_KEY = os.environ.get("MOLIT_APARTMENT_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 MOLIT_PRESALE_TRADE_API_KEY = os.environ.get("MOLIT_PRESALE_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 KAKAO_MAP_JAVASCRIPT_KEY = os.environ.get("KAKAO_MAP_JAVASCRIPT_KEY", "")
+NAVER_API_HUB_CLIENT_ID = os.environ.get("NAVER_API_HUB_CLIENT_ID", "")
+NAVER_API_HUB_CLIENT_SECRET = os.environ.get("NAVER_API_HUB_CLIENT_SECRET", "")
+NAVER_SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_CLIENT_ID", "")
+NAVER_SEARCH_CLIENT_SECRET = os.environ.get("NAVER_SEARCH_CLIENT_SECRET", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 SUPADATA_API_KEY = os.environ.get("SUPADATA_API_KEY", "")
 ANALYSIS_PROVIDER = os.environ.get("ANALYSIS_PROVIDER", "openrouter")
@@ -127,11 +135,12 @@ BUDGET_PREWARM_ENABLED = os.environ.get("BUDGET_PREWARM_ENABLED", "1") == "1"
 BUDGET_PREWARM_DELAY_SECONDS = float(os.environ.get("BUDGET_PREWARM_DELAY_SECONDS", "30"))
 BUDGET_PREWARM_MONTHS = int(os.environ.get("BUDGET_PREWARM_MONTHS", str(MOLIT_SIGNAL_LOOKBACK_MONTHS)))
 BUDGET_PREWARM_MAX_WORKERS = int(os.environ.get("BUDGET_PREWARM_MAX_WORKERS", "4"))
-# 서버 시작 시 미리 실거래 캐시를 데워 둘 지역. 주요 검색 지역(성남·용인)을
-# 기본에 포함해 콜드 검색의 보강 시간을 줄인다. 환경변수로 재정의 가능.
+# 서버 시작 시 미리 실거래 캐시를 데워 둘 지역. 조건 검색이 지원하는
+# 서울·경기 전체를 기본으로 준비해 첫 검색도 저장 데이터만으로 계산한다.
+# 환경변수로 더 좁게 재정의할 수 있다.
 BUDGET_PREWARM_REGIONS = tuple(
     value.strip()
-    for value in os.environ.get("BUDGET_PREWARM_REGIONS", "서울특별시,성남시,용인시").split(",")
+    for value in os.environ.get("BUDGET_PREWARM_REGIONS", "서울특별시,경기도").split(",")
     if value.strip()
 )
 # 신고 기한(계약 후 30일)이 지난 과거 월 실거래는 거의 바뀌지 않으므로 긴 주기로만 갱신한다.
@@ -140,6 +149,14 @@ MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS = int(os.environ.get("MOLIT_MONTH_CACHE_R
 SIGNAL_MIN_WINDOW_DEALS = int(os.environ.get("SIGNAL_MIN_WINDOW_DEALS", "3"))
 SIGNAL_MIN_TOTAL_DEALS = int(os.environ.get("SIGNAL_MIN_TOTAL_DEALS", "5"))
 BUDGET_RESULT_CACHE_TTL_SECONDS = int(os.environ.get("BUDGET_RESULT_CACHE_TTL_SECONDS", str(60 * 60 * 12)))
+NEWS_CATALYST_CACHE_TTL_SECONDS = int(os.environ.get("NEWS_CATALYST_CACHE_TTL_SECONDS", str(60 * 60 * 3)))
+NEWS_CATALYST_LOOKBACK_DAYS = int(os.environ.get("NEWS_CATALYST_LOOKBACK_DAYS", "548"))
+NEWS_RELATED_LOOKBACK_DAYS = int(os.environ.get("NEWS_RELATED_LOOKBACK_DAYS", "730"))
+NEWS_RELATED_LIMIT = max(1, min(int(os.environ.get("NEWS_RELATED_LIMIT", "2")), 4))
+NEWS_CATALYST_TIMEOUT_SECONDS = float(os.environ.get("NEWS_CATALYST_TIMEOUT_SECONDS", "4"))
+NEWS_CATALYST_SEARCH_RESULTS = max(1, min(int(os.environ.get("NEWS_CATALYST_SEARCH_RESULTS", "100")), 100))
+NEWS_CATALYST_BATCH_LIMIT = max(1, min(int(os.environ.get("NEWS_CATALYST_BATCH_LIMIT", "12")), 24))
+NEWS_CATALYST_MAX_WORKERS = max(1, min(int(os.environ.get("NEWS_CATALYST_MAX_WORKERS", "4")), 8))
 
 TRANSCRIPT_FAILURE_TTL_HOURS = int(os.environ.get("TRANSCRIPT_FAILURE_TTL_HOURS", "12"))
 TRANSCRIPT_TRANSIENT_FAILURE_TTL_HOURS = int(os.environ.get("TRANSCRIPT_TRANSIENT_FAILURE_TTL_HOURS", "2"))

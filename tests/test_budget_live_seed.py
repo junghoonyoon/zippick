@@ -237,6 +237,10 @@ class BudgetLiveSeedTest(unittest.TestCase):
         self.assertEqual(row["budgetOverPercent"], 0)
 
     def test_static_price_range_is_replaced_with_the_latest_deal(self):
+        recent_deal_date = (
+            budget_candidates.datetime.date.today()
+            - budget_candidates.datetime.timedelta(days=20)
+        ).isoformat()
         entity = {
             "name": "최근거래아파트",
             "city": "서울시",
@@ -254,7 +258,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "maxPriceEok": 8.2,
             "priceSource": "molit_csv",
             "transactionCount": 18,
-            "latestDealDate": "2026-06-18",
+            "latestDealDate": recent_deal_date,
         }
         live = {
             "areaLabel": "전용 60~60㎡",
@@ -265,7 +269,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "latestDealExclusiveArea": 59.86,
             "latestDealFloor": "11",
             "transactionCount": 16,
-            "latestDealDate": "2026-06-18",
+            "latestDealDate": recent_deal_date,
             "sourceNote": "국토부",
             "currentEstimateMinPriceEok": 7.8,
             "currentEstimateMidPriceEok": 8.0,

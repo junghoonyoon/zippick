@@ -19,10 +19,17 @@
 특수관계 거래·입력 오류 추정)를 점수 계산에서 제외한다.
 
 전고점 회복률과 대장 단지 대비 가격 차이는 점수 밖의 참고 정보로만 제공한다.
+
+지역 대장은 apartment_leaders 모듈의 동일 지역·동일 면적 구간 평가를
+공유한다. 전용 70~89㎡를 대표 구간으로 삼고 가격 수준 35%, 지역 대비
+상승 선도력 25%, 세대수 대비 거래 유동성 20%, 연식 10%, 역 접근성 10%를
+백분위 기반으로 합산한다. 거래 1건 이하 단지는 일반 대장 1위에서 제외한다.
 """
 import datetime
 import statistics
+from concurrent.futures import ThreadPoolExecutor
 
+import apartment_leaders
 import config
 import molit_transactions
 import real_estate_search
@@ -30,9 +37,9 @@ import real_estate_search
 LOOKBACK_MONTHS = config.MOLIT_SIGNAL_LOOKBACK_MONTHS
 MIN_WINDOW_DEALS = config.SIGNAL_MIN_WINDOW_DEALS
 MIN_TOTAL_DEALS = config.SIGNAL_MIN_TOTAL_DEALS
-# v8은 중립 산식이 적용되지 않은 채 v7로 잘못 저장된 과거 캐시까지
-# 명확히 무효화하기 위한 버전이다.
-SCORE_FORMULA_VERSION = 8
+# v13은 24개월 전체 중앙값이 장기 상승한 단지의 최근 정상 거래를 이상치로
+# 오판하던 문제를 고친 지역 시계열 기반 이상치 필터를 적용한다.
+SCORE_FORMULA_VERSION = 13
 
 # 결측 항목의 중립값. '정보 없음'을 0점(최악)으로 처리하면 비교군이 없는
 # 구의 단지가 구조적으로 불리해지므로, 모르는 항목은 평균 수준으로 간주한다.
@@ -61,9 +68,23 @@ AREA_BAND_SIZE = 10  # ㎡. 59↔84 같은 평형 혼합을 걸러내는 밴드 
 BAND_MIN_DEALS_PER_SIDE = 2
 OUTLIER_PCT = 0.30  # 평형대 중앙값 대비 이 비율을 넘게 벗어난 거래는 제외
 OUTLIER_MIN_BAND_DEALS = 5  # 이 미만 표본의 밴드는 정상 거래 오폐기 위험이 커서 필터하지 않음
+OUTLIER_LOCAL_WINDOW_MONTHS = 3
 _DISTRICT_BENCHMARK_LIMIT = 12
 _DISTRICT_BENCHMARK_MIN = 3
 _DISTRICT_MOMENTUM_CACHE = {}
+LEADER_FORMULA_VERSION = 4
+LEADER_MIN_HOUSEHOLDS = 300
+LEADER_MIN_ANNUAL_DEALS = 6
+LEADER_LIQUIDITY_FULL_DEALS = 20
+LEADER_SCALE_FULL_HOUSEHOLDS = 3000
+LEADER_STANDARD_AREA_BAND = 8  # 전용 80~89㎡
+LEADER_STANDARD_AREA_MIN_DEALS = 2
+LEADER_MIN_PRICE_RATIO = 0.85
+_LEADER_WEIGHTS = {
+    "price": 55,
+    "liquidity": 25,
+    "scale": 20,
+}
 
 # 절대 스케일 정규화 경계. 가격·거래량의 실제 방향을 중심으로 점수를
 # 계산하고, 전고점·대장 대비 가격은 점수 밖의 참고 정보로만 남긴다.
@@ -88,6 +109,8 @@ _COMPONENT_LABELS = {
 MAX_LATEST_DEAL_AGE_DAYS = 120
 _DISTRICT_LEADER_INDEX = None
 _DISTRICT_LEADER_CANDIDATE_LIMIT = 20
+_LEADER_SCOPE_INDEX = None
+_LEADER_SCOPE_ENTITY_SIGNALS_CACHE = {}
 
 SIGNAL_NOTE = (
     "최근 가격·거래 흐름 점수는 국토부 실거래가 기반 최근 6개월 같은 평형대 가격 변화·"
@@ -98,6 +121,16 @@ SIGNAL_NOTE = (
 
 def _month_key(deal_date):
     return str(deal_date or "")[:7]
+
+
+def _month_ordinal(deal_date):
+    try:
+        year, month = map(int, str(deal_date or "")[:7].split("-"))
+    except (TypeError, ValueError):
+        return None
+    if month < 1 or month > 12:
+        return None
+    return year * 12 + month
 
 
 def _months_ago(months):
@@ -198,11 +231,13 @@ def _sample_confidence(result):
 
 
 def _filter_price_outliers(deals):
-    """평형대 중앙값에서 ±30% 넘게 벗어난 거래를 제외한다.
+    """같은 평형대의 인접 시기 중앙값에서 ±30% 넘게 벗어난 거래를 제외한다.
 
     '중개거래'로 신고됐어도 특수관계 거래나 입력 오류로 보이는 극단가가
     소표본 창의 중앙값과 월별 전고점을 끌어당기는 것을 막는다.
-    표본 5건 미만인 밴드는 시세 기준 자체가 불안정해 필터하지 않는다.
+    24개월 전체 중앙값을 쓰면 시장 가격이 실제로 크게 오른 단지의 최근
+    정상 거래를 통째로 이상치로 오판하므로, 거래 전후 3개월의 지역 시세만
+    비교한다. 인접 표본이 5건 미만이면 오폐기를 피하기 위해 필터하지 않는다.
     """
     bands = {}
     for item in deals:
@@ -212,12 +247,20 @@ def _filter_price_outliers(deals):
         if len(band_items) < OUTLIER_MIN_BAND_DEALS:
             kept.extend(band_items)
             continue
-        band_median = statistics.median(_ppsm(item) for item in band_items)
-        if band_median <= 0:
-            kept.extend(band_items)
-            continue
         for item in band_items:
-            if abs(_ppsm(item) / band_median - 1) > OUTLIER_PCT:
+            item_month = _month_ordinal(item.get("dealDate"))
+            local_items = [
+                other
+                for other in band_items
+                if item_month is not None
+                and (other_month := _month_ordinal(other.get("dealDate"))) is not None
+                and abs(other_month - item_month) <= OUTLIER_LOCAL_WINDOW_MONTHS
+            ]
+            if len(local_items) < OUTLIER_MIN_BAND_DEALS:
+                kept.append(item)
+                continue
+            local_median = statistics.median(_ppsm(other) for other in local_items)
+            if local_median > 0 and abs(_ppsm(item) / local_median - 1) > OUTLIER_PCT:
                 excluded += 1
             else:
                 kept.append(item)
@@ -260,11 +303,69 @@ def _band_matched_change(recent, prior):
     return round((statistics.median(recent_all) / prior_median - 1) * 100, 1), False
 
 
-def raw_signals(name, region="", households=0):
-    """단지 하나의 시그널 원자료. leaderGap은 후보군 레벨에서 채운다."""
-    transactions = molit_transactions.transactions_for_apartment(
-        name, region=region, area_label="", lookback_months=LOOKBACK_MONTHS,
+def _leader_reference_price(recent):
+    """대장 비교용 최근 ㎡당가와 사용한 평형대를 반환한다.
+
+    전용 80~89㎡ 거래가 2건 이상이면 이를 우선한다. 없으면 최근 거래가
+    가장 많은 10㎡ 평형대를 사용해 한 단지 안에서도 평형 혼합을 피한다.
+    """
+    bands = {}
+    for item in recent:
+        if _ppsm(item) <= 0:
+            continue
+        bands.setdefault(_area_band(item), []).append(_ppsm(item))
+    standard = bands.get(LEADER_STANDARD_AREA_BAND) or []
+    if len(standard) >= LEADER_STANDARD_AREA_MIN_DEALS:
+        return (
+            round(statistics.median(standard), 1),
+            LEADER_STANDARD_AREA_BAND,
+            len(standard),
+        )
+    eligible = [
+        (band, values)
+        for band, values in bands.items()
+        if len(values) >= LEADER_STANDARD_AREA_MIN_DEALS
+    ]
+    if not eligible:
+        return None, None, 0
+    band, values = max(
+        eligible,
+        key=lambda row: (
+            len(row[1]),
+            -abs(row[0] - LEADER_STANDARD_AREA_BAND),
+            row[0],
+        ),
     )
+    return round(statistics.median(values), 1), band, len(values)
+
+
+def raw_signals(
+    name,
+    region="",
+    households=0,
+    cache_only=False,
+    area_label="",
+    transactions=None,
+    entity=None,
+):
+    """단지 하나의 시그널 원자료. leaderGap은 후보군 레벨에서 채운다."""
+    if transactions is None:
+        transaction_loader = (
+            molit_transactions.transactions_for_apartment_cached
+            if cache_only
+            else molit_transactions.transactions_for_apartment
+        )
+        loader_kwargs = {
+            "region": region,
+            "area_label": area_label,
+            "lookback_months": LOOKBACK_MONTHS,
+        }
+        if entity is not None:
+            loader_kwargs["entity"] = entity
+        transactions = transaction_loader(
+            name,
+            **loader_kwargs,
+        )
     deals = [item for item in transactions if _ppsm(item) > 0 and item.get("dealDate")]
     deals, outlier_excluded = _filter_price_outliers(deals)
     result = {
@@ -295,6 +396,9 @@ def raw_signals(name, region="", households=0):
         "districtComparisonCount": 0,
         "recoveryPct": None,
         "currentPpsm": None,
+        "leaderReferencePpsm": None,
+        "leaderReferenceAreaBand": None,
+        "leaderReferenceDealCount": 0,
         "leaderGapPct": None,
     }
     if len(deals) < MIN_TOTAL_DEALS:
@@ -316,6 +420,11 @@ def raw_signals(name, region="", households=0):
     prior = [item for item in deals if prior_cut < _month_key(item["dealDate"]) <= recent_cut]
     result["recentDealCount"] = len(recent)
     result["priorDealCount"] = len(prior)
+    (
+        result["leaderReferencePpsm"],
+        result["leaderReferenceAreaBand"],
+        result["leaderReferenceDealCount"],
+    ) = _leader_reference_price(recent)
 
     if len(recent) >= MIN_WINDOW_DEALS and len(prior) >= MIN_WINDOW_DEALS:
         momentum, matched = _band_matched_change(recent, prior)
@@ -528,7 +637,12 @@ def _district_leader_index():
     for entity in real_estate_search.APARTMENT_MASTER:
         region_key = real_estate_search.compact(entity.get("district"))
         households = int(entity.get("households") or 0)
-        if not region_key or households <= 0 or entity.get("aggregate"):
+        if (
+            not region_key
+            or households <= 0
+            or entity.get("aggregate")
+            or entity.get("status")
+        ):
             continue
         grouped.setdefault(region_key, []).append(entity)
     _DISTRICT_LEADER_INDEX = {
@@ -554,7 +668,11 @@ def _district_entity_signals(region):
     pairs = []
     for entity in _district_leader_index().get(region_key, [])[:_DISTRICT_BENCHMARK_LIMIT]:
         try:
-            signals = raw_signals(entity.get("name", ""), region=region)
+            signals = raw_signals(
+                entity.get("name", ""),
+                region=region,
+                entity=entity,
+            )
         except Exception:
             continue
         pairs.append((entity, signals))
@@ -609,6 +727,40 @@ def district_peer_reports(name, region, limit=3):
     return peers
 
 
+def district_index_source_candidates(region, exclude_name="", limit=8):
+    """지역 평균지수 보강에 사용할 세대수 상위 단지 목록.
+
+    분양권·신축처럼 R-ONE 단지 매칭이 되지 않는 결과도 같은 지역의
+    공통 매매가격지수를 결합할 수 있도록, 점수 산정 가능 여부와 무관하게
+    단지 마스터의 고정 후보군을 반환한다.
+    """
+    region_key = real_estate_search.compact(region)
+    if not region_key:
+        return []
+    index = _district_leader_index()
+    if region_key not in index:
+        matches = [
+            key for key in index
+            if key and (key in region_key or region_key in key)
+        ]
+        if matches:
+            region_key = max(matches, key=len)
+    excluded_key = real_estate_search.compact(exclude_name)
+    rows = []
+    for entity in index.get(region_key, []):
+        name = str(entity.get("name") or "").strip()
+        if not name or real_estate_search.compact(name) == excluded_key:
+            continue
+        rows.append({
+            "name": name,
+            "region": str(entity.get("district") or region).strip(),
+            "households": int(entity.get("households") or 0),
+        })
+        if len(rows) >= max(1, int(limit or 1)):
+            break
+    return rows
+
+
 def _entity_name_keys(entity):
     return {
         real_estate_search.compact(value)
@@ -625,39 +777,188 @@ def _row_name_keys(row):
     }
 
 
-def _absolute_leader(region, candidates):
-    """해당 구 전체에서 실거래 시그널이 유효한 최대 세대수 단지 1곳을 반환한다."""
-    region_key = real_estate_search.compact(region)
-    entities = _district_leader_index().get(region_key, [])
-    if not entities:
-        return None, None
-
-    candidate_signals = []
-    for row in candidates:
-        if real_estate_search.compact(row.get("region")) == region_key:
-            candidate_signals.append((_row_name_keys(row), row.get("signals") or {}))
-
-    fallback = None
-    for entity in entities:
-        entity_keys = _entity_name_keys(entity)
-        signals = next(
-            (signals for row_keys, signals in candidate_signals if row_keys.intersection(entity_keys)),
-            None,
+def _leader_scope_index():
+    """준공 단지를 자치구·법정동별로 묶은 전체 대장 후보 인덱스."""
+    global _LEADER_SCOPE_INDEX
+    if _LEADER_SCOPE_INDEX is not None:
+        return _LEADER_SCOPE_INDEX
+    grouped = {}
+    for entity in real_estate_search.APARTMENT_MASTER:
+        region_key = real_estate_search.compact(entity.get("district"))
+        legal_dong_key = real_estate_search.compact(entity.get("legalDong"))
+        households = int(entity.get("households") or 0)
+        if (
+            not region_key
+            or not legal_dong_key
+            or households < LEADER_MIN_HOUSEHOLDS
+            or entity.get("aggregate")
+            or entity.get("status")
+        ):
+            continue
+        grouped.setdefault((region_key, legal_dong_key), []).append(entity)
+    _LEADER_SCOPE_INDEX = {
+        key: sorted(
+            entities,
+            key=lambda entity: (
+                -(int(entity.get("households") or 0)),
+                entity.get("name") or "",
+            ),
         )
-        if signals is None:
-            try:
-                signals = raw_signals(entity.get("name", ""), region=region)
-            except Exception:
-                signals = {"status": "error", "dealCount": 0}
-        if fallback is None:
-            fallback = (entity, signals)
-        if signals.get("status") == "ok" and signals.get("currentPpsm"):
-            return entity, signals
-    return fallback or (None, None)
+        for key, entities in grouped.items()
+    }
+    return _LEADER_SCOPE_INDEX
+
+
+def _leader_scope_entity_signals(region, legal_dong):
+    """같은 법정동의 전체 대장 후보와 시그널. 법정동이 없으면 구 후보로 폴백."""
+    region_key = real_estate_search.compact(region)
+    legal_dong_key = real_estate_search.compact(legal_dong)
+    if not region_key:
+        return []
+    if not legal_dong_key:
+        return _district_entity_signals(region)
+    scope_key = (region_key, legal_dong_key)
+    if scope_key in _LEADER_SCOPE_ENTITY_SIGNALS_CACHE:
+        return _LEADER_SCOPE_ENTITY_SIGNALS_CACHE[scope_key]
+    pairs = []
+    for entity in _leader_scope_index().get(scope_key, []):
+        try:
+            signals = raw_signals(
+                entity.get("name", ""),
+                region=region,
+                entity=entity,
+            )
+        except Exception:
+            signals = {"status": "error", "dealCount": 0}
+        pairs.append((entity, signals))
+    _LEADER_SCOPE_ENTITY_SIGNALS_CACHE[scope_key] = pairs
+    return pairs
+
+
+def _leader_score_details(entity, signals, lower_price_count, price_count):
+    """대장 후보 1곳의 100점 환산 결과를 반환한다."""
+    if price_count <= 1:
+        price_points = _LEADER_WEIGHTS["price"]
+    else:
+        price_points = _LEADER_WEIGHTS["price"] * (
+            lower_price_count / (price_count - 1)
+        )
+    annual_deals = int(signals.get("recentDealCount") or 0) + int(signals.get("priorDealCount") or 0)
+    households = int(entity.get("households") or 0)
+    liquidity_points = _LEADER_WEIGHTS["liquidity"] * min(
+        annual_deals / LEADER_LIQUIDITY_FULL_DEALS,
+        1,
+    )
+    scale_points = _LEADER_WEIGHTS["scale"] * min(
+        households / LEADER_SCALE_FULL_HOUSEHOLDS,
+        1,
+    )
+    breakdown = {
+        "price": round(price_points, 1),
+        "liquidity": round(liquidity_points, 1),
+        "scale": round(scale_points, 1),
+    }
+    return {
+        "score": round(sum(breakdown.values()), 1),
+        "breakdown": breakdown,
+        "annualDeals": annual_deals,
+        "currentPpsm": signals.get("currentPpsm"),
+        "referencePpsm": signals.get("leaderReferencePpsm"),
+        "referenceAreaBand": signals.get("leaderReferenceAreaBand"),
+        "referenceDealCount": signals.get("leaderReferenceDealCount"),
+    }
+
+
+def _absolute_leader(region, candidates, legal_dong=""):
+    """문서의 대장지수로 지역 또는 법정동 범위의 1위를 반환한다."""
+    del candidates  # 검색 결과에 따라 대장이 바뀌지 않도록 의도적으로 사용하지 않는다.
+    region_key = real_estate_search.compact(region)
+    legal_dong_key = real_estate_search.compact(legal_dong)
+    entities = []
+    for entity in real_estate_search.APARTMENT_MASTER:
+        if (
+            entity.get("aggregate")
+            or entity.get("status")
+            or not region_key
+            or real_estate_search.compact(entity.get("district")) != region_key
+            or (
+                legal_dong_key
+                and real_estate_search.compact(entity.get("legalDong")) != legal_dong_key
+            )
+        ):
+            continue
+        entities.append(entity)
+    if not entities:
+        return None, None, None
+
+    pairs = []
+    for entity in entities:
+        try:
+            transactions = molit_transactions.transactions_for_apartment(
+                entity.get("name", ""),
+                region=region,
+                area_label="",
+                lookback_months=max(24, LOOKBACK_MONTHS),
+                entity=entity,
+            )
+        except Exception:
+            transactions = []
+        pairs.append((entity, transactions))
+    ranking_payload = apartment_leaders.calculate_rankings_from_pairs(
+        str(entities[0].get("province") or ""),
+        region,
+        pairs,
+        area_bucket_value=apartment_leaders.DEFAULT_AREA_BUCKET,
+        limit=1,
+    )
+    items = ranking_payload.get("rankings", {}).get("overall") or []
+    if not items:
+        return None, None, None
+    winner = items[0]
+    winner_entity = next(
+        (
+            entity for entity in entities
+            if apartment_leaders._entity_id(entity) == winner.get("apartmentId")
+        ),
+        None,
+    )
+    if winner_entity is None:
+        return None, None, None
+    winner_transactions = next(
+        transactions for entity, transactions in pairs
+        if entity is winner_entity
+    )
+    winner_signals = raw_signals(
+        winner_entity.get("name", ""),
+        region=region,
+        entity=winner_entity,
+        transactions=winner_transactions,
+    )
+    details = {
+        "basis": (
+            "locality_market_leader_v4"
+            if legal_dong_key
+            else "district_market_leader_v4"
+        ),
+        "candidateCount": ranking_payload.get("complexCount"),
+        "eligibleCandidateCount": ranking_payload.get("eligibleComplexCount"),
+        "priceFinalistCount": None,
+        "score": winner.get("score"),
+        "scoreCoverage": winner.get("overallScoreCoverage"),
+        "breakdown": winner.get("scores") or {},
+        "annualDeals": winner.get("transactionCount12m"),
+        "currentPpsm": winner_signals.get("currentPpsm"),
+        "referencePpsm": winner_signals.get("leaderReferencePpsm"),
+        "referenceAreaBand": winner_signals.get("leaderReferenceAreaBand"),
+        "referenceDealCount": winner_signals.get("leaderReferenceDealCount"),
+        "confidenceLevel": winner.get("confidenceLevel"),
+        "calculationVersion": winner.get("calculationVersion"),
+    }
+    return winner_entity, winner_signals, details
 
 
 def attach_signals(candidates):
-    """후보 목록에 signals를 부착한다. 대장은 구 전체에서 고정한다."""
+    """후보 목록에 signals를 부착한다. 대장은 같은 법정동에서 고정한다."""
     # API가 잠시 느려져 회로가 열려도 디스크에 저장된 월별 실거래로 계산한다.
     if not candidates:
         return
@@ -677,6 +978,8 @@ def attach_signals(candidates):
                 row.get("name", ""),
                 region=row.get("region", ""),
                 households=row.get("households") or 0,
+                area_label=row.get("areaLabel") or row.get("displayAreaLabel") or "",
+                entity=row if row.get("legalDong") or row.get("jibun") else None,
             )
         except Exception:
             row["signals"] = {"status": "error", "dealCount": 0}
@@ -711,35 +1014,113 @@ def attach_signals(candidates):
             signals["districtComparisonCount"] = len(peers)
             signals["districtBasis"] = "search_candidates"
 
-    # 지역별 대장: 검색 조건과 무관하게 구 전체에서 유효 실거래가 있는
-    # 최대 세대수 단지 한 곳만 사용한다.
+    # 동·구 대장: 검색 조건과 무관한 고정 후보군에서 가격·거래·규모
+    # 종합 점수가 가장 높은 단지를 범위별로 한 곳씩 사용한다.
     leaders = {}
-    for region in {row.get("region", "") for row in candidates if row.get("region")}:
-        entity, signals = _absolute_leader(region, candidates)
+    leader_scopes = {
+        (row.get("region", ""), row.get("legalDong", ""))
+        for row in candidates
+        if row.get("region")
+    }
+    for region, legal_dong in leader_scopes:
+        entity, signals, calculation = _absolute_leader(
+            region,
+            candidates,
+            legal_dong=legal_dong,
+        )
         if entity:
-            leaders[region] = {"entity": entity, "signals": signals or {}}
+            leaders[(region, legal_dong)] = {
+                "entity": entity,
+                "signals": signals or {},
+                "calculation": calculation or {},
+            }
+    district_leaders = {}
+    for region in {row.get("region", "") for row in candidates if row.get("region")}:
+        cached_district_leader = leaders.get((region, ""))
+        if cached_district_leader:
+            district_leaders[region] = cached_district_leader
+            continue
+        entity, leader_signals, calculation = _absolute_leader(region, candidates, legal_dong="")
+        if entity:
+            district_leaders[region] = {
+                "entity": entity,
+                "signals": leader_signals or {},
+                "calculation": calculation or {},
+            }
 
     for row in candidates:
         signals = row.get("signals") or {}
         signals["scoreFormulaVersion"] = SCORE_FORMULA_VERSION
-        leader = leaders.get(row.get("region", ""))
-        if signals.get("status") == "ok" and leader is not None:
+        leader = leaders.get((row.get("region", ""), row.get("legalDong", "")))
+        district_leader = district_leaders.get(row.get("region", ""))
+        # 후보 단지의 거래 표본이 부족하거나 오래됐어도 지역 대장 자체는
+        # 변하지 않는다. 점수 산정 가능 여부와 대장 비교 메타데이터를
+        # 분리해 모든 후보 차트가 대장 시계열을 요청할 수 있게 한다.
+        if leader is not None:
             leader_entity = leader["entity"]
             is_leader = bool(_row_name_keys(row).intersection(_entity_name_keys(leader_entity)))
-            signals["leaderRegion"] = row.get("region", "")
+            calculation = leader.get("calculation") or {}
+            leader_basis = calculation.get("basis") or "district_market_leader_v4"
+            signals["leaderRegion"] = (
+                row.get("legalDong", "")
+                if leader_basis == "locality_market_leader_v4"
+                else row.get("region", "")
+            )
             signals["leaderName"] = leader_entity.get("name")
             signals["leaderHouseholds"] = int(leader_entity.get("households") or 0)
-            signals["leaderBasis"] = "district_households"
+            breakdown = calculation.get("breakdown") or {}
+            signals["leaderBasis"] = leader_basis
+            signals["leaderFormulaVersion"] = LEADER_FORMULA_VERSION
+            signals["leaderCandidateLimit"] = None
+            signals["leaderCandidateCount"] = calculation.get("candidateCount")
+            signals["leaderPriceFinalistCount"] = calculation.get("priceFinalistCount")
+            signals["leaderScore"] = calculation.get("score")
+            signals["leaderPricePoints"] = breakdown.get("price")
+            signals["leaderLeadershipPoints"] = breakdown.get("leadership")
+            signals["leaderLiquidityPoints"] = breakdown.get("liquidity")
+            signals["leaderAgePoints"] = breakdown.get("age")
+            signals["leaderStationPoints"] = breakdown.get("station")
+            signals["leaderScalePoints"] = breakdown.get("household")
+            signals["leaderScoreCoverage"] = calculation.get("scoreCoverage")
+            signals["leaderAnnualDeals"] = calculation.get("annualDeals")
+            signals["leaderCurrentPpsm"] = calculation.get("currentPpsm")
+            signals["leaderBenchmarkPpsm"] = calculation.get("referencePpsm")
+            signals["leaderBenchmarkAreaBand"] = calculation.get("referenceAreaBand")
+            signals["leaderBenchmarkDealCount"] = calculation.get("referenceDealCount")
             signals["isRegionalLeader"] = is_leader
+        if district_leader is not None:
+            district_leader_entity = district_leader["entity"]
+            signals["districtLeaderName"] = district_leader_entity.get("name")
+            signals["districtLeaderRegion"] = row.get("region", "")
+            signals["districtLeaderHouseholds"] = int(
+                district_leader_entity.get("households") or 0
+            )
+            signals["districtLeaderBasis"] = (
+                (district_leader.get("calculation") or {}).get("basis")
+                or "district_market_leader_v4"
+            )
+            signals["isDistrictLeader"] = bool(
+                _row_name_keys(row).intersection(_entity_name_keys(district_leader_entity))
+            )
         if (
             signals.get("status") == "ok"
             and leader is not None
             and not signals.get("isRegionalLeader")
             and signals.get("currentPpsm")
         ):
-            leader_ppsm = (leader.get("signals") or {}).get("currentPpsm") or 0
-            if leader_ppsm > 0:
-                signals["leaderGapPct"] = round((1 - signals["currentPpsm"] / leader_ppsm) * 100, 1)
+            leader_signals = leader.get("signals") or {}
+            leader_ppsm = leader_signals.get("leaderReferencePpsm") or 0
+            candidate_ppsm = signals.get("leaderReferencePpsm") or 0
+            same_area_band = (
+                signals.get("leaderReferenceAreaBand") is not None
+                and signals.get("leaderReferenceAreaBand")
+                    == leader_signals.get("leaderReferenceAreaBand")
+            )
+            if leader_ppsm > 0 and candidate_ppsm > 0 and same_area_band:
+                signals["leaderGapPct"] = round(
+                    (1 - candidate_ppsm / leader_ppsm) * 100,
+                    1,
+                )
         if signals.get("status") == "ok":
             details = _score_details(signals)
             signals["score"] = details["score"]
@@ -755,5 +1136,113 @@ def attach_signals(candidates):
                 if signals.get("status") == "insufficient"
                 else ([{"kind": "stale", "label": "최근 거래 없음", "tone": "wait"}]
                       if signals.get("status") == "stale" else [])
+            )
+        row["signals"] = signals
+
+
+def attach_cached_signals(candidates, only_missing=True):
+    """로컬 월별 캐시만 사용해 아직 없는 후보 점수를 즉시 채운다.
+
+    조건 검색의 1차 응답은 외부 API 왕복 없이 2~3초 안에 끝나야 한다.
+    완성 검색에서 저장한 단지 스냅샷을 우선 사용하고, 스냅샷이 없는 소수
+    후보만 이 경로로 계산한다. 구 전체 대장 조회는 추가 단지 수십 곳을
+    연쇄 계산하므로 생략하고, 같은 검색 결과의 유효 후보를 비교군으로 쓴다.
+    """
+    if not candidates:
+        return
+    if not molit_transactions.configured():
+        for row in candidates:
+            signals = row.get("signals")
+            if isinstance(signals, dict) and (
+                not only_missing
+                or signals.get("scoreFormulaVersion") == SCORE_FORMULA_VERSION
+            ):
+                continue
+            row["signals"] = {
+                "status": "unavailable",
+                "dealCount": 0,
+                "score": None,
+                "badges": [],
+                "scoreFormulaVersion": SCORE_FORMULA_VERSION,
+            }
+        return
+
+    computed_rows = []
+    for row in candidates:
+        cached_transactions = row.pop("_cachedMarketTransactions", None)
+        signals = row.get("signals")
+        if (
+            only_missing
+            and isinstance(signals, dict)
+            and signals.get("scoreFormulaVersion") == SCORE_FORMULA_VERSION
+        ):
+            continue
+        computed_rows.append((row, cached_transactions))
+
+    def _compute(item):
+        row, cached_transactions = item
+        try:
+            row["signals"] = raw_signals(
+                row.get("name", ""),
+                region=row.get("region", ""),
+                households=row.get("households") or 0,
+                cache_only=True,
+                area_label=row.get("areaLabel") or row.get("displayAreaLabel") or "",
+                transactions=cached_transactions,
+                entity=row if row.get("legalDong") or row.get("jibun") else None,
+            )
+        except Exception:
+            row["signals"] = {"status": "error", "dealCount": 0}
+
+    if computed_rows:
+        workers = min(24, len(computed_rows))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(_compute, computed_rows))
+
+    # 새로 계산한 후보의 지역 상대값은 이미 스냅샷이 붙은 같은 검색 결과를
+    # 포함해 중앙값으로 채운다. 외부 조회 없이도 점수의 네 항목을 완성한다.
+    for row, _cached_transactions in computed_rows:
+        signals = row.get("signals") or {}
+        if signals.get("status") != "ok" or signals.get("momentumPct") is None:
+            continue
+        peers = [
+            (other.get("signals") or {}).get("momentumPct")
+            for other in candidates
+            if other is not row
+            and other.get("region", "") == row.get("region", "")
+            and (other.get("signals") or {}).get("status") == "ok"
+            and (other.get("signals") or {}).get("momentumPct") is not None
+        ]
+        if peers:
+            district_momentum = round(statistics.median(peers), 1)
+            signals["districtMomentumPct"] = district_momentum
+            signals["districtRelativePct"] = round(
+                signals["momentumPct"] - district_momentum,
+                1,
+            )
+            signals["districtComparisonCount"] = len(peers)
+            signals["districtBasis"] = "cached_search_candidates"
+
+    for row, _cached_transactions in computed_rows:
+        signals = row.get("signals") or {}
+        signals["scoreFormulaVersion"] = SCORE_FORMULA_VERSION
+        if signals.get("status") == "ok":
+            details = _score_details(signals)
+            signals["score"] = details["score"]
+            signals["scoreRaw"] = details["rawScore"]
+            signals["scoreBreakdown"] = details["breakdown"]
+            signals["scoreCaps"] = details["caps"]
+            signals["scoreFormulaVersion"] = details["formulaVersion"]
+            signals["badges"] = _badges(signals)
+        else:
+            signals["score"] = None
+            signals["badges"] = (
+                [{"kind": "insufficient", "label": "거래 표본 부족", "tone": "wait"}]
+                if signals.get("status") == "insufficient"
+                else (
+                    [{"kind": "stale", "label": "최근 거래 없음", "tone": "wait"}]
+                    if signals.get("status") == "stale"
+                    else []
+                )
             )
         row["signals"] = signals

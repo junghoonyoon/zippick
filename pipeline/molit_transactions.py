@@ -28,13 +28,15 @@ MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 7
+PRICE_BAND_CACHE_SCHEMA_VERSION = 8
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 _CIRCUIT_STATE = {
     TRANSACTION_KIND_APARTMENT: {"disabledUntil": 0, "lastError": ""},
     TRANSACTION_KIND_PRESALE: {"disabledUntil": 0, "lastError": ""},
 }
 _PRICE_BAND_CACHE_LOCK = threading.Lock()
+_PRICE_BAND_SOURCE_SIGNATURE = None
+_PRICE_BAND_MEMORY_CACHE = {}
 _MONTH_MEMORY_CACHE = {}
 _MONTH_ADDRESS_INDEX = {}
 _MONTH_MEMORY_CACHE_LOCK = threading.Lock()
@@ -215,13 +217,17 @@ def _read_cached_month_memory(
 
 
 def _price_band_cache_key(name, region, area_label, lookback_months):
-    tracked_files = [__file__, *real_estate_search.APARTMENT_CSV_PATHS]
-    revisions = {}
-    for path in tracked_files:
-        try:
-            revisions[str(path)] = os.path.getmtime(path)
-        except OSError:
-            revisions[str(path)] = 0
+    global _PRICE_BAND_SOURCE_SIGNATURE
+    if _PRICE_BAND_SOURCE_SIGNATURE is None:
+        digests = []
+        for path in real_estate_search.APARTMENT_CSV_PATHS:
+            try:
+                digests.append(hashlib.sha256(path.read_bytes()).hexdigest())
+            except OSError:
+                digests.append("")
+        _PRICE_BAND_SOURCE_SIGNATURE = hashlib.sha256(
+            "|".join(digests).encode("utf-8"),
+        ).hexdigest()
     material = {
         "schema": PRICE_BAND_CACHE_SCHEMA_VERSION,
         "date": datetime.date.today().isoformat(),
@@ -231,7 +237,8 @@ def _price_band_cache_key(name, region, area_label, lookback_months):
         "lookbackMonths": int(lookback_months or RECENT_LOOKBACK_MONTHS),
         "transactionKind": transaction_kind_for_apartment(name, region),
         "dealMonths": _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS)),
-        "revisions": revisions,
+        # 릴리스마다 바뀌는 mtime 대신 원본 단지 데이터 내용으로만 무효화한다.
+        "sourceRevision": _PRICE_BAND_SOURCE_SIGNATURE,
     }
     encoded = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -243,6 +250,13 @@ def _price_band_cache_path(cache_key):
 
 def _read_cached_price_band(cache_key):
     path = _price_band_cache_path(cache_key)
+    memory_key = (str(PRICE_BAND_CACHE_DIR), cache_key)
+    memory_cached = _PRICE_BAND_MEMORY_CACHE.get(memory_key)
+    if memory_cached:
+        fetched_at, band = memory_cached
+        if time.time() - fetched_at <= PRICE_BAND_CACHE_TTL_SECONDS:
+            return True, band
+        _PRICE_BAND_MEMORY_CACHE.pop(memory_key, None)
     if not path.exists():
         return False, None
     try:
@@ -256,18 +270,22 @@ def _read_cached_price_band(cache_key):
         except OSError:
             pass
         return False, None
-    return True, cached.get("band")
+    band = cached.get("band")
+    _PRICE_BAND_MEMORY_CACHE[memory_key] = (fetched_at, band)
+    return True, band
 
 
 def _write_cached_price_band(cache_key, band):
     PRICE_BAND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path = _price_band_cache_path(cache_key)
+    fetched_at = time.time()
     tmp = path.with_suffix(f".{time.monotonic_ns()}.tmp")
     tmp.write_text(json.dumps({
-        "fetchedAt": time.time(),
+        "fetchedAt": fetched_at,
         "band": band,
     }, ensure_ascii=False), encoding="utf-8")
     tmp.replace(path)
+    _PRICE_BAND_MEMORY_CACHE[(str(PRICE_BAND_CACHE_DIR), cache_key)] = (fetched_at, band)
 
 
 def _xml_text(item, names):
@@ -597,10 +615,13 @@ def transaction_kind_for_apartment(name, region=""):
 
 
 def _row_matches_entity(row, entity):
-    dong_key = compact(entity.get("legalDong"))
-    address_key = compact(entity.get("address"))
-    row_dong = compact(row.get("법정동") or row.get("읍면동"))
-    row_jibun = compact(row.get("지번"))
+    # 공통 후보 응답은 주소가 확인되지 않은 단지에 ``address: null``을
+    # 담을 수 있다. compact(None)은 "none"이 되므로 빈 주소를 실제 주소로
+    # 오인하면 모든 지번이 불일치해 가격 흐름 거래가 0건으로 사라진다.
+    dong_key = compact(entity.get("legalDong") or "")
+    address_key = compact(entity.get("address") or "")
+    row_dong = compact(row.get("법정동") or row.get("읍면동") or "")
+    row_jibun = compact(row.get("지번") or "")
     if dong_key and row_dong and dong_key != row_dong:
         return False
     if address_key and row_jibun and not address_key.endswith(row_jibun):
@@ -791,9 +812,11 @@ def _area_target(area_label):
     if values:
         low = min(values)
         high = max(values)
-        # Official exclusive areas commonly differ from the rounded display
-        # label by a few hundredths (for example 59.98㎡ shown as 60㎡).
-        return (max(0, low - 0.75), high + 0.75)
+        # Minimum-area results use the integer part of the actual exclusive
+        # area as their display label.  A displayed 84㎡ can therefore refer
+        # to 84.89㎡ (and 59㎡ to 59.98㎡), so keep a full 1㎡ rounding margin
+        # when the detailed transactions are matched again for trend scores.
+        return (max(0, low - 1.0), high + 1.0)
     if "84" in text:
         return (75, 95)
     if "59" in text:
@@ -1061,8 +1084,14 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
     return matches
 
 
-def transactions_for_apartment(name, region="", area_label="", lookback_months=RECENT_LOOKBACK_MONTHS):
-    rows = source_rows(name, region)
+def transactions_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
     if not rows:
         return []
     transaction_kind = transaction_kind_for_apartment(name, region)
@@ -1120,6 +1149,128 @@ def transactions_for_apartment_cached(
             if items is not None:
                 monthly[(lawd_cd, deal_ymd)] = items
     return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def cached_month_coverage_for_apartment(
+    name,
+    region="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    """Report whether every expected local month cache is available."""
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
+    if not rows:
+        return {
+            "complete": False,
+            "cachedMonthCount": 0,
+            "expectedMonthCount": 0,
+        }
+    transaction_kind = transaction_kind_for_apartment(name, region)
+    month_values = _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS))
+    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    expected = len(lawd_cds) * len(month_values)
+    cached = sum(
+        _read_cached_month_memory(
+            lawd_cd,
+            deal_ymd,
+            transaction_kind=transaction_kind,
+        ) is not None
+        for lawd_cd in lawd_cds
+        for deal_ymd in month_values
+    )
+    return {
+        "complete": bool(expected and cached == expected),
+        "cachedMonthCount": cached,
+        "expectedMonthCount": expected,
+    }
+
+
+def _transactions_in_recent_months(transactions, lookback_months):
+    allowed = set(_deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS)))
+    return [
+        row
+        for row in transactions
+        if str(row.get("dealDate") or "")[:7].replace("-", "") in allowed
+    ]
+
+
+def cached_market_bundle_for_apartment(
+    name,
+    region="",
+    area_label="",
+    min_area=0,
+    lookback_months=None,
+    entity=None,
+):
+    """Build selected-area price bands and signal transactions in one cache scan."""
+    lookback_months = int(lookback_months or config.MOLIT_SIGNAL_LOOKBACK_MONTHS)
+    transactions = transactions_for_apartment_cached(
+        name,
+        region=region,
+        area_label="",
+        lookback_months=lookback_months,
+        entity=entity,
+    )
+    selected = [
+        row for row in transactions
+        if _matches_area(row, area_label)
+    ] if area_label else list(transactions)
+    selected_area_label = area_label
+    if not selected and float(min_area or 0) > 0:
+        selected = _minimum_area_transactions(transactions, float(min_area))
+        if selected:
+            display_area = max(
+                int(float(min_area)),
+                int(float(selected[0].get("exclusiveArea") or 0)),
+            )
+            selected_area_label = f"전용 {display_area}㎡"
+
+    recent = _transactions_in_recent_months(
+        selected,
+        RECENT_LOOKBACK_MONTHS,
+    )
+    comparison = _transactions_in_recent_months(selected, 12)
+    band = _price_band_payload(
+        name,
+        region,
+        selected_area_label,
+        RECENT_LOOKBACK_MONTHS,
+        recent,
+    )
+    comparison_band = _price_band_payload(
+        name,
+        region,
+        selected_area_label,
+        12,
+        comparison,
+    )
+    latest_observed = selected[0] if selected else {}
+    return {
+        "band": band,
+        "comparison": comparison_band or band,
+        "transactions": _transactions_in_recent_months(
+            selected,
+            config.MOLIT_SIGNAL_LOOKBACK_MONTHS,
+        ),
+        "lastObserved": ({
+            "lastObservedDealPriceEok": round(
+                float(latest_observed.get("dealAmountEok") or 0),
+                2,
+            ),
+            "lastObservedDealExclusiveArea": latest_observed.get("exclusiveArea"),
+            "lastObservedDealFloor": latest_observed.get("floor", ""),
+            "lastObservedDealDate": latest_observed.get("dealDate", ""),
+            "lastObservedDealNote": (
+                f"국토부 실거래가 최근 {lookback_months}개월 확장 조회"
+            ),
+        } if latest_observed else None),
+        "coverage": cached_month_coverage_for_apartment(
+            name,
+            region=region,
+            lookback_months=lookback_months,
+            entity=entity,
+        ),
+    }
 
 
 def area_options_for_apartment(name, region="", lookback_months=RECENT_LOOKBACK_MONTHS):
@@ -1193,10 +1344,11 @@ def latest_transaction_for_apartment(
     area_label="",
     lookback_months=None,
     skip_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
 ):
     lookback_months = int(lookback_months or config.MOLIT_STALE_TRANSACTION_LOOKBACK_MONTHS)
     skip_months = max(0, int(skip_months or 0))
-    rows = source_rows(name, region)
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
     if not rows:
         return None
     transaction_kind = transaction_kind_for_apartment(name, region)
@@ -1362,6 +1514,20 @@ def cached_price_band_for_apartment(
     )
 
 
+def stored_price_band_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+):
+    """Return only an already-materialized price band, without deriving it."""
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
+    with _PRICE_BAND_CACHE_LOCK:
+        cache_hit, cached_band = _read_cached_price_band(cache_key)
+    return cached_band if cache_hit else None
+
+
 def _minimum_area_price_band_payload(name, region, minimum, lookback_months, transactions):
     minimum = float(minimum or 0)
     transactions = _minimum_area_transactions(
@@ -1460,3 +1626,19 @@ def cached_price_band_for_apartment_min_area(
             entity=entity,
         ),
     )
+
+
+def stored_price_band_for_apartment_min_area(
+    name,
+    region="",
+    min_area=0,
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+):
+    """Return only a persisted minimum-area price band."""
+    minimum = float(min_area or 0)
+    cache_label = f"최소 전용 {minimum:g}㎡"
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    cache_key = _price_band_cache_key(name, region, cache_label, lookback_months)
+    with _PRICE_BAND_CACHE_LOCK:
+        cache_hit, cached_band = _read_cached_price_band(cache_key)
+    return cached_band if cache_hit else None

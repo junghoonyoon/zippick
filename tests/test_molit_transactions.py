@@ -18,6 +18,48 @@ import real_estate_search  # noqa: E402
 
 
 class MolitTransactionsTest(unittest.TestCase):
+    def test_entity_without_address_still_matches_its_legal_dong(self):
+        source_row = {
+            "법정동": "개봉동",
+            "지번": "481",
+        }
+        candidate = {
+            "name": "현대",
+            "region": "구로구",
+            "legalDong": "개봉동",
+            "jibun": "481",
+            "address": None,
+        }
+
+        self.assertTrue(
+            molit_transactions._row_matches_entity(source_row, candidate)
+        )
+
+    def test_live_transaction_lookup_uses_exact_master_entity_when_provided(self):
+        entity = {
+            "name": "현대아파트",
+            "district": "테스트구",
+            "legalDong": "가동",
+            "jibun": "1",
+        }
+        with mock.patch.object(
+            molit_transactions,
+            "source_rows_for_entity",
+            return_value=[],
+        ) as exact, mock.patch.object(
+            molit_transactions,
+            "source_rows",
+            side_effect=AssertionError("generic lookup must not run"),
+        ):
+            rows = molit_transactions.transactions_for_apartment(
+                "현대아파트",
+                region="테스트구",
+                entity=entity,
+            )
+
+        self.assertEqual(rows, [])
+        exact.assert_called_once_with(entity, "테스트구")
+
     def test_quarter_trade_stats_use_latest_trade_month_for_both_windows(self):
         transactions = [
             {"dealDate": "2026-07-09", "dealAmountEok": 10.8},
@@ -340,6 +382,26 @@ class MolitTransactionsTest(unittest.TestCase):
     def test_rounded_sixty_square_meter_label_excludes_eighty_four(self):
         self.assertTrue(molit_transactions._matches_area({"exclusiveArea": 59.98}, "전용 60~60㎡"))
         self.assertFalse(molit_transactions._matches_area({"exclusiveArea": 84.97}, "전용 60~60㎡"))
+
+    def test_integer_area_label_keeps_truncated_decimal_transactions(self):
+        self.assertTrue(
+            molit_transactions._matches_area(
+                {"exclusiveArea": 84.89},
+                "전용 84㎡",
+            )
+        )
+        self.assertTrue(
+            molit_transactions._matches_area(
+                {"exclusiveArea": 59.98},
+                "전용 59㎡",
+            )
+        )
+        self.assertFalse(
+            molit_transactions._matches_area(
+                {"exclusiveArea": 74.89},
+                "전용 84㎡",
+            )
+        )
 
     def test_minimum_area_prefers_smallest_qualifying_transaction_band(self):
         row = {

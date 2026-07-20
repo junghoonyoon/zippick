@@ -8,6 +8,353 @@ APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    def test_latest_trade_direction_compares_the_actual_latest_two_trades(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        trades_match = re.search(
+            r"function candidateLatestDirectionTrades\b(?P<body>.*?)"
+            r"\n    function candidateLatestTradeDirectionHtml",
+            html,
+            re.DOTALL,
+        )
+        direction_match = re.search(
+            r"function candidateLatestTradeDirectionHtml\b(?P<body>.*?)"
+            r"\n    function candidateLatestTradeOutlierNoteHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(trades_match)
+        self.assertIsNotNone(direction_match)
+        trades_body = trades_match.group("body")
+        direction_body = direction_match.group("body")
+        self.assertIn(
+            ".sort((left, right) => right.date.localeCompare(left.date))",
+            trades_body,
+        )
+        self.assertNotIn("median", trades_body)
+        self.assertNotIn("Math.abs(row.price", trades_body)
+        self.assertLess(
+            direction_body.index("item.previousDealPriceEok"),
+            direction_body.index("candidateLatestDirectionTrades(item)"),
+        )
+        self.assertIn(
+            "latestTrades[0].price / latestTrades[1].price",
+            direction_body,
+        )
+
+    def test_market_sparkline_compares_price_growth_from_a_common_base(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        series_match = re.search(
+            r"function sparklineSeries\b(?P<body>.*?)"
+            r"\n    function leaderFormulaHtml",
+            html,
+            re.DOTALL,
+        )
+        summary_match = re.search(
+            r"function candidateTrendSummary\b(?P<body>.*?)"
+            r"\n    function candidateTrendSummaryHtml",
+            html,
+            re.DOTALL,
+        )
+        summary_html_match = re.search(
+            r"function candidateTrendSummaryHtml\b(?P<body>.*?)"
+            r"\n    function candidateSparklineHtml",
+            html,
+            re.DOTALL,
+        )
+        chart_match = re.search(
+            r"function candidateSparklineHtml\b(?P<body>.*?)"
+            r"\n    function sparkTradeDetailDate",
+            html,
+            re.DOTALL,
+        )
+        regional_index_match = re.search(
+            r"function regionalIndexValues\b(?P<body>.*?)"
+            r"\n    function regionalIndexAtPeriod",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(series_match)
+        self.assertIsNotNone(summary_match)
+        self.assertIsNotNone(summary_html_match)
+        self.assertIsNotNone(chart_match)
+        self.assertIsNotNone(regional_index_match)
+        series_body = series_match.group("body")
+        summary_body = summary_match.group("body")
+        summary_html_body = summary_html_match.group("body")
+        chart_body = chart_match.group("body")
+        self.assertIn("const complexPrices =", series_body)
+        self.assertIn("value / anchorPrice * 100", series_body)
+        self.assertIn("value / anchorIndex * 100", series_body)
+        self.assertIn("value / leaderAnchorPrice * 100", series_body)
+        self.assertIn("item.leaderRoneEstimate", series_body)
+        self.assertIn("item.districtLeaderRoneEstimate", series_body)
+        self.assertIn("value / districtLeaderAnchorPrice * 100", series_body)
+        self.assertNotIn("anchorPrice * value / anchorIndex", series_body)
+        self.assertIn("anchorPeriod:periods[anchor]", series_body)
+        self.assertIn("axisTrend(value)", chart_body)
+        self.assertIn("const w = 420, h = 194;", chart_body)
+        self.assertIn("aspect-ratio:210 / 97", html)
+        self.assertIn(".insight-trend .trend-toggle { font-size:14px }", html)
+        self.assertNotIn("spark-summary-title", summary_html_body)
+        self.assertNotIn("spark-summary-message", summary_html_body)
+        self.assertIn("windowMonths % 12 === 0", summary_html_body)
+        self.assertIn("최근 ${windowMonths / 12}년 기준", summary_html_body)
+        self.assertIn('<span class="spark-summary-basis">${esc(windowLabel)}</span>', summary_html_body)
+        self.assertIn(".spark-summary-basis {", html)
+        self.assertIn("<strong>이 단지 <em", summary_html_body)
+        self.assertIn("${esc(summary.regionName)} 평균 <em>", summary_html_body)
+        self.assertIn("${esc(summary.series.leaderName)} <em>", summary_html_body)
+        self.assertIn("candidateTrendSummaryHtml(summary)", chart_body)
+        self.assertIn("${regionName} 평균보다 더 많이 내려 흐름은 지켜봐야 해요", summary_body)
+        self.assertIn("${esc(regionName)} 평균 지수", chart_body)
+        self.assertIn("series.regionSource.includes(\"R-ONE\")", chart_body)
+        self.assertIn("가격 대비 · 지역 흐름은 ${esc(regionBasis)} 기준", chart_body)
+        self.assertIn("payload?.index?.history", regional_index_match.group("body"))
+        self.assertIn("payload?.adjustedTransactions", regional_index_match.group("body"))
+        self.assertIn("regionalIndexValues(payload, periods)", series_body)
+        self.assertIn("regionSource:String(payload?.index?.source || \"\")", series_body)
+        self.assertNotIn("=100", chart_body)
+        self.assertNotIn("%p", chart_body)
+        self.assertIn("${regionName} 평균보다 더 올라 흐름이 좋아요", summary_body)
+        self.assertNotIn("아파트 시장", chart_body)
+        self.assertIn(": [max, 100, min]", chart_body)
+        self.assertIn("data-complex-trend-label", chart_body)
+        self.assertIn("data-region-trend-label", chart_body)
+        self.assertNotIn("spark-peak", chart_body)
+        self.assertNotIn("최근 2년 고점", chart_body)
+        self.assertNotIn(".spark-peak-", html)
+        self.assertIn('stroke="#d99024"', chart_body)
+        self.assertIn("spark-dot spark-leader", chart_body)
+        self.assertIn('class="spark-legend-item spark-legend-primary"', chart_body)
+        self.assertIn(".spark-legend-primary { color:#344054; font-weight:850 }", html)
+        self.assertIn('class="spark-leader-group"', chart_body)
+        self.assertIn('class="spark-legend-item spark-leader-search"', chart_body)
+        self.assertIn('data-leader-search-name="${esc(series.leaderName)}"', chart_body)
+        self.assertIn('data-leader-search-region="${esc(leaderSearchRegion)}"', chart_body)
+        self.assertIn('aria-label="${esc(`${series.leaderName} ${sharedLeaderRegionName} 대장 검색`)}"', chart_body)
+        self.assertIn("leaderFormulaHtml(item, leaderRegionName)", chart_body)
+        self.assertIn("series.districtLeaderSharesLocality", chart_body)
+        self.assertIn("`${leaderRegionName}/${districtLeaderRegionName}`", chart_body)
+        self.assertIn("${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장", chart_body)
+        self.assertIn("${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장", chart_body)
+        self.assertIn('stroke="#8067c7"', chart_body)
+        self.assertNotIn('stroke-dasharray="5 3"', chart_body)
+        self.assertIn('stroke="#1677ff" stroke-width="3"', chart_body)
+        self.assertIn("spark-dot spark-district-leader", chart_body)
+        self.assertNotIn("지역 대장", chart_body)
+        self.assertIn("complexRate - leaderRate", summary_body)
+        self.assertIn("${regionName} 평균보다 강하고, ${leaderRegionName} 대장과 같은 방향으로 오르는 좋은 흐름이에요", summary_body)
+        self.assertIn("${regionName} 평균과 ${leaderRegionName} 대장을 모두 앞서는 강한 상승 흐름이에요", summary_body)
+        self.assertIn("하락장에서도 잘 버티고 있어요", summary_body)
+        self.assertIn("${regionName} 평균과 ${leaderRegionName} 대장보다 더 많이 내려 흐름은 지켜봐야 해요", summary_body)
+        self.assertNotIn("지역 대장", summary_body)
+        self.assertNotIn("가격 방어력이 약한 흐름이에요", summary_body)
+        self.assertIn('aria-label="${esc(`${regionName} 대장아파트 산정식 보기`)}"', html)
+        self.assertIn("같은 전용 70~89㎡ 구간", html)
+        self.assertIn("가격·상승률·거래량은 같은 지역과 같은 면적 구간", html)
+        self.assertIn("거래 1건 이하 단지는 일반 대장 1위에서 제외", html)
+        self.assertIn("가격 수준 · 35%", html)
+        self.assertIn("상승 선도력 · 25%", html)
+        self.assertIn("거래 유동성", html)
+        self.assertIn("역 접근성 · 10%", html)
+        self.assertIn("syncSparkAxisLabelSizes();\n      hideSparkTooltips();", html)
+        self.assertIn("const minRenderedSize = 11;", html)
+        self.assertIn("const maxRenderedSize = 11;", html)
+        self.assertIn("renderedFontSize / renderedScale", html)
+        self.assertIn('const leaderSearch = event.target.closest("[data-leader-search-name]");', html)
+        self.assertIn("await runLeaderApartmentSearch(leaderSearch);", html)
+        self.assertIn("void runLeaderApartmentSearch(leaderSearch);", html)
+        self.assertIn("async function runLeaderApartmentSearch(trigger)", html)
+        self.assertIn("await runAptSearch(name, selectedItem);", html)
+        self.assertIn(".spark-leader-search:hover", html)
+        self.assertIn("text-decoration:underline", html)
+        self.assertIn("text-underline-offset:3px", html)
+
+    def test_market_sparkline_labels_the_regional_leader_itself(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        chart_match = re.search(
+            r"function candidateSparklineHtml\b(?P<body>.*?)"
+            r"\n    function sparkTradeDetailDate",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(chart_match)
+        chart_body = chart_match.group("body")
+        self.assertIn("item.signals?.isRegionalLeader", chart_body)
+        self.assertIn('class="spark-self-leader"', chart_body)
+        self.assertIn("이 단지가 ${esc(sharedLeaderRegionName)}", chart_body)
+        self.assertIn("item.signals?.isDistrictLeader", chart_body)
+        self.assertIn(".spark-self-leader {", html)
+
+    def test_candidate_insight_combines_personal_choice_price_flow_and_news(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        gains_match = re.search(
+            r"function candidateChoiceGains\(item\) \{(?P<body>.*?)"
+            r"\n    function candidateChoiceGainObject",
+            html,
+            re.DOTALL,
+        )
+        funding_match = re.search(
+            r"function candidateChoiceFundingCost\(item\) \{(?P<body>.*?)"
+            r"\n    function candidateChoiceCost",
+            html,
+            re.DOTALL,
+        )
+        cost_match = re.search(
+            r"function candidateChoiceCost\(item\) \{(?P<body>.*?)"
+            r"\n    function candidateChoiceCatalyst",
+            html,
+            re.DOTALL,
+        )
+        summary_lines_match = re.search(
+            r"function candidateChoiceSummaryLines\(item\) \{(?P<body>.*?)"
+            r"\n    function candidateChoiceSummaryHtml",
+            html,
+            re.DOTALL,
+        )
+        trend_insight_match = re.search(
+            r"function candidateTrendInsightHtml\(item, options = \{\}\) \{(?P<body>.*?)"
+            r"\n    function candidateVerdictHtml",
+            html,
+            re.DOTALL,
+        )
+        verdict_match = re.search(
+            r"function candidateVerdictHtml\(item, options = \{\}\) \{(?P<body>.*?)"
+            r"\n    // 중수용 근거 숫자",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(gains_match)
+        self.assertIsNotNone(funding_match)
+        self.assertIsNotNone(cost_match)
+        self.assertIsNotNone(summary_lines_match)
+        self.assertIsNotNone(trend_insight_match)
+        self.assertIsNotNone(verdict_match)
+        gains_body = gains_match.group("body")
+        funding_body = funding_match.group("body")
+        cost_body = cost_match.group("body")
+        summary_lines_body = summary_lines_match.group("body")
+        trend_insight_body = trend_insight_match.group("body")
+        verdict_body = verdict_match.group("body")
+        self.assertIn('rarity?.kind === "households"', gains_body)
+        self.assertIn('rarity?.kind === "age"', gains_body)
+        self.assertIn('["short", "restricted"].includes(fundingStatus) || cash?.gap < 0', gains_body)
+        self.assertIn('cash?.gap >= .3 && fundingStatus === "possible"', gains_body)
+        self.assertIn("!hasFundingShortfall", gains_body)
+        self.assertIn('gains.push("최근 고점보다 낮은 가격")', gains_body)
+        self.assertNotIn('gains.push("가격 여유")', gains_body)
+        self.assertIn("return gains.slice(0, 2);", gains_body)
+        self.assertIn('scenario?.type === "latest_deal"', funding_body)
+        self.assertIn('scenario?.type === "recent3_average"', funding_body)
+        self.assertIn("최근 실거래 가격은 자금 범위를 넘지만 3개월 평균 수준이면 검토할 수 있어요", funding_body)
+        self.assertIn("3개월 평균 가격은 자금 범위를 넘어 최근 실거래 수준의 매물이어야 검토할 수 있어요", funding_body)
+        self.assertIn("주담대 상한에 먼저 걸려", funding_body)
+        self.assertIn("소득 기준 대출한도가 먼저 막혀", funding_body)
+        self.assertIn("LTV 한도가 먼저 걸려", funding_body)
+        self.assertIn("가격 협상이 돼야 자금 조건 안으로 들어오는 단지예요", funding_body)
+        self.assertLess(
+            cost_body.index('item.policyImpact?.status === "restricted"'),
+            cost_body.index("cash?.gap < 0"),
+        )
+        self.assertLess(cost_body.index("cash?.gap < 0"), cost_body.index("ageDays != null && ageDays > 120"))
+        self.assertIn('item.policyImpact?.status === "short" || cash?.gap < 0', cost_body)
+        self.assertIn("candidateChoiceFundingCost(item)", cost_body)
+        self.assertIn("거래 표본이 적어 적정 가격 판단은 어려워요", cost_body)
+        self.assertIn("가격은 최근 2년 고점과 거의 비슷해요", cost_body)
+        self.assertNotIn("가격 메리트는 크지 않아요", cost_body)
+        self.assertIn("candidateChoiceRelativeCost(item)", cost_body)
+        self.assertIn("candidateDealAgeDays(item.latestDealDate)", html)
+        self.assertIn("candidateDealAgeDays(item.roneEstimate?.latestTrade?.dealDate)", html)
+        self.assertIn("Math.min(...ages)", html)
+        self.assertIn("candidateChoiceCatalystSubject(item)", summary_lines_body)
+        self.assertIn("candidateChoiceCompactText(cost)", summary_lines_body)
+        self.assertIn('[/상승 흐름은 더 지켜봐야 해요$/, "상승 흐름 확인 필요"]', html)
+        self.assertNotIn('"상승 상승 흐름"', html)
+        self.assertIn("const trendSummary = candidateTrendSummary(item);", summary_lines_body)
+        self.assertIn('lines.push(`${gainObject} 얻는 대신 ${candidateChoiceCompactText(cost)}`);', summary_lines_body)
+        self.assertIn('lines.push(`${catalystSubject} 긍정 변수`);', summary_lines_body)
+        self.assertIn("lines.push(candidateChoiceCompactText(trendMessage))", summary_lines_body)
+        self.assertIn("...new Set(lines)", summary_lines_body)
+        self.assertIn('row?.scope === "complex"', html)
+        self.assertIn('row?.status === "confirmed"', html)
+        self.assertIn('row?.scope === "area"', html)
+        self.assertIn('row?.status === "nearby"', html)
+        self.assertIn("인근 정비사업", html)
+        self.assertIn("row?.eventLabel", html)
+        self.assertIn("다른 후보보다 뚜렷한 강점은 아직 없음", summary_lines_body)
+        self.assertIn('<span class="insight-kicker">핵심 요약</span>', html)
+        self.assertIn('<div class="insight-summary">', html)
+        self.assertIn(".insight-trend { margin:14px -10px 0; border:0; border-radius:0; padding:0; background:transparent }", html)
+        self.assertIn("font-size:11px", html)
+        self.assertIn(".budget-sparkline-legend { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; color:#8b95a1; font-size:13px", html)
+        self.assertIn(".spark-basis { flex-basis:100%; color:#8b95a1; font-size:13px", html)
+        self.assertNotIn("이 단지는 이런 선택이에요", html)
+        self.assertIn('<ul class="insight-title">${lines.map(line => `<li>${esc(line)}</li>`).join("")}</ul>', html)
+        self.assertIn("font-size:15px; font-weight:700", html)
+        self.assertIn("${candidateTrendInsightHtml(item, options)}", verdict_body)
+        self.assertIn("${candidateRelatedNewsHtml(item)}", verdict_body)
+        self.assertLess(
+            verdict_body.index("${candidateRelatedNewsHtml(item)}"),
+            verdict_body.index("${candidateTrendInsightHtml(item, options)}"),
+        )
+        self.assertIn('data-trend-toggle data-trend-action="toggle"', html)
+        self.assertIn("차트보기", html)
+        self.assertNotIn("차트로 확인", html)
+        self.assertIn("candidateTrendPanelHtml(item, series)", trend_insight_body)
+        self.assertNotIn("insight-section-label", trend_insight_body)
+        self.assertIn('<div class="trend-status" data-trend-control>${controlHtml}</div>', trend_insight_body)
+        self.assertIn('class="insight-news"', html)
+        self.assertIn('class="insight-news-item"', html)
+        self.assertNotIn("관련 변수", html)
+        self.assertNotIn("insight-news-head", html)
+        self.assertNotIn("현재 가격 흐름과 별도로 앞으로 확인할 뉴스예요.", html)
+        self.assertNotIn("insight-news-context", html)
+        self.assertIn("item.relatedNews", html)
+        self.assertIn('"인근 교통·개발"', html)
+        self.assertIn('status === "confirmed" && eventLabel', html)
+        self.assertIn("news:Array.isArray(row.news) ? row.news : []", html)
+        self.assertIn('getJson("/api/apartment-catalysts"', html)
+        self.assertIn("enrichNewsCatalysts(rows);", html)
+        self.assertIn("const CANDIDATE_PAGE_SIZE = 10;", html)
+        self.assertIn("allSortedRows.slice(0, candidateVisibleCount)", html)
+        self.assertIn("candidateLoadMoreHtml(rows.length, allSortedRows.length)", html)
+        self.assertIn("data-candidate-load-more", html)
+        self.assertIn("pending.slice(index, index + CANDIDATE_PAGE_SIZE)", html)
+        self.assertIn("visibleCandidates: rows", html)
+        self.assertNotIn('class="insight-tradeoff-label"', html)
+        self.assertNotIn('class="insight-next-action"', html)
+        self.assertNotIn('class="insight-action-label"', html)
+        self.assertNotIn('class="insight-action"', html)
+        self.assertNotIn(".insight-next-action {", html)
+        self.assertNotIn(".insight-tradeoffs {", html)
+        self.assertNotIn('class="insight-evidence-item"', html)
+        self.assertIn("font-size:12px; font-weight:700", html)
+        self.assertIn(".insight-trend .spark-summary-values em { font-size:inherit; font-weight:850 }", html)
+        self.assertIn(".insight-trend .budget-sparkline {\n      margin:12px 0 2px; padding-top:12px;", html)
+        self.assertNotIn("margin:12px 0 2px; border-top:1px solid #e5e5e7; padding-top:12px;", html)
+        self.assertNotIn(".insight-kicker::before", html)
+        self.assertIn("background:#f5f5f7", html)
+        self.assertNotIn(".candidate-verdict:has(.insight-good)", html)
+
+    def test_direct_apartment_search_keeps_funding_impact_in_core_summary(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        candidate_match = re.search(
+            r"function aptMarketCandidate\b(?P<body>.*?)"
+            r"\n    async function enrichAptLeaderEstimate",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(candidate_match)
+        body = candidate_match.group("body")
+        self.assertIn("...canonical", body)
+        self.assertIn("policyImpact:canonical.policyImpact || data?.policyImpact || null", body)
+        self.assertIn("signals:canonical.signals || {}", body)
+
     def test_condition_stepper_hides_downward_and_returns_upward(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(
@@ -25,6 +372,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("setConditionFlowScrollHidden(false);", body)
         self.assertIn("#conditionView .condition-flow.is-scroll-hidden", html)
         self.assertIn("body.condition-flow-scroll-hidden .power-persistent", html)
+        self.assertIn("--app-header-sticky-height:64px", html)
+        self.assertIn("position:sticky; top:0; z-index:60", html)
+        self.assertIn("top:var(--app-header-sticky-height); z-index:20", html)
+        self.assertIn("top:calc(var(--app-header-sticky-height) + 68px)", html)
+        self.assertIn("top:calc(var(--app-header-sticky-height) + 8px)", html)
 
     def test_search_field_opens_a_dedicated_search_view_with_back_button(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -43,7 +395,101 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("if (activeSearchQuery && !searchSuspended) suspendSearchView();", html)
         self.assertIn('aptSearchPageBack.addEventListener("click", closeAptSearchView);', html)
 
-    def test_search_results_start_price_and_signal_enrichment(self):
+    def test_condition_region_selection_refreshes_selected_chips(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        sync_match = re.search(
+            r"function syncConditionEditRegionSelectedChips\b(?P<body>.*?)"
+            r"\n    function conditionEditFieldHtml",
+            html,
+            re.DOTALL,
+        )
+        change_match = re.search(
+            r'conditionItemEditForm\.addEventListener\("change", event => \{(?P<body>.*?)'
+            r"\n    \}\);",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(sync_match)
+        self.assertIsNotNone(change_match)
+        self.assertIn("chips.outerHTML = conditionEditRegionSelectedChipsHtml();", sync_match.group("body"))
+        self.assertIn("syncConditionRegionChoices(event.target);", change_match.group("body"))
+        self.assertIn("syncConditionEditRegionSelectedChips();", change_match.group("body"))
+
+    def test_result_header_shows_all_selected_house_conditions(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        summary_match = re.search(
+            r"function persistentPreferenceSummary\b(?P<body>.*?)"
+            r"\n    function renderPersistentRegion",
+            html,
+            re.DOTALL,
+        )
+        render_match = re.search(
+            r"function renderPreferenceSinglePickers\b(?P<body>.*?)"
+            r"\n    function openPreferenceSinglePicker",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(summary_match)
+        self.assertIsNotNone(render_match)
+        summary_body = summary_match.group("body")
+        self.assertIn('selectionSummary("region")', summary_body)
+        self.assertIn("selectedOptionText(budgetMinArea)", summary_body)
+        self.assertIn("`세대수 ${selectedOptionText(budgetMinHouseholds)}`", summary_body)
+        self.assertIn("selectedOptionText(budgetMaxBuildingAge)", summary_body)
+        self.assertIn('.join(" · ")', summary_body)
+        self.assertIn("renderPersistentRegion();", render_match.group("body"))
+        self.assertIn(".power-persistent-copy { overflow:hidden; flex-wrap:nowrap; gap:8px }", html)
+        self.assertIn("text-overflow:ellipsis; white-space:nowrap", html)
+        self.assertIn('data-condition-summary-open="power"] { flex:0 0 auto }', html)
+        self.assertIn("flex:1 1 0; min-width:0; overflow:hidden", html)
+        self.assertIn('<span class="power-persistent-label">금액</span>', html)
+        self.assertIn('<span class="power-persistent-label">지역</span>', html)
+        self.assertIn('>변경</button>', html)
+        self.assertIn('{ label:"금액", value:budgetLabel', html)
+        self.assertIn('{ label:"지역", value:regionLabel', html)
+
+    def test_apartment_suggestions_render_as_search_page_content(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        search_box = re.search(
+            r'<div class="apt-search" id="aptSearchBox">(?P<body>.*?)'
+            r"\n      </div>",
+            html,
+            re.DOTALL,
+        )
+        landing = re.search(
+            r'<div class="app-view apt-search-landing" id="aptSearchLanding"'
+            r'(?P<body>.*?)\n    </div>\n\n    <div class="app-view condition-stage-results"',
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(search_box)
+        self.assertIsNotNone(landing)
+        self.assertNotIn('id="aptSearchSuggest"', search_box.group("body"))
+        self.assertIn('id="aptSearchSuggest"', landing.group("body"))
+        self.assertIn(
+            "body.apt-search-mode.apt-search-suggest-open "
+            ".apt-search-landing:not([hidden])",
+            html,
+        )
+        self.assertIn("padding:20px 0 56px", html)
+        self.assertIn("padding-top:14px", html)
+        self.assertIn(
+            "body.apt-search-mode #aptSearchView:not([hidden]) { padding-top:16px }",
+            html,
+        )
+        suggest_style = re.search(
+            r"\.apt-search-suggest \{(?P<body>.*?)\}",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(suggest_style)
+        self.assertNotIn("position:absolute", suggest_style.group("body"))
+        self.assertNotIn("box-shadow", suggest_style.group("body"))
+
+    def test_search_results_start_the_common_candidate_enrichment(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(
             r"async function runAptSearch\b(?P<body>.*?)"
@@ -54,8 +500,80 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIsNotNone(match)
         body = match.group("body")
-        self.assertIn("void enrichAptCards(items);", body)
+        self.assertNotIn("enrichAptCards(items)", body)
         self.assertIn("void enrichAptAffordability(items);", body)
+        self.assertIn("동일한 공통 후보 응답", body)
+        self.assertNotIn("openAptAreaSheet(0)", body)
+
+    def test_apartment_results_require_an_exact_clicked_suggestion(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        fallback_match = re.search(
+            r"function aptSearchFallbackItem\b(?P<body>.*?)"
+            r"\n    function aptSearchResultItems",
+            html,
+            re.DOTALL,
+        )
+        result_match = re.search(
+            r"function aptSearchResultItems\b(?P<body>.*?)"
+            r"\n    async function runAptSearch",
+            html,
+            re.DOTALL,
+        )
+        run_match = re.search(
+            r"async function runAptSearch\b(?P<body>.*?)"
+            r"\n    const aptReportCache",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(fallback_match)
+        self.assertIsNotNone(result_match)
+        self.assertIsNotNone(run_match)
+        self.assertIn("!selectedItem", fallback_match.group("body"))
+        self.assertIn('String(query || "").trim() !== name', fallback_match.group("body"))
+        self.assertIn("if (!fallback) return [];", result_match.group("body"))
+        self.assertIn("return [exactSelectedItems[0]];", result_match.group("body"))
+        self.assertIn("return [fallback];", result_match.group("body"))
+        self.assertNotIn("if (items.length) return items;", result_match.group("body"))
+        self.assertIn("if (!aptSearchFallbackItem(query, selectedItem))", run_match.group("body"))
+        self.assertIn("const fallback = aptSearchFallbackItem(query, selectedItem);", run_match.group("body"))
+        self.assertIn("items = [fallback];", run_match.group("body"))
+
+    def test_apartment_search_submit_does_not_expose_partial_match_results(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        match = re.search(
+            r'aptSearchForm\.addEventListener\("submit", event => \{(?P<body>.*?)'
+            r'\n    \}\);',
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertIn("event.preventDefault();", body)
+        self.assertIn("openAptSearchLanding({ focus:false });", body)
+        self.assertNotIn("runAptSearch", body)
+
+    def test_apartment_affordability_request_times_out_instead_of_loading_forever(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        match = re.search(
+            r"async function fetchAptAffordability\b(?P<body>.*?)"
+            r"\n    async function fetchAptAreaOptions",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertIn("const controller = new AbortController();", body)
+        self.assertIn("setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);", body)
+        self.assertIn("signal:controller.signal", body)
+        self.assertIn("finally(() => clearTimeout(timeout))", body)
+        self.assertIn('search_region:item.region || ""', body)
+        self.assertIn("budget:currentPurchasePower?.budgetEok", body)
+        self.assertIn("min_area:area ? 0 : budgetMinArea.value", body)
+        self.assertIn("min_households:budgetMinHouseholds.value", body)
+        self.assertIn("max_building_age:budgetMaxBuildingAge.value", body)
 
     def test_pending_budget_enrichment_is_not_labeled_as_insufficient(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -83,6 +601,110 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertIn("currentBudgetData?.enrichmentPending", badge_body)
         self.assertIn('? "loading"', badge_body)
+
+    def test_price_trend_buttons_use_plain_language_with_score(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        label_match = re.search(
+            r"function signalTrendButtonLabel\b(?P<body>.*?)"
+            r"\n    function signalVolumeClause",
+            html,
+            re.DOTALL,
+        )
+        score_match = re.search(
+            r"function candidateSignalScoreLabel\b(?P<body>.*?)"
+            r"\n    function signalBadgesHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(label_match)
+        self.assertIsNotNone(score_match)
+        label_body = label_match.group("body")
+        score_body = score_match.group("body")
+        for label in (
+            "상승세 뚜렷해요",
+            "상승세 보여요",
+            "큰 변화 없어요",
+            "하락세 보여요",
+        ):
+            self.assertIn(label, label_body)
+        self.assertIn("`${trend} · ${signals.score}점`", score_body)
+        self.assertIn(
+            'return "거래가 적어 판단이 어려워요";',
+            score_body,
+        )
+        self.assertIn(
+            "최근 가격 흐름 · ${esc(candidateSignalScoreLabel(item))}",
+            html,
+        )
+        rank_match = re.search(
+            r"function assignCandidateSignalRanks\b(?P<body>.*?)"
+            r"\n    function candidateSignalRankBadgeHtml",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(rank_match)
+        rank_body = rank_match.group("body")
+        self.assertIn("Number(right.signals.score) - Number(left.signals.score)", rank_body)
+        self.assertIn(".slice(0, 3)", rank_body)
+        self.assertIn("row.signalRank = index + 1", rank_body)
+        self.assertIn("assignCandidateSignalRanks([...allRows, ...excludedRows], allSortedRows);", html)
+        self.assertIn('class="candidate-signal-rank is-rank-${rank}"', html)
+        self.assertIn("${candidateSignalRankBadgeHtml(item)}", html)
+        self.assertIn("data-candidate-signal-label", html)
+
+    def test_signal_peer_cards_focus_the_matching_budget_result(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        focus_match = re.search(
+            r"function focusBudgetCandidateResult\b(?P<body>.*?)"
+            r"\n    function budgetLoadingStageIndex",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(focus_match)
+        body = focus_match.group("body")
+        self.assertIn("setCandidateDetailOpen(sheet, false)", body)
+        self.assertIn("setCandidateMapDetailOpen(false)", body)
+        self.assertIn('setCandidateViewMode("list")', body)
+        self.assertIn("candidateVisibleCount = Math.max(", body)
+        self.assertIn("renderBudgetCandidates(currentBudgetData, { preserveSelection:true });", body)
+        self.assertIn('targetCard.scrollIntoView({ behavior:"smooth", block:"center" });', body)
+        self.assertIn("targetCard.focus({ preventScroll:true });", body)
+        self.assertIn("focusBudgetCandidateResult(signalPeer.dataset.signalPeerKey);", html)
+        self.assertIn('tabindex="-1" data-candidate-name=', html)
+        self.assertIn("void runApartmentResultSearch({", html)
+        self.assertIn("단지 검색 결과 보기", html)
+        self.assertNotIn("openAptReport(peer.dataset.aptPeerName", html)
+        self.assertNotIn("최근 상승 흐름 리포트 보기", html)
+
+    def test_map_leader_click_moves_map_and_syncs_apartment_search_value(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        focus_match = re.search(
+            r"async function focusCandidateMapLeader\b(?P<body>.*?)"
+            r"\n    async function runLeaderApartmentSearch",
+            html,
+            re.DOTALL,
+        )
+        navigation_match = re.search(
+            r"async function runLeaderApartmentSearch\b(?P<body>.*?)"
+            r"\n    const aptReportCache",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(focus_match)
+        self.assertIsNotNone(navigation_match)
+        focus_body = focus_match.group("body")
+        navigation_body = navigation_match.group("body")
+        self.assertIn("/api/apartment-suggest?q=", focus_body)
+        self.assertIn("geocodeCandidate(geocoder, kakao, mapItem)", focus_body)
+        self.assertIn("appendCandidateMapEntry(mapItem, position)", focus_body)
+        self.assertIn("selectCandidateMapItem(entry.item)", focus_body)
+        self.assertIn("aptSearchInput.value = name;", navigation_body)
+        self.assertIn('candidateViewMode === "map" && candidateMap', navigation_body)
+        self.assertIn("await focusCandidateMapLeader(name, region);", navigation_body)
+        self.assertIn("await runApartmentResultSearch({ name, region });", navigation_body)
 
     def test_unverified_candidate_over_cap_is_removed_after_price_enrichment(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -125,7 +747,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(
             r"function renderBudgetCandidates\b(?P<body>.*?)"
-            r"\n    const budgetLoadingStages",
+            r"\n    function budgetLoadingStageIndex",
             html,
             re.DOTALL,
         )
@@ -136,8 +758,201 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             body.count(".filter(row => candidateWithinPurchaseCap(row, data.budgetEok))"),
             2,
         )
+        self.assertGreaterEqual(
+            body.count(".filter(candidateHasVerifiedSelectedArea)"),
+            2,
+        )
         self.assertIn("policyExcludedCandidates: excludedRows", body)
-        self.assertIn("realEstateSearch.budgetCandidates.v17", html)
+        self.assertIn("realEstateSearch.budgetCandidates.v19", html)
+
+    def test_completed_no_trade_state_is_not_rendered_as_still_checking(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        headline_match = re.search(
+            r"function candidateHeadlinePrice\b(?P<body>.*?)"
+            r"\n    function candidateHeadlinePriceHtml",
+            html,
+            re.DOTALL,
+        )
+        latest_match = re.search(
+            r"function candidatePriceComparisonContentHtml\b(?P<body>.*?)"
+            r"\n    function candidatePriceComparisonHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(headline_match)
+        self.assertIsNotNone(latest_match)
+        self.assertIn('"no_recent_trade"', headline_match.group("body"))
+        self.assertIn('"no_selected_area_trade"', headline_match.group("body"))
+        self.assertIn("개월 거래 없음", headline_match.group("body"))
+        self.assertIn('"no_recent_trade"', latest_match.group("body"))
+        self.assertIn("최근 6개월 거래 없음", latest_match.group("body"))
+
+    def test_budget_candidates_render_before_background_enrichment_finishes(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        render_match = re.search(
+            r"function renderBudgetCandidates\b(?P<body>.*?)"
+            r"\n    function budgetLoadingStageIndex",
+            html,
+            re.DOTALL,
+        )
+        load_match = re.search(
+            r"async function loadBudgetCandidates\b(?P<body>.*?)"
+            r"\n    async function loadRegionApartments",
+            html,
+            re.DOTALL,
+        )
+        progress_match = re.search(
+            r"function budgetEnrichmentProgressHtml\b(?P<body>.*?)"
+            r"\n    function updateBudgetEnrichmentProgress",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(render_match)
+        self.assertIsNotNone(load_match)
+        self.assertIsNotNone(progress_match)
+        render_body = render_match.group("body")
+        load_body = load_match.group("body")
+        progress_body = progress_match.group("body")
+        self.assertNotIn("pendingCandidatesHtml", html)
+        self.assertNotIn("displayRows.map", render_body)
+        self.assertIn(
+            "await revealBudgetCandidatesTogether(data, controller)",
+            load_body,
+        )
+        self.assertIn(
+            "refreshBudgetCacheInBackground(url, data.enrichmentJobId)",
+            load_body,
+        )
+        self.assertNotIn("waitForBudgetPresentation", html)
+        self.assertNotIn(
+            "if (data.enrichmentPending) {\n        document.body.classList.remove",
+            render_body,
+        )
+        self.assertLess(
+            render_body.index("if (!rows.length)"),
+            render_body.index("if (data.enrichmentPending)"),
+        )
+        self.assertIn("data-budget-background-status", render_body)
+        self.assertLess(
+            load_body.index("await revealBudgetCandidatesTogether(data, controller)"),
+            load_body.index("refreshBudgetCacheInBackground(url, data.enrichmentJobId)"),
+        )
+        self.assertIn('const count = completed ? "3/3 완료"', progress_body)
+        self.assertIn('const state = completed || index < safeStage ? "done"', progress_body)
+
+    def test_condition_change_does_not_wait_for_complete_signal_enrichment(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        load_match = re.search(
+            r"async function loadBudgetCandidates\b(?P<body>.*?)"
+            r"\n    async function loadRegionApartments",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(load_match)
+        load_body = load_match.group("body")
+        self.assertNotIn("waitForBudgetPresentation", html)
+        self.assertIn(
+            "await revealBudgetCandidatesTogether(data, controller)",
+            load_body,
+        )
+        self.assertIn(
+            "refreshBudgetCacheInBackground(url, data.enrichmentJobId)",
+            load_body,
+        )
+
+    def test_frontend_signal_formula_version_matches_backend(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        backend = (ROOT / "pipeline" / "momentum_signals.py").read_text(encoding="utf-8")
+        version_match = re.search(
+            r"const SIGNAL_FORMULA_VERSION = (?P<version>\d+);",
+            html,
+        )
+        backend_version_match = re.search(
+            r"^SCORE_FORMULA_VERSION = (?P<version>\d+)$",
+            backend,
+            re.MULTILINE,
+        )
+
+        self.assertIsNotNone(version_match)
+        self.assertIsNotNone(backend_version_match)
+        self.assertEqual(
+            int(version_match.group("version")),
+            int(backend_version_match.group("version")),
+        )
+
+    def test_condition_modal_refreshes_results_only_after_final_confirmation(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        item_submit_match = re.search(
+            r"async function submitConditionItemEdit\b(?P<body>.*?)"
+            r"\n    function renderConditionSummary",
+            html,
+            re.DOTALL,
+        )
+        close_match = re.search(
+            r"function closeConditionSummary\b(?P<body>.*?)"
+            r"\n\n    function fieldErrorAnchor",
+            html,
+            re.DOTALL,
+        )
+        complete_match = re.search(
+            r'conditionSummaryComplete\.addEventListener\("click", \(\) => \{(?P<body>.*?)'
+            r"\n    \}\);",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(item_submit_match)
+        self.assertIsNotNone(close_match)
+        self.assertIsNotNone(complete_match)
+        self.assertNotIn("loadBudgetCandidates();", item_submit_match.group("body"))
+        self.assertIn("if (!commit) restoreConditionSummaryState();", close_match.group("body"))
+        complete_body = complete_match.group("body")
+        self.assertIn("closeConditionSummary(true, true);", complete_body)
+        self.assertIn("loadBudgetCandidates();", complete_body)
+        self.assertLess(
+            complete_body.index("closeConditionSummary(true, true);"),
+            complete_body.index("loadBudgetCandidates();"),
+        )
+
+    def test_budget_live_refresh_updates_cache_and_visible_results(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        background_match = re.search(
+            r"function refreshBudgetCacheInBackground\b(?P<body>.*?)"
+            r"\n    async function loadBudgetCandidates",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(background_match)
+        background_body = background_match.group("body")
+        self.assertIn("writeBudgetBrowserCache(url, next)", background_body)
+        self.assertIn(
+            "renderBudgetCandidates(next, { preserveSelection:true })",
+            background_body,
+        )
+        self.assertLess(
+            background_body.index("writeBudgetBrowserCache(url, next)"),
+            background_body.index("renderBudgetCandidates(next, { preserveSelection:true })"),
+        )
+
+    def test_budget_result_trends_auto_load_without_card_button_clicks(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        render_match = re.search(
+            r"function renderBudgetCandidates\b(?P<body>.*?)"
+            r"\n    function budgetLoadingStageIndex",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(render_match)
+        body = render_match.group("body")
+        self.assertIn("mountCandidateMapPortal();", body)
+        self.assertIn("enrichMarketInsights(rows);", body)
+        self.assertLess(
+            body.index("mountCandidateMapPortal();"),
+            body.index("enrichMarketInsights(rows);"),
+        )
 
     def test_rone_latest_trade_fills_price_before_score_enrichment_finishes(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -161,7 +976,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("item.roneEstimate?.latestTrade", fallback_body)
         self.assertIn("trade?.dealAmountEok", fallback_body)
         self.assertIn("!Number(item.latestDealPriceEok || 0)", fallback_body)
-        self.assertEqual(load_body.count("applyRoneLatestTradeFallback(item);"), 2)
+        self.assertEqual(load_body.count("applyRoneLatestTradeFallback(item);"), 1)
+        self.assertIn("candidateLeaderEstimateItem(item)", load_body)
+        self.assertIn("candidateDistrictLeaderEstimateItem(item)", load_body)
+        self.assertLess(load_body.index("await candidateRequest"), load_body.index("await Promise.all"))
+        self.assertGreaterEqual(load_body.count("refreshMarketInsight(item);"), 3)
+        self.assertIn("item.leaderRoneEstimate", load_body)
+        self.assertIn("item.districtLeaderRoneEstimate", load_body)
 
     def test_report_cache_shares_an_in_flight_request_and_retries_failures(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -213,6 +1034,125 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data?.latestTrade?.exclusiveArea", body)
         self.assertIn("clusters.map", body)
 
+    def test_direct_search_defaults_to_the_same_minimum_area_rule_as_step_search(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        fetch_match = re.search(
+            r"async function fetchAptAffordability\b(?P<body>.*?)"
+            r"\n    async function fetchAptAreaOptions",
+            html,
+            re.DOTALL,
+        )
+        enrich_match = re.search(
+            r"async function enrichAptAffordability\b(?P<body>.*?)"
+            r"\n    function refreshAptSearchProfileResults",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(fetch_match)
+        self.assertIsNotNone(enrich_match)
+        fetch_body = fetch_match.group("body")
+        enrich_body = enrich_match.group("body")
+        self.assertIn('search_region:item.region || ""', fetch_body)
+        self.assertNotIn("multiSelections.region", fetch_body)
+        self.assertNotIn("representativeAptAreaOption", html)
+        self.assertIn("const minimum = Number(budgetMinArea.value || 0);", enrich_body)
+        self.assertIn("await selectAptArea(", enrich_body)
+        self.assertIn('card,\n              "",', enrich_body)
+        self.assertIn("minimum ? `전용 ${minimum}㎡ 이상`", enrich_body)
+
+    def test_direct_search_enriches_the_regional_leader_chart(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        candidate_match = re.search(
+            r"function aptMarketCandidate\b(?P<body>.*?)"
+            r"\n    async function enrichAptLeaderEstimate",
+            html,
+            re.DOTALL,
+        )
+        leader_match = re.search(
+            r"async function enrichAptLeaderEstimate\b(?P<body>.*?)"
+            r"\n    function aptPolicyImpactHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(candidate_match)
+        self.assertIsNotNone(leader_match)
+        candidate_body = candidate_match.group("body")
+        leader_body = leader_match.group("body")
+        self.assertIn("...canonical", candidate_body)
+        self.assertIn("latestTrade,", candidate_body)
+        self.assertIn("candidateLeaderEstimateItem(candidate)", leader_body)
+        self.assertIn("candidateDistrictLeaderEstimateItem(candidate)", leader_body)
+        self.assertIn("requestRoneEstimate(target)", leader_body)
+        self.assertIn('enrich(leaderItem, "leaderRoneEstimate")', leader_body)
+        self.assertIn('enrich(districtLeaderItem, "districtLeaderRoneEstimate")', leader_body)
+        self.assertIn("await enrichAptLeaderEstimate(candidate);", html)
+        self.assertLess(
+            html.index("await enrichAptLeaderEstimate(candidate);"),
+            html.index("renderAptCandidateResult(card, item, data, candidate, requestToken);"),
+        )
+        self.assertIn(
+            "function aptAffordabilityHtml(data, item = {}, report = {}, preparedCandidate = null)",
+            html,
+        )
+
+    def test_direct_search_uses_the_same_news_enrichment_function(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        select_match = re.search(
+            r"async function selectAptArea\b(?P<body>.*?)"
+            r"\n    async function enrichAptAffordability",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(select_match)
+        body = select_match.group("body")
+        self.assertIn("void enrichNewsCatalysts([candidate], updated =>", body)
+        self.assertIn("renderAptCandidateResult(card, item, data, updated, requestToken);", body)
+
+    def test_direct_search_applies_the_same_latest_trade_fallback_before_render(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        select_match = re.search(
+            r"async function selectAptArea\b(?P<body>.*?)"
+            r"\n    async function enrichAptAffordability",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(select_match)
+        body = select_match.group("body")
+        self.assertIn("applyRoneLatestTradeFallback(candidate);", body)
+        self.assertLess(
+            body.index("applyRoneLatestTradeFallback(candidate);"),
+            body.index("renderAptCandidateResult(card, item, data, candidate, requestToken);"),
+        )
+
+    def test_auto_resolved_area_updates_the_area_button_and_explains_fallback(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        render_match = re.search(
+            r"function renderAptCandidateResult\b(?P<body>.*?)"
+            r"\n    async function selectAptArea",
+            html,
+            re.DOTALL,
+        )
+        affordability_match = re.search(
+            r"function aptAffordabilityHtml\b(?P<body>.*?)"
+            r"\n    async function fetchAptAffordability",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(render_match)
+        self.assertIsNotNone(affordability_match)
+        render_body = render_match.group("body")
+        affordability_body = affordability_match.group("body")
+        self.assertIn('const resolvedArea = String(data?.resolvedArea || "");', render_body)
+        self.assertIn("card.dataset.selectedAptArea = resolvedArea;", render_body)
+        self.assertIn("changeButton.textContent = buttonLabel;", render_body)
+        self.assertIn("data.areaFallback && Number(data.requestedMinArea || 0)", affordability_body)
+        self.assertIn("가장 가까운 실제 거래 평형 자동 선택", affordability_body)
+
     def test_area_sheet_backdrop_and_escape_close_before_an_area_is_selected(self):
         html = APP_HTML.read_text(encoding="utf-8")
         click_match = re.search(
@@ -234,11 +1174,40 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("selectedAptArea", click_match.group("body"))
         self.assertNotIn("selectedAptArea", key_match.group("body"))
 
+    def test_candidate_detail_modal_locks_background_scroll(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        sync_match = re.search(
+            r"function syncCandidateDetailScrollLock\b(?P<body>.*?)"
+            r"\n    function setCandidateDetailOpen",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(sync_match)
+        self.assertIn(
+            '".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden])"',
+            sync_match.group("body"),
+        )
+        self.assertIn(
+            'document.body.classList.toggle("candidate-detail-sheet-open", Boolean(openSheet));',
+            sync_match.group("body"),
+        )
+        self.assertIn(
+            "body.candidate-detail-sheet-open { overflow:hidden; overscroll-behavior:none }",
+            html,
+        )
+        self.assertIn(
+            "min-height:0; overflow:auto; overscroll-behavior:contain; "
+            "-webkit-overflow-scrolling:touch;",
+            html,
+        )
+        self.assertGreaterEqual(html.count("syncCandidateDetailScrollLock();"), 4)
+
     def test_candidate_results_use_a_floating_map_button_without_view_tabs(self):
         html = APP_HTML.read_text(encoding="utf-8")
         render_match = re.search(
             r"function renderBudgetCandidates\b(?P<body>.*?)"
-            r"\n    const budgetLoadingStages",
+            r"\n    function budgetLoadingStageIndex",
             html,
             re.DOTALL,
         )
@@ -257,6 +1226,16 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('data-candidate-view="map"', html)
         self.assertIn('aria-label="지도에서 후보 보기"', html)
         self.assertNotIn('data-candidate-view="list"', html)
+        self.assertIn(
+            "position:fixed; z-index:75; right:max(22px,env(safe-area-inset-right));",
+            html,
+        )
+        self.assertIn(
+            "right:max(18px,env(safe-area-inset-right)); "
+            "bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));",
+            html,
+        )
+        self.assertNotIn("position:static; display:grid; width:52px; height:52px", html)
 
     def test_candidate_map_reset_removes_stale_sdk_layers(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -292,6 +1271,100 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("candidateMapContainer !== container", body)
         self.assertIn("candidateMap?.setDraggable?.(true);", body)
         self.assertIn("candidateMap?.setZoomable?.(true);", body)
+
+    def test_candidate_map_mobile_sheet_starts_compact_and_swipes_full(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        setup_match = re.search(
+            r"function setupCandidateMapPreviewSheet\b(?P<body>.*?)"
+            r"\n    function beginCandidateMapSheetDrag",
+            html,
+            re.DOTALL,
+        )
+        drag_match = re.search(
+            r"function endCandidateMapSheetDrag\b(?P<body>.*?)"
+            r"\n    function candidateMapMarkerHtml",
+            html,
+            re.DOTALL,
+        )
+        pointer_match = re.search(
+            r"function handleCandidateMapPointerDown\b(?P<body>.*?)"
+            r"\n    budgetResultEl\.addEventListener\(\"pointerdown\"",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(setup_match)
+        self.assertIsNotNone(drag_match)
+        self.assertIsNotNone(pointer_match)
+        self.assertIn('options.expanded === true ? "expanded" : "collapsed"', setup_match.group("body"))
+        self.assertIn("const collapsedTargetRect = (comparison || summary).getBoundingClientRect();", setup_match.group("body"))
+        self.assertIn("swipeDistance >= 48", drag_match.group("body"))
+        self.assertIn("swipeDistance <= -48", drag_match.group("body"))
+        self.assertIn('preview?.dataset.mobileState === "collapsed" ? preview : null', pointer_match.group("body"))
+        self.assertIn(
+            '.candidate-map-preview[data-mobile-state="collapsed"] .candidate-price-comparison',
+            html,
+        )
+        self.assertIn(
+            '.candidate-map-preview[data-mobile-state="collapsed"] .candidate-map-sheet-content',
+            html,
+        )
+
+    def test_market_sparkline_tooltip_shows_selected_month_trade_date_and_price(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        tooltip_match = re.search(
+            r"function showSparkPointDetails\b(?P<body>.*?)"
+            r"\n    function candidateTrendControlHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(tooltip_match)
+        tooltip_body = tooltip_match.group("body")
+        self.assertIn("point.dataset.periodTitle", tooltip_body)
+        self.assertIn('class="spark-tooltip-period"', tooltip_body)
+        self.assertIn("sparkTradeDetailDate(trade.dealDate)", tooltip_body)
+        self.assertIn("policyMoney(Number(trade.price || 0))", tooltip_body)
+        self.assertNotIn("주변 평균보다", tooltip_body)
+        self.assertNotIn("<span>이 단지</span>", tooltip_body)
+        self.assertNotIn("평균 거래가", tooltip_body)
+        self.assertNotIn("실거래 ${trades.length}건", tooltip_body)
+        self.assertIn('data-period-title="${esc(sparkTradeDetailPeriod(series.periods[index]))}"', html)
+        self.assertIn('return match ? `${match[1]}년 ${Number(match[2])}월`', html)
+
+    def test_minimum_area_picker_can_switch_between_square_metres_and_pyeong(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertGreaterEqual(html.count("data-area-unit-toggle"), 3)
+        self.assertIn('class="area-input-wrap"', html)
+        self.assertIn(".area-input-wrap > .area-unit-toggle", html)
+        self.assertIn("condition-item-area-unit-tools", html)
+        self.assertIn("syncConditionEditAreaUnitDisplay();", html)
+        self.assertIn('activeConditionEditTarget !== "budgetMinArea"', html)
+        self.assertNotIn("budget-field-label-row", html)
+        self.assertIn('let areaDisplayUnit = "sqm";', html)
+        self.assertIn('squareMetres / 3.305785', html)
+        self.assertIn('return `${pyeong}평 이상`;', html)
+        self.assertIn('return `${squareMetres}㎡ 이상`;', html)
+        self.assertIn('areaDisplayUnit = areaDisplayUnit === "sqm" ? "pyeong" : "sqm";', html)
+        self.assertIn('areaDisplayUnit = saved.preference?.areaDisplayUnit', html)
+        self.assertIn('areaDisplayUnit,', html)
+
+    def test_naver_property_actions_open_in_a_safe_new_tab(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        match = re.search(
+            r"function candidateNaverPropertyActionHtml\b(?P<body>.*?)"
+            r"\n    function candidateListMetaHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertIn('target="_blank"', body)
+        self.assertIn('rel="noopener noreferrer"', body)
+        self.assertNotIn("뒤로가기로 결과에 복귀", html)
+        self.assertNotIn("뒤로가기로 지도에 복귀", html)
 
 
 if __name__ == "__main__":

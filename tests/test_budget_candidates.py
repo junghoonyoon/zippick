@@ -26,6 +26,128 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
+    def test_step_and_direct_search_share_the_same_canonical_candidate_fields(self):
+        entity = {
+            "name": "공통파이프라인아파트",
+            "dedupeKey": "common-apt",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "테스트구",
+            "legalDong": "테스트동",
+            "address": "서울특별시 테스트구 테스트동 1",
+            "households": 1200,
+            "approvedAt": "2015-01-01",
+        }
+        price_row = {
+            "name": entity["name"],
+            "region": "테스트구",
+            "legalDong": "테스트동",
+            "jibun": "1",
+            "areaLabel": "전용 59~60㎡",
+            "minPriceEok": 8.0,
+            "midPriceEok": 8.5,
+            "averagePriceEok": 8.6,
+            "maxPriceEok": 9.0,
+            "priceSource": "molit_csv",
+            "transactionCount": 8,
+            "latestDealDate": "2026-07-01",
+            "sourceNote": "국토부 실거래",
+        }
+
+        def attach_signals(rows):
+            for row in rows:
+                row["signals"] = {
+                    "status": "ready",
+                    "score": 67,
+                    "areaLabel": row.get("areaLabel"),
+                }
+
+        def attach_verdicts(rows, budget_eok):
+            for row in rows:
+                row["verdict"] = {
+                    "label": "검토",
+                    "budgetEok": budget_eok,
+                }
+
+        with mock.patch.object(
+            budget_candidates,
+            "_load_price_bands",
+            return_value=[price_row],
+        ), mock.patch.object(
+            budget_candidates,
+            "_find_entities",
+            return_value=[entity],
+        ), mock.patch.object(
+            budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            budget_candidates.real_estate_search,
+            "APARTMENT_MASTER",
+            [entity],
+        ), mock.patch.object(
+            budget_candidates.molit_transactions,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            budget_candidates.molit_transactions,
+            "price_band_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            budget_candidates.momentum_signals,
+            "attach_signals",
+            side_effect=attach_signals,
+        ), mock.patch.object(
+            budget_candidates.naver_complex,
+            "attach_links",
+        ), mock.patch.object(
+            budget_candidates.verdicts,
+            "attach_verdicts",
+            side_effect=attach_verdicts,
+        ):
+            step_payload = budget_candidates.budget_candidates(
+                "10",
+                region="테스트구",
+                min_area=59,
+                all_matches=True,
+            )
+            direct_candidate = budget_candidates.apartment_candidate_result(
+                entity["name"],
+                region="테스트구",
+                search_region="테스트구",
+                budget="10",
+                min_area=59,
+            )
+
+        step_candidate = step_payload["candidates"][0]
+        common_fields = (
+            "resultSchemaVersion",
+            "name",
+            "region",
+            "areaLabel",
+            "displayAreaLabel",
+            "minPriceEok",
+            "midPriceEok",
+            "maxPriceEok",
+            "priceSource",
+            "transactionCount",
+            "latestDealDate",
+            "policyImpact",
+            "signals",
+            "verdict",
+            "displayName",
+            "displayRegion",
+            "mapAddress",
+            "reasons",
+            "risks",
+            "nextChecks",
+        )
+        self.assertIsNotNone(direct_candidate)
+        self.assertEqual(
+            {key: step_candidate.get(key) for key in common_fields},
+            {key: direct_candidate.get(key) for key in common_fields},
+        )
+
     def test_every_actionable_candidate_price_obeys_five_percent_cap(self):
         price_fields = (
             "latestDealPriceEok",

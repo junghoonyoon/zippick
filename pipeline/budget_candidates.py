@@ -17,6 +17,7 @@ MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_band
 PRICE_BAND_CSV_PATHS = [PRICE_BANDS_CSV, MOLIT_PRICE_BANDS_CSV]
 VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
+CANDIDATE_RESULT_SCHEMA_VERSION = 1
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -776,6 +777,61 @@ def _candidate_from_entity(entity, region, min_area, budget_eok, purpose, priori
     return candidate
 
 
+def _candidate_from_price_row(
+    row,
+    entity,
+    region,
+    budget_eok,
+    purpose,
+    priority,
+    commute,
+    price_strategy,
+):
+    """Create the canonical candidate seed used by every search entry point."""
+    households = real_estate_search._int_value(entity.get("households")) if entity else 0
+    building = _building_profile(entity)
+    area_min, area_max = _area_range(row.get("areaLabel"))
+    search_query = row["name"]
+    if entity:
+        scope = region or entity.get("district") or entity.get("city") or row.get("region")
+        search_query = real_estate_search._region_apartment_search_query(entity, scope)
+    candidate = {
+        "name": row["name"],
+        "region": row.get("region", ""),
+        "legalDong": row.get("legalDong") or (entity or {}).get("legalDong", ""),
+        "jibun": row.get("jibun") or _entity_jibun(entity),
+        "cortarNo": (entity or {}).get("cortarNo", ""),
+        "areaLabel": row.get("areaLabel", ""),
+        "minPriceEok": row.get("minPriceEok"),
+        "midPriceEok": row.get("midPriceEok"),
+        "averagePriceEok": row.get("averagePriceEok"),
+        "maxPriceEok": row.get("maxPriceEok"),
+        "households": households,
+        "searchQuery": search_query,
+        "updatedAt": row.get("updatedAt", ""),
+        "sourceNote": row.get("sourceNote", ""),
+        "priceSource": row.get("priceSource") or "manual",
+        "transactionCount": row.get("transactionCount") or 0,
+        "latestDealDate": row.get("latestDealDate") or "",
+        "sourceUrl": row.get("sourceUrl") or "",
+        "areaMin": area_min,
+        "areaMax": area_max,
+        **building,
+        **_naver_property_link(row, entity),
+        "_budgetEok": budget_eok,
+    }
+    _apply_fit(candidate, budget_eok)
+    candidate["_score"] = _candidate_score(
+        candidate,
+        entity,
+        purpose,
+        priority,
+        commute,
+        price_strategy,
+    )
+    return candidate
+
+
 def _cached_live_band_for_seed(row, entity, min_area):
     """Return a locally cached price band without triggering an API request."""
     try:
@@ -795,6 +851,50 @@ def _cached_live_band_for_seed(row, entity, min_area):
         return live
     except Exception:
         return None
+
+
+def _apply_stored_live_price(row, preferred_min_area=0):
+    """Apply an already-materialized band without API or month-cache scans."""
+    minimum = _float_value(preferred_min_area)
+    live = None
+    if minimum:
+        live = molit_transactions.stored_price_band_for_apartment_min_area(
+            row["name"],
+            region=row.get("region", ""),
+            min_area=minimum,
+        )
+    if not live:
+        live = molit_transactions.stored_price_band_for_apartment(
+            row["name"],
+            region=row.get("region", ""),
+            area_label=row.get("areaLabel", ""),
+        )
+    if not live:
+        return row
+    comparison = live
+    if (
+        _int_value(live.get("recent3TradeCount")) < 5
+        and _int_value(
+            live.get("lookbackMonths") or molit_transactions.RECENT_LOOKBACK_MONTHS
+        ) < 12
+    ):
+        if minimum:
+            extended = molit_transactions.stored_price_band_for_apartment_min_area(
+                row["name"],
+                region=row.get("region", ""),
+                min_area=minimum,
+                lookback_months=12,
+            )
+        else:
+            extended = molit_transactions.stored_price_band_for_apartment(
+                row["name"],
+                region=row.get("region", ""),
+                area_label=row.get("areaLabel", ""),
+                lookback_months=12,
+            )
+        if extended:
+            comparison = extended
+    return _apply_live_band(row, live, comparison)
 
 
 def _seed_region_key(row):
@@ -879,6 +979,7 @@ def _fast_cached_seed_rows(entries, min_area, budget_eok, purpose, priority, com
     rows_out = []
     for row, entity in entries:
         live = _cached_live_band_for_seed(row, entity, min_area)
+        row["_storedPriceChecked"] = True
         if live:
             _apply_live_band(row, live)
             _apply_fit(row, budget_eok)
@@ -1587,6 +1688,359 @@ def _nearby_suggestions_with_cached_fallback(
     )
 
 
+def _candidate_policy_context(
+    budget,
+    region,
+    home_ownership="unknown",
+    first_time=False,
+    cash_eok=0,
+    annual_income=0,
+    monthly_debt_payment=0,
+    co_borrower=False,
+    spouse_annual_income=0,
+    spouse_monthly_debt_payment=0,
+    mortgage_rate=0,
+    loan_term_years=30,
+    purchase_cost_rate=0,
+):
+    """Resolve the shared user profile and regional purchase ceiling."""
+    policy_profile = policy_evaluator.user_profile(
+        home_ownership=home_ownership,
+        first_time=first_time,
+        cash_eok=cash_eok,
+        annual_income=annual_income,
+        monthly_debt_payment=monthly_debt_payment,
+        co_borrower=co_borrower,
+        spouse_annual_income=spouse_annual_income,
+        spouse_monthly_debt_payment=spouse_monthly_debt_payment,
+        mortgage_rate=mortgage_rate,
+        loan_term_years=loan_term_years,
+        purchase_cost_rate=purchase_cost_rate,
+    )
+    budget_eok = _budget_eok(budget)
+    budget_source = "input"
+    can_estimate_budget = bool(
+        policy_profile["cashEok"]
+        and policy_profile["annualIncomeManwon"]
+        and policy_profile["mortgageRatePercent"]
+    )
+    estimate_regions = _region_terms(region) or ["서울시", "경기도"]
+    if budget_eok > 0 and can_estimate_budget and region:
+        regional_budget_eok = policy_evaluator.estimated_purchase_ceiling(
+            policy_profile,
+            estimate_regions,
+        )
+        if regional_budget_eok > 0:
+            budget_eok = regional_budget_eok
+            budget_source = "region_adjusted"
+    elif budget_eok <= 0:
+        if not (
+            policy_profile["cashEok"]
+            and policy_profile["annualIncomeManwon"]
+            and policy_profile["mortgageRatePercent"]
+        ):
+            return {
+                "error": "자기자금, 주 대출 신청자 연소득, 예상 대출금리를 입력해 주세요.",
+                "status": 400,
+            }
+        budget_eok = policy_evaluator.estimated_purchase_ceiling(
+            policy_profile,
+            estimate_regions,
+        )
+        budget_source = "calculated"
+        if budget_eok <= 0:
+            return {
+                "error": "입력한 소득·부채·자기자금 기준으로 계산 가능한 매수 상한이 없어요.",
+                "status": 400,
+            }
+    return {
+        "profile": policy_profile,
+        "budgetEok": budget_eok,
+        "budgetSource": budget_source,
+        "canEstimateBudget": can_estimate_budget,
+    }
+
+
+def _attach_policy_impacts(rows, policy_profile):
+    for row in rows:
+        entity = _find_entity(row["name"], row.get("region", ""))
+        row["policyImpact"] = (
+            policy_evaluator.evaluate_candidate(row, entity=entity, profile=policy_profile)
+            if row.get("midPriceEok")
+            else None
+        )
+
+
+def _finalize_candidate_rows(
+    rows,
+    *,
+    budget_eok,
+    purpose="",
+    priority="",
+    commute="",
+    move_timing="",
+    price_strategy="stretch",
+    region="",
+    fast_mode=False,
+):
+    """Attach the common display, signal, link and verdict result model."""
+    for row in rows:
+        entity = _find_entity(row["name"], row.get("region", ""))
+        map_entity = _find_entity(
+            row["name"],
+            row.get("region", ""),
+            row.get("legalDong", ""),
+            row.get("jibun", ""),
+        ) or entity
+        row["resultSchemaVersion"] = CANDIDATE_RESULT_SCHEMA_VERSION
+        row["displayName"] = _candidate_display_name(row, entity)
+        row["displayRegion"] = _display_region(row, entity)
+        row["mapAddress"] = _map_address(row, map_entity)
+        row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
+        row.update(_decision_support(
+            row,
+            entity,
+            purpose,
+            priority,
+            commute,
+            move_timing,
+            price_strategy,
+            region,
+        ))
+
+    if not fast_mode and rows:
+        if molit_transactions.configured():
+            signal_months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
+            signal_pairs = set()
+            for row in rows:
+                try:
+                    for source_row in molit_transactions.source_rows(
+                        row["name"],
+                        row.get("region", ""),
+                    ):
+                        lawd_cd = molit_transactions._row_lawd_cd(source_row)
+                        if lawd_cd:
+                            signal_pairs.update(
+                                (lawd_cd, deal_ymd) for deal_ymd in signal_months
+                            )
+                except Exception:
+                    continue
+            molit_transactions.prefetch_months(signal_pairs)
+        try:
+            momentum_signals.attach_signals(rows)
+        except Exception:
+            pass
+
+    if rows:
+        if not fast_mode:
+            try:
+                naver_complex.attach_links(rows)
+            except Exception:
+                pass
+        try:
+            verdicts.attach_verdicts(rows, budget_eok)
+        except Exception:
+            pass
+
+    for row in rows:
+        row.pop("_fitRank", None)
+        row.pop("_score", None)
+        row.pop("_budgetEok", None)
+        row.pop("_storedPriceChecked", None)
+    return rows
+
+
+def _same_apartment_entity(left, right):
+    if not left or not right:
+        return False
+    left_key = str(left.get("dedupeKey") or "").strip()
+    right_key = str(right.get("dedupeKey") or "").strip()
+    if left_key and right_key:
+        return left_key == right_key
+    return left is right or (
+        real_estate_search.compact(left.get("name"))
+        == real_estate_search.compact(right.get("name"))
+        and real_estate_search.compact(left.get("district") or left.get("city"))
+        == real_estate_search.compact(right.get("district") or right.get("city"))
+    )
+
+
+def apartment_candidate_result(
+    name,
+    region="",
+    search_region="",
+    area="",
+    budget=0,
+    purpose="",
+    priority="",
+    commute="",
+    move_timing="",
+    price_strategy="stretch",
+    min_area=0,
+    min_households=0,
+    max_building_age=0,
+    home_ownership="unknown",
+    first_time=False,
+    cash_eok=0,
+    annual_income=0,
+    monthly_debt_payment=0,
+    co_borrower=False,
+    spouse_annual_income=0,
+    spouse_monthly_debt_payment=0,
+    mortgage_rate=0,
+    loan_term_years=30,
+    purchase_cost_rate=0,
+):
+    """Build one apartment through the exact same candidate result pipeline."""
+    name = str(name or "").strip()
+    region = str(region or "").strip()
+    scope_region = str(search_region or region).strip()
+    selected_area = _float_value(area)
+    minimum = 0 if selected_area else _float_value(min_area)
+    min_households = _int_value(min_households)
+    max_building_age = _int_value(max_building_age)
+    price_strategy = price_strategy if price_strategy in PRICE_STRATEGY_LABELS else "stretch"
+
+    context = _candidate_policy_context(
+        budget,
+        scope_region,
+        home_ownership=home_ownership,
+        first_time=first_time,
+        cash_eok=cash_eok,
+        annual_income=annual_income,
+        monthly_debt_payment=monthly_debt_payment,
+        co_borrower=co_borrower,
+        spouse_annual_income=spouse_annual_income,
+        spouse_monthly_debt_payment=spouse_monthly_debt_payment,
+        mortgage_rate=mortgage_rate,
+        loan_term_years=loan_term_years,
+        purchase_cost_rate=purchase_cost_rate,
+    )
+    if context.get("error"):
+        # Direct search is still useful without a completed funding profile.
+        context = _candidate_policy_context(
+            0.01,
+            "",
+            home_ownership=home_ownership,
+            first_time=first_time,
+            cash_eok=cash_eok,
+            annual_income=annual_income,
+            monthly_debt_payment=monthly_debt_payment,
+            co_borrower=co_borrower,
+            spouse_annual_income=spouse_annual_income,
+            spouse_monthly_debt_payment=spouse_monthly_debt_payment,
+            mortgage_rate=mortgage_rate,
+            loan_term_years=loan_term_years,
+            purchase_cost_rate=purchase_cost_rate,
+        )
+        context["budgetEok"] = _budget_eok(budget)
+        context["budgetSource"] = "unavailable"
+
+    policy_profile = context["profile"]
+    budget_eok = context["budgetEok"]
+    entity = _find_entity(name, region)
+    if not entity or entity.get("aggregate"):
+        return None
+    if not _matches_region({"name": name, "region": region}, entity, scope_region):
+        return None
+    if _is_rental_apartment({"name": name}, entity):
+        return None
+    households = real_estate_search._int_value(entity.get("households"))
+    building = _building_profile(entity)
+    if min_households and households < min_households:
+        return None
+    if max_building_age and (
+        not building["buildingAge"] or building["buildingAge"] > max_building_age
+    ):
+        return None
+
+    candidates = []
+    for price_row in _load_price_bands():
+        matches = _find_entities(
+            price_row["name"],
+            price_row.get("region", ""),
+            price_row.get("legalDong", ""),
+            price_row.get("jibun", ""),
+        )
+        if len(matches) != 1 or not _same_apartment_entity(matches[0], entity):
+            continue
+        area_low, area_high = _area_range(price_row.get("areaLabel"))
+        if selected_area and not (area_low <= selected_area <= area_high):
+            continue
+        if minimum and area_high and area_high < minimum:
+            continue
+        candidates.append(_candidate_from_price_row(
+            price_row,
+            entity,
+            scope_region,
+            budget_eok,
+            purpose,
+            priority,
+            commute,
+            price_strategy,
+        ))
+
+    if not candidates:
+        seed = _candidate_from_entity(
+            entity,
+            scope_region,
+            minimum,
+            budget_eok,
+            purpose,
+            priority,
+            commute,
+            price_strategy,
+        )
+        if seed:
+            candidates.append(seed)
+
+    if selected_area:
+        area_label = f"{selected_area:g}"
+        for row in candidates:
+            row["areaLabel"] = area_label
+            row["areaMin"] = selected_area
+            row["areaMax"] = selected_area
+
+    for row in candidates:
+        try:
+            _apply_live_price(row, preferred_min_area=minimum)
+            if row.get("priceSource") not in VERIFIED_PRICE_SOURCES and not row.get("latestDealDate"):
+                _apply_last_observed_deal(row, preferred_min_area=minimum)
+        except Exception:
+            pass
+        _apply_fit(row, budget_eok)
+        row["_score"] = _candidate_score(
+            row,
+            entity,
+            purpose,
+            priority,
+            commute,
+            price_strategy,
+        )
+
+    candidates.sort(key=lambda row: (
+        row.get("_fitRank", 99),
+        -row.get("_score", 0),
+        abs(row.get("budgetGapEok", 0)),
+    ))
+    candidate = candidates[0]
+    _attach_policy_impacts([candidate], policy_profile)
+    _finalize_candidate_rows(
+        [candidate],
+        budget_eok=budget_eok,
+        purpose=purpose,
+        priority=priority,
+        commute=commute,
+        move_timing=move_timing,
+        price_strategy=price_strategy,
+        region=scope_region,
+    )
+    candidate["budgetSource"] = context["budgetSource"]
+    candidate["pipelineMinArea"] = minimum
+    candidate["selectedArea"] = selected_area or None
+    return candidate
+
+
 def budget_candidates(
     budget,
     region="",
@@ -1613,7 +2067,9 @@ def budget_candidates(
     all_matches=False,
     fast_mode=False,
 ):
-    policy_profile = policy_evaluator.user_profile(
+    context = _candidate_policy_context(
+        budget,
+        region,
         home_ownership=home_ownership,
         first_time=first_time,
         cash_eok=cash_eok,
@@ -1626,26 +2082,12 @@ def budget_candidates(
         loan_term_years=loan_term_years,
         purchase_cost_rate=purchase_cost_rate,
     )
-    budget_eok = _budget_eok(budget)
-    budget_source = "input"
-    can_estimate_budget = bool(
-        policy_profile["cashEok"]
-        and policy_profile["annualIncomeManwon"]
-        and policy_profile["mortgageRatePercent"]
-    )
-    estimate_regions = _region_terms(region) or ["서울시", "경기도"]
-    if budget_eok > 0 and can_estimate_budget and region:
-        regional_budget_eok = policy_evaluator.estimated_purchase_ceiling(policy_profile, estimate_regions)
-        if regional_budget_eok > 0:
-            budget_eok = regional_budget_eok
-            budget_source = "region_adjusted"
-    elif budget_eok <= 0:
-        if not policy_profile["cashEok"] or not policy_profile["annualIncomeManwon"] or not policy_profile["mortgageRatePercent"]:
-            return {"error": "자기자금, 주 대출 신청자 연소득, 예상 대출금리를 입력해 주세요.", "status": 400}
-        budget_eok = policy_evaluator.estimated_purchase_ceiling(policy_profile, estimate_regions)
-        budget_source = "calculated"
-        if budget_eok <= 0:
-            return {"error": "입력한 소득·부채·자기자금 기준으로 계산 가능한 매수 상한이 없어요.", "status": 400}
+    if context.get("error"):
+        return context
+    policy_profile = context["profile"]
+    budget_eok = context["budgetEok"]
+    budget_source = context["budgetSource"]
+    can_estimate_budget = context["canEstimateBudget"]
     price_strategy = price_strategy if price_strategy in PRICE_STRATEGY_LABELS else "stretch"
     min_area = _float_value(min_area)
     min_households = _int_value(min_households)
@@ -1714,36 +2156,16 @@ def budget_candidates(
         if max_building_age and (not building["buildingAge"] or building["buildingAge"] > max_building_age):
             filtered["buildingAge"] += 1
             continue
-        search_query = row["name"]
-        if entity:
-            scope = region or entity.get("district") or entity.get("city") or row.get("region")
-            search_query = real_estate_search._region_apartment_search_query(entity, scope)
-        candidate = {
-            "name": row["name"],
-            "region": row.get("region", ""),
-            "legalDong": row.get("legalDong") or (entity or {}).get("legalDong", ""),
-            "jibun": row.get("jibun") or _entity_jibun(entity),
-            "cortarNo": (entity or {}).get("cortarNo", ""),
-            "areaLabel": row.get("areaLabel", ""),
-            "minPriceEok": row.get("minPriceEok"),
-            "midPriceEok": row.get("midPriceEok"),
-            "averagePriceEok": row.get("averagePriceEok"),
-            "maxPriceEok": row.get("maxPriceEok"),
-            "households": households,
-            "searchQuery": search_query,
-            "updatedAt": row.get("updatedAt", ""),
-            "sourceNote": row.get("sourceNote", ""),
-            "priceSource": row.get("priceSource") or "manual",
-            "transactionCount": row.get("transactionCount") or 0,
-            "latestDealDate": row.get("latestDealDate") or "",
-            "sourceUrl": row.get("sourceUrl") or "",
-            "areaMin": area_min,
-            "areaMax": area_max,
-            **building,
-            **_naver_property_link(row, entity),
-            "_budgetEok": budget_eok,
-        }
-        _apply_fit(candidate, budget_eok)
+        candidate = _candidate_from_price_row(
+            row,
+            entity,
+            region,
+            budget_eok,
+            purpose,
+            priority,
+            commute,
+            price_strategy,
+        )
         if (
             _candidate_over_purchase_cap(candidate, budget_eok)
             and candidate["priceSource"] in VERIFIED_PRICE_SOURCES
@@ -1751,7 +2173,6 @@ def budget_candidates(
         ):
             filtered["price"] += 1
             continue
-        candidate["_score"] = _candidate_score(candidate, entity, purpose, priority, commute, price_strategy)
         rows.append(candidate)
 
     live_seed_count = 0
@@ -1856,6 +2277,7 @@ def budget_candidates(
 
     if not rows:
         return {
+            "candidateResultSchemaVersion": CANDIDATE_RESULT_SCHEMA_VERSION,
             "budgetEok": budget_eok,
             "budgetText": _price_text(budget_eok),
             "budgetSource": budget_source,
@@ -1972,6 +2394,25 @@ def budget_candidates(
             except Exception:
                 continue
 
+    if fast_mode:
+        # 1차 응답도 저장된 단지별 가격 밴드를 전 후보에 적용한다. 파일 캐시
+        # 적중만 허용하므로 외부 API나 월별 거래 스캔으로 응답 시간이 늘지 않는다.
+        for row in rows:
+            try:
+                if not row.get("_storedPriceChecked"):
+                    _apply_stored_live_price(row, preferred_min_area=min_area)
+                _apply_fit(row, budget_eok)
+                row["_score"] = _candidate_score(
+                    row,
+                    _find_entity(row["name"], row.get("region", "")),
+                    purpose,
+                    priority,
+                    commute,
+                    price_strategy,
+                )
+            except Exception:
+                continue
+
     verified_rows = []
     unverified_price_count = 0
     last_deal_over_budget_count = 0
@@ -2010,13 +2451,7 @@ def budget_candidates(
     if all_matches and len(unique_rows) > result_limit:
         unique_rows = unique_rows[:result_limit]
 
-    for row in unique_rows:
-        entity = _find_entity(row["name"], row.get("region", ""))
-        row["policyImpact"] = (
-            policy_evaluator.evaluate_candidate(row, entity=entity, profile=policy_profile)
-            if row.get("midPriceEok")
-            else None
-        )
+    _attach_policy_impacts(unique_rows, policy_profile)
 
     policy_excluded_rows = []
     if all_matches:
@@ -2034,55 +2469,18 @@ def budget_candidates(
 
     candidates = policy_allowed_rows if all_matches else policy_allowed_rows[:limit]
     policy_excluded_candidates = [] if all_matches else policy_excluded_rows[:limit]
-    for row in [*candidates, *policy_excluded_candidates]:
-        entity = _find_entity(row["name"], row.get("region", ""))
-        map_entity = _find_entity(
-            row["name"],
-            row.get("region", ""),
-            row.get("legalDong", ""),
-            row.get("jibun", ""),
-        ) or entity
-        row["displayName"] = _candidate_display_name(row, entity)
-        row["displayRegion"] = _display_region(row, entity)
-        row["mapAddress"] = _map_address(row, map_entity)
-        row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
-        row.update(_decision_support(row, entity, purpose, priority, commute, move_timing, price_strategy, region))
-        row.pop("_fitRank", None)
-        row.pop("_score", None)
-        row.pop("_budgetEok", None)
-
     display_rows = [*candidates, *policy_excluded_candidates]
-    if not fast_mode and display_rows:
-        if molit_transactions.configured():
-            # 시그널 계산에 필요한 (지역코드, 월)을 후보 전체 기준으로 병렬 선적재
-            signal_months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
-            signal_pairs = set()
-            for row in display_rows:
-                try:
-                    for source_row in molit_transactions.source_rows(row["name"], row.get("region", "")):
-                        lawd_cd = molit_transactions._row_lawd_cd(source_row)
-                        if lawd_cd:
-                            signal_pairs.update((lawd_cd, deal_ymd) for deal_ymd in signal_months)
-                except Exception:
-                    continue
-            # 회로 차단 중이면 prefetch_months는 즉시 반환하고, attach_signals가
-            # 기존 월별 캐시를 사용해 점수 계산을 계속한다.
-            molit_transactions.prefetch_months(signal_pairs)
-        try:
-            momentum_signals.attach_signals(display_rows)
-        except Exception:
-            pass
-
-    if display_rows:
-        if not fast_mode:
-            try:
-                naver_complex.attach_links(display_rows)
-            except Exception:
-                pass
-        try:
-            verdicts.attach_verdicts(display_rows, budget_eok)
-        except Exception:
-            pass
+    _finalize_candidate_rows(
+        display_rows,
+        budget_eok=budget_eok,
+        purpose=purpose,
+        priority=priority,
+        commute=commute,
+        move_timing=move_timing,
+        price_strategy=price_strategy,
+        region=region,
+        fast_mode=fast_mode,
+    )
 
     # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.
     # all_matches 응답은 정책상 needs_input/restricted 후보도 candidates에 담지만,
@@ -2118,6 +2516,7 @@ def budget_candidates(
         result_message = "최신 실거래를 확인하지 못한 수동 가격 후보는 결과에서 제외했어요. 국토부 API 연결을 복구한 뒤 다시 확인해 주세요."
 
     return {
+        "candidateResultSchemaVersion": CANDIDATE_RESULT_SCHEMA_VERSION,
         "budgetEok": budget_eok,
         "budgetText": _price_text(budget_eok),
         "budgetSource": budget_source,

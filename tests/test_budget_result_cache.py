@@ -158,6 +158,299 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertEqual(first, reordered)
         self.assertNotEqual(first, changed)
 
+    def test_market_snapshot_fills_first_stage_without_live_lookup(self):
+        saved_at = time.time()
+        cached = {
+            "savedAt": saved_at,
+            "payload": {
+                "candidates": [{
+                    "name": "즉시단지",
+                    "region": "강동구",
+                    "areaLabel": "전용 59㎡",
+                    "latestDealPriceEok": 8.1,
+                    "latestDealDate": "2026-07-01",
+                    "transactionCount": 12,
+                    "signals": {
+                        "status": "ok",
+                        "score": 72,
+                        "scoreFormulaVersion": (
+                            search_server.momentum_signals.SCORE_FORMULA_VERSION
+                        ),
+                    },
+                }],
+            },
+        }
+        initial = {
+            "candidates": [{
+                "name": "즉시단지",
+                "region": "강동구",
+                "areaLabel": "전용 60~60㎡",
+                "latestDealPriceEok": None,
+                "signals": None,
+            }],
+        }
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(
+                 search_server.momentum_signals,
+                 "attach_cached_signals",
+             ) as attach_cached:
+            (Path(directory) / "completed.json").write_text(
+                json.dumps(cached, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            search_server._attach_market_snapshots(initial)
+
+        row = initial["candidates"][0]
+        self.assertTrue(initial["marketSnapshotReady"])
+        self.assertEqual(initial["marketSnapshotHitCount"], 1)
+        self.assertEqual(row["latestDealPriceEok"], 8.1)
+        self.assertEqual(row["latestDealDate"], "2026-07-01")
+        self.assertEqual(row["signals"]["score"], 72)
+        self.assertTrue(row["marketSnapshotHit"])
+        attach_cached.assert_called_once_with(initial["candidates"], only_missing=True)
+
+    def test_condition_change_recalculates_cash_scenarios_after_market_snapshot(self):
+        cached = {
+            "savedAt": time.time(),
+            "payload": {
+                "candidates": [{
+                    "name": "백련산힐스테이트2차",
+                    "region": "은평구",
+                    "areaLabel": "전용 59㎡",
+                    "latestDealPriceEok": 8.4,
+                    "latestDealDate": "2026-06-30",
+                    "recent3AveragePriceEok": 8.3,
+                    "recent3AdjustedAveragePriceEok": 8.3,
+                    "recent3TradeCount": 10,
+                    "recent3AdjustedTradeCount": 10,
+                    "transactionCount": 10,
+                }],
+            },
+        }
+        profile = search_server.policy_evaluator.user_profile(cash_eok=5)
+        stale_impact = search_server.policy_evaluator.evaluate_candidate(
+            {
+                "name": "백련산힐스테이트2차",
+                "region": "은평구",
+                "midPriceEok": 8.3,
+            },
+            profile=profile,
+        )
+        initial = {
+            "candidates": [{
+                "name": "백련산힐스테이트2차",
+                "region": "은평구",
+                "areaLabel": "전용 59㎡",
+                "midPriceEok": 8.3,
+                "policyImpact": stale_impact,
+            }],
+            "policyExcludedCandidates": [],
+            "allMatches": True,
+            "initialStage": True,
+            "policySnapshot": {
+                **search_server.policy_evaluator.summarize([stale_impact], profile),
+                "estimatedPurchaseCeilingEok": 9.4,
+                "budgetSource": "region_adjusted",
+            },
+        }
+        self.assertEqual(stale_impact["cashScenarios"], [])
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server, "BUDGET_JOBS", {}), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=False), \
+             mock.patch.object(search_server, "_attach_cached_market_bands"), \
+             mock.patch.object(
+                 search_server.momentum_signals,
+                 "attach_cached_signals",
+             ), mock.patch.object(
+                 search_server.budget_candidates,
+                 "budget_candidates",
+                 return_value=initial,
+             ):
+            (Path(directory) / "previous-condition.json").write_text(
+                json.dumps(cached, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            payload = search_server._start_staged_budget_payload(
+                "changed-condition",
+                {
+                    "budget": "9.4",
+                    "cash_eok": "5",
+                    "all_matches": True,
+                },
+            )
+
+        row = payload["candidates"][0]
+        scenarios = {
+            scenario["type"]: scenario
+            for scenario in row["policyImpact"]["cashScenarios"]
+        }
+        self.assertEqual(set(scenarios), {"latest_deal", "recent3_average"})
+        self.assertEqual(scenarios["latest_deal"]["requiredCashEok"], 5.04)
+        self.assertEqual(scenarios["recent3_average"]["requiredCashEok"], 4.98)
+        self.assertEqual(row["policyImpact"]["status"], "short")
+        self.assertEqual(payload["policySnapshot"]["counts"]["short"], 1)
+        self.assertEqual(payload["policySnapshot"]["estimatedPurchaseCeilingEok"], 9.4)
+        self.assertEqual(payload["policySnapshot"]["budgetSource"], "region_adjusted")
+
+    def test_market_snapshot_does_not_reuse_signal_from_another_area(self):
+        cached = {
+            "savedAt": time.time(),
+            "payload": {
+                "candidates": [{
+                    "name": "평형분리단지",
+                    "region": "강동구",
+                    "areaLabel": "전용 59㎡",
+                    "signals": {
+                        "status": "ok",
+                        "score": 72,
+                        "scoreFormulaVersion": (
+                            search_server.momentum_signals.SCORE_FORMULA_VERSION
+                        ),
+                    },
+                }],
+            },
+        }
+        initial = {
+            "candidates": [{
+                "name": "평형분리단지",
+                "region": "강동구",
+                "areaLabel": "전용 84~85㎡",
+                "signals": None,
+            }],
+        }
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server, "_attach_cached_market_bands"), \
+             mock.patch.object(
+                 search_server.momentum_signals,
+                 "attach_cached_signals",
+             ) as attach_cached:
+            (Path(directory) / "completed.json").write_text(
+                json.dumps(cached, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            search_server._attach_market_snapshots(initial)
+
+        self.assertIsNone(initial["candidates"][0]["signals"])
+        attach_cached.assert_called_once_with(initial["candidates"], only_missing=True)
+
+    def test_incomplete_price_row_is_not_indexed_as_ready_market_snapshot(self):
+        payload = {
+            "candidates": [{
+                "name": "미완성단지",
+                "region": "강동구",
+                "areaLabel": "전용 84~85㎡",
+                "midPriceEok": 0,
+            }],
+        }
+
+        search_server.MARKET_ROW_SNAPSHOTS.clear()
+        search_server.MARKET_ROW_SNAPSHOT_KEYS.clear()
+        search_server._index_market_snapshot_payload(payload, time.time())
+
+        self.assertEqual(search_server.MARKET_ROW_SNAPSHOTS, {})
+        self.assertEqual(search_server.MARKET_ROW_SNAPSHOT_KEYS, {})
+
+    def test_complete_no_trade_state_is_indexed_without_becoming_pending(self):
+        payload = {
+            "candidates": [{
+                "name": "무거래단지",
+                "region": "강동구",
+                "areaLabel": "전용 84~85㎡",
+                "midPriceEok": 0,
+                "marketDataStatus": "no_recent_trade",
+            }],
+        }
+
+        search_server.MARKET_ROW_SNAPSHOTS.clear()
+        search_server.MARKET_ROW_SNAPSHOT_KEYS.clear()
+        search_server._index_market_snapshot_payload(payload, time.time())
+
+        snapshot = next(iter(search_server.MARKET_ROW_SNAPSHOTS.values()))[1]
+        self.assertEqual(snapshot["marketDataStatus"], "no_recent_trade")
+
+    def test_local_month_cache_fills_filtered_search_price_before_reveal(self):
+        row = {
+            "name": "재검색단지",
+            "region": "강동구",
+            "areaLabel": "전용 84~85㎡",
+            "areaMin": 84,
+            "midPriceEok": 0,
+        }
+        live = {
+            "areaLabel": "전용 84㎡",
+            "minPriceEok": 7.8,
+            "midPriceEok": 8.0,
+            "averagePriceEok": 8.1,
+            "maxPriceEok": 8.4,
+            "latestDealPriceEok": 8.2,
+            "latestDealDate": "2026-07-01",
+            "transactionCount": 5,
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value={},
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "cached_market_bundle_for_apartment",
+            return_value={
+                "band": live,
+                "comparison": live,
+                "coverage": {"complete": True},
+                "transactions": [],
+            },
+        ):
+            search_server._attach_cached_market_bands([row])
+
+        self.assertEqual(row["latestDealPriceEok"], 8.2)
+        self.assertEqual(row["midPriceEok"], 8.0)
+        self.assertEqual(row["marketDataStatus"], "ready")
+        self.assertTrue(row["marketLocalCacheHit"])
+
+    def test_local_month_cache_fills_last_observed_selected_area_trade(self):
+        row = {
+            "name": "과거거래단지",
+            "region": "강동구",
+            "areaLabel": "전용 84~85㎡",
+            "areaMin": 84,
+            "midPriceEok": 0,
+        }
+        last_observed = {
+            "lastObservedDealPriceEok": 15.0,
+            "lastObservedDealExclusiveArea": 84.8,
+            "lastObservedDealFloor": "17",
+            "lastObservedDealDate": "2025-09-25",
+            "lastObservedDealNote": "국토부 실거래가 최근 36개월 확장 조회",
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value={},
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "cached_market_bundle_for_apartment",
+            return_value={
+                "band": None,
+                "comparison": None,
+                "coverage": {"complete": True},
+                "transactions": [],
+                "lastObserved": last_observed,
+            },
+        ):
+            search_server._attach_cached_market_bands([row])
+
+        self.assertEqual(row["lastObservedDealPriceEok"], 15.0)
+        self.assertEqual(row["lastObservedDealDate"], "2025-09-25")
+        self.assertEqual(row["marketDataStatus"], "no_recent_trade")
+
     def test_result_is_persisted_and_expired_by_ttl(self):
         with tempfile.TemporaryDirectory() as directory, \
              mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \

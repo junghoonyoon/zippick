@@ -1,0 +1,46 @@
+{
+  "calculationVersion": "leader-v4",
+  "defaultAreaBucket": "70-89",
+  "weights": {
+    "overall": {
+      "price": 0.35,
+      "leadership": 0.25,
+      "liquidity": 0.2,
+      "age": 0.1,
+      "station": 0.1
+    },
+    "price": {
+      "medianPrice": 0.7,
+      "medianPricePerSquareMeter": 0.3
+    },
+    "leadership": {
+      "relativeReturn6m": 0.6,
+      "relativeReturn12m": 0.4
+    },
+    "liquidity": {
+      "transactionTurnover": 0.7,
+      "activeTransactionMonths": 0.3
+    },
+    "residence": {
+      "station": 0.3,
+      "age": 0.25,
+      "price": 0.2,
+      "liquidity": 0.15,
+      "household": 0.1
+    },
+    "newBuild": {
+      "price": 0.4,
+      "liquidity": 0.2,
+      "station": 0.2,
+      "household": 0.1,
+      "brand": 0.1
+    },
+    "valueExpectation": {
+      "station": 0.35,
+      "age": 0.3,
+      "household": 0.2,
+      "liquidity": 0.15
+    }
+  },
+  "brandScores": {}
+}

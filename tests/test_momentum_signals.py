@@ -57,7 +57,10 @@ class MomentumSignalsTest(unittest.TestCase):
     def test_attach_signals_sets_leader_gap_and_badges(self):
         def fake_tx(name, **kwargs):
             if name == "대장":
-                return [_deal(m, 1500) for m in (1, 2, 3, 7, 8, 9)]
+                return (
+                    [_deal(m, 1500) for m in (1, 2, 3, 4, 5, 6)]
+                    + [_deal(m, 1200) for m in (7, 8, 9, 10, 11, 12)]
+                )
             return _rising_deals()  # current ppsm ~1100 → 갭 약 27%
 
         candidates = [
@@ -81,8 +84,13 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(chaser["leaderName"], "대장")
         self.assertEqual(chaser["leaderRegion"], "강동구")
         self.assertFalse(chaser["isRegionalLeader"])
+        self.assertEqual(chaser["leaderBasis"], "district_market_leader_v4")
+        self.assertEqual(chaser["leaderFormulaVersion"], momentum_signals.LEADER_FORMULA_VERSION)
+        self.assertEqual(chaser["leaderPricePoints"], 100)
+        self.assertEqual(chaser["leaderLeadershipPoints"], 100)
+        self.assertIsNone(chaser["leaderStationPoints"])
         self.assertIsInstance(chaser["score"], int)
-        self.assertGreater(chaser["districtRelativePct"], 0)
+        self.assertAlmostEqual(chaser["districtRelativePct"], -15.0, delta=0.2)
         self.assertEqual(set(chaser["scoreBreakdown"]), {
             "priceMomentum", "turnover", "districtRelative", "recentPersistence",
         })
@@ -117,9 +125,322 @@ class MomentumSignalsTest(unittest.TestCase):
         signals = candidates[0]["signals"]
         self.assertEqual(signals["leaderName"], "구전체대장")
         self.assertEqual(signals["leaderHouseholds"], 5000)
-        self.assertEqual(signals["leaderBasis"], "district_households")
+        self.assertEqual(signals["leaderBasis"], "district_market_leader_v4")
         self.assertFalse(signals["isRegionalLeader"])
         self.assertAlmostEqual(signals["leaderGapPct"], 25.0, delta=0.1)
+
+    def test_leader_metadata_is_attached_for_every_candidate_signal_status(self):
+        def fake_tx(name, **kwargs):
+            if name == "조회실패":
+                raise RuntimeError("temporary failure")
+            if name == "표본부족":
+                return [_deal(1, 1000)] * 3
+            if name == "거래오래됨":
+                return [_deal(m, 1100) for m in (5, 6, 7, 8, 9, 10)]
+            return [_deal(m, 1500) for m in (1, 2, 3, 7, 8, 9)]
+
+        candidates = [
+            {"name": "표본부족", "region": "강동구", "households": 800},
+            {"name": "거래오래됨", "region": "강동구", "households": 900},
+            {"name": "조회실패", "region": "강동구", "households": 1000},
+        ]
+        district_master = [
+            {"name": "지역대장", "district": "강동구", "households": 3000},
+        ]
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", district_master), \
+             mock.patch.object(momentum_signals, "_DISTRICT_LEADER_INDEX", None), \
+             mock.patch.object(momentum_signals, "_DISTRICT_MOMENTUM_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_DISTRICT_ENTITY_SIGNALS_CACHE", {}):
+            momentum_signals.attach_signals(candidates)
+
+        self.assertEqual(
+            [row["signals"]["status"] for row in candidates],
+            ["insufficient", "stale", "error"],
+        )
+        for row in candidates:
+            signals = row["signals"]
+            self.assertEqual(signals["leaderName"], "지역대장")
+            self.assertEqual(signals["leaderRegion"], "강동구")
+            self.assertFalse(signals["isRegionalLeader"])
+            self.assertIsNone(signals.get("leaderGapPct"))
+
+    def test_market_leader_is_not_just_the_largest_complex(self):
+        def fake_tx(name, **kwargs):
+            if name == "가격거래대장":
+                return (
+                    [_deal(m, 1600) for m in (1, 2, 3, 4, 5, 6)]
+                    + [_deal(m, 1600) for m in (7, 8, 9, 10, 11, 12)]
+                )
+            return [_deal(m, 1200) for m in (1, 2, 3, 7, 8, 9)]
+
+        candidates = [{"name": "검색후보", "region": "강동구", "households": 800}]
+        district_master = [
+            {"name": "최대세대수", "district": "강동구", "households": 5000},
+            {"name": "가격거래대장", "district": "강동구", "households": 1000},
+            {"name": "검색후보", "district": "강동구", "households": 800},
+        ]
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", district_master), \
+             mock.patch.object(momentum_signals, "_DISTRICT_LEADER_INDEX", None), \
+             mock.patch.object(momentum_signals, "_DISTRICT_MOMENTUM_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_DISTRICT_ENTITY_SIGNALS_CACHE", {}):
+            momentum_signals.attach_signals(candidates)
+
+        signals = candidates[0]["signals"]
+        self.assertEqual(signals["leaderName"], "가격거래대장")
+        self.assertEqual(signals["leaderHouseholds"], 1000)
+        self.assertEqual(signals["leaderPricePoints"], 100)
+        self.assertEqual(signals["leaderLiquidityPoints"], 100)
+        self.assertGreater(signals["leaderScore"], 80)
+
+    def test_locality_leader_does_not_mix_other_area_bucket(self):
+        def fake_tx(name, **kwargs):
+            if name == "한양아파트":
+                return [_deal(m, 2700) for m in range(1, 13) for _ in range(2)]
+            if name == "파크뷰":
+                return [_deal(m, 2200, area=139.7) for m in (1, 2, 3, 4, 7, 8, 9, 10)]
+            return [_deal(m, 1800) for m in (1, 2, 3, 7, 8, 9)]
+
+        candidates = [{
+            "name": "정자동후보",
+            "region": "성남분당구",
+            "legalDong": "정자동",
+            "households": 800,
+        }]
+        district_master = [
+            {
+                "name": "한양아파트",
+                "district": "성남분당구",
+                "legalDong": "서현동",
+                "households": 2419,
+            },
+            {
+                "name": "파크뷰",
+                "aliases": ["정자동 파크뷰"],
+                "district": "성남분당구",
+                "legalDong": "정자동",
+                "households": 1829,
+            },
+            {
+                "name": "정자동후보",
+                "district": "성남분당구",
+                "legalDong": "정자동",
+                "households": 800,
+            },
+        ]
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", district_master), \
+             mock.patch.object(momentum_signals, "_DISTRICT_LEADER_INDEX", None), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_INDEX", None), \
+             mock.patch.object(momentum_signals, "_DISTRICT_MOMENTUM_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_DISTRICT_ENTITY_SIGNALS_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE", {}):
+            momentum_signals.attach_signals(candidates)
+
+        signals = candidates[0]["signals"]
+        # 파크뷰는 이 표본에서 139㎡ 거래만 있으므로 대표 70~89㎡ 순위와 섞지 않는다.
+        self.assertEqual(signals["leaderName"], "정자동후보")
+        self.assertEqual(signals["leaderRegion"], "정자동")
+        self.assertEqual(signals["leaderBasis"], "locality_market_leader_v4")
+        self.assertTrue(signals["isRegionalLeader"])
+
+    def test_leader_reference_price_prefers_standard_84_area_band(self):
+        deals = [
+            _deal(1, 3000, area=84.9),
+            _deal(2, 2900, area=84.9),
+            _deal(1, 2100, area=139.7),
+            _deal(2, 2200, area=139.7),
+            _deal(3, 2150, area=139.7),
+        ]
+
+        ppsm, area_band, count = momentum_signals._leader_reference_price(deals)
+
+        self.assertEqual(ppsm, 2950)
+        self.assertEqual(area_band, 8)
+        self.assertEqual(count, 2)
+
+    def test_locality_leader_excludes_other_dong_and_presale(self):
+        def fake_tx(name, **kwargs):
+            prices = {
+                "다른동고가": 4000,
+                "같은동분양권": 5000,
+                "같은동준공대장": 2500,
+                "검색후보": 1800,
+            }
+            return [_deal(m, prices[name]) for m in (1, 2, 3, 7, 8, 9)]
+
+        candidates = [{
+            "name": "검색후보",
+            "region": "테스트구",
+            "legalDong": "가동",
+            "households": 800,
+        }]
+        master = [
+            {
+                "name": "다른동고가",
+                "district": "테스트구",
+                "legalDong": "나동",
+                "households": 3000,
+            },
+            {
+                "name": "같은동분양권",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 2500,
+                "status": "분양권",
+            },
+            {
+                "name": "같은동준공대장",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 1200,
+            },
+            {
+                "name": "검색후보",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 800,
+            },
+        ]
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", master), \
+             mock.patch.object(momentum_signals, "_DISTRICT_LEADER_INDEX", None), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_INDEX", None), \
+             mock.patch.object(momentum_signals, "_DISTRICT_MOMENTUM_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_DISTRICT_ENTITY_SIGNALS_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE", {}):
+            momentum_signals.attach_signals(candidates)
+
+        signals = candidates[0]["signals"]
+        self.assertEqual(signals["leaderName"], "같은동준공대장")
+        self.assertEqual(signals["leaderRegion"], "가동")
+        self.assertEqual(signals["leaderCandidateCount"], 2)
+
+    def test_attach_signals_includes_distinct_district_leader(self):
+        def fake_tx(name, **kwargs):
+            prices = {
+                "검색후보": 1800,
+                "가동대장": 2400,
+                "나동구대장": 3200,
+            }
+            return [_deal(month, prices[name]) for month in (1, 2, 3, 7, 8, 9)]
+
+        candidates = [{
+            "name": "검색후보",
+            "region": "테스트구",
+            "legalDong": "가동",
+            "households": 800,
+        }]
+        master = [
+            {
+                "name": "검색후보",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 800,
+            },
+            {
+                "name": "가동대장",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 1200,
+            },
+            {
+                "name": "나동구대장",
+                "district": "테스트구",
+                "legalDong": "나동",
+                "households": 2000,
+            },
+        ]
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", master), \
+             mock.patch.object(momentum_signals, "_DISTRICT_LEADER_INDEX", None), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_INDEX", None), \
+             mock.patch.object(momentum_signals, "_DISTRICT_MOMENTUM_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_DISTRICT_ENTITY_SIGNALS_CACHE", {}), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE", {}):
+            momentum_signals.attach_signals(candidates)
+
+        signals = candidates[0]["signals"]
+        self.assertEqual(signals["leaderName"], "가동대장")
+        self.assertEqual(signals["leaderRegion"], "가동")
+        self.assertEqual(signals["districtLeaderName"], "나동구대장")
+        self.assertEqual(signals["districtLeaderRegion"], "테스트구")
+        self.assertEqual(signals["districtLeaderBasis"], "district_market_leader_v4")
+        self.assertFalse(signals["isDistrictLeader"])
+
+    def test_locality_leader_considers_all_eligible_complexes(self):
+        master = [
+            {
+                "name": f"대단지{index}",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 2000 - index,
+            }
+            for index in range(20)
+        ] + [{
+            "name": "고가중형단지",
+            "district": "테스트구",
+            "legalDong": "가동",
+            "households": 300,
+        }]
+
+        def fake_tx(name, **kwargs):
+            ppsm = 4000 if name == "고가중형단지" else 1500
+            return [_deal(m, ppsm) for m in (1, 2, 3, 7, 8, 9)]
+
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", master), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_INDEX", None), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE", {}):
+            entity, _signals, details = momentum_signals._absolute_leader(
+                "테스트구",
+                [],
+                legal_dong="가동",
+            )
+
+        self.assertEqual(entity["name"], "고가중형단지")
+        self.assertEqual(details["candidateCount"], 21)
+
+    def test_large_cheap_complex_cannot_beat_clear_price_leader(self):
+        master = [
+            {
+                "name": "가격대장",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 800,
+            },
+            {
+                "name": "대형저가단지",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 3000,
+            },
+        ]
+
+        def fake_tx(name, **kwargs):
+            ppsm = 2000 if name == "가격대장" else 1200
+            months = (1, 2, 3, 4, 7, 8, 9, 10) if name == "가격대장" else range(1, 13)
+            return [_deal(month, ppsm) for month in months]
+
+        with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", side_effect=fake_tx), \
+             mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", master), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_INDEX", None), \
+             mock.patch.object(momentum_signals, "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE", {}):
+            entity, _signals, details = momentum_signals._absolute_leader(
+                "테스트구",
+                [],
+                legal_dong="가동",
+            )
+
+        self.assertEqual(entity["name"], "가격대장")
+        self.assertEqual(details["eligibleCandidateCount"], 2)
+        self.assertIsNone(details["priceFinalistCount"])
 
     def test_missing_metrics_are_scored_neutral_not_zero(self):
         # 결측 항목은 0점(최악)이 아니라 중립값으로 간주한다.
@@ -281,6 +602,25 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(signals["dealCount"], 10)
         self.assertAlmostEqual(signals["momentumPct"], 10.0, delta=0.2)
 
+    def test_sustained_price_level_shift_is_not_filtered_as_an_outlier(self):
+        # 직전 6개월 대비 최근 6개월 가격이 크게 올랐어도 최근 거래가 여러 건
+        # 같은 수준에서 체결됐다면 시장 변화이지 이상거래가 아니다.
+        deals = (
+            [_deal(m, 1000) for m in (7, 8, 9, 10, 11, 12)]
+            + [_deal(m, 1700) for m in (1, 1, 2, 2, 3, 3, 4, 5, 6)]
+        )
+        with mock.patch.object(
+            momentum_signals.molit_transactions,
+            "transactions_for_apartment",
+            return_value=deals,
+        ):
+            signals = momentum_signals.raw_signals("급격한가격상승", region="분당구")
+
+        self.assertEqual(signals["status"], "ok")
+        self.assertEqual(signals["outlierExcludedCount"], 0)
+        self.assertEqual(signals["latestDealDate"], _deal(1, 1700)["dealDate"])
+        self.assertAlmostEqual(signals["momentumPct"], 70.0, delta=0.2)
+
     def test_small_band_sample_is_not_outlier_filtered(self):
         # 표본 5건 미만 밴드는 무엇이 정상가인지 판별이 불안정하므로 필터하지 않는다.
         deals = [_deal(m, 1000) for m in (1, 2, 7)] + [_deal(3, 600)]
@@ -334,6 +674,86 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(
             momentum_signals._composite_score(discounted),
             momentum_signals._composite_score(expensive),
+        )
+
+    def test_district_index_sources_use_fixed_large_complexes(self):
+        district_index = {
+            momentum_signals.real_estate_search.compact("성남시 수정구"): [
+                {"name": "대형단지", "district": "성남시 수정구", "households": 3000},
+                {"name": "검색단지", "district": "성남시 수정구", "households": 2000},
+            ],
+        }
+        with mock.patch.object(
+            momentum_signals,
+            "_district_leader_index",
+            return_value=district_index,
+        ):
+            rows = momentum_signals.district_index_source_candidates(
+                "경기도 성남시 수정구 산성동",
+                exclude_name="검색단지",
+            )
+
+        self.assertEqual(rows, [{
+            "name": "대형단지",
+            "region": "성남시 수정구",
+            "households": 3000,
+        }])
+
+    def test_cached_signal_attachment_never_calls_live_transaction_loader(self):
+        candidates = [{"name": "캐시단지", "region": "강동구", "households": 1000}]
+        with mock.patch.object(
+            momentum_signals.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            momentum_signals.molit_transactions,
+            "transactions_for_apartment_cached",
+            return_value=_rising_deals(),
+        ) as cached, mock.patch.object(
+            momentum_signals.molit_transactions,
+            "transactions_for_apartment",
+            side_effect=AssertionError("live loader must not run"),
+        ) as live:
+            momentum_signals.attach_cached_signals(candidates)
+
+        signals = candidates[0]["signals"]
+        self.assertEqual(signals["status"], "ok")
+        self.assertIsInstance(signals["score"], int)
+        self.assertEqual(
+            signals["scoreFormulaVersion"],
+            momentum_signals.SCORE_FORMULA_VERSION,
+        )
+        cached.assert_called_once_with(
+            "캐시단지",
+            region="강동구",
+            area_label="",
+            lookback_months=momentum_signals.LOOKBACK_MONTHS,
+        )
+        live.assert_not_called()
+
+    def test_cached_signal_attachment_uses_selected_area(self):
+        candidates = [{
+            "name": "평형단지",
+            "region": "강동구",
+            "areaLabel": "전용 84~85㎡",
+            "households": 1000,
+        }]
+        with mock.patch.object(
+            momentum_signals.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            momentum_signals.molit_transactions,
+            "transactions_for_apartment_cached",
+            return_value=_rising_deals(),
+        ) as cached:
+            momentum_signals.attach_cached_signals(candidates)
+
+        cached.assert_called_once_with(
+            "평형단지",
+            region="강동구",
+            area_label="전용 84~85㎡",
+            lookback_months=momentum_signals.LOOKBACK_MONTHS,
         )
 
 

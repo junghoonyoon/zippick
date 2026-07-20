@@ -226,14 +226,38 @@ def _strip_building_dong_suffix(name):
     return value.strip()
 
 
+def _is_specific_numbered_variant(primary_name, official_name):
+    """Return True when the official name identifies a numbered sub-complex.
+
+    Some public rows use a generic representative name such as ``주공아파트``
+    for every numbered complex and keep the useful identity only in the
+    official-price name (``주공12``, ``하안주공13단지``).  Keeping the generic
+    representative name makes those distinct complexes collapse into one
+    search entity.
+    """
+    primary_key = compact(primary_name)
+    official_key = compact(official_name)
+    family_key = re.sub(r"(?:아파트|apt)$", "", primary_key)
+    if len(family_key) < 2 or family_key not in official_key:
+        return False
+    suffix = official_key.rsplit(family_key, 1)[-1]
+    return bool(re.fullmatch(r"\d+(?:단지[0-9a-z가-힣]*|차|고층|저층)?", suffix))
+
+
 def _apartment_display_name(row):
     name = _clean_entity_name(row.get("대표단지명") or row.get("단지명_도로명주소") or row.get("단지명_건축물대장") or row.get("단지명_공시가격"))
     official = _clean_entity_name(row.get("단지명_공시가격"))
     building_name = _clean_entity_name(row.get("단지명_건축물대장"))
     if _has_building_dong_suffix(name):
+        if _is_usable_apartment_name(official) and _is_specific_numbered_variant(
+            _strip_building_dong_suffix(name), official,
+        ):
+            return official
         for candidate in (building_name, official, _strip_building_dong_suffix(name)):
             if _is_usable_apartment_name(candidate) and not _has_building_dong_suffix(candidate):
                 return candidate
+    if _is_usable_apartment_name(official) and _is_specific_numbered_variant(name, official):
+        return official
     if name.endswith("아파트") and _is_usable_apartment_name(official):
         official_key = compact(official)
         name_key = compact(name)
@@ -251,7 +275,7 @@ def _numbered_complex_base(name):
 
 
 def _legal_dong_aliases(row):
-    legal_dong = _clean_entity_name(row.get("법정동"))
+    legal_dong = _row_legal_dong(row)
     if not legal_dong:
         return []
     aliases = [legal_dong]
@@ -259,6 +283,19 @@ def _legal_dong_aliases(row):
     if shortened != legal_dong:
         aliases.append(shortened)
     return aliases
+
+
+def _row_legal_dong(row):
+    legal_dong = _clean_entity_name(row.get("법정동"))
+    if legal_dong:
+        return legal_dong
+    administrative_dong = _clean_entity_name(row.get("읍면동"))
+    jibun = _clean_entity_name(row.get("지번"))
+    if administrative_dong.endswith(("읍", "면")) and jibun:
+        legal_ri = jibun.split()[0]
+        if legal_ri.endswith("리"):
+            return legal_ri
+    return administrative_dong
 
 
 def _legal_dong_stems(dong):
@@ -339,7 +376,7 @@ def _load_apartment_csv_entities(limit=None):
                         aliases.append(alias)
                 aliases.extend(_local_apartment_aliases(row, [name, *aliases]))
                 district = row.get("자치구") or row.get("시군구") or ""
-                legal_dong = _clean_entity_name(row.get("법정동"))
+                legal_dong = _row_legal_dong(row)
                 pnu = re.sub(r"\D", "", str(row.get("필지고유번호") or ""))
                 cortar_no = pnu[:10] if len(pnu) >= 10 else ""
                 entities.append({
@@ -357,7 +394,7 @@ def _load_apartment_csv_entities(limit=None):
                         name,
                         row.get("시도") or "",
                         district,
-                        row.get("법정동") or "",
+                        legal_dong,
                     )),
                     "households": _int_value(row.get("세대수")),
                     "approvedAt": str(row.get("사용승인일") or "").strip(),
@@ -526,6 +563,10 @@ def _relaxed_alias_variants(alias):
 def _is_ordered_subsequence(needle, haystack):
     if len(needle) < 4 or len(haystack) < len(needle):
         return False
+    needle_numbers = re.findall(r"\d+", needle)
+    haystack_numbers = re.findall(r"\d+", haystack)
+    if needle_numbers and any(number not in haystack_numbers for number in needle_numbers):
+        return False
     pos = 0
     for char in haystack:
         if pos < len(needle) and needle[pos] == char:
@@ -621,7 +662,25 @@ def _unit_alias_display(alias):
     return re.sub(r"\s+", " ", re.sub(r"[()]", " ", str(alias or ""))).strip()
 
 
-def suggest_apartments(query, limit=8):
+def _unit_alias_identity(alias, entity):
+    key = compact(alias)
+    location_keys = sorted({
+        compact(entity.get(field, ""))
+        for field in ("province", "city", "district", "legalDong")
+        if compact(entity.get(field, ""))
+    }, key=len, reverse=True)
+    changed = True
+    while changed:
+        changed = False
+        for location_key in location_keys:
+            if key.startswith(location_key):
+                key = key[len(location_key):]
+                changed = True
+                break
+    return key
+
+
+def suggest_apartments(query, limit=20):
     """단지 자동완성. 묶음(aggregate)이 아닌 개별 단지만 주소와 함께 반환한다.
 
     '한솔주공' 같은 축약 검색어도 순서 유지 부분 일치로 개별 단지에 매칭한다.
@@ -640,9 +699,12 @@ def suggest_apartments(query, limit=8):
         unit_aliases = []
         base_aliases = []
         seen_units = set()
+        entity_has_unit_number = bool(_UNIT_ALIAS_RE.search(str(entity.get("name") or "")))
         for alias in aliases:
-            if _UNIT_ALIAS_RE.search(str(alias or "")):
-                unit_key = compact(alias)
+            if not entity_has_unit_number and _UNIT_ALIAS_RE.search(str(alias or "")):
+                # 로컬 검색용으로 붙인 '정자동' 같은 지역 접두사는 같은 단지의
+                # 별도 이름이 아니다. 공식 별칭과 지역 별칭을 하나로 취급한다.
+                unit_key = _unit_alias_identity(alias, entity)
                 if unit_key and unit_key not in seen_units:
                     seen_units.add(unit_key)
                     unit_aliases.append(alias)
@@ -754,8 +816,9 @@ def suggest_apartments(query, limit=8):
                 continue
             address_parts.append(part)
             stripped_parts.append(stripped)
+        entity_name = str(entity.get("name") or "")
         suggestions.append({
-            "name": entity.get("name", ""),
+            "name": _unit_alias_display(entity_name) if _UNIT_ALIAS_RE.search(entity_name) else entity_name,
             # 일부 공공 원본은 자치구가 비어 있고 시·법정동만 있다. 검색 결과가
             # 빈 지역으로 넘어가면 전용면적 API가 단지를 식별하지 못하므로 가장
             # 구체적으로 남아 있는 지역값을 순서대로 사용한다.
