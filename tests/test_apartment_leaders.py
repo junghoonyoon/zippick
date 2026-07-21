@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "pipeline"))
 
 import apartment_leaders  # noqa: E402
+import molit_transactions  # noqa: E402
 
 
 def _trade(date, price, area=84.8, **extra):
@@ -26,16 +27,213 @@ def _monthly_trades(prices, area=84.8):
 
 
 class ApartmentLeadersTest(unittest.TestCase):
-    def test_frontend_exposes_region_area_categories_and_confidence(self):
+    def test_region_matching_does_not_mix_yangju_into_namyangju(self):
+        self.assertFalse(apartment_leaders._region_matches("양주시", "남양주시"))
+        self.assertTrue(apartment_leaders._region_matches("성남분당구", "분당구"))
+
+    def test_master_entities_derive_lawd_code_from_parcel_id(self):
+        hwaseong = apartment_leaders.matching_entities("경기도", "화성시")
+
+        self.assertTrue(hwaseong)
+        self.assertTrue(all(entity.get("lawdCd") == "41590" for entity in hwaseong))
+
+    def test_gyeonggi_source_row_uses_legal_ri_and_parcel_number(self):
+        row = {"읍면동": "가평읍", "지번": "대곡리 695"}
+
+        self.assertEqual(molit_transactions._source_legal_dong(row), "대곡리")
+        self.assertEqual(molit_transactions._source_jibun(row), "695")
+        self.assertEqual(molit_transactions._legal_dong_leaf("가평읍 대곡리"), "대곡리")
+
+    def test_hwaseong_reads_old_and_split_lawd_codes(self):
+        self.assertEqual(
+            molit_transactions.related_lawd_codes("41590"),
+            ("41590", "41591", "41593", "41595", "41597"),
+        )
+
+    def test_frontend_exposes_region_categories_and_area_adjustment_help(self):
         html = (ROOT / "앱화면" / "real-estate-search.html").read_text(encoding="utf-8")
         self.assertIn('id="leaderEntry"', html)
+        header_start = html.index('<header class="app-header">')
+        header = html[header_start:html.index("</header>", header_start)]
+        hero_start = html.index('<div class="hero-actions">')
+        hero_actions = html[hero_start:html.index("</div>", hero_start)]
+        self.assertIn('id="leaderEntry"', header)
+        self.assertNotIn('id="leaderEntry"', hero_actions)
+        self.assertNotIn('id="leaderBack"', html)
+        self.assertIn('showingLeader ? "내 예산으로 찾기" : "지역별 대장아파트"', html)
+        self.assertIn('if (activeView === "leader")', html)
+        self.assertIn("openHomeView();", html)
+        self.assertIn(
+            'id="listingReportHistoryEntry" type="button" hidden',
+            hero_actions,
+        )
         self.assertIn('id="leaderSido"', html)
         self.assertIn('id="leaderSigungu"', html)
-        self.assertIn('id="leaderAreaBucket"', html)
-        for category in ("overall", "price", "leadership", "residence", "new_build", "value"):
-            self.assertIn(f'data-leader-category="{category}"', html)
+        self.assertNotIn('id="leaderAreaBucket"', html)
+        self.assertNotIn('id="leaderAreaTabs"', html)
+        self.assertNotIn('data-leader-area-profile=', html)
+        self.assertNotIn('id="leaderAreaComparison"', html)
+        self.assertNotIn('id="leaderMeta"', html)
+        self.assertNotIn('id="leaderCategoryTabs"', html)
+        self.assertIn('id="leaderReferenceCaption" hidden', html)
+        self.assertIn('leaderReferenceCaption.textContent = `${leaderReferenceLabel(payload?.referenceMonth)} 기준`;', html)
+        self.assertLess(html.index('id="leaderReferenceCaption"'), html.index('id="leaderPageTitle"'))
+        self.assertNotIn("areaProfile,", html)
+        self.assertNotIn("activeLeaderAreaProfile", html)
+        self.assertIn(
+            "border:0; border-radius:0; padding:0; background:transparent; box-shadow:none;",
+            html,
+        )
+        for category in ("price", "leadership", "residence", "new_build", "value"):
+            self.assertNotIn(f'data-leader-category="{category}"', html)
         self.assertIn("데이터 신뢰도", html)
         self.assertIn("/api/apartment-leaders", html)
+        self.assertIn('item.nearestStationName || "가까운 역"', html)
+        self.assertIn("직선 ${Math.round(stationDistance)", html)
+        self.assertNotIn("대장(면적별)", html)
+        self.assertIn('aria-label="대장아파트 가격 보정 기준 보기"', html)
+        self.assertIn("실거래가 × (84 ÷ 실제면적)", html)
+        self.assertIn("거래가 가장 많은 면적대", html)
+        self.assertIn("84㎡는 공통 표시 기준", html)
+        self.assertNotIn('data-leader-category="overall"', html)
+        self.assertNotIn('data-leader-category="leadership"', html)
+        self.assertIn("fetchLeaderRanking(activeLeaderCategory, 10", html)
+        self.assertIn("leaderGrowthText(item.return6m)", html)
+        self.assertIn("data-leader-expand-rank", html)
+        self.assertIn('class="leader-list-name">${esc(item.apartmentName)}</span>', html)
+        self.assertIn('class="leader-list-area">실거래 전용', html)
+        self.assertIn(".leader-list-copy { display:grid; gap:6px; min-width:0 }", html)
+        self.assertIn("expandedLeaderRanks", html)
+        self.assertIn('let activeLeaderCategory = "price";', html)
+
+    def test_area_adjusted_price_is_the_default_market_leader_definition(self):
+        entities = [
+            {
+                "name": "시장대장(2단지)",
+                "province": "서울특별시",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 500,
+                "approvedAt": "2008-01-01",
+                "dedupeKey": "market-leader",
+            },
+            {
+                "name": "혼합평형고가",
+                "province": "서울특별시",
+                "district": "테스트구",
+                "legalDong": "나동",
+                "households": 1500,
+                "approvedAt": "2024-01-01",
+                "dedupeKey": "mixed-price",
+            },
+        ]
+        data = [
+            (
+                entities[0],
+                [
+                    _trade("2026-06-15", 200000, area=84.8),
+                    _trade("2026-05-15", 200000, area=84.9),
+                    _trade("2026-04-15", 100000, area=77.0),
+                    _trade("2026-03-15", 100000, area=77.0),
+                ],
+            ),
+            (
+                entities[1],
+                [
+                    _trade("2026-06-15", 150000, area=84.8),
+                    _trade("2026-05-15", 150000, area=84.9),
+                    _trade("2026-04-15", 300000, area=77.0),
+                    _trade("2026-03-15", 300000, area=77.0),
+                ],
+            ),
+        ]
+
+        result = apartment_leaders.calculate_rankings_from_pairs(
+            "서울특별시",
+            "테스트구",
+            data,
+            area_bucket_value="70-89",
+            reference_month="2026-06",
+        )
+        price = result["rankings"]["price"]
+
+        self.assertEqual(apartment_leaders.DEFAULT_CATEGORY, "price")
+        self.assertEqual(price[0]["apartmentName"], "시장대장(2단지)")
+        self.assertEqual(price[0]["marketLeaderName"], "시장대장")
+        self.assertAlmostEqual(price[0]["leaderPrice12m"], 198495.5, delta=0.1)
+        self.assertEqual(price[0]["leaderRepresentativeArea"], 84.85)
+        self.assertEqual(price[0]["leaderRepresentativeMedianPrice12m"], 200000)
+        self.assertEqual(price[0]["leaderPriceAdjustmentExponent"], 0.75)
+        self.assertEqual(price[0]["leaderPriceTransactionCount12m"], 2)
+        self.assertEqual(price[0]["rankingTransactionCount12m"], 2)
+        self.assertIn("84㎡ 보정가", price[0]["reasons"][0])
+        self.assertEqual(result["leaderPriceBasisLabel"], "대표 평형 84㎡ 면적 보정가")
+        self.assertNotIn("areaProfile", result)
+        self.assertEqual(result["areaTarget"], 84.0)
+
+    def test_general_leader_uses_each_complex_most_traded_representative_band(self):
+        def entity(name):
+            return {
+                "name": name,
+                "province": "경기도",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 500,
+                "approvedAt": "2011-01-01",
+                "dedupeKey": name,
+            }
+
+        data = [
+            (
+                entity("중대형대장"),
+                [_trade(f"2026-0{month}-15", 350000, area=104.0) for month in (3, 4, 5, 6)],
+            ),
+            (
+                entity("소형고단가"),
+                [_trade(f"2026-0{month}-15", 200000, area=58.7) for month in (2, 3, 4, 5, 6)],
+            ),
+            (
+                entity("국평단지"),
+                [_trade(f"2026-0{month}-15", 243000, area=84.7) for month in (3, 4, 5, 6)],
+            ),
+        ]
+
+        result = apartment_leaders.calculate_rankings_from_pairs(
+            "경기도",
+            "테스트구",
+            data,
+            area_bucket_value="70-89",
+            reference_month="2026-06",
+        )
+        price = result["rankings"]["price"]
+
+        self.assertEqual(price[0]["apartmentName"], "중대형대장")
+        self.assertEqual({row["apartmentName"] for row in price}, {
+            "중대형대장", "소형고단가", "국평단지",
+        })
+        self.assertAlmostEqual(price[0]["leaderRepresentativeArea"], 104.0)
+        self.assertEqual(price[0]["leaderPriceTransactionCount12m"], 4)
+
+    def test_representative_area_range_boundaries_are_exact(self):
+        transactions = [
+            _trade("2026-06-01", 100000, area=49.99),
+            _trade("2026-06-02", 100000, area=50.0),
+            _trade("2026-06-03", 100000, area=59.99),
+            _trade("2026-06-04", 100000, area=199.99),
+            _trade("2026-06-05", 100000, area=200.0),
+        ]
+
+        trades, area = apartment_leaders._leader_price_trades(transactions, "2026-06")
+
+        self.assertEqual([row["exclusiveArea"] for row in trades], [50.0, 59.99])
+        self.assertAlmostEqual(area, 54.995)
+
+    def test_cache_key_uses_single_general_leader_definition(self):
+        path = apartment_leaders._cache_path(
+            "서울특별시", "테스트구", "70-89", "2026-06",
+        )
+
+        self.assertTrue(str(path).endswith(".json"))
 
     def test_area_bucket_boundaries(self):
         cases = {
@@ -76,6 +274,83 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertEqual(apartment_leaders.confidence_for_count(2)[1], "LOW")
         self.assertEqual(apartment_leaders.confidence_for_count(1)[1], "CANDIDATE")
 
+    def test_cached_kakao_station_distance_is_used_in_metrics(self):
+        entity = {
+            "name": "역세권단지",
+            "province": "서울특별시",
+            "district": "테스트구",
+            "legalDong": "가동",
+            "households": 500,
+            "approvedAt": "2020-01-01",
+            "dedupeKey": "station-test",
+        }
+        trades = [_trade("2026-06-15", 100000), _trade("2026-05-15", 98000)]
+        cached = {
+            "latitude": 37.5,
+            "longitude": 127.0,
+            "nearestStationName": "테스트역",
+            "nearestStationDistance": 420,
+            "nearestStationLatitude": 37.501,
+            "nearestStationLongitude": 127.001,
+            "stationDistanceType": "straight_line",
+            "stationDistanceSource": "kakao-local-v2",
+        }
+        with mock.patch.object(
+            apartment_leaders.kakao_station_distances,
+            "cached_station",
+            return_value=cached,
+        ):
+            row = apartment_leaders._base_metrics(
+                entity,
+                trades,
+                "2026-06",
+                "70-89",
+            )
+
+        self.assertEqual(row["nearestStationName"], "테스트역")
+        self.assertEqual(row["nearestStationDistance"], 420)
+        self.assertEqual(row["stationScore"], 90)
+        self.assertEqual(row["stationDistanceSource"], "kakao-local-v2")
+
+    def test_station_lower_bound_is_scored_for_regions_without_a_nearby_station(self):
+        entity = {
+            "name": "원거리단지",
+            "province": "경기도",
+            "district": "테스트군",
+            "legalDong": "가리",
+            "households": 100,
+            "approvedAt": "2020-01-01",
+            "dedupeKey": "far-station-test",
+        }
+        cached = {
+            "stationDistanceLowerBound": 20000,
+            "stationDistanceType": "straight_line_lower_bound",
+            "stationDistanceSource": "kakao-local-v2",
+        }
+        with mock.patch.object(
+            apartment_leaders.kakao_station_distances,
+            "cached_station",
+            return_value=cached,
+        ):
+            row = apartment_leaders._base_metrics(
+                entity,
+                [_trade("2026-06-15", 10000), _trade("2026-05-15", 9900)],
+                "2026-06",
+                "70-89",
+            )
+        row["areaBucket"] = "70-89"
+        apartment_leaders._score_metrics([row], "2026-06")
+
+        self.assertEqual(row["stationScore"], 10.0)
+        self.assertNotIn(
+            "지하철 거리 데이터가 없어 역 접근성은 점수에서 제외했습니다.",
+            apartment_leaders._warnings(row),
+        )
+        self.assertIn(
+            "반경 20km 안에 지하철역 없음",
+            apartment_leaders._reason_candidates(row, "residence"),
+        )
+
     def test_cancelled_direct_and_other_area_trades_are_excluded(self):
         transactions = [
             _trade("2026-06-15", 100000),
@@ -91,6 +366,28 @@ class ApartmentLeadersTest(unittest.TestCase):
         )
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["dealDate"], "2026-06-15")
+
+    def test_missing_leadership_explains_stale_latest_trade(self):
+        entity = {
+            "name": "희소거래단지",
+            "province": "서울특별시",
+            "district": "테스트구",
+            "legalDong": "가동",
+            "households": 500,
+            "approvedAt": "2020-01-01",
+            "dedupeKey": "sparse-leadership-test",
+        }
+        trades = [
+            _trade("2025-07-15", 100000),
+            _trade("2025-10-15", 105000),
+            _trade("2026-01-15", 110000),
+        ]
+        row = apartment_leaders._base_metrics(entity, trades, "2026-06", "70-89")
+        row["leadershipScore"] = None
+
+        self.assertEqual(row["latestTransactionMonth"], "2026-01")
+        self.assertIn("마지막 비교 거래가 2026년 1월", row["leadershipMissingReason"])
+        self.assertIn(row["leadershipMissingReason"], apartment_leaders._warnings(row))
 
     def test_full_ranking_is_region_and_area_scoped_and_excludes_one_trade(self):
         entities = [
@@ -177,6 +474,62 @@ class ApartmentLeadersTest(unittest.TestCase):
             "지하철 거리 데이터가 없어 역 접근성은 점수에서 제외했습니다.",
             overall[0]["warnings"],
         )
+
+    def test_growth_ranking_uses_six_month_return_only(self):
+        entities = [
+            {
+                "name": "장기상승단지",
+                "province": "서울특별시",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 1000,
+                "approvedAt": "2018-01-01",
+                "dedupeKey": "long-growth",
+            },
+            {
+                "name": "단기상승단지",
+                "province": "서울특별시",
+                "district": "테스트구",
+                "legalDong": "나동",
+                "households": 1000,
+                "approvedAt": "2018-01-01",
+                "dedupeKey": "short-growth",
+            },
+        ]
+        long_growth = _monthly_trades([
+            ("2025-06", 100000),
+            ("2025-07", 120000),
+            ("2025-08", 125000),
+            ("2025-09", 130000),
+            ("2025-12", 150000),
+            ("2026-03", 180000),
+            ("2026-06", 200000),
+        ])
+        short_growth = _monthly_trades([
+            ("2025-06", 100000),
+            ("2025-07", 105000),
+            ("2025-08", 108000),
+            ("2025-09", 109000),
+            ("2025-12", 110000),
+            ("2026-03", 140000),
+            ("2026-06", 150000),
+        ])
+
+        result = apartment_leaders.calculate_rankings_from_pairs(
+            "서울특별시",
+            "테스트구",
+            [(entities[0], long_growth), (entities[1], short_growth)],
+            area_bucket_value="70-89",
+            reference_month="2026-06",
+            limit=10,
+        )
+        growth = result["rankings"]["leadership"]
+
+        self.assertEqual([row["apartmentName"] for row in growth], ["단기상승단지", "장기상승단지"])
+        self.assertEqual(growth[0]["categoryLabel"], "상승률 좋은순")
+        self.assertEqual(growth[0]["score"], growth[0]["return6m"])
+        self.assertGreater(growth[0]["return6m"], growth[1]["return6m"])
+        self.assertEqual(growth[0]["transactionCount12m"], 6)
 
     def test_tie_breaker_prefers_confidence_then_transactions_then_price(self):
         rows = [

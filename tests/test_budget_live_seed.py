@@ -17,6 +17,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "city": "서울시",
             "district": "송파구",
             "legalDong": "가락동",
+            "address": "서울특별시 송파구 가락동 1",
             "households": 900,
             "approvedAt": "2000-01-01",
         }
@@ -46,12 +47,13 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "city": "성남시",
             "district": "성남분당구",
             "legalDong": "정자동",
+            "address": "경기도 성남시 분당구 정자동 1",
             "category": "성남분당구 아파트",
             "households": 1200,
             "approvedAt": "2023-01-01",
         }
 
-        def fake_price_band(name, region="", area_label="", lookback_months=None):
+        def fake_price_band(name, region="", area_label="", lookback_months=None, **_kwargs):
             if name != "분당테스트아파트":
                 return None
             return {
@@ -86,7 +88,10 @@ class BudgetLiveSeedTest(unittest.TestCase):
         self.assertEqual(result["eligibleCount"], 1)
         self.assertEqual(result["candidates"][0]["name"], "분당테스트아파트")
         self.assertEqual(result["candidates"][0]["region"], "성남분당구")
-        self.assertEqual(result["candidates"][0]["displayRegion"], "성남분당구 정자동")
+        self.assertEqual(
+            result["candidates"][0]["displayRegion"],
+            "경기도 성남시 분당구 정자동 1",
+        )
         self.assertEqual(result["candidates"][0]["areaLabel"], "전용 59~60㎡")
         self.assertEqual(result["candidates"][0]["displayAreaLabel"], "전용 59㎡")
         self.assertEqual(result["candidates"][0]["priceSource"], "molit")
@@ -98,6 +103,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "city": "성남시",
                 "district": "성남분당구",
                 "legalDong": "정자동",
+                "address": f"경기도 성남시 분당구 정자동 {index + 1}",
                 "households": 1200 + index,
                 "approvedAt": "2023-01-01",
             }
@@ -131,6 +137,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "city": "성남시",
                 "district": "성남분당구",
                 "legalDong": "정자동",
+                "address": f"경기도 성남시 분당구 정자동 {index + 1}",
                 "households": 1200 + index,
                 "approvedAt": "2023-01-01",
             }
@@ -163,6 +170,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "city": "성남시",
                 "district": "성남분당구",
                 "legalDong": "정자동",
+                "address": "경기도 성남시 분당구 정자동 1",
                 "households": 1200,
                 "approvedAt": "2023-01-01",
             },
@@ -172,6 +180,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "city": "성남시",
                 "district": "성남분당구",
                 "legalDong": "정자동",
+                "address": "경기도 성남시 분당구 정자동 2",
                 "households": 1200,
                 "approvedAt": "2023-01-01",
             },
@@ -180,6 +189,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "city": "성남시",
                 "district": "성남분당구",
                 "legalDong": "정자동",
+                "address": "경기도 성남시 분당구 정자동 3",
                 "households": 1200,
                 "approvedAt": "2023-01-01",
             },
@@ -246,6 +256,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "city": "서울시",
             "district": "금천구",
             "legalDong": "독산동",
+            "address": "서울특별시 금천구 독산동 1",
             "households": 800,
             "approvedAt": "2020-01-01",
         }
@@ -257,6 +268,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "midPriceEok": 7.8,
             "maxPriceEok": 8.2,
             "priceSource": "molit_csv",
+            "priceIdentityVerified": True,
             "transactionCount": 18,
             "latestDealDate": recent_deal_date,
         }
@@ -299,6 +311,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "midPriceEok": 8.32,
             "maxPriceEok": 8.98,
             "priceSource": "molit_csv",
+            "priceIdentityVerified": True,
             "transactionCount": 10,
             "latestDealDate": "2026-06-18",
         }
@@ -316,6 +329,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "maxPriceEok": 8.98,
             "latestDealPriceEok": 8.65,
             "priceSource": "molit_csv",
+            "priceIdentityVerified": True,
             "transactionCount": 10,
             "latestDealDate": "2026-06-18",
         }
@@ -331,6 +345,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "midPriceEok": 8.32,
             "maxPriceEok": 8.98,
             "priceSource": "molit_csv",
+            "priceIdentityVerified": True,
             "transactionCount": 10,
             "latestDealDate": "2025-06-18",
         }
@@ -413,6 +428,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "city": "서울시",
             "district": "송파구",
             "legalDong": "가락동",
+            "address": "서울특별시 송파구 가락동 1",
             "households": 900,
             "approvedAt": "2000-01-01",
         }
@@ -445,6 +461,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "city": "서울시",
             "district": "강동구",
             "legalDong": "길동",
+            "address": "서울특별시 강동구 길동 1",
             "households": 1092,
             "approvedAt": "1982-01-01",
         }
@@ -491,6 +508,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "city": "서울시",
                 "district": district,
                 "legalDong": "테스트동",
+                "address": f"서울특별시 {district} 테스트동 {index + 1}",
                 "households": 900 + index,
                 "approvedAt": "2000-01-01",
             }
@@ -547,6 +565,8 @@ class BudgetLiveSeedTest(unittest.TestCase):
                 "name": f"통합그랑메종{index}단지",
                 "city": "성남시",
                 "district": "성남중원구",
+                "legalDong": "금광동",
+                "address": f"경기도 성남시 중원구 금광동 {index}",
                 "households": 1100,
                 "approvedAt": "2023-01-01",
             }

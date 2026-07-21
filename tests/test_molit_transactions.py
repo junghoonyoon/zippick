@@ -18,6 +18,36 @@ import real_estate_search  # noqa: E402
 
 
 class MolitTransactionsTest(unittest.TestCase):
+    def test_generic_same_district_name_fails_closed_but_exact_entity_resolves(self):
+        columns = ["단지종류명", "대표단지명", "자치구", "법정동", "지번", "필지고유번호"]
+        rows = [
+            ["아파트", "현대아파트", "테스트구", "가동", "1", "9999910100100010000"],
+            ["아파트", "현대아파트", "테스트구", "나동", "2", "9999910200100020000"],
+        ]
+        entities = [
+            {"name": "현대", "aliases": ["현대아파트"], "district": "테스트구", "legalDong": "가동", "jibun": "1"},
+            {"name": "현대", "aliases": ["현대아파트"], "district": "테스트구", "legalDong": "나동", "jibun": "2"},
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "apartments.csv"
+            with path.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.writer(handle)
+                writer.writerow(columns)
+                writer.writerows(rows)
+            with mock.patch.object(molit_transactions.real_estate_search, "APARTMENT_CSV_PATHS", [path]), \
+                 mock.patch.object(molit_transactions.real_estate_search, "APARTMENT_MASTER", entities):
+                ambiguous = molit_transactions.source_rows("현대", "테스트구")
+                exact = molit_transactions.source_rows_for_entity(entities[0], "테스트구")
+
+        self.assertEqual(ambiguous, [])
+        self.assertEqual([(row["법정동"], row["지번"]) for row in exact], [("가동", "1")])
+
+    def test_entity_parcel_rejects_a_same_dong_different_jibun(self):
+        self.assertFalse(molit_transactions._row_matches_entity(
+            {"법정동": "이문동", "지번": "55"},
+            {"name": "현대", "legalDong": "이문동", "jibun": "54"},
+        ))
+
     def test_entity_without_address_still_matches_its_legal_dong(self):
         source_row = {
             "법정동": "개봉동",
@@ -60,6 +90,37 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(rows, [])
         exact.assert_called_once_with(entity, "테스트구")
 
+    def test_split_region_matches_exact_name_when_address_changed(self):
+        source = {
+            "필지고유번호": "4159012900700030011",
+            "대표단지명": "동탄역 롯데캐슬",
+            "법정동": "오산동",
+            "지번": "지구BL 3-11",
+        }
+        item = {
+            "apartment": "동탄역롯데캐슬",
+            "legalDong": "여울동",
+            "jibun": "1089",
+            "dealDate": "2026-06-04",
+            "dealAmountManwon": 222500,
+            "exclusiveArea": 84.7,
+            "floor": "20",
+        }
+        with mock.patch.object(
+            molit_transactions,
+            "_deal_months",
+            return_value=["202606"],
+        ):
+            rows = molit_transactions._matching_transactions(
+                [source],
+                "동탄역 롯데캐슬",
+                "",
+                12,
+                {("41597", "202606"): [item]},
+            )
+
+        self.assertEqual(rows, [item])
+
     def test_quarter_trade_stats_use_latest_trade_month_for_both_windows(self):
         transactions = [
             {"dealDate": "2026-07-09", "dealAmountEok": 10.8},
@@ -91,6 +152,29 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(stats["recent3AdjustedAveragePriceEok"], 8.89)
         self.assertEqual(stats["recent3AdjustedTradeCount"], 2)
         self.assertEqual(stats["recent3ExcludedTradeCount"], 1)
+
+    def test_previous_trade_comparison_skips_the_same_isolated_price(self):
+        transactions = [
+            {"dealDate": "2026-04-29", "dealAmountEok": 8.99},
+            {"dealDate": "2026-04-20", "dealAmountEok": 5.5},
+            {"dealDate": "2026-04-04", "dealAmountEok": 8.8},
+        ]
+
+        band = molit_transactions._price_band_payload(
+            "안암골벽산",
+            "동대문구",
+            "전용 59.94㎡",
+            12,
+            transactions,
+        )
+
+        # 원장의 직전 거래는 그대로 보존한다.
+        self.assertEqual(band["previousDealPriceEok"], 5.5)
+        self.assertEqual(band["previousDealDate"], "2026-04-20")
+        # 흐름 비교는 평균에서도 제외한 같은 이상거래를 건너뛴다.
+        self.assertEqual(band["comparisonDealPriceEok"], 8.8)
+        self.assertEqual(band["comparisonDealDate"], "2026-04-04")
+        self.assertEqual(band["comparisonDealSkippedOutlierCount"], 1)
 
     def test_half_year_trade_stats_compare_recent_and_previous_six_months(self):
         transactions = [
@@ -191,6 +275,43 @@ class MolitTransactionsTest(unittest.TestCase):
             result = molit_transactions.fetch_month("11710", "202607")
 
         self.assertEqual(result, items)
+
+    def test_fetch_month_reads_every_api_page(self):
+        def response_for(name, total_count):
+            response = mock.Mock()
+            response.text = f"""<?xml version="1.0" encoding="UTF-8"?>
+            <response>
+              <header><resultCode>000</resultCode><resultMsg>OK</resultMsg></header>
+              <body><totalCount>{total_count}</totalCount><items><item>
+                <aptNm>{name}</aptNm><dealAmount>100,000</dealAmount>
+                <dealYear>2026</dealYear><dealMonth>6</dealMonth><dealDay>1</dealDay>
+                <excluUseAr>84.8</excluUseAr><floor>10</floor>
+                <umdNm>테스트동</umdNm><jibun>1</jibun>
+              </item></items></body>
+            </response>"""
+            response.raise_for_status.return_value = None
+            return response
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(molit_transactions, "TRANSACTION_CACHE_DIR", Path(directory)), \
+             mock.patch.object(molit_transactions.config, "MOLIT_APARTMENT_TRADE_API_KEY", "test-key"), \
+             mock.patch.object(
+                 molit_transactions.requests,
+                 "get",
+                 side_effect=[
+                     response_for("첫페이지", 1001),
+                     response_for("둘째페이지", 1001),
+                 ],
+             ) as get:
+            molit_transactions._mark_success()
+            molit_transactions._MONTH_MEMORY_CACHE.clear()
+            result = molit_transactions.fetch_month("99999", "202606")
+
+        self.assertEqual([row["apartment"] for row in result], ["첫페이지", "둘째페이지"])
+        self.assertEqual(
+            [call.kwargs["params"]["pageNo"] for call in get.call_args_list],
+            [1, 2],
+        )
 
     def test_presale_month_uses_separate_endpoint_key_and_cache(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -433,10 +554,15 @@ class MolitTransactionsTest(unittest.TestCase):
             budget_candidates.molit_transactions,
             "price_band_for_apartment",
             return_value=live,
-        ) as lookup:
+        ) as lookup, mock.patch.object(
+            budget_candidates,
+            "_price_lookup_entity",
+            return_value={"name": row["name"], "legalDong": "산성동", "jibun": "1"},
+        ):
             budget_candidates._apply_live_price(row, preferred_min_area=59)
 
         self.assertEqual(lookup.call_args.kwargs["area_label"], "전용 59~60㎡")
+        self.assertEqual(lookup.call_args.kwargs["entity"]["legalDong"], "산성동")
         self.assertEqual(row["areaLabel"], "전용 59~60㎡")
         self.assertEqual(row["midPriceEok"], 8.5)
         self.assertEqual(row["minPriceEok"], 8.1)

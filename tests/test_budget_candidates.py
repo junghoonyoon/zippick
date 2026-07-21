@@ -348,6 +348,8 @@ class BudgetCandidatesTest(unittest.TestCase):
             {
                 "name": "서초테스트",
                 "region": "서초구",
+                "legalDong": "서초동",
+                "jibun": "1",
                 "midPriceEok": 4.8,
                 "averagePriceEok": 4.8,
                 "minPriceEok": 4.7,
@@ -374,6 +376,8 @@ class BudgetCandidatesTest(unittest.TestCase):
             {
                 "name": "강남테스트",
                 "region": "강남구",
+                "legalDong": "역삼동",
+                "jibun": "1",
                 "midPriceEok": 8.0,
                 "averagePriceEok": 8.0,
                 "minPriceEok": 7.8,
@@ -384,6 +388,8 @@ class BudgetCandidatesTest(unittest.TestCase):
             {
                 "name": "서초테스트",
                 "region": "서초구",
+                "legalDong": "서초동",
+                "jibun": "1",
                 "midPriceEok": 5.0,
                 "averagePriceEok": 5.0,
                 "minPriceEok": 4.8,
@@ -526,6 +532,7 @@ class BudgetCandidatesTest(unittest.TestCase):
                 "recentMedianPriceEok": 8.5,
                 "transactionCount": 8,
                 "priceSource": "molit",
+                "priceIdentityVerified": True,
             },
             {}, "", "", "", "", "stretch", "",
         )

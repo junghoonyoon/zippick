@@ -18,12 +18,16 @@
 후보 결과는 목록과 지도로 전환할 수 있다. 지도 핀에는 후보 순위와 대표 실거래가를
 표시하고, 핀을 누르면 단지 요약과 현재 매물 확인 링크를 보여준다.
 
-첫 화면의 `지역별 대장아파트 보기`에서는 시·군·구와 전용면적 구간을 고른 뒤
-종합·가격·상승 선도·실거주·신축·가성비 순위를 확인할 수 있다. 종합 점수는
-가격 수준 35%, 지역 대비 상승 선도력 25%, 세대수 대비 거래 유동성 20%,
-연식 10%, 역 접근성 10%를 같은 지역·같은 면적 구간 안의 백분위로 계산한다.
-최근 12개월 거래가 1건 이하인 단지는 일반 대장 1위에서 제외하며, 지하철
-거리처럼 원천에 없는 값은 임의로 채우지 않고 미반영 경고를 표시한다.
+첫 화면의 `지역별 대장아파트 보기`에서는 시·군·구를 고른 뒤
+대장·상승률 좋은순·실거주·신축·가성비 순위를 확인할 수 있다. 기본
+대장은 최근 12개월 정상 거래를 10㎡ 면적대로 묶고 거래가 가장 많은 대표 평형의
+중위가격을 `대표 평형 중위가 × (84 ÷ 대표면적)^0.75`로 보정한 값이 가장 높은
+단지로 정한다. 대표 평형 거래가 2건 미만인 단지는 기본 대장에서 제외한다.
+`상승률 좋은순`은 최근 12개월 거래가 5건 이상이고 최근 6개월 상승률을 계산할 수
+있는 단지만 상승률이 높은 순서로 상위 10개를 나열한다. 2위 이하 행을
+누르면 현재 화면에서 1위와 같은 상세 카드가 펼쳐져 항목별 점수를 비교할 수 있다. 지하철
+거리는 카카오 Local API로 아파트 주소를 좌표로 변환한 뒤 가장 가까운 역까지의
+직선거리를 일괄 수집해 반영하며, 아직 수집되지 않은 값은 미반영 경고로 표시한다.
 
 단지명을 바로 검색한 결과는 먼저 단지 전체 평형의 거래를 요약해 보여준다.
 카드에서 최근 거래가 확인된 전용면적을 선택하면 해당 평형만으로 예상 매수가,
@@ -76,8 +80,20 @@ http://127.0.0.1:8766
 PYTHONPATH=pipeline python3 pipeline/apartment_leaders.py \
   --sido 서울특별시 --sigungu 성동구 \
   --reference-month 2026-06 --area-bucket 70-89 \
-  --category overall --cache-only
+  --category price --cache-only
 ```
+
+카카오 REST 키를 설정한 뒤 지역별 지하철 거리를 수집하려면:
+
+```bash
+PYTHONPATH=pipeline python3 pipeline/kakao_station_distances.py \
+  --sido 서울특별시 --sigungu 성동구
+```
+
+전체 지역 수집은 `--all`, 호출 없이 대상 수만 확인하려면 `--dry-run`을 사용한다.
+주소 또는 역을 찾지 못했던 단지만 보완 수집할 때는 `--retry-unavailable`을 함께 사용한다.
+수집 결과는 `pipeline/cache/apartment_station_distances.json`에 저장되며, 이후
+대장지수 계산에서 자동으로 재사용된다.
 
 ## 설정
 
@@ -92,6 +108,7 @@ PYTHONPATH=pipeline python3 pipeline/apartment_leaders.py \
 선택:
 
 - `공공데이터키`: 국토교통부_아파트 매매 실거래가 상세 자료 API 인증키. 있으면 예산 후보의 가격대를 최근 실거래가로 우선 보강하고, 없거나 권한 오류가 나면 `data/apartment_price_bands.csv`의 보강 가격대로 동작한다.
+- `카카오REST키`: 대장아파트의 주소 좌표와 가장 가까운 지하철역 직선거리를 일괄 수집하는 서버용 REST API 키. 화면 코드에는 노출하지 않는다.
 - `카카오지도키`: 후보 결과의 지도 보기에 사용할 카카오 지도 JavaScript 키. 카카오 개발자 사이트에서 앱의 JavaScript 키를 발급하고 실제 접속 도메인을 JavaScript SDK 도메인으로 등록해야 한다.
 - `네이버API허브아이디`, `네이버API허브시크릿`: NAVER API HUB의 뉴스 검색 키. 설정하면 착공·개통·인가처럼 확인된 변화는 후보 카드 문장에 조합하고, 단지명이 제목에 직접 나온 소식, 같은 단지군 또는 법정동의 확정된 정비사업, 광역 교통·대규모 개발 소식만 카드 하단에 최대 2건 표시한다. 분양 홍보·생활행정·정치성 기사와 단순 업무협약은 제외한다. 기존 NAVER Developers 검색 키는 `네이버검색아이디`, `네이버검색시크릿`으로도 연결할 수 있다.
 
@@ -106,7 +123,8 @@ PYTHONPATH=pipeline python3 pipeline/apartment_leaders.py \
 | `pipeline/budget_candidates.py` | 예산·필수 조건 기준 후보 선정 |
 | `pipeline/policy_evaluator.py` | 사용자·후보별 현재 주택 정책 판정 |
 | `pipeline/news_catalysts.py` | 확정 단계 호재와 단지·생활권 관련 뉴스 선별·캐시 |
-| `pipeline/apartment_leaders.py` | 지역·면적 구간별 대장지수와 카테고리 순위 계산 |
+| `pipeline/apartment_leaders.py` | 지역별 일반 대장과 카테고리 순위 계산 |
+| `pipeline/kakao_station_distances.py` | 카카오 Local API 기반 아파트 좌표·최인접 지하철역 거리 수집 |
 | `data/apartment_leader_settings.json` | 대장지수 가중치·계산 버전·브랜드 점수 설정 |
 | `pipeline/search_server.py` | 로컬 API 서버 |
 | `data/housing_policy_snapshot.json` | 시행 중인 정책 기준과 공식 출처 스냅샷 |

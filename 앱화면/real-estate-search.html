@@ -27,7 +27,7 @@
     }
     button,input { font:inherit }
     .page { width:min(760px,calc(100% - 28px)); margin:0 auto; padding:64px 0 88px }
-    .app-header { display:flex; align-items:center; justify-content:space-between; gap:20px }
+    .app-header { display:flex; align-items:center; justify-content:flex-start; gap:16px }
     .apt-search-page-back {
       display:none; place-items:center; flex:0 0 42px; width:42px; height:42px; border:0; border-radius:50%;
       padding:0; background:transparent; color:#191f28; cursor:pointer;
@@ -35,13 +35,38 @@
     .apt-search-page-back:hover { background:#f2f4f6 }
     .apt-search-page-back:focus-visible { outline:3px solid rgba(49,130,246,.2); outline-offset:2px }
     .apt-search-page-back svg { width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round }
-    .apt-search { position:relative; flex:1; min-width:0; max-width:440px }
-    .apt-search form { display:flex; align-items:center; gap:9px; border:1px solid transparent; border-radius:999px; padding:0 16px; height:46px; background:#f2f4f6 }
+    .apt-search { position:relative; flex:1; min-width:0; max-width:440px; margin-left:auto }
+    .apt-search form { display:flex; align-items:center; gap:9px; border:1px solid rgba(0,0,0,.06); border-radius:999px; padding:0 16px; height:46px; background:#f2f4f6 }
     .apt-search form:focus-within { border-color:#3182f6; background:#fff }
     .apt-search-icon { flex:none; width:18px; height:18px; fill:none; stroke:#8b95a1; stroke-width:2; stroke-linecap:round }
     .apt-search input { flex:1; min-width:0; border:0; padding:0; background:transparent; color:#191f28; font-family:inherit; font-size:15px; font-weight:600; outline:none }
     .apt-search input::placeholder { color:#8b95a1 }
     .apt-search input::-webkit-search-cancel-button { -webkit-appearance:none }
+    .compare-cart {
+      position:relative; display:none; place-items:center; flex:0 0 auto; width:42px; height:42px;
+      border:1px solid #d8e0ea; border-radius:50%; padding:0; background:#fff; color:#475467;
+      cursor:pointer; box-shadow:0 4px 12px rgba(31,52,73,.06);
+    }
+    body.condition-stage-results:has(#conditionView:not([hidden])) .compare-cart:not([hidden]) { display:grid }
+    body.apt-search-mode .compare-cart { display:none !important }
+    .compare-cart:hover:not(:disabled) { border-color:#9fc8ff; background:#f5f9ff; color:#1267d8 }
+    .compare-cart:disabled { cursor:default }
+    .compare-cart:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:2px }
+    .compare-cart svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
+    .compare-cart-badge {
+      position:absolute; top:-4px; right:-4px; display:grid; place-items:center; min-width:19px; height:19px;
+      border:2px solid #f5f7f9; border-radius:999px; padding:0 4px; background:#3182f6; color:#fff;
+      font-size:11px; font-weight:900; line-height:1;
+    }
+    .comparison-limit-toast {
+      position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:150;
+      max-width:calc(100% - 32px); border-radius:12px; padding:12px 16px;
+      background:#333d4b; color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.18);
+      font-size:14px; font-weight:750; line-height:1.45; text-align:center;
+      opacity:0; pointer-events:none; transform:translate(-50%, 8px);
+      transition:opacity .18s ease,transform .18s ease;
+    }
+    .comparison-limit-toast.is-visible { opacity:1; transform:translate(-50%, 0) }
     .apt-search-suggest { display:grid; width:100%; overflow:hidden; border-top:1px solid #e5e8eb; background:#fff }
     .apt-search-suggest[hidden] { display:none }
     .apt-search-landing { display:grid; place-items:center; min-height:340px; padding:56px 20px; text-align:center }
@@ -54,9 +79,10 @@
     body.apt-search-mode .page { padding-top:24px }
     body.apt-search-mode .app-header { position:relative; z-index:80; align-items:center; flex-direction:row; gap:10px }
     body.apt-search-mode .brand { display:none }
+    body.apt-search-mode .app-header .leader-entry { display:none }
     body.apt-search-mode .apt-search-page-back { display:grid }
     body.apt-search-mode .apt-search { max-width:none }
-    body.apt-search-mode .apt-search form { height:50px; border-color:#e5e8eb; background:#f5f6f8 }
+    body.apt-search-mode .apt-search form { height:50px; border-color:rgba(0,0,0,.06); background:#f5f6f8 }
     body.apt-search-mode .apt-search form:focus-within { border-color:#3182f6; background:#fff; box-shadow:0 0 0 3px rgba(49,130,246,.1) }
     body.apt-search-mode .apt-result-back { display:none }
     body.apt-search-mode.apt-search-suggest-open .apt-search-landing:not([hidden]) { display:block; min-height:0; padding:20px 0 56px; text-align:left }
@@ -81,24 +107,26 @@
     .apt-result-card { display:grid; gap:6px; border:1px solid #e5e8eb; border-radius:16px; padding:16px; background:#fff }
     .apt-result-name { color:#191f28; font-size:17px; font-weight:850 }
     .apt-result-meta { color:#667085; font-size:13px; font-weight:600 }
-    .apt-area-picker {
-      display:grid; gap:11px; margin:18px 0 4px; border:1px solid #dbeafe;
-      border-radius:15px; padding:15px; background:#f7fbff;
+    .apt-area-picker { min-width:0; margin:12px 0 0 }
+    .apt-area-options {
+      display:flex; flex-wrap:nowrap; gap:8px; min-width:0; margin:0 -2px; overflow-x:auto;
+      padding:2px; scrollbar-width:none; overscroll-behavior-x:contain;
+      -webkit-overflow-scrolling:touch;
     }
-    .apt-area-picker-head { display:grid; gap:4px }
-    .apt-area-picker-title { margin:0; color:#1d4ed8; font-size:14px; font-weight:900; line-height:1.45 }
-    .apt-area-picker-copy { margin:0; color:#64748b; font-size:12px; font-weight:650; line-height:1.55; word-break:keep-all }
-    .apt-area-options { display:flex; flex-wrap:wrap; gap:7px }
+    .apt-area-options::-webkit-scrollbar { display:none }
     .apt-area-option {
-      min-height:36px; border:1px solid #cbd5e1; border-radius:999px; padding:0 13px;
-      background:#fff; color:#475569; font-size:13px; font-weight:850; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; min-height:42px;
+      border:1px solid #d8dee8; border-radius:999px; padding:0 16px; background:#fff;
+      color:#333d4b; font-size:14px; font-weight:850; line-height:1; white-space:nowrap; cursor:pointer;
+      box-shadow:0 2px 5px rgba(31,52,73,.05);
     }
-    .apt-area-option:hover { border-color:#93c5fd; color:#1d4ed8 }
+    .apt-area-option:hover { border-color:#b0b8c1; background:#f8fafc; color:#191f28 }
     .apt-area-option.is-selected {
-      border-color:#3182f6; background:#3182f6; color:#fff; box-shadow:0 4px 10px rgba(49,130,246,.18);
+      border-color:#20252b; background:#20252b; color:#fff; box-shadow:0 5px 12px rgba(25,31,40,.18);
     }
-    .apt-area-option:focus-visible { outline:3px solid rgba(49,130,246,.2); outline-offset:2px }
-    .apt-area-options-status { align-self:center; color:#94a3b8; font-size:12px; font-weight:700 }
+    .apt-area-option.is-selected:hover { border-color:#20252b; background:#20252b; color:#fff }
+    .apt-area-option:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:2px }
+    .apt-area-options-status { align-self:center; min-height:42px; color:#8b95a1; font-size:13px; font-weight:700; line-height:42px }
     .apt-area-change {
       display:inline-flex; align-items:center; justify-content:center; min-height:38px; margin-top:16px;
       gap:5px; border:1px solid #d8dee8; border-radius:10px; padding:0 12px 0 13px; background:#fff;
@@ -167,6 +195,7 @@
     .condition-stage-results .apt-result-list { gap:16px }
     .condition-stage-results .apt-result-card { display:block }
     .condition-stage-results .apt-affordability { display:block; margin:0; border:0; padding:0 }
+    .condition-stage-results .apt-result-card .candidate-price-comparison { margin-top:10px }
     .condition-stage-results .apt-affordability.is-loading { min-height:120px; padding:38px 0; font-size:15px; text-align:center }
     .condition-stage-results .apt-result-actions { display:block; margin-top:0 }
     .condition-stage-results .apt-result-naver { display:inline-flex }
@@ -192,8 +221,8 @@
     .apt-report-sheet .signal-report-lead { margin-top:4px }
     @media (max-width:720px) {
       .apt-search { max-width:none }
-      .apt-area-picker { margin-top:15px; padding:14px }
-      .apt-area-option { min-height:38px }
+      .apt-area-picker { margin-top:10px }
+      .apt-area-option { min-height:40px; padding:0 15px }
       .apt-area-sheet-title { font-size:28px }
       .apt-area-sheet-options { padding-right:28px; padding-left:28px }
       .apt-affordability-row { min-height:52px }
@@ -486,8 +515,7 @@
     .power-persistent .power-condition-shortcut:hover { background:#edf4ff }
     .power-persistent .power-condition-shortcut:focus-visible { outline:3px solid rgba(18,103,216,.2); outline-offset:1px }
     .power-persistent .power-condition-shortcut strong {
-      color:#1267d8; text-decoration-line:underline; text-decoration-color:#1267d8;
-      text-decoration-thickness:1.5px; text-underline-offset:3px; text-decoration-skip-ink:none;
+      color:#191f28; text-decoration:none;
     }
     .power-condition-change {
       display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; min-height:36px;
@@ -727,7 +755,6 @@
     .candidate-map-fab:focus-visible { outline:3px solid rgba(49,130,246,.28); outline-offset:4px }
     .candidate-map-fab svg { width:32px; height:32px; fill:currentColor }
     body.candidate-map-open .candidate-map-fab { display:none }
-    body:has(.compare-dock.show) .candidate-map-fab { bottom:max(106px,calc(env(safe-area-inset-bottom) + 98px)) }
     body.candidate-map-open { overflow:hidden; overscroll-behavior:none }
     .candidate-map-view[hidden] { display:none }
     .decision-list[hidden] { display:none !important }
@@ -1167,6 +1194,10 @@
     .spark-leader-search:hover { background:#eef6ff; color:#1267d8; text-decoration-thickness:2px }
     .spark-leader-search:focus-visible { outline:2px solid #3182f6; outline-offset:2px }
     .spark-basis { flex-basis:100%; color:#8b95a1; font-size:13px; font-weight:600 }
+    .spark-compare-error {
+      flex-basis:100%; border-radius:9px; padding:7px 9px; background:#fff4e5;
+      color:#8a5a00; font-size:12px; font-weight:750; line-height:1.45;
+    }
     .spark-leader-group { display:inline-flex; align-items:center; gap:5px; min-width:0 }
     .spark-self-leader {
       display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 9px;
@@ -1331,12 +1362,12 @@
       content:""; position:absolute; top:.62em; left:1px; width:4px; height:4px;
       border-radius:50%; background:#8e8e93;
     }
-    .insight-trend { margin:14px -10px 0; border:0; border-radius:0; padding:0; background:transparent }
+    .insight-trend { margin:14px 0 0; border:0; border-radius:0; padding:0; background:transparent }
     .insight-section-head { display:flex; align-items:center; justify-content:space-between; gap:12px }
     .insight-section-label { color:#68686d; font-size:12px; font-weight:800; line-height:1.35 }
     .insight-trend .trend-status { width:auto; padding-top:0 }
     .insight-trend .trend-status-copy span { font-size:12px }
-    .insight-trend .trend-toggle { font-size:14px }
+    .insight-trend .trend-toggle { font-size:15px; line-height:1.4 }
     .insight-trend .spark-summary { gap:8px; padding:8px 0 0 }
     .insight-trend .spark-summary-values { gap:4px 13px }
     .insight-trend .spark-summary-values strong,
@@ -1537,19 +1568,6 @@
     .result-back:hover { border-color:#9db8dd; color:#111 }
     .search-resume-pill { position:fixed; left:18px; bottom:18px; z-index:70; display:none; align-items:center; gap:8px; border:0; border-radius:999px; background:#111; color:#fff; font-weight:800; font-size:14px; padding:12px 18px; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.22) }
     .search-resume-pill.show { display:inline-flex }
-    .compare-dock {
-      display:none; position:fixed; z-index:70; left:50%; bottom:18px; transform:translateX(-50%);
-      width:min(700px,calc(100% - 28px)); align-items:center; justify-content:space-between; gap:16px;
-      border:1px solid rgba(255,255,255,.14); border-radius:18px; padding:13px 14px 13px 18px;
-      background:rgba(29,29,31,.96); color:#fff; box-shadow:0 18px 44px rgba(0,0,0,.22);
-      backdrop-filter:saturate(180%) blur(18px);
-    }
-    .compare-dock.show { display:flex }
-    .compare-dock-copy { min-width:0 }
-    .compare-dock-title { font-size:15px; font-weight:850; line-height:1.35 }
-    .compare-dock-names { overflow:hidden; margin-top:3px; color:#c7cad0; font-size:12px; line-height:1.35; text-overflow:ellipsis; white-space:nowrap }
-    .compare-open { flex:0 0 auto; min-height:42px; border:0; border-radius:12px; padding:0 16px; background:#fff; color:#1d1d1f; font-size:13px; font-weight:900; cursor:pointer }
-    .compare-open:disabled { opacity:.45; cursor:not-allowed }
     .comparison-overlay {
       display:none; position:fixed; z-index:100; inset:0; align-items:flex-end; justify-content:center;
       padding:28px; background:rgba(17,24,39,.46); backdrop-filter:blur(7px);
@@ -1560,11 +1578,10 @@
       border-radius:24px; padding:26px; background:#fff; box-shadow:0 30px 80px rgba(0,0,0,.24);
     }
     .comparison-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px }
-    .comparison-kicker { margin:0; color:var(--blue); font-size:13px; font-weight:850 }
-    .comparison-head h2 { margin:5px 0 0; font-size:27px; line-height:1.25 }
+    .comparison-head h2 { margin:0; font-size:27px; line-height:1.25 }
+    .comparison-mobile-subtitle { display:none; margin:5px 0 0; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.45 }
     .comparison-close { flex:0 0 auto; width:38px; height:38px; border:0; border-radius:50%; background:#f1f3f6; color:#555d6b; font-size:21px; cursor:pointer }
-    .comparison-summary { margin:16px 0 18px; border-radius:15px; padding:14px 16px; background:#eff6ff; color:#344054; font-size:15px; font-weight:650; line-height:1.65 }
-    .comparison-table-wrap { overflow-x:auto; border:1px solid #e4e8ef; border-radius:16px }
+    .comparison-table-wrap { overflow-x:auto; margin-top:18px; border:1px solid #e4e8ef; border-radius:16px }
     .comparison-table { width:100%; min-width:720px; border-collapse:collapse; table-layout:fixed }
     .comparison-table th,.comparison-table td { border-right:1px solid #e8ebf0; border-bottom:1px solid #e8ebf0; padding:14px 15px; vertical-align:top; text-align:left }
     .comparison-table tr:last-child th,.comparison-table tr:last-child td { border-bottom:0 }
@@ -1576,6 +1593,7 @@
     .comparison-name { display:block; font-size:16px; font-weight:900 }
     .comparison-sub { display:block; margin-top:4px; color:#667085; font-size:12px; font-weight:600 }
     .comparison-lines { display:grid; gap:6px; margin:0; padding:0; list-style:none }
+    .comparison-table td > strong + .comparison-lines { margin-top:6px }
     .comparison-lines li { position:relative; padding-left:12px }
     .comparison-lines li::before { content:""; position:absolute; left:0; top:.62em; width:4px; height:4px; border-radius:50%; background:#7aa7f2 }
     body.comparison-open { overflow:hidden }
@@ -1892,12 +1910,10 @@
       .multi-option-panel { position:static; width:100%; max-height:min(380px,65vh); margin-top:7px; box-shadow:none }
       .candidate-foot { align-items:flex-start; flex-direction:column }
       .candidate-primary-actions { align-items:center; gap:12px }
-      .compare-dock { bottom:10px; padding:11px 11px 11px 14px }
-      .compare-dock-names { max-width:190px }
-      .compare-open { padding:0 13px }
       .comparison-overlay { padding:0; align-items:flex-end }
       .comparison-panel { max-height:92vh; border-radius:22px 22px 0 0; padding:20px 16px 24px }
       .comparison-head h2 { font-size:23px }
+      .comparison-mobile-subtitle { display:block }
       .region-tabs { width:100% }
       .region-tab { flex:1 1 0; padding:8px 10px }
       .lookback-select-wrap { width:100%; max-width:180px }
@@ -2048,9 +2064,6 @@
     .source { font-size:16px }
     .foot { margin-top:32px; color:#717b89; font-size:14px; line-height:1.7 }
 
-    .compare-dock-title { font-size:17px }
-    .compare-dock-names { font-size:14px }
-    .compare-open { min-height:46px; font-size:14px }
     .comparison-kicker { font-size:15px }
     .comparison-head h2 { font-size:30px }
     .comparison-table thead th { font-size:17px }
@@ -2202,7 +2215,7 @@
       .policy-metric strong { font-size:16px }
       .candidate-verdict { margin-top:12px; padding:0; font-size:14px }
       .insight-summary { border-radius:16px; padding:14px }
-      .insight-trend { margin:12px -6px 0; border-radius:0; padding:0 }
+      .insight-trend { margin:12px 0 0; border-radius:0; padding:0 }
       .candidate-verdict b { display:block; margin:0 0 3px }
       .candidate-primary-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:12px }
       .candidate-primary-actions .naver-land-action,
@@ -2248,18 +2261,8 @@
       position:sticky; top:var(--app-header-sticky-height); z-index:20;
       width:100%; max-width:760px; margin:30px 0 0; padding:12px 0 10px; border:0; border-radius:0;
       background:#f5f7f9; box-shadow:none;
-      transition:transform .2s ease,opacity .16s ease; will-change:transform;
     }
-    #conditionView .condition-flow.is-scroll-hidden {
-      opacity:0; pointer-events:none; transform:translateY(calc(-100% - 4px));
-    }
-    .power-persistent,
-    .condition-stage-results .budget-enrichment-note { transition:top .2s ease }
     .power-persistent { top:calc(var(--app-header-sticky-height) + 68px) }
-    body.condition-flow-scroll-hidden .power-persistent,
-    body.condition-flow-scroll-hidden.condition-stage-results .budget-enrichment-note {
-      top:calc(var(--app-header-sticky-height) + 8px);
-    }
     #conditionView .condition-flow-list {
       display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
       align-items:center; width:100%; margin:0; padding:0;
@@ -2300,7 +2303,6 @@
     #conditionView .condition-flow-step.is-complete .condition-flow-number { background:#0878df }
     #conditionView .condition-flow-step.is-complete .condition-flow-number { font-size:15px; font-weight:900 }
     @media (prefers-reduced-motion:reduce) {
-      #conditionView .condition-flow,
       .power-persistent,
       .condition-stage-results .budget-enrichment-note { transition:none }
     }
@@ -2474,6 +2476,9 @@
       #conditionView .condition-flow-item { min-width:0 }
       #conditionView .condition-flow-step { gap:6px; min-height:36px; font-size:clamp(14px,4.3vw,18px) }
       #conditionView .condition-flow-number { width:24px; height:24px; font-size:14px }
+      body.condition-stage-results #conditionView .condition-flow {
+        position:relative; top:auto; z-index:auto; padding:7px 0 5px;
+      }
       .condition-stage-power .hero-copy h1 { margin-top:38px; font-size:clamp(33px,10vw,39px) }
       .condition-stage-power .hero-copy .lead { font-size:17px }
       .condition-stage-power .budget-panel { margin-top:28px }
@@ -2776,16 +2781,17 @@
       justify-self:stretch; width:100%; margin-top:14px; padding:0;
       background:transparent; color:#1d1d1f; font-size:15px; line-height:1.5;
     }
-    .condition-stage-results .candidate-primary-actions { display:flex; width:100%; gap:10px; margin-top:20px }
+    .condition-stage-results .candidate-primary-actions { display:flex; flex-wrap:nowrap; align-items:center; width:100%; gap:8px; margin-top:20px }
     .condition-stage-results .naver-land-action {
-      flex:1 1 100%; width:100%; min-height:46px; margin:0; border:0; border-radius:14px; padding:0 18px;
+      flex:1 1 auto; width:auto; min-width:0; min-height:46px; margin:0; border:0; border-radius:14px; padding:0 18px;
       background:#3182f6; color:#fff; font-size:14px; font-weight:800;
     }
     .condition-stage-results .naver-land-action:hover { background:#1b64da }
     .condition-stage-results .compare-toggle,
     .condition-stage-results .candidate-primary-actions .youtube-action {
-      min-height:46px !important; border:0 !important; border-radius:14px !important; padding:0 16px !important;
+      flex:0 0 auto; width:auto; max-width:100%; min-height:40px !important; border:0 !important; border-radius:12px !important; padding:0 12px !important;
       background:#f2f4f6 !important; color:#4e5968 !important;
+      font-size:13px; white-space:nowrap;
     }
     .condition-stage-results .compare-toggle[aria-pressed="true"] { background:#e8f3ff !important; color:#1b64da !important }
     .condition-stage-results .candidate-details { margin-top:20px; border:0; padding-top:16px }
@@ -2815,7 +2821,6 @@
         width:60px; height:60px;
       }
       .candidate-map-fab svg { width:30px; height:30px }
-      body:has(.compare-dock.show) .candidate-map-fab { bottom:max(98px,calc(env(safe-area-inset-bottom) + 90px)) }
       .candidate-map-view { grid-template-rows:auto auto minmax(0,1fr) }
       .candidate-map-header {
         grid-template-columns:40px minmax(0,1fr); grid-template-rows:auto; gap:8px;
@@ -2889,13 +2894,21 @@
       .condition-stage-results .candidate-verdict { padding:0 }
       .condition-stage-results .insight-summary { padding:16px }
       .condition-stage-results .insight-trend { padding:0 }
-      .condition-stage-results .candidate-primary-actions { grid-template-columns:1fr 1fr; gap:8px }
+      .condition-stage-results .candidate-primary-actions { display:flex; flex-wrap:nowrap; gap:8px }
       .condition-stage-results .candidate-primary-actions .naver-land-action {
-        grid-column:1 / -1; min-height:52px; border:0; border-radius:15px; background:#3182f6; box-shadow:none;
+        flex:1 1 auto; width:auto; min-width:0; min-height:48px; border:0; border-radius:15px; padding:0 12px;
+        background:#3182f6; box-shadow:none;
       }
       .condition-stage-results .compare-toggle,
-      .condition-stage-results .candidate-primary-actions .youtube-action { min-height:48px !important }
+      .condition-stage-results .candidate-primary-actions .youtube-action { width:auto; min-height:40px !important }
       .condition-stage-results .decision-grid { grid-template-columns:1fr }
+    }
+
+    @media (max-width:350px) {
+      .condition-stage-results .candidate-primary-actions { display:grid; grid-template-columns:minmax(0,1fr) }
+      .condition-stage-results .candidate-primary-actions .naver-land-action,
+      .condition-stage-results .compare-toggle,
+      .condition-stage-results .candidate-primary-actions .youtube-action { width:100% }
     }
 
     @media (max-width:420px) {
@@ -2912,7 +2925,8 @@
       .condition-stage-power .power-calculate,
       .condition-stage-preference .budget-field select,
       .condition-stage-preference .multi-picker summary,
-      .condition-stage-preference #budgetSubmit { transition:none }
+      .condition-stage-preference #budgetSubmit,
+      .comparison-limit-toast { transition:none }
       .condition-stage-power .power-calculate:active,
       .condition-stage-preference #budgetSubmit:active { transform:none }
     }
@@ -2929,33 +2943,50 @@
 
     /* 지역별 대장아파트 */
     .leader-entry {
-      display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px;
-      margin-top:24px; border:1px solid #b9d6fb; border-radius:14px; padding:0 18px;
-      background:#eff6ff; color:#1267d8; font-size:16px; font-weight:850; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; gap:16px; flex:0 0 auto; min-height:42px;
+      margin:0; border:0; border-radius:0; padding:0;
+      background:transparent; color:#191f28; font-size:17px; font-weight:850; white-space:nowrap; cursor:pointer;
     }
-    .leader-entry::after { content:"→"; font-size:18px }
-    .leader-entry:hover { border-color:#8dbdf9; background:#e6f1ff }
+    .leader-entry::before { content:""; width:1px; height:12px; background:#d8dde5 }
+    .leader-entry-label-short { display:none }
+    .leader-entry:hover { background:transparent; color:#1267d8 }
     .leader-entry:focus-visible,
-    .leader-back:focus-visible,
-    .leader-category-tab:focus-visible,
     .leader-detail-button:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:2px }
     .leader-view { padding-top:18px }
-    .leader-back {
-      display:inline-flex; align-items:center; gap:7px; min-height:40px; border:0; padding:0;
-      background:transparent; color:#4e5968; font-size:15px; font-weight:800; cursor:pointer;
-    }
-    .leader-back::before { content:"←"; font-size:18px }
     .leader-heading { margin:28px 0 24px }
-    .leader-kicker { margin:0 0 8px; color:#3182f6; font-size:15px; font-weight:900 }
+    .leader-reference-caption {
+      margin:0 0 8px; color:#8b95a1; font-size:13px; font-weight:750; line-height:1.4;
+    }
+    .leader-title-row { display:flex; align-items:center; gap:10px }
     .leader-heading h1 { margin:0; font-size:clamp(34px,6vw,48px); line-height:1.2 }
     .leader-heading .lead { margin-top:14px }
-    .leader-filter-card {
-      display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; border:1px solid #e1e6ec;
-      border-radius:22px; padding:24px; background:#fff; box-shadow:0 10px 28px rgba(31,52,73,.05);
+    .leader-price-help { position:relative; flex:0 0 auto }
+    .leader-price-help summary {
+      display:grid; place-items:center; width:26px; height:26px; border:1px solid #cbd5e1;
+      border-radius:50%; background:#fff; color:#64748b; font-size:14px; font-weight:900; cursor:pointer;
+      list-style:none;
     }
+    .leader-price-help summary::-webkit-details-marker { display:none }
+    .leader-price-help summary:hover { border-color:#93c5fd; color:#1267d8 }
+    .leader-price-help summary:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:2px }
+    .leader-price-help-popover {
+      position:absolute; z-index:30; top:36px; left:0; width:min(390px,calc(100vw - 44px));
+      border:1px solid #dbe3ed; border-radius:16px; padding:17px 18px; background:#fff;
+      color:#475467; box-shadow:0 16px 36px rgba(15,23,42,.14); font-size:13px; font-weight:650; line-height:1.6;
+    }
+    .leader-price-help-popover strong { display:block; margin-bottom:6px; color:#191f28; font-size:14px }
+    .leader-price-help-popover p { margin:0 }
+    .leader-price-help-popover p + p { margin-top:8px }
+    .leader-filter-card {
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 16px;
+      border:0; border-radius:0; padding:0; background:transparent; box-shadow:none;
+    }
+    .leader-filter-card[data-region-depth="3"] { grid-template-columns:repeat(3,minmax(0,1fr)) }
     .leader-field { display:grid; gap:8px; min-width:0 }
+    .leader-field[hidden] { display:none }
     .leader-field label { color:#4e5968; font-size:14px; font-weight:800 }
     .leader-field select {
+      appearance:auto; -webkit-appearance:menulist;
       width:100%; min-height:52px; border:1px solid #d8dee7; border-radius:13px; padding:0 38px 0 14px;
       background:#fff; color:#191f28; font-size:16px; font-weight:750; cursor:pointer;
     }
@@ -2965,22 +2996,7 @@
     }
     .leader-submit:hover { background:#1b64da }
     .leader-submit:disabled { background:#b9c7d8; cursor:wait }
-    .leader-meta {
-      display:flex; flex-wrap:wrap; gap:8px 14px; margin:18px 2px 0; color:#667085;
-      font-size:14px; font-weight:700; line-height:1.5;
-    }
-    .leader-meta span { display:inline-flex; align-items:center; gap:6px }
-    .leader-meta span::before { content:""; width:4px; height:4px; border-radius:50%; background:#b0b8c1 }
-    .leader-category-tabs {
-      display:flex; gap:7px; margin:26px -2px 18px; padding:2px; overflow-x:auto; scrollbar-width:none;
-    }
-    .leader-category-tabs::-webkit-scrollbar { display:none }
-    .leader-category-tab {
-      flex:0 0 auto; min-height:42px; border:1px solid #dfe4ea; border-radius:999px; padding:0 15px;
-      background:#fff; color:#667085; font-size:14px; font-weight:850; cursor:pointer; white-space:nowrap;
-    }
-    .leader-category-tab[aria-selected="true"] { border-color:#3182f6; background:#3182f6; color:#fff }
-    .leader-result { display:grid; gap:14px }
+    .leader-result { display:grid; gap:14px; margin-top:18px }
     .leader-loading,
     .leader-empty {
       display:grid; place-items:center; min-height:230px; border:1px solid #e4e8ed; border-radius:22px;
@@ -3000,9 +3016,18 @@
       display:grid; grid-template-columns:minmax(0,1fr) auto; gap:22px; padding:26px 26px 22px;
       background:linear-gradient(145deg,#f7fbff,#fff 62%);
     }
+    .leader-winner-collapsible > .leader-winner-top { cursor:pointer; list-style:none }
+    .leader-winner-collapsible > .leader-winner-top::-webkit-details-marker { display:none }
+    .leader-winner-collapsible > .leader-winner-top:hover { background:linear-gradient(145deg,#f1f8ff,#fff 62%) }
+    .leader-winner-collapsible > .leader-winner-top:focus-visible { outline:3px solid rgba(49,130,246,.24); outline-offset:-3px }
     .leader-rank-label { margin:0 0 9px; color:#3182f6; font-size:14px; font-weight:900 }
     .leader-winner-name { margin:0; color:#191f28; font-size:27px; font-weight:950; line-height:1.28; letter-spacing:-.025em }
     .leader-winner-sub { margin:8px 0 0; color:#667085; font-size:14px; font-weight:700 }
+    .leader-value-score {
+      display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 8px; margin:12px 0 0;
+      color:#667085; font-size:13px; font-weight:750; line-height:1.45;
+    }
+    .leader-value-score strong { color:#1267d8; font-size:17px; font-weight:950; letter-spacing:-.02em }
     .leader-score {
       display:grid; place-items:center; align-content:center; width:106px; height:106px; border-radius:50%;
       background:#191f28; color:#fff; text-align:center;
@@ -3015,6 +3040,21 @@
     }
     .leader-confidence[data-level="LOW"],
     .leader-confidence[data-level="CANDIDATE"] { background:#fff4df; color:#9a6500 }
+    .leader-adjustment-note { display:block; margin-top:10px; color:#667085; font-size:13px; font-weight:750; line-height:1.5 }
+    .leader-adjustment-note b { color:#344054; font-weight:900 }
+    .leader-winner-toggle-label {
+      display:inline-flex; align-items:center; gap:7px; margin-top:12px; color:#1267d8;
+      font-size:13px; font-weight:900;
+    }
+    .leader-winner-toggle-label-closed { display:none }
+    .leader-winner-toggle-icon {
+      display:grid; place-items:center; width:22px; height:22px; border-radius:50%;
+      background:#e8f3ff; color:#1267d8; font-size:16px; line-height:1;
+    }
+    .leader-winner-collapsible:not([open]) .leader-winner-toggle-label-open { display:none }
+    .leader-winner-collapsible:not([open]) .leader-winner-toggle-label-closed { display:inline }
+    .leader-winner-collapsible:not([open]) .leader-winner-toggle-icon::before { content:"+" }
+    .leader-winner-collapsible[open] .leader-winner-toggle-icon::before { content:"−" }
     .leader-winner-body { display:grid; gap:22px; padding:0 26px 26px }
     .leader-reasons { display:grid; gap:10px; margin:0; padding:18px 0 0; border-top:1px solid #edf0f4; list-style:none }
     .leader-reasons li { position:relative; padding-left:20px; color:#344054; font-size:15px; font-weight:750; line-height:1.55 }
@@ -3030,18 +3070,33 @@
       color:#1267d8; font-size:15px; font-weight:900; cursor:pointer;
     }
     .leader-list { overflow:hidden; border:1px solid #e1e6ec; border-radius:20px; background:#fff }
+    .leader-list-row + .leader-list-row { border-top:1px solid #edf0f4 }
+    .leader-list-row.is-expanded { padding-bottom:1px; background:#f8fbff }
     .leader-list-item {
       display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:13px; align-items:center;
-      width:100%; min-height:92px; border:0; border-top:1px solid #edf0f4; padding:17px 20px;
+      width:100%; min-height:92px; border:0; padding:17px 20px;
       background:#fff; color:inherit; text-align:left; cursor:pointer;
     }
-    .leader-list-item:first-child { border-top:0 }
     .leader-list-item:hover { background:#f8fbff }
+    .leader-list-item[aria-expanded="true"] { background:#f8fbff }
     .leader-list-rank { color:#8b95a1; font-size:19px; font-weight:900; text-align:center }
-    .leader-list-copy { min-width:0 }
-    .leader-list-name { overflow:hidden; color:#191f28; font-size:17px; font-weight:900; text-overflow:ellipsis; white-space:nowrap }
-    .leader-list-meta { margin-top:6px; color:#667085; font-size:13px; font-weight:700; line-height:1.4 }
+    .leader-list-copy { display:grid; gap:6px; min-width:0 }
+    .leader-list-name { display:block; overflow:hidden; color:#191f28; font-size:17px; font-weight:900; text-overflow:ellipsis; white-space:nowrap }
+    .leader-list-meta { display:block; color:#667085; font-size:13px; font-weight:700; line-height:1.4 }
+    .leader-list-area { color:#344054; font-weight:900; white-space:nowrap }
+    .leader-list-value-score { color:#1267d8; font-weight:900 }
+    .leader-list-end { display:flex; align-items:center; gap:12px }
     .leader-list-score { color:#191f28; font-size:20px; font-weight:950 }
+    .leader-list-expand-icon {
+      display:grid; place-items:center; width:28px; height:28px; border-radius:50%;
+      background:#f2f4f6; color:#667085; font-size:19px; font-weight:800; line-height:1;
+    }
+    .leader-list-item[aria-expanded="true"] .leader-list-expand-icon { background:#e8f3ff; color:#1267d8 }
+    .leader-expanded-card { margin:0 14px 14px; border-radius:20px; box-shadow:none }
+    .leader-expanded-card .leader-winner-top { padding:22px 22px 19px }
+    .leader-expanded-card .leader-winner-body { padding:0 22px 22px }
+    .leader-expanded-card .leader-score { width:96px; height:96px }
+    .leader-expanded-card .leader-score strong { font-size:25px }
     .leader-warning {
       border-radius:16px; padding:15px 17px; background:#fff8e8; color:#805b16;
       font-size:14px; font-weight:700; line-height:1.6;
@@ -3054,35 +3109,11 @@
     .leader-method-copy p { margin:0 }
 
     /* 계약 전 매물 검증 */
-    .hero-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px }
-    .hero-actions .leader-entry { margin-top:0 }
+    .hero-actions { display:none; flex-wrap:wrap; gap:10px; margin-top:24px }
+    .hero-actions:has(> :not([hidden])) { display:flex }
     .listing-report-history-entry {
       border:1px solid #d7deea; border-radius:14px; padding:13px 18px; background:#fff;
       color:#4e5968; font:inherit; font-size:14px; font-weight:900; cursor:pointer;
-    }
-    .listing-review-entry {
-      display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:50px;
-      border:0; border-radius:14px; padding:0 20px; background:#191f28; color:#fff;
-      font-size:16px; font-weight:900; cursor:pointer;
-    }
-    .listing-review-entry::after { content:"→"; font-size:18px }
-    .listing-review-entry:hover { background:#2b3440 }
-    .listing-review-trigger {
-      appearance:none; display:inline-flex; align-items:center; justify-content:center; min-height:46px;
-      border:0; border-radius:14px; padding:0 17px; background:#3182f6; color:#fff;
-      font:inherit; font-size:14px; font-weight:900; cursor:pointer;
-    }
-    .listing-review-trigger:hover { background:#1b64da }
-    .candidate-primary-actions .listing-review-trigger { flex:1 1 100%; width:100% }
-    .condition-stage-results .candidate-primary-actions .listing-review-trigger {
-      flex:1 1 100%; width:100%; min-height:52px; background:#3182f6;
-    }
-    .condition-stage-results .candidate-primary-actions .naver-land-action {
-      flex:1 1 auto; width:auto; min-height:46px; border:0; background:#f2f4f6;
-      color:#4e5968; box-shadow:none;
-    }
-    .condition-stage-results .candidate-primary-actions .naver-land-action:hover {
-      background:#e9edf2; color:#333d4b;
     }
     .listing-review-sheet { z-index:260 }
     .listing-review-sheet .result-info-panel {
@@ -3188,10 +3219,44 @@
     .listing-report-history button span { color:#3182f6; font-size:13px; font-weight:850 }
     .listing-report-history button small { grid-column:1 / -1; color:#8b95a1; font-size:12px; font-weight:650 }
     @media (max-width:620px) {
+      .app-header { display:flex; align-items:center; gap:12px }
+      .app-header .brand { flex:0 0 auto }
+      .app-header .leader-entry {
+        flex:0 0 auto; min-height:36px; padding:0; font-size:17px;
+      }
+      .app-header .leader-entry::before { display:block }
+      .app-header .leader-entry::after { display:none }
+      .app-header .apt-search {
+        flex:0 0 46px; width:46px; max-width:46px; margin-left:auto;
+      }
+      .app-header .apt-search form {
+        position:relative; justify-content:center; border:0; padding:0; background:transparent;
+      }
+      .app-header .apt-search form:focus-within { border:0; background:transparent }
+      .app-header .apt-search-icon { width:22px; height:22px; stroke:#191f28; stroke-width:2.4 }
+      .app-header .apt-search input { position:absolute; inset:0; opacity:0; cursor:pointer }
+      body.condition-stage-results .app-header:has(.compare-cart:not([hidden])) .apt-search {
+        width:46px;
+      }
+      body.apt-search-mode .app-header { display:flex }
+      body.apt-search-mode .app-header .apt-search { flex:1 1 auto; width:auto; max-width:none; margin-left:0 }
+      body.apt-search-mode .app-header .apt-search form {
+        justify-content:flex-start; border:1px solid rgba(0,0,0,.06); padding:0 14px; background:#f5f6f8;
+      }
+      body.apt-search-mode .app-header .apt-search form:focus-within {
+        border-color:#3182f6; background:#fff;
+      }
+      body.apt-search-mode .app-header .apt-search-icon { width:18px; height:18px; stroke:#8b95a1; stroke-width:2 }
+      body.apt-search-mode .app-header .apt-search input { position:static; opacity:1; cursor:text }
+      .leader-entry-label-long { display:none }
+      .leader-entry-label-short { display:inline }
       .leader-heading { margin-top:22px }
       .leader-heading h1 { font-size:35px }
-      .leader-filter-card { grid-template-columns:1fr; padding:20px }
-      .leader-submit { grid-column:1 }
+      .leader-title-row { align-items:flex-start; gap:8px }
+      .leader-price-help { margin-top:7px }
+      .leader-price-help-popover { right:0; left:auto }
+      .leader-filter-card { grid-template-columns:1fr; padding:0 }
+      .leader-submit { grid-column:1 / -1 }
       .leader-winner-top { grid-template-columns:minmax(0,1fr) 88px; gap:14px; padding:22px 20px 18px }
       .leader-score { width:88px; height:88px }
       .leader-score strong { font-size:24px }
@@ -3199,8 +3264,14 @@
       .leader-winner-body { padding:0 20px 22px }
       .leader-score-grid { grid-template-columns:1fr }
       .leader-list-item { grid-template-columns:30px minmax(0,1fr) auto; padding:16px 14px }
-      .hero-actions { display:grid }
-      .listing-review-entry,.listing-report-history-entry,.hero-actions .leader-entry { width:100% }
+      .leader-list-end { gap:7px }
+      .leader-list-score { font-size:18px }
+      .leader-list-expand-icon { width:26px; height:26px; font-size:17px }
+      .leader-expanded-card { margin:0 8px 10px }
+      .leader-expanded-card .leader-winner-top { padding:20px 18px 17px }
+      .leader-expanded-card .leader-winner-body { padding:0 18px 20px }
+      .hero-actions:has(> :not([hidden])) { display:grid }
+      .listing-report-history-entry { width:100% }
       .listing-review-content { padding:0 18px 28px }
       .listing-review-fields { grid-template-columns:1fr }
       .listing-review-field.full { grid-column:1 }
@@ -3232,6 +3303,10 @@
         <span class="brand-mark" aria-hidden="true"><span><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M9.5 19.5v-6h5v6"/></svg></span></span>
         <span class="brand-name">집픽</span>
       </button>
+      <button class="leader-entry" id="leaderEntry" type="button" aria-label="지역별 대장아파트 보기">
+        <span class="leader-entry-label-long">지역별 대장아파트</span>
+        <span class="leader-entry-label-short" aria-hidden="true">지역 대장</span>
+      </button>
       <button class="apt-search-page-back" id="aptSearchPageBack" type="button" aria-label="검색 화면 닫기">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
       </button>
@@ -3241,6 +3316,10 @@
           <input id="aptSearchInput" type="search" placeholder="아파트 단지명 바로 검색" aria-label="아파트 단지 검색" aria-expanded="false" aria-controls="aptSearchSuggest" autocomplete="off" enterkeyhint="search">
         </form>
       </div>
+      <button class="compare-cart" id="compareCart" type="button" aria-label="비교함이 비어 있어요" disabled hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.4L21 7H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>
+        <span class="compare-cart-badge" id="compareCartBadge" aria-hidden="true">0</span>
+      </button>
     </header>
 
     <div class="app-view apt-search-landing" id="aptSearchLanding" role="region" aria-label="아파트 단지 검색" hidden>
@@ -3306,43 +3385,46 @@
     </div>
 
     <div class="app-view leader-view" id="leaderView" role="region" aria-labelledby="leaderPageTitle" hidden>
-      <button class="leader-back" id="leaderBack" type="button">내 조건으로 돌아가기</button>
       <header class="leader-heading">
-        <p class="leader-kicker">지역별 대장아파트</p>
-        <h1 id="leaderPageTitle">같은 지역·같은 평형끼리<br>데이터로 비교했어요</h1>
-        <p class="lead">한 번의 최고가가 아니라 최근 12개월 실거래, 지역 대비 상승 흐름, 거래 회전율과 단지 조건을 함께 봅니다.</p>
+        <p class="leader-reference-caption" id="leaderReferenceCaption" hidden></p>
+        <div class="leader-title-row">
+          <h1 id="leaderPageTitle">우리 지역 대장아파트를 한눈에</h1>
+          <details class="leader-price-help">
+            <summary aria-label="대장아파트 가격 보정 기준 보기">i</summary>
+            <div class="leader-price-help-popover">
+              <strong>단지별 대표평형을 84㎡ 상당가로 비교해요</strong>
+              <p>최근 12개월 정상 거래를 10㎡ 면적대로 묶고, 거래가 가장 많은 면적대를 그 단지의 대표평형으로 사용합니다.</p>
+              <p><b>보정식</b> · 실거래가 × (84 ÷ 실제면적)<sup>0.75</sup></p>
+              <p>84㎡는 공통 표시 기준일 뿐 84㎡ 거래만 고르는 조건이 아닙니다. 대표평형 거래가 2건 미만인 단지는 기본 대장에서 제외합니다.</p>
+            </div>
+          </details>
+        </div>
+        <p class="lead">단지마다 가장 많이 거래된 대표평형을 같은 84㎡ 기준으로 환산해 비교해요.</p>
       </header>
       <form class="leader-filter-card" id="leaderForm">
         <div class="leader-field">
           <label for="leaderSido">시·도</label>
           <select id="leaderSido" required aria-label="시·도 선택"></select>
         </div>
-        <div class="leader-field">
-          <label for="leaderSigungu">시·군·구</label>
-          <select id="leaderSigungu" required aria-label="시·군·구 선택"></select>
+        <div class="leader-field" id="leaderCityField" hidden>
+          <label for="leaderCity">시·군</label>
+          <select id="leaderCity" aria-label="시·군 선택" disabled></select>
         </div>
-        <div class="leader-field">
-          <label for="leaderAreaBucket">전용면적 구간</label>
-          <select id="leaderAreaBucket" required aria-label="전용면적 구간 선택"></select>
+        <div class="leader-field" id="leaderSigunguField">
+          <label for="leaderSigungu" id="leaderSigunguLabel">시·군·구</label>
+          <select id="leaderSigungu" required aria-label="시·군·구 선택"></select>
         </div>
         <button class="leader-submit" id="leaderSubmit" type="submit">대장 순위 보기</button>
       </form>
-      <div class="leader-meta" id="leaderMeta" aria-live="polite"></div>
-      <div class="leader-category-tabs" id="leaderCategoryTabs" role="tablist" aria-label="대장 순위 카테고리">
-        <button class="leader-category-tab" type="button" role="tab" data-leader-category="overall" aria-selected="true">종합</button>
-        <button class="leader-category-tab" type="button" role="tab" data-leader-category="price" aria-selected="false">가격</button>
-        <button class="leader-category-tab" type="button" role="tab" data-leader-category="leadership" aria-selected="false">상승 선도</button>
-        <button class="leader-category-tab" type="button" role="tab" data-leader-category="residence" aria-selected="false">실거주</button>
-        <button class="leader-category-tab" type="button" role="tab" data-leader-category="new_build" aria-selected="false">신축</button>
-        <button class="leader-category-tab" type="button" role="tab" data-leader-category="value" aria-selected="false">가성비</button>
-      </div>
       <section class="leader-result" id="leaderResult" aria-live="polite"></section>
       <details class="leader-method">
         <summary>어떻게 대장을 고르나요?</summary>
         <div class="leader-method-copy">
-          <p>종합 점수는 가격 35%, 지역 대비 상승 선도력 25%, 세대수 대비 거래 회전율 20%, 연식 10%, 역 접근성 10%로 계산합니다.</p>
-          <p>각 항목은 같은 시·군·구와 같은 전용면적 구간 안에서 백분위로 비교합니다. 최근 12개월 거래가 2건 미만인 단지는 일반 대장 1위가 될 수 없습니다.</p>
-          <p>현재 원천에 없는 지하철 거리와 브랜드는 임의 값을 넣지 않고 점수에서 제외하며, 화면에 데이터 부족을 표시합니다.</p>
+          <p>최근 12개월의 전용 50㎡ 이상~200㎡ 미만 정상 거래를 10㎡ 면적대로 묶고, 거래가 가장 많은 면적대를 단지의 대표평형으로 정합니다.</p>
+          <p>대표평형 거래에 <b>(84 ÷ 실제면적)<sup>0.75</sup></b>를 적용해 84㎡ 상당가로 환산합니다. 84㎡라는 목표값은 순위를 바꾸지 않는 공통 표시 기준입니다.</p>
+          <p>대표평형 거래가 2건 미만이면 기본 대장에서 제외하고, 거래 수가 같으면 84㎡에 가까운 면적대를 사용합니다.</p>
+          <p>상승률 좋은순은 거래가 5건 이상이고 최근 6개월 상승률을 계산할 수 있는 단지만 상위 10개를 보여줍니다.</p>
+          <p>수집되지 않은 값은 임의로 채우지 않고 점수에서 제외하며, 화면에 데이터 부족을 표시합니다.</p>
         </div>
       </details>
     </div>
@@ -3352,9 +3434,8 @@
         <h1>내 예산으로 살 수 있는 집,<br>한 번에 찾기</h1>
         <p class="lead">구매 가능한 금액부터 조건에 맞는 매물 후보까지 한 번에 계산하고 비교해보세요.</p>
         <div class="hero-actions">
-          <button class="listing-review-entry" id="listingReviewEntry" type="button">보고 온 매물 검증하기</button>
-          <button class="listing-report-history-entry" id="listingReportHistoryEntry" type="button">내 검증 리포트</button>
-          <button class="leader-entry" id="leaderEntry" type="button">지역별 대장아파트 보기</button>
+          <!-- 내 검증 리포트는 완성도를 높인 뒤 재노출한다. -->
+          <button class="listing-report-history-entry" id="listingReportHistoryEntry" type="button" hidden>내 검증 리포트</button>
         </div>
       </div>
 
@@ -3723,20 +3804,14 @@
     <section id="result" class="result"></section>
   </main>
 
-  <aside class="compare-dock" id="compareDock" aria-live="polite">
-    <div class="compare-dock-copy">
-      <div class="compare-dock-title" id="compareDockTitle">후보를 비교함에 담았어요</div>
-      <div class="compare-dock-names" id="compareDockNames"></div>
-    </div>
-    <button class="compare-open" id="compareOpen" type="button" disabled>한 곳 더 선택</button>
-  </aside>
+  <div class="comparison-limit-toast" id="comparisonLimitToast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <div class="comparison-overlay" id="comparisonOverlay" aria-hidden="true">
     <section class="comparison-panel" role="dialog" aria-modal="true" aria-labelledby="comparisonTitle">
       <div class="comparison-head">
         <div>
-          <p class="comparison-kicker">내 후보 비교</p>
-          <h2 id="comparisonTitle">어떤 차이가 있는지 볼게요</h2>
+          <h2 id="comparisonTitle">내 후보 비교</h2>
+          <p class="comparison-mobile-subtitle">웹으로 보는 게 좋아요</p>
         </div>
         <button class="comparison-close" id="comparisonClose" type="button" aria-label="비교 화면 닫기">×</button>
       </div>
@@ -3758,22 +3833,21 @@
     const regionView = $("regionView");
     const leaderView = $("leaderView");
     const leaderEntry = $("leaderEntry");
-    const leaderBack = $("leaderBack");
+    const leaderEntryLabelLong = leaderEntry.querySelector(".leader-entry-label-long");
+    const leaderEntryLabelShort = leaderEntry.querySelector(".leader-entry-label-short");
     const leaderForm = $("leaderForm");
     const leaderSido = $("leaderSido");
+    const leaderCityField = $("leaderCityField");
+    const leaderCity = $("leaderCity");
+    const leaderSigunguField = $("leaderSigunguField");
+    const leaderSigunguLabel = $("leaderSigunguLabel");
     const leaderSigungu = $("leaderSigungu");
-    const leaderAreaBucket = $("leaderAreaBucket");
     const leaderSubmit = $("leaderSubmit");
-    const leaderMeta = $("leaderMeta");
-    const leaderCategoryTabs = $("leaderCategoryTabs");
+    const leaderReferenceCaption = $("leaderReferenceCaption");
     const leaderResult = $("leaderResult");
     const viewTabs = [...document.querySelectorAll("[data-view]")];
     const conditionFlow = $("conditionFlow");
     const conditionFlowButtons = [...conditionFlow.querySelectorAll("[data-condition-stage]")];
-    let conditionFlowLastScrollY = Math.max(window.scrollY, 0);
-    let conditionFlowScrollDirection = 0;
-    let conditionFlowScrollTravel = 0;
-    let conditionFlowScrollFrame = 0;
     const budgetPanel = document.querySelector("#conditionView > .budget-panel");
     const purchasePowerStep = $("purchasePowerStep");
     const conditionResultsPanel = $("conditionResultsPanel");
@@ -3852,10 +3926,9 @@
     const conditionItemEditApply = $("conditionItemEditApply");
     const budgetSubmit = $("budgetSubmit");
     const budgetResultEl = $("budgetResult");
-    const compareDock = $("compareDock");
-    const compareDockTitle = $("compareDockTitle");
-    const compareDockNames = $("compareDockNames");
-    const compareOpen = $("compareOpen");
+    const compareCart = $("compareCart");
+    const compareCartBadge = $("compareCartBadge");
+    const comparisonLimitToast = $("comparisonLimitToast");
     const comparisonOverlay = $("comparisonOverlay");
     const comparisonClose = $("comparisonClose");
     const comparisonContent = $("comparisonContent");
@@ -3863,15 +3936,15 @@
     const listingReviewTitle = $("listingReviewTitle");
     const listingReviewMeta = $("listingReviewMeta");
     const listingReviewContent = $("listingReviewContent");
-    const listingReviewEntry = $("listingReviewEntry");
     const listingReportHistoryEntry = $("listingReportHistoryEntry");
     let currentListingReviewTarget = null;
     let currentListingReview = null;
     let currentListingReviewSaved = null;
     let progressTimer = null;
     let budgetLoadingTimer = null;
-    let budgetBackgroundRefreshController = null;
     let budgetSearchController = null;
+    let comparisonLimitToastTimer = null;
+    let comparisonLimitToastFrame = null;
     let chipTabsData = [];
     let activeChipTab = "all";
     let activeRegion = "seoul";
@@ -3879,23 +3952,26 @@
     let hasExplicitRegionScope = false;
     let activeLookbackMonths = 12;
     let leaderRegions = [];
-    let activeLeaderCategory = "overall";
+    let activeLeaderCategory = "price";
     let leaderRegionsLoaded = false;
     let leaderRequestController = null;
     let currentLeaderPayload = null;
+    let leaderWinnerCollapsed = false;
+    const expandedLeaderRanks = new Set();
     const purchasePowerStorageKey = "realEstateSearch.purchasePower.v1";
     const listingReportOwnerStorageKey = "realEstateSearch.listingReportOwner.v1";
     let areaDisplayUnit = "sqm";
     // 점수 공식 버전. pipeline/momentum_signals.py의 SCORE_FORMULA_VERSION과 맞춘다.
     // 브라우저 캐시에 구버전 공식으로 계산된 결과가 남아 재사용되는 것을 막는다.
-    const SIGNAL_FORMULA_VERSION = 13;
+    const SIGNAL_FORMULA_VERSION = 17;
     const MARKET_INSIGHT_TIMEOUT_MS = 12000;
     // v10부터 참고 가격·집계형 행까지 인접 지역 탐색 신호로 사용한다.
     // 이전 응답은 같은 조건에서도 추천이 비어 있을 수 있어 재사용하지 않는다.
     // v12부터 지도 지오코딩에 쓰는 원주소(mapAddress)를 포함한다.
     // v16부터 광역 지역도 분산 선별한 실거래 후보를 포함한다.
     // v17부터 화면에 보이는 모든 구매 시나리오에 +5% 상한을 적용한다.
-    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v19.f${SIGNAL_FORMULA_VERSION}:`;
+    const CANDIDATE_RESULT_SCHEMA_VERSION = 3;
+    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v21.f${SIGNAL_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
     try {
       Object.keys(localStorage)
@@ -4129,11 +4205,15 @@
       return Number(data?.nearbyRegionsVersion || 0) >= 3 && Array.isArray(data?.nearbyRegions);
     }
 
+    function budgetPayloadUsesCurrentCandidateSchema(data) {
+      return Number(data?.candidateResultSchemaVersion || 0) >= CANDIDATE_RESULT_SCHEMA_VERSION;
+    }
+
     function readBudgetBrowserCache(url) {
       const key = `${budgetBrowserCachePrefix}${url}`;
       try {
         const entry = JSON.parse(localStorage.getItem(key) || "null");
-        if (!entry || typeof entry !== "object" || !entry.data || !budgetPayloadSupportsNearbyRegions(entry.data) || !budgetPayloadUsesCurrentSignalFormula(entry.data) || Date.now() - Number(entry.savedAt || 0) > budgetBrowserCacheTtlMs) {
+        if (!entry || typeof entry !== "object" || !entry.data || !budgetPayloadSupportsNearbyRegions(entry.data) || !budgetPayloadUsesCurrentCandidateSchema(entry.data) || !budgetPayloadUsesCurrentSignalFormula(entry.data) || Date.now() - Number(entry.savedAt || 0) > budgetBrowserCacheTtlMs) {
           localStorage.removeItem(key);
           return null;
         }
@@ -4144,7 +4224,7 @@
     }
     function writeBudgetBrowserCache(url, data) {
       // 서버가 정상적으로 저장한 결과만 브라우저에도 보관한다.
-      if (!data || !data.cacheSavedAt || data.browserCacheHit || !budgetPayloadSupportsNearbyRegions(data) || !budgetPayloadUsesCurrentSignalFormula(data)) return;
+      if (!data || !data.cacheSavedAt || data.browserCacheHit || !budgetPayloadSupportsNearbyRegions(data) || !budgetPayloadUsesCurrentCandidateSchema(data) || !budgetPayloadUsesCurrentSignalFormula(data)) return;
       try {
         localStorage.setItem(`${budgetBrowserCachePrefix}${url}`, JSON.stringify({
           savedAt: Date.now(),
@@ -4200,7 +4280,7 @@
         renderPreferenceSinglePickers();
         savePurchasePowerForm();
         showPolicyExcludedCandidates = Boolean(saved.showPolicyExcludedCandidates);
-        includeAdditionalFundingCandidates = saved.includeAdditionalFundingCandidates === true;
+        includeAdditionalFundingCandidates = saved.includeAdditionalFundingCandidates !== false;
         budgetSort = saved.budgetSort || "budget_near";
         candidateViewMode = saved.candidateViewMode === "map" ? "map" : "list";
         candidateVisibleCount = Math.max(
@@ -4219,7 +4299,7 @@
     let currentBudgetData = null;
     let currentPurchasePower = null;
     let showPolicyExcludedCandidates = false;
-    let includeAdditionalFundingCandidates = false;
+    let includeAdditionalFundingCandidates = true;
     let budgetSort = "budget_near";
     let candidateViewMode = "list";
     const CANDIDATE_PAGE_SIZE = 10;
@@ -4683,9 +4763,86 @@
       return Number.isFinite(score) ? score.toFixed(1) : "-";
     }
 
+    function leaderPriceText(value) {
+      const manwon = Number(value);
+      if (!Number.isFinite(manwon)) return "-";
+      const eok = manwon / 10000;
+      return `${eok.toFixed(1).replace(/\.0$/, "")}억`;
+    }
+
+    function leaderAreaText(value) {
+      const area = Number(value);
+      if (!Number.isFinite(area)) return "-";
+      return area.toFixed(1).replace(/\.0$/, "");
+    }
+
+    function leaderAdjustmentHtml(item) {
+      const area = Number(item.leaderRepresentativeArea);
+      const actualPrice = Number(item.leaderRepresentativeMedianPrice12m);
+      const target = Number(item.leaderPriceAdjustmentTargetArea);
+      if (!Number.isFinite(area) || !Number.isFinite(actualPrice) || !Number.isFinite(target)) return "";
+      return `<span class="leader-adjustment-note"><b>실거래 전용 ${esc(leaderAreaText(area))}㎡</b> 중위가 ${esc(leaderPriceText(actualPrice))} → ${esc(leaderAreaText(target))}㎡ 보정</span>`;
+    }
+
+    function leaderGrowthText(value) {
+      const rate = Number(value);
+      if (!Number.isFinite(rate)) return "-";
+      return `${rate > 0 ? "+" : ""}${rate.toFixed(1)}%`;
+    }
+
+    function leaderValueScoreHtml(item, payload, { compact = false } = {}) {
+      if (payload.category !== "value") return "";
+      const score = leaderScoreText(item.score);
+      if (score === "-") return "";
+      if (compact) return `<span class="leader-list-value-score">가성비 ${esc(score)}점</span> · `;
+      return `<p class="leader-value-score"><span>가성비 점수</span><strong>${esc(score)}점</strong></p>`;
+    }
+
+    const GYEONGGI_DISTRICT_CITY_PREFIXES = ["고양", "부천", "성남", "수원", "안산", "안양", "용인"];
+
+    function gyeonggiRegionParts(value) {
+      const original = String(value || "");
+      const cityPrefix = GYEONGGI_DISTRICT_CITY_PREFIXES.find(prefix => original.startsWith(prefix) && original.endsWith("구"));
+      if (!cityPrefix) return { city:original, district:"", value:original };
+      return {
+        city:`${cityPrefix}시`,
+        district:original.slice(cityPrefix.length),
+        value:original,
+      };
+    }
+
+    function syncLeaderSubdistricts(preferred = "") {
+      const selected = leaderRegions.find(region => region.sido === "경기도");
+      const rows = (selected?.sigungu || [])
+        .map(gyeonggiRegionParts)
+        .filter(row => row.city === leaderCity.value);
+      leaderSigungu.innerHTML = rows.map(row => `<option value="${esc(row.value)}">${esc(row.district || "구 없음")}</option>`).join("");
+      const next = rows.some(row => row.value === preferred) ? preferred : rows[0]?.value;
+      if (next) leaderSigungu.value = next;
+      leaderSigungu.disabled = rows.length <= 1 && !rows[0]?.district;
+    }
+
     function syncLeaderDistricts(preferred = "") {
       const selected = leaderRegions.find(region => region.sido === leaderSido.value);
       const districts = selected?.sigungu || [];
+      const isGyeonggi = leaderSido.value === "경기도";
+      leaderForm.dataset.regionDepth = isGyeonggi ? "3" : "2";
+      leaderCityField.hidden = !isGyeonggi;
+      leaderCity.disabled = !isGyeonggi;
+      leaderCity.required = isGyeonggi;
+      leaderSigunguLabel.textContent = isGyeonggi ? "구" : "시·군·구";
+      leaderSigungu.setAttribute("aria-label", isGyeonggi ? "구 선택" : "시·군·구 선택");
+      if (isGyeonggi) {
+        const rows = districts.map(gyeonggiRegionParts);
+        const cities = [...new Set(rows.map(row => row.city))];
+        leaderCity.innerHTML = cities.map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join("");
+        const preferredCity = rows.find(row => row.value === preferred)?.city;
+        const nextCity = preferredCity && cities.includes(preferredCity) ? preferredCity : cities[0];
+        if (nextCity) leaderCity.value = nextCity;
+        syncLeaderSubdistricts(preferred);
+        return;
+      }
+      leaderSigungu.disabled = false;
       leaderSigungu.innerHTML = districts.map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join("");
       const next = districts.includes(preferred) ? preferred : (districts.includes("성동구") ? "성동구" : districts[0]);
       if (next) leaderSigungu.value = next;
@@ -4706,8 +4863,6 @@
           : leaderRegions[0]?.sido;
         if (defaultSido) leaderSido.value = defaultSido;
         syncLeaderDistricts();
-        leaderAreaBucket.innerHTML = (payload.areaBuckets || []).map(bucket => `<option value="${esc(bucket.id)}">${esc(bucket.label)}</option>`).join("");
-        leaderAreaBucket.value = payload.defaultAreaBucket || "70-89";
         leaderRegionsLoaded = true;
       } catch (error) {
         leaderResult.innerHTML = `<div class="leader-empty">${esc(error.message || "지역 목록을 불러오지 못했어요.")}</div>`;
@@ -4718,34 +4873,109 @@
     }
 
     function leaderComponentHtml(item) {
+      const stationDistance = item.nearestStationDistance === null || item.nearestStationDistance === undefined || item.nearestStationDistance === ""
+        ? null
+        : Number(item.nearestStationDistance);
+      const stationLowerBound = item.stationDistanceLowerBound === null || item.stationDistanceLowerBound === undefined || item.stationDistanceLowerBound === ""
+        ? null
+        : Number(item.stationDistanceLowerBound);
+      const stationContext = Number.isFinite(stationDistance)
+        ? `${item.nearestStationName || "가까운 역"} · 직선 ${Math.round(stationDistance).toLocaleString("ko-KR")}m`
+        : Number.isFinite(stationLowerBound)
+          ? `반경 ${(stationLowerBound / 1000).toLocaleString("ko-KR")}km 내 역 없음`
+          : "";
       const components = [
-        ["가격", item.scores?.price],
-        ["상승 선도", item.scores?.leadership],
-        ["거래 유동성", item.scores?.liquidity],
-        ["연식", item.scores?.age],
-        ["역 접근성", item.scores?.station],
-        ["단지 규모", item.scores?.household],
+        [`${item.leaderPriceBasisLabel || "대표 평형 84㎡ 보정가"} 가격 백분위`, item.scores?.price, "미반영"],
+        ["상승률 순위", item.scores?.leadership, "비교 거래 부족"],
+        ["거래 유동성", item.scores?.liquidity, "미반영"],
+        ["연식", item.scores?.age, "준공일 없음"],
+        [`역 접근성${stationContext ? ` · ${stationContext}` : ""}`, item.scores?.station, "거리 미수집"],
+        ["단지 규모", item.scores?.household, "세대수 없음"],
       ];
-      return components.map(([label, raw]) => {
+      return components.map(([label, raw, unavailableLabel]) => {
         const value = Number(raw);
         const available = raw !== null && raw !== undefined && raw !== "" && Number.isFinite(value);
         return `<div class="leader-component">
           <span class="leader-component-label">${esc(label)}</span>
-          <strong class="leader-component-value">${available ? esc(value.toFixed(1)) : "미반영"}</strong>
+          <strong class="leader-component-value">${available ? esc(value.toFixed(1)) : esc(unavailableLabel)}</strong>
           <span class="leader-component-track" aria-hidden="true"><i style="width:${available ? Math.max(0, Math.min(value, 100)) : 0}%"></i></span>
         </div>`;
       }).join("");
     }
 
+    function leaderRankPresentation(item, payload) {
+      const rank = Number(item.rank || 1);
+      const isPriceLeader = payload.category === "price";
+      const isGrowthRanking = payload.category === "leadership";
+      const isValueRanking = payload.category === "value";
+      const areaTarget = leaderAreaText(payload.areaTarget || item.leaderPriceAdjustmentTargetArea || 84);
+      const scoreTitle = isPriceLeader
+        ? `${areaTarget}㎡ 보정가`
+        : isGrowthRanking
+          ? "6개월 상승률"
+          : isValueRanking
+            ? `${areaTarget}㎡ 보정가`
+            : `${payload.categoryLabel || ""} 점수`;
+      const metric = isPriceLeader
+        ? leaderPriceText(item.leaderPrice12m)
+        : isGrowthRanking
+          ? leaderGrowthText(item.return6m)
+          : isValueRanking
+            ? leaderPriceText(item.leaderPrice12m)
+            : leaderScoreText(item.score);
+      const displayName = item.marketLeaderName || item.apartmentName;
+      const location = displayName !== item.apartmentName
+        ? `${item.apartmentName} · ${item.dong || item.address || ""}`
+        : (item.dong || item.address || "");
+      const region = item.sigungu || payload.region?.sigungu || "";
+      const rankLabel = isPriceLeader
+        ? (rank === 1 ? `${region} 대장아파트` : `${region} 대장 ${rank}위`)
+        : isGrowthRanking
+          ? `${region} 6개월 상승률 ${rank}위`
+          : (rank === 1
+              ? `${region} ${payload.categoryLabel || ""} 대장`
+              : `${region} ${payload.categoryLabel || ""} ${rank}위`);
+      return { rank, isPriceLeader, isGrowthRanking, isValueRanking, scoreTitle, metric, displayName, location, rankLabel };
+    }
+
+    function leaderRankCardHtml(item, payload, { expanded = false, collapsible = false, collapsed = false } = {}) {
+      const view = leaderRankPresentation(item, payload);
+      const headingTag = view.rank === 1 ? "h2" : "h3";
+      const rootTag = collapsible ? "details" : "article";
+      const topTag = collapsible ? "summary" : "div";
+      const rootClasses = `leader-winner${expanded ? " leader-expanded-card" : ""}${collapsible ? " leader-winner-collapsible" : ""}`;
+      const rootAttributes = `${expanded ? ` id="leader-expanded-${esc(view.rank)}"` : ""}${collapsible && !collapsed ? " open" : ""}`;
+      const topAttributes = collapsible
+        ? ` id="leader-winner-toggle" data-leader-winner-toggle aria-controls="leader-winner-body-${esc(view.rank)}"`
+        : "";
+      return `<${rootTag} class="${rootClasses}"${rootAttributes}>
+        <${topTag} class="leader-winner-top"${topAttributes}>
+          <div>
+            <p class="leader-rank-label">${esc(view.rankLabel)}</p>
+            <${headingTag} class="leader-winner-name">${esc(view.displayName)}</${headingTag}>
+            <p class="leader-winner-sub">${esc(view.location)}</p>
+            ${leaderValueScoreHtml(item, payload)}
+            <span class="leader-confidence" data-level="${esc(item.rankingConfidenceLevel || item.confidenceLevel || "")}">데이터 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")} · 기준 거래 ${esc(item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건</span>
+            ${view.isPriceLeader ? leaderAdjustmentHtml(item) : ""}
+            ${collapsible ? `<span class="leader-winner-toggle-label"><span class="leader-winner-toggle-label-open">상세 접기</span><span class="leader-winner-toggle-label-closed">상세 펼치기</span><span class="leader-winner-toggle-icon" aria-hidden="true"></span></span>` : ""}
+          </div>
+          <div class="leader-score" aria-label="${esc(`${view.scoreTitle} ${view.metric}${view.isPriceLeader || view.isGrowthRanking || view.isValueRanking ? "" : "점"}`)}">
+            <strong>${esc(view.metric)}</strong><span>${esc(view.scoreTitle)}</span>
+          </div>
+        </${topTag}>
+        <div class="leader-winner-body"${collapsible ? ` id="leader-winner-body-${esc(view.rank)}"` : ""}>
+          <ul class="leader-reasons">${(item.reasons || []).slice(0, 3).map(reason => `<li>${esc(reason)}</li>`).join("")}</ul>
+          <div class="leader-score-grid" aria-label="항목별 점수">${leaderComponentHtml(item)}</div>
+          <button class="leader-detail-button" type="button" data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-area-target="${esc(payload.areaTarget || item.leaderPriceAdjustmentTargetArea || "")}">단지 상세보기</button>
+        </div>
+      </${rootTag}>`;
+    }
+
     function renderLeaderResult(payload) {
       currentLeaderPayload = payload;
       const items = Array.isArray(payload?.items) ? payload.items : [];
-      leaderMeta.innerHTML = [
-        `${leaderReferenceLabel(payload?.referenceMonth)} 기준`,
-        `최근 ${payload?.lookbackMonths || 12}개월 실거래`,
-        `전용 ${payload?.areaBucketLabel || ""} 비교`,
-        payload?.dataAvailability?.stationDistance ? "역 거리 반영" : "역 거리 미반영",
-      ].map(value => `<span>${esc(value)}</span>`).join("");
+      leaderReferenceCaption.textContent = `${leaderReferenceLabel(payload?.referenceMonth)} 기준`;
+      leaderReferenceCaption.hidden = false;
       if (!items.length) {
         const message = payload?.warnings?.[0] || "최근 거래가 부족해 신뢰도 높은 대장 단지를 선정하기 어렵습니다.";
         leaderResult.innerHTML = `<div class="leader-empty">${esc(message)}</div>`;
@@ -4754,76 +4984,75 @@
       const winner = items[0];
       const runners = items.slice(1);
       const warnings = [...new Set([...(payload.warnings || []), ...(winner.warnings || [])])];
-      const scoreTitle = payload.category === "overall" ? "대장지수" : `${payload.categoryLabel || ""} 점수`;
+      const isPriceLeader = payload.category === "price";
+      const isGrowthRanking = payload.category === "leadership";
+      const isValueRanking = payload.category === "value";
       leaderResult.innerHTML = `
-        <article class="leader-winner">
-          <div class="leader-winner-top">
-            <div>
-              <p class="leader-rank-label">${esc(`${winner.sigungu || payload.region?.sigungu || ""} ${payload.categoryLabel || ""} 대장`)}</p>
-              <h2 class="leader-winner-name">${esc(winner.apartmentName)}</h2>
-              <p class="leader-winner-sub">${esc(winner.dong || winner.address || "")}</p>
-              <span class="leader-confidence" data-level="${esc(winner.confidenceLevel || "")}">데이터 신뢰도 ${esc(winner.confidenceLabel || "")} · 거래 ${esc(winner.transactionCount12m || 0)}건</span>
-            </div>
-            <div class="leader-score" aria-label="${esc(`${scoreTitle} ${leaderScoreText(winner.score)}점`)}">
-              <strong>${esc(leaderScoreText(winner.score))}</strong><span>${esc(scoreTitle)}</span>
-            </div>
-          </div>
-          <div class="leader-winner-body">
-            <ul class="leader-reasons">${(winner.reasons || []).slice(0, 3).map(reason => `<li>${esc(reason)}</li>`).join("")}</ul>
-            <div class="leader-score-grid" aria-label="항목별 점수">${leaderComponentHtml(winner)}</div>
-            <button class="leader-detail-button" type="button" data-leader-detail-name="${esc(winner.apartmentName)}" data-leader-detail-region="${esc(winner.sigungu || "")}" data-leader-detail-households="${esc(winner.householdCount || 0)}">단지 상세보기</button>
-          </div>
-        </article>
+        ${leaderRankCardHtml(winner, payload, { collapsible:true, collapsed:leaderWinnerCollapsed })}
         ${runners.length ? `<div class="leader-list" aria-label="2위부터 ${runners.length + 1}위">
-          ${runners.map(item => `<button class="leader-list-item" type="button" data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}">
-            <span class="leader-list-rank">${esc(item.rank)}</span>
-            <span class="leader-list-copy"><span class="leader-list-name">${esc(item.apartmentName)}</span><span class="leader-list-meta">거래 ${esc(item.transactionCount12m || 0)}건 · 신뢰도 ${esc(item.confidenceLabel || "")}</span></span>
-            <strong class="leader-list-score">${esc(leaderScoreText(item.score))}</strong>
-          </button>`).join("")}
+          ${runners.map(item => {
+            const expanded = expandedLeaderRanks.has(Number(item.rank));
+            const metric = isPriceLeader
+              ? leaderPriceText(item.leaderPrice12m)
+              : isGrowthRanking
+                ? leaderGrowthText(item.return6m)
+                : isValueRanking
+                  ? leaderPriceText(item.leaderPrice12m)
+                  : leaderScoreText(item.score);
+            return `<div class="leader-list-row${expanded ? " is-expanded" : ""}">
+              <button class="leader-list-item" id="leader-rank-toggle-${esc(item.rank)}" type="button" data-leader-expand-rank="${esc(item.rank)}" aria-expanded="${expanded}" aria-controls="leader-expanded-${esc(item.rank)}">
+                <span class="leader-list-rank">${esc(item.rank)}</span>
+                <span class="leader-list-copy">
+                  <span class="leader-list-name">${esc(item.apartmentName)}</span>
+                  <span class="leader-list-meta">${leaderValueScoreHtml(item, payload, { compact:true })}${isPriceLeader && item.leaderRepresentativeArea ? `<strong class="leader-list-area">실거래 전용 ${esc(leaderAreaText(item.leaderRepresentativeArea))}㎡</strong> · ` : ""}기준 거래 ${esc(item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건 · 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")}</span>
+                </span>
+                <span class="leader-list-end"><strong class="leader-list-score">${esc(metric)}</strong><span class="leader-list-expand-icon" aria-hidden="true">${expanded ? "−" : "+"}</span></span>
+              </button>
+              ${expanded ? leaderRankCardHtml(item, payload, { expanded:true }) : ""}
+            </div>`;
+          }).join("")}
         </div>` : ""}
         ${warnings.length ? `<div class="leader-warning">${warnings.map(value => esc(value)).join("<br>")}</div>` : ""}
       `;
     }
 
-    async function loadLeaderRanking() {
-      if (!leaderRegionsLoaded) await loadLeaderRegions();
-      if (!leaderSido.value || !leaderSigungu.value || !leaderAreaBucket.value) return;
-      leaderRequestController?.abort();
-      leaderRequestController = new AbortController();
-      leaderSubmit.disabled = true;
-      leaderCategoryTabs.setAttribute("aria-busy", "true");
-      leaderResult.innerHTML = `<div class="leader-loading">같은 지역·같은 면적의 최근 거래를 비교하고 있어요.</div>`;
+    async function fetchLeaderRanking(category, limit, signal) {
       const params = new URLSearchParams({
         sido:leaderSido.value,
         sigungu:leaderSigungu.value,
-        areaBucket:leaderAreaBucket.value,
-        category:activeLeaderCategory,
-        limit:"5",
+        category,
+        limit:String(limit),
       });
+      const response = await fetch(`/api/apartment-leaders?${params}`, { signal });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "지역 대장 순위를 불러오지 못했어요.");
+      return payload;
+    }
+
+    async function loadLeaderRanking() {
+      if (!leaderRegionsLoaded) await loadLeaderRegions();
+      if (!leaderSido.value || !leaderSigungu.value) return;
+      leaderRequestController?.abort();
+      leaderRequestController = new AbortController();
+      leaderWinnerCollapsed = false;
+      expandedLeaderRanks.clear();
+      currentLeaderPayload = null;
+      leaderSubmit.disabled = true;
+      leaderResult.innerHTML = `<div class="leader-loading">같은 지역의 대표평형 거래를 비교하고 있어요.</div>`;
       try {
-        const response = await fetch(`/api/apartment-leaders?${params}`, { signal:leaderRequestController.signal });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || "지역 대장 순위를 불러오지 못했어요.");
+        const signal = leaderRequestController.signal;
+        const payload = await fetchLeaderRanking(activeLeaderCategory, 10, signal);
         renderLeaderResult(payload);
       } catch (error) {
         if (error.name === "AbortError") return;
-        leaderMeta.innerHTML = "";
+        leaderReferenceCaption.hidden = true;
         leaderResult.innerHTML = `<div class="leader-empty">${esc(error.message || "지역 대장 순위를 불러오지 못했어요.")}</div>`;
       } finally {
         leaderSubmit.disabled = false;
-        leaderCategoryTabs.removeAttribute("aria-busy");
       }
     }
 
-    function setLeaderCategory(category) {
-      activeLeaderCategory = category;
-      leaderCategoryTabs.querySelectorAll("[data-leader-category]").forEach(tab => {
-        tab.setAttribute("aria-selected", String(tab.dataset.leaderCategory === category));
-      });
-    }
-
     function setActiveView(view) {
-      setConditionFlowScrollHidden(false);
       const aptView = document.getElementById("aptSearchView");
       if (aptView) aptView.hidden = true;
       activeView = ["region", "leader"].includes(view) ? view : "condition";
@@ -4832,6 +5061,12 @@
       conditionView.hidden = showingRegion || showingLeader;
       regionView.hidden = !showingRegion;
       leaderView.hidden = !showingLeader;
+      leaderEntryLabelLong.textContent = showingLeader ? "내 예산으로 찾기" : "지역별 대장아파트";
+      leaderEntryLabelShort.textContent = showingLeader ? "예산 찾기" : "지역 대장";
+      leaderEntry.setAttribute(
+        "aria-label",
+        showingLeader ? "내 예산으로 찾기" : "지역별 대장아파트 보기",
+      );
       viewTabs.forEach(tab => {
         const selected = tab.dataset.view === activeView;
         tab.classList.toggle("active", selected);
@@ -4858,7 +5093,6 @@
       }
     }
     function setConditionStage(stage, shouldScroll = true) {
-      setConditionFlowScrollHidden(false);
       const canChooseConditions = Boolean(currentPurchasePower);
       const canViewResults = Boolean(currentBudgetData || budgetSearchController);
       const flowStepNumbers = { power:"1", preference:"2", results:"3" };
@@ -4903,37 +5137,6 @@
       if (shouldScroll) window.scrollTo({ top:0, behavior:"smooth" });
     }
 
-    function setConditionFlowScrollHidden(hidden) {
-      conditionFlow.classList.toggle("is-scroll-hidden", hidden);
-      document.body.classList.toggle("condition-flow-scroll-hidden", hidden);
-    }
-
-    function updateConditionFlowForScroll() {
-      conditionFlowScrollFrame = 0;
-      const currentScrollY = Math.max(window.scrollY, 0);
-      const delta = currentScrollY - conditionFlowLastScrollY;
-      if (!delta) return;
-      const direction = delta > 0 ? 1 : -1;
-      if (direction !== conditionFlowScrollDirection) {
-        conditionFlowScrollDirection = direction;
-        conditionFlowScrollTravel = 0;
-      }
-      conditionFlowScrollTravel += Math.abs(delta);
-      const conditionScreenVisible = !conditionView.hidden && !document.body.classList.contains("apt-search-mode");
-      if (!conditionScreenVisible || currentScrollY <= 12) {
-        setConditionFlowScrollHidden(false);
-      } else if (direction > 0 && conditionFlowScrollTravel >= 14) {
-        setConditionFlowScrollHidden(true);
-      } else if (direction < 0 && conditionFlowScrollTravel >= 8) {
-        setConditionFlowScrollHidden(false);
-      }
-      conditionFlowLastScrollY = currentScrollY;
-    }
-
-    window.addEventListener("scroll", () => {
-      if (conditionFlowScrollFrame) return;
-      conditionFlowScrollFrame = requestAnimationFrame(updateConditionFlowForScroll);
-    }, { passive:true });
     const compactText = value => String(value ?? "").replace(/[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]/g, "").toLowerCase();
     function regionQueryVariants(value) {
       const key = compactText(value);
@@ -5524,7 +5727,14 @@
 
     function roneEstimateKey(item) {
       const area = item.latestDealExclusiveArea || item.areaMin || item.areaMax || "";
-      return [candidateDisplayName(item), item.region || item.displayRegion || "", area, "details"].join("|");
+      return [
+        item.name || candidateDisplayName(item),
+        item.region || item.displayRegion || "",
+        item.legalDong || "",
+        item.jibun || "",
+        area,
+        "details",
+      ].join("|");
     }
 
     function ronePeriodText(value) {
@@ -5647,11 +5857,13 @@
       const timeout = setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);
       const fetchEstimate = async requestedArea => {
         const params = new URLSearchParams({
-          name:candidateDisplayName(item),
+          name:item.name || candidateDisplayName(item),
           region:item.region || item.displayRegion || "",
           months:"24",
           details:"true",
         });
+        if (item.legalDong) params.set("legal_dong", item.legalDong);
+        if (item.jibun) params.set("jibun", item.jibun);
         if (requestedArea) params.set("area", requestedArea);
         const payload = await getJson(`/api/rone-estimate?${params.toString()}`, { signal:controller.signal });
         return {
@@ -5686,6 +5898,8 @@
         name:leaderName,
         displayName:leaderName,
         region:signals.leaderRegion || item.region || item.displayRegion || "",
+        legalDong:signals.leaderLegalDong || "",
+        jibun:signals.leaderJibun || "",
         latestDealExclusiveArea:item.latestDealExclusiveArea,
         areaMin:item.areaMin,
         areaMax:item.areaMax,
@@ -5706,10 +5920,25 @@
         name:leaderName,
         displayName:leaderName,
         region:signals.districtLeaderRegion || item.region || item.displayRegion || "",
+        legalDong:signals.districtLeaderLegalDong || "",
+        jibun:signals.districtLeaderJibun || "",
         latestDealExclusiveArea:item.latestDealExclusiveArea,
         areaMin:item.areaMin,
         areaMax:item.areaMax,
       };
+    }
+
+    async function requestComparableEstimate(target) {
+      let lastError = null;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const cached = roneEstimateCache.get(roneEstimateKey(target));
+          return cached || await requestRoneEstimate(target);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("비교 단지 실거래를 불러오지 못했어요.");
     }
 
     function enrichRoneEstimates(rows, budgetEok) {
@@ -5933,8 +6162,20 @@
     function candidateLatestTradeDirectionHtml(item) {
       const latestPrice = Number(item.latestDealPriceEok || item.lastObservedDealPriceEok || 0);
       const previousPrice = Number(item.previousDealPriceEok || 0);
-      if (latestPrice && previousPrice) {
-        return coloredRateHtml(`직전 거래 대비 ${marketRateText((latestPrice / previousPrice - 1) * 100)}`);
+      const comparisonPrice = Number(
+        item.comparisonDealPriceEok
+        || item.roneEstimate?.comparisonTrade?.dealAmountEok
+        || previousPrice
+        || 0
+      );
+      const skippedOutlierCount = Number(
+        item.comparisonDealSkippedOutlierCount
+        || item.roneEstimate?.comparisonSkippedOutlierCount
+        || 0
+      );
+      if (latestPrice && comparisonPrice) {
+        const label = skippedOutlierCount > 0 ? "직전 정상 거래 대비" : "직전 거래 대비";
+        return coloredRateHtml(`${label} ${marketRateText((latestPrice / comparisonPrice - 1) * 100)}`);
       }
       const itemPeriod = marketPeriod(item.latestDealDate || item.lastObservedDealDate);
       const payloadPeriod = marketPeriod(item.roneEstimate?.latestTrade?.dealDate);
@@ -5951,6 +6192,19 @@
     }
 
     function candidateLatestTradeOutlierNoteHtml(item) {
+      const comparisonSkippedCount = Number(
+        item.comparisonDealSkippedOutlierCount
+        || item.roneEstimate?.comparisonSkippedOutlierCount
+        || 0
+      );
+      const rawPreviousPrice = Number(
+        item.previousDealPriceEok
+        || item.roneEstimate?.previousTrade?.dealAmountEok
+        || 0
+      );
+      if (comparisonSkippedCount > 0 && rawPreviousPrice > 0) {
+        return `<span class="candidate-price-note">직전 ${esc(policyMoney(rawPreviousPrice))} 거래는 주변 가격과 차이가 커 흐름 비교에서 제외했어요</span>`;
+      }
       const excludedTradeCount = Number(item.recent3ExcludedTradeCount || 0);
       if (excludedTradeCount <= 0) return "";
       return `<span class="candidate-price-note">이상거래 ${excludedTradeCount.toLocaleString("ko-KR")}건은 제외하고 산정했어요</span>`;
@@ -6051,7 +6305,7 @@
       return regionalIndexValues(payload, [period])[0];
     }
 
-    // 월평균 실거래가, 지역 매매가격지수, 동·구 대장 단지 가격을 첫 공통월
+    // 월평균 실거래가, 지역 매매가격지수, 동·구 대표 평형 면적 보정 대장 가격을 첫 공통월
     // 100으로 맞춰 서로 단위가 다른 값의 상승률 흐름만 비교한다.
     function sparklineSeries(item) {
       const payload = item.roneEstimate;
@@ -6114,6 +6368,13 @@
             value == null ? null : value / districtLeaderAnchorPrice * 100
           ))
         : null;
+      const comparisonNotices = [...(item.leaderEstimateErrors || [])];
+      if (leaderMonthly && !leader) {
+        comparisonNotices.push(`${leaderName} 대장과 겹치는 기준월 없음`);
+      }
+      if (districtLeaderMonthly && !districtLeader) {
+        comparisonNotices.push(`${districtLeaderName} 구 대장과 겹치는 기준월 없음`);
+      }
       return {
         periods,
         complex,
@@ -6126,6 +6387,7 @@
         districtLeader,
         districtLeaderName:districtLeader ? districtLeaderName : "",
         districtLeaderSharesLocality,
+        comparisonNotices,
         regionSource:String(payload?.index?.source || ""),
         anchorPeriod:periods[anchor],
         observedMonthCount,
@@ -6136,18 +6398,19 @@
     function leaderFormulaHtml(item, regionName) {
       const signals = item.signals || {};
       const numberOrNull = value => value === null || value === undefined || value === "" ? null : Number(value);
-      const scoreValue = numberOrNull(signals.leaderScore);
-      const pricePoints = numberOrNull(signals.leaderPricePoints);
-      const leadershipPoints = numberOrNull(signals.leaderLeadershipPoints);
-      const liquidityPoints = numberOrNull(signals.leaderLiquidityPoints);
-      const agePoints = numberOrNull(signals.leaderAgePoints);
-      const stationPoints = numberOrNull(signals.leaderStationPoints);
-      const points = value => Number.isFinite(value) ? value.toFixed(1).replace(/\.0$/, "") : "미반영";
-      const hasScore = Number.isFinite(scoreValue);
+      const leaderPrice = numberOrNull(signals.leaderPrice12m);
+      const priceText = Number.isFinite(leaderPrice)
+        ? `${(leaderPrice / 10000).toFixed(1).replace(/\.0$/, "")}억`
+        : "확인 중";
       const leaderName = signals.leaderName || "선정 단지";
-      const candidateCount = Number(signals.leaderCandidateCount || 0);
+      const candidateCount = Number(signals.leaderEligibleCandidateCount || 0);
       const annualDeals = Number(signals.leaderAnnualDeals || 0);
       const households = Number(signals.leaderHouseholds || 0);
+      const representativeArea = numberOrNull(signals.leaderRepresentativeArea);
+      const representativePrice = numberOrNull(signals.leaderRepresentativeMedianPrice12m);
+      const targetArea = numberOrNull(signals.leaderPriceAdjustmentTargetArea) || 84;
+      const areaRange = targetArea === 59 ? "58~60㎡" : "83~85㎡";
+      const priceBasis = signals.leaderPriceBasisLabel || `전용 ${leaderAreaText(targetArea)}㎡ 실거래 보정가`;
       return `<details class="spark-leader-info">
         <summary aria-label="${esc(`${regionName} 대장아파트 산정식 보기`)}">
           <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -6157,17 +6420,14 @@
         </summary>
         <div class="spark-leader-formula">
           <strong>${esc(regionName)} 대장 · ${esc(leaderName)}</strong>
-          <p>${esc(regionName)}의 같은 전용 70~89㎡ 구간에서 최근 12개월 실거래가 있는 ${candidateCount ? `${esc(candidateCount)}개 단지` : "단지"}를 비교했어요.</p>
+          <p>${esc(regionName)}의 실제 전용 ${esc(areaRange)} 거래만 ${esc(leaderAreaText(targetArea))}㎡ 가격으로 보정해 ${candidateCount ? `${esc(candidateCount)}개 단지` : "단지별로"} 비교했어요.</p>
           <dl class="spark-leader-score">
-            <div><dt>가격 수준 · 35%</dt><dd>${esc(points(pricePoints))}</dd></div>
-            <div><dt>상승 선도력 · 25%</dt><dd>${esc(points(leadershipPoints))}</dd></div>
-            <div><dt>거래 유동성 · 20%</dt><dd>${esc(points(liquidityPoints))}</dd></div>
-            <div><dt>단지 연식 · 10%</dt><dd>${esc(points(agePoints))}</dd></div>
-            <div><dt>역 접근성 · 10%</dt><dd>${esc(points(stationPoints))}</dd></div>
-            ${hasScore ? `<div class="spark-leader-total"><dt>종합 점수</dt><dd>${esc(points(scoreValue))} / 100</dd></div>` : ""}
+            ${Number.isFinite(representativeArea) && Number.isFinite(representativePrice) ? `<div><dt>실제 거래 중앙면적</dt><dd>전용 ${esc(leaderAreaText(representativeArea))}㎡ · ${esc(leaderPriceText(representativePrice))}</dd></div>` : ""}
+            <div><dt>${esc(priceBasis)}</dt><dd>${esc(priceText)}</dd></div>
+            <div><dt>해당 면적형 거래</dt><dd>${annualDeals ? `${esc(annualDeals)}건` : "확인 중"}</dd></div>
           </dl>
-          <p>${annualDeals ? `최근 12개월 ${esc(annualDeals)}건` : "최근 거래 기준"}${households ? ` · ${esc(households.toLocaleString("ko-KR"))}세대` : ""}</p>
-          <span class="spark-leader-note">가격·상승률·거래량은 같은 지역과 같은 면적 구간 안에서 백분위로 비교해요. 거래 1건 이하 단지는 일반 대장 1위에서 제외하고, 없는 데이터는 임의 점수로 채우지 않아요.</span>
+          ${households ? `<p>${esc(households.toLocaleString("ko-KR"))}세대</p>` : ""}
+          <span class="spark-leader-note">보정식: 실거래가 × (${esc(leaderAreaText(targetArea))} ÷ 실제면적)<sup>0.75</sup>. 다른 평형은 섞지 않으며, 해당 면적형 거래가 2건 미만인 단지는 제외해요.</span>
         </div>
       </details>`;
     }
@@ -6312,6 +6572,7 @@
       }
       return {
         series,
+        complexName:candidateDisplayName(item) || item.name || "해당 단지",
         regionName,
         leaderRegionName,
         complexValue,
@@ -6334,7 +6595,7 @@
       return `<div class="spark-summary">
         <span class="spark-summary-basis">${esc(windowLabel)}</span>
         <div class="spark-summary-values">
-          <strong>이 단지 <em class="${esc(summary.tone)}">${esc(sparklineTrendRateText(summary.complexValue))}</em></strong>
+          <strong>${esc(summary.complexName)} <em class="${esc(summary.tone)}">${esc(sparklineTrendRateText(summary.complexValue))}</em></strong>
           ${summary.regionValue == null ? "" : `<span>${esc(summary.regionName)} 평균 <em>${esc(sparklineTrendRateText(summary.regionValue))}</em></span>`}
           ${summary.leaderValue == null ? "" : `<span>${esc(summary.series.leaderName)} <em>${esc(sparklineTrendRateText(summary.leaderValue))}</em></span>`}
           ${summary.districtLeaderValue == null ? "" : `<span>${esc(summary.series.districtLeaderName)} <em>${esc(sparklineTrendRateText(summary.districtLeaderValue))}</em></span>`}
@@ -6347,6 +6608,7 @@
       if (!series) return "";
       const summary = candidateTrendSummary(item, series);
       if (!summary) return "";
+      const complexName = summary.complexName || candidateDisplayName(item) || item.name || "해당 단지";
       const w = 420, h = 194;
       const plot = { left:58, right:10, top:12, bottom:34 };
       const values = [
@@ -6401,7 +6663,7 @@
       )
         ? `${leaderRegionName}/${districtLeaderRegionName}`
         : leaderRegionName;
-      const label = `${summary.anchorLabel} 대비 최근 2년 이 단지${series.region ? `와 ${regionName} 평균 지수` : ""}${series.leader ? `, ${leaderRegionName} 대장 ${series.leaderName}` : ""}${series.districtLeader ? `, ${districtLeaderRegionName} 대장 ${series.districtLeaderName}` : ""} 가격 변화`;
+      const label = `${summary.anchorLabel} 대비 최근 2년 가격 변화 · ${complexName}${series.region ? `, ${regionName} 평균 지수` : ""}${series.leader ? `, ${leaderRegionName} 대장 ${series.leaderName}` : ""}${series.districtLeader ? `, ${districtLeaderRegionName} 대장 ${series.districtLeaderName}` : ""}`;
       const regionBasis = series.regionSource.includes("R-ONE")
         ? "한국부동산원 매매가격지수"
         : series.regionSource || "지역 대표 단지 평균지수";
@@ -6417,7 +6679,7 @@
           ${series.complex.map((value, index) => {
             if (value == null) return "";
             const averagePrice = series.complexPrices[index];
-            const complexTrendLabel = `이 단지 ${sparklineTrendRateText(value)}`;
+            const complexTrendLabel = `${complexName} ${sparklineTrendRateText(value)}`;
             const regionTrendLabel = series.region?.[index] == null
               ? ""
               : `${regionName} 평균 지수 ${sparklineTrendRateText(series.region[index])}`;
@@ -6437,16 +6699,17 @@
         </svg>
         <div class="spark-trade-tooltip" data-spark-tooltip role="status" aria-live="polite" hidden></div>
         <div class="budget-sparkline-legend" aria-label="차트 범례">
-          <span class="spark-legend-item spark-legend-primary"><i class="spark-dot spark-complex" aria-hidden="true"></i>이 단지</span>
+          <span class="spark-legend-item spark-legend-primary"><i class="spark-dot spark-complex" aria-hidden="true"></i>${esc(complexName)}</span>
           ${series.region ? `<span class="spark-legend-item"><i class="spark-dot spark-region" aria-hidden="true"></i>${esc(regionName)} 평균 지수</span>` : ""}
           ${item.signals?.isRegionalLeader ? `<div class="spark-leader-group">
-            <span class="spark-self-leader">이 단지가 ${esc(sharedLeaderRegionName)} 대장이에요</span>
+            <span class="spark-self-leader">${esc(complexName)} · ${esc(sharedLeaderRegionName)} 대장</span>
             ${item.signals?.leaderName ? leaderFormulaHtml(item, leaderRegionName) : ""}
           </div>` : series.leader ? `<div class="spark-leader-group">
             <button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.leaderName)}" data-leader-search-region="${esc(leaderSearchRegion)}" aria-label="${esc(`${series.leaderName} ${sharedLeaderRegionName} 대장 검색`)}"><i class="spark-dot spark-leader" aria-hidden="true"></i>${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장</button>
             ${item.signals?.leaderName ? leaderFormulaHtml(item, leaderRegionName) : ""}
           </div>` : (item.signals?.leaderName ? leaderFormulaHtml(item, leaderRegionName) : "")}
-          ${item.signals?.isDistrictLeader && !item.signals?.isRegionalLeader ? `<span class="spark-self-leader">이 단지가 ${esc(districtLeaderRegionName)} 대장이에요</span>` : series.districtLeader ? `<button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.districtLeaderName)}" data-leader-search-region="${esc(districtLeaderRegionName)}" aria-label="${esc(`${series.districtLeaderName} ${districtLeaderRegionName} 대장 검색`)}"><i class="spark-dot spark-district-leader" aria-hidden="true"></i>${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장</button>` : ""}
+          ${item.signals?.isDistrictLeader && !item.signals?.isRegionalLeader ? `<span class="spark-self-leader">${esc(complexName)} · ${esc(districtLeaderRegionName)} 대장</span>` : series.districtLeader ? `<button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.districtLeaderName)}" data-leader-search-region="${esc(districtLeaderRegionName)}" aria-label="${esc(`${series.districtLeaderName} ${districtLeaderRegionName} 대장 검색`)}"><i class="spark-dot spark-district-leader" aria-hidden="true"></i>${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장</button>` : ""}
+          ${series.comparisonNotices?.length ? `<span class="spark-compare-error">${esc([...new Set(series.comparisonNotices)].join(" · "))}. 다시 검색하면 자동으로 재시도해요.</span>` : ""}
           <span class="spark-basis">${esc(summary.anchorLabel)} 가격 대비 · 지역 흐름은 ${esc(regionBasis)} 기준</span>
         </div>`;
     }
@@ -7304,6 +7567,7 @@
     async function loadMarketInsight(item) {
       const leaderItem = candidateLeaderEstimateItem(item);
       const districtLeaderItem = candidateDistrictLeaderEstimateItem(item);
+      item.leaderEstimateErrors = [];
       const cached = roneEstimateCache.get(roneEstimateKey(item));
       const leaderCached = leaderItem ? roneEstimateCache.get(roneEstimateKey(leaderItem)) : null;
       const districtLeaderCached = districtLeaderItem
@@ -7315,12 +7579,12 @@
       item.marketInsightState = cached ? "ready" : "loading";
       const candidateRequest = cached ? Promise.resolve(cached) : requestRoneEstimate(item);
       const leaderRequest = leaderItem
-        ? (leaderCached ? Promise.resolve(leaderCached) : requestRoneEstimate(leaderItem))
+        ? (leaderCached ? Promise.resolve(leaderCached) : requestComparableEstimate(leaderItem))
         : null;
       const districtLeaderRequest = districtLeaderItem
         ? (districtLeaderCached
             ? Promise.resolve(districtLeaderCached)
-            : requestRoneEstimate(districtLeaderItem))
+            : requestComparableEstimate(districtLeaderItem))
         : null;
       refreshMarketInsight(item);
       try {
@@ -7335,9 +7599,15 @@
       refreshMarketInsight(item);
       await Promise.all([
         leaderRequest?.then(result => { item.leaderRoneEstimate = result.payload; })
-          .catch(() => { item.leaderRoneEstimate = null; }),
+          .catch(() => {
+            item.leaderRoneEstimate = null;
+            item.leaderEstimateErrors.push(`${leaderItem.name} 대장 비교선`);
+          }),
         districtLeaderRequest?.then(result => { item.districtLeaderRoneEstimate = result.payload; })
-          .catch(() => { item.districtLeaderRoneEstimate = null; }),
+          .catch(() => {
+            item.districtLeaderRoneEstimate = null;
+            item.leaderEstimateErrors.push(`${districtLeaderItem.name} 구 대장 비교선`);
+          }),
       ]);
       refreshMarketInsight(item);
     }
@@ -9182,11 +9452,12 @@
       const badgeList = signals.badges || [];
       const badges = badgeList.map(badge => `<span class="badge ${esc(badge.tone || "wait")}">${esc(badge.label)}</span>`).join("");
       const leaderRegion = signals.leaderRegion || item.region || "해당 지역";
+      const leaderAreaTarget = Number(signals.leaderPriceAdjustmentTargetArea || 84);
       const leaderCaption = signals.leaderName
         ? `<div class="signal-panel-caption signal-leader-caption">${
             signals.isRegionalLeader
-              ? `이 단지는 가격·거래·규모를 종합한 ${esc(leaderRegion)} 대장이에요`
-              : `비교 기준: 가격·거래·규모를 종합한 ${esc(leaderRegion)} 대장 · ${esc(signals.leaderName)}`
+              ? `이 단지는 실제 ${esc(leaderAreaText(leaderAreaTarget))}㎡형 보정가 기준 ${esc(leaderRegion)} 대장이에요`
+              : `비교 기준: 실제 ${esc(leaderAreaText(leaderAreaTarget))}㎡형 보정가 1위 · ${esc(leaderRegion)} ${esc(signals.leaderName)}`
           }</div>`
         : "";
       if (!hasScore) {
@@ -9650,19 +9921,36 @@
           button.textContent = isSelected ? "비교에서 빼기" : "+ 비교 담기";
         }
       });
-      compareDock.classList.toggle("show", selected.length > 0);
-      compareDockTitle.textContent = selected.length < 2
-        ? "비교하려면 한 곳을 더 선택해 주세요"
-        : `${selected.length}개 후보를 나란히 볼 수 있어요`;
-      compareDockNames.textContent = selected.map(candidateDisplayName).join(" · ");
-      compareOpen.disabled = selected.length < 2;
-      compareOpen.textContent = selected.length < 2 ? "한 곳 더 선택" : `${selected.length}개 비교하기`;
+      compareCart.hidden = selected.length === 0;
+      compareCart.disabled = selected.length < 2;
+      compareCartBadge.textContent = String(selected.length);
+      compareCart.setAttribute(
+        "aria-label",
+        selected.length < 2
+          ? `비교함에 ${selected.length}개 담김, 한 곳 더 선택해 주세요`
+          : `비교함에 ${selected.length}개 담김, 비교하기`,
+      );
     }
 
     function toggleComparison(name) {
       if (selectedCandidateNames.has(name)) selectedCandidateNames.delete(name);
       else if (selectedCandidateNames.size < 3) selectedCandidateNames.add(name);
+      else showComparisonLimitToast();
       syncCompareSelection();
+    }
+
+    function showComparisonLimitToast() {
+      clearTimeout(comparisonLimitToastTimer);
+      cancelAnimationFrame(comparisonLimitToastFrame);
+      comparisonLimitToast.classList.remove("is-visible");
+      comparisonLimitToast.textContent = "";
+      comparisonLimitToastFrame = requestAnimationFrame(() => {
+        comparisonLimitToast.textContent = "비교는 최대 3건까지 담을 수 있어요.";
+        comparisonLimitToast.classList.add("is-visible");
+        comparisonLimitToastTimer = setTimeout(() => {
+          comparisonLimitToast.classList.remove("is-visible");
+        }, 2200);
+      });
     }
 
     function comparisonLines(items, fallback) {
@@ -9670,26 +9958,45 @@
       return `<ul class="comparison-lines">${rows.map(item => `<li>${esc(item)}</li>`).join("")}</ul>`;
     }
 
-    function topicParticle(text) {
-      const value = String(text || "").trim();
-      const code = value ? value.charCodeAt(value.length - 1) : 0;
-      const hasBatchim = code >= 0xAC00 && code <= 0xD7A3 && (code - 0xAC00) % 28 !== 0;
-      return hasBatchim ? "은" : "는";
-    }
-
-    function comparisonSummary(rows) {
-      const cheapest = [...rows].sort((a, b) => Number(a.midPriceEok || 999) - Number(b.midPriceEok || 999))[0];
-      const largest = [...rows].sort((a, b) => Number(b.households || 0) - Number(a.households || 0))[0];
-      const comparisonBasis = "예산·기본 조건";
-      const cheapestName = candidateDisplayName(cheapest);
-      const largestName = candidateDisplayName(largest);
-      if (cheapestName === largestName) {
-        return `${cheapestName}${topicParticle(cheapestName)} 선택 후보 중 기준 가격이 가장 낮고 세대수도 가장 많아요. 다른 후보는 ${comparisonBasis}과 확인할 위험에서 어떤 차이가 있는지 함께 보세요.`;
+    function comparisonSignalHtml(row) {
+      const signals = row.signals || {};
+      const metric = value => value === null || value === undefined || value === "" ? Number.NaN : Number(value);
+      const score = metric(signals.score);
+      if (!Number.isFinite(score)) {
+        return comparisonLines([], candidateSignalScoreLabel(row));
       }
-      return `${cheapestName}${topicParticle(cheapestName)} 선택 후보 중 기준 가격이 가장 낮고, ${largestName}${topicParticle(largestName)} 세대수가 가장 많아요. 실제 결정은 ${comparisonBasis}과 각 후보의 확인 항목을 함께 비교해야 해요.`;
+
+      const confidenceLabels = { high:"표본 신뢰도 높음", medium:"표본 신뢰도 보통", low:"표본 신뢰도 낮음" };
+      const confidence = confidenceLabels[signals.sampleConfidence] || "";
+      const headline = [`${score}점`, signalTierLabel(score), confidence].filter(Boolean).join(" · ");
+      const details = [];
+      const recent3Pct = metric(signals.recent3Pct);
+      const momentumPct = metric(signals.momentumPct);
+      if (Number.isFinite(recent3Pct)) {
+        const periods = [`최근 3개월 ${marketRateText(recent3Pct)}`];
+        if (Number.isFinite(momentumPct)) periods.push(`최근 6개월 ${marketRateText(momentumPct)}`);
+        details.push(periods.join(" · "));
+      } else if (Number.isFinite(momentumPct)) {
+        details.push(`최근 6개월 ${marketRateText(momentumPct)}`);
+      }
+
+      const recentDeals = Number(signals.recentDealCount);
+      const priorDeals = Number(signals.priorDealCount);
+      if (Number.isFinite(recentDeals) && Number.isFinite(priorDeals) && (recentDeals > 0 || priorDeals > 0)) {
+        details.push(`거래량 · 직전 6개월 ${priorDeals}건 → 최근 6개월 ${recentDeals}건`);
+      }
+
+      const recovery = metric(signals.recoveryPct);
+      if (Number.isFinite(recovery) && recovery > 0) {
+        const drop = Math.max(0, Math.round(100 - recovery));
+        details.push(drop <= 2 ? "최근 2년 고점 부근" : `최근 2년 고점 대비 ${drop}% 낮음`);
+      }
+      return `<strong>${esc(headline)}</strong>${details.length ? comparisonLines(details.slice(0, 3), "") : ""}`;
     }
 
     function comparisonValue(row, key) {
+      if (key === "summary") return comparisonLines(candidateChoiceSummaryLines(row), "핵심 요약 확인 필요");
+      if (key === "signal") return comparisonSignalHtml(row);
       if (key === "price") return `<strong>${esc(row.midPriceEok ? transactionMoney(row.midPriceEok) : "-")}</strong><br><span>${esc(row.priceRangeText || "가격 범위 확인 필요")}</span>`;
       if (key === "gap") return esc(budgetGapText(row.budgetGapEok));
       if (key === "fit") return `<span class="fit-pill ${esc(row.fitClass || "mention")}">${esc(row.fitStatus || "확인 필요")}</span>`;
@@ -9729,6 +10036,8 @@
       const rows = selectedCandidates();
       if (rows.length < 2) return;
       const comparisonRows = [
+        ["핵심 요약", "summary"],
+        ["최근 가격·거래 흐름", "signal"],
         ["기준 가격", "price"],
         ["구매력 상한 차이", "gap"],
         ["구매력 범위", "fit"],
@@ -9744,7 +10053,6 @@
         ["다음 확인", "checks"],
       ];
       comparisonContent.innerHTML = `
-        <p class="comparison-summary">${esc(comparisonSummary(rows))}</p>
         <div class="comparison-table-wrap">
           <table class="comparison-table">
             <thead><tr><th scope="col">비교 항목</th>${rows.map(row => `<th scope="col"><span class="comparison-name">${esc(candidateDisplayName(row))}</span><span class="comparison-sub">${esc(candidateMetaText(row))}</span></th>`).join("")}</tr></thead>
@@ -9761,7 +10069,7 @@
       comparisonOverlay.classList.remove("show");
       comparisonOverlay.setAttribute("aria-hidden", "true");
       document.body.classList.remove("comparison-open");
-      compareOpen.focus();
+      compareCart.focus();
     }
 
     function resetComparisonState() {
@@ -9804,7 +10112,7 @@
             return `<li class="budget-enrichment-step" data-budget-enrichment-step data-state="${state}"><span class="budget-enrichment-step-icon" aria-hidden="true"></span><span class="budget-enrichment-step-copy"><strong class="budget-enrichment-step-label">${esc(item.label)}</strong><span class="budget-enrichment-step-detail">${esc(item.detail)}</span></span></li>`;
           }).join("")}
         </ol>
-        <span class="budget-enrichment-message" data-budget-enrichment-message>${completed ? "완성된 후보 중 첫 10개를 불러올게요." : "전체 후보를 정리한 뒤 첫 10개부터 보여드릴게요."}</span>`;
+        <span class="budget-enrichment-message" data-budget-enrichment-message>${completed ? "모든 후보 카드가 준비됐어요." : "모든 후보 카드가 준비되면 한 번에 보여드릴게요."}</span>`;
     }
 
     function updateBudgetEnrichmentProgress(activeStage, completed = false) {
@@ -9858,6 +10166,17 @@
       document.body.classList.remove("candidate-sort-sheet-open");
       removeCandidateMapPortal();
       resetCandidateMap();
+      // 단계형 응답의 일부 데이터가 도착해도 후보 카드는 노출하지 않는다.
+      // 실거래와 가격 흐름까지 모두 준비된 완료 응답만 목록으로 그린다.
+      if (data.enrichmentPending) {
+        currentBudgetData = null;
+        setConditionStage("results", false);
+        budgetResultEl.classList.add("show");
+        if (!budgetResultEl.querySelector("[data-budget-enrichment-note]")) {
+          budgetResultEl.innerHTML = budgetEnrichmentHtml(1);
+        }
+        return;
+      }
       const allRows = (data.allCandidates || data.policyDefaultCandidates || data.candidates || [])
         .filter(candidateHasVerifiedSelectedArea)
         .filter(row => candidateWithinPurchaseCap(row, data.budgetEok));
@@ -9910,10 +10229,6 @@
       if (!rows.length) {
         candidateViewMode = "list";
         document.body.classList.remove("candidate-map-open");
-        if (data.enrichmentPending) {
-          budgetResultEl.innerHTML = budgetEnrichmentHtml(1);
-          return;
-        }
         const emptyMessage = data.allMatches ? "현재 자금 범위에 해당하는 단지가 없어요." : data.message || "예산 기준 후보를 찾지 못했어요.";
         budgetResultEl.innerHTML = `<div class="candidate-options-bar"><div class="candidate-funding-option">${additionalFundingToggleHtml(includeAdditionalFundingCandidates)}</div>${candidateSortHtml(budgetSort, false)}</div>${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
         return;
@@ -9933,7 +10248,6 @@
           <div class="budget-title-row">
             <div class="budget-title">${resultTitleHtml}</div>
           </div>
-          ${data.enrichmentPending ? '<div class="budget-caption" data-budget-background-status role="status" aria-live="polite">첫 10개를 먼저 보여드려요. 최신 실거래와 가격 흐름 점수는 백그라운드에서 갱신 중이에요.<span class="loading-dots" aria-hidden="true"></span></div>' : ""}
         </div>
         ${profile.length ? `<div class="budget-profile result-condition-profile">${profile.map(item => `<span class="profile-pill">${esc(item)}</span>`).join("")}</div>` : ""}
         <div class="candidate-options-bar">
@@ -9959,9 +10273,6 @@
               </div>
               ${policyImpactHtml(item.policyImpact, item, data.budgetEok)}
               <div class="candidate-primary-actions">
-                <button class="listing-review-trigger" type="button" data-listing-review-name="${esc(item.name)}" data-listing-review-region="${esc(item.region || item.displayRegion || "")}" data-listing-review-area="${esc(item.displayAreaLabel || item.areaLabel || "")}" data-listing-review-price="${esc(item.latestDealPriceEok || item.recent3AdjustedAveragePriceEok || item.recent3AveragePriceEok || item.midPriceEok || "")}">
-                  이 매물 계약 전 분석
-                </button>
                 ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기, 새 탭으로 열기`)}
                 <button class="compare-toggle" type="button" data-compare-name="${esc(item.name)}" aria-pressed="${selectedCandidateNames.has(item.name)}">
                   ${selectedCandidateNames.has(item.name) ? "비교에서 빼기" : "+ 비교 담기"}
@@ -10056,7 +10367,7 @@
       updateBudgetEnrichmentProgress(stageIndex);
       const message = budgetResultEl.querySelector("[data-budget-enrichment-message]");
       if (message && elapsedSeconds >= 3) {
-        message.textContent = "예상보다 조금 오래 걸리고 있지만, 준비되면 첫 10개부터 보여드릴게요.";
+        message.textContent = "예상보다 조금 오래 걸리고 있지만, 모든 후보 카드가 준비되면 한 번에 보여드릴게요.";
       }
     }
 
@@ -10079,43 +10390,50 @@
       return true;
     }
 
-    function refreshBudgetCacheInBackground(url, jobId) {
-      budgetBackgroundRefreshController?.abort();
-      const controller = new AbortController();
-      budgetBackgroundRefreshController = controller;
-      void (async () => {
-        try {
-          for (let attempt = 0; attempt < 820 && !controller.signal.aborted; attempt += 1) {
-            await new Promise(resolve => setTimeout(resolve, 750));
-            const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}`, { signal:controller.signal });
-            if (!next.done) continue;
-            const showingSameSearch = (
-              budgetBackgroundRefreshController === controller
-              && currentBudgetData?.enrichmentJobId === jobId
-            );
-            if (next.error) {
-              if (showingSameSearch) {
-                renderBudgetCandidates({
-                  ...currentBudgetData,
-                  enrichmentPending:false,
-                  enrichmentStage:"error",
-                  enrichmentError:next.error,
-                }, { preserveSelection:true });
-              }
-              break;
-            }
-            writeBudgetBrowserCache(url, next);
-            if (showingSameSearch) {
-              renderBudgetCandidates(next, { preserveSelection:true });
-            }
-            break;
-          }
-        } catch (error) {
-          if (error?.name !== "AbortError") console.debug("budget cache refresh deferred", error);
-        } finally {
-          if (budgetBackgroundRefreshController === controller) budgetBackgroundRefreshController = null;
+    function waitForBudgetPoll(delayMs, signal) {
+      return new Promise((resolve, reject) => {
+        let timer = null;
+        const finish = () => {
+          signal.removeEventListener("abort", cancel);
+          resolve();
+        };
+        const cancel = () => {
+          clearTimeout(timer);
+          reject(new DOMException("검색을 취소했어요.", "AbortError"));
+        };
+        if (signal.aborted) {
+          cancel();
+          return;
         }
-      })();
+        timer = setTimeout(finish, delayMs);
+        signal.addEventListener("abort", cancel, { once:true });
+      });
+    }
+
+    async function waitForCompletedBudgetCandidates(data, url, controller) {
+      if (!data.enrichmentPending) return data;
+      const jobId = data.enrichmentJobId;
+      if (!jobId) throw { error:"후보 분석 진행 상태를 확인하지 못했어요." };
+
+      for (let attempt = 0; attempt < 820; attempt += 1) {
+        await waitForBudgetPoll(750, controller.signal);
+        if (controller.signal.aborted || budgetSearchController !== controller) return null;
+        const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}`, { signal:controller.signal });
+        if (!next.done) {
+          if (next.enrichmentStage === "live_data_slow") {
+            updateBudgetEnrichmentProgress(BUDGET_ENRICHMENT_STAGES.length - 1);
+          }
+          continue;
+        }
+        if (next.error || next.enrichmentStage === "error" || next.enrichmentStage === "timeout") {
+          throw { error:next.error || "모든 후보 데이터를 준비하지 못했어요. 잠시 후 다시 검색해 주세요." };
+        }
+        if (next.enrichmentPending) continue;
+        updateBudgetEnrichmentProgress(BUDGET_ENRICHMENT_STAGES.length - 1, true);
+        writeBudgetBrowserCache(url, next);
+        return next;
+      }
+      throw { error:"후보 분석이 오래 걸리고 있어요. 잠시 후 다시 검색해 주세요." };
     }
 
     async function loadBudgetCandidates() {
@@ -10134,11 +10452,10 @@
       budgetSubmit.disabled = true;
       resetComparisonState();
       showPolicyExcludedCandidates = false;
-      includeAdditionalFundingCandidates = false;
+      includeAdditionalFundingCandidates = true;
       budgetSort = "budget_near";
       candidateVisibleCount = CANDIDATE_PAGE_SIZE;
       budgetSearchController?.abort();
-      budgetBackgroundRefreshController?.abort();
       const controller = new AbortController();
       budgetSearchController = controller;
       setConditionStage("results");
@@ -10167,13 +10484,12 @@
           staged: "true",
         });
         const url = `/api/budget-candidates?${params.toString()}`;
-        const data = readBudgetBrowserCache(url) || await getJson(url, { signal:controller.signal });
-        if (!data.enrichmentPending) writeBudgetBrowserCache(url, data);
+        const initialData = readBudgetBrowserCache(url) || await getJson(url, { signal:controller.signal });
+        const data = await waitForCompletedBudgetCandidates(initialData, url, controller);
+        if (!data) return;
+        writeBudgetBrowserCache(url, data);
         const revealed = await revealBudgetCandidatesTogether(data, controller);
         if (!revealed) return;
-        if (data.enrichmentPending && data.enrichmentJobId) {
-          refreshBudgetCacheInBackground(url, data.enrichmentJobId);
-        }
       } catch (error) {
         if (budgetSearchController !== controller) return;
         if (error?.name === "AbortError") {
@@ -10660,11 +10976,6 @@
       }
     });
     async function handleBudgetResultClick(event) {
-      const listingReviewButton = event.target.closest("[data-listing-review-name]");
-      if (listingReviewButton) {
-        openListingReview(listingReviewTargetFromTrigger(listingReviewButton));
-        return;
-      }
       const candidateMapSheetHandle = event.target.closest("[data-candidate-map-sheet-handle]");
       if (candidateMapSheetHandle) {
         if (performance.now() < candidateMapSheetSuppressClickUntil) return;
@@ -10908,7 +11219,7 @@
       budgetResultEl.querySelectorAll(".signal-report").forEach(report => setSignalDefinitionOpen(report, false));
       aptReportSheet.querySelectorAll(".signal-report").forEach(report => setSignalDefinitionOpen(report, false));
     });
-    compareOpen.addEventListener("click", openComparison);
+    compareCart.addEventListener("click", openComparison);
     comparisonClose.addEventListener("click", closeComparison);
     comparisonOverlay.addEventListener("click", event => {
       if (event.target === comparisonOverlay) closeComparison();
@@ -11099,7 +11410,7 @@
         hideAptSuggest();
         return;
       }
-      aptSearchSuggest.innerHTML = items.map(item => `<button class="apt-suggest-item" type="button" role="option" data-apt-suggest-name="${esc(item.name)}" data-apt-suggest-region="${esc(item.region || "")}" data-apt-suggest-address="${esc(item.address || "")}" data-apt-suggest-households="${esc(item.households || "")}" data-apt-suggest-status="${esc(item.status || "")}">
+      aptSearchSuggest.innerHTML = items.map(item => `<button class="apt-suggest-item" type="button" role="option" data-apt-suggest-name="${esc(item.name)}" data-apt-suggest-region="${esc(item.region || "")}" data-apt-suggest-address="${esc(item.address || "")}" data-apt-suggest-legal-dong="${esc(item.legalDong || "")}" data-apt-suggest-jibun="${esc(item.jibun || "")}" data-apt-suggest-cortar-no="${esc(item.cortarNo || "")}" data-apt-suggest-lawd-cd="${esc(item.lawdCd || "")}" data-apt-suggest-households="${esc(item.households || "")}" data-apt-suggest-status="${esc(item.status || "")}">
         <span class="apt-suggest-row"><span class="apt-suggest-chip">아파트</span><span class="apt-suggest-name">${esc(item.name)}</span>${apartmentStatusBadgeHtml(item.status)}</span>
         ${item.address ? `<span class="apt-suggest-address">${esc(item.address)}</span>` : ""}
       </button>`).join("");
@@ -11157,11 +11468,20 @@
       if (!fallback) return [];
       const selectedName = String(selectedItem.name || "");
       const selectedRegion = String(selectedItem.region || "");
+      const selectedDong = String(selectedItem.legalDong || "");
+      const selectedJibun = String(selectedItem.jibun || "");
       const exactSelectedItems = items.filter(item => (
         String(item.name || "") === selectedName
         && (!selectedRegion || String(item.region || "") === selectedRegion)
+        && (!selectedDong || String(item.legalDong || "") === selectedDong)
+        && (!selectedJibun || String(item.jibun || "") === selectedJibun)
       ));
-      if (exactSelectedItems.length) return [exactSelectedItems[0]];
+      if (exactSelectedItems.length) {
+        return [{
+          ...exactSelectedItems[0],
+          preferredArea:String(selectedItem.preferredArea || ""),
+        }];
+      }
       return [fallback];
     }
 
@@ -11188,6 +11508,7 @@
         }
         items = [fallback];
       }
+      aptSearchInput.value = "";
       if (!items.length) {
         aptSearchResults.innerHTML = `<div class="apt-result-empty">‘${esc(query)}’와 일치하는 단지를 찾지 못했어요. 단지명 철자나 지역명을 함께 입력해 보세요.</div>`;
         return;
@@ -11199,13 +11520,14 @@
             <span class="budget-meta" data-apt-result-meta>${esc([item.address, item.households ? `${Number(item.households).toLocaleString()}세대` : ""].filter(Boolean).join(" · "))}</span>
           </div>
         </div>
-        <button class="apt-area-change" type="button" data-apt-area-change>전용면적 선택</button>
+        <div class="apt-area-picker" data-apt-area-picker>
+          <div class="apt-area-options" data-apt-area-options role="radiogroup" aria-label="전용면적 선택">
+            <span class="apt-area-options-status">전용면적 불러오는 중…</span>
+          </div>
+        </div>
         <div class="apt-affordability is-loading" data-apt-affordability aria-live="polite">예상 매수가와 필요한 자금을 계산하고 있어요…</div>
         <div class="apt-result-actions">
           <div class="candidate-primary-actions">
-            <button class="listing-review-trigger" type="button" data-listing-review-name="${esc(item.name)}" data-listing-review-region="${esc(item.region || "")}">
-              이 매물 계약 전 분석
-            </button>
             ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "apt-result-naver")}
           </div>
           <button class="apt-result-report candidate-detail-trigger" type="button" data-apt-card-signal data-signal-tone="loading" data-apt-report-name="${esc(item.name)}" data-apt-report-region="${esc(item.region || "")}">최근 가격·거래 흐름 확인 중…</button>
@@ -11230,6 +11552,7 @@
         address:String(item?.address || "").trim(),
         households:Number(item?.households || 0),
         status:String(item?.status || "").trim(),
+        preferredArea:String(item?.preferredArea || "").trim(),
       };
       aptSearchInput.value = name;
       await runAptSearch(name, selectedItem);
@@ -11783,20 +12106,24 @@
     async function enrichAptLeaderEstimate(candidate) {
       const leaderItem = candidateLeaderEstimateItem(candidate);
       const districtLeaderItem = candidateDistrictLeaderEstimateItem(candidate);
-      const enrich = async (target, property) => {
+      candidate.leaderEstimateErrors = [];
+      const enrich = async (target, property, failureLabel) => {
         if (!target) return;
         try {
-          const cacheKey = roneEstimateKey(target);
-          const cached = roneEstimateCache.get(cacheKey);
-          const result = cached || await requestRoneEstimate(target);
+          const result = await requestComparableEstimate(target);
           candidate[property] = result.payload;
         } catch (_) {
           candidate[property] = null;
+          candidate.leaderEstimateErrors.push(failureLabel);
         }
       };
       await Promise.all([
-        enrich(leaderItem, "leaderRoneEstimate"),
-        enrich(districtLeaderItem, "districtLeaderRoneEstimate"),
+        enrich(leaderItem, "leaderRoneEstimate", `${leaderItem?.name || "동"} 대장 비교선`),
+        enrich(
+          districtLeaderItem,
+          "districtLeaderRoneEstimate",
+          `${districtLeaderItem?.name || "구"} 구 대장 비교선`,
+        ),
       ]);
     }
 
@@ -11843,7 +12170,7 @@
       const basis = `${sampleText} · ${estimateMethod} · 신뢰도 ${estimate.confidence || "보통"} · ${data.areaBasis || "단지 거래 기준"}${fallbackNote}${ageWarning}`;
       return `<div class="budget-side">
           ${candidatePriceComparisonHtml(candidate)}
-          <div class="candidate-verdict">${candidateVerdictHtml(candidate)}</div>
+          <div class="candidate-verdict">${candidateVerdictHtml(candidate, { trendExpanded:candidate.aptSearchTrendExpanded !== false })}</div>
         </div>
         ${aptPolicyImpactHtml(data, priceText)}
         <div class="apt-price-basis">예상 매수가 ${esc(priceText)} · ${esc(basis)} · 대출 한도는 금융회사 심사 전 참고값</div>`;
@@ -11853,6 +12180,8 @@
       const requestBody = {
         name:item.name,
         region:item.region || "",
+        legal_dong:item.legalDong || "",
+        jibun:item.jibun || "",
         // 직접 단지 검색에는 이전 스텝 검색의 지역 선택값을 섞지 않는다.
         // 검색한 단지의 실제 지역을 기준으로 대장·정책·시그널을 계산해야
         // 같은 단지의 공통 결과 모델이 어느 진입 경로에서도 동일해진다.
@@ -11862,8 +12191,11 @@
         budget:currentPurchasePower?.budgetEok || "",
         price_strategy:"stretch",
         min_area:area ? 0 : budgetMinArea.value,
-        min_households:budgetMinHouseholds.value,
-        max_building_age:budgetMaxBuildingAge.value,
+        // 직접 선택한 단지는 후보 탐색 조건과 무관하게 공통 시그널·대장
+        // 정보를 만들어야 한다. 세대수·연식 필터로 정확한 단지를 탈락시키면
+        // 가격 차트만 남고 지역 대장 비교 데이터가 사라진다.
+        min_households:0,
+        max_building_age:0,
         profile:aptPurchaseProfile(),
       };
       const cacheKey = JSON.stringify(requestBody);
@@ -11886,9 +12218,16 @@
     }
 
     async function fetchAptAreaOptions(item) {
-      const cacheKey = `${item.name}${item.region || ""}`;
+      const cacheKey = `${item.name}${item.region || ""}${item.legalDong || ""}${item.jibun || ""}`;
       if (aptAreaOptionsCache.has(cacheKey)) return aptAreaOptionsCache.get(cacheKey);
-      const pending = getJson(`/api/apartment-areas?name=${encodeURIComponent(item.name)}&region=${encodeURIComponent(item.region || "")}&months=24`);
+      const params = new URLSearchParams({
+        name:item.name,
+        region:item.region || "",
+        months:"24",
+      });
+      if (item.legalDong) params.set("legal_dong", item.legalDong);
+      if (item.jibun) params.set("jibun", item.jibun);
+      const pending = getJson(`/api/apartment-areas?${params.toString()}`);
       aptAreaOptionsCache.set(cacheKey, pending);
       try {
         const data = await pending;
@@ -12011,30 +12350,31 @@
       });
     }
 
-    function renderAptAreaOptions(card, areas, selectedArea = "") {
+    function syncAptAreaChipSelection(card, selectedArea = "") {
+      card?.querySelectorAll("[data-apt-area]").forEach(button => {
+        const selected = String(button.dataset.aptArea || "") === String(selectedArea || "");
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-checked", String(selected));
+      });
+    }
+
+    function renderAptAreaOptions(card, areas, selectedArea = card?.dataset.selectedAptAreaChoice || "") {
       const options = card?.querySelector("[data-apt-area-options]");
-      const copy = card?.querySelector("[data-apt-area-copy]");
       if (!options) return;
       const cleanAreas = Array.isArray(areas)
         ? areas.filter(area => area && String(area.value || "").trim())
         : [];
-      options.innerHTML = [
-        `<button class="apt-area-option${selectedArea ? "" : " is-selected"}" type="button" data-apt-area="" aria-pressed="${selectedArea ? "false" : "true"}">전체</button>`,
-        ...cleanAreas.map(area => {
+      if (!cleanAreas.length) {
+        options.innerHTML = `<span class="apt-area-options-status">선택 가능한 전용면적이 없어요.</span>`;
+      } else {
+        options.innerHTML = cleanAreas.map(area => {
           const value = String(area.value);
+          const label = String(area.label || "").replace(/^전용\s*/, "");
           const selected = value === String(selectedArea);
           const count = Number(area.transactionCount || 0);
-          const title = count ? `${area.label} · 최근 거래 ${count.toLocaleString("ko-KR")}건` : area.label;
-          return `<button class="apt-area-option${selected ? " is-selected" : ""}" type="button" data-apt-area="${esc(value)}" aria-pressed="${selected ? "true" : "false"}" title="${esc(title)}">${esc(area.label)}</button>`;
-        }),
-      ].join("");
-      if (copy) {
-        const selected = cleanAreas.find(area => String(area.value) === String(selectedArea));
-        copy.textContent = selected
-          ? `${selected.label} 기준으로 예상 매수가·필요 자금·거래 흐름을 다시 계산했어요.`
-          : cleanAreas.length
-            ? "현재는 단지 전체 평형의 거래를 함께 보여드리고 있어요. 면적을 고르면 해당 평형의 예상 매수가와 필요한 자금을 다시 계산해요."
-            : "최근 거래에서 구분 가능한 전용면적을 찾지 못해 현재는 단지 전체 평형을 보여드리고 있어요.";
+          const title = count ? `전용 ${label} · 최근 거래 ${count.toLocaleString("ko-KR")}건` : `전용 ${label}`;
+          return `<button class="apt-area-option${selected ? " is-selected" : ""}" type="button" role="radio" data-apt-area="${esc(value)}" data-apt-area-label="${esc(label)}" aria-checked="${selected ? "true" : "false"}" title="${esc(title)}">${esc(label)}</button>`;
+        }).join("");
       }
     }
 
@@ -12042,8 +12382,11 @@
       const card = aptSearchResults.querySelector(`[data-apt-card-index="${index}"]`);
       if (!card) return;
       try {
-        const data = await fetchAptAreaOptions(item);
-        renderAptAreaOptions(card, data.areas?.length ? data.areas : fallbackAptAreaOption(initialData));
+        const [data, fallbackData] = await Promise.all([
+          fetchAptAreaOptions(item),
+          initialData ? Promise.resolve(initialData) : fetchAptAffordability(item).catch(() => null),
+        ]);
+        renderAptAreaOptions(card, data.areas?.length ? data.areas : fallbackAptAreaOption(fallbackData));
       } catch {
         renderAptAreaOptions(card, fallbackAptAreaOption(initialData));
       }
@@ -12055,7 +12398,6 @@
       const slot = card.querySelector("[data-apt-affordability]");
       const meta = card.querySelector("[data-apt-result-meta]");
       const signalEl = card.querySelector("[data-apt-card-signal]");
-      const reviewButton = card.querySelector("[data-listing-review-name]");
       aptCandidateResults.set(index, candidate);
       const resolvedArea = String(data?.resolvedArea || "");
       if (resolvedArea) {
@@ -12064,6 +12406,7 @@
         card.dataset.selectedAptArea = resolvedArea;
         card.dataset.selectedAptAreaChoice = resolvedArea;
         card.dataset.selectedAptAreaLabel = resolvedLabel;
+        syncAptAreaChipSelection(card, resolvedArea);
         const changeButton = card.querySelector("[data-apt-area-change]");
         if (changeButton) {
           const buttonLabel = resolvedLabel.replace(/^전용\s*/, "");
@@ -12072,17 +12415,14 @@
         }
       }
       if (meta) meta.innerHTML = candidateListMetaHtml(candidate);
-      if (reviewButton) {
-        reviewButton.dataset.listingReviewRegion = candidate.region || item.region || "";
-        reviewButton.dataset.listingReviewArea = resolvedArea || candidate.displayAreaLabel || "";
-        reviewButton.dataset.listingReviewPrice = data?.estimate?.midPriceEok || candidate.midPriceEok || "";
-      }
       if (signalEl) {
         const state = aptCardSignalState(candidate, candidate.latestDealDate);
         signalEl.textContent = state.text;
         signalEl.dataset.signalTone = state.tone;
       }
       if (slot) {
+        const trendExpanded = card.dataset.aptTrendExpanded !== "false";
+        candidate.aptSearchTrendExpanded = trendExpanded;
         slot.innerHTML = aptAffordabilityHtml(data, item, {}, candidate);
         slot.classList.remove("is-loading");
         syncSparkAxisLabelSizes(slot);
@@ -12098,6 +12438,7 @@
       card.dataset.selectedAptArea = String(area || "");
       card.dataset.selectedAptAreaChoice = String(areaChoice || "");
       card.dataset.selectedAptAreaLabel = displayLabel;
+      syncAptAreaChipSelection(card, areaChoice);
       const changeButton = card.querySelector("[data-apt-area-change]");
       if (changeButton) {
         const buttonLabel = displayLabel.replace(/^전용\s*/, "");
@@ -12152,13 +12493,18 @@
           const requestToken = String(card.dataset.aptAreaRequest || "0");
           try {
             if (String(card.dataset.aptAreaRequest || "0") !== requestToken) continue;
+            const areaOptionsPromise = enrichAptAreaOptions(item, index);
+            const preferredArea = Number(item.preferredArea || 0);
             const minimum = Number(budgetMinArea.value || 0);
             await selectAptArea(
               card,
-              "",
-              minimum ? `전용 ${minimum}㎡ 이상` : "상관없음",
-              "",
+              preferredArea ? String(preferredArea) : "",
+              preferredArea
+                ? `전용 ${leaderAreaText(preferredArea)}㎡`
+                : minimum ? `전용 ${minimum}㎡ 이상` : "상관없음",
+              preferredArea ? String(preferredArea) : "",
             );
+            await areaOptionsPromise;
           } catch (error) {
             if (String(card.dataset.aptAreaRequest || "0") !== requestToken) continue;
             slot.innerHTML = aptAffordabilityHtml({
@@ -12280,6 +12626,10 @@
         name:item.dataset.aptSuggestName || "",
         region:item.dataset.aptSuggestRegion || "",
         address:item.dataset.aptSuggestAddress || "",
+        legalDong:item.dataset.aptSuggestLegalDong || "",
+        jibun:item.dataset.aptSuggestJibun || "",
+        cortarNo:item.dataset.aptSuggestCortarNo || "",
+        lawdCd:item.dataset.aptSuggestLawdCd || "",
         households:Number(item.dataset.aptSuggestHouseholds || 0),
         status:item.dataset.aptSuggestStatus || "",
       };
@@ -12290,9 +12640,13 @@
       if (!event.target.closest("#aptSearchBox")) hideAptSuggest();
     });
     aptSearchResults.addEventListener("click", event => {
-      const listingReviewButton = event.target.closest("[data-listing-review-name]");
-      if (listingReviewButton) {
-        openListingReview(listingReviewTargetFromTrigger(listingReviewButton));
+      const areaOption = event.target.closest("[data-apt-area]");
+      if (areaOption) {
+        const card = areaOption.closest("[data-apt-card-index]");
+        const area = String(areaOption.dataset.aptArea || "");
+        if (!card || areaOption.getAttribute("aria-checked") === "true") return;
+        const label = String(areaOption.dataset.aptAreaLabel || "");
+        selectAptArea(card, area, `전용 ${label}`, area);
         return;
       }
       const areaChange = event.target.closest("[data-apt-area-change]");
@@ -12318,6 +12672,7 @@
         const expanded = trendToggle.getAttribute("aria-expanded") === "true";
         trendToggle.setAttribute("aria-expanded", String(!expanded));
         trendToggle.textContent = expanded ? "차트보기" : "차트 접기";
+        if (candidateCard) candidateCard.dataset.aptTrendExpanded = String(!expanded);
         if (panel) {
           panel.hidden = expanded;
           if (expanded) panel.querySelector("[data-spark-tooltip]")?.setAttribute("hidden", "");
@@ -12384,34 +12739,55 @@
     });
     aptSearchPageBack.addEventListener("click", closeAptSearchView);
     aptSearchBack.addEventListener("click", closeAptSearchView);
-    listingReviewEntry.addEventListener("click", () => openAptSearchLanding());
     listingReportHistoryEntry.addEventListener("click", () => void openListingReportHistory());
     leaderEntry.addEventListener("click", () => {
+      if (activeView === "leader") {
+        openHomeView();
+        return;
+      }
       setActiveView("leader");
       window.scrollTo({ top:0, behavior:"smooth" });
     });
-    leaderBack.addEventListener("click", () => {
-      setActiveView("condition");
-      window.scrollTo({ top:0, behavior:"smooth" });
-    });
     leaderSido.addEventListener("change", () => syncLeaderDistricts());
+    leaderCity.addEventListener("change", () => syncLeaderSubdistricts());
     leaderForm.addEventListener("submit", event => {
       event.preventDefault();
       void loadLeaderRanking();
     });
-    leaderCategoryTabs.addEventListener("click", event => {
-      const tab = event.target.closest("[data-leader-category]");
-      if (!tab || tab.getAttribute("aria-selected") === "true") return;
-      setLeaderCategory(tab.dataset.leaderCategory);
-      void loadLeaderRanking();
-    });
     leaderResult.addEventListener("click", event => {
+      const winnerToggle = event.target.closest("[data-leader-winner-toggle]");
+      if (winnerToggle && currentLeaderPayload) {
+        event.preventDefault();
+        leaderWinnerCollapsed = !leaderWinnerCollapsed;
+        renderLeaderResult(currentLeaderPayload);
+        requestAnimationFrame(() => {
+          document.getElementById("leader-winner-toggle")?.focus({ preventScroll:true });
+        });
+        return;
+      }
+      const expander = event.target.closest("[data-leader-expand-rank]");
+      if (expander && currentLeaderPayload) {
+        const rank = Number(expander.dataset.leaderExpandRank || 0);
+        if (!rank) return;
+        const opening = !expandedLeaderRanks.has(rank);
+        if (opening) expandedLeaderRanks.add(rank);
+        else expandedLeaderRanks.delete(rank);
+        renderLeaderResult(currentLeaderPayload);
+        requestAnimationFrame(() => {
+          leaderResult.querySelector(`[data-leader-expand-rank="${rank}"]`)?.focus({ preventScroll:true });
+          if (opening) {
+            document.getElementById(`leader-expanded-${rank}`)?.scrollIntoView({ behavior:"smooth", block:"nearest" });
+          }
+        });
+        return;
+      }
       const detail = event.target.closest("[data-leader-detail-name]");
       if (!detail) return;
       void runApartmentResultSearch({
         name:detail.dataset.leaderDetailName || "",
         region:detail.dataset.leaderDetailRegion || "",
         households:Number(detail.dataset.leaderDetailHouseholds || 0),
+        preferredArea:detail.dataset.leaderDetailAreaTarget || "",
       });
     });
     aptReportSheet.addEventListener("click", event => {
@@ -12506,7 +12882,7 @@
       if (event.key === "Escape" && !listingReviewSheet.hidden) closeListingReview();
     });
 
-    homeButton.addEventListener("click", () => {
+    function openHomeView() {
       closeListingReview();
       document.body.classList.remove("candidate-map-open");
       candidateViewMode = "list";
@@ -12516,7 +12892,10 @@
       budgetResultEl.innerHTML = "";
       setConditionStage("power", false);
       hasExplicitRegionScope = false;
-    });
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    homeButton.addEventListener("click", openHomeView);
 
     restorePurchasePowerForm();
     applyEstimatedMortgageRate();

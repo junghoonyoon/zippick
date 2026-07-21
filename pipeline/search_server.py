@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 import config
 import apartment_leaders
 import budget_candidates
+import kakao_station_distances
 import listing_review
 import molit_transactions
 import momentum_signals
@@ -41,7 +42,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 15
+BUDGET_CACHE_SCHEMA_VERSION = 17
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -87,6 +88,9 @@ MARKET_SNAPSHOT_FIELDS = (
     "lastObservedDealNote",
     "previousDealPriceEok",
     "previousDealDate",
+    "comparisonDealPriceEok",
+    "comparisonDealDate",
+    "comparisonDealSkippedOutlierCount",
     "transactionCount",
     "tradeLookbackMonths",
     "statsThrough",
@@ -103,6 +107,7 @@ MARKET_SNAPSHOT_FIELDS = (
     "previous6TradeCount",
     "sourceNote",
     "priceSource",
+    "priceIdentityVerified",
 )
 
 
@@ -198,6 +203,8 @@ def _market_snapshot_key(row):
     return (
         real_estate_search.compact(row.get("name", "")),
         real_estate_search.compact(row.get("region", "")),
+        real_estate_search.compact(row.get("legalDong", "")),
+        real_estate_search.compact(row.get("jibun", "")),
     )
 
 
@@ -235,7 +242,7 @@ def _compatible_snapshot(snapshot_index, snapshot_keys, key, area_key):
     compatible = [
         snapshot_index[row_key]
         for row_key in snapshot_keys.get(key, ())
-        if _market_snapshot_area_compatible(area_key, row_key[2])
+        if _market_snapshot_area_compatible(area_key, row_key[-1])
     ]
     return max(compatible, key=lambda item: item[0]) if compatible else None
 
@@ -258,6 +265,12 @@ def _index_market_snapshot_payload_locked(payload, saved_at):
                     saved_at,
                     json.loads(json.dumps(signals, ensure_ascii=False)),
                 )
+        if (
+            int(row.get("resultSchemaVersion") or 0)
+            < budget_candidates.CANDIDATE_RESULT_SCHEMA_VERSION
+            or row.get("priceIdentityVerified") is not True
+        ):
+            continue
         area_key = _market_snapshot_area_key(row)
         market = {
             field: row.get(field)
@@ -337,7 +350,7 @@ def _positive_number(value):
 
 
 def _market_price_ready(row):
-    return any(
+    return row.get("priceIdentityVerified") is True and any(
         _positive_number(row.get(field))
         for field in (
             "latestDealPriceEok",
@@ -352,12 +365,11 @@ def _cached_market_band(row):
     if _market_price_ready(row):
         return row, None, None, None, None, None
     try:
-        entity = budget_candidates._find_entity(
-            row.get("name", ""),
-            row.get("region", ""),
-        )
+        entity = budget_candidates._price_lookup_entity(row)
     except Exception:
         entity = None
+    if entity is None:
+        return row, None, None, None, None, None
     area_range = _market_snapshot_area_range(_market_snapshot_area_key(row))
     minimum = float(row.get("areaMin") or (area_range or (0, 0))[0] or 0)
     try:
@@ -396,15 +408,19 @@ def _attach_cached_market_bands(rows):
             row["marketDataStatus"] = "ready"
             row["marketLocalCacheHit"] = True
         elif (coverage or {}).get("complete"):
+            budget_candidates._invalidate_unverified_price(row)
             if last_observed:
                 row.update(last_observed)
+                row["priceSource"] = "molit_reference"
             row["marketDataStatus"] = (
                 "no_recent_trade"
                 if last_observed
                 else "no_selected_area_trade"
             )
             row["marketCacheCoverage"] = coverage
+            row["priceIdentityVerified"] = True
         else:
+            budget_candidates._invalidate_unverified_price(row)
             row["marketDataStatus"] = "pending"
             if coverage:
                 row["marketCacheCoverage"] = coverage
@@ -526,10 +542,7 @@ def _refresh_snapshot_policy_impacts(payload, candidate_arguments):
             row["policyImpact"] = None
             continue
         try:
-            entity = budget_candidates._find_entity(
-                row.get("name", ""),
-                row.get("region", ""),
-            )
+            entity = budget_candidates._price_lookup_entity(row)
         except Exception:
             entity = None
         impact = policy_evaluator.evaluate_candidate(
@@ -915,7 +928,7 @@ def _regional_index_for_apartment(name, region, months):
     return regional_index
 
 
-def _molit_affordability_estimate(name, region, area, months):
+def _molit_affordability_estimate(name, region, area, months, entity=None):
     """Build a price estimate from MOLIT trades when R-ONE has no complex match.
 
     Without an area selection, the estimate intentionally summarizes all unit
@@ -937,12 +950,14 @@ def _molit_affordability_estimate(name, region, area, months):
     selected_area = requested_area
     for lookup_region in lookup_regions:
         try:
-            band = molit_transactions.price_band_for_apartment(
-                name,
-                region=lookup_region,
-                area_label=requested_area,
-                lookback_months=lookback_months,
-            )
+            options = {
+                "region": lookup_region,
+                "area_label": requested_area,
+                "lookback_months": lookback_months,
+            }
+            if entity is not None:
+                options["entity"] = entity
+            band = molit_transactions.price_band_for_apartment(name, **options)
         except Exception:
             band = None
         if not band:
@@ -973,12 +988,14 @@ def _molit_affordability_estimate(name, region, area, months):
         return None
 
     try:
-        transactions = molit_transactions.transactions_for_apartment(
-            name,
-            region=selected_region,
-            area_label=selected_area,
-            lookback_months=lookback_months,
-        )
+        options = {
+            "region": selected_region,
+            "area_label": selected_area,
+            "lookback_months": lookback_months,
+        }
+        if entity is not None:
+            options["entity"] = entity
+        transactions = molit_transactions.transactions_for_apartment(name, **options)
     except Exception:
         transactions = []
     latest_date = str(selected_band.get("latestDealDate") or "")
@@ -1005,6 +1022,9 @@ def _molit_affordability_estimate(name, region, area, months):
             "basePeriod": str(row.get("dealDate") or "")[:7].replace("-", ""),
             "baseIndex": None,
             "factor": 1.0,
+            "apartment": row.get("apartment"),
+            "legalDong": row.get("legalDong"),
+            "jibun": row.get("jibun"),
             "adjustment": (
                 "국토부 분양권·입주권 실거래 원가격"
                 if transaction_kind == molit_transactions.TRANSACTION_KIND_PRESALE
@@ -1053,16 +1073,55 @@ def _molit_affordability_estimate(name, region, area, months):
             "exclusiveArea": selected_band.get("latestDealExclusiveArea"),
             "floor": selected_band.get("latestDealFloor"),
         },
+        "previousTrade": (
+            {
+                "dealDate": transactions[1].get("dealDate"),
+                "dealAmountEok": transactions[1].get("dealAmountEok"),
+                "exclusiveArea": transactions[1].get("exclusiveArea"),
+                "floor": transactions[1].get("floor"),
+            }
+            if len(transactions) > 1
+            else {}
+        ),
+        "comparisonTrade": ({
+            "dealDate": selected_band.get("comparisonDealDate"),
+            "dealAmountEok": selected_band.get("comparisonDealPriceEok"),
+        } if selected_band.get("comparisonDealPriceEok") else {}),
+        "comparisonSkippedOutlierCount": int(
+            selected_band.get("comparisonDealSkippedOutlierCount") or 0
+        ),
         "adjustedTransactions": adjusted_transactions,
         "index": regional_index or {},
         "areaBasis": area_basis,
         "transactionKind": transaction_kind,
+        "identity": molit_transactions._entity_cache_identity(entity),
     }
+
+
+def _merge_exact_transactions_with_index(exact_payload, index_payload, name=""):
+    """Keep the exact MOLIT trade set and add only the regional R-ONE index."""
+    if not isinstance(exact_payload, dict):
+        return exact_payload
+    regional_index = _regional_index_from_rone_payload(index_payload, name)
+    if not regional_index:
+        return exact_payload
+    exact_payload["index"] = regional_index
+    index_by_period = {
+        str(row.get("period") or ""): row.get("value")
+        for row in regional_index.get("history") or []
+        if isinstance(row, dict)
+    }
+    for row in exact_payload.get("adjustedTransactions") or []:
+        period = str(row.get("basePeriod") or "")
+        row["baseIndex"] = index_by_period.get(period)
+    return exact_payload
 
 
 def _apartment_affordability(arguments):
     name = str(arguments.get("name") or "").strip()
     region = str(arguments.get("region") or "").strip()
+    legal_dong = str(arguments.get("legal_dong") or arguments.get("legalDong") or "").strip()
+    jibun = str(arguments.get("jibun") or "").strip()
     area = str(arguments.get("area") or "").strip()
     months = arguments.get("months") or 24
     if len(name) < 2 or len(region) < 2:
@@ -1073,6 +1132,8 @@ def _apartment_affordability(arguments):
     common_candidate_arguments = {
         "name": name,
         "region": region,
+        "legal_dong": legal_dong,
+        "jibun": jibun,
         "search_region": arguments.get("search_region") or region,
         "area": area,
         "budget": arguments.get("budget") or 0,
@@ -1082,8 +1143,11 @@ def _apartment_affordability(arguments):
         "move_timing": arguments.get("move_timing") or "",
         "price_strategy": arguments.get("price_strategy") or "stretch",
         "min_area": arguments.get("min_area") or 0,
-        "min_households": arguments.get("min_households") or 0,
-        "max_building_age": arguments.get("max_building_age") or 0,
+        # 이 엔드포인트는 사용자가 이미 고른 정확한 단지를 분석한다.
+        # 후보 탐색용 세대수·연식 조건으로 단지를 다시 탈락시키면 canonical
+        # candidate와 그 안의 대장 비교 시그널만 비게 된다.
+        "min_households": 0,
+        "max_building_age": 0,
         "home_ownership": profile_arguments.get("home_ownership") or "unknown",
         "first_time": profile_arguments.get("first_time") or False,
         "cash_eok": profile_arguments.get("cash_eok") or 0,
@@ -1102,22 +1166,41 @@ def _apartment_affordability(arguments):
         )
     except Exception:
         common_candidate = None
+    market_entity = budget_candidates._price_lookup_entity(
+        common_candidate or {
+            "name": name,
+            "region": region,
+            "legalDong": legal_dong,
+            "jibun": jibun,
+        }
+    )
+    strict_identity = bool(legal_dong or jibun)
+    if strict_identity and market_entity is None:
+        return {
+            "state": "unavailable",
+            "error": "법정동·지번으로 단지를 정확히 식별하지 못해 실거래를 표시하지 않습니다.",
+            "candidate": common_candidate,
+            "profileComplete": False,
+        }, 200
 
     effective_area = area
     area_fallback = False
     minimum_area = policy_evaluator._float(arguments.get("min_area")) if not area else 0
     if minimum_area:
         try:
+            area_options_kwargs = {
+                "region": region,
+                "lookback_months": months,
+            }
+            if market_entity is not None:
+                area_options_kwargs["entity"] = market_entity
             area_options = molit_transactions.area_options_for_apartment(
-                name,
-                region=region,
-                lookback_months=months,
+                name, **area_options_kwargs,
             )
             if not area_options and region:
+                area_options_kwargs["region"] = ""
                 area_options = molit_transactions.area_options_for_apartment(
-                    name,
-                    region="",
-                    lookback_months=months,
+                    name, **area_options_kwargs,
                 )
         except Exception:
             area_options = None
@@ -1176,6 +1259,26 @@ def _apartment_affordability(arguments):
             months=months,
             include_details=True,
         )
+    # 카드 가격과 차트의 단지선은 반드시 같은 법정동·지번의 국토부
+    # 거래 집합을 사용한다. R-ONE 응답에서는 지역 지수만 결합한다.
+    if market_entity is not None:
+        exact_payload = _molit_affordability_estimate(
+            name,
+            region,
+            effective_area,
+            months,
+            entity=market_entity,
+        )
+        if exact_payload:
+            if estimate_status == 200 and isinstance(estimate_payload, dict):
+                exact_payload = _merge_exact_transactions_with_index(
+                    exact_payload, estimate_payload, name,
+                )
+            estimate_payload, estimate_status = exact_payload, 200
+        elif strict_identity:
+            estimate_payload, estimate_status = {
+                "error": "해당 법정동·지번의 동일 면적 실거래를 확인하지 못했어요."
+            }, 404
     estimate = estimate_payload.get("estimate") if isinstance(estimate_payload, dict) else None
     if estimate_status != 200 or not isinstance(estimate, dict):
         fallback_payload = _molit_affordability_estimate(
@@ -1183,11 +1286,12 @@ def _apartment_affordability(arguments):
             region,
             effective_area,
             months,
+            entity=market_entity,
         )
         if fallback_payload:
             estimate_payload = fallback_payload
             estimate = fallback_payload["estimate"]
-        elif common_candidate and (
+        elif not strict_identity and common_candidate and (
             common_candidate.get("estimatedMinPriceEok")
             or common_candidate.get("currentEstimateMinPriceEok")
             or common_candidate.get("minPriceEok")
@@ -1811,6 +1915,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/apartment-catalysts",
             "/api/listing-review",
             "/api/admin/apartment-leaders/recalculate",
+            "/api/admin/apartment-station-distances/refresh",
         } and not report_share_match:
             self._json({"error": "지원하지 않는 요청이에요."}, 404)
             return
@@ -1837,7 +1942,10 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json({"saved": saved})
             return
-        if parsed.path == "/api/admin/apartment-leaders/recalculate":
+        if parsed.path in {
+            "/api/admin/apartment-leaders/recalculate",
+            "/api/admin/apartment-station-distances/refresh",
+        }:
             configured_token = os.environ.get("APARTMENT_LEADER_ADMIN_TOKEN", "").strip()
             supplied_token = (
                 self.headers.get("X-Admin-Token", "").strip()
@@ -1855,6 +1963,30 @@ class Handler(BaseHTTPRequestHandler):
             if not sido or not sigungu:
                 self._json({"error": "시·도와 시·군·구를 입력해 주세요."}, 400)
                 return
+            if parsed.path == "/api/admin/apartment-station-distances/refresh":
+                try:
+                    payload = kakao_station_distances.enrich_entities(
+                        kakao_station_distances.entities_for_region(sido, sigungu),
+                        force=bool(arguments.get("force")),
+                        retry_unavailable=bool(arguments.get("retryUnavailable")),
+                        limit=arguments.get("limit"),
+                        workers=arguments.get("workers"),
+                        dry_run=bool(arguments.get("dryRun")),
+                    )
+                except kakao_station_distances.KakaoLocalError as exc:
+                    self._json({"error": str(exc)}, 503)
+                    return
+                except (TypeError, ValueError) as exc:
+                    self._json({"error": str(exc)}, 400)
+                    return
+                except Exception:
+                    self._json({"error": "지하철 거리 데이터를 갱신하지 못했어요."}, 502)
+                    return
+                self._json({
+                    **payload,
+                    "region": {"sido": sido, "sigungu": sigungu},
+                })
+                return
             try:
                 payload = apartment_leaders.get_leaders(
                     sido,
@@ -1864,7 +1996,7 @@ class Handler(BaseHTTPRequestHandler):
                         or apartment_leaders.DEFAULT_AREA_BUCKET
                     ),
                     reference_month=str(arguments.get("referenceMonth") or ""),
-                    category=str(arguments.get("category") or "overall"),
+                    category=str(arguments.get("category") or apartment_leaders.DEFAULT_CATEGORY),
                     limit=arguments.get("limit") or 5,
                     force=True,
                     cache_only=bool(arguments.get("dryRun")),
@@ -1955,6 +2087,8 @@ class Handler(BaseHTTPRequestHandler):
                 "molitAvailable": molit_transactions.enabled(),
                 "molitLastError": molit_transactions.last_error(),
                 "newsCatalystConfigured": news_catalysts.configured(),
+                "kakaoLocalConfigured": kakao_station_distances.configured(),
+                "stationDistanceCache": kakao_station_distances.cache_stats(),
                 "budgetPrewarm": dict(BUDGET_PREWARM_STATE),
             })
             return
@@ -1967,6 +2101,8 @@ class Handler(BaseHTTPRequestHandler):
                 ],
                 "defaultAreaBucket": apartment_leaders.DEFAULT_AREA_BUCKET,
                 "calculationVersion": apartment_leaders.CALCULATION_VERSION,
+                "stationDistanceConfigured": kakao_station_distances.configured(),
+                "stationDistanceCache": kakao_station_distances.cache_stats(),
             })
             return
         if parsed.path == "/api/apartment-leaders":
@@ -1976,7 +2112,7 @@ class Handler(BaseHTTPRequestHandler):
                 params.get("areaBucket", params.get("area_bucket", [apartment_leaders.DEFAULT_AREA_BUCKET]))[0].strip()
             )
             reference_month = params.get("referenceMonth", params.get("reference_month", [""]))[0].strip()
-            category = params.get("category", ["overall"])[0].strip()
+            category = params.get("category", [apartment_leaders.DEFAULT_CATEGORY])[0].strip()
             try:
                 limit = int(params.get("limit", ["5"])[0])
             except ValueError:
@@ -2123,6 +2259,8 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/apartment-areas":
             name = params.get("name", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
+            legal_dong = params.get("legal_dong", [""])[0].strip()
+            jibun = params.get("jibun", [""])[0].strip()
             months = params.get("months", ["24"])[0].strip()
             if len(name) < 2:
                 self._json({"error": "단지명을 확인해 주세요."}, 400)
@@ -2131,17 +2269,26 @@ class Handler(BaseHTTPRequestHandler):
                 months = max(1, min(int(months), 60))
             except ValueError:
                 months = 24
+            entity = budget_candidates._price_lookup_entity({
+                "name": name,
+                "region": region,
+                "legalDong": legal_dong,
+                "jibun": jibun,
+            })
+            if (legal_dong or jibun) and entity is None:
+                self._json({
+                    "error": "법정동·지번으로 단지를 정확히 식별하지 못했습니다."
+                }, 409)
+                return
             try:
-                areas = molit_transactions.area_options_for_apartment(
-                    name,
-                    region=region,
-                    lookback_months=months,
-                )
+                options = {"region": region, "lookback_months": months}
+                if entity is not None:
+                    options["entity"] = entity
+                areas = molit_transactions.area_options_for_apartment(name, **options)
                 if not areas and region:
+                    options["region"] = ""
                     areas = molit_transactions.area_options_for_apartment(
-                        name,
-                        region="",
-                        lookback_months=months,
+                        name, **options,
                     )
             except Exception:
                 # 조회 장애를 정상적인 '거래 없음'으로 응답하면 프런트 캐시에 빈
@@ -2183,9 +2330,23 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/rone-estimate":
             name = params.get("name", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
+            legal_dong = params.get("legal_dong", [""])[0].strip()
+            jibun = params.get("jibun", [""])[0].strip()
             area = params.get("area", [""])[0].strip()
             months = params.get("months", ["12"])[0].strip()
             include_details = params.get("details", [""])[0].strip().lower() in {"1", "true", "yes"}
+            entity = budget_candidates._price_lookup_entity({
+                "name": name,
+                "region": region,
+                "legalDong": legal_dong,
+                "jibun": jibun,
+            })
+            strict_identity = bool(legal_dong or jibun)
+            if strict_identity and entity is None:
+                self._json({
+                    "error": "법정동·지번으로 단지를 정확히 식별하지 못해 차트를 표시하지 않습니다."
+                }, 409)
+                return
             transaction_kind = molit_transactions.transaction_kind_for_apartment(name, region)
             if transaction_kind == molit_transactions.TRANSACTION_KIND_PRESALE:
                 payload, status = {"error": "분양권·입주권 전용 실거래 조회"}, 404
@@ -2197,10 +2358,25 @@ class Handler(BaseHTTPRequestHandler):
                     months=months,
                     include_details=include_details,
                 )
-            # R-ONE에 없는 단지(신축·분양권 등)는 국토부 실거래로 대체해
-            # 거래 흐름·추정가가 항상 뜨도록 한다.
-            if status != 200 or not isinstance(payload, dict) or not isinstance(payload.get("estimate"), dict):
-                fallback_payload = _molit_affordability_estimate(name, region, area, months)
+            # 차트의 단지 거래선은 카드와 같은 법정동·지번의 국토부 원거래만
+            # 쓴다. R-ONE은 지역 흐름 지수로만 결합한다.
+            exact_payload = _molit_affordability_estimate(
+                name, region, area, months, entity=entity,
+            )
+            if exact_payload:
+                if status == 200 and isinstance(payload, dict):
+                    exact_payload = _merge_exact_transactions_with_index(
+                        exact_payload, payload, name,
+                    )
+                payload, status = exact_payload, 200
+            elif strict_identity:
+                payload, status = {
+                    "error": "해당 법정동·지번의 동일 면적 실거래를 확인하지 못했어요."
+                }, 404
+            elif status != 200 or not isinstance(payload, dict) or not isinstance(payload.get("estimate"), dict):
+                fallback_payload = _molit_affordability_estimate(
+                    name, region, area, months,
+                )
                 if fallback_payload:
                     payload, status = fallback_payload, 200
             self._json(payload, status)

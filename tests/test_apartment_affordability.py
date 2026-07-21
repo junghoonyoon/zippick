@@ -45,6 +45,58 @@ ESTIMATE_PAYLOAD = {
 
 
 class ApartmentAffordabilityTest(unittest.TestCase):
+    def test_exact_entity_keeps_card_and_chart_on_the_same_transactions(self):
+        entity = {
+            "name": "현대",
+            "district": "동대문구",
+            "legalDong": "이문동",
+            "jibun": "54",
+        }
+        band = {
+            "latestDealDate": "2026-07-04",
+            "latestDealPriceEok": 9.27,
+            "latestDealExclusiveArea": 59.92,
+            "previousDealDate": "2026-04-05",
+            "previousDealPriceEok": 8.5,
+            "transactionCount": 2,
+            "minPriceEok": 8.5,
+            "midPriceEok": 8.89,
+            "maxPriceEok": 9.27,
+            "currentEstimateMinPriceEok": 8.5,
+            "currentEstimateMidPriceEok": 8.89,
+            "currentEstimateMaxPriceEok": 9.27,
+        }
+        trades = [
+            {"apartment": "현대", "legalDong": "이문동", "jibun": "54", "dealDate": "2026-07-04", "dealAmountEok": 9.27, "exclusiveArea": 59.92},
+            {"apartment": "현대", "legalDong": "이문동", "jibun": "54", "dealDate": "2026-04-05", "dealAmountEok": 8.5, "exclusiveArea": 59.92},
+        ]
+        with mock.patch.object(
+            search_server.molit_transactions,
+            "price_band_for_apartment",
+            return_value=band,
+        ) as price_band, mock.patch.object(
+            search_server.molit_transactions,
+            "transactions_for_apartment",
+            return_value=trades,
+        ) as transactions, mock.patch.object(
+            search_server,
+            "_regional_index_for_apartment",
+            return_value=None,
+        ):
+            payload = search_server._molit_affordability_estimate(
+                "현대", "동대문구", "59.92", 24, entity=entity,
+            )
+
+        self.assertEqual(payload["latestTrade"]["dealAmountEok"], 9.27)
+        self.assertEqual(payload["previousTrade"]["dealAmountEok"], 8.5)
+        self.assertEqual(
+            [row["originalPriceEok"] for row in payload["adjustedTransactions"]],
+            [9.27, 8.5],
+        )
+        self.assertTrue(all(row["legalDong"] == "이문동" and row["jibun"] == "54" for row in payload["adjustedTransactions"]))
+        self.assertIs(price_band.call_args.kwargs["entity"], entity)
+        self.assertIs(transactions.call_args.kwargs["entity"], entity)
+
     def test_listing_review_reuses_ready_affordability_payload(self):
         affordability = {
             "state": "ready",
@@ -219,6 +271,10 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             search_server.rone_estimates,
             "estimate",
             return_value=(ESTIMATE_PAYLOAD, 200),
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "area_options_for_apartment",
+            return_value=[{"value": "59", "label": "전용 59㎡"}],
         ):
             payload, status = search_server._apartment_affordability({
                 "name": "테스트아파트",
@@ -226,6 +282,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
                 "search_region": "성남분당구",
                 "budget": "10",
                 "min_area": "59",
+                "min_households": "9999",
+                "max_building_age": "1",
             })
 
         self.assertEqual(status, 200)
@@ -238,6 +296,11 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertEqual(common_result.call_args_list[0].kwargs["min_area"], "59")
         self.assertEqual(common_result.call_args_list[-1].kwargs["min_area"], 0)
         self.assertEqual(common_result.call_args_list[-1].kwargs["budget"], "10")
+        self.assertTrue(all(
+            call.kwargs["min_households"] == 0
+            and call.kwargs["max_building_age"] == 0
+            for call in common_result.call_args_list
+        ))
 
     def test_minimum_area_without_a_larger_unit_selects_the_closest_actual_unit(self):
         initial_candidate = {

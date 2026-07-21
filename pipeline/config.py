@@ -38,6 +38,7 @@ def _load_settings_file(path):
         ("공공데이터키", "PUBLIC_DATA_API_KEY"),
         ("국토부키", "PUBLIC_DATA_API_KEY"),
         ("실거래가키", "PUBLIC_DATA_API_KEY"),
+        ("카카오REST키", "KAKAO_REST_API_KEY"),
         ("카카오지도키", "KAKAO_MAP_JAVASCRIPT_KEY"),
         ("네이버API허브아이디", "NAVER_API_HUB_CLIENT_ID"),
         ("네이버API허브시크릿", "NAVER_API_HUB_CLIENT_SECRET"),
@@ -84,6 +85,16 @@ PUBLIC_DATA_API_KEY = os.environ.get("PUBLIC_DATA_API_KEY", os.environ.get("MOLI
 MOLIT_APARTMENT_TRADE_API_KEY = os.environ.get("MOLIT_APARTMENT_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 MOLIT_PRESALE_TRADE_API_KEY = os.environ.get("MOLIT_PRESALE_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 KAKAO_MAP_JAVASCRIPT_KEY = os.environ.get("KAKAO_MAP_JAVASCRIPT_KEY", "")
+KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY", "")
+KAKAO_LOCAL_TIMEOUT_SECONDS = float(os.environ.get("KAKAO_LOCAL_TIMEOUT_SECONDS", "8"))
+KAKAO_STATION_RADIUS_METERS = max(
+    1000,
+    min(int(os.environ.get("KAKAO_STATION_RADIUS_METERS", "20000")), 20000),
+)
+KAKAO_STATION_MAX_WORKERS = max(
+    1,
+    min(int(os.environ.get("KAKAO_STATION_MAX_WORKERS", "6")), 16),
+)
 NAVER_API_HUB_CLIENT_ID = os.environ.get("NAVER_API_HUB_CLIENT_ID", "")
 NAVER_API_HUB_CLIENT_SECRET = os.environ.get("NAVER_API_HUB_CLIENT_SECRET", "")
 NAVER_SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_CLIENT_ID", "")

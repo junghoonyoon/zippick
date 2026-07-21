@@ -166,7 +166,11 @@ class BudgetResultCacheTest(unittest.TestCase):
                 "candidates": [{
                     "name": "즉시단지",
                     "region": "강동구",
+                    "legalDong": "천호동",
+                    "jibun": "1",
                     "areaLabel": "전용 59㎡",
+                    "resultSchemaVersion": search_server.budget_candidates.CANDIDATE_RESULT_SCHEMA_VERSION,
+                    "priceIdentityVerified": True,
                     "latestDealPriceEok": 8.1,
                     "latestDealDate": "2026-07-01",
                     "transactionCount": 12,
@@ -184,6 +188,8 @@ class BudgetResultCacheTest(unittest.TestCase):
             "candidates": [{
                 "name": "즉시단지",
                 "region": "강동구",
+                "legalDong": "천호동",
+                "jibun": "1",
                 "areaLabel": "전용 60~60㎡",
                 "latestDealPriceEok": None,
                 "signals": None,
@@ -218,7 +224,11 @@ class BudgetResultCacheTest(unittest.TestCase):
                 "candidates": [{
                     "name": "백련산힐스테이트2차",
                     "region": "은평구",
+                    "legalDong": "불광동",
+                    "jibun": "1",
                     "areaLabel": "전용 59㎡",
+                    "resultSchemaVersion": search_server.budget_candidates.CANDIDATE_RESULT_SCHEMA_VERSION,
+                    "priceIdentityVerified": True,
                     "latestDealPriceEok": 8.4,
                     "latestDealDate": "2026-06-30",
                     "recent3AveragePriceEok": 8.3,
@@ -242,6 +252,8 @@ class BudgetResultCacheTest(unittest.TestCase):
             "candidates": [{
                 "name": "백련산힐스테이트2차",
                 "region": "은평구",
+                "legalDong": "불광동",
+                "jibun": "1",
                 "areaLabel": "전용 59㎡",
                 "midPriceEok": 8.3,
                 "policyImpact": stale_impact,
@@ -303,6 +315,8 @@ class BudgetResultCacheTest(unittest.TestCase):
                 "candidates": [{
                     "name": "평형분리단지",
                     "region": "강동구",
+                    "legalDong": "길동",
+                    "jibun": "1",
                     "areaLabel": "전용 59㎡",
                     "signals": {
                         "status": "ok",
@@ -318,6 +332,8 @@ class BudgetResultCacheTest(unittest.TestCase):
             "candidates": [{
                 "name": "평형분리단지",
                 "region": "강동구",
+                "legalDong": "길동",
+                "jibun": "1",
                 "areaLabel": "전용 84~85㎡",
                 "signals": None,
             }],
@@ -361,9 +377,13 @@ class BudgetResultCacheTest(unittest.TestCase):
             "candidates": [{
                 "name": "무거래단지",
                 "region": "강동구",
+                "legalDong": "상일동",
+                "jibun": "1",
                 "areaLabel": "전용 84~85㎡",
                 "midPriceEok": 0,
                 "marketDataStatus": "no_recent_trade",
+                "resultSchemaVersion": search_server.budget_candidates.CANDIDATE_RESULT_SCHEMA_VERSION,
+                "priceIdentityVerified": True,
             }],
         }
 
@@ -378,6 +398,8 @@ class BudgetResultCacheTest(unittest.TestCase):
         row = {
             "name": "재검색단지",
             "region": "강동구",
+            "legalDong": "성내동",
+            "jibun": "1",
             "areaLabel": "전용 84~85㎡",
             "areaMin": 84,
             "midPriceEok": 0,
@@ -418,6 +440,8 @@ class BudgetResultCacheTest(unittest.TestCase):
         row = {
             "name": "과거거래단지",
             "region": "강동구",
+            "legalDong": "둥촌동",
+            "jibun": "1",
             "areaLabel": "전용 84~85㎡",
             "areaMin": 84,
             "midPriceEok": 0,

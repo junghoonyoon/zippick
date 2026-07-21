@@ -3,6 +3,7 @@ import csv
 import datetime
 import hashlib
 import json
+import math
 import os
 import re
 import statistics
@@ -28,8 +29,13 @@ MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 8
+PRICE_BAND_CACHE_SCHEMA_VERSION = 10
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
+# 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
+# 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
+LAWD_CODE_SUCCESSORS = {
+    "41590": ("41591", "41593", "41595", "41597"),
+}
 _CIRCUIT_STATE = {
     TRANSACTION_KIND_APARTMENT: {"disabledUntil": 0, "lastError": ""},
     TRANSACTION_KIND_PRESALE: {"disabledUntil": 0, "lastError": ""},
@@ -39,6 +45,7 @@ _PRICE_BAND_SOURCE_SIGNATURE = None
 _PRICE_BAND_MEMORY_CACHE = {}
 _MONTH_MEMORY_CACHE = {}
 _MONTH_ADDRESS_INDEX = {}
+_MONTH_NAME_INDEX = {}
 _MONTH_MEMORY_CACHE_LOCK = threading.Lock()
 _SOURCE_INDEX = None
 _SOURCE_INDEX_SIGNATURE = None
@@ -170,9 +177,14 @@ def _read_cached_month(
     except (OSError, ValueError):
         return None
     fetched_at = float(payload.get("fetchedAt") or 0)
+    items = payload.get("items") or []
+    # 구 캐시는 첫 1,000건만 저장됐을 수 있다. 정상 조회 때는 다시 받아
+    # 페이지 완결 표식이 있는 캐시로 교체하고, API 장애 때만 부분 캐시를 쓴다.
+    if not allow_stale and len(items) >= 1000 and payload.get("complete") is not True:
+        return None
     if not allow_stale and time.time() - fetched_at > _month_cache_ttl(deal_ymd):
         return None
-    return payload.get("items") or []
+    return items
 
 
 def _write_cached_month(
@@ -189,6 +201,7 @@ def _write_cached_month(
         "lawdCd": lawd_cd,
         "dealYmd": deal_ymd,
         "transactionKind": transaction_kind,
+        "complete": True,
         "items": items,
     }, ensure_ascii=False), encoding="utf-8")
     tmp.replace(path)
@@ -216,7 +229,19 @@ def _read_cached_month_memory(
     return cached
 
 
-def _price_band_cache_key(name, region, area_label, lookback_months):
+def _entity_cache_identity(entity):
+    entity = entity or {}
+    return {
+        "name": str(entity.get("name") or "").strip(),
+        "province": str(entity.get("province") or "").strip(),
+        "district": str(entity.get("district") or entity.get("city") or "").strip(),
+        "legalDong": str(entity.get("legalDong") or "").strip(),
+        "jibun": str(entity.get("jibun") or "").strip(),
+        "lawdCd": str(entity.get("lawdCd") or "").strip(),
+    } if entity else None
+
+
+def _price_band_cache_key(name, region, area_label, lookback_months, entity=None):
     global _PRICE_BAND_SOURCE_SIGNATURE
     if _PRICE_BAND_SOURCE_SIGNATURE is None:
         digests = []
@@ -234,6 +259,9 @@ def _price_band_cache_key(name, region, area_label, lookback_months):
         "name": str(name or "").strip(),
         "region": str(region or "").strip(),
         "areaLabel": str(area_label or "").strip(),
+        # 같은 구에 같은 단지명이 여러 개 있어도 가격 캐시를 공유하지 않는다.
+        # 법정동·지번이 다른 거래가 과거 캐시를 통해 다시 섞이는 것도 막는다.
+        "entity": _entity_cache_identity(entity),
         "lookbackMonths": int(lookback_months or RECENT_LOOKBACK_MONTHS),
         "transactionKind": transaction_kind_for_apartment(name, region),
         "dealMonths": _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS)),
@@ -331,6 +359,15 @@ def _parse_items(xml_text, transaction_kind=TRANSACTION_KIND_APARTMENT):
     return rows
 
 
+def _parse_total_count(xml_text):
+    root = ET.fromstring(xml_text)
+    node = root.find(".//totalCount")
+    try:
+        return int(str(node.text or "").strip()) if node is not None else 0
+    except ValueError:
+        return 0
+
+
 def fetch_month(
     lawd_cd,
     deal_ymd,
@@ -366,23 +403,35 @@ def fetch_month(
             or "공공데이터키가 설정되어 있지 않아요."
         )
     try:
-        response = requests.get(
-            (
-                PRESALE_ENDPOINT
-                if transaction_kind == TRANSACTION_KIND_PRESALE
-                else APARTMENT_ENDPOINT
-            ),
-            params={
+        endpoint = (
+            PRESALE_ENDPOINT
+            if transaction_kind == TRANSACTION_KIND_PRESALE
+            else APARTMENT_ENDPOINT
+        )
+        request_params = {
                 "serviceKey": _service_key(transaction_kind),
                 "LAWD_CD": lawd_cd,
                 "DEAL_YMD": deal_ymd,
                 "numOfRows": 1000,
                 "pageNo": 1,
-            },
+        }
+        response = requests.get(
+            endpoint,
+            params=request_params,
             timeout=config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
         )
         response.raise_for_status()
         items = _parse_items(response.text, transaction_kind)
+        total_count = _parse_total_count(response.text)
+        page_count = max(1, math.ceil(total_count / request_params["numOfRows"]))
+        for page_number in range(2, page_count + 1):
+            page_response = requests.get(
+                endpoint,
+                params={**request_params, "pageNo": page_number},
+                timeout=config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
+            )
+            page_response.raise_for_status()
+            items.extend(_parse_items(page_response.text, transaction_kind))
     except requests.HTTPError as exc:
         status = getattr(exc.response, "status_code", None)
         if status in {401, 403}:
@@ -478,18 +527,42 @@ def _items_for_source_row(lawd_cd, deal_ymd, items, row, dong_only=False):
         if cached_index is None or cached_index[0] != id(items):
             address_index = {}
             for item in items:
-                key = (compact(item.get("legalDong")), compact(item.get("jibun")))
+                key = (_legal_dong_leaf(item.get("legalDong")), compact(item.get("jibun")))
                 address_index.setdefault(key, []).append(item)
             _MONTH_ADDRESS_INDEX[memory_key] = (id(items), address_index)
         else:
             address_index = cached_index[1]
-    dong = compact(row.get("법정동") or row.get("읍면동"))
-    jibun = compact(row.get("지번"))
+    dong = _legal_dong_leaf(_source_legal_dong(row))
+    jibun = compact(_source_jibun(row))
     if dong and jibun and not dong_only:
         return address_index.get((dong, jibun), [])
     if dong:
         return [item for (item_dong, _), values in address_index.items() if item_dong == dong for item in values]
     return items
+
+
+def _items_for_exact_names(lawd_cd, deal_ymd, items, names):
+    transaction_kind = (
+        str(items[0].get("transactionKind") or TRANSACTION_KIND_APARTMENT)
+        if items
+        else TRANSACTION_KIND_APARTMENT
+    )
+    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
+    with _MONTH_MEMORY_CACHE_LOCK:
+        cached_index = _MONTH_NAME_INDEX.get(memory_key)
+        if cached_index is None or cached_index[0] != id(items):
+            name_index = {}
+            for item in items:
+                name_index.setdefault(compact(item.get("apartment")), []).append(item)
+            _MONTH_NAME_INDEX[memory_key] = (id(items), name_index)
+        else:
+            name_index = cached_index[1]
+    keys = {compact(value) for value in names if compact(value)}
+    return [
+        item
+        for key in keys
+        for item in name_index.get(key, [])
+    ]
 
 
 def _row_lawd_cd(row):
@@ -501,6 +574,39 @@ def _row_lawd_cd(row):
         if len(value) >= 5:
             return value[:5]
     return ""
+
+
+def related_lawd_codes(lawd_cd):
+    code = str(lawd_cd or "").strip()[:5]
+    if not code:
+        return ()
+    return (code, *LAWD_CODE_SUCCESSORS.get(code, ()))
+
+
+def _source_legal_dong(row):
+    legal_dong = str(row.get("법정동") or "").strip()
+    if legal_dong:
+        return legal_dong
+    administrative_dong = str(row.get("읍면동") or "").strip()
+    jibun = str(row.get("지번") or "").strip()
+    if administrative_dong.endswith(("읍", "면")) and jibun:
+        legal_ri = jibun.split()[0]
+        if legal_ri.endswith("리"):
+            return legal_ri
+    return administrative_dong
+
+
+def _source_jibun(row):
+    jibun = str(row.get("지번") or "").strip()
+    legal_dong = _source_legal_dong(row)
+    if legal_dong and jibun.startswith(f"{legal_dong} "):
+        return jibun[len(legal_dong):].strip()
+    return jibun
+
+
+def _legal_dong_leaf(value):
+    parts = str(value or "").strip().split()
+    return compact(parts[-1]) if parts else ""
 
 
 def _row_region_values(row):
@@ -618,13 +724,20 @@ def _row_matches_entity(row, entity):
     # 공통 후보 응답은 주소가 확인되지 않은 단지에 ``address: null``을
     # 담을 수 있다. compact(None)은 "none"이 되므로 빈 주소를 실제 주소로
     # 오인하면 모든 지번이 불일치해 가격 흐름 거래가 0건으로 사라진다.
-    dong_key = compact(entity.get("legalDong") or "")
+    dong_key = _legal_dong_leaf(entity.get("legalDong"))
     address_key = compact(entity.get("address") or "")
-    row_dong = compact(row.get("법정동") or row.get("읍면동") or "")
-    row_jibun = compact(row.get("지번") or "")
+    entity_jibun_text = str(entity.get("jibun") or "").strip()
+    entity_dong_text = str(entity.get("legalDong") or "").strip()
+    if entity_dong_text and entity_jibun_text.startswith(f"{entity_dong_text} "):
+        entity_jibun_text = entity_jibun_text[len(entity_dong_text):].strip()
+    entity_jibun = compact(entity_jibun_text)
+    row_dong = _legal_dong_leaf(_source_legal_dong(row))
+    row_jibun = compact(_source_jibun(row))
     if dong_key and row_dong and dong_key != row_dong:
         return False
-    if address_key and row_jibun and not address_key.endswith(row_jibun):
+    if entity_jibun and row_jibun and entity_jibun != row_jibun:
+        return False
+    if not entity_jibun and address_key and row_jibun and not address_key.endswith(row_jibun):
         return False
     return True
 
@@ -635,7 +748,7 @@ def _dedupe_rows(rows):
     for row in rows:
         key = (
             _row_lawd_cd(row),
-            compact(row.get("법정동") or row.get("읍면동")),
+            compact(_source_legal_dong(row)),
             compact(row.get("지번")),
             compact(row.get("대표단지명")),
         )
@@ -669,7 +782,7 @@ def _source_row_index():
                         continue
                     key = (
                         lawd_cd,
-                        compact(row.get("법정동") or row.get("읍면동")),
+                        compact(_source_legal_dong(row)),
                         compact(row.get("지번")),
                         compact(row.get("대표단지명")),
                     )
@@ -720,9 +833,24 @@ def _source_row_index():
 def source_rows(name, region=""):
     all_rows, exact_index = _source_row_index()
     entities = _matching_master_entities(name, region)
-    search_names = [name]
+    unique_entities = {}
     for entity in entities:
-        search_names.extend(_entity_alias_values(entity))
+        identity = (
+            compact(entity.get("province")),
+            compact(entity.get("district") or entity.get("city")),
+            _legal_dong_leaf(entity.get("legalDong")),
+            compact(entity.get("jibun") or ""),
+        )
+        unique_entities.setdefault(identity, entity)
+    entities = list(unique_entities.values())
+    # 단지명이 같은 마스터가 둘 이상이면 이름·구만으로는 어느 단지인지
+    # 확정할 수 없다. 잘못된 거래를 보여주기보다 호출자가 법정동·지번을
+    # 넘기도록 빈 결과로 닫는다.
+    if len(entities) > 1:
+        return []
+    if len(entities) == 1:
+        return source_rows_for_entity(entities[0], region)
+    search_names = [name]
     search_keys = []
     seen_keys = set()
     for value in search_names:
@@ -735,10 +863,14 @@ def source_rows(name, region=""):
         for key in search_keys
         for row in exact_index.get(key, [])
         if _matches_region(row, region)
-        and (not entities or any(_row_matches_entity(row, entity) for entity in entities))
     ]
     if exact_rows:
-        return _dedupe_rows(exact_rows)
+        exact_rows = _dedupe_rows(exact_rows)
+        identities = {
+            (_row_lawd_cd(row), _legal_dong_leaf(_source_legal_dong(row)), compact(_source_jibun(row)))
+            for row in exact_rows
+        }
+        return exact_rows if len(identities) == 1 else []
     rows = []
     # Fuzzy fallback for names that have no exact public-data alias. The
     # indexed exact path above handles normal complexes without reopening and
@@ -747,13 +879,17 @@ def source_rows(name, region=""):
         if (
             any(_matches_name(row, value) for value in search_names)
             and _matches_region(row, region)
-            and (not entities or any(_row_matches_entity(row, entity) for entity in entities))
         ):
             rows.append(row)
     # A generic substring such as "동아" can occur in several unrelated
     # complexes in the same district. When the requested complex has an exact
     # public-data alias, do not mix those fuzzy matches into its transactions.
-    return _dedupe_rows(exact_rows or rows)
+    rows = _dedupe_rows(rows)
+    identities = {
+        (_row_lawd_cd(row), _legal_dong_leaf(_source_legal_dong(row)), compact(_source_jibun(row)))
+        for row in rows
+    }
+    return rows if len(identities) == 1 else []
 
 
 def source_rows_for_entity(entity, region=""):
@@ -930,6 +1066,73 @@ def _exclude_price_outliers(prices):
     return typical, len(values) - len(typical)
 
 
+def _previous_trade_comparison(transactions):
+    """Choose a useful previous trade without hiding the raw prior deal.
+
+    ``previousDeal*`` remains the literal immediately preceding transaction.
+    When that deal is one of the isolated prices already excluded from the
+    recent-three-month average, ``comparisonDeal*`` points to the nearest
+    preceding non-outlier.  This keeps the factual ledger intact while
+    preventing a single exceptional family/condition trade from masquerading
+    as market-wide price momentum.
+    """
+    trades = [
+        row for row in transactions
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(row.get("dealDate") or ""))
+        and _float_value(row.get("dealAmountEok")) > 0
+    ]
+    if len(trades) < 2:
+        return {
+            "comparisonDealPriceEok": 0,
+            "comparisonDealDate": "",
+            "comparisonDealSkippedOutlierCount": 0,
+        }
+    immediate = trades[1]
+    result = {
+        "comparisonDealPriceEok": round(
+            _float_value(immediate.get("dealAmountEok")), 2,
+        ),
+        "comparisonDealDate": immediate.get("dealDate", ""),
+        "comparisonDealSkippedOutlierCount": 0,
+    }
+    if len(trades) < 3:
+        return result
+
+    latest_period = str(trades[0].get("dealDate") or "")[:7].replace("-", "")
+    recent_periods = {
+        _shift_month(latest_period, offset)
+        for offset in (-2, -1, 0)
+    }
+    recent_trades = [
+        row for row in trades
+        if str(row.get("dealDate") or "")[:7].replace("-", "") in recent_periods
+    ]
+    typical_prices, excluded_count = _exclude_price_outliers(
+        [row.get("dealAmountEok") for row in recent_trades]
+    )
+    if excluded_count <= 0:
+        return result
+    typical_keys = {round(_float_value(value), 8) for value in typical_prices}
+    latest_key = round(_float_value(recent_trades[0].get("dealAmountEok")), 8)
+    # If the latest trade itself is exceptional, keep the literal comparison;
+    # silently replacing its baseline would imply false confidence.
+    if latest_key not in typical_keys:
+        return result
+    for index, row in enumerate(recent_trades[1:], start=1):
+        price = _float_value(row.get("dealAmountEok"))
+        if round(price, 8) not in typical_keys:
+            continue
+        skipped = index - 1
+        if skipped <= 0:
+            return result
+        return {
+            "comparisonDealPriceEok": round(price, 2),
+            "comparisonDealDate": row.get("dealDate", ""),
+            "comparisonDealSkippedOutlierCount": skipped,
+        }
+    return result
+
+
 def _quarter_trade_stats(transactions):
     trades = [
         row for row in transactions
@@ -1028,16 +1231,21 @@ def _unit_number(value):
     return match.group(1).lstrip("0") or match.group(1)
 
 
-def _matches_transaction(row, item, name):
+def _matches_transaction(row, item, name, allow_relocated=False):
     item_name = compact(item.get("apartment"))
     if not item_name:
         return False
     names = [name, *_row_name_values(row)]
+    exact_name_match = any(compact(value) == item_name for value in names)
     name_match = any(compact(value) and (compact(value) == item_name or compact(value) in item_name or item_name in compact(value)) for value in names)
     if not name_match:
         return False
-    row_dong = compact(row.get("법정동") or row.get("읍면동"))
-    item_dong = compact(item.get("legalDong"))
+    # 행정구역 분리와 함께 법정동·지번이 바뀐 단지는 구 코드가 달라진
+    # 거래에서 긴 고유 단지명이 정확히 일치할 때만 주소 불일치를 허용한다.
+    if allow_relocated:
+        return bool(exact_name_match and len(item_name) >= 6)
+    row_dong = _legal_dong_leaf(_source_legal_dong(row))
+    item_dong = _legal_dong_leaf(item.get("legalDong"))
     if row_dong and item_dong and row_dong not in item_dong and item_dong not in row_dong:
         return False
     # 'N단지'가 조회명과 실거래명 양쪽에 있으면 번호 일치가 최우선 기준이다.
@@ -1047,7 +1255,7 @@ def _matches_transaction(row, item, name):
     item_unit = _unit_number(item.get("apartment"))
     if query_unit and item_unit:
         return query_unit == item_unit
-    row_jibun = compact(row.get("지번"))
+    row_jibun = compact(_source_jibun(row))
     item_jibun = compact(item.get("jibun"))
     if row_jibun and item_jibun and row_jibun != item_jibun:
         return False
@@ -1059,27 +1267,50 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
     seen = set()
     unit_query = bool(_unit_number(name))
     for row in rows:
-        lawd_cd = _row_lawd_cd(row)
-        for deal_ymd in _deal_months(lookback_months):
-            items = monthly.get((lawd_cd, deal_ymd), [])
-            for item in _items_for_source_row(lawd_cd, deal_ymd, items, row, dong_only=unit_query):
-                if not _is_market_transaction(item):
-                    continue
-                if not _matches_area(item, area_label):
-                    continue
-                if not _matches_transaction(row, item, name):
-                    continue
-                key = (
-                    item.get("apartment"),
-                    item.get("dealDate"),
-                    item.get("dealAmountManwon"),
-                    item.get("exclusiveArea"),
-                    item.get("floor"),
+        source_lawd_cd = _row_lawd_cd(row)
+        for lawd_cd in related_lawd_codes(source_lawd_cd):
+            for deal_ymd in _deal_months(lookback_months):
+                items = monthly.get((lawd_cd, deal_ymd), [])
+                relocated = lawd_cd != source_lawd_cd
+                candidates = (
+                    _items_for_exact_names(
+                        lawd_cd,
+                        deal_ymd,
+                        items,
+                        [name, *_row_name_values(row)],
+                    )
+                    if relocated
+                    else _items_for_source_row(
+                        lawd_cd,
+                        deal_ymd,
+                        items,
+                        row,
+                        dong_only=unit_query,
+                    )
                 )
-                if key in seen:
-                    continue
-                seen.add(key)
-                matches.append(item)
+                for item in candidates:
+                    if not _is_market_transaction(item):
+                        continue
+                    if not _matches_area(item, area_label):
+                        continue
+                    if not _matches_transaction(
+                        row,
+                        item,
+                        name,
+                        allow_relocated=relocated,
+                    ):
+                        continue
+                    key = (
+                        item.get("apartment"),
+                        item.get("dealDate"),
+                        item.get("dealAmountManwon"),
+                        item.get("exclusiveArea"),
+                        item.get("floor"),
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    matches.append(item)
     matches.sort(key=lambda row: row.get("dealDate", ""), reverse=True)
     return matches
 
@@ -1095,7 +1326,11 @@ def transactions_for_apartment(
     if not rows:
         return []
     transaction_kind = transaction_kind_for_apartment(name, region)
-    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    lawd_cds = sorted({
+        code
+        for row in rows
+        for code in related_lawd_codes(_row_lawd_cd(row))
+    })
     month_values = _deal_months(lookback_months)
     prefetch_months(
         ((lawd_cd, deal_ymd) for lawd_cd in lawd_cds for deal_ymd in month_values),
@@ -1138,7 +1373,11 @@ def transactions_for_apartment_cached(
     transaction_kind = transaction_kind_for_apartment(name, region)
     monthly = {}
     month_values = _deal_months(lookback_months)
-    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    lawd_cds = sorted({
+        code
+        for row in rows
+        for code in related_lawd_codes(_row_lawd_cd(row))
+    })
     for lawd_cd in lawd_cds:
         for deal_ymd in month_values:
             items = _read_cached_month_memory(
@@ -1167,7 +1406,11 @@ def cached_month_coverage_for_apartment(
         }
     transaction_kind = transaction_kind_for_apartment(name, region)
     month_values = _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS))
-    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    lawd_cds = sorted({
+        code
+        for row in rows
+        for code in related_lawd_codes(_row_lawd_cd(row))
+    })
     expected = len(lawd_cds) * len(month_values)
     cached = sum(
         _read_cached_month_memory(
@@ -1273,7 +1516,12 @@ def cached_market_bundle_for_apartment(
     }
 
 
-def area_options_for_apartment(name, region="", lookback_months=RECENT_LOOKBACK_MONTHS):
+def area_options_for_apartment(
+    name,
+    region="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
     """Return recently traded exclusive-area types for a complex.
 
     Public transaction records often express the same marketed unit type with
@@ -1286,6 +1534,7 @@ def area_options_for_apartment(name, region="", lookback_months=RECENT_LOOKBACK_
         region=region,
         area_label="",
         lookback_months=lookback_months,
+        entity=entity,
     )
     clusters = []
     for transaction in sorted(
@@ -1352,7 +1601,11 @@ def latest_transaction_for_apartment(
     if not rows:
         return None
     transaction_kind = transaction_kind_for_apartment(name, region)
-    lawd_cds = sorted({_row_lawd_cd(row) for row in rows if _row_lawd_cd(row)})
+    lawd_cds = sorted({
+        code
+        for row in rows
+        for code in related_lawd_codes(_row_lawd_cd(row))
+    })
     month_values = _deal_months(lookback_months)[skip_months:]
     batch_size = max(1, config.MOLIT_STALE_PREFETCH_BATCH_MONTHS)
     for batch_start in range(0, len(month_values), batch_size):
@@ -1455,14 +1708,23 @@ def _price_band_payload(name, region, area_label, lookback_months, transactions)
         "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
         "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
         "currentEstimateMethod": (estimate or {}).get("method", ""),
+        **_previous_trade_comparison(transactions),
         **_quarter_trade_stats(transactions),
         **_half_year_trade_stats(transactions),
     }
 
 
-def price_band_for_apartment(name, region="", area_label="", lookback_months=RECENT_LOOKBACK_MONTHS):
+def price_band_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
     lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
+    cache_key = _price_band_cache_key(
+        name, region, area_label, lookback_months, entity=entity,
+    )
     with _PRICE_BAND_CACHE_LOCK:
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     if cache_hit:
@@ -1478,6 +1740,7 @@ def price_band_for_apartment(name, region="", area_label="", lookback_months=REC
             region=region,
             area_label=area_label,
             lookback_months=lookback_months,
+            entity=entity,
         ),
     )
     with _PRICE_BAND_CACHE_LOCK:
@@ -1494,7 +1757,9 @@ def cached_price_band_for_apartment(
 ):
     """Return a price band without making any network request."""
     lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
+    cache_key = _price_band_cache_key(
+        name, region, area_label, lookback_months, entity=entity,
+    )
     with _PRICE_BAND_CACHE_LOCK:
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     if cache_hit:
@@ -1519,10 +1784,13 @@ def stored_price_band_for_apartment(
     region="",
     area_label="",
     lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
 ):
     """Return only an already-materialized price band, without deriving it."""
     lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, area_label, lookback_months)
+    cache_key = _price_band_cache_key(
+        name, region, area_label, lookback_months, entity=entity,
+    )
     with _PRICE_BAND_CACHE_LOCK:
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     return cached_band if cache_hit else None
@@ -1564,17 +1832,26 @@ def _minimum_area_price_band_payload(name, region, minimum, lookback_months, tra
         "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
         "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
         "currentEstimateMethod": (estimate or {}).get("method", ""),
+        **_previous_trade_comparison(transactions),
         **_quarter_trade_stats(transactions),
         **_half_year_trade_stats(transactions),
     }
 
 
-def price_band_for_apartment_min_area(name, region="", min_area=0, lookback_months=RECENT_LOOKBACK_MONTHS):
+def price_band_for_apartment_min_area(
+    name,
+    region="",
+    min_area=0,
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
     """Return the smallest actually traded unit type at or above min_area."""
     minimum = float(min_area or 0)
     cache_label = f"최소 전용 {minimum:g}㎡"
     lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, cache_label, lookback_months)
+    cache_key = _price_band_cache_key(
+        name, region, cache_label, lookback_months, entity=entity,
+    )
     with _PRICE_BAND_CACHE_LOCK:
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     if cache_hit:
@@ -1590,6 +1867,7 @@ def price_band_for_apartment_min_area(name, region="", min_area=0, lookback_mont
             region=region,
             area_label="",
             lookback_months=lookback_months,
+            entity=entity,
         ),
     )
     with _PRICE_BAND_CACHE_LOCK:
@@ -1608,7 +1886,9 @@ def cached_price_band_for_apartment_min_area(
     minimum = float(min_area or 0)
     cache_label = f"최소 전용 {minimum:g}㎡"
     lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, cache_label, lookback_months)
+    cache_key = _price_band_cache_key(
+        name, region, cache_label, lookback_months, entity=entity,
+    )
     with _PRICE_BAND_CACHE_LOCK:
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     if cache_hit:
@@ -1633,12 +1913,15 @@ def stored_price_band_for_apartment_min_area(
     region="",
     min_area=0,
     lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
 ):
     """Return only a persisted minimum-area price band."""
     minimum = float(min_area or 0)
     cache_label = f"최소 전용 {minimum:g}㎡"
     lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
-    cache_key = _price_band_cache_key(name, region, cache_label, lookback_months)
+    cache_key = _price_band_cache_key(
+        name, region, cache_label, lookback_months, entity=entity,
+    )
     with _PRICE_BAND_CACHE_LOCK:
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     return cached_band if cache_hit else None

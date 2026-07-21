@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""시·군·구와 전용면적 구간별 대장아파트 순위를 계산한다.
+"""시·군·구별 대장아파트 순위를 계산한다.
 
 실거래와 단지 마스터만 사용하며, 단지명 자체를 대장으로 지정하지 않는다.
-지하철 거리·브랜드처럼 현재 원천에 없는 값은 ``None``으로 유지하고 결과의
-데이터 보유율과 경고에 반영한다.
+지하철 거리는 카카오 Local API로 미리 수집한 직선거리 캐시를 사용한다. 아직
+수집되지 않은 거리와 브랜드처럼 원천에 없는 값은 ``None``으로 유지한다.
 """
 import argparse
 import calendar
@@ -12,10 +12,12 @@ import hashlib
 import json
 import math
 import os
+import re
 import statistics
 from pathlib import Path
 
 import config
+import kakao_station_distances
 import molit_transactions
 import real_estate_search
 
@@ -39,14 +41,25 @@ CATEGORY_FIELDS = {
 }
 CATEGORY_LABELS = {
     "overall": "종합",
-    "price": "가격",
-    "leadership": "상승 선도",
+    "price": "대장",
+    "leadership": "상승률 좋은순",
     "residence": "실거주",
     "new_build": "신축",
     "value": "가성비",
 }
 MAX_REASON_COUNT = 4
 DEFAULT_LIMIT = 5
+LEADERSHIP_LIMIT = 10
+DEFAULT_CATEGORY = "price"
+NATIONAL_AREA_BUCKET = "70-89"
+NATIONAL_AREA_TARGET = 84.0
+# 일반 대장은 단지별로 거래가 가장 많은 대표 평형을 고른 뒤 같은 84㎡ 상당가로
+# 환산한다. 84㎡는 공통 표시 기준이며, 84㎡ 거래만 후보로 제한하지 않는다.
+LEADER_AREA_MIN = 50.0
+LEADER_AREA_MAX = 200.0
+LEADER_AREA_MIN_DEALS = 2
+LEADER_PRICE_AREA_EXPONENT = 0.75
+NATIONAL_AREA_LABEL = "대표 평형 84㎡ 면적 보정가"
 
 
 def _load_settings():
@@ -266,10 +279,93 @@ def _period_return(monthly, reference_month, months):
     return round((current / baseline - 1) * 100, 2), total_gap
 
 
+def _leadership_missing_reason(monthly, reference_month):
+    """6개월 상승률을 계산할 수 없는 이유를 설명한다."""
+    if not monthly:
+        return "최근 거래가 없어 6개월 상승률을 계산하지 못했습니다."
+    reference = _parse_reference_month(reference_month)
+    current, _current_gap = _month_value(monthly, reference)
+    latest_month = max(monthly)
+    if current is None:
+        year, month = latest_month.split("-", 1)
+        return (
+            f"마지막 비교 거래가 {int(year)}년 {int(month)}월로, "
+            "최근 3개월 내 거래가 없어 6개월 상승률을 계산하지 못했습니다."
+        )
+    baseline6, _gap6 = _month_value(monthly, _month_shift(reference, -6))
+    if baseline6 is None:
+        return "6개월 전 비교 거래가 없어 상승률을 계산하지 못했습니다."
+    return None
+
+
 def _price_per_square_meter(row):
     area = float(row.get("exclusiveArea") or 0)
     price = float(row.get("dealAmountManwon") or 0)
     return price / area if area > 0 and price > 0 else None
+
+
+def _leader_price_trades(
+    transactions,
+    reference_month,
+):
+    """최근 거래가 가장 많은 10㎡ 대표 평형과 중앙 전용면적을 반환한다."""
+    start, end = _window_dates(reference_month, 12)
+    bands = {}
+    for row in transactions:
+        area = float(row.get("exclusiveArea") or 0)
+        if (
+            not _valid_transaction(row)
+            or not LEADER_AREA_MIN <= area < LEADER_AREA_MAX
+            or not start <= datetime.date.fromisoformat(str(row["dealDate"])[:10]) <= end
+        ):
+            continue
+        bands.setdefault(int(area // 10), []).append(row)
+    eligible = [
+        (band, rows)
+        for band, rows in bands.items()
+        if len(rows) >= LEADER_AREA_MIN_DEALS
+    ]
+    if not eligible:
+        return [], None
+    _band, trades = max(
+        eligible,
+        key=lambda item: (
+            len(item[1]),
+            -abs(
+                statistics.median(
+                    float(row.get("exclusiveArea") or 0) for row in item[1]
+                ) - NATIONAL_AREA_TARGET
+            ),
+            -item[0],
+        ),
+    )
+    areas = [float(row.get("exclusiveArea") or 0) for row in trades]
+    return trades, statistics.median(areas)
+
+
+def _leader_adjusted_price(row, target_area=NATIONAL_AREA_TARGET):
+    area = float(row.get("exclusiveArea") or 0)
+    price = float(row.get("dealAmountManwon") or 0)
+    if area <= 0 or price <= 0:
+        return None
+    return price * (float(target_area) / area) ** LEADER_PRICE_AREA_EXPONENT
+
+
+def _format_area(area):
+    if area is None:
+        return ""
+    return f"{float(area):.1f}".rstrip("0").rstrip(".")
+
+
+def _format_eok(manwon):
+    if manwon is None:
+        return ""
+    value = float(manwon) / 10000
+    return f"{value:.1f}".rstrip("0").rstrip(".") + "억원"
+
+
+def _market_leader_name(name):
+    return re.sub(r"\s*\(\d+\s*단지\)\s*$", "", str(name or "")).strip()
 
 
 def _weighted_score(values, weights):
@@ -303,7 +399,17 @@ def _region_matches(value, target):
         "경기": "경기도",
     }
     target_key = real_estate_search.compact(aliases.get(str(target).strip(), target))
-    return bool(value_key and (value_key == target_key or value_key in target_key or target_key in value_key))
+    if not value_key:
+        return False
+    if value_key == target_key:
+        return True
+    # 사용자가 '분당구'처럼 시 접두사를 뺀 자치구를 입력한 경우만 허용한다.
+    # '양주시'를 '남양주시'에 포함시키는 일반 부분 문자열 비교는 하지 않는다.
+    return bool(
+        target_key.endswith(("구", "군"))
+        and len(target_key) >= 3
+        and value_key.endswith(target_key)
+    )
 
 
 def matching_entities(sido, sigungu):
@@ -351,9 +457,10 @@ def _prefetch_region_months(entities, lookback_months, cache_only):
     if cache_only or not molit_transactions.enabled():
         return
     lawd_codes = {
-        str(entity.get("lawdCd") or "")[:5]
+        code
         for entity in entities
-        if str(entity.get("lawdCd") or "")[:5].isdigit()
+        for code in molit_transactions.related_lawd_codes(entity.get("lawdCd"))
+        if code.isdigit()
     }
     months = molit_transactions._deal_months(lookback_months)
     molit_transactions.prefetch_months(
@@ -384,16 +491,43 @@ def _load_transactions(entities, reference_month, cache_only):
     return rows
 
 
-def _base_metrics(entity, transactions, reference_month, bucket):
+def _base_metrics(
+    entity,
+    transactions,
+    reference_month,
+    bucket,
+):
     trades12 = _transactions_in_window(transactions, reference_month, 12, bucket)
     trades24 = _transactions_in_window(transactions, reference_month, 24, bucket)
+    leader_price_trades, leader_representative_area = _leader_price_trades(
+        transactions,
+        reference_month,
+    )
     prices = [float(row["dealAmountManwon"]) for row in trades12]
+    leader_actual_prices = [
+        float(row["dealAmountManwon"])
+        for row in leader_price_trades
+    ]
+    leader_prices = [
+        value for value in (
+            _leader_adjusted_price(row, NATIONAL_AREA_TARGET)
+            for row in leader_price_trades
+        )
+        if value is not None
+    ]
     ppsm = [_price_per_square_meter(row) for row in trades12]
     ppsm = [value for value in ppsm if value is not None]
     months = {_month_key(row.get("dealDate")) for row in trades12}
     households = int(entity.get("households") or 0)
     count = len(trades12)
+    leader_price_count = len(leader_price_trades)
     confidence_score, confidence_level, confidence_label, _weight = confidence_for_count(count)
+    (
+        leader_price_confidence_score,
+        leader_price_confidence_level,
+        leader_price_confidence_label,
+        _leader_price_weight,
+    ) = confidence_for_count(leader_price_count)
     monthly_prices = _monthly_medians(
         trades24,
         lambda row: float(row.get("dealAmountManwon") or 0),
@@ -403,10 +537,30 @@ def _base_metrics(entity, transactions, reference_month, bucket):
     approved_at = entity.get("approvedAt")
     age = age_score(approved_at, reference_month)
     completion_year = int(str(approved_at)[:4]) if str(approved_at)[:4].isdigit() else None
-    station_distance = entity.get("nearestStationDistance")
+    cached_station = kakao_station_distances.cached_station(entity) or {}
+    station_distance = (
+        entity.get("nearestStationDistance")
+        if entity.get("nearestStationDistance") is not None
+        else cached_station.get("nearestStationDistance")
+    )
+    station_name = (
+        entity.get("nearestStationName")
+        or cached_station.get("nearestStationName")
+    )
+    station_distance_type = (
+        entity.get("stationDistanceType")
+        or cached_station.get("stationDistanceType")
+    )
+    station_distance_lower_bound = cached_station.get("stationDistanceLowerBound")
+    station_score_distance = (
+        station_distance
+        if station_distance is not None
+        else station_distance_lower_bound
+    )
     return {
         "apartmentId": _entity_id(entity),
         "apartmentName": entity.get("name", ""),
+        "marketLeaderName": _market_leader_name(entity.get("name", "")),
         "sido": entity.get("province", ""),
         "sigungu": entity.get("district", ""),
         "dong": entity.get("legalDong", ""),
@@ -414,10 +568,44 @@ def _base_metrics(entity, transactions, reference_month, bucket):
         "householdCount": households or None,
         "completionYear": completion_year,
         "brand": entity.get("brand") or None,
-        "nearestStationName": entity.get("nearestStationName") or None,
+        "latitude": entity.get("latitude") or cached_station.get("latitude"),
+        "longitude": entity.get("longitude") or cached_station.get("longitude"),
+        "nearestStationName": station_name or None,
         "nearestStationDistance": station_distance,
-        "stationDistanceType": entity.get("stationDistanceType") or None,
+        "nearestStationLatitude": cached_station.get("nearestStationLatitude"),
+        "nearestStationLongitude": cached_station.get("nearestStationLongitude"),
+        "stationDistanceLowerBound": station_distance_lower_bound,
+        "stationDistanceType": station_distance_type or None,
+        "stationDistanceSource": (
+            entity.get("stationDistanceSource")
+            or cached_station.get("stationDistanceSource")
+        ),
+        "stationDistanceUpdatedAt": cached_station.get("stationDistanceUpdatedAt"),
         "medianPrice12m": round(statistics.median(prices), 1) if prices else None,
+        "leaderPrice12m": (
+            round(statistics.median(leader_prices), 1)
+            if leader_prices else None
+        ),
+        "leaderRepresentativeArea": (
+            round(float(leader_representative_area), 2)
+            if leader_representative_area is not None else None
+        ),
+        "leaderRepresentativeMedianPrice12m": (
+            round(statistics.median(leader_actual_prices), 1)
+            if leader_actual_prices else None
+        ),
+        "leaderPriceAdjustmentTargetArea": NATIONAL_AREA_TARGET,
+        "leaderPriceAdjustmentExponent": LEADER_PRICE_AREA_EXPONENT,
+        "leaderPriceBasisLabel": (
+            f"대표 전용 {_format_area(leader_representative_area)}㎡의 "
+            f"{_format_area(NATIONAL_AREA_TARGET)}㎡ 보정가"
+            if leader_representative_area is not None
+            else NATIONAL_AREA_LABEL
+        ),
+        "leaderPriceTransactionCount12m": leader_price_count,
+        "leaderPriceConfidenceScore": leader_price_confidence_score,
+        "leaderPriceConfidenceLevel": leader_price_confidence_level,
+        "leaderPriceConfidenceLabel": leader_price_confidence_label,
         "medianPricePerSquareMeter12m": round(statistics.median(ppsm), 1) if ppsm else None,
         "transactionCount12m": count,
         "transactionTurnover12m": round(count / households * 100, 3) if households else None,
@@ -427,14 +615,20 @@ def _base_metrics(entity, transactions, reference_month, bucket):
         "return12m": return12m,
         "returnGapMonths6m": gap6m,
         "returnGapMonths12m": gap12m,
+        "latestTransactionMonth": max(months) if months else None,
+        "leadershipMissingReason": _leadership_missing_reason(
+            monthly_prices,
+            reference_month,
+        ),
         "dataConfidenceScore": confidence_score,
         "confidenceLevel": confidence_level,
         "confidenceLabel": confidence_label,
         "ageScore": age,
-        "stationScore": station_score(station_distance),
+        "stationScore": station_score(station_score_distance),
         "brandScore": SETTINGS.get("brandScores", {}).get(str(entity.get("brand") or "")) or None,
         "_trades12": trades12,
         "_trades24": trades24,
+        "_leaderPriceTrades12": leader_price_trades,
     }
 
 
@@ -460,6 +654,15 @@ def _district_price_medians(metrics):
     )
 
 
+def _district_leader_price_median(metrics):
+    prices = [
+        float(row["leaderPrice12m"])
+        for row in metrics
+        if row.get("leaderPrice12m") is not None
+    ]
+    return statistics.median(prices) if prices else None
+
+
 def _district_returns(metrics, reference_month):
     trades = [trade for row in metrics for trade in row["_trades24"]]
     monthly = _monthly_medians(
@@ -475,6 +678,7 @@ def _district_returns(metrics, reference_month):
 def _score_metrics(metrics, reference_month):
     weights = SETTINGS["weights"]
     district_price, district_ppsm = _district_price_medians(metrics)
+    district_leader_price = _district_leader_price_median(metrics)
     district_return6m, district_return12m = _district_returns(metrics, reference_month)
     for row in metrics:
         row["adjustedMedianPrice12m"] = adjusted_price(
@@ -482,6 +686,11 @@ def _score_metrics(metrics, reference_month):
         )
         row["adjustedMedianPricePerSquareMeter12m"] = adjusted_price(
             row["medianPricePerSquareMeter12m"], district_ppsm, row["transactionCount12m"],
+        )
+        row["adjustedLeaderPrice12m"] = adjusted_price(
+            row["leaderPrice12m"],
+            district_leader_price,
+            row["leaderPriceTransactionCount12m"],
         )
         row["districtReturn6m"] = district_return6m
         row["districtReturn12m"] = district_return12m
@@ -502,20 +711,18 @@ def _score_metrics(metrics, reference_month):
         "adjustedMedianPricePerSquareMeter12m",
         "medianPricePerSquareMeterPercentile",
     )
-    _apply_percentile(metrics, "relativeReturn6m", "relativeReturn6mPercentile")
-    _apply_percentile(metrics, "relativeReturn12m", "relativeReturn12mPercentile")
+    _apply_percentile(metrics, "leaderPrice12m", "leaderPricePercentile")
+    _apply_percentile(metrics, "return6m", "return6mPercentile")
+    _apply_percentile(metrics, "return12m", "return12mPercentile")
     _apply_percentile(metrics, "transactionTurnover12m", "transactionTurnoverPercentile")
     _apply_percentile(metrics, "activeTransactionMonthRatio12m", "activeTransactionMonthsPercentile")
     _apply_percentile(metrics, "householdCount", "householdScore")
 
     for row in metrics:
-        row["priceScore"], row["priceScoreCoverage"] = _weighted_score({
-            "medianPrice": row["medianPricePercentile"],
-            "medianPricePerSquareMeter": row["medianPricePerSquareMeterPercentile"],
-        }, weights["price"])
+        row["priceScore"] = row["leaderPricePercentile"]
+        row["priceScoreCoverage"] = 100.0 if row["priceScore"] is not None else 0.0
         row["leadershipScore"], row["leadershipScoreCoverage"] = _weighted_score({
-            "relativeReturn6m": row["relativeReturn6mPercentile"],
-            "relativeReturn12m": row["relativeReturn12mPercentile"],
+            "return6m": row["return6mPercentile"],
         }, weights["leadership"])
         row["liquidityScore"], row["liquidityScoreCoverage"] = _weighted_score({
             "transactionTurnover": row["transactionTurnoverPercentile"],
@@ -578,14 +785,27 @@ def _reason_candidates(row, category):
     reasons = []
     price_top = _top_percent(row.get("priceScore"))
     if price_top is not None:
-        reasons.append(("price", row.get("priceScore") or 0, f"{row['sigungu']} {AREA_BUCKETS[row['areaBucket']]['label']} 가격 상위 {price_top}%"))
-    relative6m = row.get("relativeReturn6m")
-    if relative6m is not None and relative6m >= 0:
-        reasons.append(("leadership", row.get("leadershipScore") or 0, f"최근 6개월 지역 평균보다 {relative6m:.1f}%p 초과 상승"))
-    elif relative6m is not None and category == "leadership":
-        leadership_top = _top_percent(row.get("leadershipScore"))
-        if leadership_top is not None:
-            reasons.append(("leadership", row.get("leadershipScore") or 0, f"최근 6개월 상대 흐름 상위 {leadership_top}%"))
+        leader_price = _format_eok(row.get("leaderPrice12m"))
+        basis = row.get("leaderPriceBasisLabel") or AREA_BUCKETS[row["areaBucket"]]["label"]
+        reasons.append((
+            "price",
+            row.get("priceScore") or 0,
+            f"{basis} {leader_price} · {row['sigungu']} 상위 {price_top}%",
+        ))
+    if category == "leadership" and row.get("return6m") is not None:
+        reasons.append((
+            "growth",
+            200,
+            f"최근 6개월 상승률 {float(row['return6m']):.1f}%",
+        ))
+    else:
+        growth_top = _top_percent(row.get("leadershipScore"))
+        if growth_top is not None:
+            reasons.append((
+                "leadership",
+                row.get("leadershipScore") or 0,
+                f"6개월 상승률 순위 상위 {growth_top}%",
+            ))
     turnover_top = _top_percent(row.get("transactionTurnoverPercentile"))
     if turnover_top is not None:
         reasons.append(("liquidity", row.get("liquidityScore") or 0, f"세대수 대비 거래 회전율 상위 {turnover_top}%"))
@@ -597,12 +817,18 @@ def _reason_candidates(row, category):
     if row.get("nearestStationDistance") is not None:
         distance_type = "도보거리" if row.get("stationDistanceType") == "walking" else "직선거리"
         reasons.append(("station", row.get("stationScore") or 0, f"가장 가까운 지하철역까지 {distance_type} {float(row['nearestStationDistance']):,.0f}m"))
+    elif row.get("stationDistanceLowerBound") is not None:
+        reasons.append((
+            "station",
+            row.get("stationScore") or 0,
+            f"반경 {float(row['stationDistanceLowerBound']) / 1000:g}km 안에 지하철역 없음",
+        ))
     if category == "value" and row.get("valueGap") is not None:
         reasons.append(("value", 120, f"입지·상품성 기대 순위가 가격 순위보다 {row['valueGap']:.1f}점 높음"))
     priorities = {
         "overall": ["price", "leadership", "liquidity", "age", "station", "active"],
         "price": ["price", "liquidity", "active", "age", "station", "leadership"],
-        "leadership": ["leadership", "active", "liquidity", "price", "age", "station"],
+        "leadership": ["growth", "active", "liquidity", "price", "age", "station"],
         "residence": ["station", "age", "price", "liquidity", "active", "leadership"],
         "new_build": ["age", "price", "liquidity", "station", "active", "leadership"],
         "value": ["value", "station", "age", "liquidity", "active", "price"],
@@ -612,21 +838,33 @@ def _reason_candidates(row, category):
     return [text for _kind, _impact, text in reasons[:MAX_REASON_COUNT]]
 
 
-def _warnings(row):
+def _warnings(row, category=None):
     warnings = []
-    count = int(row.get("transactionCount12m") or 0)
+    count = int(
+        (
+            row.get("leaderPriceTransactionCount12m")
+            if category == "price"
+            else row.get("transactionCount12m")
+        )
+        or 0
+    )
     if count <= 1:
-        warnings.append("최근 12개월 거래가 1건 이하라 일반 대장 순위에서 제외됩니다.")
+        warnings.append("최근 12개월 기준 거래가 1건 이하라 해당 순위에서 제외됩니다.")
     elif count < 5:
-        warnings.append(f"최근 12개월 거래가 {count}건으로 가격 신뢰도가 낮습니다.")
+        warnings.append(f"최근 12개월 기준 거래가 {count}건으로 가격 신뢰도가 낮습니다.")
     if row.get("stationScore") is None:
         warnings.append("지하철 거리 데이터가 없어 역 접근성은 점수에서 제외했습니다.")
+    if row.get("leadershipScore") is None:
+        warnings.append(
+            row.get("leadershipMissingReason")
+            or "6개월 가격 비교 데이터가 부족해 상승률을 계산하지 못했습니다."
+        )
     if row.get("ageScore") is None:
         warnings.append("준공연도 데이터가 없어 연식은 점수에서 제외했습니다.")
     if row.get("householdCount") is None:
         warnings.append("세대수 데이터가 없어 거래 회전율과 규모 점수 일부를 계산하지 못했습니다.")
-    if max(int(row.get("returnGapMonths6m") or 0), int(row.get("returnGapMonths12m") or 0)) >= 3:
-        warnings.append("월별 거래 간격이 길어 상승 선도력의 신뢰도가 낮습니다.")
+    if int(row.get("returnGapMonths6m") or 0) >= 3:
+        warnings.append("월별 거래 간격이 길어 상승률의 신뢰도가 낮습니다.")
     if row.get("isNewBuild") and count < 5:
         warnings.append("입주 초기 단지로 장기 가격 흐름 데이터가 부족합니다.")
     return warnings
@@ -636,12 +874,14 @@ def _eligible(row, category):
     count = int(row.get("transactionCount12m") or 0)
     if row.get(CATEGORY_FIELDS[category]) is None:
         return False
+    if category == "price":
+        return int(row.get("leaderPriceTransactionCount12m") or 0) >= 2
     if category == "new_build":
         return bool(row.get("isNewBuild") and count >= 1)
     if count < 2:
         return False
     if category == "leadership":
-        return count >= 5 and row.get("leadershipScore") is not None
+        return count >= 5 and row.get("return6m") is not None
     if category == "value":
         return (
             count >= 5
@@ -659,11 +899,30 @@ def _public_item(row, category, rank):
     }
     item.update({
         "rank": rank,
-        "score": row.get(score_field),
+        "score": (
+            row.get("return6m")
+            if category == "leadership"
+            else row.get(score_field)
+        ),
+        "rankingTransactionCount12m": (
+            row.get("leaderPriceTransactionCount12m")
+            if category == "price"
+            else row.get("transactionCount12m")
+        ),
+        "rankingConfidenceLevel": (
+            row.get("leaderPriceConfidenceLevel")
+            if category == "price"
+            else row.get("confidenceLevel")
+        ),
+        "rankingConfidenceLabel": (
+            row.get("leaderPriceConfidenceLabel")
+            if category == "price"
+            else row.get("confidenceLabel")
+        ),
         "category": category,
         "categoryLabel": CATEGORY_LABELS[category],
         "reasons": _reason_candidates(row, category),
-        "warnings": _warnings(row),
+        "warnings": _warnings(row, category),
         "scores": {
             "price": row.get("priceScore"),
             "leadership": row.get("leadershipScore"),
@@ -679,13 +938,29 @@ def _public_item(row, category, rank):
 def _rank_category(metrics, category, limit):
     score_field = CATEGORY_FIELDS[category]
     rows = [row for row in metrics if _eligible(row, category)]
-    rows.sort(key=lambda row: (
-        -float(row.get(score_field) or 0),
-        -float(row.get("dataConfidenceScore") or 0),
-        -int(row.get("transactionCount12m") or 0),
-        -float(row.get("priceScore") or 0),
-        str(row.get("apartmentName") or ""),
-    ))
+    if category == "price":
+        rows.sort(key=lambda row: (
+            -float(row.get("leaderPrice12m") or 0),
+            -float(row.get("leaderPriceConfidenceScore") or 0),
+            -int(row.get("leaderPriceTransactionCount12m") or 0),
+            str(row.get("apartmentName") or ""),
+        ))
+    elif category == "leadership":
+        rows.sort(key=lambda row: (
+            -float(row.get("return6m") or 0),
+            -float(row.get("dataConfidenceScore") or 0),
+            -int(row.get("transactionCount12m") or 0),
+            -float(row.get("priceScore") or 0),
+            str(row.get("apartmentName") or ""),
+        ))
+    else:
+        rows.sort(key=lambda row: (
+            -float(row.get(score_field) or 0),
+            -float(row.get("dataConfidenceScore") or 0),
+            -int(row.get("transactionCount12m") or 0),
+            -float(row.get("priceScore") or 0),
+            str(row.get("apartmentName") or ""),
+        ))
     return [
         _public_item(row, category, index)
         for index, row in enumerate(rows[:limit], 1)
@@ -706,7 +981,12 @@ def calculate_rankings_from_pairs(
     entity_transactions = list(entity_transactions)
     entities = [entity for entity, _transactions in entity_transactions]
     metrics = [
-        _base_metrics(entity, transactions, reference, area_bucket_value)
+        _base_metrics(
+            entity,
+            transactions,
+            reference,
+            area_bucket_value,
+        )
         for entity, transactions in entity_transactions
     ]
     for row in metrics:
@@ -718,6 +998,18 @@ def calculate_rankings_from_pairs(
     }
     trade_complex_count = sum(1 for row in metrics if row["transactionCount12m"] > 0)
     eligible_complex_count = sum(1 for row in metrics if row["transactionCount12m"] >= 2)
+    leader_price_trade_complex_count = sum(
+        1 for row in metrics
+        if row["leaderPriceTransactionCount12m"] > 0
+    )
+    leader_price_eligible_complex_count = sum(
+        1 for row in metrics
+        if row["leaderPriceTransactionCount12m"] >= 2
+    )
+    leadership_eligible_complex_count = sum(
+        1 for row in metrics
+        if _eligible(row, "leadership")
+    )
     warnings = []
     if not entities:
         warnings.append("해당 지역에 등록된 아파트 단지가 없습니다.")
@@ -730,12 +1022,26 @@ def calculate_rankings_from_pairs(
         "referenceMonth": reference,
         "areaBucket": area_bucket_value,
         "areaBucketLabel": AREA_BUCKETS[area_bucket_value]["label"],
+        "areaTarget": NATIONAL_AREA_TARGET,
+        "leaderPriceBasisLabel": NATIONAL_AREA_LABEL,
         "calculationVersion": CALCULATION_VERSION,
         "lookbackMonths": 12,
-        "stationDistanceBasis": None,
+        "stationDistanceBasis": (
+            "카카오 Local API 좌표 기준 직선거리"
+            f"(반경 {config.KAKAO_STATION_RADIUS_METERS / 1000:g}km 미탐지 시 거리 하한 반영)"
+            if any(row.get("stationDistanceLowerBound") is not None for row in metrics)
+            else (
+                "카카오 Local API 좌표 기준 직선거리"
+                if any(row.get("stationScore") is not None for row in metrics)
+                else None
+            )
+        ),
         "complexCount": len(entities),
         "tradeComplexCount": trade_complex_count,
         "eligibleComplexCount": eligible_complex_count,
+        "leaderPriceTradeComplexCount": leader_price_trade_complex_count,
+        "leaderPriceEligibleComplexCount": leader_price_eligible_complex_count,
+        "leadershipEligibleComplexCount": leadership_eligible_complex_count,
         "rankings": rankings,
         "warnings": warnings,
         "dataAvailability": {
@@ -768,8 +1074,20 @@ def calculate_rankings(
     )
 
 
-def _cache_path(sido, sigungu, area_bucket_value, reference_month):
-    material = "|".join((CALCULATION_VERSION, sido, sigungu, area_bucket_value, reference_month))
+def _cache_path(
+    sido,
+    sigungu,
+    area_bucket_value,
+    reference_month,
+):
+    material = "|".join((
+        CALCULATION_VERSION,
+        sido,
+        sigungu,
+        area_bucket_value,
+        reference_month,
+        kakao_station_distances.cache_revision(),
+    ))
     digest = hashlib.sha256(material.encode("utf-8")).hexdigest()
     return CACHE_DIR / f"{digest}.json"
 
@@ -779,7 +1097,7 @@ def get_leaders(
     sigungu,
     area_bucket_value=DEFAULT_AREA_BUCKET,
     reference_month=None,
-    category="overall",
+    category=DEFAULT_CATEGORY,
     limit=DEFAULT_LIMIT,
     force=False,
     cache_only=False,
@@ -787,7 +1105,12 @@ def get_leaders(
     if category not in CATEGORY_FIELDS:
         raise ValueError("지원하지 않는 대장 카테고리입니다.")
     reference = _parse_reference_month(reference_month).strftime("%Y-%m")
-    path = _cache_path(sido, sigungu, area_bucket_value, reference)
+    path = _cache_path(
+        sido,
+        sigungu,
+        area_bucket_value,
+        reference,
+    )
     payload = None
     if path.exists() and not force:
         try:
@@ -800,7 +1123,9 @@ def get_leaders(
             sigungu,
             area_bucket_value=area_bucket_value,
             reference_month=reference,
-            limit=max(DEFAULT_LIMIT, int(limit or DEFAULT_LIMIT)),
+            # 첫 화면의 기본 가격 순위가 먼저 캐시돼도 상승률 Top 10을
+            # 잘라내지 않도록 카테고리 전체를 최소 10위까지 보관한다.
+            limit=max(LEADERSHIP_LIMIT, int(limit or DEFAULT_LIMIT)),
             cache_only=cache_only,
         )
         if not cache_only:
@@ -812,10 +1137,33 @@ def get_leaders(
     response["category"] = category
     response["categoryLabel"] = CATEGORY_LABELS[category]
     response["items"] = (payload.get("rankings", {}).get(category) or [])[:max(1, min(int(limit or DEFAULT_LIMIT), 20))]
+    response["warnings"] = list(payload.get("warnings") or [])
+    if category == "price":
+        if not int(payload.get("leaderPriceTradeComplexCount") or 0):
+            response["warnings"].insert(
+                0,
+                f"{payload.get('leaderPriceBasisLabel') or NATIONAL_AREA_LABEL}의 최근 거래가 없습니다.",
+            )
+        elif not int(payload.get("leaderPriceEligibleComplexCount") or 0):
+            response["warnings"].insert(
+                0,
+                f"{payload.get('leaderPriceBasisLabel') or NATIONAL_AREA_LABEL} 거래가 단지별 2건 미만이라 대장을 선정하기 어렵습니다.",
+            )
+    elif category == "leadership" and not int(payload.get("leadershipEligibleComplexCount") or 0):
+        response["warnings"].insert(
+            0,
+            "최근 12개월 거래가 5건 이상이고 6개월 상승률을 계산할 수 있는 단지가 없습니다.",
+        )
     return response
 
 
-def apartment_detail(apartment_id, sido, sigungu, area_bucket_value, reference_month=None):
+def apartment_detail(
+    apartment_id,
+    sido,
+    sigungu,
+    area_bucket_value,
+    reference_month=None,
+):
     payload = calculate_rankings(
         sido,
         sigungu,
@@ -847,7 +1195,7 @@ def main(argv=None):
     parser.add_argument("--sigungu", default="")
     parser.add_argument("--reference-month", default="")
     parser.add_argument("--area-bucket", default=DEFAULT_AREA_BUCKET, choices=AREA_BUCKETS)
-    parser.add_argument("--category", default="overall", choices=CATEGORY_FIELDS)
+    parser.add_argument("--category", default=DEFAULT_CATEGORY, choices=CATEGORY_FIELDS)
     parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
     parser.add_argument("--cache-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

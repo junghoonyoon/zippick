@@ -17,7 +17,7 @@ MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_band
 PRICE_BAND_CSV_PATHS = [PRICE_BANDS_CSV, MOLIT_PRICE_BANDS_CSV]
 VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
-CANDIDATE_RESULT_SCHEMA_VERSION = 1
+CANDIDATE_RESULT_SCHEMA_VERSION = 3
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -47,6 +47,13 @@ BROAD_REGION_KEYS = {
     real_estate_search.compact(item)
     for item in ("서울", "서울시", "서울특별시", "경기", "경기도")
 }
+
+
+def _has_verified_price(row):
+    return (
+        row.get("priceSource") in VERIFIED_PRICE_SOURCES
+        and row.get("priceIdentityVerified") is True
+    )
 
 PURPOSE_LABELS = {
     "live": "실거주",
@@ -544,7 +551,7 @@ def _apply_fit(row, budget_eok):
     _apply_recent_trade_estimate(row)
     estimated_mid = _float_value(row.get("estimatedMidPriceEok"))
     stale_verified_trade = (
-        row.get("priceSource") in VERIFIED_PRICE_SOURCES
+        _has_verified_price(row)
         and bool(row.get("latestDealDate"))
         and not _deal_date_is_recent(row.get("latestDealDate"))
     )
@@ -615,10 +622,74 @@ def _preferred_area_label(min_area):
     return bands.get(int(minimum), "") if minimum else ""
 
 
+def _price_lookup_entity(row):
+    """Resolve one physical complex for every price-bearing lookup.
+
+    A district and apartment name are not an identity: names such as ``현대``
+    repeat within the same district. Prefer the exact master row, and only use
+    a non-master row when it already carries both legal-dong and parcel data.
+    """
+    row = row or {}
+    name = str(row.get("name") or "").strip()
+    region = str(row.get("region") or "").strip()
+    legal_dong = str(row.get("legalDong") or "").strip()
+    jibun = str(row.get("jibun") or "").strip()
+    matches = _find_entities(name, region, legal_dong, jibun)
+    if len(matches) == 1:
+        entity = matches[0]
+        if entity.get("legalDong") and (entity.get("jibun") or entity.get("address")):
+            return entity
+    if not matches and legal_dong and jibun:
+        return {
+            "name": name,
+            "aliases": [],
+            "district": region,
+            "legalDong": legal_dong,
+            "jibun": jibun,
+            "lawdCd": str(row.get("lawdCd") or "").strip(),
+        }
+    return None
+
+
+def _invalidate_unverified_price(row):
+    """Fail closed when a transaction cannot be tied to one parcel."""
+    for field in (
+        "minPriceEok", "midPriceEok", "averagePriceEok", "maxPriceEok",
+        "recentMinPriceEok", "recentMedianPriceEok", "recentAveragePriceEok",
+        "recentMaxPriceEok", "currentEstimateMinPriceEok",
+        "currentEstimateMidPriceEok", "currentEstimateMaxPriceEok",
+        "latestDealPriceEok", "latestDealDate", "latestDealExclusiveArea",
+        "latestDealFloor", "previousDealPriceEok", "previousDealDate",
+        "comparisonDealPriceEok", "comparisonDealDate",
+        "recent3AveragePriceEok", "recent3AdjustedAveragePriceEok",
+        "previous3AveragePriceEok", "recent6AveragePriceEok",
+        "previous6AveragePriceEok", "lastObservedDealPriceEok",
+        "lastObservedDealDate",
+    ):
+        row[field] = 0 if field.endswith("Eok") else ""
+    for field in (
+        "transactionCount", "recent3TradeCount", "recent3AdjustedTradeCount",
+        "recent3ExcludedTradeCount", "previous3TradeCount", "recent6TradeCount",
+        "previous6TradeCount", "comparisonDealSkippedOutlierCount",
+    ):
+        row[field] = 0
+    row.update({
+        "priceSource": "unverified_identity",
+        "priceIdentityVerified": False,
+        "marketDataStatus": "identity_unverified",
+        "sourceNote": "법정동·지번으로 단지를 확정하지 못해 실거래를 표시하지 않습니다.",
+    })
+    return row
+
+
 def _apply_live_price(row, preferred_min_area=0):
     minimum = _float_value(preferred_min_area)
+    entity = _price_lookup_entity(row)
+    if not entity:
+        return _invalidate_unverified_price(row)
+
     def price_band(lookback_months=None):
-        options = {"region": row.get("region", "")}
+        options = {"region": row.get("region", ""), "entity": entity}
         if lookback_months:
             options["lookback_months"] = lookback_months
         if minimum:
@@ -680,6 +751,11 @@ def _apply_live_band(row, live, comparison=None):
         "latestDealFloor": live.get("latestDealFloor", ""),
         "previousDealPriceEok": live.get("previousDealPriceEok"),
         "previousDealDate": live.get("previousDealDate", ""),
+        "comparisonDealPriceEok": live.get("comparisonDealPriceEok"),
+        "comparisonDealDate": live.get("comparisonDealDate", ""),
+        "comparisonDealSkippedOutlierCount": live.get(
+            "comparisonDealSkippedOutlierCount", 0,
+        ),
         "transactionCount": live.get("transactionCount", 0),
         "tradeLookbackMonths": live.get("lookbackMonths", molit_transactions.RECENT_LOOKBACK_MONTHS),
         "latestDealDate": live.get("latestDealDate", ""),
@@ -697,6 +773,8 @@ def _apply_live_band(row, live, comparison=None):
         "previous6TradeCount": comparison.get("previous6TradeCount", 0),
         "sourceNote": live.get("sourceNote", ""),
         "priceSource": "molit",
+        "priceIdentityVerified": True,
+        "marketDataStatus": "verified",
     })
     return _apply_recent_trade_estimate(row)
 
@@ -709,12 +787,16 @@ def _apply_last_observed_deal(row, preferred_min_area=0):
     complex whose most recent known transaction already exceeds the purchase
     ceiling.
     """
+    entity = _price_lookup_entity(row)
+    if not entity:
+        return _invalidate_unverified_price(row)
     area_label = _preferred_area_label(preferred_min_area) if _float_value(preferred_min_area) else row.get("areaLabel", "")
     last_deal = molit_transactions.latest_transaction_for_apartment(
         row["name"],
         region=row.get("region", ""),
         area_label=area_label,
         skip_months=config.MOLIT_TRANSACTION_LOOKBACK_MONTHS,
+        entity=entity,
     )
     last_price = _float_value((last_deal or {}).get("latestDealPriceEok"))
     if not last_price:
@@ -725,6 +807,9 @@ def _apply_last_observed_deal(row, preferred_min_area=0):
         "lastObservedDealFloor": last_deal.get("latestDealFloor", ""),
         "lastObservedDealDate": last_deal.get("latestDealDate", ""),
         "lastObservedDealNote": last_deal.get("sourceNote", ""),
+        "priceSource": "molit_reference",
+        "priceIdentityVerified": True,
+        "marketDataStatus": "no_recent_trade",
     })
     return row
 
@@ -759,6 +844,8 @@ def _candidate_from_entity(entity, region, min_area, budget_eok, purpose, priori
         "updatedAt": "",
         "sourceNote": "",
         "priceSource": "molit_lookup",
+        "priceIdentityVerified": False,
+        "marketDataStatus": "pending",
         "transactionCount": 0,
         "latestDealDate": "",
         "sourceUrl": "",
@@ -795,11 +882,14 @@ def _candidate_from_price_row(
     if entity:
         scope = region or entity.get("district") or entity.get("city") or row.get("region")
         search_query = real_estate_search._region_apartment_search_query(entity, scope)
+    legal_dong = row.get("legalDong") or (entity or {}).get("legalDong", "")
+    jibun = row.get("jibun") or _entity_jibun(entity)
+    identity_verified = bool(legal_dong and jibun)
     candidate = {
         "name": row["name"],
         "region": row.get("region", ""),
-        "legalDong": row.get("legalDong") or (entity or {}).get("legalDong", ""),
-        "jibun": row.get("jibun") or _entity_jibun(entity),
+        "legalDong": legal_dong,
+        "jibun": jibun,
         "cortarNo": (entity or {}).get("cortarNo", ""),
         "areaLabel": row.get("areaLabel", ""),
         "minPriceEok": row.get("minPriceEok"),
@@ -811,6 +901,8 @@ def _candidate_from_price_row(
         "updatedAt": row.get("updatedAt", ""),
         "sourceNote": row.get("sourceNote", ""),
         "priceSource": row.get("priceSource") or "manual",
+        "priceIdentityVerified": identity_verified,
+        "marketDataStatus": "verified" if identity_verified else "pending",
         "transactionCount": row.get("transactionCount") or 0,
         "latestDealDate": row.get("latestDealDate") or "",
         "sourceUrl": row.get("sourceUrl") or "",
@@ -856,18 +948,23 @@ def _cached_live_band_for_seed(row, entity, min_area):
 def _apply_stored_live_price(row, preferred_min_area=0):
     """Apply an already-materialized band without API or month-cache scans."""
     minimum = _float_value(preferred_min_area)
+    entity = _price_lookup_entity(row)
+    if not entity:
+        return _invalidate_unverified_price(row)
     live = None
     if minimum:
         live = molit_transactions.stored_price_band_for_apartment_min_area(
             row["name"],
             region=row.get("region", ""),
             min_area=minimum,
+            entity=entity,
         )
     if not live:
         live = molit_transactions.stored_price_band_for_apartment(
             row["name"],
             region=row.get("region", ""),
             area_label=row.get("areaLabel", ""),
+            entity=entity,
         )
     if not live:
         return row
@@ -884,6 +981,7 @@ def _apply_stored_live_price(row, preferred_min_area=0):
                 region=row.get("region", ""),
                 min_area=minimum,
                 lookback_months=12,
+                entity=entity,
             )
         else:
             extended = molit_transactions.stored_price_band_for_apartment(
@@ -891,6 +989,7 @@ def _apply_stored_live_price(row, preferred_min_area=0):
                 region=row.get("region", ""),
                 area_label=row.get("areaLabel", ""),
                 lookback_months=12,
+                entity=entity,
             )
         if extended:
             comparison = extended
@@ -1116,7 +1215,16 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
             entity for entity in matches
             if real_estate_search.compact(entity.get("address")).endswith(jibun_key)
         ]
-    return matches
+    unique = {}
+    for entity in matches:
+        physical_key = (
+            real_estate_search.compact(entity.get("province")),
+            real_estate_search.compact(entity.get("district") or entity.get("city")),
+            real_estate_search.compact(entity.get("legalDong")),
+            real_estate_search.compact(entity.get("jibun") or _entity_jibun(entity)),
+        )
+        unique.setdefault(physical_key, entity)
+    return list(unique.values())
 
 
 def _find_entity(name, region="", legal_dong="", jibun=""):
@@ -1267,7 +1375,7 @@ def _purpose_score(row, purpose):
         elif item == "move":
             scores.append((4 if households >= 1500 else 1) + (2 if ratio <= 0.95 else 0))
         elif item == "invest":
-            scores.append((4 if row.get("priceSource") in VERIFIED_PRICE_SOURCES and row.get("transactionCount") else 0) + (2 if ratio <= 0.9 else 0))
+            scores.append((4 if _has_verified_price(row) and row.get("transactionCount") else 0) + (2 if ratio <= 0.9 else 0))
     return round(sum(scores) / len(scores), 1) if scores else 0
 
 
@@ -1354,7 +1462,7 @@ def _decision_support(row, entity, purpose, priority, commute, move_timing, pric
     else:
         risks.append("사용승인일 데이터를 연결하지 못해 연식은 직접 확인해야 해요.")
 
-    if row.get("priceSource") in VERIFIED_PRICE_SOURCES:
+    if _has_verified_price(row):
         count = row.get("transactionCount") or 0
         latest_deal_price = _float_value(row.get("latestDealPriceEok"))
         recent_median_price = _float_value(row.get("recentMedianPriceEok"))
@@ -1531,7 +1639,7 @@ def _collect_nearby_candidate(bucket, nearby_keys, row, entity, min_area, min_ho
         entries[key] = {
             "name": str(row.get("name") or "").strip(),
             "price": price,
-            "verifiedPrice": row.get("priceSource") in VERIFIED_PRICE_SOURCES,
+            "verifiedPrice": _has_verified_price(row),
         }
 
 
@@ -1651,6 +1759,7 @@ def _collect_cached_nearby_candidates(
                 **live,
                 "midPriceEok": live_price,
                 "priceSource": "molit",
+                "priceIdentityVerified": True,
             },
             entity,
             min_area,
@@ -1763,7 +1872,7 @@ def _candidate_policy_context(
 
 def _attach_policy_impacts(rows, policy_profile):
     for row in rows:
-        entity = _find_entity(row["name"], row.get("region", ""))
+        entity = _price_lookup_entity(row)
         row["policyImpact"] = (
             policy_evaluator.evaluate_candidate(row, entity=entity, profile=policy_profile)
             if row.get("midPriceEok")
@@ -1785,13 +1894,10 @@ def _finalize_candidate_rows(
 ):
     """Attach the common display, signal, link and verdict result model."""
     for row in rows:
-        entity = _find_entity(row["name"], row.get("region", ""))
-        map_entity = _find_entity(
-            row["name"],
-            row.get("region", ""),
-            row.get("legalDong", ""),
-            row.get("jibun", ""),
-        ) or entity
+        if not _has_verified_price(row):
+            _invalidate_unverified_price(row)
+        entity = _price_lookup_entity(row)
+        map_entity = entity
         row["resultSchemaVersion"] = CANDIDATE_RESULT_SCHEMA_VERSION
         row["displayName"] = _candidate_display_name(row, entity)
         row["displayRegion"] = _display_region(row, entity)
@@ -1814,9 +1920,11 @@ def _finalize_candidate_rows(
             signal_pairs = set()
             for row in rows:
                 try:
-                    for source_row in molit_transactions.source_rows(
-                        row["name"],
-                        row.get("region", ""),
+                    entity = _price_lookup_entity(row)
+                    if not entity:
+                        continue
+                    for source_row in molit_transactions.source_rows_for_entity(
+                        entity, row.get("region", ""),
                     ):
                         lawd_cd = molit_transactions._row_lawd_cd(source_row)
                         if lawd_cd:
@@ -1868,6 +1976,8 @@ def _same_apartment_entity(left, right):
 def apartment_candidate_result(
     name,
     region="",
+    legal_dong="",
+    jibun="",
     search_region="",
     area="",
     budget=0,
@@ -1938,7 +2048,8 @@ def apartment_candidate_result(
 
     policy_profile = context["profile"]
     budget_eok = context["budgetEok"]
-    entity = _find_entity(name, region)
+    entity_matches = _find_entities(name, region, legal_dong, jibun)
+    entity = entity_matches[0] if len(entity_matches) == 1 else None
     if not entity or entity.get("aggregate"):
         return None
     if not _matches_region({"name": name, "region": region}, entity, scope_region):
@@ -2004,7 +2115,7 @@ def apartment_candidate_result(
     for row in candidates:
         try:
             _apply_live_price(row, preferred_min_area=minimum)
-            if row.get("priceSource") not in VERIFIED_PRICE_SOURCES and not row.get("latestDealDate"):
+            if not _has_verified_price(row) and not row.get("latestDealDate"):
                 _apply_last_observed_deal(row, preferred_min_area=minimum)
         except Exception:
             pass
@@ -2119,6 +2230,9 @@ def budget_candidates(
             filtered["identity"] += 1
             continue
         entity = entity_matches[0] if entity_matches else None
+        if entity is None and not (row.get("legalDong") and row.get("jibun")):
+            filtered["identity"] += 1
+            continue
         if entity and entity.get("aggregate"):
             if (
                 nearby_keys
@@ -2168,7 +2282,7 @@ def budget_candidates(
         )
         if (
             _candidate_over_purchase_cap(candidate, budget_eok)
-            and candidate["priceSource"] in VERIFIED_PRICE_SOURCES
+            and _has_verified_price(candidate)
             and not (molit_transactions.enabled() and min_area)
         ):
             filtered["price"] += 1
@@ -2351,7 +2465,13 @@ def budget_candidates(
         prefetch_pairs = set()
         for row in preselected:
             try:
-                for source_row in molit_transactions.source_rows(row["name"], row.get("region", "")):
+                entity = _price_lookup_entity(row)
+                if not entity:
+                    _invalidate_unverified_price(row)
+                    continue
+                for source_row in molit_transactions.source_rows_for_entity(
+                    entity, row.get("region", ""),
+                ):
                     lawd_cd = molit_transactions._row_lawd_cd(source_row)
                     if not lawd_cd:
                         continue
@@ -2365,7 +2485,7 @@ def budget_candidates(
         # 앞선 우선순위 조회에서 밀린 단지도 범위가 대표값으로 남지 않게 한다.
         for row in rows:
             if (
-                row.get("priceSource") not in VERIFIED_PRICE_SOURCES
+                not _has_verified_price(row)
                 or not row.get("latestDealDate")
                 or _float_value(row.get("latestDealPriceEok"))
             ):
@@ -2375,7 +2495,7 @@ def budget_candidates(
                 _apply_fit(row, budget_eok)
                 row["_score"] = _candidate_score(
                     row,
-                    _find_entity(row["name"], row.get("region", "")),
+                    _price_lookup_entity(row),
                     purpose,
                     priority,
                     commute,
@@ -2387,10 +2507,10 @@ def budget_candidates(
         for row in preselected:
             try:
                 _apply_live_price(row, preferred_min_area=min_area)
-                if row.get("priceSource") not in VERIFIED_PRICE_SOURCES and not row.get("latestDealDate"):
+                if not _has_verified_price(row) and not row.get("latestDealDate"):
                     _apply_last_observed_deal(row, preferred_min_area=min_area)
                 _apply_fit(row, budget_eok)
-                row["_score"] = _candidate_score(row, _find_entity(row["name"], row.get("region", "")), purpose, priority, commute, price_strategy)
+                row["_score"] = _candidate_score(row, _price_lookup_entity(row), purpose, priority, commute, price_strategy)
             except Exception:
                 continue
 
@@ -2404,7 +2524,7 @@ def budget_candidates(
                 _apply_fit(row, budget_eok)
                 row["_score"] = _candidate_score(
                     row,
-                    _find_entity(row["name"], row.get("region", "")),
+                    _price_lookup_entity(row),
                     purpose,
                     priority,
                     commute,
@@ -2425,7 +2545,7 @@ def budget_candidates(
             if last_observed_price and _fit_status(last_observed_price, budget_eok)[0] == "제외":
                 last_deal_over_budget_count += 1
             continue
-        if row.get("priceSource") not in VERIFIED_PRICE_SOURCES:
+        if not _has_verified_price(row):
             if not _float_value(row.get("lastObservedDealPriceEok")):
                 if fast_mode:
                     # 1차 응답에서는 가격 미확인 후보도 '확인 중' 상태로 먼저
@@ -2548,8 +2668,8 @@ def budget_candidates(
         "rentalExcludedCount": filtered["rental"],
         "liveSeedCount": live_seed_count,
         "livePriceEnabled": molit_transactions.enabled(),
-        "livePriceCount": sum(1 for row in candidates if row.get("priceSource") in VERIFIED_PRICE_SOURCES),
-        "officialPriceBandCount": sum(1 for row in rows if row.get("priceSource") in VERIFIED_PRICE_SOURCES),
+        "livePriceCount": sum(1 for row in candidates if _has_verified_price(row)),
+        "officialPriceBandCount": sum(1 for row in rows if _has_verified_price(row)),
         "livePriceError": molit_transactions.last_error(),
         "policySnapshot": {
             **policy_evaluator.summarize(

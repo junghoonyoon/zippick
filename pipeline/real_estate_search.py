@@ -75,7 +75,10 @@ MANUAL_APARTMENT_MASTER = [
     {"name": "리센츠", "category": "아파트", "aliases": []},
     {"name": "트리지움", "category": "아파트", "aliases": []},
     {"name": "파크리오", "category": "아파트", "aliases": []},
-    {"name": "잠실주공5단지", "category": "아파트", "aliases": ["주공5단지"]},
+    {
+        "name": "잠실주공5단지", "category": "아파트",
+        "aliases": ["주공5단지", "주공아파트5단지"],
+    },
     {"name": "목동신시가지", "category": "아파트", "aliases": ["목동신시가지아파트"]},
     {"name": "마포래미안푸르지오", "category": "아파트", "aliases": ["마래푸"]},
     {"name": "서울숲 트리마제", "category": "아파트", "aliases": ["트리마제", "서울숲트리마제"]},
@@ -94,7 +97,10 @@ MANUAL_APARTMENT_MASTER = [
     {"name": "고덕그라시움", "category": "아파트", "aliases": []},
     {"name": "동탄역 롯데캐슬", "category": "아파트", "aliases": ["동탄역롯데캐슬", "동탄롯데캐슬"]},
     {"name": "동탄역 시범단지", "category": "아파트", "aliases": ["동탄역시범단지", "동탄시범단지", "시범단지"]},
-    {"name": "광교중흥S클래스", "category": "아파트", "aliases": ["광교중흥", "중흥S클래스"]},
+    {
+        "name": "광교중흥S클래스", "category": "아파트",
+        "aliases": ["광교중흥", "중흥S클래스", "광교중흥에스클래스"],
+    },
     {"name": "판교푸르지오그랑블", "category": "아파트", "aliases": []},
     {"name": "백현마을", "category": "아파트", "aliases": []},
     {"name": "위례자이더시티", "category": "아파트", "aliases": []},
@@ -110,12 +116,29 @@ MANUAL_APARTMENT_MASTER = [
     {"name": "이문 아이파크 자이", "category": "아파트", "aliases": ["이문아이파크자이"]},
     {"name": "북서울자이 폴라리스", "category": "아파트", "aliases": ["북서울자이폴라리스"]},
     {"name": "자이퍼스틴", "category": "아파트", "aliases": []},
-    {"name": "동탄 롯데캐슬 알바트로스", "category": "아파트", "aliases": ["동탄롯데캐슬알바트로스", "롯데캐슬알바트로스"]},
+    {
+        "name": "동탄 롯데캐슬 알바트로스", "category": "아파트",
+        "aliases": [
+            "동탄롯데캐슬알바트로스",
+            "롯데캐슬알바트로스",
+            "동탄역 롯데캐슬알바트로스",
+        ],
+    },
     {"name": "동탄역 시범 더샵 센트럴시티", "category": "아파트", "aliases": ["동탄역시범더샵센트럴시티", "더샵센트럴시티"]},
     {"name": "동탄 아이파크", "category": "아파트", "aliases": ["동탄아이파크"]},
-    {"name": "동탄 푸른마을 포스코더샵2차", "category": "아파트", "aliases": ["푸른마을포스코더샵2차", "포스코더샵2차"]},
+    {
+        "name": "동탄 푸른마을 포스코더샵2차", "category": "아파트",
+        "aliases": [
+            "푸른마을포스코더샵2차",
+            "포스코더샵2차",
+            "푸른마을 포스코더샾2차",
+        ],
+    },
     {"name": "더샵 분당 센트로", "category": "아파트", "aliases": ["더샵분당센트로"]},
-    {"name": "아이파크 삼성", "category": "아파트", "aliases": ["아이파크삼성"]},
+    {
+        "name": "아이파크 삼성", "category": "아파트",
+        "aliases": ["아이파크삼성", "아이파크삼성동"],
+    },
     {"name": "아크로 삼성", "category": "아파트", "aliases": ["아크로삼성"]},
     {"name": "자연앤 힐스테이트", "category": "아파트", "aliases": ["자연앤힐스테이트"]},
     {"name": "더샵 스타시티", "category": "아파트", "aliases": ["더샵스타시티"]},
@@ -126,7 +149,14 @@ MANUAL_APARTMENT_MASTER = [
     {"name": "힐스테이트 하기", "category": "아파트", "aliases": ["힐스테이트하기"]},
     {"name": "고양 창릉 S4", "category": "아파트", "aliases": ["고양창릉S4", "창릉S4"]},
     {"name": "고양 창릉 S3", "category": "아파트", "aliases": ["고양창릉S3", "창릉S3"]},
-    {"name": "e편한세상분당퍼스트빌리지", "category": "아파트", "aliases": ["이편한세상분당퍼스트빌리지", "분당퍼스트빌리지"]},
+    {
+        "name": "e편한세상분당퍼스트빌리지", "category": "아파트",
+        "aliases": [
+            "이편한세상분당퍼스트빌리지",
+            "분당퍼스트빌리지",
+            "e편한세상 분당 퍼스트빌리지(성남낙생 A-1BL) 신혼희망타운(공공분양)",
+        ],
+    },
     {"name": "한신더휴 메가시티", "category": "아파트", "aliases": ["한신더휴메가시티", "창원메가시티"]},
     {"name": "래미안 퍼스티지", "category": "아파트", "aliases": ["반포래미안퍼스티지", "퍼스티지"]},
     {"name": "경희궁자이", "category": "아파트", "aliases": ["경희공자이"]},
@@ -379,6 +409,9 @@ def _load_apartment_csv_entities(limit=None):
                 legal_dong = _row_legal_dong(row)
                 pnu = re.sub(r"\D", "", str(row.get("필지고유번호") or ""))
                 cortar_no = pnu[:10] if len(pnu) >= 10 else ""
+                lawd_cd = str(row.get("법정동코드") or row.get("lawdCd") or "").strip()
+                if not lawd_cd and len(pnu) >= 5:
+                    lawd_cd = pnu[:5]
                 entities.append({
                     "name": name,
                     "category": f"{district} 아파트".strip(),
@@ -398,7 +431,7 @@ def _load_apartment_csv_entities(limit=None):
                     )),
                     "households": _int_value(row.get("세대수")),
                     "approvedAt": str(row.get("사용승인일") or "").strip(),
-                    "lawdCd": str(row.get("법정동코드") or row.get("lawdCd") or "").strip(),
+                    "lawdCd": lawd_cd,
                     "status": str(row.get("상태") or "").strip(),
                 })
                 base = _numbered_complex_base(name)
@@ -417,7 +450,7 @@ def _load_apartment_csv_entities(limit=None):
                         "address": str(row.get("주소") or "").strip(),
                         "households": 0,
                         "approvedAt": str(row.get("사용승인일") or "").strip(),
-                        "lawdCd": str(row.get("법정동코드") or row.get("lawdCd") or "").strip(),
+                        "lawdCd": lawd_cd,
                         "status": str(row.get("상태") or "").strip(),
                     })
                     group["aliases"].extend([name, *aliases])
@@ -481,7 +514,67 @@ def _merge_entities(*groups):
     return list(merged.values())
 
 
-APARTMENT_MASTER = _merge_entities(MANUAL_APARTMENT_MASTER, _load_apartment_csv_entities())
+def _entity_identity_keys(entity):
+    """Return exact, sufficiently specific names that may identify one complex."""
+    keys = set()
+    for value in (entity.get("name"), *(entity.get("aliases") or [])):
+        key = compact(value)
+        if len(key) >= 4:
+            keys.add(key)
+    return keys
+
+
+def _link_manual_apartments_to_source(manual_entities, source_entities):
+    """Attach an incomplete editorial search name to one unambiguous source row.
+
+    Manual rows are useful search aliases, but many intentionally contain no
+    location or building profile.  When one exact alias identifies one physical
+    source complex, reuse that source's dedupe key so the normal merge retains
+    the friendly name while filling every canonical field.  Ambiguous aliases
+    remain unlinked instead of borrowing metadata from the wrong complex.
+    """
+    key_targets = {}
+    for source in source_entities:
+        if source.get("aggregate"):
+            continue
+        identity = source.get("dedupeKey") or compact(source.get("name", ""))
+        if not identity:
+            continue
+        for key in _entity_identity_keys(source):
+            key_targets.setdefault(key, {})[identity] = source
+
+    linked = []
+    for original in manual_entities:
+        entity = dict(original)
+        has_region = any(entity.get(field) for field in ("district", "city", "legalDong"))
+        has_profile = _int_value(entity.get("households")) > 0
+        if has_region and (has_profile or entity.get("status")):
+            linked.append(entity)
+            continue
+        source = None
+        # A long official alias is more discriminating than a short nickname.
+        # Use the most specific exact key that resolves to one source identity.
+        for key in sorted(_entity_identity_keys(entity), key=len, reverse=True):
+            targets = key_targets.get(key, {})
+            if len(targets) == 1:
+                source = next(iter(targets.values()))
+                break
+        if source is not None:
+            entity["dedupeKey"] = source.get("dedupeKey") or compact(source.get("name", ""))
+            entity["aliases"] = [
+                *(entity.get("aliases") or []),
+                source.get("name", ""),
+                *(source.get("aliases") or []),
+            ]
+        linked.append(entity)
+    return linked
+
+
+_CSV_APARTMENT_MASTER = _load_apartment_csv_entities()
+APARTMENT_MASTER = _merge_entities(
+    _link_manual_apartments_to_source(MANUAL_APARTMENT_MASTER, _CSV_APARTMENT_MASTER),
+    _CSV_APARTMENT_MASTER,
+)
 APARTMENT_RANK_MASTER = MANUAL_APARTMENT_MASTER
 
 
@@ -838,6 +931,10 @@ def suggest_apartments(query, limit=20):
         item for item in suggestions
         if item["address"] or compact(item["name"]) not in named_with_address
     ]
+    # 지역을 식별하지 못한 보조 검색명은 후속 가격 API가 반드시 실패한다.
+    # 값이 있는 것처럼 결과 카드에 진입시켜 전 필드를 '미확인'으로 보이게
+    # 하지 말고, 정식 단지 레코드가 연결될 때까지 자동완성에서 제외한다.
+    suggestions = [item for item in suggestions if item["region"]]
     # '상계주공아파트'처럼 단지 번호 없는 묶음 이름은, 같은 지역에 번호 붙은
     # 형제 단지가 2곳 이상 함께 검색되면 숨긴다. 묶음 이름의 결과값은 여러
     # 단지 실거래가 섞여 단지별 리포트와 1:1이 되지 않기 때문이다.

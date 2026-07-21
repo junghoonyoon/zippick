@@ -1,5 +1,5 @@
 {
-  "calculationVersion": "leader-v4",
+  "calculationVersion": "leader-v14",
   "defaultAreaBucket": "70-89",
   "weights": {
     "overall": {
@@ -14,8 +14,7 @@
       "medianPricePerSquareMeter": 0.3
     },
     "leadership": {
-      "relativeReturn6m": 0.6,
-      "relativeReturn12m": 0.4
+      "return6m": 1.0
     },
     "liquidity": {
       "transactionTurnover": 0.7,

@@ -67,6 +67,40 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
         self.assertTrue(all(row["legalDong"] == "하안동" for row in suggestions))
         self.assertTrue(all("하안동" in row["address"] for row in suggestions))
 
+    def test_manual_alias_uses_complete_unique_source_complex(self):
+        cases = {
+            "서울숲 트리마제": ("성동구", "성수동1가", 688),
+            "광교중흥S클래스": ("수원영통구", "원천동", 2231),
+            "동탄 롯데캐슬 알바트로스": ("화성시", "청계동", 1416),
+            "동탄 푸른마을 포스코더샵2차": ("화성시", "능동", 1226),
+            "아이파크 삼성": ("강남구", "삼성동", 449),
+        }
+
+        for query, expected in cases.items():
+            with self.subTest(query=query):
+                suggestions = real_estate_search.suggest_apartments(query)
+                self.assertEqual(len(suggestions), 1)
+                self.assertEqual(
+                    (
+                        suggestions[0]["region"],
+                        suggestions[0]["legalDong"],
+                        suggestions[0]["households"],
+                    ),
+                    expected,
+                )
+
+    def test_unresolved_editorial_name_never_opens_an_all_unknown_result(self):
+        self.assertEqual(
+            real_estate_search.suggest_apartments("개포자이프레지던스"),
+            [],
+        )
+
+    def test_apartment_suggestions_always_have_a_region_for_followup_apis(self):
+        for entity in real_estate_search.MANUAL_APARTMENT_MASTER:
+            with self.subTest(name=entity["name"]):
+                suggestions = real_estate_search.suggest_apartments(entity["name"])
+                self.assertTrue(all(row["region"] for row in suggestions))
+
 
 if __name__ == "__main__":
     unittest.main()
