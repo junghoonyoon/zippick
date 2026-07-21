@@ -61,6 +61,9 @@ MARKET_SNAPSHOT_SOURCE_DIR = None
 MARKET_SNAPSHOTS_LOADED = False
 REGIONAL_INDEX_CACHE = {}
 REGIONAL_INDEX_CACHE_LOCK = threading.Lock()
+APARTMENT_LEADER_CONTEXT_CACHE = {}
+APARTMENT_LEADER_CONTEXT_CACHE_LOCK = threading.Lock()
+APARTMENT_LEADER_CONTEXT_LOCKS = tuple(threading.Lock() for _ in range(32))
 MARKET_SNAPSHOT_MAX_AGE_SECONDS = int(os.environ.get(
     "MARKET_SNAPSHOT_MAX_AGE_SECONDS",
     # 검색 즉시 표시용 스냅샷은 최대 48시간까지 먼저 보여주고, 같은 요청에서
@@ -664,6 +667,80 @@ def _cached_budget_payload(cache_key):
     })
     _schedule_budget_optional_links(cache_key, payload)
     return payload
+
+
+def _apartment_leader_context(name, region, legal_dong="", jibun=""):
+    """차트에 필요한 동·구 대장 메타데이터만 지연 계산한다."""
+    identity = (
+        str(name or "").strip(),
+        str(region or "").strip(),
+        str(legal_dong or "").strip(),
+        str(jibun or "").strip(),
+        momentum_signals.LEADER_FORMULA_VERSION,
+    )
+    with APARTMENT_LEADER_CONTEXT_CACHE_LOCK:
+        cached = APARTMENT_LEADER_CONTEXT_CACHE.get(identity)
+    if cached:
+        return json.loads(json.dumps(cached, ensure_ascii=False)), 200
+
+    identity_lock = APARTMENT_LEADER_CONTEXT_LOCKS[
+        hash(identity) % len(APARTMENT_LEADER_CONTEXT_LOCKS)
+    ]
+    with identity_lock:
+        with APARTMENT_LEADER_CONTEXT_CACHE_LOCK:
+            cached = APARTMENT_LEADER_CONTEXT_CACHE.get(identity)
+        if cached:
+            return json.loads(json.dumps(cached, ensure_ascii=False)), 200
+
+        entity = budget_candidates._price_lookup_entity({
+            "name": name,
+            "region": region,
+            "legalDong": legal_dong,
+            "jibun": jibun,
+        })
+        if entity is None:
+            try:
+                entity = budget_candidates._find_entity(name, region)
+            except Exception:
+                entity = None
+        entity = entity or {}
+        district = str(entity.get("district") or region or "").strip()
+        row = {
+            "name": str(entity.get("name") or name or "").strip(),
+            "region": district,
+            "legalDong": str(entity.get("legalDong") or legal_dong or "").strip(),
+            "jibun": str(entity.get("jibun") or jibun or "").strip(),
+            "households": int(entity.get("households") or 0),
+        }
+        if not row["name"] or not row["region"]:
+            return {"error": "대장단지 비교 대상을 정확히 식별하지 못했어요."}, 422
+        try:
+            momentum_signals.attach_signals([row], include_leader_context=True)
+        except Exception:
+            return {"error": "대장단지 선정이 지연되고 있어요. 다시 시도해 주세요."}, 503
+
+        source_signals = row.get("signals") or {}
+        signals = {
+            key: value
+            for key, value in source_signals.items()
+            if key.startswith("leader")
+            or key.startswith("districtLeader")
+            or key in {"isRegionalLeader", "isDistrictLeader"}
+        }
+        if not signals.get("leaderName") or not signals.get("districtLeaderName"):
+            return {"error": "동·구 대장단지를 모두 선정하지 못했어요. 다시 시도해 주세요."}, 503
+        payload = {
+            "name": row["name"],
+            "region": row["region"],
+            "legalDong": row["legalDong"],
+            "jibun": row["jibun"],
+            "signals": signals,
+            "leaderReady": True,
+            "districtLeaderReady": True,
+        }
+        with APARTMENT_LEADER_CONTEXT_CACHE_LOCK:
+            APARTMENT_LEADER_CONTEXT_CACHE[identity] = payload
+        return json.loads(json.dumps(payload, ensure_ascii=False)), 200
 
 
 def _apartment_report(name, region):
@@ -2412,6 +2489,22 @@ class Handler(BaseHTTPRequestHandler):
                 "lookbackMonths": months,
                 "source": "국토부 실거래",
             })
+            return
+        if parsed.path == "/api/apartment-leader-context":
+            name = params.get("name", [""])[0].strip()
+            region = params.get("region", [""])[0].strip()
+            legal_dong = params.get("legal_dong", [""])[0].strip()
+            jibun = params.get("jibun", [""])[0].strip()
+            if len(name) < 2 or len(region) < 2:
+                self._json({"error": "단지명과 지역을 확인해 주세요."}, 400)
+                return
+            payload, status = _apartment_leader_context(
+                name,
+                region,
+                legal_dong=legal_dong,
+                jibun=jibun,
+            )
+            self._json(payload, status)
             return
         if parsed.path == "/api/apartment-report":
             name = params.get("name", [""])[0].strip()

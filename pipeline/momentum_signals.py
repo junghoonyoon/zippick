@@ -1075,7 +1075,7 @@ def attach_signals(candidates, include_leader_context=True):
     # 동·구 대장: 검색 조건과 무관한 전체 단지에서 대표 평형의 최근 12개월
     # 거래를 84㎡ 상당가로 보정했을 때 가장 높은 단지를 사용한다.
     leaders = {}
-    leader_scopes = sorted({
+    locality_scopes = sorted({
         (
             row.get("region", ""),
             row.get("legalDong", ""),
@@ -1083,6 +1083,11 @@ def attach_signals(candidates, include_leader_context=True):
         for row in candidates
         if row.get("region")
     }) if include_leader_context else []
+    # 동 대장과 구 대장은 서로 의존하지 않는다. 두 범위를 한 번에 같은
+    # 작업 풀에 넣어 차트 선택 후 대장 확정 시간을 합이 아닌 최댓값으로 줄인다.
+    leader_scopes = sorted(set(locality_scopes).union(
+        (region, "") for region in district_scopes
+    )) if include_leader_context else []
 
     def _leader_scope_item(scope):
         region, legal_dong = scope
@@ -1103,39 +1108,24 @@ def attach_signals(candidates, include_leader_context=True):
                 "signals": signals or {},
                 "calculation": calculation or {},
             }
-    district_leaders = {}
-    missing_district_scopes = []
-    if include_leader_context:
-        for region in district_scopes:
-            cached_district_leader = leaders.get((region, ""))
-            if cached_district_leader:
-                district_leaders[region] = cached_district_leader
-                continue
-            missing_district_scopes.append(region)
-
-    def _district_leader_item(region):
-        entity, leader_signals, calculation = _absolute_leader(
-            region,
-            candidates,
-            legal_dong="",
-        )
-        return region, entity, leader_signals, calculation
-
-    for region, entity, leader_signals, calculation in _SCOPE_EXECUTOR.map(
-        _district_leader_item,
-        missing_district_scopes,
-    ):
-        if entity:
-            district_leaders[region] = {
-                "entity": entity,
-                "signals": leader_signals or {},
-                "calculation": calculation or {},
-            }
+    locality_leaders = {
+        scope: leaders[scope]
+        for scope in locality_scopes
+        if scope in leaders
+    }
+    district_leaders = {
+        region: leaders[(region, "")]
+        for region in district_scopes
+        if (region, "") in leaders
+    } if include_leader_context else {}
 
     for row in candidates:
         signals = row.get("signals") or {}
         signals["scoreFormulaVersion"] = SCORE_FORMULA_VERSION
-        leader = leaders.get((row.get("region", ""), row.get("legalDong", "")))
+        leader = locality_leaders.get((
+            row.get("region", ""),
+            row.get("legalDong", ""),
+        ))
         district_leader = district_leaders.get(row.get("region", ""))
         # 후보 단지의 거래 표본이 부족하거나 오래됐어도 지역 대장 자체는
         # 변하지 않는다. 점수 산정 가능 여부와 대장 비교 메타데이터를

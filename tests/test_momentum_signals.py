@@ -146,6 +146,46 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertIsNone(candidates[0]["signals"]["leaderGapPct"])
         self.assertTrue(candidates[0]["signals"]["isRegionalLeader"])
 
+    def test_locality_and_district_leaders_are_selected_in_parallel(self):
+        both_started = threading.Event()
+        scopes = []
+        scopes_lock = threading.Lock()
+
+        def absolute_leader(region, candidates, legal_dong=""):
+            with scopes_lock:
+                scopes.append((region, legal_dong))
+                if len(scopes) == 2:
+                    both_started.set()
+            self.assertTrue(both_started.wait(1))
+            return None, None, None
+
+        candidate = {
+            "name": "후보",
+            "region": "노원구",
+            "legalDong": "하계동",
+            "households": 1000,
+        }
+        with mock.patch.object(
+            momentum_signals.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            momentum_signals,
+            "raw_signals",
+            return_value={"status": "insufficient", "dealCount": 2},
+        ), mock.patch.object(
+            momentum_signals,
+            "_district_benchmark",
+            return_value={"momentumPct": None, "count": 0},
+        ), mock.patch.object(
+            momentum_signals,
+            "_absolute_leader",
+            side_effect=absolute_leader,
+        ):
+            momentum_signals.attach_signals([candidate])
+
+        self.assertCountEqual(scopes, [("노원구", "하계동"), ("노원구", "")])
+
     def test_leader_is_fixed_from_entire_district_when_not_in_search_results(self):
         def fake_tx(name, **kwargs):
             if name == "구전체대장":

@@ -218,6 +218,65 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             "정자동",
         )
 
+    def test_leader_context_returns_only_chart_metadata_and_reuses_cache(self):
+        entity = {
+            "name": "장미(시영6)",
+            "district": "노원구",
+            "legalDong": "하계동",
+            "jibun": "270-1",
+            "households": 1880,
+        }
+
+        def attach(rows, **kwargs):
+            self.assertTrue(kwargs["include_leader_context"])
+            rows[0]["signals"] = {
+                "score": 97,
+                "leaderName": "우성",
+                "leaderRegion": "하계동",
+                "leaderLegalDong": "하계동",
+                "leaderJibun": "270",
+                "districtLeaderName": "청구3",
+                "districtLeaderRegion": "노원구",
+                "districtLeaderLegalDong": "중계동",
+                "districtLeaderJibun": "360-2",
+                "isRegionalLeader": False,
+                "isDistrictLeader": False,
+            }
+
+        with mock.patch.object(
+            search_server,
+            "APARTMENT_LEADER_CONTEXT_CACHE",
+            {},
+        ), mock.patch.object(
+            search_server.budget_candidates,
+            "_price_lookup_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.momentum_signals,
+            "attach_signals",
+            side_effect=attach,
+        ) as attach_signals:
+            payload, status = search_server._apartment_leader_context(
+                "장미(시영6)",
+                "노원구",
+                legal_dong="하계동",
+                jibun="270-1",
+            )
+            cached, cached_status = search_server._apartment_leader_context(
+                "장미(시영6)",
+                "노원구",
+                legal_dong="하계동",
+                jibun="270-1",
+            )
+
+        self.assertEqual(status, 200)
+        self.assertEqual(cached_status, 200)
+        self.assertEqual(payload["signals"]["leaderName"], "우성")
+        self.assertEqual(payload["signals"]["districtLeaderName"], "청구3")
+        self.assertNotIn("score", payload["signals"])
+        self.assertEqual(cached, payload)
+        attach_signals.assert_called_once()
+
     def test_price_is_returned_without_a_purchase_profile(self):
         with mock.patch.object(
             search_server.rone_estimates,

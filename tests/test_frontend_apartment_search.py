@@ -321,6 +321,44 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("item.signals?.isDistrictLeader", chart_body)
         self.assertIn(".spark-self-leader {", html)
 
+    def test_budget_chart_loads_leader_context_then_both_series_in_parallel(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        context_match = re.search(
+            r"async function requestLeaderContext\b(?P<body>.*?)"
+            r"\n    function applyLeaderContext",
+            html,
+            re.DOTALL,
+        )
+        load_match = re.search(
+            r"async function loadMarketInsight\b(?P<body>.*?)"
+            r"\n    async function loadCandidateTrendInsight",
+            html,
+            re.DOTALL,
+        )
+        selected_match = re.search(
+            r"async function loadCandidateTrendInsight\b(?P<body>.*?)"
+            r"\n    function enrichMarketInsights",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(context_match)
+        self.assertIsNotNone(load_match)
+        self.assertIsNotNone(selected_match)
+        self.assertIn("/api/apartment-leader-context?", context_match.group("body"))
+        load_body = load_match.group("body")
+        self.assertIn("const leaderRequest = leaderItem", load_body)
+        self.assertIn("const districtLeaderRequest = districtLeaderItem", load_body)
+        self.assertIn("await Promise.all([", load_body)
+        selected_body = selected_match.group("body")
+        self.assertIn("await requestLeaderContext(item)", selected_body)
+        self.assertIn(
+            "await loadMarketInsight(item, { requireLeaderComparison:true })",
+            selected_body,
+        )
+        self.assertIn("대장 비교 불러오는 중", html)
+        self.assertIn("const loaded = await loadCandidateTrendInsight(candidate);", html)
+
     def test_candidate_insight_combines_personal_choice_price_flow_and_news(self):
         html = APP_HTML.read_text(encoding="utf-8")
         gains_match = re.search(

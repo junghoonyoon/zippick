@@ -4325,6 +4325,8 @@
     const selectedCandidateNames = new Set();
     const roneEstimateCache = new Map();
     const roneEstimateInFlight = new Map();
+    const leaderContextCache = new Map();
+    const leaderContextInFlight = new Map();
     const newsCatalystCache = new Map();
     const newsCatalystInFlight = new Map();
     const loadingAssetUrl = "assets/youtube-search-loading.svg";
@@ -5941,6 +5943,39 @@
       throw lastError || new Error("비교 단지 실거래를 불러오지 못했어요.");
     }
 
+    function leaderContextKey(item) {
+      return [item.name || "", item.region || "", item.legalDong || "", item.jibun || ""].join("\u001f");
+    }
+
+    async function requestLeaderContext(item) {
+      const key = leaderContextKey(item);
+      if (leaderContextCache.has(key)) return leaderContextCache.get(key);
+      if (leaderContextInFlight.has(key)) return leaderContextInFlight.get(key);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);
+      const params = new URLSearchParams({
+        name:item.name || candidateDisplayName(item),
+        region:item.region || item.displayRegion || "",
+      });
+      if (item.legalDong) params.set("legal_dong", item.legalDong);
+      if (item.jibun) params.set("jibun", item.jibun);
+      const pending = getJson(`/api/apartment-leader-context?${params.toString()}`, {
+        signal:controller.signal,
+      }).then(payload => {
+        leaderContextCache.set(key, payload);
+        return payload;
+      }).finally(() => {
+        clearTimeout(timeout);
+        leaderContextInFlight.delete(key);
+      });
+      leaderContextInFlight.set(key, pending);
+      return pending;
+    }
+
+    function applyLeaderContext(item, payload) {
+      item.signals = { ...(item.signals || {}), ...(payload?.signals || {}) };
+    }
+
     function enrichRoneEstimates(rows, budgetEok) {
       rows.slice(0, 5).forEach(async item => {
         const cached = roneEstimateCache.get(roneEstimateKey(item));
@@ -6785,8 +6820,21 @@
     function candidateTrendControlHtml(item, options = {}) {
       const expanded = options.expanded === true;
       const state = item.marketInsightState || (item.roneEstimate ? "ready" : "idle");
+      const hasLeaderContext = Boolean(
+        item.signals?.leaderName && item.signals?.districtLeaderName
+      );
+      const leaderState = item.leaderContextState || (hasLeaderContext ? "ready" : "idle");
+      if (leaderState === "loading") {
+        return `<button class="trend-toggle" type="button" disabled>대장 비교 불러오는 중</button>`;
+      }
+      if (leaderState === "error") {
+        return `<button class="trend-toggle" type="button" data-trend-toggle data-trend-action="load" aria-expanded="false">대장 비교 다시 불러오기</button>`;
+      }
+      if (leaderState === "idle") {
+        return `<button class="trend-toggle" type="button" data-trend-toggle data-trend-action="load" aria-expanded="false">차트보기</button>`;
+      }
       if (state === "loading") {
-        return `<button class="trend-toggle" type="button" disabled>차트보기</button>`;
+        return `<button class="trend-toggle" type="button" disabled>차트 불러오는 중</button>`;
       }
       if (state === "error") {
         return `<button class="trend-toggle" type="button" data-trend-toggle data-trend-action="load" aria-expanded="false">차트보기</button>`;
@@ -7564,7 +7612,8 @@
       if (!item.latestDealFloor) item.latestDealFloor = String(trade.floor || "");
     }
 
-    async function loadMarketInsight(item) {
+    async function loadMarketInsight(item, options = {}) {
+      const requireLeaderComparison = options.requireLeaderComparison === true;
       const leaderItem = candidateLeaderEstimateItem(item);
       const districtLeaderItem = candidateDistrictLeaderEstimateItem(item);
       item.leaderEstimateErrors = [];
@@ -7609,7 +7658,35 @@
             item.leaderEstimateErrors.push(`${districtLeaderItem.name} 구 대장 비교선`);
           }),
       ]);
+      const leaderComplete = !leaderItem || Boolean(item.leaderRoneEstimate);
+      const districtLeaderComplete = !districtLeaderItem || Boolean(item.districtLeaderRoneEstimate);
+      if (
+        requireLeaderComparison
+        && (item.marketInsightState !== "ready" || !leaderComplete || !districtLeaderComplete)
+      ) {
+        item.leaderContextState = "error";
+        refreshMarketInsight(item);
+        return false;
+      }
       refreshMarketInsight(item);
+      return item.marketInsightState === "ready";
+    }
+
+    async function loadCandidateTrendInsight(item) {
+      item.leaderContextState = "loading";
+      refreshMarketInsight(item);
+      try {
+        const payload = await requestLeaderContext(item);
+        applyLeaderContext(item, payload);
+      } catch (_) {
+        item.leaderContextState = "error";
+        refreshMarketInsight(item);
+        return false;
+      }
+      const loaded = await loadMarketInsight(item, { requireLeaderComparison:true });
+      item.leaderContextState = loaded ? "ready" : "error";
+      refreshMarketInsight(item);
+      return loaded;
     }
 
     function enrichMarketInsights(rows) {
@@ -11067,7 +11144,26 @@
           const candidate = candidateMapPreview
             ? currentBudgetData?.candidates?.find(item => candidateIdentityKey(item) === candidateMapSelectedKey)
             : currentBudgetData?.candidates?.find(item => item.name === candidateName);
-          if (candidate) await loadMarketInsight(candidate);
+          if (candidate) {
+            const loaded = await loadCandidateTrendInsight(candidate);
+            if (!loaded) return;
+            const refreshedPanel = trendScope?.querySelector("[data-sparkline]");
+            const refreshedToggle = trendScope?.querySelector('[data-trend-toggle][data-trend-action="toggle"]');
+            if (refreshedToggle) {
+              refreshedToggle.setAttribute("aria-expanded", "true");
+              refreshedToggle.textContent = "차트 접기";
+            }
+            if (refreshedPanel) {
+              refreshedPanel.hidden = false;
+              if (candidateMapPreview && candidateMapUsesBottomSheet()) {
+                setCandidateMapSheetExpanded(true, candidateMapPreview);
+              }
+              requestAnimationFrame(() => {
+                syncSparkAxisLabelSizes(refreshedPanel);
+                refreshedPanel.scrollIntoView({ block:"nearest", behavior:"smooth" });
+              });
+            }
+          }
           return;
         }
         const panel = trendScope?.querySelector("[data-sparkline]");
