@@ -25,8 +25,8 @@ MOBILE_COMPLEX_LIST_ENDPOINT = "https://m.land.naver.com/complex/ajax/complexLis
 CACHE_DIR = config.CACHE_DIR / "naver_complex"
 CACHE_VERSION = "v5"
 NEGATIVE_TTL_SECONDS = 60 * 60 * 24 * 7  # 못 찾은 단지는 7일 후 재시도
-TIMEOUT_SECONDS = float(getattr(config, "NAVER_COMPLEX_TIMEOUT_SECONDS", 4))
-MAX_WORKERS = int(getattr(config, "NAVER_COMPLEX_MAX_WORKERS", 6))
+TIMEOUT_SECONDS = float(getattr(config, "NAVER_COMPLEX_TIMEOUT_SECONDS", 2))
+MAX_WORKERS = int(getattr(config, "NAVER_COMPLEX_MAX_WORKERS", 2))
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
@@ -38,7 +38,13 @@ HEADERS = {
 _CACHE_LOCK = threading.Lock()
 _CORTAR_CACHE_LOCK = threading.Lock()
 _CORTAR_COMPLEX_CACHE = {}
+_CORTAR_REQUEST_LOCKS = tuple(threading.Lock() for _ in range(32))
+_DISABLED_LOCK = threading.Lock()
 _DISABLED_UNTIL = 0
+_EXECUTOR = ThreadPoolExecutor(
+    max_workers=MAX_WORKERS,
+    thread_name_prefix="naver-complex",
+)
 
 # 네이버 검색 API가 일시적으로 제한돼도 확실히 검증된 중복명 단지는
 # 잘못된 오피스텔/지번 검색으로 보내지 않도록 직링크를 우선한다.
@@ -103,9 +109,19 @@ def _write_cache(key, payload):
     tmp.replace(path)
 
 
-def _search(keyword):
+def _temporarily_disabled():
+    with _DISABLED_LOCK:
+        return time.time() < _DISABLED_UNTIL
+
+
+def _disable_temporarily(seconds=60 * 10):
     global _DISABLED_UNTIL
-    if time.time() < _DISABLED_UNTIL:
+    with _DISABLED_LOCK:
+        _DISABLED_UNTIL = max(_DISABLED_UNTIL, time.time() + seconds)
+
+
+def _search(keyword):
+    if _temporarily_disabled():
         return None
     try:
         response = requests.get(
@@ -119,7 +135,7 @@ def _search(keyword):
     except Exception:
         # 조회 제한을 '검색 결과 없음'으로 캐시하면 이후 정상화돼도 일주일간
         # 검색창 링크만 남는다. 장애는 None으로 구분해 캐시하지 않는다.
-        _DISABLED_UNTIL = time.time() + 60 * 10
+        _disable_temporarily()
         return None
     result = data.get("result") if isinstance(data, dict) else None
     complexes = (
@@ -136,9 +152,22 @@ def _search_by_cortar(cortar_no):
     cortar_no = re.sub(r"\D", "", str(cortar_no or ""))[:10]
     if len(cortar_no) != 10:
         return None
+    if _temporarily_disabled():
+        return None
     with _CORTAR_CACHE_LOCK:
         if cortar_no in _CORTAR_COMPLEX_CACHE:
             return _CORTAR_COMPLEX_CACHE[cortar_no]
+    # 같은 동만 한 번 호출하되 서로 다른 동의 조회는 병렬로 진행한다.
+    # 네트워크 대기 중 전역 캐시 잠금을 잡지 않는다.
+    request_lock = _CORTAR_REQUEST_LOCKS[
+        hash(cortar_no) % len(_CORTAR_REQUEST_LOCKS)
+    ]
+    with request_lock:
+        if _temporarily_disabled():
+            return None
+        with _CORTAR_CACHE_LOCK:
+            if cortar_no in _CORTAR_COMPLEX_CACHE:
+                return _CORTAR_COMPLEX_CACHE[cortar_no]
         try:
             response = requests.get(
                 MOBILE_COMPLEX_LIST_ENDPOINT,
@@ -149,11 +178,13 @@ def _search_by_cortar(cortar_no):
             response.raise_for_status()
             data = response.json()
         except Exception:
+            _disable_temporarily()
             return None
         complexes = data.get("result") if isinstance(data, dict) else None
         if not isinstance(complexes, list):
             return None
-        _CORTAR_COMPLEX_CACHE[cortar_no] = complexes
+        with _CORTAR_CACHE_LOCK:
+            _CORTAR_COMPLEX_CACHE[cortar_no] = complexes
         return complexes
 
 
@@ -359,7 +390,7 @@ def search_url(query):
     return f"https://fin.land.naver.com/search?q={quote(str(query or '').strip(), safe='')}"
 
 
-def attach_links(rows):
+def attach_links(rows, update_display_name=True):
     """확정된 네이버 단지의 링크와 표시명을 후보 카드에 적용한다."""
     def _one(row):
         try:
@@ -384,8 +415,9 @@ def attach_links(rows):
             complex_name = str(resolved.get("complexName") or "").strip()
             if complex_name:
                 row["naverComplexName"] = complex_name
-                row["displayName"] = complex_name
-                row["displayNameSource"] = "naver_complex"
+                if update_display_name:
+                    row["displayName"] = complex_name
+                    row["displayNameSource"] = "naver_complex"
             return
         # 확정되지 않은 단지를 검색 화면으로 보내면 네이버페이 오류 화면이
         # 열리거나 동명이인 단지로 연결될 수 있으므로 링크를 비활성화한다.
@@ -405,5 +437,6 @@ def attach_links(rows):
     targets = [row for row in rows if row.get("name")]
     if not targets:
         return
-    with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(targets))) as pool:
-        list(pool.map(_one, targets))
+    # 요청마다 별도 풀을 만들면 동시 검색 수만큼 네이버 호출이 늘어난다.
+    # 프로세스 공용 풀로 전체 호출량을 제한한다.
+    list(_EXECUTOR.map(_one, targets))

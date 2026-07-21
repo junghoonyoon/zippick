@@ -47,6 +47,10 @@ _MONTH_MEMORY_CACHE = {}
 _MONTH_ADDRESS_INDEX = {}
 _MONTH_NAME_INDEX = {}
 _MONTH_MEMORY_CACHE_LOCK = threading.Lock()
+# 여러 검색이 같은 지역·월을 동시에 요구해도 외부 API 호출은 한 번만
+# 실행한다. 고정된 스트라이프 잠금을 사용해 키별 잠금 사전이 무한히
+# 커지는 것을 피하면서 서로 다른 지역·월은 계속 병렬 처리한다.
+_MONTH_FETCH_LOCKS = tuple(threading.Lock() for _ in range(64))
 _SOURCE_INDEX = None
 _SOURCE_INDEX_SIGNATURE = None
 _SOURCE_INDEX_LOCK = threading.Lock()
@@ -369,6 +373,21 @@ def _parse_total_count(xml_text):
 
 
 def fetch_month(
+    lawd_cd,
+    deal_ymd,
+    transaction_kind=TRANSACTION_KIND_APARTMENT,
+):
+    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
+    lock = _MONTH_FETCH_LOCKS[hash(memory_key) % len(_MONTH_FETCH_LOCKS)]
+    with lock:
+        return _fetch_month_singleflight(
+            lawd_cd,
+            deal_ymd,
+            transaction_kind=transaction_kind,
+        )
+
+
+def _fetch_month_singleflight(
     lawd_cd,
     deal_ymd,
     transaction_kind=TRANSACTION_KIND_APARTMENT,

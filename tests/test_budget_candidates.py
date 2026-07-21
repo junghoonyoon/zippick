@@ -54,7 +54,7 @@ class BudgetCandidatesTest(unittest.TestCase):
             "sourceNote": "국토부 실거래",
         }
 
-        def attach_signals(rows):
+        def attach_signals(rows, **_kwargs):
             for row in rows:
                 row["signals"] = {
                     "status": "ready",
@@ -759,7 +759,7 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(len(result["candidates"]), 3)
         self.assertTrue(all(row["policyImpact"]["status"] == "possible" for row in result["candidates"]))
 
-    def test_candidate_uses_direct_naver_complex_link_or_stays_disabled(self):
+    def test_budget_candidate_does_not_wait_for_naver_complex_resolution(self):
         result = budget_candidates.budget_candidates(
             "9억",
             region="서울시",
@@ -768,13 +768,8 @@ class BudgetCandidatesTest(unittest.TestCase):
         )
 
         candidate = result["candidates"][0]
-        kind = candidate.get("naverLinkKind")
-        if kind == "complex":
-            self.assertTrue(candidate["naverPropertyUrl"].startswith("https://fin.land.naver.com/complexes/"))
-            self.assertIn("tab=article", candidate["naverPropertyUrl"])
-        else:
-            self.assertEqual(kind, "unresolved")
-            self.assertEqual(candidate["naverPropertyUrl"], "")
+        self.assertNotIn("naverLinkKind", candidate)
+        self.assertTrue(candidate.get("naverPropertyQuery"))
 
     def test_naver_link_uses_unique_name_without_internal_region_tokens(self):
         entity = budget_candidates._find_entity("산성역 헤리스톤", "성남수정구")

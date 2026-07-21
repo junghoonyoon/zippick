@@ -1891,6 +1891,7 @@ def _finalize_candidate_rows(
     price_strategy="stretch",
     region="",
     fast_mode=False,
+    include_naver_links=True,
 ):
     """Attach the common display, signal, link and verdict result model."""
     for row in rows:
@@ -1935,12 +1936,18 @@ def _finalize_candidate_rows(
                     continue
             molit_transactions.prefetch_months(signal_pairs)
         try:
-            momentum_signals.attach_signals(rows)
+            # 대장 비교 설명은 점수 밖 참고 정보이며 지역 전체 단지를 다시
+            # 계산한다. 핵심 순위에서는 네 가지 점수까지만 확정하고 대장
+            # 컨텍스트는 직접 리포트 같은 상세 조회 경로에 맡긴다.
+            momentum_signals.attach_signals(
+                rows,
+                include_leader_context=False,
+            )
         except Exception:
             pass
 
     if rows:
-        if not fast_mode:
+        if not fast_mode and include_naver_links:
             try:
                 naver_complex.attach_links(rows)
             except Exception:
@@ -2600,6 +2607,9 @@ def budget_candidates(
         price_strategy=price_strategy,
         region=region,
         fast_mode=fast_mode,
+        # 전체 후보의 네이버 단지 확인은 순위·가격 신뢰도와 무관한
+        # 선택 보강이다. 검색 완료를 막지 않고 서버가 별도로 캐시한다.
+        include_naver_links=False,
     )
 
     # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.

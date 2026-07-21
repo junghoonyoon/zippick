@@ -3,8 +3,10 @@ import datetime
 import json
 import sys
 import tempfile
+import threading
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest import mock
 
@@ -312,6 +314,45 @@ class MolitTransactionsTest(unittest.TestCase):
             [call.kwargs["params"]["pageNo"] for call in get.call_args_list],
             [1, 2],
         )
+
+    def test_same_month_concurrent_requests_share_one_api_call(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+        <response>
+          <header><resultCode>000</resultCode><resultMsg>OK</resultMsg></header>
+          <body><totalCount>1</totalCount><items><item>
+            <aptNm>공유호출아파트</aptNm><dealAmount>100,000</dealAmount>
+            <dealYear>2026</dealYear><dealMonth>6</dealMonth><dealDay>1</dealDay>
+            <excluUseAr>84.8</excluUseAr><floor>10</floor>
+            <umdNm>테스트동</umdNm><jibun>1</jibun>
+          </item></items></body>
+        </response>"""
+        response = mock.Mock()
+        response.text = xml
+        response.raise_for_status.return_value = None
+        started = threading.Event()
+        release = threading.Event()
+
+        def delayed_get(*_args, **_kwargs):
+            started.set()
+            release.wait(1)
+            return response
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(molit_transactions, "TRANSACTION_CACHE_DIR", Path(directory)), \
+             mock.patch.object(molit_transactions.config, "MOLIT_APARTMENT_TRADE_API_KEY", "test-key"), \
+             mock.patch.object(molit_transactions.requests, "get", side_effect=delayed_get) as get:
+            molit_transactions._mark_success()
+            molit_transactions._MONTH_MEMORY_CACHE.clear()
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                first = pool.submit(molit_transactions.fetch_month, "99998", "202606")
+                self.assertTrue(started.wait(0.5))
+                second = pool.submit(molit_transactions.fetch_month, "99998", "202606")
+                release.set()
+                first_result = first.result(timeout=1)
+                second_result = second.result(timeout=1)
+
+        self.assertEqual(get.call_count, 1)
+        self.assertEqual(first_result, second_result)
 
     def test_presale_month_uses_separate_endpoint_key_and_cache(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>

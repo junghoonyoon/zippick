@@ -10390,6 +10390,54 @@
       return true;
     }
 
+    function applyOptionalNaverLinks(payload, optionalId) {
+      if (!currentBudgetData || currentBudgetData.optionalEnrichmentId !== optionalId) return;
+      const patches = Array.isArray(payload?.links) ? payload.links : [];
+      if (!patches.length) return;
+      const patchByKey = new Map(patches.map(row => [candidateIdentityKey(row), row]));
+      const seen = new Set();
+      [
+        currentBudgetData.allCandidates,
+        currentBudgetData.policyDefaultCandidates,
+        currentBudgetData.policyExcludedCandidates,
+        currentBudgetData.candidates,
+        currentBudgetData.visibleCandidates,
+      ].forEach(rows => (Array.isArray(rows) ? rows : []).forEach(item => {
+        if (seen.has(item)) return;
+        seen.add(item);
+        const patch = patchByKey.get(candidateIdentityKey(item));
+        if (patch) Object.assign(item, patch);
+      }));
+      budgetResultEl.querySelectorAll("[data-candidate-key]").forEach(card => {
+        const patch = patchByKey.get(card.dataset.candidateKey || "");
+        const url = patch ? candidateNaverPropertyUrl(patch) : "";
+        if (!url) return;
+        card.querySelectorAll("[data-naver-land-link]").forEach(link => {
+          link.href = url;
+        });
+      });
+    }
+
+    async function enrichOptionalBudgetLinks(data) {
+      const optionalId = String(data?.optionalEnrichmentId || "");
+      if (!data?.optionalEnrichmentPending || !optionalId) return;
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!currentBudgetData || currentBudgetData.optionalEnrichmentId !== optionalId) return;
+        let payload;
+        try {
+          payload = await getJson(`/api/budget-candidates/optional-progress?id=${encodeURIComponent(optionalId)}`);
+        } catch (_) {
+          return;
+        }
+        if (!payload.done) continue;
+        applyOptionalNaverLinks(payload, optionalId);
+        currentBudgetData.optionalEnrichmentPending = false;
+        currentBudgetData.optionalEnrichmentStage = payload.optionalEnrichmentStage || "complete";
+        return;
+      }
+    }
+
     function waitForBudgetPoll(delayMs, signal) {
       return new Promise((resolve, reject) => {
         let timer = null;
@@ -10490,6 +10538,7 @@
         writeBudgetBrowserCache(url, data);
         const revealed = await revealBudgetCandidatesTogether(data, controller);
         if (!revealed) return;
+        void enrichOptionalBudgetLinks(data);
       } catch (error) {
         if (budgetSearchController !== controller) return;
         if (error?.name === "AbortError") {

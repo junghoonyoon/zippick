@@ -1,5 +1,7 @@
 import datetime
 import sys
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -39,6 +41,47 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(signals["status"], "unavailable")
         self.assertIsNone(signals["score"])
         self.assertEqual(signals["scoreFormulaVersion"], momentum_signals.SCORE_FORMULA_VERSION)
+
+    def test_attach_signals_calculates_candidate_raw_signals_in_parallel(self):
+        candidates = [
+            {"name": f"병렬후보{index}", "region": "테스트구"}
+            for index in range(4)
+        ]
+        active = 0
+        max_active = 0
+        active_lock = threading.Lock()
+
+        def slow_raw(*_args, **_kwargs):
+            nonlocal active, max_active
+            with active_lock:
+                active += 1
+                max_active = max(max_active, active)
+            time.sleep(0.05)
+            with active_lock:
+                active -= 1
+            return {"status": "insufficient", "dealCount": 2}
+
+        with mock.patch.object(
+            momentum_signals.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            momentum_signals,
+            "raw_signals",
+            side_effect=slow_raw,
+        ), mock.patch.object(
+            momentum_signals,
+            "_district_benchmark",
+            return_value={"momentumPct": None, "count": 0},
+        ), mock.patch.object(
+            momentum_signals,
+            "_absolute_leader",
+            return_value=(None, None, None),
+        ):
+            momentum_signals.attach_signals(candidates)
+
+        self.assertGreaterEqual(max_active, 2)
+        self.assertTrue(all(row["signals"]["status"] == "insufficient" for row in candidates))
 
     def test_rising_complex_scores_positive_momentum(self):
         with mock.patch.object(momentum_signals.molit_transactions, "transactions_for_apartment", return_value=_rising_deals()):

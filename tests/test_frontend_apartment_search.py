@@ -1093,6 +1093,33 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             completion_body.index("return next"),
         )
 
+    def test_optional_naver_links_update_after_complete_list_is_revealed(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        optional_match = re.search(
+            r"async function enrichOptionalBudgetLinks\b(?P<body>.*?)"
+            r"\n    function waitForBudgetPoll",
+            html,
+            re.DOTALL,
+        )
+        load_match = re.search(
+            r"async function loadBudgetCandidates\b(?P<body>.*?)"
+            r"\n    async function loadRegionApartments",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(optional_match)
+        self.assertIsNotNone(load_match)
+        optional_body = optional_match.group("body")
+        load_body = load_match.group("body")
+        self.assertIn("/api/budget-candidates/optional-progress", optional_body)
+        self.assertIn("applyOptionalNaverLinks(payload, optionalId)", optional_body)
+        self.assertIn("void enrichOptionalBudgetLinks(data);", load_body)
+        self.assertLess(
+            load_body.index("await revealBudgetCandidatesTogether(data, controller)"),
+            load_body.index("void enrichOptionalBudgetLinks(data);"),
+        )
+
     def test_budget_result_trends_auto_load_without_card_button_clicks(self):
         html = APP_HTML.read_text(encoding="utf-8")
         render_match = re.search(

@@ -1,5 +1,6 @@
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -239,6 +240,63 @@ class NaverComplexTest(unittest.TestCase):
             resolved = naver_complex.resolve("재시도단지", legal_dong="둔촌동")
 
         self.assertEqual(resolved["complexNo"], "54321")
+
+    def test_cortar_requests_do_not_hold_the_global_cache_lock_during_network(self):
+        codes = []
+        for value in range(1138010100, 1138010200):
+            code = str(value)
+            stripe = hash(code) % len(naver_complex._CORTAR_REQUEST_LOCKS)
+            if not codes or stripe != codes[0][1]:
+                codes.append((code, stripe))
+            if len(codes) == 2:
+                break
+
+        first_started = threading.Event()
+        second_started = threading.Event()
+        release = threading.Event()
+        call_count = 0
+        call_lock = threading.Lock()
+
+        def delayed_get(*_args, **_kwargs):
+            nonlocal call_count
+            with call_lock:
+                call_count += 1
+                current = call_count
+            (first_started if current == 1 else second_started).set()
+            release.wait(1)
+            response = _response([])
+            response.json.return_value = {"result": []}
+            return response
+
+        with mock.patch.object(naver_complex.requests, "get", side_effect=delayed_get):
+            first = threading.Thread(
+                target=naver_complex._search_by_cortar,
+                args=(codes[0][0],),
+            )
+            second = threading.Thread(
+                target=naver_complex._search_by_cortar,
+                args=(codes[1][0],),
+            )
+            first.start()
+            self.assertTrue(first_started.wait(0.5))
+            second.start()
+            self.assertTrue(second_started.wait(0.5))
+            release.set()
+            first.join(1)
+            second.join(1)
+
+        self.assertEqual(call_count, 2)
+
+    def test_cortar_error_opens_shared_circuit_before_more_requests(self):
+        with mock.patch.object(
+            naver_complex.requests,
+            "get",
+            side_effect=RuntimeError("blocked"),
+        ) as request:
+            self.assertIsNone(naver_complex._search_by_cortar("1138010100"))
+            self.assertIsNone(naver_complex._search_by_cortar("1138010200"))
+
+        self.assertEqual(request.call_count, 1)
 
 
 if __name__ == "__main__":

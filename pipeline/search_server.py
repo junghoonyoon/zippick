@@ -42,11 +42,13 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 17
+BUDGET_CACHE_SCHEMA_VERSION = 18
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
 BUDGET_MAX_JOBS = 20
+BUDGET_OPTIONAL_LINK_KEYS = set()
+BUDGET_OPTIONAL_LINK_KEYS_LOCK = threading.Lock()
 BUDGET_JOB_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_TIMEOUT_SECONDS", "150"))
 BUDGET_JOB_HARD_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_HARD_TIMEOUT_SECONDS", "600"))
 BUDGET_PREWARM_STATE = {"running": False, "done": False, "pairCount": 0, "finishedAt": None}
@@ -602,7 +604,7 @@ def _repair_budget_signals(payload):
     if not rows or not molit_transactions.configured():
         return
     if any(_signal_unavailable(row) for row in rows):
-        momentum_signals.attach_signals(rows)
+        momentum_signals.attach_signals(rows, include_leader_context=False)
 
 
 def _budget_key_lock(cache_key):
@@ -660,6 +662,7 @@ def _cached_budget_payload(cache_key):
         "enrichmentPending": False,
         "enrichmentStage": "complete",
     })
+    _schedule_budget_optional_links(cache_key, payload)
     return payload
 
 
@@ -1573,10 +1576,116 @@ def _trim_budget_jobs_locked():
         BUDGET_JOBS.pop(job_id, None)
 
 
+def _optional_naver_rows(payload):
+    return [
+        row
+        for row in _budget_payload_rows(payload)
+        if row.get("name")
+        and row.get("naverPropertyQuery")
+        and row.get("naverLinkKind") not in {"complex", "unresolved"}
+    ]
+
+
+def _run_budget_optional_links(cache_key, payload):
+    try:
+        rows = _optional_naver_rows(payload)
+        if rows:
+            # 표시명과 순위는 핵심 결과에서 확정한다. 백그라운드 보강은
+            # 네이버 단지 번호와 링크만 추가해 이미 본 리스트를 바꾸지 않는다.
+            naver_complex.attach_links(rows, update_display_name=False)
+        payload.update({
+            "optionalEnrichmentPending": False,
+            "optionalEnrichmentStage": "complete",
+        })
+    except Exception:
+        # 선택 보강 실패가 핵심 결과의 완료 상태를 되돌리거나 영원히
+        # 진행 중으로 보이게 하지 않는다. 다음 검색에서는 다시 시도할 수 있다.
+        payload.update({
+            "optionalEnrichmentPending": False,
+            "optionalEnrichmentStage": "error",
+        })
+    try:
+        with BUDGET_CACHE_LOCK:
+            _write_budget_cache(cache_key, payload)
+    except Exception:
+        pass
+    finally:
+        with BUDGET_OPTIONAL_LINK_KEYS_LOCK:
+            BUDGET_OPTIONAL_LINK_KEYS.discard(cache_key)
+
+
+def _schedule_budget_optional_links(cache_key, payload):
+    rows = _optional_naver_rows(payload)
+    if not rows:
+        payload.update({
+            "optionalEnrichmentPending": False,
+            "optionalEnrichmentStage": "complete",
+        })
+        return False
+    with BUDGET_OPTIONAL_LINK_KEYS_LOCK:
+        if cache_key in BUDGET_OPTIONAL_LINK_KEYS:
+            payload.update({
+                "optionalEnrichmentPending": True,
+                "optionalEnrichmentStage": "naver_links",
+                "optionalEnrichmentId": cache_key,
+            })
+            return True
+        BUDGET_OPTIONAL_LINK_KEYS.add(cache_key)
+    payload.update({
+        "optionalEnrichmentPending": True,
+        "optionalEnrichmentStage": "naver_links",
+        "optionalEnrichmentId": cache_key,
+    })
+    # 핵심 결과 캐시에도 선택 보강 상태를 먼저 기록한다. 링크 작업이
+    # 끝나기 전 같은 검색이 들어와도 중복 작업을 만들지 않고, 완료 캐시를
+    # 보강 중인 이전 상태로 덮어쓰는 경쟁도 막는다.
+    with BUDGET_CACHE_LOCK:
+        _write_budget_cache(cache_key, payload)
+    optional_payload = json.loads(json.dumps(payload, ensure_ascii=False))
+    threading.Thread(
+        target=_run_budget_optional_links,
+        args=(cache_key, optional_payload),
+        daemon=True,
+    ).start()
+    return True
+
+
+def _budget_optional_link_snapshot(cache_key):
+    if not re.fullmatch(r"[0-9a-f]{64}", str(cache_key or "")):
+        return None
+    with BUDGET_CACHE_LOCK:
+        cached = _read_budget_cache(cache_key)
+    if not cached:
+        return None
+    payload, _saved_at = cached
+    links = []
+    for row in _budget_payload_rows(payload):
+        if row.get("naverLinkKind") != "complex" or not row.get("naverComplexNo"):
+            continue
+        links.append({
+            "name": row.get("name"),
+            "region": row.get("region"),
+            "areaLabel": row.get("areaLabel"),
+            "displayAreaLabel": row.get("displayAreaLabel"),
+            "naverComplexNo": row.get("naverComplexNo"),
+            "naverComplexName": row.get("naverComplexName"),
+            "naverPropertyUrl": row.get("naverPropertyUrl"),
+            "naverLinkKind": "complex",
+        })
+    pending = bool(payload.get("optionalEnrichmentPending"))
+    return {
+        "done": not pending,
+        "optionalEnrichmentPending": pending,
+        "optionalEnrichmentStage": payload.get("optionalEnrichmentStage"),
+        "links": links,
+    }
+
+
 def _run_budget_enrichment(job_id, cache_key, candidate_arguments):
     try:
         payload = _load_budget_payload(cache_key, candidate_arguments)
         payload.update({"enrichmentPending": False, "enrichmentStage": "complete"})
+        _schedule_budget_optional_links(cache_key, payload)
     except Exception as exc:
         payload = {
             "done": True,
@@ -1659,7 +1768,10 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
     _refresh_snapshot_policy_impacts(initial, candidate_arguments)
     if not molit_transactions.configured():
         initial = json.loads(json.dumps(initial, ensure_ascii=False))
-        momentum_signals.attach_signals(_budget_payload_rows(initial))
+        momentum_signals.attach_signals(
+            _budget_payload_rows(initial),
+            include_leader_context=False,
+        )
         initial.update({
             "enrichmentPending": False,
             "enrichmentStage": "complete",
@@ -2389,6 +2501,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             status = payload.pop("status", 200)
             self._json(payload, status)
+            return
+        if parsed.path == "/api/budget-candidates/optional-progress":
+            job_id = params.get("id", [""])[0].strip()
+            payload = _budget_optional_link_snapshot(job_id)
+            if not payload:
+                self._json({"error": "선택 보강 작업을 찾지 못했어요."}, 404)
+                return
+            self._json(payload)
             return
         if parsed.path == "/api/budget-candidates":
             budget = params.get("budget", [""])[0].strip()

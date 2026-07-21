@@ -108,6 +108,14 @@ MAX_LATEST_DEAL_AGE_DAYS = 120
 _DISTRICT_LEADER_INDEX = None
 _DISTRICT_LEADER_CANDIDATE_LIMIT = 20
 _LEADER_SCOPE_INDEX = None
+_SIGNAL_EXECUTOR = ThreadPoolExecutor(
+    max_workers=config.MOMENTUM_SIGNAL_MAX_WORKERS,
+    thread_name_prefix="momentum-signal",
+)
+_SCOPE_EXECUTOR = ThreadPoolExecutor(
+    max_workers=config.MOMENTUM_SCOPE_MAX_WORKERS,
+    thread_name_prefix="momentum-scope",
+)
 _LEADER_SCOPE_ENTITY_SIGNALS_CACHE = {}
 
 SIGNAL_NOTE = (
@@ -984,7 +992,7 @@ def _absolute_leader(
     return winner_entity, winner_signals, details
 
 
-def attach_signals(candidates):
+def attach_signals(candidates, include_leader_context=True):
     """후보 목록에 signals를 부착한다. 대장은 같은 법정동에서 고정한다."""
     # API가 잠시 느려져 회로가 열려도 디스크에 저장된 월별 실거래로 계산한다.
     if not candidates:
@@ -999,7 +1007,7 @@ def attach_signals(candidates):
                 "scoreFormulaVersion": SCORE_FORMULA_VERSION,
             }
         return
-    for row in candidates:
+    def _attach_raw(row):
         try:
             row["signals"] = raw_signals(
                 row.get("name", ""),
@@ -1011,15 +1019,38 @@ def attach_signals(candidates):
         except Exception:
             row["signals"] = {"status": "error", "dealCount": 0}
 
+    # 월별 실거래는 호출부에서 지역·월 단위로 먼저 모아 두므로 여기서는
+    # 후보별 로컬 조립과 통계 계산을 공유 작업 풀에서 병렬 처리한다.
+    if len(candidates) == 1:
+        _attach_raw(candidates[0])
+    else:
+        list(_SIGNAL_EXECUTOR.map(_attach_raw, candidates))
+
     # 같은 구 대비 흐름: 구 세대수 상위 고정 단지군의 중앙값과 비교한다.
     # 검색 결과에 잡힌 후보군을 쓰면 검색 조건이 바뀔 때마다 같은 단지의
     # 점수가 달라져 재현성이 깨지므로, 고정 기준을 우선 사용하고
     # 표본이 부족한 구에서만 검색 후보군 중앙값으로 폴백한다.
+    district_scopes = sorted({
+        row.get("region", "")
+        for row in candidates
+        if row.get("region")
+    })
+
+    def _benchmark_item(region):
+        return region, _district_benchmark(region)
+
+    benchmark_by_region = dict(
+        _SCOPE_EXECUTOR.map(_benchmark_item, district_scopes)
+    ) if district_scopes else {}
+
     for row in candidates:
         signals = row.get("signals") or {}
         if signals.get("status") != "ok" or signals.get("momentumPct") is None:
             continue
-        benchmark = _district_benchmark(row.get("region", ""))
+        benchmark = benchmark_by_region.get(
+            row.get("region", ""),
+            {"momentumPct": None, "count": 0},
+        )
         if benchmark["momentumPct"] is not None:
             signals["districtMomentumPct"] = benchmark["momentumPct"]
             signals["districtRelativePct"] = round(signals["momentumPct"] - benchmark["momentumPct"], 1)
@@ -1044,42 +1075,56 @@ def attach_signals(candidates):
     # 동·구 대장: 검색 조건과 무관한 전체 단지에서 대표 평형의 최근 12개월
     # 거래를 84㎡ 상당가로 보정했을 때 가장 높은 단지를 사용한다.
     leaders = {}
-    leader_scopes = {
+    leader_scopes = sorted({
         (
             row.get("region", ""),
             row.get("legalDong", ""),
         )
         for row in candidates
         if row.get("region")
-    }
-    for region, legal_dong in leader_scopes:
+    }) if include_leader_context else []
+
+    def _leader_scope_item(scope):
+        region, legal_dong = scope
         entity, signals, calculation = _absolute_leader(
             region,
             candidates,
             legal_dong=legal_dong,
         )
+        return scope, entity, signals, calculation
+
+    for scope, entity, signals, calculation in _SCOPE_EXECUTOR.map(
+        _leader_scope_item,
+        leader_scopes,
+    ):
         if entity:
-            leaders[(region, legal_dong)] = {
+            leaders[scope] = {
                 "entity": entity,
                 "signals": signals or {},
                 "calculation": calculation or {},
             }
     district_leaders = {}
-    district_scopes = {
-        row.get("region", "")
-        for row in candidates
-        if row.get("region")
-    }
-    for region in district_scopes:
-        cached_district_leader = leaders.get((region, ""))
-        if cached_district_leader:
-            district_leaders[region] = cached_district_leader
-            continue
+    missing_district_scopes = []
+    if include_leader_context:
+        for region in district_scopes:
+            cached_district_leader = leaders.get((region, ""))
+            if cached_district_leader:
+                district_leaders[region] = cached_district_leader
+                continue
+            missing_district_scopes.append(region)
+
+    def _district_leader_item(region):
         entity, leader_signals, calculation = _absolute_leader(
             region,
             candidates,
             legal_dong="",
         )
+        return region, entity, leader_signals, calculation
+
+    for region, entity, leader_signals, calculation in _SCOPE_EXECUTOR.map(
+        _district_leader_item,
+        missing_district_scopes,
+    ):
         if entity:
             district_leaders[region] = {
                 "entity": entity,
@@ -1257,9 +1302,7 @@ def attach_cached_signals(candidates, only_missing=True):
             row["signals"] = {"status": "error", "dealCount": 0}
 
     if computed_rows:
-        workers = min(24, len(computed_rows))
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            list(pool.map(_compute, computed_rows))
+        list(_SIGNAL_EXECUTOR.map(_compute, computed_rows))
 
     # 새로 계산한 후보의 지역 상대값은 이미 스냅샷이 붙은 같은 검색 결과를
     # 포함해 중앙값으로 채운다. 외부 조회 없이도 점수의 네 항목을 완성한다.

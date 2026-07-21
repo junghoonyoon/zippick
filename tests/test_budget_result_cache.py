@@ -46,6 +46,122 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertFalse(completed["enrichmentPending"])
         self.assertEqual(completed["candidates"][0]["name"], "보강 후보")
 
+    def test_critical_result_completes_before_optional_naver_links(self):
+        link_started = threading.Event()
+        release_links = threading.Event()
+
+        def calculate(**arguments):
+            if arguments.get("fast_mode"):
+                return {"candidates": [{"name": "1차 후보"}]}
+            return {
+                "candidates": [{
+                    "name": "확정 후보",
+                    "naverPropertyQuery": "확정 후보",
+                    "signals": {"status": "ok", "score": 70},
+                }],
+            }
+
+        def attach_links(rows, update_display_name=True):
+            self.assertFalse(update_display_name)
+            link_started.set()
+            release_links.wait(2)
+            rows[0].update({
+                "naverComplexNo": "12345",
+                "naverPropertyUrl": "https://fin.land.naver.com/complexes/12345?tab=article",
+                "naverLinkKind": "complex",
+            })
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server, "BUDGET_JOBS", {}), \
+             mock.patch.object(search_server, "BUDGET_OPTIONAL_LINK_KEYS", set()), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(search_server.budget_candidates, "budget_candidates", side_effect=calculate), \
+             mock.patch.object(search_server.naver_complex, "attach_links", side_effect=attach_links):
+            initial = search_server._start_staged_budget_payload(
+                "optional-links",
+                {"budget": "7.9"},
+            )
+            deadline = time.time() + 2
+            completed = None
+            while time.time() < deadline:
+                completed = search_server._budget_job_snapshot(
+                    initial["enrichmentJobId"],
+                )
+                if completed and completed.get("done"):
+                    break
+                time.sleep(0.01)
+
+            self.assertTrue(completed["done"])
+            self.assertFalse(completed["enrichmentPending"])
+            self.assertTrue(completed["optionalEnrichmentPending"])
+            self.assertTrue(link_started.wait(0.5))
+            self.assertNotIn("naverComplexNo", completed["candidates"][0])
+
+            release_links.set()
+            optional = None
+            deadline = time.time() + 2
+            while time.time() < deadline:
+                cached = search_server._read_budget_cache("optional-links")
+                optional = cached[0] if cached else None
+                if optional and not optional.get("optionalEnrichmentPending"):
+                    break
+                time.sleep(0.01)
+
+        self.assertEqual(optional["optionalEnrichmentStage"], "complete")
+        self.assertEqual(optional["candidates"][0]["naverComplexNo"], "12345")
+        snapshot = search_server._budget_optional_link_snapshot("optional-links")
+        self.assertIsNone(snapshot)  # 공개 조회 키는 64자리 캐시 키만 허용한다.
+
+    def test_optional_link_snapshot_returns_only_non_ranking_fields(self):
+        cache_key = "a" * 64
+        payload = {
+            "optionalEnrichmentPending": False,
+            "optionalEnrichmentStage": "complete",
+            "candidates": [{
+                "name": "확정 후보",
+                "region": "성동구",
+                "areaLabel": "전용 84㎡",
+                "score": 91,
+                "naverComplexNo": "12345",
+                "naverComplexName": "확정 후보 아파트",
+                "naverPropertyUrl": "https://fin.land.naver.com/complexes/12345?tab=article",
+                "naverLinkKind": "complex",
+            }],
+        }
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)):
+            search_server._write_budget_cache(cache_key, payload)
+            snapshot = search_server._budget_optional_link_snapshot(cache_key)
+
+        self.assertTrue(snapshot["done"])
+        self.assertEqual(snapshot["links"][0]["naverComplexNo"], "12345")
+        self.assertNotIn("score", snapshot["links"][0])
+
+    def test_optional_link_failure_finishes_without_blocking_result(self):
+        cache_key = "b" * 64
+        optional_keys = {cache_key}
+        payload = {
+            "optionalEnrichmentPending": True,
+            "optionalEnrichmentStage": "naver_links",
+            "candidates": [{
+                "name": "확정 후보",
+                "naverPropertyQuery": "확정 후보",
+                "signals": {"status": "ok", "score": 70},
+            }],
+        }
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server, "BUDGET_OPTIONAL_LINK_KEYS", optional_keys), \
+             mock.patch.object(search_server.naver_complex, "attach_links", side_effect=RuntimeError("down")):
+            search_server._run_budget_optional_links(cache_key, payload)
+            cached = search_server._read_budget_cache(cache_key)[0]
+
+        self.assertFalse(cached["optionalEnrichmentPending"])
+        self.assertEqual(cached["optionalEnrichmentStage"], "error")
+        self.assertEqual(cached["candidates"][0]["signals"]["score"], 70)
+        self.assertNotIn(cache_key, optional_keys)
+
     def test_staged_result_skips_enrichment_without_molit_configuration(self):
         with tempfile.TemporaryDirectory() as directory, \
              mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
@@ -518,7 +634,7 @@ class BudgetResultCacheTest(unittest.TestCase):
         # 다시 계산하지 않고 캐시 히트 경로에서 시그널만 보강한다.
         payload = {"candidates": [{"name": "테스트", "signals": None}]}
 
-        def repair(rows):
+        def repair(rows, **_kwargs):
             for row in rows:
                 signals = {
                     "status": "ok",
@@ -563,7 +679,7 @@ class BudgetResultCacheTest(unittest.TestCase):
             }],
         }
 
-        def repair(rows):
+        def repair(rows, **_kwargs):
             for row in rows:
                 row["signals"] = {
                     "status": "ok",
