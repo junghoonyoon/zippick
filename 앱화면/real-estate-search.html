@@ -3160,11 +3160,11 @@
     }
     .leader-value-score strong { color:#1267d8; font-size:17px; font-weight:950; letter-spacing:-.02em }
     .leader-score {
-      display:grid; place-items:center; align-content:center; width:106px; height:106px; border-radius:50%;
-      background:#191f28; color:#fff; text-align:center;
+      display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:max-content;
+      border-left:1px solid #dbe3ed; padding-left:22px; color:#191f28; text-align:right;
     }
-    .leader-score strong { font-size:28px; font-weight:950; line-height:1 }
-    .leader-score span { margin-top:6px; color:#cbd5e1; font-size:12px; font-weight:800 }
+    .leader-score strong { margin-top:6px; font-size:32px; font-weight:950; line-height:1; letter-spacing:-.03em; white-space:nowrap }
+    .leader-score span { color:#667085; font-size:12px; font-weight:800; line-height:1.35; white-space:nowrap }
     .leader-confidence {
       display:inline-flex; align-items:center; min-height:28px; margin-top:13px; border-radius:999px;
       padding:0 10px; background:#e8f6ed; color:#147a55; font-size:13px; font-weight:850;
@@ -3220,7 +3220,7 @@
     .leader-list-area { color:#344054; font-weight:900; white-space:nowrap }
     .leader-list-value-score { color:#1267d8; font-weight:900 }
     .leader-list-end { display:flex; align-items:center; gap:12px }
-    .leader-list-score { color:#191f28; font-size:20px; font-weight:950 }
+    .leader-list-score { color:#191f28; font-size:20px; font-weight:950; white-space:nowrap }
     .leader-list-expand-icon {
       display:grid; place-items:center; width:28px; height:28px; border-radius:50%;
       background:#f2f4f6; color:#667085; font-size:19px; font-weight:800; line-height:1;
@@ -3229,8 +3229,7 @@
     .leader-expanded-card { margin:0 14px 14px; border-radius:20px; box-shadow:none }
     .leader-expanded-card .leader-winner-top { padding:22px 22px 19px }
     .leader-expanded-card .leader-winner-body { padding:0 22px 22px }
-    .leader-expanded-card .leader-score { width:96px; height:96px }
-    .leader-expanded-card .leader-score strong { font-size:25px }
+    .leader-expanded-card .leader-score strong { font-size:28px }
     .leader-warning {
       border-radius:16px; padding:15px 17px; background:#fff8e8; color:#805b16;
       font-size:14px; font-weight:700; line-height:1.6;
@@ -3388,21 +3387,37 @@
       .leader-price-help-popover { right:0; left:auto }
       .leader-filter-card,
       .leader-filter-card[data-region-depth="3"] {
-        grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0;
+        grid-template-columns:minmax(0,1fr); gap:18px; padding:0;
       }
-      .leader-filter-card[data-region-depth="3"] #leaderSigunguField { grid-column:1 / -1 }
-      .leader-field { gap:6px }
-      .leader-field label { font-size:13px }
-      .leader-field select { min-height:48px; padding-right:28px; padding-left:12px; font-size:15px }
+      .leader-filter-card[data-region-depth="3"] #leaderSigunguField { grid-column:1 }
+      .leader-field { gap:9px }
+      .leader-field label { color:#3f4650; font-size:15px; font-weight:750 }
+      .leader-field select {
+        min-height:56px; border-color:transparent; border-radius:13px; padding-right:38px; padding-left:15px;
+        background:#f0f2f5; color:#242a32; font-size:17px; font-weight:650;
+      }
+      .leader-field select:focus { border-color:#79aff0; background:#fff; box-shadow:0 0 0 3px rgba(0,113,227,.1) }
       .leader-submit { grid-column:1 / -1 }
-      .leader-winner-top { grid-template-columns:minmax(0,1fr) 88px; gap:14px; padding:22px 20px 18px }
-      .leader-score { width:88px; height:88px }
-      .leader-score strong { font-size:24px }
+      .leader-submit { min-height:58px; margin-top:2px; border-radius:14px; font-size:17px; box-shadow:none }
+      .leader-result { gap:16px; margin-top:28px }
+      .leader-winner { border-color:#edf0f4; border-radius:16px; box-shadow:none }
+      .leader-winner-top {
+        grid-template-columns:minmax(0,1fr); gap:18px; padding:26px 16px;
+        background:#fff;
+      }
+      .leader-score {
+        align-items:flex-start; width:100%; min-width:0; border-top:1px solid #edf0f4; border-left:0;
+        padding-top:14px; padding-left:0; color:#191f28; text-align:left;
+      }
+      .leader-score strong { margin-top:5px; font-size:24px; line-height:1.2; letter-spacing:-.025em }
+      .leader-score span { color:#6b7684; font-size:13px; line-height:1.45 }
       .leader-winner-name { font-size:23px }
-      .leader-winner-body { padding:0 20px 22px }
+      .leader-winner-body { padding:0 16px 24px }
       .leader-score-grid { grid-template-columns:1fr }
-      .leader-list-item { grid-template-columns:30px minmax(0,1fr) auto; padding:16px 14px }
+      .leader-list { border-color:#edf0f4; border-radius:16px }
+      .leader-list-item { grid-template-columns:30px minmax(0,1fr); gap:11px; padding:18px 14px }
       .leader-list-end { gap:7px }
+      .leader-list-end { grid-column:2; justify-content:flex-start }
       .leader-list-score { font-size:18px }
       .leader-list-expand-icon { width:26px; height:26px; font-size:17px }
       .leader-expanded-card { margin:0 8px 10px }
@@ -5285,7 +5300,7 @@
             ${collapsible ? `<span class="leader-winner-toggle-label"><span class="leader-winner-toggle-label-open">상세 접기</span><span class="leader-winner-toggle-label-closed">상세 펼치기</span><span class="leader-winner-toggle-icon" aria-hidden="true"></span></span>` : ""}
           </div>
           <div class="leader-score" aria-label="${esc(`${view.scoreTitle} ${view.metric}${view.isPriceLeader || view.isGrowthRanking || view.isValueRanking ? "" : "점"}`)}">
-            <strong>${esc(view.metric)}</strong><span>${esc(view.scoreTitle)}</span>
+            <span>${esc(view.scoreTitle)}</span><strong>${esc(view.metric)}</strong>
           </div>
         </${topTag}>
         <div class="leader-winner-body"${collapsible ? ` id="leader-winner-body-${esc(view.rank)}"` : ""}>

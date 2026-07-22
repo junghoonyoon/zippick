@@ -224,6 +224,18 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertNotIn("전용 ${area}㎡", html[leader_meta_start:leader_meta_end])
         self.assertNotIn("item.address", html[leader_meta_start:leader_meta_end])
         self.assertNotIn("leader-meta-address", html)
+        self.assertIn(
+            "display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:max-content;",
+            html,
+        )
+        self.assertIn(
+            '<span>${esc(view.scoreTitle)}</span><strong>${esc(view.metric)}</strong>',
+            html,
+        )
+        self.assertNotIn(
+            "display:grid; place-items:center; align-content:center; width:106px; height:106px; border-radius:50%;",
+            html,
+        )
         self.assertIn(".leader-list-copy { display:grid; gap:6px; min-width:0 }", html)
         self.assertIn("expandedLeaderRanks", html)
         self.assertIn('let activeLeaderCategory = "price";', html)

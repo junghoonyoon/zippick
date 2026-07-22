@@ -313,6 +313,54 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertEqual(cached, payload)
         attach_signals.assert_called_once()
 
+    def test_leader_context_keeps_district_comparison_when_locality_leader_is_missing(self):
+        entity = {
+            "name": "서강GS",
+            "district": "마포구",
+            "legalDong": "신정동",
+            "jibun": "30",
+            "households": 538,
+        }
+
+        def attach(rows, **kwargs):
+            self.assertTrue(kwargs["include_leader_context"])
+            rows[0]["signals"] = {
+                "districtLeaderName": "래미안 마포 리버웰",
+                "districtLeaderRegion": "마포구",
+                "districtLeaderLegalDong": "용강동",
+                "districtLeaderJibun": "502",
+                "isDistrictLeader": False,
+            }
+
+        with mock.patch.object(
+            search_server,
+            "APARTMENT_LEADER_CONTEXT_CACHE",
+            {},
+        ), mock.patch.object(
+            search_server.budget_candidates,
+            "_price_lookup_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.momentum_signals,
+            "attach_signals",
+            side_effect=attach,
+        ):
+            payload, status = search_server._apartment_leader_context(
+                "서강GS",
+                "마포구",
+                legal_dong="신정동",
+                jibun="30",
+            )
+
+        self.assertEqual(status, 200)
+        self.assertFalse(payload["leaderReady"])
+        self.assertTrue(payload["districtLeaderReady"])
+        self.assertNotIn("leaderName", payload["signals"])
+        self.assertEqual(
+            payload["signals"]["districtLeaderName"],
+            "래미안 마포 리버웰",
+        )
+
     def test_price_is_returned_without_a_purchase_profile(self):
         with mock.patch.object(
             search_server.rone_estimates,

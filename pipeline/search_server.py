@@ -727,16 +727,21 @@ def _apartment_leader_context(name, region, legal_dong="", jibun=""):
             or key.startswith("districtLeader")
             or key in {"isRegionalLeader", "isDistrictLeader"}
         }
-        if not signals.get("leaderName") or not signals.get("districtLeaderName"):
-            return {"error": "동·구 대장단지를 모두 선정하지 못했어요. 다시 시도해 주세요."}, 503
+        leader_ready = bool(signals.get("leaderName"))
+        district_leader_ready = bool(signals.get("districtLeaderName"))
+        # 동 단위에 84㎡ 거래 표본이 없어도 구 대장은 선정될 수 있다.
+        # 하나의 비교선이라도 사용할 수 있으면 성공으로 응답해 사용 가능한
+        # 비교 정보를 프런트에서 버리지 않게 한다.
+        if not leader_ready and not district_leader_ready:
+            return {"error": "동·구 대장단지를 선정하지 못했어요. 다시 시도해 주세요."}, 503
         payload = {
             "name": row["name"],
             "region": row["region"],
             "legalDong": row["legalDong"],
             "jibun": row["jibun"],
             "signals": signals,
-            "leaderReady": True,
-            "districtLeaderReady": True,
+            "leaderReady": leader_ready,
+            "districtLeaderReady": district_leader_ready,
         }
         with APARTMENT_LEADER_CONTEXT_CACHE_LOCK:
             APARTMENT_LEADER_CONTEXT_CACHE[identity] = payload

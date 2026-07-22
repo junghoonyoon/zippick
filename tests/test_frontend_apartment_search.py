@@ -146,20 +146,32 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn(".leader-submit { grid-column:1 / -1 }", html)
         self.assertNotIn(".leader-submit { grid-column:1 }", html)
 
-    def test_mobile_leader_region_fields_share_one_row(self):
+    def test_mobile_leader_region_fields_match_budget_form_stack(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertIn(
             '.leader-filter-card[data-region-depth="3"] {\n'
-            "        grid-template-columns:repeat(2,minmax(0,1fr));",
+            "        grid-template-columns:minmax(0,1fr);",
             html,
         )
         self.assertIn(
             '.leader-filter-card[data-region-depth="3"] #leaderSigunguField '
-            "{ grid-column:1 / -1 }",
+            "{ grid-column:1 }",
             html,
         )
-        self.assertNotIn(".leader-filter-card { grid-template-columns:1fr;", html)
+        self.assertIn("min-height:56px; border-color:transparent; border-radius:13px;", html)
+        self.assertIn("background:#f0f2f5; color:#242a32; font-size:17px;", html)
+
+    def test_mobile_leader_price_uses_budget_result_style_instead_of_circle(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn("grid-template-columns:minmax(0,1fr); gap:18px; padding:26px 16px;", html)
+        self.assertIn(
+            "align-items:flex-start; width:100%; min-width:0; border-top:1px solid #edf0f4; border-left:0;",
+            html,
+        )
+        self.assertIn(".leader-score strong { margin-top:5px; font-size:24px;", html)
+        self.assertNotIn("width:106px; height:106px; border-radius:50%", html)
 
     def test_first_place_leader_card_can_collapse_and_keeps_state_during_rerender(self):
         html = APP_HTML.read_text(encoding="utf-8")
