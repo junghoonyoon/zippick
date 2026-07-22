@@ -146,6 +146,21 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn(".leader-submit { grid-column:1 / -1 }", html)
         self.assertNotIn(".leader-submit { grid-column:1 }", html)
 
+    def test_mobile_leader_region_fields_share_one_row(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn(
+            '.leader-filter-card[data-region-depth="3"] {\n'
+            "        grid-template-columns:repeat(2,minmax(0,1fr));",
+            html,
+        )
+        self.assertIn(
+            '.leader-filter-card[data-region-depth="3"] #leaderSigunguField '
+            "{ grid-column:1 / -1 }",
+            html,
+        )
+        self.assertNotIn(".leader-filter-card { grid-template-columns:1fr;", html)
+
     def test_first_place_leader_card_can_collapse_and_keeps_state_during_rerender(self):
         html = APP_HTML.read_text(encoding="utf-8")
         card_match = re.search(
@@ -239,7 +254,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('class="leader-value-score"', helper_body)
         presentation_body = presentation_match.group("body")
         self.assertIn('isValueRanking = payload.category === "value"', presentation_body)
-        self.assertIn("leaderPriceText(item.leaderPrice12m)", presentation_body)
+        self.assertIn(
+            "leaderPriceText(item.leaderPrice6m ?? item.leaderPrice12m)",
+            presentation_body,
+        )
         self.assertIn("leaderValueScoreHtml(item, payload)", card_match.group("body"))
         self.assertIn(
             "leaderValueScoreHtml(item, payload, { compact:true })",
@@ -1400,6 +1418,16 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('id="compareCartBadge"', html)
         self.assertIn("compareCart.hidden = selected.length === 0", html)
         self.assertIn("compareCartBadge.textContent = String(selected.length)", html)
+
+    def test_review_report_titles_include_the_selected_area(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn("function candidateDetailAreaText(item)", html)
+        self.assertIn('return `${Number.isInteger(value) ? value : value.toFixed(1).replace(/\\.0$/, "")}㎡`;', html)
+        self.assertIn('class="candidate-detail-title-area"', html)
+        self.assertIn("${candidateDetailTitleHtml(item)}", html)
+        self.assertIn("aptReportTitle.innerHTML = candidateDetailTitleHtml(candidate, name);", html)
+        self.assertIn("aptReportTitle.innerHTML = candidateDetailTitleHtml(report, name);", html)
         self.assertIn('compareCart.addEventListener("click", openComparison);', html)
         self.assertIn('id="comparisonLimitToast"', html)
         self.assertIn("else showComparisonLimitToast();", html)
@@ -1689,7 +1717,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data.areaFallback && Number(data.requestedMinArea || 0)", affordability_body)
         self.assertIn("가장 가까운 실제 거래 평형 자동 선택", affordability_body)
 
-    def test_apartment_search_chart_is_open_by_default_and_keeps_user_choice(self):
+    def test_apartment_search_chart_is_closed_by_default_and_keeps_user_choice(self):
         html = APP_HTML.read_text(encoding="utf-8")
         affordability_match = re.search(
             r"function aptAffordabilityHtml\b(?P<body>.*?)"
@@ -1714,11 +1742,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(render_match)
         self.assertIsNotNone(click_match)
         self.assertIn(
-            "candidateVerdictHtml(candidate, { trendExpanded:candidate.aptSearchTrendExpanded !== false })",
+            "candidateVerdictHtml(candidate, { trendExpanded:candidate.aptSearchTrendExpanded === true })",
             affordability_match.group("body"),
         )
         self.assertIn(
-            'const trendExpanded = card.dataset.aptTrendExpanded !== "false";',
+            'const trendExpanded = card.dataset.aptTrendExpanded === "true";',
             render_match.group("body"),
         )
         self.assertIn(
@@ -1733,6 +1761,19 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             "candidateCard.dataset.aptTrendExpanded = String(!expanded);",
             click_match.group("body"),
         )
+
+    def test_direct_apartment_search_exposes_the_floating_map_view(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('let candidateMapOrigin = "budget";', html)
+        self.assertIn('candidateMapOrigin = "aptSearch";', html)
+        self.assertIn(
+            'candidateMapFloatingButtonHtml() + candidateMapViewHtml(items, false, { directSearch:true })',
+            html,
+        )
+        self.assertIn("mountCandidateMapPortal(aptSearchResults);", html)
+        self.assertIn('candidateMapOrigin === "aptSearch"', html)
+        self.assertIn("const directRows = [...aptCandidateResults.values()];", html)
 
     def test_area_sheet_backdrop_and_escape_close_before_an_area_is_selected(self):
         html = APP_HTML.read_text(encoding="utf-8")

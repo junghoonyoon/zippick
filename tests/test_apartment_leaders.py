@@ -37,6 +37,103 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertTrue(hwaseong)
         self.assertTrue(all(entity.get("lawdCd") == "41590" for entity in hwaseong))
 
+    def test_mapo_leaders_include_rachel_presale_complex(self):
+        mapo = apartment_leaders.matching_entities("서울특별시", "마포구")
+        rachel = next(
+            entity
+            for entity in mapo
+            if entity.get("name") == "마포자이힐스테이트 라첼스"
+        )
+
+        self.assertEqual(rachel.get("status"), "분양권")
+        self.assertEqual(rachel.get("lawdCd"), "11440")
+
+    def test_region_prefetches_apartment_and_presale_feeds_separately(self):
+        entities = [
+            {"name": "기존단지", "district": "테스트구", "lawdCd": "11111"},
+            {
+                "name": "분양단지",
+                "district": "테스트구",
+                "lawdCd": "22222",
+                "status": "분양권",
+            },
+        ]
+        prefetched = []
+
+        def capture(pairs, transaction_kind):
+            prefetched.append((transaction_kind, list(pairs)))
+
+        with mock.patch.object(
+            molit_transactions,
+            "transaction_kind_for_apartment",
+            side_effect=lambda name, _region: (
+                molit_transactions.TRANSACTION_KIND_PRESALE
+                if name == "분양단지"
+                else molit_transactions.TRANSACTION_KIND_APARTMENT
+            ),
+        ), mock.patch.object(
+            molit_transactions, "enabled", return_value=True,
+        ), mock.patch.object(
+            molit_transactions, "related_lawd_codes", side_effect=lambda code: (code,),
+        ), mock.patch.object(
+            molit_transactions, "_deal_months", return_value=["202606"],
+        ), mock.patch.object(
+            molit_transactions, "prefetch_months", side_effect=capture,
+        ):
+            apartment_leaders._prefetch_region_months(entities, 24, cache_only=False)
+
+        self.assertEqual(
+            prefetched,
+            [
+                (molit_transactions.TRANSACTION_KIND_APARTMENT, [("11111", "202606")]),
+                (molit_transactions.TRANSACTION_KIND_PRESALE, [("22222", "202606")]),
+            ],
+        )
+
+    def test_presale_ranking_exposes_status_and_uses_new_build_category(self):
+        presale_entity = {
+            "name": "분양단지",
+            "province": "서울특별시",
+            "district": "테스트구",
+            "legalDong": "가동",
+            "lawdCd": "11111",
+            "status": "분양권",
+            "dedupeKey": "presale-leader-test",
+        }
+        completed_entity = {
+            "name": "일반단지",
+            "province": "서울특별시",
+            "district": "테스트구",
+            "legalDong": "나동",
+            "lawdCd": "11111",
+            "approvedAt": "2020-01-01",
+            "dedupeKey": "completed-leader-test",
+        }
+        result = apartment_leaders.calculate_rankings_from_pairs(
+            "서울특별시",
+            "테스트구",
+            [
+                (
+                    presale_entity,
+                    [_trade("2026-05-10", 200000), _trade("2026-06-10", 220000)],
+                ),
+                (
+                    completed_entity,
+                    [_trade("2026-05-10", 300000), _trade("2026-06-10", 320000)],
+                ),
+            ],
+            reference_month="2026-06",
+        )
+
+        self.assertEqual(
+            [row["apartmentName"] for row in result["rankings"]["price"]],
+            ["일반단지", "분양단지"],
+        )
+        price_item = result["rankings"]["price"][1]
+        self.assertEqual(price_item["status"], "분양권")
+        self.assertEqual(result["rankings"]["new_build"][0]["apartmentName"], "분양단지")
+        self.assertIn("분양권·입주권 실거래", price_item["warnings"][0])
+
     def test_gyeonggi_source_row_uses_legal_ri_and_parcel_number(self):
         row = {"읍면동": "가평읍", "지번": "대곡리 695"}
 
@@ -87,6 +184,8 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertNotIn('id="leaderCategoryTabs"', html)
         self.assertIn('id="leaderReferenceCaption" hidden', html)
         self.assertIn('leaderReferenceCaption.textContent = `${leaderReferenceLabel(payload?.referenceMonth)} 기준`;', html)
+        self.assertIn('${apartmentStatusBadgeHtml(item.status)}</${headingTag}>', html)
+        self.assertIn('${apartmentStatusBadgeHtml(item.status)}</span>', html)
         self.assertLess(html.index('id="leaderReferenceCaption"'), html.index('id="leaderPageTitle"'))
         self.assertNotIn("areaProfile,", html)
         self.assertNotIn("activeLeaderAreaProfile", html)
@@ -107,14 +206,38 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertNotIn("실거래가 × (84 ÷ 실제면적)", html)
         self.assertNotIn('data-leader-category="overall"', html)
         self.assertNotIn('data-leader-category="leadership"', html)
-        self.assertIn("fetchLeaderRanking(activeLeaderCategory, 10", html)
+        self.assertIn("fetchLeaderRanking(activeLeaderCategory, 30", html)
         self.assertIn("leaderGrowthText(item.return6m)", html)
         self.assertIn("data-leader-expand-rank", html)
         self.assertIn('class="leader-list-name">${esc(item.apartmentName)}</span>', html)
-        self.assertIn('class="leader-list-area">전용 84㎡ 실거래', html)
+        self.assertIn('class="leader-list-area">최근 6개월 · 전용 84㎡ 실거래', html)
+        self.assertIn("최근 6개월의 전용 84.00㎡ 이상 85.00㎡ 미만", html)
+        self.assertIn("item.leaderPrice6m ?? item.leaderPrice12m", html)
+        self.assertIn("function leaderMetaHtml(item)", html)
+        self.assertIn('`${Number(item.completionYear)}년 준공`', html)
+        self.assertIn('`${Number(item.householdCount).toLocaleString("ko-KR")}세대`', html)
+        self.assertIn('class="leader-meta-detail">${esc(completion)} · ${esc(households)}</span>', html)
+        self.assertIn('class="leader-winner-sub">${view.meta}</p>', html)
+        self.assertIn('class="leader-list-location">${leaderMetaHtml(item)}</span>', html)
+        leader_meta_start = html.index("function leaderMetaHtml(item)")
+        leader_meta_end = html.index("const GYEONGGI_DISTRICT_CITY_PREFIXES", leader_meta_start)
+        self.assertNotIn("전용 ${area}㎡", html[leader_meta_start:leader_meta_end])
+        self.assertNotIn("item.address", html[leader_meta_start:leader_meta_end])
+        self.assertNotIn("leader-meta-address", html)
         self.assertIn(".leader-list-copy { display:grid; gap:6px; min-width:0 }", html)
         self.assertIn("expandedLeaderRanks", html)
         self.assertIn('let activeLeaderCategory = "price";', html)
+        self.assertIn('id="leaderMapFab" type="button" aria-label="지역 대장 지도 보기"', html)
+        self.assertIn('id="leaderMapView" role="dialog" aria-modal="true"', html)
+        self.assertIn('id="leaderMapCanvas" aria-label="지역 대장 단지 위치"', html)
+        self.assertIn('leaderMapFab.hidden = false;', html)
+        self.assertIn('leaderMapFab.addEventListener("click", openLeaderMap);', html)
+        self.assertIn("rows.map(item => geocodeCandidate(geocoder, kakaoApi, item))", html)
+        self.assertIn('data-leader-map-detail', html)
+        self.assertIn('class="candidate-map-preview" id="leaderMapPreview"', html)
+        self.assertIn("return candidateMapMarkerHtml(leaderMapCandidate(item), selected);", html)
+        self.assertIn("setupCandidateMapPreviewSheet(leaderMapPreview);", html)
+        self.assertNotIn(".leader-map-marker {", html)
 
     def test_exact_84m2_actual_price_is_the_default_market_leader_definition(self):
         entities = [
@@ -170,14 +293,15 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertEqual(apartment_leaders.DEFAULT_CATEGORY, "price")
         self.assertEqual(price[0]["apartmentName"], "시장대장(2단지)")
         self.assertEqual(price[0]["marketLeaderName"], "시장대장")
-        self.assertEqual(price[0]["leaderPrice12m"], 200000)
+        self.assertEqual(price[0]["leaderPrice6m"], 200000)
         self.assertEqual(price[0]["leaderRepresentativeArea"], 84.85)
-        self.assertEqual(price[0]["leaderRepresentativeMedianPrice12m"], 200000)
+        self.assertEqual(price[0]["leaderRepresentativeMedianPrice6m"], 200000)
         self.assertIsNone(price[0]["leaderPriceAdjustmentExponent"])
-        self.assertEqual(price[0]["leaderPriceTransactionCount12m"], 2)
-        self.assertEqual(price[0]["rankingTransactionCount12m"], 2)
-        self.assertIn("전용 84㎡ 실거래 중위가", price[0]["reasons"][0])
-        self.assertEqual(result["leaderPriceBasisLabel"], "전용 84㎡ 실거래 중위가")
+        self.assertEqual(price[0]["leaderPriceTransactionCount6m"], 2)
+        self.assertEqual(price[0]["rankingTransactionCount"], 2)
+        self.assertIn("최근 6개월 전용 84㎡ 실거래 중위가", price[0]["reasons"][0])
+        self.assertEqual(result["leaderPriceBasisLabel"], "최근 6개월 전용 84㎡ 실거래 중위가")
+        self.assertEqual(result["priceLookbackMonths"], 6)
         self.assertNotIn("areaProfile", result)
         self.assertEqual(result["areaTarget"], 84.0)
 
@@ -219,7 +343,7 @@ class ApartmentLeadersTest(unittest.TestCase):
 
         self.assertEqual([row["apartmentName"] for row in price], ["국평단지"])
         self.assertAlmostEqual(price[0]["leaderRepresentativeArea"], 84.7)
-        self.assertEqual(price[0]["leaderPriceTransactionCount12m"], 4)
+        self.assertEqual(price[0]["leaderPriceTransactionCount6m"], 4)
 
     def test_84m2_actual_trade_range_boundaries_are_exact(self):
         transactions = [
@@ -233,6 +357,33 @@ class ApartmentLeadersTest(unittest.TestCase):
 
         self.assertEqual([row["exclusiveArea"] for row in trades], [84.0, 84.99])
         self.assertAlmostEqual(area, 84.495)
+
+    def test_price_ranking_uses_six_month_median_but_keeps_twelve_month_activity(self):
+        entity = {
+            "name": "기간분리단지",
+            "province": "서울특별시",
+            "district": "테스트구",
+            "legalDong": "가동",
+            "dedupeKey": "six-month-price-window",
+        }
+        transactions = [
+            _trade("2025-11-15", 900000),
+            _trade("2025-12-15", 900000),
+            _trade("2026-05-15", 100000),
+            _trade("2026-06-15", 100000),
+        ]
+
+        result = apartment_leaders.calculate_rankings_from_pairs(
+            "서울특별시",
+            "테스트구",
+            [(entity, transactions)],
+            reference_month="2026-06",
+        )
+        item = result["rankings"]["price"][0]
+
+        self.assertEqual(item["leaderPrice6m"], 100000)
+        self.assertEqual(item["leaderPriceTransactionCount6m"], 2)
+        self.assertEqual(item["transactionCount12m"], 4)
 
     def test_cache_key_uses_single_general_leader_definition(self):
         path = apartment_leaders._cache_path(

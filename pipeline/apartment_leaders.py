@@ -50,6 +50,7 @@ CATEGORY_LABELS = {
 MAX_REASON_COUNT = 4
 DEFAULT_LIMIT = 5
 LEADERSHIP_LIMIT = 10
+MAX_RESULT_LIMIT = 50
 DEFAULT_CATEGORY = "price"
 NATIONAL_AREA_BUCKET = "70-89"
 NATIONAL_AREA_TARGET = 84.0
@@ -59,7 +60,9 @@ LEADER_AREA_MIN = 84.0
 LEADER_AREA_MAX = 85.0
 LEADER_AREA_MIN_DEALS = 2
 LEADER_PRICE_AREA_EXPONENT = None
-NATIONAL_AREA_LABEL = "전용 84㎡ 실거래 중위가"
+LEADER_PRICE_LOOKBACK_MONTHS = 6
+NATIONAL_AREA_LABEL = "최근 6개월 전용 84㎡ 실거래 중위가"
+RANKABLE_PRESALE_STATUSES = frozenset(molit_transactions.PRESALE_STATUSES)
 
 
 def _load_settings():
@@ -304,12 +307,13 @@ def _price_per_square_meter(row):
     return price / area if area > 0 and price > 0 else None
 
 
-def _leader_price_trades(
+def _exact_area_trades(
     transactions,
     reference_month,
+    months,
 ):
-    """최근 12개월 전용 84.x㎡ 실제 거래와 중앙 전용면적을 반환한다."""
-    start, end = _window_dates(reference_month, 12)
+    """지정 기간의 전용 84.x㎡ 실제 거래와 중앙 전용면적을 반환한다."""
+    start, end = _window_dates(reference_month, months)
     trades = []
     for row in transactions:
         area = float(row.get("exclusiveArea") or 0)
@@ -324,6 +328,18 @@ def _leader_price_trades(
         return [], None
     areas = [float(row.get("exclusiveArea") or 0) for row in trades]
     return trades, statistics.median(areas)
+
+
+def _leader_price_trades(
+    transactions,
+    reference_month,
+):
+    """최근 6개월 전용 84.x㎡ 실제 거래와 중앙 전용면적을 반환한다."""
+    return _exact_area_trades(
+        transactions,
+        reference_month,
+        LEADER_PRICE_LOOKBACK_MONTHS,
+    )
 
 
 def _leader_adjusted_price(row, target_area=NATIONAL_AREA_TARGET):
@@ -401,9 +417,10 @@ def matching_entities(sido, sigungu):
     rows = []
     seen = set()
     for entity in real_estate_search.APARTMENT_MASTER:
+        status = str(entity.get("status") or "").strip()
         if (
             entity.get("aggregate")
-            or entity.get("status")
+            or (status and status not in RANKABLE_PRESALE_STATUSES)
             or not _region_matches(entity.get("province"), sido)
             or not _region_matches(entity.get("district"), sigungu)
         ):
@@ -419,7 +436,8 @@ def matching_entities(sido, sigungu):
 def leader_regions():
     grouped = {}
     for entity in real_estate_search.APARTMENT_MASTER:
-        if entity.get("aggregate") or entity.get("status"):
+        status = str(entity.get("status") or "").strip()
+        if entity.get("aggregate") or (status and status not in RANKABLE_PRESALE_STATUSES):
             continue
         sido = str(entity.get("province") or "").strip()
         sigungu = str(entity.get("district") or "").strip()
@@ -439,18 +457,29 @@ def _lookback_months(reference_month):
 
 
 def _prefetch_region_months(entities, lookback_months, cache_only):
-    if cache_only or not molit_transactions.enabled():
+    if cache_only:
         return
-    lawd_codes = {
-        code
-        for entity in entities
-        for code in molit_transactions.related_lawd_codes(entity.get("lawdCd"))
-        if code.isdigit()
-    }
     months = molit_transactions._deal_months(lookback_months)
-    molit_transactions.prefetch_months(
-        ((lawd_code, month) for lawd_code in lawd_codes for month in months),
-    )
+    entities_by_kind = {}
+    for entity in entities:
+        transaction_kind = molit_transactions.transaction_kind_for_apartment(
+            entity.get("name", ""),
+            entity.get("district", ""),
+        )
+        entities_by_kind.setdefault(transaction_kind, []).append(entity)
+    for transaction_kind, kind_entities in entities_by_kind.items():
+        if not molit_transactions.enabled(transaction_kind):
+            continue
+        lawd_codes = {
+            code
+            for entity in kind_entities
+            for code in molit_transactions.related_lawd_codes(entity.get("lawdCd"))
+            if code.isdigit()
+        }
+        molit_transactions.prefetch_months(
+            ((lawd_code, month) for lawd_code in lawd_codes for month in months),
+            transaction_kind=transaction_kind,
+        )
 
 
 def _load_transactions(entities, reference_month, cache_only):
@@ -485,7 +514,15 @@ def _base_metrics(
     # 대장 페이지의 가격·상승률·거래량·신뢰도를 모두 동일한 84.x㎡ 실제
     # 거래로 계산한다. bucket은 이전 API 호환을 위해 인자로만 유지한다.
     del bucket
-    trades12, leader_representative_area = _leader_price_trades(transactions, reference_month)
+    trades12, _representative_area12 = _exact_area_trades(
+        transactions,
+        reference_month,
+        12,
+    )
+    leader_price_trades, leader_representative_area = _leader_price_trades(
+        transactions,
+        reference_month,
+    )
     start24, end24 = _window_dates(reference_month, 24)
     trades24 = [
         row for row in transactions
@@ -493,7 +530,6 @@ def _base_metrics(
         and LEADER_AREA_MIN <= float(row.get("exclusiveArea") or 0) < LEADER_AREA_MAX
         and start24 <= datetime.date.fromisoformat(str(row["dealDate"])[:10]) <= end24
     ]
-    leader_price_trades = trades12
     prices = [float(row["dealAmountManwon"]) for row in trades12]
     leader_actual_prices = [
         float(row["dealAmountManwon"])
@@ -542,6 +578,7 @@ def _base_metrics(
         if station_distance is not None
         else station_distance_lower_bound
     )
+    status = str(entity.get("status") or "").strip()
     return {
         "apartmentId": _entity_id(entity),
         "apartmentName": entity.get("name", ""),
@@ -550,6 +587,7 @@ def _base_metrics(
         "sigungu": entity.get("district", ""),
         "dong": entity.get("legalDong", ""),
         "address": entity.get("address", ""),
+        "status": status or None,
         "householdCount": households or None,
         "completionYear": completion_year,
         "brand": entity.get("brand") or None,
@@ -567,6 +605,11 @@ def _base_metrics(
         ),
         "stationDistanceUpdatedAt": cached_station.get("stationDistanceUpdatedAt"),
         "medianPrice12m": round(statistics.median(prices), 1) if prices else None,
+        "leaderPrice6m": (
+            round(statistics.median(leader_prices), 1)
+            if leader_prices else None
+        ),
+        # 이전 클라이언트 호환용 별칭. 실제 계산 기간은 priceLookbackMonths를 따른다.
         "leaderPrice12m": (
             round(statistics.median(leader_prices), 1)
             if leader_prices else None
@@ -575,6 +618,10 @@ def _base_metrics(
             round(float(leader_representative_area), 2)
             if leader_representative_area is not None else None
         ),
+        "leaderRepresentativeMedianPrice6m": (
+            round(statistics.median(leader_actual_prices), 1)
+            if leader_actual_prices else None
+        ),
         "leaderRepresentativeMedianPrice12m": (
             round(statistics.median(leader_actual_prices), 1)
             if leader_actual_prices else None
@@ -582,6 +629,7 @@ def _base_metrics(
         "leaderPriceAdjustmentTargetArea": NATIONAL_AREA_TARGET,
         "leaderPriceAdjustmentExponent": LEADER_PRICE_AREA_EXPONENT,
         "leaderPriceBasisLabel": NATIONAL_AREA_LABEL,
+        "leaderPriceTransactionCount6m": leader_price_count,
         "leaderPriceTransactionCount12m": leader_price_count,
         "leaderPriceConfidenceScore": leader_price_confidence_score,
         "leaderPriceConfidenceLevel": leader_price_confidence_level,
@@ -608,6 +656,7 @@ def _base_metrics(
         "brandScore": SETTINGS.get("brandScores", {}).get(str(entity.get("brand") or "")) or None,
         "_trades12": trades12,
         "_trades24": trades24,
+        "_leaderPriceTrades6": leader_price_trades,
         "_leaderPriceTrades12": leader_price_trades,
     }
 
@@ -636,9 +685,9 @@ def _district_price_medians(metrics):
 
 def _district_leader_price_median(metrics):
     prices = [
-        float(row["leaderPrice12m"])
+        float(row["leaderPrice6m"])
         for row in metrics
-        if row.get("leaderPrice12m") is not None
+        if row.get("leaderPrice6m") is not None
     ]
     return statistics.median(prices) if prices else None
 
@@ -667,11 +716,12 @@ def _score_metrics(metrics, reference_month):
         row["adjustedMedianPricePerSquareMeter12m"] = adjusted_price(
             row["medianPricePerSquareMeter12m"], district_ppsm, row["transactionCount12m"],
         )
-        row["adjustedLeaderPrice12m"] = adjusted_price(
-            row["leaderPrice12m"],
+        row["adjustedLeaderPrice6m"] = adjusted_price(
+            row["leaderPrice6m"],
             district_leader_price,
-            row["leaderPriceTransactionCount12m"],
+            row["leaderPriceTransactionCount6m"],
         )
+        row["adjustedLeaderPrice12m"] = row["adjustedLeaderPrice6m"]
         row["districtReturn6m"] = district_return6m
         row["districtReturn12m"] = district_return12m
         row["relativeReturn6m"] = (
@@ -691,7 +741,7 @@ def _score_metrics(metrics, reference_month):
         "adjustedMedianPricePerSquareMeter12m",
         "medianPricePerSquareMeterPercentile",
     )
-    _apply_percentile(metrics, "leaderPrice12m", "leaderPricePercentile")
+    _apply_percentile(metrics, "leaderPrice6m", "leaderPricePercentile")
     _apply_percentile(metrics, "return6m", "return6mPercentile")
     _apply_percentile(metrics, "return12m", "return12mPercentile")
     _apply_percentile(metrics, "transactionTurnover12m", "transactionTurnoverPercentile")
@@ -723,8 +773,11 @@ def _score_metrics(metrics, reference_month):
             "household": row["householdScore"],
         }, weights["residence"])
         is_new_build = (
-            row["completionYear"] is not None
-            and _parse_reference_month(reference_month).year - row["completionYear"] <= 3
+            row.get("status") in RANKABLE_PRESALE_STATUSES
+            or (
+                row["completionYear"] is not None
+                and _parse_reference_month(reference_month).year - row["completionYear"] <= 3
+            )
         )
         row["isNewBuild"] = is_new_build
         if is_new_build:
@@ -765,7 +818,7 @@ def _reason_candidates(row, category):
     reasons = []
     price_top = _top_percent(row.get("priceScore"))
     if price_top is not None:
-        leader_price = _format_eok(row.get("leaderPrice12m"))
+        leader_price = _format_eok(row.get("leaderPrice6m"))
         basis = row.get("leaderPriceBasisLabel") or AREA_BUCKETS[row["areaBucket"]]["label"]
         reasons.append((
             "price",
@@ -820,18 +873,24 @@ def _reason_candidates(row, category):
 
 def _warnings(row, category=None):
     warnings = []
+    if row.get("status") in RANKABLE_PRESALE_STATUSES:
+        warnings.append(
+            f"{row['status']} 단지로 국토교통부 분양권·입주권 실거래를 기준으로 계산했습니다."
+        )
     count = int(
         (
-            row.get("leaderPriceTransactionCount12m")
+            row.get("leaderPriceTransactionCount6m")
             if category == "price"
             else row.get("transactionCount12m")
         )
         or 0
     )
     if count <= 1:
-        warnings.append("최근 12개월 기준 거래가 1건 이하라 해당 순위에서 제외됩니다.")
+        period = LEADER_PRICE_LOOKBACK_MONTHS if category == "price" else 12
+        warnings.append(f"최근 {period}개월 기준 거래가 1건 이하라 해당 순위에서 제외됩니다.")
     elif count < 5:
-        warnings.append(f"최근 12개월 기준 거래가 {count}건으로 가격 신뢰도가 낮습니다.")
+        period = LEADER_PRICE_LOOKBACK_MONTHS if category == "price" else 12
+        warnings.append(f"최근 {period}개월 기준 거래가 {count}건으로 가격 신뢰도가 낮습니다.")
     if row.get("stationScore") is None:
         warnings.append("지하철 거리 데이터가 없어 역 접근성은 점수에서 제외했습니다.")
     if row.get("leadershipScore") is None:
@@ -855,7 +914,7 @@ def _eligible(row, category):
     if row.get(CATEGORY_FIELDS[category]) is None:
         return False
     if category == "price":
-        return int(row.get("leaderPriceTransactionCount12m") or 0) >= 2
+        return int(row.get("leaderPriceTransactionCount6m") or 0) >= 2
     if category == "new_build":
         return bool(row.get("isNewBuild") and count >= 1)
     if count < 2:
@@ -884,8 +943,13 @@ def _public_item(row, category, rank):
             if category == "leadership"
             else row.get(score_field)
         ),
+        "rankingTransactionCount": (
+            row.get("leaderPriceTransactionCount6m")
+            if category == "price"
+            else row.get("transactionCount12m")
+        ),
         "rankingTransactionCount12m": (
-            row.get("leaderPriceTransactionCount12m")
+            row.get("leaderPriceTransactionCount6m")
             if category == "price"
             else row.get("transactionCount12m")
         ),
@@ -920,9 +984,9 @@ def _rank_category(metrics, category, limit):
     rows = [row for row in metrics if _eligible(row, category)]
     if category == "price":
         rows.sort(key=lambda row: (
-            -float(row.get("leaderPrice12m") or 0),
+            -float(row.get("leaderPrice6m") or 0),
             -float(row.get("leaderPriceConfidenceScore") or 0),
-            -int(row.get("leaderPriceTransactionCount12m") or 0),
+            -int(row.get("leaderPriceTransactionCount6m") or 0),
             str(row.get("apartmentName") or ""),
         ))
     elif category == "leadership":
@@ -973,18 +1037,22 @@ def calculate_rankings_from_pairs(
         row["areaBucket"] = area_bucket_value
     _score_metrics(metrics, reference)
     rankings = {
-        category: _rank_category(metrics, category, max(1, min(int(limit or DEFAULT_LIMIT), 20)))
+        category: _rank_category(
+            metrics,
+            category,
+            max(1, min(int(limit or DEFAULT_LIMIT), MAX_RESULT_LIMIT)),
+        )
         for category in CATEGORY_FIELDS
     }
     trade_complex_count = sum(1 for row in metrics if row["transactionCount12m"] > 0)
     eligible_complex_count = sum(1 for row in metrics if row["transactionCount12m"] >= 2)
     leader_price_trade_complex_count = sum(
         1 for row in metrics
-        if row["leaderPriceTransactionCount12m"] > 0
+        if row["leaderPriceTransactionCount6m"] > 0
     )
     leader_price_eligible_complex_count = sum(
         1 for row in metrics
-        if row["leaderPriceTransactionCount12m"] >= 2
+        if row["leaderPriceTransactionCount6m"] >= 2
     )
     leadership_eligible_complex_count = sum(
         1 for row in metrics
@@ -1006,6 +1074,7 @@ def calculate_rankings_from_pairs(
         "leaderPriceBasisLabel": NATIONAL_AREA_LABEL,
         "calculationVersion": CALCULATION_VERSION,
         "lookbackMonths": 12,
+        "priceLookbackMonths": LEADER_PRICE_LOOKBACK_MONTHS,
         "stationDistanceBasis": (
             "카카오 Local API 좌표 기준 직선거리"
             f"(반경 {config.KAKAO_STATION_RADIUS_METERS / 1000:g}km 미탐지 시 거리 하한 반영)"
@@ -1116,7 +1185,10 @@ def get_leaders(
     response = {key: value for key, value in payload.items() if key != "rankings"}
     response["category"] = category
     response["categoryLabel"] = CATEGORY_LABELS[category]
-    response["items"] = (payload.get("rankings", {}).get(category) or [])[:max(1, min(int(limit or DEFAULT_LIMIT), 20))]
+    category_items = payload.get("rankings", {}).get(category) or []
+    response["items"] = category_items[
+        :max(1, min(int(limit or DEFAULT_LIMIT), MAX_RESULT_LIMIT))
+    ]
     response["warnings"] = list(payload.get("warnings") or [])
     if category == "price":
         if not int(payload.get("leaderPriceTradeComplexCount") or 0):

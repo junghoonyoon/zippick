@@ -757,6 +757,8 @@
     .candidate-map-fab svg { width:32px; height:32px; fill:currentColor }
     body.candidate-map-open .candidate-map-fab { display:none }
     body.candidate-map-open { overflow:hidden; overscroll-behavior:none }
+    body.leader-map-open { overflow:hidden; overscroll-behavior:none }
+    body.leader-map-open .leader-map-fab { display:none }
     .candidate-map-view[hidden] { display:none }
     .decision-list[hidden] { display:none !important }
     .candidate-map-view {
@@ -1490,7 +1492,10 @@
     }
     .candidate-detail-panel { max-height:min(86vh,780px) }
     .candidate-detail-sheet-heading { min-width:0 }
+    .candidate-detail-sheet .result-info-sheet-title,
+    .apt-report-sheet .result-info-sheet-title { display:flex; align-items:center; flex-wrap:wrap; gap:8px }
     .candidate-detail-sheet .result-info-sheet-title { font-size:18px; font-weight:850; line-height:1.3 }
+    .candidate-detail-title-area { color:#667085; font-size:.72em; font-weight:750; white-space:nowrap }
     .candidate-detail-sheet-meta { margin:7px 0 0; color:#7b8796; font-size:13px; font-weight:600; line-height:1.5; word-break:keep-all }
     .candidate-detail-sheet-content {
       min-height:0; overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
@@ -3145,8 +3150,10 @@
     .leader-winner-collapsible > .leader-winner-top:hover { background:linear-gradient(145deg,#f1f8ff,#fff 62%) }
     .leader-winner-collapsible > .leader-winner-top:focus-visible { outline:3px solid rgba(49,130,246,.24); outline-offset:-3px }
     .leader-rank-label { margin:0 0 9px; color:#3182f6; font-size:14px; font-weight:900 }
-    .leader-winner-name { margin:0; color:#191f28; font-size:27px; font-weight:950; line-height:1.28; letter-spacing:-.025em }
-    .leader-winner-sub { margin:8px 0 0; color:#667085; font-size:14px; font-weight:700 }
+    .leader-winner-name { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0; color:#191f28; font-size:27px; font-weight:950; line-height:1.28; letter-spacing:-.025em }
+    .leader-winner-name .apartment-status-badge { font-size:12px; letter-spacing:0 }
+    .leader-winner-sub { display:grid; gap:2px; margin:8px 0 0; color:#667085; font-size:14px; font-weight:700 }
+    .leader-meta-detail { display:block }
     .leader-value-score {
       display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 8px; margin:12px 0 0;
       color:#667085; font-size:13px; font-weight:750; line-height:1.45;
@@ -3205,7 +3212,10 @@
     .leader-list-item[aria-expanded="true"] { background:#f8fbff }
     .leader-list-rank { color:#8b95a1; font-size:19px; font-weight:900; text-align:center }
     .leader-list-copy { display:grid; gap:6px; min-width:0 }
+    .leader-list-name-row { display:flex; align-items:center; gap:7px; min-width:0 }
     .leader-list-name { display:block; overflow:hidden; color:#191f28; font-size:17px; font-weight:900; text-overflow:ellipsis; white-space:nowrap }
+    .leader-list-name-row .apartment-status-badge { min-height:20px; padding:2px 6px; font-size:11px }
+    .leader-list-location { display:grid; gap:2px; min-width:0; color:#667085; font-size:13px; font-weight:650; line-height:1.4 }
     .leader-list-meta { display:block; color:#667085; font-size:13px; font-weight:700; line-height:1.4 }
     .leader-list-area { color:#344054; font-weight:900; white-space:nowrap }
     .leader-list-value-score { color:#1267d8; font-weight:900 }
@@ -3376,7 +3386,14 @@
       .leader-title-row { align-items:flex-start; gap:8px }
       .leader-price-help { margin-top:7px }
       .leader-price-help-popover { right:0; left:auto }
-      .leader-filter-card { grid-template-columns:1fr; padding:0 }
+      .leader-filter-card,
+      .leader-filter-card[data-region-depth="3"] {
+        grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0;
+      }
+      .leader-filter-card[data-region-depth="3"] #leaderSigunguField { grid-column:1 / -1 }
+      .leader-field { gap:6px }
+      .leader-field label { font-size:13px }
+      .leader-field select { min-height:48px; padding-right:28px; padding-left:12px; font-size:15px }
       .leader-submit { grid-column:1 / -1 }
       .leader-winner-top { grid-template-columns:minmax(0,1fr) 88px; gap:14px; padding:22px 20px 18px }
       .leader-score { width:88px; height:88px }
@@ -3523,7 +3540,7 @@
             <summary aria-label="대장아파트 실거래 기준 보기">i</summary>
             <div class="leader-price-help-popover">
               <strong>전용 84㎡ 실제 거래만 비교해요</strong>
-              <p>최근 12개월의 전용 84.00㎡ 이상 85.00㎡ 미만 정상 거래만 사용합니다.</p>
+              <p>최근 6개월의 전용 84.00㎡ 이상 85.00㎡ 미만 정상 거래만 사용합니다.</p>
               <p>59㎡·77㎡·104㎡ 등 다른 면적의 거래는 포함하거나 84㎡ 가격으로 환산하지 않습니다.</p>
               <p>전용 84㎡ 거래가 2건 미만인 단지는 기본 대장에서 제외합니다.</p>
             </div>
@@ -3550,13 +3567,37 @@
       <details class="leader-method">
         <summary>어떻게 대장을 고르나요?</summary>
         <div class="leader-method-copy">
-          <p>최근 12개월의 전용 84.00㎡ 이상 85.00㎡ 미만 정상 거래만 사용합니다.</p>
-          <p>가격·거래량·거래 회전율·신뢰도·상승률을 모두 이 전용 84㎡ 실제 거래로 계산합니다.</p>
+          <p>거래가격 순위와 가격 신뢰도는 최근 6개월의 전용 84.00㎡ 이상 85.00㎡ 미만 정상 거래로 계산합니다.</p>
+          <p>거래 유동성과 상승률은 흐름이 끊기지 않도록 기존 12개월 이상 거래 자료를 함께 사용합니다.</p>
           <p>다른 면적을 84㎡ 가격으로 환산하지 않으며, 전용 84㎡ 거래가 2건 미만인 단지는 기본 대장에서 제외합니다.</p>
           <p>상승률 좋은순은 거래가 5건 이상이고 최근 6개월 상승률을 계산할 수 있는 단지만 상위 10개를 보여줍니다.</p>
           <p>수집되지 않은 값은 임의로 채우지 않고 점수에서 제외하며, 화면에 데이터 부족을 표시합니다.</p>
         </div>
       </details>
+      <button class="candidate-map-fab leader-map-fab" id="leaderMapFab" type="button" aria-label="지역 대장 지도 보기" title="지역 대장 지도 보기" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 2a7 7 0 0 0-7 7c0 5.15 6.16 11.72 6.42 12a.8.8 0 0 0 1.16 0C12.84 20.72 19 14.15 19 9a7 7 0 0 0-7-7Zm0 9.65A2.65 2.65 0 1 1 12 6.35a2.65 2.65 0 0 1 0 5.3Z"/>
+        </svg>
+      </button>
+      <section class="candidate-map-view leader-map-view" id="leaderMapView" role="dialog" aria-modal="true" aria-labelledby="leaderMapTitle" hidden>
+        <header class="candidate-map-header">
+          <div class="candidate-map-conditions">
+            <span class="candidate-map-condition-title" id="leaderMapTitle">지역 대장 지도</span>
+            <div class="candidate-map-condition-copy">
+              <span class="candidate-map-condition-shortcut"><span class="candidate-map-condition-label">지역</span><strong id="leaderMapRegion"></strong></span>
+            </div>
+          </div>
+          <button class="candidate-map-close" id="leaderMapClose" type="button" aria-label="지역 대장 목록으로 돌아가기"></button>
+        </header>
+        <div class="candidate-map-toolbar">
+          <span class="candidate-map-condition-label">전용 84㎡ 실거래 순위</span>
+        </div>
+        <div class="candidate-map-shell">
+          <div class="candidate-map-canvas" id="leaderMapCanvas" aria-label="지역 대장 단지 위치"></div>
+          <div class="candidate-map-state" id="leaderMapState" role="status" aria-live="polite"></div>
+          <aside class="candidate-map-preview" id="leaderMapPreview" data-candidate-map-preview aria-live="polite" hidden></aside>
+        </div>
+      </section>
     </div>
 
     <div class="app-view" id="conditionView" role="tabpanel" aria-labelledby="budgetViewTab">
@@ -3972,6 +4013,13 @@
     const leaderSubmit = $("leaderSubmit");
     const leaderReferenceCaption = $("leaderReferenceCaption");
     const leaderResult = $("leaderResult");
+    const leaderMapFab = $("leaderMapFab");
+    const leaderMapView = $("leaderMapView");
+    const leaderMapClose = $("leaderMapClose");
+    const leaderMapRegion = $("leaderMapRegion");
+    const leaderMapCanvas = $("leaderMapCanvas");
+    const leaderMapState = $("leaderMapState");
+    const leaderMapPreview = $("leaderMapPreview");
     const viewTabs = [...document.querySelectorAll("[data-view]")];
     const conditionFlow = $("conditionFlow");
     const conditionFlowButtons = [...conditionFlow.querySelectorAll("[data-condition-stage]")];
@@ -4085,6 +4133,11 @@
     let currentLeaderPayload = null;
     let leaderWinnerCollapsed = false;
     const expandedLeaderRanks = new Set();
+    let leaderMap = null;
+    let leaderMapEntries = [];
+    let leaderMapRenderGeneration = 0;
+    let leaderMapReturnScrollY = 0;
+    let leaderMapTrigger = null;
     const purchasePowerStorageKey = "realEstateSearch.purchasePower.v1";
     const listingReportOwnerStorageKey = "realEstateSearch.listingReportOwner.v1";
     let areaDisplayUnit = "sqm";
@@ -4565,6 +4618,7 @@
     let candidateConfidenceFilter = false;
     let budgetSort = "budget_near";
     let candidateViewMode = "list";
+    let candidateMapOrigin = "budget";
     const CANDIDATE_PAGE_SIZE = 10;
     let candidateVisibleCount = CANDIDATE_PAGE_SIZE;
     let candidateMap = null;
@@ -5042,9 +5096,9 @@
 
     function leaderAdjustmentHtml(item) {
       const area = Number(item.leaderRepresentativeArea);
-      const actualPrice = Number(item.leaderRepresentativeMedianPrice12m);
+      const actualPrice = Number(item.leaderRepresentativeMedianPrice6m ?? item.leaderRepresentativeMedianPrice12m);
       if (!Number.isFinite(area) || !Number.isFinite(actualPrice)) return "";
-      return `<span class="leader-adjustment-note"><b>전용 84㎡ 실제 거래</b> · 중앙면적 ${esc(leaderAreaText(area))}㎡ · 중위가 ${esc(leaderPriceText(actualPrice))} · 면적 환산 없음</span>`;
+      return `<span class="leader-adjustment-note"><b>최근 6개월 전용 84㎡ 실제 거래</b> · 중앙면적 ${esc(leaderAreaText(area))}㎡ · 중위가 ${esc(leaderPriceText(actualPrice))} · 면적 환산 없음</span>`;
     }
 
     function leaderGrowthText(value) {
@@ -5059,6 +5113,16 @@
       if (score === "-") return "";
       if (compact) return `<span class="leader-list-value-score">가성비 ${esc(score)}점</span> · `;
       return `<p class="leader-value-score"><span>가성비 점수</span><strong>${esc(score)}점</strong></p>`;
+    }
+
+    function leaderMetaHtml(item) {
+      const completion = Number(item.completionYear)
+        ? `${Number(item.completionYear)}년 준공`
+        : (item.status || "준공연도 미확인");
+      const households = Number(item.householdCount)
+        ? `${Number(item.householdCount).toLocaleString("ko-KR")}세대`
+        : "세대수 미확인";
+      return `<span class="leader-meta-detail">${esc(completion)} · ${esc(households)}</span>`;
     }
 
     const GYEONGGI_DISTRICT_CITY_PREFIXES = ["고양", "부천", "성남", "수원", "안산", "안양", "용인"];
@@ -5148,7 +5212,7 @@
           ? `반경 ${(stationLowerBound / 1000).toLocaleString("ko-KR")}km 내 역 없음`
           : "";
       const components = [
-        [`${item.leaderPriceBasisLabel || "전용 84㎡ 실거래 중위가"} 가격 백분위`, item.scores?.price, "미반영"],
+        [`${item.leaderPriceBasisLabel || "최근 6개월 전용 84㎡ 실거래 중위가"} 가격 백분위`, item.scores?.price, "미반영"],
         ["상승률 순위", item.scores?.leadership, "비교 거래 부족"],
         ["거래 유동성", item.scores?.liquidity, "미반영"],
         ["연식", item.scores?.age, "준공일 없음"],
@@ -5173,23 +5237,21 @@
       const isValueRanking = payload.category === "value";
       const areaTarget = leaderAreaText(payload.areaTarget || item.leaderPriceAdjustmentTargetArea || 84);
       const scoreTitle = isPriceLeader
-        ? `전용 ${areaTarget}㎡ 실거래`
+        ? `최근 6개월 · 전용 ${areaTarget}㎡`
         : isGrowthRanking
           ? "6개월 상승률"
           : isValueRanking
             ? `전용 ${areaTarget}㎡ 실거래`
             : `${payload.categoryLabel || ""} 점수`;
       const metric = isPriceLeader
-        ? leaderPriceText(item.leaderPrice12m)
+        ? leaderPriceText(item.leaderPrice6m ?? item.leaderPrice12m)
         : isGrowthRanking
           ? leaderGrowthText(item.return6m)
           : isValueRanking
-            ? leaderPriceText(item.leaderPrice12m)
+            ? leaderPriceText(item.leaderPrice6m ?? item.leaderPrice12m)
             : leaderScoreText(item.score);
       const displayName = item.marketLeaderName || item.apartmentName;
-      const location = displayName !== item.apartmentName
-        ? `${item.apartmentName} · ${item.dong || item.address || ""}`
-        : (item.dong || item.address || "");
+      const meta = leaderMetaHtml(item);
       const region = item.sigungu || payload.region?.sigungu || "";
       const rankLabel = isPriceLeader
         ? (rank === 1 ? `${region} 대장아파트` : `${region} 대장 ${rank}위`)
@@ -5198,7 +5260,7 @@
           : (rank === 1
               ? `${region} ${payload.categoryLabel || ""} 대장`
               : `${region} ${payload.categoryLabel || ""} ${rank}위`);
-      return { rank, isPriceLeader, isGrowthRanking, isValueRanking, scoreTitle, metric, displayName, location, rankLabel };
+      return { rank, isPriceLeader, isGrowthRanking, isValueRanking, scoreTitle, metric, displayName, meta, rankLabel };
     }
 
     function leaderRankCardHtml(item, payload, { expanded = false, collapsible = false, collapsed = false } = {}) {
@@ -5215,10 +5277,10 @@
         <${topTag} class="leader-winner-top"${topAttributes}>
           <div>
             <p class="leader-rank-label">${esc(view.rankLabel)}</p>
-            <${headingTag} class="leader-winner-name">${esc(view.displayName)}</${headingTag}>
-            <p class="leader-winner-sub">${esc(view.location)}</p>
+            <${headingTag} class="leader-winner-name"><span>${esc(view.displayName)}</span>${apartmentStatusBadgeHtml(item.status)}</${headingTag}>
+            <p class="leader-winner-sub">${view.meta}</p>
             ${leaderValueScoreHtml(item, payload)}
-            <span class="leader-confidence" data-level="${esc(item.rankingConfidenceLevel || item.confidenceLevel || "")}">데이터 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")} · 기준 거래 ${esc(item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건</span>
+            <span class="leader-confidence" data-level="${esc(item.rankingConfidenceLevel || item.confidenceLevel || "")}">데이터 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")} · 기준 거래 ${esc(item.rankingTransactionCount ?? item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건</span>
             ${view.isPriceLeader ? leaderAdjustmentHtml(item) : ""}
             ${collapsible ? `<span class="leader-winner-toggle-label"><span class="leader-winner-toggle-label-open">상세 접기</span><span class="leader-winner-toggle-label-closed">상세 펼치기</span><span class="leader-winner-toggle-icon" aria-hidden="true"></span></span>` : ""}
           </div>
@@ -5234,16 +5296,178 @@
       </${rootTag}>`;
     }
 
+    function resetLeaderMap() {
+      leaderMapRenderGeneration += 1;
+      leaderMapEntries.forEach(entry => entry.overlay?.setMap?.(null));
+      leaderMapEntries = [];
+      leaderMap?.setDraggable?.(false);
+      leaderMapCanvas.replaceChildren();
+      leaderMap = null;
+      leaderMapPreview.hidden = true;
+      leaderMapPreview.innerHTML = "";
+    }
+
+    function setLeaderMapState(title, copy, loading = false) {
+      leaderMapState.hidden = false;
+      leaderMapState.innerHTML = `${loading ? '<span class="candidate-map-loader" aria-hidden="true"></span>' : ""}<strong>${esc(title)}</strong><span>${esc(copy)}</span>`;
+    }
+
+    function leaderMapCandidate(item) {
+      const priceEok = Number(item.leaderPrice12m || 0) / 10000;
+      return {
+        ...item,
+        name:item.apartmentName || item.marketLeaderName || "",
+        region:item.sigungu || "",
+        legalDong:item.dong || "",
+        displayAreaLabel:`${Number(item.rank || 0)}위 · 전용 84㎡`,
+        areaLabel:`${Number(item.rank || 0)}위 · 전용 84㎡`,
+        latestDealPriceEok:priceEok,
+        recentMedianPriceEok:priceEok,
+        recent6AveragePriceEok:priceEok,
+        tradeLookbackMonths:12,
+      };
+    }
+
+    function leaderMapMarkerHtml(item, selected = false) {
+      return candidateMapMarkerHtml(leaderMapCandidate(item), selected);
+    }
+
+    function selectLeaderMapItem(item, options = {}) {
+      const selectedRank = Number(item.rank || 0);
+      leaderMapEntries.forEach(entry => {
+        const selected = Number(entry.item.rank || 0) === selectedRank;
+        entry.element.classList.toggle("is-selected", selected);
+        entry.element.innerHTML = leaderMapMarkerHtml(entry.item, selected);
+        entry.element.setAttribute("aria-pressed", String(selected));
+        entry.overlay.setZIndex(selected ? 10 : 1);
+      });
+      const view = leaderRankPresentation(item, currentLeaderPayload || {});
+      const candidate = leaderMapCandidate(item);
+      leaderMapPreview.innerHTML = `<button class="candidate-map-sheet-handle" type="button" data-candidate-map-sheet-handle aria-expanded="false" aria-label="지도 상세 카드 펼치기"></button>
+        <div class="candidate-map-sheet-content">
+          <div class="candidate-top">
+            <div class="budget-main">
+              <span class="leader-rank-label">${esc(view.rankLabel)}</span>
+              <span class="budget-name">${esc(view.displayName)}</span>
+              <span class="budget-meta">${view.meta}</span>
+            </div>
+          </div>
+          <div class="budget-side">
+            ${candidatePriceComparisonHtml(candidate)}
+            <ul class="leader-reasons">${(item.reasons || []).slice(0, 3).map(reason => `<li>${esc(reason)}</li>`).join("")}</ul>
+          </div>
+        </div>
+        <div class="candidate-map-sheet-actions">
+          <button class="leader-detail-button" type="button" data-leader-map-detail data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-area-target="${esc(currentLeaderPayload?.areaTarget || item.leaderPriceAdjustmentTargetArea || "")}">단지 상세보기</button>
+        </div>`;
+      leaderMapPreview.hidden = false;
+      setupCandidateMapPreviewSheet(leaderMapPreview);
+      const selectedEntry = leaderMapEntries.find(entry => Number(entry.item.rank || 0) === selectedRank);
+      if (options.pan !== false && selectedEntry) leaderMap?.panTo(selectedEntry.position);
+    }
+
+    async function renderLeaderMap() {
+      const rows = Array.isArray(currentLeaderPayload?.items) ? currentLeaderPayload.items : [];
+      resetLeaderMap();
+      const generation = leaderMapRenderGeneration;
+      if (!rows.length || leaderMapView.hidden) return;
+      setLeaderMapState("지역 대장 위치를 불러오고 있어요", "순위 단지의 주소를 지도에서 확인하고 있어요.", true);
+      try {
+        const kakaoApi = await loadKakaoMapApi();
+        if (generation !== leaderMapRenderGeneration || leaderMapView.hidden) return;
+        leaderMap = new kakaoApi.maps.Map(leaderMapCanvas, {
+          center:new kakaoApi.maps.LatLng(37.5665, 126.9780),
+          level:7,
+          draggable:true,
+          scrollwheel:true,
+        });
+        const geocoder = new kakaoApi.maps.services.Geocoder();
+        const located = (await Promise.all(rows.map(item => geocodeCandidate(geocoder, kakaoApi, item)))).filter(Boolean);
+        if (generation !== leaderMapRenderGeneration || leaderMapView.hidden) return;
+        if (!located.length) {
+          setLeaderMapState("지도에 표시할 주소를 찾지 못했어요", "목록에서 단지 주소를 확인해 주세요.");
+          return;
+        }
+        const bounds = new kakaoApi.maps.LatLngBounds();
+        located.forEach(entry => {
+          const position = new kakaoApi.maps.LatLng(entry.latitude, entry.longitude);
+          bounds.extend(position);
+          const marker = document.createElement("button");
+          const view = leaderRankPresentation(entry.item, currentLeaderPayload || {});
+          marker.type = "button";
+          marker.className = "candidate-map-marker";
+          marker.innerHTML = leaderMapMarkerHtml(entry.item);
+          marker.setAttribute("aria-label", `${view.rank}위 ${view.displayName}, ${view.scoreTitle} ${view.metric}`);
+          marker.setAttribute("aria-pressed", "false");
+          const mapEntry = { item:entry.item, position, element:marker, overlay:null };
+          marker.addEventListener("click", event => {
+            event.stopPropagation();
+            selectLeaderMapItem(mapEntry.item);
+          });
+          mapEntry.overlay = new kakaoApi.maps.CustomOverlay({
+            map:leaderMap,
+            position,
+            content:marker,
+            yAnchor:1.2,
+          });
+          leaderMapEntries.push(mapEntry);
+        });
+        if (located.length > 1) leaderMap.setBounds(bounds);
+        else {
+          leaderMap.setCenter(leaderMapEntries[0].position);
+          leaderMap.setLevel(4);
+        }
+        leaderMapState.hidden = true;
+        selectLeaderMapItem(located[0].item, { pan:false });
+        requestAnimationFrame(() => leaderMap?.relayout());
+      } catch (error) {
+        if (generation !== leaderMapRenderGeneration) return;
+        const missingKey = error?.code === "MAP_KEY_MISSING";
+        setLeaderMapState(
+          missingKey ? "지도 사용을 위한 키가 필요해요" : "지도를 불러오지 못했어요",
+          missingKey
+            ? "설정.txt에 카카오지도키를 추가한 뒤 앱을 다시 실행해 주세요."
+            : "카카오 개발자 사이트의 JavaScript 키와 등록 도메인을 확인해 주세요.",
+        );
+      }
+    }
+
+    function openLeaderMap() {
+      if (!currentLeaderPayload?.items?.length) return;
+      leaderMapReturnScrollY = window.scrollY;
+      leaderMapTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : leaderMapFab;
+      leaderMapRegion.textContent = [leaderSido.value, leaderSigungu.value].filter(Boolean).join(" ");
+      leaderMapView.hidden = false;
+      document.body.classList.add("leader-map-open");
+      requestAnimationFrame(() => {
+        leaderMapClose.focus({ preventScroll:true });
+        void renderLeaderMap();
+      });
+    }
+
+    function closeLeaderMap(options = {}) {
+      if (leaderMapView.hidden) return;
+      leaderMapView.hidden = true;
+      document.body.classList.remove("leader-map-open");
+      resetLeaderMap();
+      window.scrollTo({ top:leaderMapReturnScrollY, behavior:"auto" });
+      if (options.restoreFocus !== false && leaderMapTrigger?.isConnected) {
+        requestAnimationFrame(() => leaderMapTrigger.focus({ preventScroll:true }));
+      }
+    }
+
     function renderLeaderResult(payload) {
       currentLeaderPayload = payload;
       const items = Array.isArray(payload?.items) ? payload.items : [];
       leaderReferenceCaption.textContent = `${leaderReferenceLabel(payload?.referenceMonth)} 기준`;
       leaderReferenceCaption.hidden = false;
       if (!items.length) {
+        leaderMapFab.hidden = true;
         const message = payload?.warnings?.[0] || "최근 거래가 부족해 신뢰도 높은 대장 단지를 선정하기 어렵습니다.";
         leaderResult.innerHTML = `<div class="leader-empty">${esc(message)}</div>`;
         return;
       }
+      leaderMapFab.hidden = false;
       const winner = items[0];
       const runners = items.slice(1);
       const warnings = [...new Set([...(payload.warnings || []), ...(winner.warnings || [])])];
@@ -5256,18 +5480,19 @@
           ${runners.map(item => {
             const expanded = expandedLeaderRanks.has(Number(item.rank));
             const metric = isPriceLeader
-              ? leaderPriceText(item.leaderPrice12m)
+              ? leaderPriceText(item.leaderPrice6m ?? item.leaderPrice12m)
               : isGrowthRanking
                 ? leaderGrowthText(item.return6m)
                 : isValueRanking
-                  ? leaderPriceText(item.leaderPrice12m)
+                  ? leaderPriceText(item.leaderPrice6m ?? item.leaderPrice12m)
                   : leaderScoreText(item.score);
             return `<div class="leader-list-row${expanded ? " is-expanded" : ""}">
               <button class="leader-list-item" id="leader-rank-toggle-${esc(item.rank)}" type="button" data-leader-expand-rank="${esc(item.rank)}" aria-expanded="${expanded}" aria-controls="leader-expanded-${esc(item.rank)}">
                 <span class="leader-list-rank">${esc(item.rank)}</span>
                 <span class="leader-list-copy">
-                  <span class="leader-list-name">${esc(item.apartmentName)}</span>
-                  <span class="leader-list-meta">${leaderValueScoreHtml(item, payload, { compact:true })}${isPriceLeader && item.leaderRepresentativeArea ? `<strong class="leader-list-area">전용 84㎡ 실거래</strong> · ` : ""}기준 거래 ${esc(item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건 · 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")}</span>
+                  <span class="leader-list-name-row"><span class="leader-list-name">${esc(item.apartmentName)}</span>${apartmentStatusBadgeHtml(item.status)}</span>
+                  <span class="leader-list-location">${leaderMetaHtml(item)}</span>
+                  <span class="leader-list-meta">${leaderValueScoreHtml(item, payload, { compact:true })}${isPriceLeader && item.leaderRepresentativeArea ? `<strong class="leader-list-area">최근 6개월 · 전용 84㎡ 실거래</strong> · ` : ""}기준 거래 ${esc(item.rankingTransactionCount ?? item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건 · 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")}</span>
                 </span>
                 <span class="leader-list-end"><strong class="leader-list-score">${esc(metric)}</strong><span class="leader-list-expand-icon" aria-hidden="true">${expanded ? "−" : "+"}</span></span>
               </button>
@@ -5300,11 +5525,12 @@
       leaderWinnerCollapsed = false;
       expandedLeaderRanks.clear();
       currentLeaderPayload = null;
+      leaderMapFab.hidden = true;
       leaderSubmit.disabled = true;
       leaderResult.innerHTML = `<div class="leader-loading">같은 지역의 전용 84㎡ 실거래를 비교하고 있어요.</div>`;
       try {
         const signal = leaderRequestController.signal;
-        const payload = await fetchLeaderRanking(activeLeaderCategory, 10, signal);
+        const payload = await fetchLeaderRanking(activeLeaderCategory, 30, signal);
         renderLeaderResult(payload);
       } catch (error) {
         if (error.name === "AbortError") return;
@@ -5321,6 +5547,7 @@
       activeView = ["region", "leader"].includes(view) ? view : "condition";
       const showingRegion = activeView === "region";
       const showingLeader = activeView === "leader";
+      if (!showingLeader && !leaderMapView.hidden) closeLeaderMap({ restoreFocus:false });
       conditionView.hidden = showingRegion || showingLeader;
       regionView.hidden = !showingRegion;
       leaderView.hidden = !showingLeader;
@@ -8126,6 +8353,20 @@
       return `${addressHtml} · ${esc(detail)}`;
     }
 
+    function candidateDetailAreaText(item) {
+      const label = String(item?.displayAreaLabel || item?.areaLabel || "").trim();
+      const match = label.match(/\d+(?:\.\d+)?/);
+      if (!match) return "";
+      const value = Number(match[0]);
+      return `${Number.isInteger(value) ? value : value.toFixed(1).replace(/\.0$/, "")}㎡`;
+    }
+
+    function candidateDetailTitleHtml(item, fallbackName = "") {
+      const name = candidateDisplayName(item || {}) || fallbackName;
+      const area = candidateDetailAreaText(item);
+      return `<span>${esc(name)}</span>${area ? `<span class="candidate-detail-title-area">${esc(area)}</span>` : ""}`;
+    }
+
     function candidateMapFloatingButtonHtml() {
       return `<button class="candidate-map-fab" type="button" data-candidate-view="map" aria-label="지도에서 후보 보기" title="지도에서 후보 보기">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -8143,7 +8384,14 @@
       </div>`;
     }
 
-    function candidateMapConditionItems(rows = []) {
+    function candidateMapConditionItems(rows = [], directSearch = false) {
+      if (directSearch) {
+        const item = rows[0] || {};
+        return [
+          { label:"단지", value:candidateDisplayName(item) || "검색한 아파트", tab:"preference", ariaLabel:"검색한 단지" },
+          { label:"전용면적", value:item.displayAreaLabel || item.areaLabel || "면적 확인 중", tab:"preference", ariaLabel:"선택한 전용면적" },
+        ];
+      }
       const compactMapHeader = window.matchMedia?.("(max-width:700px)")?.matches;
       const regionLabel = (compactMapHeader ? compactSelectionSummary("region") : selectionSummary("region")) || rows[0]?.region || "지역 상관없음";
       const budgetLabel = currentBudgetData?.budgetEok ? policyMoney(currentBudgetData.budgetEok) : "확인 중";
@@ -8164,23 +8412,24 @@
       </button>`;
     }
 
-    function candidateMapViewHtml(rows = [], showCashGapSort = false) {
-      const conditionItems = candidateMapConditionItems(rows);
+    function candidateMapViewHtml(rows = [], showCashGapSort = false, options = {}) {
+      const directSearch = options.directSearch === true;
+      const conditionItems = candidateMapConditionItems(rows, directSearch);
       return `<section class="candidate-map-view" data-candidate-map-view role="dialog" aria-modal="true" aria-labelledby="candidateMapTitle"${candidateViewMode === "map" ? "" : " hidden"}>
         <header class="candidate-map-header">
           <div class="candidate-map-conditions">
-            <span class="candidate-map-condition-title" id="candidateMapTitle">선택된 조건</span>
+            <span class="candidate-map-condition-title" id="candidateMapTitle">${directSearch ? "검색한 단지" : "선택된 조건"}</span>
             <div class="candidate-map-condition-copy">
               ${conditionItems.map(candidateMapConditionShortcutHtml).join("")}
             </div>
           </div>
           <div class="candidate-map-header-funding">
-            ${additionalFundingToggleHtml(includeAdditionalFundingCandidates)}
+            ${directSearch ? "" : additionalFundingToggleHtml(includeAdditionalFundingCandidates)}
           </div>
           <button class="candidate-map-close" type="button" data-candidate-map-close aria-label="목록으로 돌아가기"></button>
         </header>
         <div class="candidate-map-toolbar">
-          <div class="candidate-map-funding-option">${additionalFundingToggleHtml(includeAdditionalFundingCandidates)}</div>
+          ${directSearch ? "" : `<div class="candidate-map-funding-option">${additionalFundingToggleHtml(includeAdditionalFundingCandidates)}</div>`}
         </div>
         <div class="candidate-map-shell">
           <div class="candidate-map-canvas" data-candidate-map aria-label="후보 단지 위치"></div>
@@ -8191,10 +8440,10 @@
           </div>
           <aside class="candidate-map-preview" data-candidate-map-preview hidden></aside>
           <div class="candidate-map-map-tools">
-            <div class="candidate-map-legend" aria-label="지도 마커 범례">
+            ${directSearch ? "" : `<div class="candidate-map-legend" aria-label="지도 마커 범례">
               <span class="candidate-map-legend-item"><span class="candidate-map-legend-swatch is-short" aria-hidden="true"></span>추가 자금 필요</span>
               <span class="candidate-map-legend-item"><span class="candidate-map-legend-swatch" aria-hidden="true"></span>자금 적정</span>
-            </div>
+            </div>`}
             <p class="candidate-map-caption" data-candidate-map-caption hidden></p>
           </div>
         </div>
@@ -8215,8 +8464,8 @@
       if (mapView && mapView.parentElement === document.body) mapView.remove();
     }
 
-    function mountCandidateMapPortal() {
-      const mapView = budgetResultEl.querySelector("[data-candidate-map-view]");
+    function mountCandidateMapPortal(source = budgetResultEl) {
+      const mapView = source.querySelector("[data-candidate-map-view]");
       if (!mapView) return null;
       document.body.appendChild(mapView);
       mapView.addEventListener("click", handleBudgetResultClick);
@@ -8429,7 +8678,7 @@
           <div class="result-info-grabber" aria-hidden="true"></div>
           <div class="result-info-sheet-head">
             <div class="candidate-detail-sheet-heading">
-              <h4 class="result-info-sheet-title" id="candidateMapDetailTitle">${esc(candidateDisplayName(item))}</h4>
+              <h4 class="result-info-sheet-title" id="candidateMapDetailTitle">${candidateDetailTitleHtml(item)}</h4>
               <p class="candidate-detail-sheet-meta">${candidateListMetaHtml(item)}</p>
             </div>
             <button class="result-info-sheet-close" type="button" data-candidate-map-detail-close aria-label="검토 리포트 닫기"></button>
@@ -8792,7 +9041,11 @@
       if (openingMap) {
         requestAnimationFrame(() => {
           mapView?.querySelector("[data-candidate-map-close]")?.focus({ preventScroll:true });
-          renderCandidateMap(currentBudgetData?.visibleCandidates || currentBudgetData?.candidates || []);
+          const directRows = [...aptCandidateResults.values()];
+          const rows = candidateMapOrigin === "aptSearch"
+            ? (directRows.length ? directRows : currentAptSearchItems)
+            : currentBudgetData?.visibleCandidates || currentBudgetData?.candidates || [];
+          renderCandidateMap(rows);
         });
       } else {
         resetCandidateMap();
@@ -11135,7 +11388,7 @@
                   <div class="result-info-grabber" aria-hidden="true"></div>
                   <div class="result-info-sheet-head">
                     <div class="candidate-detail-sheet-heading">
-                      <h4 class="result-info-sheet-title" id="candidateDetailTitle${candidateIndex}">${esc(candidateDisplayName(item))}</h4>
+                      <h4 class="result-info-sheet-title" id="candidateDetailTitle${candidateIndex}">${candidateDetailTitleHtml(item)}</h4>
                       <p class="candidate-detail-sheet-meta">${candidateListMetaHtml(item)}</p>
                     </div>
                     <button class="result-info-sheet-close" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
@@ -11881,6 +12134,17 @@
           }
         });
       }
+      if (!leaderMapView.hidden) {
+        requestAnimationFrame(() => {
+          leaderMap?.relayout();
+          if (!leaderMapPreview.hidden) {
+            const mode = candidateMapUsesBottomSheet()
+              ? leaderMapPreview.dataset.mobileState || "collapsed"
+              : "expanded";
+            setupCandidateMapPreviewSheet(leaderMapPreview, { mode });
+          }
+        });
+      }
     });
     async function handleBudgetResultClick(event) {
       const candidateMapSheetHandle = event.target.closest("[data-candidate-map-sheet-handle]");
@@ -11902,6 +12166,7 @@
       }
       const candidateViewButton = event.target.closest("[data-candidate-view]");
       if (candidateViewButton) {
+        candidateMapOrigin = "budget";
         setCandidateViewMode(candidateViewButton.dataset.candidateView);
         return;
       }
@@ -12405,6 +12670,12 @@
     function closeAptSearchView() {
       closeAptAreaSheet(false);
       hideAptSuggest();
+      if (candidateMapOrigin === "aptSearch") {
+        candidateViewMode = "list";
+        document.body.classList.remove("candidate-map-open");
+        removeCandidateMapPortal();
+        resetCandidateMap();
+      }
       document.body.classList.remove("apt-search-mode");
       aptSearchLanding.hidden = true;
       aptSearchView.hidden = true;
@@ -12475,6 +12746,11 @@
         aptSearchResults.innerHTML = `<div class="apt-result-empty">‘${esc(query)}’와 일치하는 단지를 찾지 못했어요. 단지명 철자나 지역명을 함께 입력해 보세요.</div>`;
         return;
       }
+      candidateMapOrigin = "aptSearch";
+      candidateViewMode = "list";
+      removeCandidateMapPortal();
+      resetCandidateMap();
+      document.body.classList.remove("candidate-map-open");
       aptSearchResults.innerHTML = items.map((item, index) => `<article class="apt-result-card budget-candidate" data-apt-card-index="${index}" data-candidate-name="${esc(item.name)}">
         <div class="candidate-top">
           <div class="budget-main">
@@ -12495,7 +12771,8 @@
           </div>
           <button class="apt-result-report candidate-detail-trigger" type="button" data-apt-card-signal data-signal-tone="loading" data-apt-report-name="${esc(item.name)}" data-apt-report-region="${esc(item.region || "")}">검토 리포트 준비 중…</button>
         </div>
-      </article>`).join("");
+      </article>`).join("") + candidateMapFloatingButtonHtml() + candidateMapViewHtml(items, false, { directSearch:true });
+      mountCandidateMapPortal(aptSearchResults);
       currentAptSearchItems = items;
       // 가격·정책·시그널은 예산 검색과 동일한 공통 후보 응답에서 함께 받는다.
       void enrichAptAffordability(items);
@@ -13148,7 +13425,7 @@
       const basis = `${sampleText} · ${estimateMethod} · 신뢰도 ${estimate.confidence || "보통"} · ${data.areaBasis || "단지 거래 기준"}${fallbackNote}${ageWarning}`;
       return `<div class="budget-side">
           ${candidatePriceComparisonHtml(candidate)}
-          <div class="candidate-verdict">${candidateVerdictHtml(candidate, { trendExpanded:candidate.aptSearchTrendExpanded !== false })}</div>
+          <div class="candidate-verdict">${candidateVerdictHtml(candidate, { trendExpanded:candidate.aptSearchTrendExpanded === true })}</div>
         </div>
         ${aptPolicyImpactHtml(data, priceText)}
         <div class="apt-price-basis">예상 매수가 ${esc(priceText)} · ${esc(basis)} · 대출 한도는 금융회사 심사 전 참고값</div>`;
@@ -13399,7 +13676,7 @@
         signalEl.dataset.signalTone = state.tone;
       }
       if (slot) {
-        const trendExpanded = card.dataset.aptTrendExpanded !== "false";
+        const trendExpanded = card.dataset.aptTrendExpanded === "true";
         candidate.aptSearchTrendExpanded = trendExpanded;
         slot.innerHTML = aptAffordabilityHtml(data, item, {}, candidate);
         slot.classList.remove("is-loading");
@@ -13531,13 +13808,13 @@
       aptReportSheet.hidden = false;
       aptReportSheet.setAttribute("aria-hidden", "false");
       syncCandidateDetailScrollLock();
-      aptReportTitle.textContent = name;
+      aptReportTitle.innerHTML = candidateDetailTitleHtml(candidate, name);
       aptReportMeta.textContent = "";
       aptReportMeta.hidden = true;
       aptReportContent.innerHTML = `<div class="apt-result-empty">최근 실거래로 리포트를 만들고 있어요…</div>`;
       if (candidate) {
         const report = { ...candidate, peers:[] };
-        aptReportTitle.textContent = candidateDisplayName(report) || name;
+        aptReportTitle.innerHTML = candidateDetailTitleHtml(report, name);
         const metaParts = [
           report.displayRegion || report.region,
           report.households ? `${Number(report.households).toLocaleString()}세대` : "",
@@ -13555,7 +13832,7 @@
         // 비교군을 사용한다. 구버전 응답에서 peers가 빠져도 검색 후보 비교
         // UI로 잘못 폴백하지 않도록 직접 검색 리포트 타입을 유지한다.
         if (!Array.isArray(report.peers)) report.peers = [];
-        aptReportTitle.textContent = candidateDisplayName(report) || name;
+        aptReportTitle.innerHTML = candidateDetailTitleHtml(report, name);
         const metaParts = [
           report.regionLabel || report.region,
           report.households ? `${Number(report.households).toLocaleString()}세대` : "",
@@ -13618,6 +13895,12 @@
       if (!event.target.closest("#aptSearchBox")) hideAptSuggest();
     });
     aptSearchResults.addEventListener("click", async event => {
+      const candidateViewButton = event.target.closest("[data-candidate-view]");
+      if (candidateViewButton) {
+        candidateMapOrigin = "aptSearch";
+        setCandidateViewMode(candidateViewButton.dataset.candidateView);
+        return;
+      }
       const areaOption = event.target.closest("[data-apt-area]");
       if (areaOption) {
         const card = areaOption.closest("[data-apt-card-index]");
@@ -13761,6 +14044,35 @@
     leaderForm.addEventListener("submit", event => {
       event.preventDefault();
       void loadLeaderRanking();
+    });
+    leaderMapFab.addEventListener("click", openLeaderMap);
+    leaderMapClose.addEventListener("click", () => closeLeaderMap());
+    leaderMapView.addEventListener("pointerdown", handleCandidateMapPointerDown);
+    leaderMapView.addEventListener("pointermove", moveCandidateMapSheetDrag);
+    leaderMapView.addEventListener("pointerup", endCandidateMapSheetDrag);
+    leaderMapView.addEventListener("pointercancel", endCandidateMapSheetDrag);
+    leaderMapView.addEventListener("click", event => {
+      const sheetHandle = event.target.closest("[data-candidate-map-sheet-handle]");
+      if (sheetHandle) {
+        if (performance.now() < candidateMapSheetSuppressClickUntil) return;
+        const preview = sheetHandle.closest("[data-candidate-map-preview]");
+        setCandidateMapSheetExpanded(!preview?.classList.contains("is-expanded"), preview);
+        return;
+      }
+      const detail = event.target.closest("[data-leader-map-detail]");
+      if (!detail) return;
+      closeLeaderMap({ restoreFocus:false });
+      void runApartmentResultSearch({
+        name:detail.dataset.leaderDetailName || "",
+        region:detail.dataset.leaderDetailRegion || "",
+        households:Number(detail.dataset.leaderDetailHouseholds || 0),
+        preferredArea:detail.dataset.leaderDetailAreaTarget || "",
+      });
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape" || leaderMapView.hidden) return;
+      event.preventDefault();
+      closeLeaderMap();
     });
     leaderResult.addEventListener("click", event => {
       const winnerToggle = event.target.closest("[data-leader-winner-toggle]");
