@@ -79,7 +79,7 @@
     body.apt-search-mode .page { padding-top:24px }
     body.apt-search-mode .app-header { position:relative; z-index:80; align-items:center; flex-direction:row; gap:10px }
     body.apt-search-mode .brand { display:none }
-    body.apt-search-mode .app-header .leader-entry { display:none }
+    body.apt-search-mode .app-header .view-tabs { display:none }
     body.apt-search-mode .apt-search-page-back { display:grid }
     body.apt-search-mode .apt-search { max-width:none }
     body.apt-search-mode .apt-search form { height:50px; border-color:rgba(0,0,0,.06); background:#f5f6f8 }
@@ -267,6 +267,7 @@
     }
     .view-tab:hover { color:var(--ink) }
     .view-tab.active { background:#fff; color:var(--ink); box-shadow:0 1px 4px rgba(20,28,45,.1) }
+    .view-tab-label-short { display:none }
     .app-view[hidden] { display:none }
     .region-intro { margin-top:24px }
     .region-intro h1 { margin-top:0 }
@@ -1030,6 +1031,16 @@
       }
     }
     .candidate-sort-label { color:#475467; font-size:12px; font-weight:900 }
+    .candidate-filter-chips { display:flex; align-items:center; gap:8px; min-width:0; overflow-x:auto; scrollbar-width:none }
+    .candidate-filter-chips::-webkit-scrollbar { display:none }
+    .candidate-filter-chip {
+      flex:0 0 auto; min-height:38px; border:1px solid #e5e8eb; border-radius:11px; padding:0 14px;
+      background:#fff; color:#333d4b; font:inherit; font-size:14px; font-weight:750; white-space:nowrap; cursor:pointer;
+      box-shadow:0 1px 2px rgba(15,23,42,.03);
+    }
+    .candidate-filter-chip:hover { border-color:#90bfff; color:#1767c5 }
+    .candidate-filter-chip[aria-pressed="true"] { border:2px solid #3182f6; background:#fff; color:#3182f6; font-weight:850 }
+    .candidate-filter-chip:focus-visible { outline:3px solid rgba(49,130,246,.2); outline-offset:2px }
     .signal-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center }
     .signal-badges .badge { margin-left:0 }
     .signal-score { font-size:14px; font-weight:900; color:#1d4ed8; background:#eaf2fe; border-radius:999px; padding:6px 12px }
@@ -1132,14 +1143,19 @@
     .trend-status-copy { display:grid; gap:3px; min-width:0; text-align:left }
     .trend-status-copy strong { color:#344054; font-size:14px; font-weight:850; line-height:1.35 }
     .trend-status-copy span { color:#7b8491; font-size:13px; font-weight:650; line-height:1.45; word-break:keep-all }
-    .trend-toggle { flex:0 0 auto; margin:0; border:0; padding:0; background:none; color:#3182f6; font-size:15px; font-weight:800; cursor:pointer }
-    .trend-toggle:disabled { color:#a8b0bc; cursor:default }
-    .trend-toggle[data-trend-action="toggle"] { display:inline-flex; align-items:center; gap:5px }
-    .trend-toggle[data-trend-action="toggle"]::after {
-      content:"›"; display:inline-block; font-size:20px; font-weight:650; line-height:1;
-      transform:rotate(90deg); transition:transform .16s ease;
+    .trend-toggle {
+      display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; gap:7px; min-height:36px;
+      margin:0; border:1px solid #dfe3e8; border-radius:10px; padding:0 12px; background:#fff;
+      color:#3182f6; font-size:15px; font-weight:800; line-height:1.4; cursor:pointer;
+      transition:border-color .15s ease,background .15s ease,color .15s ease;
     }
-    .trend-toggle[data-trend-action="toggle"][aria-expanded="true"]::after { transform:rotate(-90deg) }
+    .trend-toggle:hover { border-color:#cdd3db; background:#f8f9fa; color:#1b64da }
+    .trend-toggle:disabled { border-color:#e7eaee; background:#fafbfc; color:#a8b0bc; cursor:default }
+    .trend-toggle[data-trend-toggle]::after {
+      content:""; display:block; width:7px; height:7px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
+      transform:translateY(-2px) rotate(45deg); transition:transform .16s ease;
+    }
+    .trend-toggle[data-trend-toggle][aria-expanded="true"]::after { transform:translateY(2px) rotate(225deg) }
     .spark-summary { display:grid; gap:7px; padding:4px 0 7px }
     .spark-summary-basis { color:#868e99; font-size:12px; font-weight:750; line-height:1.35 }
     .spark-summary-values { display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 16px }
@@ -1312,12 +1328,48 @@
     .policy-metric strong { display:block; margin-top:3px; color:#30343b; font-size:15px; font-weight:900; line-height:1.35; word-break:keep-all }
     .policy-impact-grid.policy-cash-grid { grid-template-columns:1fr; gap:0 }
     .policy-cash-scenario { display:flex; align-items:center; justify-content:space-between; gap:16px; border-bottom:1px solid #edf0f4 }
+    .policy-cash-scenario:last-child { border-bottom:0 }
     .policy-cash-scenario-copy { min-width:0; color:#30343b; font-size:15px; font-weight:900 }
+    .policy-cash-scenario-copy small { display:block; margin-top:4px; color:#8b95a1; font-size:11px; font-weight:700; line-height:1.4 }
     .policy-cash-scenario-result { display:grid; flex:0 0 auto; justify-items:end; gap:3px; text-align:right }
     .policy-cash-scenario-result strong { text-align:right }
     .policy-cash-scenario-result small { color:#6b7684; font-size:13px; font-weight:750; line-height:1.35 }
     .policy-cash-scenario-result small.risk { color:var(--neg) }
     .policy-cash-scenario-result small.up { color:var(--pos) }
+    .policy-metric span.policy-required-line { display:flex; align-items:baseline; justify-content:flex-end; gap:5px }
+    .policy-required-line .policy-required-label { color:#8b95a1; font-size:11px; font-weight:750; white-space:nowrap }
+    .policy-required-line strong { display:inline; margin-top:0 }
+    .asking-price-check { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #edf0f4; padding:14px 10px 2px }
+    .asking-price-check-form { display:flex; flex:1 1 auto; align-items:center; gap:9px; min-width:0 }
+    .asking-price-check-label { color:#30343b; font-size:15px; font-weight:900; white-space:nowrap }
+    .asking-price-check-controls { display:flex; align-items:center; justify-content:flex-end; gap:6px; min-width:0 }
+    .asking-price-input-shell { display:flex; flex:0 0 84px; align-items:center; width:84px; min-height:38px; border:1px solid #d8dee8; border-radius:10px; padding:0 9px; background:#fff }
+    .asking-price-input-shell:focus-within { border-color:#3182f6; box-shadow:0 0 0 3px rgba(49,130,246,.1) }
+    .asking-price-input-shell input { width:100%; min-width:0; border:0; outline:0; padding:0; background:transparent; color:#191f28; font:inherit; font-size:15px; font-weight:850; text-align:right }
+    .asking-price-input-shell input[type="number"] { appearance:textfield; -moz-appearance:textfield }
+    .asking-price-input-shell input[type="number"]::-webkit-inner-spin-button,
+    .asking-price-input-shell input[type="number"]::-webkit-outer-spin-button { margin:0; -webkit-appearance:none }
+    .asking-price-input-shell span { margin-left:4px; color:#6b7684; font-size:13px; font-weight:750 }
+    .asking-price-check-submit { min-height:38px; border:0; border-radius:10px; padding:0 12px; background:#3182f6; color:#fff; font-size:13px; font-weight:850; cursor:pointer }
+    .asking-price-check-submit:disabled { background:#9abcf0; cursor:wait }
+    .asking-price-check-result { flex:0 0 auto }
+    .asking-price-check-result[hidden] { display:none }
+    .asking-price-check-result .policy-metric { padding:0; border-radius:0 }
+    .condition-stage-results .asking-price-check-result .policy-metric {
+      display:grid; grid-template-columns:1fr; justify-content:initial; align-items:initial; justify-items:end; gap:3px;
+      border-bottom:0; padding:0; background:transparent;
+    }
+    .asking-price-check.is-ready .asking-price-check-submit { display:none }
+    .asking-price-check-error { color:var(--neg); font-size:13px; font-weight:750; line-height:1.45 }
+    @media (max-width:420px) {
+      .asking-price-check { gap:8px; padding-right:4px; padding-left:4px }
+      .asking-price-check-form { gap:7px }
+      .asking-price-check-label { font-size:13px }
+      .asking-price-check-controls { gap:4px }
+      .asking-price-input-shell { flex-basis:70px; width:70px; min-height:34px; padding:0 7px }
+      .asking-price-input-shell input { font-size:14px }
+      .asking-price-check-submit { min-height:34px; padding:0 8px; font-size:12px }
+    }
     .policy-impact-notes { display:grid; gap:5px; margin:10px 0 0; padding:0; list-style:none }
     .policy-impact-notes li { position:relative; padding-left:12px; color:#596273; font-size:13px; line-height:1.5 }
     .policy-impact-notes li::before { content:""; position:absolute; left:0; top:.62em; width:4px; height:4px; border-radius:50%; background:#d28a3b }
@@ -1432,13 +1484,6 @@
     .candidate-detail-trigger:hover,.candidate-detail-trigger[aria-expanded="true"] {
       border-color:#b0b8c1; background:#f7f8fa; color:#191f28;
     }
-    .candidate-signal-rank {
-      display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; min-width:34px; min-height:24px;
-      border-radius:999px; padding:0 9px; font-size:12px; font-weight:900; line-height:1; white-space:nowrap;
-    }
-    .candidate-signal-rank.is-rank-1 { background:#fff1c7; color:#8a5a00 }
-    .candidate-signal-rank.is-rank-2 { background:#edf1f5; color:#566273 }
-    .candidate-signal-rank.is-rank-3 { background:#ffeadf; color:#9b4b1f }
     .candidate-detail-score {
       display:inline-flex; align-items:center; justify-content:center; min-height:24px; border-radius:999px; padding:0 9px;
       background:#eff6ff; color:var(--blue); font-size:13px; font-weight:900; line-height:1; white-space:nowrap;
@@ -1478,6 +1523,48 @@
     .candidate-detail-sheet .signal-band { gap:15px }
     .candidate-detail-sheet .signal-report-lead { margin-top:4px }
     .signal-report { display:grid; gap:22px; color:#333d4b; word-break:keep-all }
+    .candidate-review-report { gap:0 }
+    .candidate-detail-sheet .candidate-review-report,.apt-report-sheet .candidate-review-report { gap:0 }
+    .candidate-review-head { padding:2px 0 12px }
+    .candidate-review-kicker { color:#3182f6; font-size:13px; font-weight:900; letter-spacing:.01em }
+    .candidate-review-verdict { display:inline-flex; align-items:center; min-height:27px; margin-top:0; border-radius:999px; padding:4px 9px; background:#edf4ff; color:#1d4ed8; font-size:13px; font-weight:900; line-height:1.3 }
+    .candidate-review-verdict[data-tone="risk"] { background:#fff0ed; color:#b42318 }
+    .candidate-review-verdict[data-tone="wait"] { background:#fff7e6; color:#805b16 }
+    .candidate-review-title { margin:6px 0 0; color:#191f28; font-size:30px; font-weight:900; letter-spacing:-.035em; line-height:1.25 }
+    .candidate-review-subtitle { margin:5px 0 0; color:#5d6877; font-size:15px; font-weight:700; line-height:1.55 }
+    .candidate-review-snapshot { display:flex; align-items:center; flex-wrap:wrap; gap:5px 12px; padding:6px 0 11px; border-bottom:1px solid #e8edf3; color:#8b95a1 }
+    .candidate-review-snapshot-item { display:inline-flex; align-items:baseline; flex-wrap:wrap; gap:3px 6px; min-width:0 }
+    .candidate-review-snapshot-item + .candidate-review-snapshot-item { border-left:1px solid #dfe4ea; padding-left:12px }
+    .candidate-review-snapshot-label { color:#8b95a1; font-size:11px; font-weight:800 }
+    .candidate-review-snapshot-value { overflow-wrap:anywhere; color:#667085; font-size:12px; font-weight:800; letter-spacing:0; line-height:1.4 }
+    .candidate-review-snapshot-note { color:#98a2b3; font-size:11px; font-weight:650; line-height:1.4 }
+    .candidate-review-section { padding:14px 0; border-bottom:1px solid #e8edf3 }
+    .candidate-review-section-head { display:flex; align-items:center; gap:8px }
+    .candidate-review-section-index { display:grid; place-items:center; flex:0 0 25px; width:25px; height:25px; border-radius:50%; background:#edf4ff; color:#3182f6; font-size:11px; font-weight:900 }
+    .candidate-review-section h4,.candidate-review-reference h4 { margin:0; color:#191f28; font-size:17px; font-weight:900; line-height:1.35 }
+    .candidate-review-section-lead { display:block; margin-top:8px; color:#191f28; font-size:20px; font-weight:900; letter-spacing:-.02em; line-height:1.4 }
+    .candidate-review-section p { margin:4px 0 0; color:#4e5968; font-size:15px; font-weight:650; line-height:1.65 }
+    .candidate-review-section.is-caution { margin-top:13px; border:0; border-radius:14px; padding:13px; background:#fff8ed }
+    .candidate-review-section.is-caution .candidate-review-section-index { background:#ffe8bf; color:#9a6700 }
+    .candidate-review-section.is-caution .candidate-review-section-lead { color:#5f4514 }
+    .candidate-review-section.is-caution p { color:#6f5728 }
+    @media (max-width:420px) {
+      .candidate-review-title { font-size:27px }
+      .candidate-review-snapshot { align-items:flex-start; gap:5px 12px }
+      .candidate-review-snapshot-item + .candidate-review-snapshot-item { border-left:0; padding-left:0 }
+    }
+    .candidate-review-reference { padding:14px 0 2px }
+    .candidate-review-reference-card { display:grid; gap:5px; margin-top:7px; border:1px solid #e3e8ef; border-radius:13px; padding:11px; background:#f8fafc }
+    .candidate-review-reference-score { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:7px; color:#4e5968; font-size:14px; font-weight:750 }
+    .candidate-review-reference-score strong { color:#303846; font-size:17px; font-weight:900 }
+    .candidate-review-reference-meta { display:grid; gap:5px; color:#6b7684; font-size:13px; font-weight:650; line-height:1.5 }
+    .candidate-review-reference-details { margin-top:7px; border-top:1px solid #e5e9ef; padding-top:7px }
+    .candidate-review-reference-details summary { color:#4e5968; font-size:14px; font-weight:850; cursor:pointer; list-style:none }
+    .candidate-review-reference-details summary::-webkit-details-marker { display:none }
+    .candidate-review-reference-details summary::after { content:" +"; color:#3182f6 }
+    .candidate-review-reference-details[open] summary::after { content:" −" }
+    .candidate-review-reference-details .signal-score-explainer { margin-top:10px }
+    .candidate-review-reference .signal-peer-section { margin-top:14px }
     .signal-report-title { position:relative; display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:0; color:#191f28; font-size:20px; font-weight:900; letter-spacing:-.025em; line-height:1.35 }
     .signal-report-info-button { display:inline-grid; place-items:center; flex:0 0 auto; width:22px; height:22px; border:1.5px solid #aeb7c2; border-radius:50%; padding:0; background:#fff; color:#7b8796; font:inherit; font-size:13px; font-weight:900; line-height:1; cursor:pointer }
     .signal-report-info-button:hover,.signal-report-info-button[aria-expanded="true"] { border-color:#3182f6; color:#1767c5; background:#f4f8ff }
@@ -2139,7 +2226,7 @@
       .form-step-head { gap:10px }
       .step-status { display:none }
       .power-result-value { font-size:26px }
-      .power-persistent { top:64px; width:100%; margin-top:4px; border-radius:15px; padding:11px 12px }
+      .power-persistent { top:64px; width:100%; margin-top:8px; border-radius:15px; padding:8px 12px }
       .power-persistent { gap:5px }
       .power-persistent-copy { overflow:hidden; flex-wrap:nowrap; gap:8px }
       .power-persistent-meta { gap:5px }
@@ -2476,8 +2563,8 @@
       #conditionView .condition-flow-item { min-width:0 }
       #conditionView .condition-flow-step { gap:6px; min-height:36px; font-size:clamp(14px,4.3vw,18px) }
       #conditionView .condition-flow-number { width:24px; height:24px; font-size:14px }
-      body.condition-stage-results #conditionView .condition-flow {
-        position:relative; top:auto; z-index:auto; padding:7px 0 5px;
+      body.condition-stage-results .power-persistent {
+        top:calc(var(--app-header-sticky-height) + 8px);
       }
       .condition-stage-power .hero-copy h1 { margin-top:38px; font-size:clamp(33px,10vw,39px) }
       .condition-stage-power .hero-copy .lead { font-size:17px }
@@ -2657,7 +2744,8 @@
     }
 
     /* Toss-inspired candidate results: keep every datum, simplify the reading order. */
-    .condition-stage-results #conditionView .condition-flow { margin-top:0 }
+    body.condition-stage-results #conditionView .condition-flow { display:none }
+    body.condition-stage-results .power-persistent { margin-top:8px }
     .condition-stage-results .budget-result { width:100%; max-width:760px; margin-right:auto; margin-left:auto }
     .condition-stage-results .budget-result { margin-top:24px }
     .condition-stage-results .budget-enrichment-note {
@@ -2669,7 +2757,7 @@
     .condition-stage-results .budget-enrichment-note::before { display:none }
     .condition-stage-results .budget-head { position:relative; z-index:18; overflow:visible; margin-bottom:0 }
     .condition-stage-results .budget-title {
-      display:block; overflow:visible; padding-bottom:6px; color:#1d1d1f; font-size:30px; font-weight:800; line-height:1.36; letter-spacing:0;
+      display:block; overflow:visible; padding-bottom:6px; color:#1d1d1f; font-size:21px; font-weight:800; line-height:1.36; letter-spacing:0;
       word-break:keep-all; overflow-wrap:normal;
     }
     .condition-stage-results .budget-title .title-count { color:inherit; font-weight:inherit }
@@ -2705,7 +2793,7 @@
     .condition-stage-results .result-condition-profile { margin:26px 0 30px }
     .condition-stage-results .candidate-options-bar {
       position:static;
-      width:100vw; display:flex; align-items:center; justify-content:space-between; gap:10px 18px;
+      width:100vw; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px 18px;
       margin:16px calc(50% - 50vw); padding:0 max(16px,calc((100vw - 760px) / 2));
       background:#f5f7f9;
     }
@@ -2777,23 +2865,37 @@
     .condition-stage-results .policy-metric span { color:#4e5968; font-size:15px; font-weight:700 }
     .condition-stage-results .policy-metric span.policy-cash-scenario-copy { color:#151b24; font-size:16px; font-weight:900 }
     .condition-stage-results .policy-metric strong { flex:0 0 auto; margin-top:0; color:#191f28; font-size:19px; text-align:right }
+    .condition-stage-results .asking-price-check { padding:14px 0 0 }
     .condition-stage-results .candidate-verdict {
       justify-self:stretch; width:100%; margin-top:14px; padding:0;
       background:transparent; color:#1d1d1f; font-size:15px; line-height:1.5;
     }
     .condition-stage-results .candidate-primary-actions { display:flex; flex-wrap:nowrap; align-items:center; width:100%; gap:8px; margin-top:20px }
     .condition-stage-results .naver-land-action {
-      flex:1 1 auto; width:auto; min-width:0; min-height:46px; margin:0; border:0; border-radius:14px; padding:0 18px;
+      flex:1 1 100%; width:100%; min-width:0; min-height:46px; margin:0; border:0; border-radius:14px; padding:0 18px;
       background:#3182f6; color:#fff; font-size:14px; font-weight:800;
     }
     .condition-stage-results .naver-land-action:hover { background:#1b64da }
     .condition-stage-results .compare-toggle,
     .condition-stage-results .candidate-primary-actions .youtube-action {
-      flex:0 0 auto; width:auto; max-width:100%; min-height:40px !important; border:0 !important; border-radius:12px !important; padding:0 12px !important;
+      flex:0 0 auto; width:auto; max-width:100%; min-height:46px !important; border:0 !important; border-radius:12px !important; padding:0 12px !important;
       background:#f2f4f6 !important; color:#4e5968 !important;
       font-size:13px; white-space:nowrap;
     }
     .condition-stage-results .compare-toggle[aria-pressed="true"] { background:#e8f3ff !important; color:#1b64da !important }
+    .condition-stage-results .candidate-secondary-actions {
+      display:grid; grid-template-columns:minmax(0,1.65fr) minmax(0,1fr); gap:8px; width:100%; margin-top:8px;
+    }
+    .condition-stage-results .candidate-secondary-actions .candidate-detail-trigger,
+    .condition-stage-results .candidate-secondary-actions .compare-toggle {
+      width:100%; min-width:0; min-height:48px !important; margin:0; border:1px solid #e1e5ea !important; border-radius:14px !important;
+      padding:0 12px !important; background:#fff !important; color:#4e5968 !important; font-size:14px; font-weight:800; white-space:nowrap;
+    }
+    .condition-stage-results .candidate-secondary-actions .candidate-detail-trigger:hover,
+    .condition-stage-results .candidate-secondary-actions .compare-toggle:hover {
+      border-color:#c8ced6 !important; background:#f9fafb !important; color:#333d4b !important;
+    }
+    .condition-stage-results .candidate-secondary-actions .compare-toggle[aria-pressed="true"] { border-color:#9fc8ff !important }
     .condition-stage-results .candidate-details { margin-top:20px; border:0; padding-top:16px }
     .condition-stage-results .candidate-details summary {
       justify-content:space-between; min-height:42px; border:0; border-radius:0; padding:0 2px; background:transparent;
@@ -2814,7 +2916,7 @@
     @media (max-width:700px) {
       .condition-stage-results .budget-result { margin-top:20px }
       .condition-stage-results .budget-enrichment-note { top:58px }
-      .condition-stage-results .budget-title { font-size:30px; line-height:1.38 }
+      .condition-stage-results .budget-title { font-size:21px; line-height:1.38 }
       .condition-stage-results .budget-head { align-items:flex-start; flex-direction:column; gap:18px }
       .candidate-map-fab {
         right:max(18px,env(safe-area-inset-right)); bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));
@@ -2869,10 +2971,11 @@
       .condition-stage-results .policy-summary-detail { font-size:16px }
       .condition-stage-results .result-condition-profile { margin:24px 0 30px }
       .condition-stage-results .candidate-options-bar {
-        align-items:center; flex-direction:row;
+        grid-template-columns:minmax(0,1fr); align-items:stretch; gap:10px;
         margin:16px calc(50% - 50vw); padding-right:max(16px,calc((100vw - 760px) / 2)); padding-left:max(16px,calc((100vw - 760px) / 2));
       }
-      .condition-stage-results .candidate-sort-group { align-self:center; margin-left:auto }
+      .condition-stage-results .candidate-filter-chips { width:100% }
+      .condition-stage-results .candidate-sort-group { width:100%; align-self:stretch; justify-content:flex-end; margin-left:0 }
       .condition-stage-results .additional-funding-toggle { min-height:36px }
       .condition-stage-results .candidate-sort-group { align-items:flex-start; padding-bottom:0 }
       .condition-stage-results .candidate-sort-trigger { min-height:24px; font-size:14px }
@@ -2900,7 +3003,7 @@
         background:#3182f6; box-shadow:none;
       }
       .condition-stage-results .compare-toggle,
-      .condition-stage-results .candidate-primary-actions .youtube-action { width:auto; min-height:40px !important }
+      .condition-stage-results .candidate-primary-actions .youtube-action { width:auto; min-height:48px !important }
       .condition-stage-results .decision-grid { grid-template-columns:1fr }
     }
 
@@ -2942,15 +3045,6 @@
     }
 
     /* 지역별 대장아파트 */
-    .leader-entry {
-      display:inline-flex; align-items:center; justify-content:center; gap:16px; flex:0 0 auto; min-height:42px;
-      margin:0; border:0; border-radius:0; padding:0;
-      background:transparent; color:#191f28; font-size:17px; font-weight:850; white-space:nowrap; cursor:pointer;
-    }
-    .leader-entry::before { content:""; width:1px; height:12px; background:#d8dde5 }
-    .leader-entry-label-short { display:none }
-    .leader-entry:hover { background:transparent; color:#1267d8 }
-    .leader-entry:focus-visible,
     .leader-detail-button:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:2px }
     .leader-view { padding-top:18px }
     .leader-heading { margin:28px 0 24px }
@@ -3221,13 +3315,10 @@
     @media (max-width:620px) {
       .app-header { display:flex; align-items:center; gap:12px }
       .app-header .brand { flex:0 0 auto }
-      .app-header .leader-entry {
-        flex:0 0 auto; min-height:36px; padding:0; font-size:17px;
-      }
-      .app-header .leader-entry::before { display:block }
-      .app-header .leader-entry::after { display:none }
+      .app-header .view-tabs { flex:0 1 auto; min-width:0; margin-right:auto; margin-left:auto; padding:3px }
+      .app-header .view-tab { min-width:0; min-height:36px; padding:0 10px; font-size:14px }
       .app-header .apt-search {
-        flex:0 0 46px; width:46px; max-width:46px; margin-left:auto;
+        flex:0 0 46px; width:46px; max-width:46px; margin-left:0;
       }
       .app-header .apt-search form {
         position:relative; justify-content:center; border:0; padding:0; background:transparent;
@@ -3248,8 +3339,8 @@
       }
       body.apt-search-mode .app-header .apt-search-icon { width:18px; height:18px; stroke:#8b95a1; stroke-width:2 }
       body.apt-search-mode .app-header .apt-search input { position:static; opacity:1; cursor:text }
-      .leader-entry-label-long { display:none }
-      .leader-entry-label-short { display:inline }
+      .view-tab-label-long { display:none }
+      .view-tab-label-short { display:inline }
       .leader-heading { margin-top:22px }
       .leader-heading h1 { font-size:35px }
       .leader-title-row { align-items:flex-start; gap:8px }
@@ -3278,6 +3369,9 @@
       .listing-report-price-grid { grid-template-columns:1fr }
       .listing-report-actions { margin:0 -18px -28px; padding:12px 18px calc(14px + env(safe-area-inset-bottom)) }
     }
+    .candidate-primary-actions > .compare-toggle {
+      flex:0 0 auto; width:fit-content; min-width:max-content; max-width:100%; justify-self:start;
+    }
     @media print {
       body * { visibility:hidden !important }
       .listing-review-sheet,.listing-review-sheet * { visibility:visible !important }
@@ -3303,10 +3397,16 @@
         <span class="brand-mark" aria-hidden="true"><span><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M9.5 19.5v-6h5v6"/></svg></span></span>
         <span class="brand-name">집픽</span>
       </button>
-      <button class="leader-entry" id="leaderEntry" type="button" aria-label="지역별 대장아파트 보기">
-        <span class="leader-entry-label-long">지역별 대장아파트</span>
-        <span class="leader-entry-label-short" aria-hidden="true">지역 대장</span>
-      </button>
+      <nav class="view-tabs" role="tablist" aria-label="집 찾기 방식">
+        <button class="view-tab active" id="budgetViewTab" type="button" role="tab" data-view="condition" aria-selected="true" aria-controls="conditionView" aria-label="내 예산으로 찾기">
+          <span class="view-tab-label-long">내 예산으로 찾기</span>
+          <span class="view-tab-label-short" aria-hidden="true">예산 찾기</span>
+        </button>
+        <button class="view-tab" id="leaderEntry" type="button" role="tab" data-view="leader" aria-selected="false" aria-controls="leaderView" aria-label="지역별 대장">
+          <span class="view-tab-label-long">지역별 대장</span>
+          <span class="view-tab-label-short" aria-hidden="true">지역 대장</span>
+        </button>
+      </nav>
       <button class="apt-search-page-back" id="aptSearchPageBack" type="button" aria-label="검색 화면 닫기">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
       </button>
@@ -3384,22 +3484,22 @@
       </div>
     </div>
 
-    <div class="app-view leader-view" id="leaderView" role="region" aria-labelledby="leaderPageTitle" hidden>
+    <div class="app-view leader-view" id="leaderView" role="tabpanel" aria-labelledby="leaderEntry" hidden>
       <header class="leader-heading">
         <p class="leader-reference-caption" id="leaderReferenceCaption" hidden></p>
         <div class="leader-title-row">
           <h1 id="leaderPageTitle">우리 지역 대장아파트를 한눈에</h1>
           <details class="leader-price-help">
-            <summary aria-label="대장아파트 가격 보정 기준 보기">i</summary>
+            <summary aria-label="대장아파트 실거래 기준 보기">i</summary>
             <div class="leader-price-help-popover">
-              <strong>단지별 대표평형을 84㎡ 상당가로 비교해요</strong>
-              <p>최근 12개월 정상 거래를 10㎡ 면적대로 묶고, 거래가 가장 많은 면적대를 그 단지의 대표평형으로 사용합니다.</p>
-              <p><b>보정식</b> · 실거래가 × (84 ÷ 실제면적)<sup>0.75</sup></p>
-              <p>84㎡는 공통 표시 기준일 뿐 84㎡ 거래만 고르는 조건이 아닙니다. 대표평형 거래가 2건 미만인 단지는 기본 대장에서 제외합니다.</p>
+              <strong>전용 84㎡ 실제 거래만 비교해요</strong>
+              <p>최근 12개월의 전용 84.00㎡ 이상 85.00㎡ 미만 정상 거래만 사용합니다.</p>
+              <p>59㎡·77㎡·104㎡ 등 다른 면적의 거래는 포함하거나 84㎡ 가격으로 환산하지 않습니다.</p>
+              <p>전용 84㎡ 거래가 2건 미만인 단지는 기본 대장에서 제외합니다.</p>
             </div>
           </details>
         </div>
-        <p class="lead">단지마다 가장 많이 거래된 대표평형을 같은 84㎡ 기준으로 환산해 비교해요.</p>
+        <p class="lead">모든 단지를 전용 84㎡ 실제 거래만으로 비교해요.</p>
       </header>
       <form class="leader-filter-card" id="leaderForm">
         <div class="leader-field">
@@ -3420,16 +3520,16 @@
       <details class="leader-method">
         <summary>어떻게 대장을 고르나요?</summary>
         <div class="leader-method-copy">
-          <p>최근 12개월의 전용 50㎡ 이상~200㎡ 미만 정상 거래를 10㎡ 면적대로 묶고, 거래가 가장 많은 면적대를 단지의 대표평형으로 정합니다.</p>
-          <p>대표평형 거래에 <b>(84 ÷ 실제면적)<sup>0.75</sup></b>를 적용해 84㎡ 상당가로 환산합니다. 84㎡라는 목표값은 순위를 바꾸지 않는 공통 표시 기준입니다.</p>
-          <p>대표평형 거래가 2건 미만이면 기본 대장에서 제외하고, 거래 수가 같으면 84㎡에 가까운 면적대를 사용합니다.</p>
+          <p>최근 12개월의 전용 84.00㎡ 이상 85.00㎡ 미만 정상 거래만 사용합니다.</p>
+          <p>가격·거래량·거래 회전율·신뢰도·상승률을 모두 이 전용 84㎡ 실제 거래로 계산합니다.</p>
+          <p>다른 면적을 84㎡ 가격으로 환산하지 않으며, 전용 84㎡ 거래가 2건 미만인 단지는 기본 대장에서 제외합니다.</p>
           <p>상승률 좋은순은 거래가 5건 이상이고 최근 6개월 상승률을 계산할 수 있는 단지만 상위 10개를 보여줍니다.</p>
           <p>수집되지 않은 값은 임의로 채우지 않고 점수에서 제외하며, 화면에 데이터 부족을 표시합니다.</p>
         </div>
       </details>
     </div>
 
-    <div class="app-view" id="conditionView" role="region" aria-label="내 조건">
+    <div class="app-view" id="conditionView" role="tabpanel" aria-labelledby="budgetViewTab">
       <div class="hero-copy" id="heroCopy">
         <h1>내 예산으로 살 수 있는 집,<br>한 번에 찾기</h1>
         <p class="lead">구매 가능한 금액부터 조건에 맞는 매물 후보까지 한 번에 계산하고 비교해보세요.</p>
@@ -3832,9 +3932,6 @@
     const conditionView = $("conditionView");
     const regionView = $("regionView");
     const leaderView = $("leaderView");
-    const leaderEntry = $("leaderEntry");
-    const leaderEntryLabelLong = leaderEntry.querySelector(".leader-entry-label-long");
-    const leaderEntryLabelShort = leaderEntry.querySelector(".leader-entry-label-short");
     const leaderForm = $("leaderForm");
     const leaderSido = $("leaderSido");
     const leaderCityField = $("leaderCityField");
@@ -4242,6 +4339,8 @@
           currentPurchasePower,
           showPolicyExcludedCandidates,
           includeAdditionalFundingCandidates,
+          candidateTradeAgeFilter,
+          candidateConfidenceFilter,
           budgetSort,
           candidateViewMode,
           candidateVisibleCount,
@@ -4281,7 +4380,13 @@
         savePurchasePowerForm();
         showPolicyExcludedCandidates = Boolean(saved.showPolicyExcludedCandidates);
         includeAdditionalFundingCandidates = saved.includeAdditionalFundingCandidates !== false;
-        budgetSort = saved.budgetSort || "budget_near";
+        candidateTradeAgeFilter = ["1m", "3m"].includes(saved.candidateTradeAgeFilter)
+          ? saved.candidateTradeAgeFilter
+          : "";
+        candidateConfidenceFilter = Boolean(saved.candidateConfidenceFilter);
+        budgetSort = ["budget_near", "price_low", "newer", "households", "transactions"].includes(saved.budgetSort)
+          ? saved.budgetSort
+          : "budget_near";
         candidateViewMode = saved.candidateViewMode === "map" ? "map" : "list";
         candidateVisibleCount = Math.max(
           CANDIDATE_PAGE_SIZE,
@@ -4300,6 +4405,8 @@
     let currentPurchasePower = null;
     let showPolicyExcludedCandidates = false;
     let includeAdditionalFundingCandidates = true;
+    let candidateTradeAgeFilter = "";
+    let candidateConfidenceFilter = false;
     let budgetSort = "budget_near";
     let candidateViewMode = "list";
     const CANDIDATE_PAGE_SIZE = 10;
@@ -4781,9 +4888,8 @@
     function leaderAdjustmentHtml(item) {
       const area = Number(item.leaderRepresentativeArea);
       const actualPrice = Number(item.leaderRepresentativeMedianPrice12m);
-      const target = Number(item.leaderPriceAdjustmentTargetArea);
-      if (!Number.isFinite(area) || !Number.isFinite(actualPrice) || !Number.isFinite(target)) return "";
-      return `<span class="leader-adjustment-note"><b>실거래 전용 ${esc(leaderAreaText(area))}㎡</b> 중위가 ${esc(leaderPriceText(actualPrice))} → ${esc(leaderAreaText(target))}㎡ 보정</span>`;
+      if (!Number.isFinite(area) || !Number.isFinite(actualPrice)) return "";
+      return `<span class="leader-adjustment-note"><b>전용 84㎡ 실제 거래</b> · 중앙면적 ${esc(leaderAreaText(area))}㎡ · 중위가 ${esc(leaderPriceText(actualPrice))} · 면적 환산 없음</span>`;
     }
 
     function leaderGrowthText(value) {
@@ -4887,7 +4993,7 @@
           ? `반경 ${(stationLowerBound / 1000).toLocaleString("ko-KR")}km 내 역 없음`
           : "";
       const components = [
-        [`${item.leaderPriceBasisLabel || "대표 평형 84㎡ 보정가"} 가격 백분위`, item.scores?.price, "미반영"],
+        [`${item.leaderPriceBasisLabel || "전용 84㎡ 실거래 중위가"} 가격 백분위`, item.scores?.price, "미반영"],
         ["상승률 순위", item.scores?.leadership, "비교 거래 부족"],
         ["거래 유동성", item.scores?.liquidity, "미반영"],
         ["연식", item.scores?.age, "준공일 없음"],
@@ -4912,11 +5018,11 @@
       const isValueRanking = payload.category === "value";
       const areaTarget = leaderAreaText(payload.areaTarget || item.leaderPriceAdjustmentTargetArea || 84);
       const scoreTitle = isPriceLeader
-        ? `${areaTarget}㎡ 보정가`
+        ? `전용 ${areaTarget}㎡ 실거래`
         : isGrowthRanking
           ? "6개월 상승률"
           : isValueRanking
-            ? `${areaTarget}㎡ 보정가`
+            ? `전용 ${areaTarget}㎡ 실거래`
             : `${payload.categoryLabel || ""} 점수`;
       const metric = isPriceLeader
         ? leaderPriceText(item.leaderPrice12m)
@@ -5006,7 +5112,7 @@
                 <span class="leader-list-rank">${esc(item.rank)}</span>
                 <span class="leader-list-copy">
                   <span class="leader-list-name">${esc(item.apartmentName)}</span>
-                  <span class="leader-list-meta">${leaderValueScoreHtml(item, payload, { compact:true })}${isPriceLeader && item.leaderRepresentativeArea ? `<strong class="leader-list-area">실거래 전용 ${esc(leaderAreaText(item.leaderRepresentativeArea))}㎡</strong> · ` : ""}기준 거래 ${esc(item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건 · 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")}</span>
+                  <span class="leader-list-meta">${leaderValueScoreHtml(item, payload, { compact:true })}${isPriceLeader && item.leaderRepresentativeArea ? `<strong class="leader-list-area">전용 84㎡ 실거래</strong> · ` : ""}기준 거래 ${esc(item.rankingTransactionCount12m ?? item.transactionCount12m ?? 0)}건 · 신뢰도 ${esc(item.rankingConfidenceLabel || item.confidenceLabel || "")}</span>
                 </span>
                 <span class="leader-list-end"><strong class="leader-list-score">${esc(metric)}</strong><span class="leader-list-expand-icon" aria-hidden="true">${expanded ? "−" : "+"}</span></span>
               </button>
@@ -5040,7 +5146,7 @@
       expandedLeaderRanks.clear();
       currentLeaderPayload = null;
       leaderSubmit.disabled = true;
-      leaderResult.innerHTML = `<div class="leader-loading">같은 지역의 대표평형 거래를 비교하고 있어요.</div>`;
+      leaderResult.innerHTML = `<div class="leader-loading">같은 지역의 전용 84㎡ 실거래를 비교하고 있어요.</div>`;
       try {
         const signal = leaderRequestController.signal;
         const payload = await fetchLeaderRanking(activeLeaderCategory, 10, signal);
@@ -5063,12 +5169,6 @@
       conditionView.hidden = showingRegion || showingLeader;
       regionView.hidden = !showingRegion;
       leaderView.hidden = !showingLeader;
-      leaderEntryLabelLong.textContent = showingLeader ? "내 예산으로 찾기" : "지역별 대장아파트";
-      leaderEntryLabelShort.textContent = showingLeader ? "예산 찾기" : "지역 대장";
-      leaderEntry.setAttribute(
-        "aria-label",
-        showingLeader ? "내 예산으로 찾기" : "지역별 대장아파트 보기",
-      );
       viewTabs.forEach(tab => {
         const selected = tab.dataset.view === activeView;
         tab.classList.toggle("active", selected);
@@ -6340,7 +6440,7 @@
       return regionalIndexValues(payload, [period])[0];
     }
 
-    // 월평균 실거래가, 지역 매매가격지수, 동·구 대표 평형 면적 보정 대장 가격을 첫 공통월
+    // 월평균 실거래가, 지역 매매가격지수, 동·구 전용 84㎡ 실거래 대장 가격을 첫 공통월
     // 100으로 맞춰 서로 단위가 다른 값의 상승률 흐름만 비교한다.
     function sparklineSeries(item) {
       const payload = item.roneEstimate;
@@ -6444,8 +6544,7 @@
       const representativeArea = numberOrNull(signals.leaderRepresentativeArea);
       const representativePrice = numberOrNull(signals.leaderRepresentativeMedianPrice12m);
       const targetArea = numberOrNull(signals.leaderPriceAdjustmentTargetArea) || 84;
-      const areaRange = targetArea === 59 ? "58~60㎡" : "83~85㎡";
-      const priceBasis = signals.leaderPriceBasisLabel || `전용 ${leaderAreaText(targetArea)}㎡ 실거래 보정가`;
+      const priceBasis = signals.leaderPriceBasisLabel || `전용 ${leaderAreaText(targetArea)}㎡ 실거래 중위가`;
       return `<details class="spark-leader-info">
         <summary aria-label="${esc(`${regionName} 대장아파트 산정식 보기`)}">
           <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -6455,14 +6554,14 @@
         </summary>
         <div class="spark-leader-formula">
           <strong>${esc(regionName)} 대장 · ${esc(leaderName)}</strong>
-          <p>${esc(regionName)}의 실제 전용 ${esc(areaRange)} 거래만 ${esc(leaderAreaText(targetArea))}㎡ 가격으로 보정해 ${candidateCount ? `${esc(candidateCount)}개 단지` : "단지별로"} 비교했어요.</p>
+          <p>${esc(regionName)}의 전용 84.00㎡ 이상 85.00㎡ 미만 실제 거래만으로 ${candidateCount ? `${esc(candidateCount)}개 단지` : "단지별로"} 비교했어요.</p>
           <dl class="spark-leader-score">
             ${Number.isFinite(representativeArea) && Number.isFinite(representativePrice) ? `<div><dt>실제 거래 중앙면적</dt><dd>전용 ${esc(leaderAreaText(representativeArea))}㎡ · ${esc(leaderPriceText(representativePrice))}</dd></div>` : ""}
             <div><dt>${esc(priceBasis)}</dt><dd>${esc(priceText)}</dd></div>
             <div><dt>해당 면적형 거래</dt><dd>${annualDeals ? `${esc(annualDeals)}건` : "확인 중"}</dd></div>
           </dl>
           ${households ? `<p>${esc(households.toLocaleString("ko-KR"))}세대</p>` : ""}
-          <span class="spark-leader-note">보정식: 실거래가 × (${esc(leaderAreaText(targetArea))} ÷ 실제면적)<sup>0.75</sup>. 다른 평형은 섞지 않으며, 해당 면적형 거래가 2건 미만인 단지는 제외해요.</span>
+          <span class="spark-leader-note">59㎡·77㎡·104㎡ 등 다른 면적은 환산하지 않으며, 전용 84㎡ 거래가 2건 미만인 단지는 제외해요.</span>
         </div>
       </details>`;
     }
@@ -7218,10 +7317,23 @@
       return code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 !== 0;
     }
 
+    function candidateChoiceFundingSeverity(gap) {
+      const value = Number(gap);
+      if (!Number.isFinite(value) || value >= 0) return "";
+      const purchaseCeiling = Number(currentBudgetData?.budgetEok || currentPurchasePower?.budgetEok || 0);
+      if (!(purchaseCeiling > 0)) return "unknown";
+      const shortageRatio = Math.abs(value) / purchaseCeiling;
+      if (shortageRatio <= .01) return "near";
+      if (shortageRatio <= .03) return "negotiate";
+      if (shortageRatio <= .10) return "burden";
+      return "high";
+    }
+
     function candidateChoiceFundingCost(item) {
       const impact = item.policyImpact || {};
       const scenarios = Array.isArray(impact.cashScenarios) ? impact.cashScenarios : [];
       const scenarioGap = scenario => {
+        if (scenario?.cashGapEok === null || scenario?.cashGapEok === undefined || scenario?.cashGapEok === "") return null;
         const value = Number(scenario?.cashGapEok);
         return Number.isFinite(value) ? value : null;
       };
@@ -7229,36 +7341,51 @@
       const recentAverage = scenarios.find(scenario => scenario?.type === "recent3_average");
       const latestGap = scenarioGap(latest);
       const recentAverageGap = scenarioGap(recentAverage);
-      if (latestGap != null && latestGap < 0 && recentAverageGap != null && recentAverageGap >= 0) {
-        return "최근 실거래 가격은 자금 범위를 넘지만 3개월 평균 수준이면 검토할 수 있어요";
-      }
-      if (recentAverageGap != null && recentAverageGap < 0 && latestGap != null && latestGap >= 0) {
-        return "3개월 평균 가격은 자금 범위를 넘어 최근 실거래 수준의 매물이어야 검토할 수 있어요";
-      }
       const negativeScenarios = scenarios
         .map(scenario => ({ scenario, gap:scenarioGap(scenario) }))
         .filter(row => row.gap != null && row.gap < 0)
         .sort((left, right) => left.gap - right.gap);
       const bindingScenario = negativeScenarios[0]?.scenario || null;
-      const bindingGap = negativeScenarios[0]?.gap;
+      const fallbackGap = impact.cashGapEok === null || impact.cashGapEok === undefined || impact.cashGapEok === ""
+        ? null
+        : Number(impact.cashGapEok);
+      const bindingGap = negativeScenarios[0]?.gap
+        ?? (Number.isFinite(fallbackGap) && fallbackGap < 0 ? fallbackGap : null);
+      const shortage = bindingGap == null ? null : Math.abs(bindingGap);
+      const shortageLabel = shortage == null ? "" : readableGapMoney(shortage);
+      const severity = candidateChoiceFundingSeverity(bindingGap);
       const loanLimit = Number(bindingScenario?.loanLimitEok || impact.estimatedLoanLimitEok || 0);
       const nearLoanLimit = value => {
         const limit = Number(value || 0);
         return loanLimit > 0 && limit > 0 && Math.abs(loanLimit - limit) <= .02;
       };
+      let cause = "";
       if (nearLoanLimit(impact.priceCapEok)) {
-        return "주담대 상한에 먼저 걸려 현재 가격대에서는 자기자금 부담이 커요";
+        cause = "주담대 상한 영향";
+      } else if (nearLoanLimit(impact.ltvLimitEok)) {
+        cause = "LTV 한도 영향";
       }
-      if (nearLoanLimit(impact.dsrLoanLimitEok)) {
-        return "소득 기준 대출한도가 먼저 막혀 현재 가격대에서는 자기자금 부담이 커요";
+      const withCause = message => cause ? `${message} · ${cause}` : message;
+      if (latestGap != null && latestGap < 0 && recentAverageGap != null && recentAverageGap >= 0) {
+        return withCause(`최근 실거래 기준 ${readableGapMoney(Math.abs(latestGap))} 조정 시 가능 · 3개월 평균이면 자금 조건 안`);
       }
-      if (nearLoanLimit(impact.ltvLimitEok)) {
-        return "LTV 한도가 먼저 걸려 현재 가격대에서는 자기자금 부담이 커요";
+      if (recentAverageGap != null && recentAverageGap < 0 && latestGap != null && latestGap >= 0) {
+        return withCause(`3개월 평균 기준 ${readableGapMoney(Math.abs(recentAverageGap))} 조정 필요 · 최근 실거래면 자금 조건 안`);
       }
-      if (bindingGap != null && Math.abs(bindingGap) <= .3) {
-        return "가격 협상이 돼야 자금 조건 안으로 들어오는 단지예요";
+      if (!shortageLabel) return withCause("추가 자금 규모 확인 필요");
+      if (severity === "near") {
+        return withCause(`매수 상한과 거의 맞음 · ${shortageLabel} 조정 시 가능`);
       }
-      return "현재 가격대보다 낮은 매물이 나와야 자금 조건에 맞아요";
+      if (severity === "negotiate") {
+        return withCause(`${shortageLabel} 가격 협상 필요`);
+      }
+      if (severity === "burden") {
+        return withCause(`매수 상한 대비 ${shortageLabel} 부족 · 가격 부담 있음`);
+      }
+      if (severity === "high") {
+        return withCause(`매수 상한 대비 ${shortageLabel} 부족 · 가격 부담 큼`);
+      }
+      return withCause(`추가 자금 ${shortageLabel} 필요`);
     }
 
     function candidateChoiceCost(item) {
@@ -7338,13 +7465,6 @@
       const exact = new Map([
         ["가격은 최근 2년 고점과 거의 비슷해요", "가격은 최근 2년 고점과 거의 비슷함"],
         ["주택담보대출 제한부터 확인해야 하는 단지예요", "주택담보대출 제한부터 확인 필요"],
-        ["최근 실거래 가격은 자금 범위를 넘지만 3개월 평균 수준이면 검토할 수 있어요", "최근 실거래 가격은 자금 범위를 넘지만 3개월 평균 수준이면 검토 가능"],
-        ["3개월 평균 가격은 자금 범위를 넘어 최근 실거래 수준의 매물이어야 검토할 수 있어요", "3개월 평균 가격은 자금 범위를 넘어 최근 실거래 수준의 매물이어야 검토 가능"],
-        ["주담대 상한에 먼저 걸려 현재 가격대에서는 자기자금 부담이 커요", "주담대 상한에 먼저 걸려 현재 가격대에서는 자기자금 부담 큼"],
-        ["소득 기준 대출한도가 먼저 막혀 현재 가격대에서는 자기자금 부담이 커요", "소득 기준 대출한도가 먼저 막혀 현재 가격대에서는 자기자금 부담 큼"],
-        ["LTV 한도가 먼저 걸려 현재 가격대에서는 자기자금 부담이 커요", "LTV 한도가 먼저 걸려 현재 가격대에서는 자기자금 부담 큼"],
-        ["가격 협상이 돼야 자금 조건 안으로 들어오는 단지예요", "가격 협상이 돼야 자금 조건 안으로 들어옴"],
-        ["현재 가격대보다 낮은 매물이 나와야 자금 조건에 맞아요", "현재 가격대보다 낮은 매물이 나와야 자금 조건에 맞음"],
         ["거래 공백 때문에 현재 가격을 확신하기 어려워요", "거래 공백 때문에 현재 가격을 확신하기 어려움"],
         ["최근 거래의 가격 편차가 커 적정 가격 판단은 어려워요", "최근 거래의 가격 편차가 커 적정 가격 판단은 어려움"],
         ["거래 표본이 적어 적정 가격 판단은 어려워요", "거래 표본이 적어 적정 가격 판단은 어려움"],
@@ -7376,13 +7496,22 @@
     function candidateChoiceSummaryLines(item) {
       const gains = candidateChoiceGains(item);
       const gainObject = candidateChoiceGainObject(gains);
+      const cash = candidateInsightCash(item);
+      const fundingStatus = String(item.policyImpact?.status || "");
+      const fundingSeverity = fundingStatus !== "restricted" && (fundingStatus === "short" || cash?.gap < 0)
+        ? candidateChoiceFundingSeverity(cash?.gap)
+        : "";
       const cost = candidateChoiceCost(item);
       const catalystSubject = candidateChoiceCatalystSubject(item);
       const trendSummary = candidateTrendSummary(item);
       const trendMessage = String(trendSummary?.message || "").trim();
       const lines = [];
       if (gainObject && cost) {
-        lines.push(`${gainObject} 얻는 대신 ${candidateChoiceCompactText(cost)}`);
+        if (["near", "negotiate"].includes(fundingSeverity)) {
+          lines.push(`${gains.join(" · ")} · ${candidateChoiceCompactText(cost)}`);
+        } else {
+          lines.push(`${gainObject} 얻는 대신 ${candidateChoiceCompactText(cost)}`);
+        }
       } else if (cost) {
         lines.push(candidateChoiceCompactText(cost));
       } else if (gainObject) {
@@ -7574,7 +7703,7 @@
       const trendControlEl = card?.querySelector("[data-trend-control]");
       if (trendControlEl) trendControlEl.innerHTML = candidateTrendControlHtml(item);
       const detailTriggerLabel = card?.querySelector("[data-candidate-signal-label]");
-      if (detailTriggerLabel) detailTriggerLabel.textContent = `최근 가격 흐름 · ${candidateSignalScoreLabel(item)}`;
+      if (detailTriggerLabel) detailTriggerLabel.textContent = "리포트 보기";
       const sparklineEl = card?.querySelector("[data-sparkline]");
       if (sparklineEl) {
         const html = candidateTrendPanelHtml(item);
@@ -8129,8 +8258,7 @@
             ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기, 새 탭으로 열기`)}
           </div>
           <button class="candidate-detail-trigger" type="button" data-candidate-map-detail-open aria-expanded="false">
-            ${candidateSignalRankBadgeHtml(item)}
-            <span data-candidate-signal-label>최근 가격 흐름 · ${esc(candidateSignalScoreLabel(item))}</span>
+            <span data-candidate-signal-label>검토 리포트</span>
           </button>
         </div>`;
     }
@@ -8140,7 +8268,7 @@
     }
 
     function candidateMapDetailSheetHtml(item) {
-      return `<button class="result-info-backdrop" type="button" data-candidate-map-detail-close aria-label="최근 가격·거래 흐름 닫기"></button>
+      return `<button class="result-info-backdrop" type="button" data-candidate-map-detail-close aria-label="검토 리포트 닫기"></button>
         <div class="result-info-panel candidate-detail-panel">
           <div class="result-info-grabber" aria-hidden="true"></div>
           <div class="result-info-sheet-head">
@@ -8148,7 +8276,7 @@
               <h4 class="result-info-sheet-title" id="candidateMapDetailTitle">${esc(candidateDisplayName(item))}</h4>
               <p class="candidate-detail-sheet-meta">${candidateListMetaHtml(item)}</p>
             </div>
-            <button class="result-info-sheet-close" type="button" data-candidate-map-detail-close aria-label="최근 가격·거래 흐름 닫기"></button>
+            <button class="result-info-sheet-close" type="button" data-candidate-map-detail-close aria-label="검토 리포트 닫기"></button>
           </div>
           <div class="candidate-detail-sheet-content">
             <div data-signal-report>${candidateSignalReportHtml(item)}</div>
@@ -8626,17 +8754,56 @@
       </label>`;
     }
 
+    function candidateConfidenceIsMediumOrHigher(row) {
+      const raw = String(row?.signals?.sampleConfidence || row?.estimatedPriceConfidence || "").toLowerCase();
+      if (["high", "medium", "높음", "보통"].includes(raw)) return true;
+      if (["low", "낮음"].includes(raw)) return false;
+      const recentCount = Number(row?.signals?.recentDealCount);
+      const count = Number.isFinite(recentCount) ? recentCount : Number(row?.transactionCount || 0);
+      return count >= 3;
+    }
+
+    function candidateSameAreaTradeAgeDays(row) {
+      const ages = [
+        candidateDealAgeDays(row?.latestDealDate),
+        candidateDealAgeDays(row?.signals?.latestDealDate),
+        row?.estimatedPriceAgeDays,
+        candidateDealAgeDays(row?.lastObservedDealDate),
+      ]
+        .filter(value => value !== null && value !== undefined && value !== "")
+        .map(Number)
+        .filter(value => Number.isFinite(value) && value >= 0);
+      return ages.length ? Math.min(...ages) : null;
+    }
+
+    function candidateMatchesActiveFilters(row) {
+      const ageDays = candidateSameAreaTradeAgeDays(row);
+      if (candidateTradeAgeFilter === "1m" && !(ageDays !== null && ageDays <= 31)) return false;
+      if (candidateTradeAgeFilter === "3m" && !(ageDays !== null && ageDays <= 92)) return false;
+      if (candidateConfidenceFilter && !candidateConfidenceIsMediumOrHigher(row)) return false;
+      return true;
+    }
+
+    function candidateFiltersHtml() {
+      const filters = [
+        ["trade_1m", "1개월 이내 거래", candidateTradeAgeFilter === "1m"],
+        ["trade_3m", "3개월 이내 거래", candidateTradeAgeFilter === "3m"],
+        ["confidence", "신뢰도 보통 이상", candidateConfidenceFilter],
+        ["funding_5", "추가 자금 +5%까지", includeAdditionalFundingCandidates],
+      ];
+      return `<div class="candidate-filter-chips" aria-label="후보 필터">
+        ${filters.map(([value, label, active]) => `<button class="candidate-filter-chip" type="button" data-candidate-filter="${value}" aria-pressed="${active}">${esc(label)}</button>`).join("")}
+      </div>`;
+    }
+
     function candidateSortHtml(activeSort, showCashGapSort, idSuffix = "") {
+      void showCashGapSort;
       const options = [
         ["budget_near", "구매력 상한 근접순"],
-        ["signal", "최근 가격·거래 흐름 점수 높은순"],
-        ["signal_low", "최근 가격·거래 흐름 점수 낮은순"],
         ["price_low", "최근 실거래가 낮은순"],
         ["newer", "신축순"],
         ["households", "세대수 많은순"],
-        ["transactions", "거래 많은순"],
-        ["latest", "최근 거래순"],
-        ...(showCashGapSort ? [["cash_gap", "추가 자금 적은순"]] : []),
+        ["transactions", "동일 면적 거래 많은순"],
       ];
       const activeLabel = options.find(([value]) => value === activeSort)?.[1] || options[0][1];
       const sheetId = `candidateSortSheet${idSuffix}`;
@@ -8660,10 +8827,16 @@
     }
 
     function sortCandidateRows(rows, sortKey, budgetEok) {
-      const missingLast = (value, fallback = Number.POSITIVE_INFINITY) => Number(value || 0) > 0 ? Number(value) : fallback;
-      const latestComparablePrice = row => missingLast(
-        row.latestDealPriceEok || row.lastObservedDealPriceEok || row.midPriceEok || row.estimatedMidPriceEok
-      );
+      const latestComparablePrice = row => {
+        const price = Number(
+          row.latestDealPriceEok ||
+          row.lastObservedDealPriceEok ||
+          row.midPriceEok ||
+          row.estimatedMidPriceEok ||
+          0
+        );
+        return price > 0 ? price : Number.POSITIVE_INFINITY;
+      };
       const hasBudgetComparablePrice = row => [
         row.midPriceEok,
         row.estimatedMidPriceEok,
@@ -8696,16 +8869,6 @@
           difference = Number(right.households || 0) - Number(left.households || 0);
         } else if (sortKey === "transactions") {
           difference = Number(right.transactionCount || 0) - Number(left.transactionCount || 0);
-        } else if (sortKey === "latest") {
-          difference = String(right.latestDealDate || "").localeCompare(String(left.latestDealDate || ""));
-        } else if (sortKey === "signal") {
-          difference = Number(right.signals?.score ?? -1) - Number(left.signals?.score ?? -1);
-        } else if (sortKey === "signal_low") {
-          const leftScore = left.signals?.score == null ? Number.POSITIVE_INFINITY : Number(left.signals.score);
-          const rightScore = right.signals?.score == null ? Number.POSITIVE_INFINITY : Number(right.signals.score);
-          difference = leftScore - rightScore;
-        } else if (sortKey === "cash_gap") {
-          difference = Math.abs(Number(left.policyImpact?.cashGapEok ?? -999)) - Math.abs(Number(right.policyImpact?.cashGapEok ?? -999));
         } else {
           const leftGap = budgetComparisonGap(left);
           const rightGap = budgetComparisonGap(right);
@@ -8805,7 +8968,7 @@
             </div>
             <div class="power-result-row">
               <span class="power-result-row-no">2</span>
-              <div class="power-result-row-copy"><span class="power-result-row-label">변동형 기준 예상 대출 한도</span><span class="power-result-row-meta">${esc(loanRateMeta)}</span></div>
+              <div class="power-result-row-copy"><span class="power-result-row-label">DSR 기준 예상 대출 한도</span><span class="power-result-row-meta">${esc(loanRateMeta)}</span></div>
               <strong class="power-result-row-value">${effectiveLoanLimit == null ? "금융사 확인" : `+ ${esc(policyMoney(effectiveLoanLimit))}`}</strong>
             </div>
             <div class="power-result-row">
@@ -9302,7 +9465,81 @@
       }
     }
 
-    function policyImpactHtml(impact) {
+    function askingPriceCheckHtml(item) {
+      if (!item?.name || !item?.region) return "";
+      const displayName = candidateDisplayName(item);
+      return `<div class="asking-price-check" data-asking-price-check>
+        <form class="asking-price-check-form" data-asking-price-form data-asking-price-region="${esc(item.region)}">
+          <span class="asking-price-check-label">확인한 매물가</span>
+          <span class="asking-price-check-controls">
+            <label class="asking-price-input-shell">
+              <input name="asking_price_eok" type="number" min="0.1" step="0.01" inputmode="decimal" placeholder="예: 9.2" aria-label="${esc(displayName)} 확인한 매물가">
+              <span>억</span>
+            </label>
+            <button class="asking-price-check-submit" type="submit">계산</button>
+          </span>
+        </form>
+        <div class="asking-price-check-result" data-asking-price-result aria-live="polite" hidden></div>
+      </div>`;
+    }
+
+    async function calculateAskingPrice(form) {
+      const input = form.querySelector('input[name="asking_price_eok"]');
+      const submit = form.querySelector(".asking-price-check-submit");
+      const check = form.closest("[data-asking-price-check]");
+      const result = check?.querySelector("[data-asking-price-result]");
+      const askingPrice = Number(input?.value || 0);
+      if (!input || !submit || !result || !askingPrice || askingPrice <= 0) {
+        input?.focus();
+        return;
+      }
+      const profile = aptPurchaseProfile();
+      if (!profile) {
+        result.hidden = false;
+        result.innerHTML = `<div class="asking-price-check-error">먼저 구매력 조건을 완성해 주세요.</div>`;
+        return;
+      }
+      submit.disabled = true;
+      submit.textContent = "계산 중";
+      check.classList.remove("is-ready");
+      result.hidden = true;
+      try {
+        const payload = await getJson("/api/asking-price-financing", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({
+            region:form.dataset.askingPriceRegion || "",
+            asking_price_eok:askingPrice,
+            profile,
+          }),
+        });
+        const cashGap = Number(payload.cashGapEok);
+        const hasCashGap = Number.isFinite(cashGap);
+        const gapText = !hasCashGap
+          ? ""
+          : cashGap < 0
+            ? `추가 자금 ${readableGapMoney(Math.abs(cashGap))}`
+            : cashGap > 0
+              ? `${readableGapMoney(cashGap)} 여유`
+              : "자기자금 충족";
+        const gapTone = cashGap < 0 ? "risk" : "up";
+        result.innerHTML = `<div class="policy-metric policy-cash-scenario-result">
+          <span class="policy-required-line"><small class="policy-required-label">자기자금</small><strong>${policyMoney(payload.requiredCashEok)} 필요</strong></span>
+          ${gapText ? `<small class="${gapTone}">${esc(gapText)}</small>` : ""}
+        </div>`;
+        result.hidden = false;
+        check.classList.add("is-ready");
+      } catch (error) {
+        check.classList.remove("is-ready");
+        result.hidden = false;
+        result.innerHTML = `<div class="asking-price-check-error">${esc(error.error || "매물가를 계산하지 못했어요.")}</div>`;
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "계산";
+      }
+    }
+
+    function policyImpactHtml(impact, item = null) {
       if (!impact) return "";
       const scenarios = Array.isArray(impact.cashScenarios) ? impact.cashScenarios : [];
       const scenarioRows = scenarios.map(scenario => {
@@ -9316,24 +9553,31 @@
               ? `${readableGapMoney(cashGap)} 여유`
               : "자기자금 충족";
         const gapTone = cashGap < 0 ? "risk" : "up";
+        const resultHtml = `<span class="policy-required-line">
+          <small class="policy-required-label">자기자금</small>
+          <strong>${policyMoney(scenario.requiredCashEok)} 필요</strong>
+        </span>`;
         return `<div class="policy-metric policy-cash-scenario">
-          <span class="policy-cash-scenario-copy">${esc(scenario.label || "실거래 기준")}</span>
-          <span class="policy-cash-scenario-result">
-            <strong>${policyMoney(scenario.requiredCashEok)} 필요</strong>
-            ${gapText ? `<small class="${gapTone}">${esc(gapText)}</small>` : ""}
+          <span class="policy-cash-scenario-copy">
+            ${esc(scenario.label || "실거래 기준")}
           </span>
+          <div class="policy-cash-scenario-result">
+            ${resultHtml}
+            ${gapText ? `<small class="${gapTone}">${esc(gapText)}</small>` : ""}
+          </div>
         </div>`;
       }).join("");
       const fallbackRow = `<div class="policy-metric policy-cash-scenario">
         <span class="policy-cash-scenario-copy">대표 실거래 기준</span>
-        <span class="policy-cash-scenario-result">
-          <strong>${policyMoney(impact.requiredCashEok)} 필요</strong>
-        </span>
+        <div class="policy-cash-scenario-result">
+          <span class="policy-required-line"><small class="policy-required-label">자기자금</small><strong>${policyMoney(impact.requiredCashEok)} 필요</strong></span>
+        </div>
       </div>`;
       return `<section class="policy-impact" aria-label="필요 자기자금">
         <div class="policy-impact-grid policy-cash-grid">
           ${scenarioRows || fallbackRow}
         </div>
+        ${askingPriceCheckHtml(item)}
       </section>`;
     }
 
@@ -9486,28 +9730,6 @@
       return item.marketInsightState === "loading" ? "갱신 중" : "점수 산정 불가";
     }
 
-    function assignCandidateSignalRanks(allRows = [], visibleRows = []) {
-      const universe = new Map();
-      [...allRows, ...visibleRows].forEach(row => {
-        if (row) universe.set(candidateIdentityKey(row), row);
-      });
-      universe.forEach(row => { delete row.signalRank; });
-      [...visibleRows]
-        .filter(row => row?.signals?.score !== null && Number.isFinite(Number(row?.signals?.score)))
-        .sort((left, right) => (
-          Number(right.signals.score) - Number(left.signals.score)
-          || String(left.name || "").localeCompare(String(right.name || ""), "ko")
-        ))
-        .slice(0, 3)
-        .forEach((row, index) => { row.signalRank = index + 1; });
-    }
-
-    function candidateSignalRankBadgeHtml(item) {
-      const rank = Number(item?.signalRank);
-      if (![1, 2, 3].includes(rank)) return "";
-      return `<span class="candidate-signal-rank is-rank-${rank}">${rank}위</span>`;
-    }
-
     function signalBadgesHtml(item) {
       const signals = item.signals;
       if (!signals) {
@@ -9533,8 +9755,8 @@
       const leaderCaption = signals.leaderName
         ? `<div class="signal-panel-caption signal-leader-caption">${
             signals.isRegionalLeader
-              ? `이 단지는 실제 ${esc(leaderAreaText(leaderAreaTarget))}㎡형 보정가 기준 ${esc(leaderRegion)} 대장이에요`
-              : `비교 기준: 실제 ${esc(leaderAreaText(leaderAreaTarget))}㎡형 보정가 1위 · ${esc(leaderRegion)} ${esc(signals.leaderName)}`
+              ? `이 단지는 전용 ${esc(leaderAreaText(leaderAreaTarget))}㎡ 실거래 기준 ${esc(leaderRegion)} 대장이에요`
+              : `비교 기준: 전용 ${esc(leaderAreaText(leaderAreaTarget))}㎡ 실거래 1위 · ${esc(leaderRegion)} ${esc(signals.leaderName)}`
           }</div>`
         : "";
       if (!hasScore) {
@@ -9824,7 +10046,7 @@
       </section>`;
     }
 
-    function candidateSignalReportHtml(item) {
+    function candidateLegacySignalReportHtml(item) {
       const signals = item.signals;
       const hasScore = signals?.score !== null && Number.isFinite(Number(signals?.score));
       if (!signals || !hasScore) {
@@ -9901,7 +10123,7 @@
         const hasDealCounts = Number.isFinite(recentDeals) && Number.isFinite(priorDeals);
         const dealsFell = hasDealCounts && recentDeals < priorDeals;
         const headline = volumeRising && !districtSlow
-          ? "가격과 거래가 함께 늘며 회복하고 있어요."
+          ? "가격과 거래량이 함께 증가하고 있어요."
           : dealsFell || districtSlow
             ? "가격은 오르고 있지만, 아직 힘 있는 상승세는 아니에요."
             : "가격이 이전 고점 방향으로 회복하고 있어요.";
@@ -9930,7 +10152,7 @@
       } else if (priceRising && volumeRising) {
         const flow = pattern === "steady_rise" && patternN
           ? `월간 ${esc(patternUp)}/${esc(patternN)}회 오르는 계단식 상승에 거래량까지 붙었어요.`
-          : "최근 가격과 거래량이 함께 늘어 상승 흐름이 보여요.";
+          : "최근 가격과 거래량이 함께 증가했어요.";
         const speed = districtFast ? ` 상승 속도도 ${esc(region)} 대표 단지들보다 빨라요.` : "";
         lead = `${flow}${speed}`;
       } else if (priceRising) {
@@ -9978,6 +10200,290 @@
       </section>`;
     }
 
+    function candidateReviewNumber(value) {
+      if (value === null || value === undefined || value === "") return Number.NaN;
+      return Number(value);
+    }
+
+    function candidateReviewDealCount(item, signals = item?.signals || {}) {
+      const recent = candidateReviewNumber(signals.recentDealCount);
+      if (Number.isFinite(recent) && recent >= 0) return recent;
+      const count = candidateReviewNumber(item?.transactionCount);
+      return Number.isFinite(count) && count >= 0 ? count : 0;
+    }
+
+    function candidateReviewTradeRecency(item) {
+      const ageDays = candidateInsightAgeDays(item);
+      const isRecent = ageDays !== null && ageDays <= 92;
+      const ageMonths = ageDays === null ? null : Math.max(1, Math.round(ageDays / 30));
+      return { ageDays, ageMonths, isRecent };
+    }
+
+    function candidateReviewGeneralOpinion(item) {
+      const signals = item?.signals || {};
+      const recency = candidateReviewTradeRecency(item);
+      const momentum = candidateReviewNumber(signals.momentumPct);
+      const districtDiff = candidateReviewNumber(signals.districtRelativePct);
+      const recentDeals = candidateReviewNumber(signals.recentDealCount);
+      const priorDeals = candidateReviewNumber(signals.priorDealCount);
+      const dealCount = candidateReviewDealCount(item, signals);
+      const comparisonName = signals.districtBasis === "district_top_households"
+        ? "같은 구 세대수 상위 단지"
+        : "같이 검색된 같은 구 단지";
+      const periodLabel = recency.isRecent ? "최근 6개월" : "지난 6개월";
+      const parts = [];
+
+      if (Number.isFinite(momentum)) {
+        const rate = Math.abs(momentum).toFixed(1).replace(/\.0$/, "");
+        parts.push(momentum > .05 || momentum < -.05
+          ? `${periodLabel} 동일 면적대 가격은 직전 6개월보다 ${rate}% ${momentum > 0 ? "올랐어요" : "내렸어요"}`
+          : `${periodLabel} 동일 면적대 가격은 직전 6개월과 거의 같아요`);
+      }
+      if (Number.isFinite(districtDiff)) {
+        const gap = Math.abs(districtDiff).toFixed(1).replace(/\.0$/, "");
+        if (districtDiff >= .5) parts.push(`${comparisonName}보다 상승률이 ${gap}%p 높아요`);
+        else if (districtDiff <= -.5) parts.push(`${comparisonName}보다 상승률이 ${gap}%p 낮아요`);
+        else parts.push(`${comparisonName}와 비슷한 흐름이에요`);
+      }
+      if (Number.isFinite(recentDeals) && Number.isFinite(priorDeals)) {
+        if (priorDeals > 0) {
+          const change = Math.round(((recentDeals / priorDeals) - 1) * 100);
+          if (change > 0) parts.push(`${periodLabel} 거래량도 직전 6개월보다 ${change}% 늘었어요`);
+          else if (change < 0) parts.push(`${periodLabel} 거래량은 직전 6개월보다 ${Math.abs(change)}% 줄었어요`);
+          else parts.push(`${periodLabel} 거래량은 직전 6개월과 같아요`);
+        } else if (recentDeals > 0) {
+          parts.push(`직전 6개월에는 거래가 없었지만 ${periodLabel}에는 ${recentDeals}건이 확인됐어요`);
+        }
+      }
+
+      const priceRising = Number.isFinite(momentum) && momentum >= .5;
+      const volumeRising = Number.isFinite(recentDeals) && Number.isFinite(priorDeals) && recentDeals > priorDeals;
+      let headline;
+      let interpretation;
+      if (!recency.isRecent) {
+        headline = "시장 흐름보다 현재 호가 확인이 먼저예요";
+        interpretation = recency.ageMonths
+          ? `마지막 거래가 약 ${recency.ageMonths}개월 전이라 당시 가격 흐름을 현재 시세로 보기는 어려워요. 지금 나온 매물 호가를 꼭 확인하세요.`
+          : "마지막 거래 시점을 확인하기 어려워 과거 가격 흐름을 현재 시세로 보기는 어려워요. 지금 나온 매물 호가를 꼭 확인하세요.";
+      } else if (priceRising && volumeRising) {
+        headline = dealCount >= 8 ? "가격과 거래량이 함께 증가하고 있어요" : "가격과 거래가 늘었지만 표본이 적어요";
+        interpretation = dealCount >= 8
+          ? "가격과 거래량이 같이 움직여 수요가 넓어지는 신호로 볼 수 있어요. 다만 앞으로도 오른다는 뜻은 아니에요."
+          : `동일 면적 거래가 ${dealCount}건뿐이라 실제 수요가 넓어졌다고 단정하긴 어려워요. 지금은 초기 신호로 보는 게 안전해요.`;
+      } else if (priceRising) {
+        headline = "가격은 오르지만 거래의 힘은 더 봐야 해요";
+        interpretation = "거래가 함께 늘지 않았다면 일부 거래가 전체 흐름을 끌어올렸을 수 있어요.";
+      } else if (Number.isFinite(momentum) && momentum <= -.5) {
+        headline = "아직 서두를 구간은 아니에요";
+        interpretation = "가격 하락이 멈추는지 다음 동일 면적 실거래까지 확인해보세요.";
+      } else {
+        headline = "시세보다 매물별 가격 차이가 더 중요해요";
+        interpretation = "뚜렷한 방향이 없어 층·향·수리 상태와 가격 협상 여부가 판단을 좌우해요.";
+      }
+      const evidence = parts.length ? `${parts.join(". ")}.` : "최근 실거래만으로 비교 단지 대비 가격과 거래 흐름을 충분히 설명하기 어려워요.";
+      return { headline, body:`${evidence} ${interpretation}` };
+    }
+
+    function candidateReviewPriceAnalysis(item) {
+      const recency = candidateReviewTradeRecency(item);
+      const estimate = item?.roneEstimate?.estimate || {};
+      const estimatedLow = Number(estimate.minPriceEok || item?.estimatedMinPriceEok || 0);
+      const estimatedHigh = Number(estimate.maxPriceEok || item?.estimatedMaxPriceEok || 0);
+      const fallbackLow = Number(item?.recentMinPriceEok || item?.minPriceEok || 0);
+      const fallbackHigh = Number(item?.recentMaxPriceEok || item?.maxPriceEok || 0);
+      const low = estimatedLow || fallbackLow;
+      const high = estimatedHigh || fallbackHigh;
+      const referencePrice = Number(item?.latestDealPriceEok || item?.lastObservedDealPriceEok || item?.midPriceEok || 0);
+      const hasEstimatedRange = Boolean(estimatedLow && estimatedHigh);
+
+      if (low && high) {
+        const basis = hasEstimatedRange
+          ? `${recency.isRecent ? "동일 면적대 최근 실거래" : "동일 면적대 과거 실거래"}와 거래 시점의 가격 흐름을 반영했어요`
+          : `${recency.isRecent ? "최근" : "마지막으로 확인된"} 동일 면적대 실거래를 기준으로 봤어요`;
+        const rangeLabel = recency.isRecent ? "최근 거래가격대" : "확인된 거래가격대";
+        const rangeText = `${transactionMoney(low)}~${transactionMoney(high)}`;
+        let status = "현재 매물가를 확인해 주세요";
+        let tone = "wait";
+        let headline = "현재 매물가격부터 확인해보세요";
+        let comparison = "현재 나온 매물 호가가 어느 위치인지 확인해야 판단할 수 있어요.";
+        if (!recency.isRecent) {
+          status = "호가 확인이 필요해요";
+          headline = recency.ageMonths
+            ? `마지막 거래가 약 ${recency.ageMonths}개월 전이라 호가를 확인해야 해요`
+            : "거래 시점이 불분명해 현재 호가를 확인해야 해요";
+          comparison = "실거래 이후 시장이 달라졌을 수 있어 지금 나온 매물 호가와 직접 비교해야 해요.";
+        } else if (referencePrice) {
+          if (referencePrice > high) {
+            status = "가격이 높은 편이에요";
+            tone = "risk";
+            headline = "지금 가격이라면 협상부터 해보세요";
+            comparison = `최근 확인 가격 ${transactionMoney(referencePrice)}은 최근 거래가격대보다 ${readableGapMoney(referencePrice - high)} 높아요. 층·향·수리 상태가 특별히 좋지 않다면 그대로 지불할 근거가 약해요.`;
+          } else if (referencePrice < low) {
+            status = "가격이 낮은 이유를 확인하세요";
+            tone = "wait";
+            headline = "가격은 낮지만 이유를 먼저 확인하세요";
+            comparison = `최근 확인 가격 ${transactionMoney(referencePrice)}은 최근 거래가격대보다 낮아요. 저층·하자·특수 거래인지 먼저 확인해야 해요.`;
+          } else {
+            status = "최근 시세와 비슷해요";
+            tone = "good";
+            headline = "최근 거래가격은 무리한 수준이 아니에요";
+            comparison = `최근 확인 가격 ${transactionMoney(referencePrice)}은 같은 면적대의 최근 거래가격과 비슷해요. 다만 실제 매물가는 층·향·수리 상태에 따라 달라질 수 있어요.`;
+          }
+        }
+        return { status, tone, headline, rangeText, body:`${rangeLabel}는 ${rangeText}예요. ${basis}. ${comparison}` };
+      }
+      if (referencePrice) {
+        return {
+          status:recency.isRecent ? "거래가 적어 판단이 어려워요" : "호가 확인이 필요해요",
+          tone:"wait",
+          headline:recency.isRecent ? "가격 하나만으로 적정 여부를 판단하긴 어려워요" : "마지막 거래가격보다 현재 호가가 중요해요",
+          rangeText:"산정 전",
+          body:`${recency.isRecent ? "최근 확인 가격" : "마지막으로 확인된 거래가격"}은 ${transactionMoney(referencePrice)}이에요. 비교할 거래가 적어 현재 매물 호가와 다음 실거래를 함께 봐야 해요.`,
+        };
+      }
+      return {
+        status:"현재 매물가를 확인해 주세요",
+        tone:"wait",
+        headline:"현재 가격부터 확인해야 해요",
+        rangeText:"자료 부족",
+        body:"동일 면적대 최근 거래가 부족해 최근 시세를 판단하기 어려워요. 현재 나온 매물가를 확인한 뒤 다시 비교해 주세요.",
+      };
+    }
+
+    function candidateReviewCaution(item) {
+      const signals = item?.signals || {};
+      const recency = candidateReviewTradeRecency(item);
+      const dealCount = candidateReviewDealCount(item, signals);
+      const confidenceLabels = { high:"높음", medium:"보통", low:"낮음" };
+      const rawConfidence = signals.sampleConfidence || item?.estimatedPriceConfidence;
+      const confidence = confidenceLabels[rawConfidence] || rawConfidence || (dealCount >= 8 ? "높음" : dealCount >= 3 ? "보통" : "낮음");
+      const estimate = item?.roneEstimate?.estimate || {};
+      const high = Number(estimate.maxPriceEok || item?.estimatedMaxPriceEok || item?.recentMaxPriceEok || item?.maxPriceEok || 0);
+      const cautions = [];
+      if (dealCount > 0) {
+        cautions.push(`${recency.isRecent ? "최근" : "지난"} 6개월 동일 면적 거래는 ${dealCount}건이고, 가격 추세의 표본 신뢰도는 ${confidence} 수준이에요.`);
+      } else {
+        cautions.push("지난 6개월 동일 면적 거래가 없어 과거 가격만으로 현재 시세를 판단하기 어려워요.");
+      }
+      if (high) {
+        cautions.push(`${transactionMoney(high)}을 넘으면 참고 범위를 벗어나요. 개별 매물의 장점이 분명하지 않다면 가격 협상을 먼저 검토하세요.`);
+      }
+      if (!recency.isRecent) {
+        cautions.push(recency.ageMonths
+          ? `마지막 거래가 약 ${recency.ageMonths}개월 전이라 실거래 가격을 현재 가격처럼 보기 어려워요. 현재 호가를 꼭 확인하세요.`
+          : "거래 시점을 확인하기 어려워 실거래 가격을 현재 가격처럼 보기 어려워요. 현재 호가를 꼭 확인하세요.");
+      }
+      if (signals.isRecentSurge) cautions.push("최근 3개월 급등 구간이라 호가가 실거래보다 앞서 있을 수 있어요.");
+      else if (signals.isAtPeak) cautions.push("최근 2년 고점 부근이라 직전 거래보다 더 낼 이유가 있는지 따져봐야 해요.");
+      else if (candidateReviewNumber(signals.momentumPct) <= -.5) cautions.push("하락 흐름이 이어지고 있어 다음 동일 면적 거래에서 가격이 안정되는지 확인하는 편이 안전해요.");
+      let headline = "계약 전에는 매물 상태를 한 번 더 비교하세요";
+      if (dealCount <= 4) headline = "표본이 적어 한두 건에도 흐름이 달라질 수 있어요";
+      if (signals.isRecentSurge) headline = "단기 급등 뒤 호가를 조심하세요";
+      else if (signals.isAtPeak) headline = "최근 2년 고점 부근이에요";
+      if (!recency.isRecent) headline = "실거래가 오래돼 현재 호가 확인이 필요해요";
+      return { headline, body:cautions.join(" "), confidence, dealCount };
+    }
+
+    function candidateReviewSnapshotHtml(item, price, caution) {
+      const signals = item?.signals || {};
+      const recency = candidateReviewTradeRecency(item);
+      const districtDiff = candidateReviewNumber(signals.districtRelativePct);
+      const momentum = candidateReviewNumber(signals.momentumPct);
+      const flowValue = Number.isFinite(districtDiff)
+        ? `${districtDiff > 0 ? "+" : ""}${districtDiff.toFixed(1).replace(/\.0$/, "")}%p`
+        : Number.isFinite(momentum)
+          ? `${momentum > 0 ? "+" : ""}${momentum.toFixed(1).replace(/\.0$/, "")}%`
+          : "자료 부족";
+      const flowNote = Number.isFinite(districtDiff)
+        ? "비교군 대비 상승률"
+        : recency.isRecent ? "최근 6개월 가격 변화" : "지난 6개월 가격 변화";
+      return `<div class="candidate-review-snapshot" aria-label="검토 결과 한눈에 보기">
+        <div class="candidate-review-snapshot-item">
+          <span class="candidate-review-snapshot-label">가격</span>
+          <strong class="candidate-review-snapshot-value">${esc(price.rangeText)}</strong>
+          <span class="candidate-review-snapshot-note">${esc(price.status)}</span>
+        </div>
+        <div class="candidate-review-snapshot-item">
+          <span class="candidate-review-snapshot-label">시장 흐름</span>
+          <strong class="candidate-review-snapshot-value">${esc(flowValue)}</strong>
+          <span class="candidate-review-snapshot-note">${esc(flowNote)}</span>
+        </div>
+        <div class="candidate-review-snapshot-item">
+          <span class="candidate-review-snapshot-label">신뢰도</span>
+          <strong class="candidate-review-snapshot-value">${esc(caution.confidence)}</strong>
+          <span class="candidate-review-snapshot-note">동일 면적 ${esc(caution.dealCount)}건</span>
+        </div>
+      </div>`;
+    }
+
+    function candidateReviewReferenceHtml(item) {
+      const signals = item?.signals || {};
+      const recency = candidateReviewTradeRecency(item);
+      const score = Number(signals.score);
+      const hasScore = signals.score !== null && Number.isFinite(score);
+      const recent = candidateReviewNumber(signals.recentDealCount);
+      const prior = candidateReviewNumber(signals.priorDealCount);
+      const comparisonCount = candidateReviewNumber(signals.districtComparisonCount);
+      const comparisonBasis = signals.districtBasis === "district_top_households"
+        ? "같은 구 세대수 상위 단지"
+        : "같이 검색된 같은 구 단지";
+      const countText = Number.isFinite(recent) && Number.isFinite(prior)
+        ? `거래 표본 · 직전 6개월 ${prior}건 / 최근 6개월 ${recent}건`
+        : `최근 6개월 동일 면적 거래 ${candidateReviewDealCount(item, signals)}건`;
+      const comparisonText = Number.isFinite(comparisonCount) && comparisonCount > 0
+        ? `비교군 · ${comparisonBasis} ${comparisonCount}곳`
+        : "비교군 · 현재 확인 가능한 유사 단지";
+      const flowLabel = recency.isRecent ? "최근 가격·거래 흐름" : "마지막 거래 기준 가격·거래 흐름";
+      return `<section class="candidate-review-reference" aria-label="검토 리포트 참고 정보">
+        <h4>참고 정보</h4>
+        <div class="candidate-review-reference-card">
+          <div class="candidate-review-reference-score">
+            <strong>${hasScore ? `${flowLabel} ${esc(score)}점` : `${flowLabel} 점수 미산정`}</strong>
+            ${hasScore ? `<span>· ${esc(signalTierLabel(score))}</span>` : ""}
+            <button class="signal-report-info-button" type="button" data-signal-definition-button aria-label="최근 가격·거래 흐름 지표 설명 보기" aria-expanded="false">i</button>
+            <span class="signal-report-info-tooltip" data-signal-definition-tooltip role="tooltip" hidden>최근 실거래의 가격과 거래량 변화를 보여주는 참고 지표예요. 매수를 추천하거나 미래 가격을 예측하는 점수는 아니에요.</span>
+          </div>
+          <div class="candidate-review-reference-meta">
+            <span>분석 기간 · ${recency.isRecent ? "최근" : "지난"} 6개월 가격과 직전 6개월 비교</span>
+            <span>${esc(countText)}</span>
+            <span>${esc(comparisonText)}</span>
+          </div>
+          ${hasScore ? `<details class="candidate-review-reference-details"><summary>점수 산정 근거 보기</summary>${candidateSignalScoreBreakdownHtml(item)}</details>` : ""}
+        </div>
+        ${candidateSignalPeersHtml(item)}
+      </section>`;
+    }
+
+    function candidateSignalReportHtml(item) {
+      const general = candidateReviewGeneralOpinion(item);
+      const price = candidateReviewPriceAnalysis(item);
+      const caution = candidateReviewCaution(item);
+      return `<section class="signal-report candidate-review-report" aria-label="${esc(candidateDisplayName(item))} 매수 검토 리포트">
+        <header class="candidate-review-head">
+          <span class="candidate-review-verdict" data-tone="${esc(price.tone)}">${esc(price.status)}</span>
+          <h3 class="candidate-review-title">${esc(general.headline)} ${esc(caution.headline)}</h3>
+          <p class="candidate-review-subtitle">${esc(price.headline)}</p>
+        </header>
+        ${candidateReviewSnapshotHtml(item, price, caution)}
+        <section class="candidate-review-section">
+          <div class="candidate-review-section-head"><span class="candidate-review-section-index">01</span><h4>종합 의견</h4></div>
+          <strong class="candidate-review-section-lead">${esc(general.headline)}</strong>
+          <p>${esc(general.body)}</p>
+        </section>
+        <section class="candidate-review-section">
+          <div class="candidate-review-section-head"><span class="candidate-review-section-index">02</span><h4>가격 의견</h4></div>
+          <strong class="candidate-review-section-lead">${esc(price.headline)}</strong>
+          <p>${esc(price.body)}</p>
+        </section>
+        <section class="candidate-review-section is-caution">
+          <div class="candidate-review-section-head"><span class="candidate-review-section-index">03</span><h4>주의할 점</h4></div>
+          <strong class="candidate-review-section-lead">${esc(caution.headline)}</strong>
+          <p>${esc(caution.body)}</p>
+        </section>
+        ${candidateReviewReferenceHtml(item)}
+      </section>`;
+    }
+
     function candidateDisplayName(item) {
       return item.displayName || item.name || "";
     }
@@ -9995,7 +10501,7 @@
         const button = card.querySelector("[data-compare-name]");
         if (button) {
           button.setAttribute("aria-pressed", String(isSelected));
-          button.textContent = isSelected ? "비교에서 빼기" : "+ 비교 담기";
+          button.textContent = isSelected ? "비교에서 빼기" : "비교 담기";
         }
       });
       compareCart.hidden = selected.length === 0;
@@ -10270,13 +10776,14 @@
       const needsPriceRows = data.allMatches ? allRows.filter(row => !row.policyImpact) : [];
       const defaultRows = [...possibleRows, ...needsPriceRows];
       const fundingRows = includeAdditionalFundingCandidates ? [...defaultRows, ...shortRows] : defaultRows;
-      const allSortedRows = sortCandidateRows(viewingExcluded ? excludedRows : fundingRows, budgetSort, data.budgetEok);
+      const filterSourceRows = viewingExcluded ? excludedRows : fundingRows;
+      const filteredRows = filterSourceRows.filter(candidateMatchesActiveFilters);
+      const allSortedRows = sortCandidateRows(filteredRows, budgetSort, data.budgetEok);
       candidateVisibleCount = Math.min(
         Math.max(CANDIDATE_PAGE_SIZE, candidateVisibleCount),
         allSortedRows.length,
       );
       const rows = allSortedRows.slice(0, candidateVisibleCount);
-      assignCandidateSignalRanks([...allRows, ...excludedRows], allSortedRows);
       const policyExcludedCount = excludedRows.length
         ? Number(data.policyExcludedCount || excludedRows.length)
         : 0;
@@ -10306,8 +10813,11 @@
       if (!rows.length) {
         candidateViewMode = "list";
         document.body.classList.remove("candidate-map-open");
-        const emptyMessage = data.allMatches ? "현재 자금 범위에 해당하는 단지가 없어요." : data.message || "예산 기준 후보를 찾지 못했어요.";
-        budgetResultEl.innerHTML = `<div class="candidate-options-bar"><div class="candidate-funding-option">${additionalFundingToggleHtml(includeAdditionalFundingCandidates)}</div>${candidateSortHtml(budgetSort, false)}</div>${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
+        const filtersHideResults = filterSourceRows.length > 0 && filteredRows.length === 0;
+        const emptyMessage = filtersHideResults
+          ? "선택한 필터에 해당하는 단지가 없어요."
+          : data.allMatches ? "현재 자금 범위에 해당하는 단지가 없어요." : data.message || "예산 기준 후보를 찾지 못했어요.";
+        budgetResultEl.innerHTML = `<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false)}</div>${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
         return;
       }
       const excluded = Number(data.excludedCount || 0);
@@ -10319,7 +10829,7 @@
         data.purposeLabel === "매수 검토" ? "" : data.purposeLabel,
       ].filter(Boolean);
       const resultCount = allSortedRows.length;
-      const resultTitleHtml = `조건에 맞는 주요 단지 <span class="title-count">${esc(resultCount)}곳</span>을 찾았어요`;
+      const resultTitleHtml = `매수 후보 <span class="title-count">${esc(resultCount)}단지</span>`;
       budgetResultEl.innerHTML = `
         <div class="budget-head">
           <div class="budget-title-row">
@@ -10328,10 +10838,8 @@
         </div>
         ${profile.length ? `<div class="budget-profile result-condition-profile">${profile.map(item => `<span class="profile-pill">${esc(item)}</span>`).join("")}</div>` : ""}
         <div class="candidate-options-bar">
-          <div class="candidate-funding-option">
-            ${additionalFundingToggleHtml(includeAdditionalFundingCandidates)}
-          </div>
-          ${candidateSortHtml(budgetSort, (includeAdditionalFundingCandidates && shortCount > 0) || viewingExcluded)}
+          ${candidateFiltersHtml()}
+          ${candidateSortHtml(budgetSort, false)}
         </div>
         ${candidateMapFloatingButtonHtml()}
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
@@ -10351,16 +10859,17 @@
               ${policyImpactHtml(item.policyImpact, item, data.budgetEok)}
               <div class="candidate-primary-actions">
                 ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기, 새 탭으로 열기`)}
+              </div>
+              <div class="candidate-secondary-actions">
+                <button class="candidate-detail-trigger" type="button" data-candidate-detail-open aria-expanded="false">
+                  <span data-candidate-signal-label>리포트 보기</span>
+                </button>
                 <button class="compare-toggle" type="button" data-compare-name="${esc(item.name)}" aria-pressed="${selectedCandidateNames.has(item.name)}">
-                  ${selectedCandidateNames.has(item.name) ? "비교에서 빼기" : "+ 비교 담기"}
+                  ${selectedCandidateNames.has(item.name) ? "비교에서 빼기" : "비교 담기"}
                 </button>
               </div>
-              <button class="candidate-detail-trigger" type="button" data-candidate-detail-open aria-expanded="false">
-                ${candidateSignalRankBadgeHtml(item)}
-                <span data-candidate-signal-label>최근 가격 흐름 · ${esc(candidateSignalScoreLabel(item))}</span>
-              </button>
               <div class="result-info-sheet candidate-detail-sheet" data-candidate-detail-sheet role="dialog" aria-modal="true" aria-labelledby="candidateDetailTitle${candidateIndex}" aria-hidden="true" hidden>
-                <button class="result-info-backdrop" type="button" data-candidate-detail-close aria-label="최근 가격·거래 흐름·판단 근거 닫기"></button>
+                <button class="result-info-backdrop" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
                 <div class="result-info-panel candidate-detail-panel">
                   <div class="result-info-grabber" aria-hidden="true"></div>
                   <div class="result-info-sheet-head">
@@ -10368,7 +10877,7 @@
                       <h4 class="result-info-sheet-title" id="candidateDetailTitle${candidateIndex}">${esc(candidateDisplayName(item))}</h4>
                       <p class="candidate-detail-sheet-meta">${candidateListMetaHtml(item)}</p>
                     </div>
-                    <button class="result-info-sheet-close" type="button" data-candidate-detail-close aria-label="최근 가격·거래 흐름·판단 근거 닫기"></button>
+                    <button class="result-info-sheet-close" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
                   </div>
                   <div class="candidate-detail-sheet-content">
                     <div data-signal-report>${candidateSignalReportHtml(item)}</div>
@@ -10578,6 +11087,8 @@
       resetComparisonState();
       showPolicyExcludedCandidates = false;
       includeAdditionalFundingCandidates = true;
+      candidateTradeAgeFilter = "";
+      candidateConfidenceFilter = false;
       budgetSort = "budget_near";
       candidateVisibleCount = CANDIDATE_PAGE_SIZE;
       budgetSearchController?.abort();
@@ -10826,13 +11337,22 @@
       savePurchasePowerForm();
     });
     viewTabs.forEach(tab => {
-      tab.addEventListener("click", () => setActiveView(tab.dataset.view));
+      tab.addEventListener("click", () => {
+        setActiveView(tab.dataset.view);
+        window.scrollTo({ top:0, behavior:"smooth" });
+      });
       tab.addEventListener("keydown", event => {
-        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
-        const nextView = tab.dataset.view === "condition" ? "region" : "condition";
-        setActiveView(nextView);
-        viewTabs.find(item => item.dataset.view === nextView)?.focus();
+        const currentIndex = viewTabs.indexOf(tab);
+        const nextIndex = event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? viewTabs.length - 1
+            : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + viewTabs.length) % viewTabs.length;
+        const nextTab = viewTabs[nextIndex];
+        setActiveView(nextTab.dataset.view);
+        nextTab.focus();
       });
     });
     budgetForm.addEventListener("click", event => {
@@ -11193,6 +11713,22 @@
         setCandidateSortOpen(true, candidateSortOpen);
         return;
       }
+      const candidateFilter = event.target.closest("[data-candidate-filter]");
+      if (candidateFilter && currentBudgetData) {
+        const filter = candidateFilter.dataset.candidateFilter;
+        if (filter === "trade_1m") {
+          candidateTradeAgeFilter = candidateTradeAgeFilter === "1m" ? "" : "1m";
+        } else if (filter === "trade_3m") {
+          candidateTradeAgeFilter = candidateTradeAgeFilter === "3m" ? "" : "3m";
+        } else if (filter === "confidence") {
+          candidateConfidenceFilter = !candidateConfidenceFilter;
+        } else if (filter === "funding_5") {
+          includeAdditionalFundingCandidates = !includeAdditionalFundingCandidates;
+        }
+        candidateVisibleCount = CANDIDATE_PAGE_SIZE;
+        renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
+        return;
+      }
       const candidateSortOption = event.target.closest("[data-candidate-sort-option]");
       if (candidateSortOption) {
         if (currentBudgetData) {
@@ -11316,9 +11852,8 @@
       const additionalFundingToggle = event.target.closest("[data-additional-funding-toggle]");
       if (additionalFundingToggle && currentBudgetData) {
         includeAdditionalFundingCandidates = additionalFundingToggle.checked;
-        if (!includeAdditionalFundingCandidates && budgetSort === "cash_gap") budgetSort = "budget_near";
         candidateVisibleCount = CANDIDATE_PAGE_SIZE;
-        renderBudgetCandidates(currentBudgetData);
+        renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
         return;
       }
       const policyToggle = event.target.closest("[data-policy-excluded-toggle]");
@@ -11338,6 +11873,23 @@
       search(button.dataset.query);
     }
     budgetResultEl.addEventListener("click", handleBudgetResultClick);
+    budgetResultEl.addEventListener("submit", event => {
+      const form = event.target.closest("[data-asking-price-form]");
+      if (!form) return;
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      void calculateAskingPrice(form);
+    });
+    budgetResultEl.addEventListener("input", event => {
+      if (!event.target.matches('[data-asking-price-form] input[name="asking_price_eok"]')) return;
+      const check = event.target.closest("[data-asking-price-check]");
+      const result = check?.querySelector("[data-asking-price-result]");
+      check?.classList.remove("is-ready");
+      if (result) {
+        result.hidden = true;
+        result.innerHTML = "";
+      }
+    });
     function handleCandidateMapPointerDown(event) {
       const preview = event.target.closest("[data-candidate-map-preview]");
       const handle = event.target.closest("[data-candidate-map-sheet-handle]")
@@ -11671,11 +12223,12 @@
           </div>
         </div>
         <div class="apt-affordability is-loading" data-apt-affordability aria-live="polite">예상 매수가와 필요한 자금을 계산하고 있어요…</div>
+        ${askingPriceCheckHtml(item)}
         <div class="apt-result-actions">
           <div class="candidate-primary-actions">
             ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "apt-result-naver")}
           </div>
-          <button class="apt-result-report candidate-detail-trigger" type="button" data-apt-card-signal data-signal-tone="loading" data-apt-report-name="${esc(item.name)}" data-apt-report-region="${esc(item.region || "")}">최근 가격·거래 흐름 확인 중…</button>
+          <button class="apt-result-report candidate-detail-trigger" type="button" data-apt-card-signal data-signal-tone="loading" data-apt-report-name="${esc(item.name)}" data-apt-report-region="${esc(item.region || "")}">검토 리포트 준비 중…</button>
         </div>
       </article>`).join("");
       currentAptSearchItems = items;
@@ -11830,18 +12383,18 @@
       );
       const score = Number(signals.score);
       if (signals.score !== null && Number.isFinite(score)) {
-        return { text: `최근 가격 흐름 · ${signalTrendButtonLabel(score)} · ${score}점`, tone: signalTierTone(score) };
+        return { text: "검토 리포트", tone:signalTierTone(score) };
       }
       if (signals.status === "insufficient") {
-        return { text: "최근 가격 흐름 · 거래가 적어 판단이 어려워요", tone: "flat" };
+        return { text: "검토 리포트 · 거래 표본 부족", tone:"flat" };
       }
       if (signals.status === "stale") {
         const latestTime = Date.parse(`${confirmedLatestDate}T00:00:00`);
         const ageDays = Number.isFinite(latestTime) ? Math.max(0, (Date.now() - latestTime) / 86400000) : Infinity;
         if (ageDays <= 122) {
-          return { text: "최근 가격·거래 흐름 · 상세 보기", tone: "flat" };
+          return { text:"검토 리포트", tone:"flat" };
         }
-        return { text: "최근 4개월 실거래 없음 · 점수 미산정", tone: "flat" };
+        return { text:"검토 리포트 · 최근 거래 부족", tone:"flat" };
       }
       // 가격 API에서 최신 거래를 이미 확인했다면 흐름 리포트의 일시 실패를
       // 실거래 연결 실패로 표시하지 않는다. 두 요청은 서로 독립적으로 완료된다.
@@ -11849,10 +12402,10 @@
         const latestTime = Date.parse(`${confirmedLatestDate}T00:00:00`);
         const ageDays = Number.isFinite(latestTime) ? Math.max(0, (Date.now() - latestTime) / 86400000) : Infinity;
         return ageDays <= 122
-          ? { text: "최근 실거래 확인 · 흐름 분석 준비 중", tone: "flat" }
-          : { text: "최근 4개월 실거래 없음 · 점수 미산정", tone: "flat" };
+          ? { text:"검토 리포트 준비 중…", tone:"flat" }
+          : { text:"검토 리포트 · 최근 거래 부족", tone:"flat" };
       }
-      return { text: "실거래 데이터가 연결되지 않았어요", tone: "flat" };
+      return { text:"검토 리포트 · 데이터 연결 안 됨", tone:"flat" };
     }
 
     function hasCompleteAptPurchaseProfile() {
@@ -12270,6 +12823,20 @@
           `${districtLeaderItem?.name || "구"} 구 대장 비교선`,
         ),
       ]);
+    }
+
+    async function loadAptSearchTrendInsight(candidate) {
+      candidate.leaderContextState = "loading";
+      try {
+        const payload = await requestLeaderContext(candidate);
+        applyLeaderContext(candidate, payload);
+        await enrichAptLeaderEstimate(candidate);
+        candidate.leaderContextState = "ready";
+        return Boolean(sparklineSeries(candidate));
+      } catch (_) {
+        candidate.leaderContextState = "error";
+        return false;
+      }
     }
 
     function aptPolicyImpactHtml(data, priceText) {
@@ -12784,7 +13351,7 @@
     document.addEventListener("click", event => {
       if (!event.target.closest("#aptSearchBox")) hideAptSuggest();
     });
-    aptSearchResults.addEventListener("click", event => {
+    aptSearchResults.addEventListener("click", async event => {
       const areaOption = event.target.closest("[data-apt-area]");
       if (areaOption) {
         const card = areaOption.closest("[data-apt-card-index]");
@@ -12813,6 +13380,27 @@
       const trendToggle = event.target.closest("[data-trend-toggle]");
       if (trendToggle) {
         const candidateCard = trendToggle.closest(".budget-candidate");
+        const candidateIndex = Number(candidateCard?.dataset.aptCardIndex);
+        const candidate = aptCandidateResults.get(candidateIndex);
+        if (trendToggle.dataset.trendAction === "load") {
+          if (!candidate || !candidateCard) return;
+          trendToggle.disabled = true;
+          trendToggle.textContent = "차트 불러오는 중";
+          const loaded = await loadAptSearchTrendInsight(candidate);
+          const verdict = candidateCard.querySelector(".candidate-verdict");
+          if (verdict) {
+            verdict.innerHTML = candidateVerdictHtml(candidate, { trendExpanded:loaded });
+          }
+          candidateCard.dataset.aptTrendExpanded = String(loaded);
+          const refreshedPanel = candidateCard.querySelector("[data-sparkline]");
+          if (loaded && refreshedPanel) {
+            requestAnimationFrame(() => {
+              syncSparkAxisLabelSizes(refreshedPanel);
+              refreshedPanel.scrollIntoView({ block:"nearest", behavior:"smooth" });
+            });
+          }
+          return;
+        }
         const panel = candidateCard?.querySelector("[data-sparkline]");
         const expanded = trendToggle.getAttribute("aria-expanded") === "true";
         trendToggle.setAttribute("aria-expanded", String(!expanded));
@@ -12839,6 +13427,23 @@
           button.dataset.aptReportRegion || "",
           candidate || null,
         );
+      }
+    });
+    aptSearchResults.addEventListener("submit", event => {
+      const form = event.target.closest("[data-asking-price-form]");
+      if (!form) return;
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      void calculateAskingPrice(form);
+    });
+    aptSearchResults.addEventListener("input", event => {
+      if (!event.target.matches('[data-asking-price-form] input[name="asking_price_eok"]')) return;
+      const check = event.target.closest("[data-asking-price-check]");
+      const result = check?.querySelector("[data-asking-price-result]");
+      check?.classList.remove("is-ready");
+      if (result) {
+        result.hidden = true;
+        result.innerHTML = "";
       }
     });
     aptAreaSheet.addEventListener("click", event => {
@@ -12885,14 +13490,6 @@
     aptSearchPageBack.addEventListener("click", closeAptSearchView);
     aptSearchBack.addEventListener("click", closeAptSearchView);
     listingReportHistoryEntry.addEventListener("click", () => void openListingReportHistory());
-    leaderEntry.addEventListener("click", () => {
-      if (activeView === "leader") {
-        openHomeView();
-        return;
-      }
-      setActiveView("leader");
-      window.scrollTo({ top:0, behavior:"smooth" });
-    });
     leaderSido.addEventListener("change", () => syncLeaderDistricts());
     leaderCity.addEventListener("change", () => syncLeaderSubdistricts());
     leaderForm.addEventListener("submit", event => {

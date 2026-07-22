@@ -42,7 +42,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 18
+BUDGET_CACHE_SCHEMA_VERSION = 19
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -1645,6 +1645,63 @@ def _listing_review(arguments):
     return payload, 200
 
 
+def _asking_price_financing(arguments):
+    """네이버 등에서 확인한 매물가를 현재 구매력 조건으로 다시 계산한다."""
+    region = str(arguments.get("region") or "").strip()
+    asking_price = policy_evaluator._float(arguments.get("asking_price_eok"))
+    raw_profile = arguments.get("profile")
+    if len(region) < 2:
+        return {"error": "단지 지역을 확인해 주세요."}, 400
+    if asking_price <= 0:
+        return {"error": "확인한 매물가를 입력해 주세요."}, 400
+    if not isinstance(raw_profile, dict):
+        return {"error": "먼저 구매력 조건을 입력해 주세요."}, 400
+
+    home_ownership = str(raw_profile.get("home_ownership") or "").strip()
+    first_time = str(raw_profile.get("first_time", "")).strip().lower()
+    co_borrower = str(raw_profile.get("co_borrower") or "false").strip().lower()
+    spouse_income = raw_profile.get("spouse_annual_income")
+    profile_complete = (
+        home_ownership in policy_evaluator.HOME_OWNERSHIP_LABELS
+        and home_ownership != "unknown"
+        and first_time in {"true", "false"}
+        and policy_evaluator._float(raw_profile.get("cash_eok")) > 0
+        and policy_evaluator._float(raw_profile.get("annual_income")) > 0
+        and policy_evaluator._float(raw_profile.get("mortgage_rate")) > 0
+        and (
+            co_borrower not in {"1", "true", "yes", "on"}
+            or policy_evaluator._float(spouse_income) > 0
+        )
+    )
+    if not profile_complete:
+        return {"error": "먼저 구매력 조건을 완성해 주세요."}, 400
+
+    profile = policy_evaluator.user_profile(
+        home_ownership=home_ownership,
+        first_time=first_time,
+        cash_eok=raw_profile.get("cash_eok"),
+        annual_income=raw_profile.get("annual_income"),
+        monthly_debt_payment=raw_profile.get("monthly_debt_payment"),
+        co_borrower=co_borrower,
+        spouse_annual_income=spouse_income,
+        spouse_monthly_debt_payment=raw_profile.get("spouse_monthly_debt_payment"),
+        mortgage_rate=raw_profile.get("mortgage_rate"),
+        loan_term_years=raw_profile.get("loan_term_years") or 30,
+        purchase_cost_rate=raw_profile.get("purchase_cost_rate") or 0,
+    )
+    impact = policy_evaluator.evaluate_candidate(
+        {"region": region, "midPriceEok": asking_price},
+        profile=profile,
+    )
+    return {
+        "askingPriceEok": round(asking_price, 2),
+        "requiredCashEok": impact.get("requiredCashEok"),
+        "cashGapEok": impact.get("cashGapEok"),
+        "estimatedLoanLimitEok": impact.get("estimatedLoanLimitEok"),
+        "purchaseCostEok": impact.get("purchaseCostEok"),
+    }, 200
+
+
 def _trim_budget_jobs_locked():
     if len(BUDGET_JOBS) <= BUDGET_MAX_JOBS:
         return
@@ -2102,6 +2159,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path not in {
             "/api/apartment-affordability",
             "/api/apartment-catalysts",
+            "/api/asking-price-financing",
             "/api/listing-review",
             "/api/admin/apartment-leaders/recalculate",
             "/api/admin/apartment-station-distances/refresh",
@@ -2204,6 +2262,10 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"error": "단지 목록을 확인해 주세요."}, 400)
                 return
             self._json(news_catalysts.catalysts_for_apartments(apartments))
+            return
+        if parsed.path == "/api/asking-price-financing":
+            payload, status = _asking_price_financing(arguments)
+            self._json(payload, status)
             return
         if parsed.path == "/api/listing-review":
             allowed, access_payload = paid_access.authorize(

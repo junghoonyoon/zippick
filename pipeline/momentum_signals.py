@@ -21,8 +21,8 @@
 전고점 회복률과 대장 단지 대비 가격 차이는 점수 밖의 참고 정보로만 제공한다.
 
 지역 대장은 apartment_leaders 모듈의 일반 대장 기준을 그대로 공유한다.
-단지별로 거래가 가장 많은 10㎡ 대표 평형을 고르고 84㎡ 상당가로 보정해
-동·구 대장을 정한다. 대표 평형 거래가 2건 미만인 단지는 제외한다.
+전용 84.x㎡ 실제 거래 중위가로 동·구 대장을 정하며 다른 면적은 환산하지
+않는다. 해당 면적 거래가 2건 미만인 단지는 제외한다.
 """
 import datetime
 import re
@@ -37,7 +37,7 @@ import real_estate_search
 LOOKBACK_MONTHS = config.MOLIT_SIGNAL_LOOKBACK_MONTHS
 MIN_WINDOW_DEALS = config.SIGNAL_MIN_WINDOW_DEALS
 MIN_TOTAL_DEALS = config.SIGNAL_MIN_TOTAL_DEALS
-# v17은 동·구 대장을 59㎡/84㎡로 나누지 않고 단지별 대표 평형 기준으로 통합한다.
+# v17은 가격·거래 흐름 점수식 버전이며 대장 산정식은 별도 버전으로 관리한다.
 SCORE_FORMULA_VERSION = 17
 
 # 결측 항목의 중립값. '정보 없음'을 0점(최악)으로 처리하면 비교군이 없는
@@ -71,7 +71,7 @@ OUTLIER_LOCAL_WINDOW_MONTHS = 3
 _DISTRICT_BENCHMARK_LIMIT = 12
 _DISTRICT_BENCHMARK_MIN = 3
 _DISTRICT_MOMENTUM_CACHE = {}
-LEADER_FORMULA_VERSION = 8
+LEADER_FORMULA_VERSION = 9
 LEADER_MIN_HOUSEHOLDS = 300
 LEADER_MIN_ANNUAL_DEALS = 6
 LEADER_LIQUIDITY_FULL_DEALS = 20
@@ -310,45 +310,18 @@ def _band_matched_change(recent, prior):
 
 
 def _leader_reference_price(recent):
-    """대장 비교용 최근 ㎡당가와 사용한 평형대를 반환한다.
-
-    50~200㎡ 거래를 10㎡ 단위로 묶고, 거래가 2건 이상인 면적대 중 최근 거래가
-    가장 많은 대표 평형을 사용한다. 거래 수가 같으면 84㎡에 가까운 면적대를
-    우선해 한 단지 안의 평형 혼합을 피한다.
-    """
-    bands = {}
-    for item in recent:
-        area = float(item.get("exclusiveArea") or 0)
-        if (
-            _ppsm(item) <= 0
-            or not apartment_leaders.LEADER_AREA_MIN
-            <= area
-            < apartment_leaders.LEADER_AREA_MAX
-        ):
-            continue
-        band = _area_band(item)
-        bands.setdefault(band, []).append(item)
-    eligible = [
-        (band, items)
-        for band, items in bands.items()
-        if len(items) >= LEADER_STANDARD_AREA_MIN_DEALS
+    """대장 비교용 전용 84.x㎡ 실제 거래의 최근 ㎡당가를 반환한다."""
+    items = [
+        item for item in recent
+        if apartment_leaders.LEADER_AREA_MIN
+        <= float(item.get("exclusiveArea") or 0)
+        < apartment_leaders.LEADER_AREA_MAX
+        and _ppsm(item) > 0
     ]
-    if not eligible:
+    if len(items) < LEADER_STANDARD_AREA_MIN_DEALS:
         return None, None, 0
-    band, items = max(
-        eligible,
-        key=lambda row: (
-            len(row[1]),
-            -abs(
-                statistics.median(
-                    float(item.get("exclusiveArea") or 0) for item in row[1]
-                ) - apartment_leaders.NATIONAL_AREA_TARGET
-            ),
-            -row[0],
-        ),
-    )
     values = [_ppsm(item) for item in items]
-    return round(statistics.median(values), 1), band, len(values)
+    return round(statistics.median(values), 1), _area_band(items[0]), len(values)
 
 
 def raw_signals(
@@ -886,7 +859,7 @@ def _absolute_leader(
     candidates,
     legal_dong="",
 ):
-    """대표 평형의 84㎡ 보정가로 지역 또는 법정동 1위를 반환한다."""
+    """전용 84.x㎡ 실제 거래 중위가로 지역 또는 법정동 1위를 반환한다."""
     del candidates  # 검색 결과에 따라 대장이 바뀌지 않도록 의도적으로 사용하지 않는다.
     region_key = real_estate_search.compact(region)
     legal_dong_key = real_estate_search.compact(legal_dong)
@@ -957,9 +930,9 @@ def _absolute_leader(
     )
     details = {
         "basis": (
-            "locality_representative_area_adjusted_price_v8"
+            "locality_84m2_actual_price_v9"
             if legal_dong_key
-            else "district_representative_area_adjusted_price_v8"
+            else "district_84m2_actual_price_v9"
         ),
         "candidateCount": ranking_payload.get("complexCount"),
         "eligibleCandidateCount": ranking_payload.get(
@@ -1072,8 +1045,8 @@ def attach_signals(candidates, include_leader_context=True):
             signals["districtComparisonCount"] = len(peers)
             signals["districtBasis"] = "search_candidates"
 
-    # 동·구 대장: 검색 조건과 무관한 전체 단지에서 대표 평형의 최근 12개월
-    # 거래를 84㎡ 상당가로 보정했을 때 가장 높은 단지를 사용한다.
+    # 동·구 대장: 검색 조건과 무관한 전체 단지에서 전용 84.x㎡의 최근 12개월
+    # 실제 거래 중위가가 가장 높은 단지를 사용한다.
     leaders = {}
     locality_scopes = sorted({
         (
@@ -1134,7 +1107,7 @@ def attach_signals(candidates, include_leader_context=True):
             leader_entity = leader["entity"]
             is_leader = bool(_row_name_keys(row).intersection(_entity_name_keys(leader_entity)))
             calculation = leader.get("calculation") or {}
-            leader_basis = calculation.get("basis") or "district_representative_area_adjusted_price_v8"
+            leader_basis = calculation.get("basis") or "district_84m2_actual_price_v9"
             signals["leaderRegion"] = (
                 row.get("legalDong", "")
                 if leader_basis.startswith("locality_")
@@ -1194,7 +1167,7 @@ def attach_signals(candidates, include_leader_context=True):
             )
             signals["districtLeaderBasis"] = (
                 (district_leader.get("calculation") or {}).get("basis")
-                or "district_representative_area_adjusted_price_v8"
+                or "district_84m2_actual_price_v9"
             )
             signals["isDistrictLeader"] = bool(
                 _row_name_keys(row).intersection(_entity_name_keys(district_leader_entity))

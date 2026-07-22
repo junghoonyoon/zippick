@@ -45,6 +45,42 @@ ESTIMATE_PAYLOAD = {
 
 
 class ApartmentAffordabilityTest(unittest.TestCase):
+    def test_manual_asking_price_reuses_current_financing_profile(self):
+        payload, status = search_server._asking_price_financing({
+            "region": "동대문구",
+            "asking_price_eok": "8",
+            "profile": {
+                "home_ownership": "no_home",
+                "first_time": "false",
+                "cash_eok": "5",
+                "annual_income": "8000",
+                "monthly_debt_payment": "0",
+                "co_borrower": "false",
+                "mortgage_rate": "4.2",
+                "loan_term_years": "30",
+                "purchase_cost_rate": "0",
+            },
+        })
+
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["askingPriceEok"], 8)
+        self.assertGreater(payload["requiredCashEok"], 0)
+        self.assertEqual(
+            payload["cashGapEok"],
+            round(5 - payload["requiredCashEok"], 2),
+        )
+        self.assertGreater(payload["estimatedLoanLimitEok"], 0)
+
+    def test_manual_asking_price_requires_a_complete_profile(self):
+        payload, status = search_server._asking_price_financing({
+            "region": "동대문구",
+            "asking_price_eok": "8",
+            "profile": {"home_ownership": "no_home"},
+        })
+
+        self.assertEqual(status, 400)
+        self.assertIn("구매력 조건", payload["error"])
+
     def test_exact_entity_keeps_card_and_chart_on_the_same_transactions(self):
         entity = {
             "name": "현대",

@@ -127,7 +127,7 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(chaser["leaderName"], "대장")
         self.assertEqual(chaser["leaderRegion"], "강동구")
         self.assertFalse(chaser["isRegionalLeader"])
-        self.assertEqual(chaser["leaderBasis"], "district_representative_area_adjusted_price_v8")
+        self.assertEqual(chaser["leaderBasis"], "district_84m2_actual_price_v9")
         self.assertEqual(chaser["leaderFormulaVersion"], momentum_signals.LEADER_FORMULA_VERSION)
         self.assertEqual(chaser["leaderPricePoints"], 100)
         self.assertEqual(chaser["leaderLeadershipPoints"], 100)
@@ -208,7 +208,7 @@ class MomentumSignalsTest(unittest.TestCase):
         signals = candidates[0]["signals"]
         self.assertEqual(signals["leaderName"], "구전체대장")
         self.assertEqual(signals["leaderHouseholds"], 5000)
-        self.assertEqual(signals["leaderBasis"], "district_representative_area_adjusted_price_v8")
+        self.assertEqual(signals["leaderBasis"], "district_84m2_actual_price_v9")
         self.assertFalse(signals["isRegionalLeader"])
         self.assertAlmostEqual(signals["leaderGapPct"], 25.0, delta=0.1)
 
@@ -279,7 +279,7 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(signals["leaderLiquidityPoints"], 100)
         self.assertGreater(signals["leaderScore"], 80)
 
-    def test_locality_general_leader_includes_wide_representative_complex(self):
+    def test_locality_leader_excludes_wide_non_84m2_complex(self):
         def fake_tx(name, **kwargs):
             if name == "한양아파트":
                 return [_deal(m, 2700) for m in range(1, 13) for _ in range(2)]
@@ -325,20 +325,19 @@ class MomentumSignalsTest(unittest.TestCase):
             momentum_signals.attach_signals(candidates)
 
         signals = candidates[0]["signals"]
-        self.assertEqual(signals["leaderName"], "파크뷰")
+        self.assertEqual(signals["leaderName"], "정자동후보")
         self.assertEqual(signals["leaderRegion"], "정자동")
-        self.assertEqual(signals["leaderBasis"], "locality_representative_area_adjusted_price_v8")
-        self.assertFalse(signals["isRegionalLeader"])
+        self.assertEqual(signals["leaderBasis"], "locality_84m2_actual_price_v9")
+        self.assertTrue(signals["isRegionalLeader"])
 
-    def test_common_adjustment_target_does_not_change_price_order(self):
+    def test_non_84m2_trade_is_not_adjusted_into_leader_price(self):
         small = {"exclusiveArea": 59.8, "dealAmountManwon": 150000}
         large = {"exclusiveArea": 84.8, "dealAmountManwon": 190000}
-        order_at_59 = momentum_signals.apartment_leaders._leader_adjusted_price(small, 59) > momentum_signals.apartment_leaders._leader_adjusted_price(large, 59)
-        order_at_84 = momentum_signals.apartment_leaders._leader_adjusted_price(small, 84) > momentum_signals.apartment_leaders._leader_adjusted_price(large, 84)
 
-        self.assertEqual(order_at_59, order_at_84)
+        self.assertIsNone(momentum_signals.apartment_leaders._leader_adjusted_price(small, 84))
+        self.assertEqual(momentum_signals.apartment_leaders._leader_adjusted_price(large, 84), 190000)
 
-    def test_leader_reference_price_uses_most_traded_representative_area_band(self):
+    def test_leader_reference_price_uses_only_actual_84m2_trades(self):
         deals = [
             _deal(1, 3000, area=84.9),
             _deal(2, 2900, area=84.9),
@@ -349,9 +348,9 @@ class MomentumSignalsTest(unittest.TestCase):
 
         ppsm, area_band, count = momentum_signals._leader_reference_price(deals)
 
-        self.assertEqual(ppsm, 2150)
-        self.assertEqual(area_band, 13)
-        self.assertEqual(count, 3)
+        self.assertEqual(ppsm, 2950)
+        self.assertEqual(area_band, 8)
+        self.assertEqual(count, 2)
 
     def test_locality_leader_excludes_other_dong_and_presale(self):
         def fake_tx(name, **kwargs):
@@ -461,7 +460,7 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(signals["leaderRegion"], "가동")
         self.assertEqual(signals["districtLeaderName"], "나동구대장")
         self.assertEqual(signals["districtLeaderRegion"], "테스트구")
-        self.assertEqual(signals["districtLeaderBasis"], "district_representative_area_adjusted_price_v8")
+        self.assertEqual(signals["districtLeaderBasis"], "district_84m2_actual_price_v9")
         self.assertFalse(signals["isDistrictLeader"])
 
     def test_locality_leader_considers_all_eligible_complexes(self):

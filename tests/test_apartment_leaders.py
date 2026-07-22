@@ -50,7 +50,7 @@ class ApartmentLeadersTest(unittest.TestCase):
             ("41590", "41591", "41593", "41595", "41597"),
         )
 
-    def test_frontend_exposes_region_categories_and_area_adjustment_help(self):
+    def test_frontend_exposes_region_categories_and_exact_84m2_help(self):
         html = (ROOT / "앱화면" / "real-estate-search.html").read_text(encoding="utf-8")
         self.assertIn('id="leaderEntry"', html)
         header_start = html.index('<header class="app-header">')
@@ -60,9 +60,19 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertIn('id="leaderEntry"', header)
         self.assertNotIn('id="leaderEntry"', hero_actions)
         self.assertNotIn('id="leaderBack"', html)
-        self.assertIn('showingLeader ? "내 예산으로 찾기" : "지역별 대장아파트"', html)
-        self.assertIn('if (activeView === "leader")', html)
-        self.assertIn("openHomeView();", html)
+        self.assertIn('class="view-tabs" role="tablist"', header)
+        self.assertIn('data-view="condition" aria-selected="true"', header)
+        self.assertIn('data-view="leader" aria-selected="false"', header)
+        self.assertIn('<span class="view-tab-label-long">내 예산으로 찾기</span>', header)
+        self.assertIn('<span class="view-tab-label-long">지역별 대장</span>', header)
+        self.assertIn('id="conditionView" role="tabpanel" aria-labelledby="budgetViewTab"', html)
+        self.assertIn('id="leaderView" role="tabpanel" aria-labelledby="leaderEntry"', html)
+        self.assertIn(
+            ".app-header .view-tabs { flex:0 1 auto; min-width:0; "
+            "margin-right:auto; margin-left:auto; padding:3px }",
+            html,
+        )
+        self.assertIn("flex:0 0 46px; width:46px; max-width:46px; margin-left:0;", html)
         self.assertIn(
             'id="listingReportHistoryEntry" type="button" hidden',
             hero_actions,
@@ -91,22 +101,22 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertIn('item.nearestStationName || "가까운 역"', html)
         self.assertIn("직선 ${Math.round(stationDistance)", html)
         self.assertNotIn("대장(면적별)", html)
-        self.assertIn('aria-label="대장아파트 가격 보정 기준 보기"', html)
-        self.assertIn("실거래가 × (84 ÷ 실제면적)", html)
-        self.assertIn("거래가 가장 많은 면적대", html)
-        self.assertIn("84㎡는 공통 표시 기준", html)
+        self.assertIn('aria-label="대장아파트 실거래 기준 보기"', html)
+        self.assertIn("전용 84.00㎡ 이상 85.00㎡ 미만", html)
+        self.assertIn("다른 면적의 거래는 포함하거나 84㎡ 가격으로 환산하지 않습니다", html)
+        self.assertNotIn("실거래가 × (84 ÷ 실제면적)", html)
         self.assertNotIn('data-leader-category="overall"', html)
         self.assertNotIn('data-leader-category="leadership"', html)
         self.assertIn("fetchLeaderRanking(activeLeaderCategory, 10", html)
         self.assertIn("leaderGrowthText(item.return6m)", html)
         self.assertIn("data-leader-expand-rank", html)
         self.assertIn('class="leader-list-name">${esc(item.apartmentName)}</span>', html)
-        self.assertIn('class="leader-list-area">실거래 전용', html)
+        self.assertIn('class="leader-list-area">전용 84㎡ 실거래', html)
         self.assertIn(".leader-list-copy { display:grid; gap:6px; min-width:0 }", html)
         self.assertIn("expandedLeaderRanks", html)
         self.assertIn('let activeLeaderCategory = "price";', html)
 
-    def test_area_adjusted_price_is_the_default_market_leader_definition(self):
+    def test_exact_84m2_actual_price_is_the_default_market_leader_definition(self):
         entities = [
             {
                 "name": "시장대장(2단지)",
@@ -160,18 +170,18 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertEqual(apartment_leaders.DEFAULT_CATEGORY, "price")
         self.assertEqual(price[0]["apartmentName"], "시장대장(2단지)")
         self.assertEqual(price[0]["marketLeaderName"], "시장대장")
-        self.assertAlmostEqual(price[0]["leaderPrice12m"], 198495.5, delta=0.1)
+        self.assertEqual(price[0]["leaderPrice12m"], 200000)
         self.assertEqual(price[0]["leaderRepresentativeArea"], 84.85)
         self.assertEqual(price[0]["leaderRepresentativeMedianPrice12m"], 200000)
-        self.assertEqual(price[0]["leaderPriceAdjustmentExponent"], 0.75)
+        self.assertIsNone(price[0]["leaderPriceAdjustmentExponent"])
         self.assertEqual(price[0]["leaderPriceTransactionCount12m"], 2)
         self.assertEqual(price[0]["rankingTransactionCount12m"], 2)
-        self.assertIn("84㎡ 보정가", price[0]["reasons"][0])
-        self.assertEqual(result["leaderPriceBasisLabel"], "대표 평형 84㎡ 면적 보정가")
+        self.assertIn("전용 84㎡ 실거래 중위가", price[0]["reasons"][0])
+        self.assertEqual(result["leaderPriceBasisLabel"], "전용 84㎡ 실거래 중위가")
         self.assertNotIn("areaProfile", result)
         self.assertEqual(result["areaTarget"], 84.0)
 
-    def test_general_leader_uses_each_complex_most_traded_representative_band(self):
+    def test_general_leader_excludes_non_84m2_trades_instead_of_adjusting_them(self):
         def entity(name):
             return {
                 "name": name,
@@ -207,26 +217,22 @@ class ApartmentLeadersTest(unittest.TestCase):
         )
         price = result["rankings"]["price"]
 
-        self.assertEqual(price[0]["apartmentName"], "중대형대장")
-        self.assertEqual({row["apartmentName"] for row in price}, {
-            "중대형대장", "소형고단가", "국평단지",
-        })
-        self.assertAlmostEqual(price[0]["leaderRepresentativeArea"], 104.0)
+        self.assertEqual([row["apartmentName"] for row in price], ["국평단지"])
+        self.assertAlmostEqual(price[0]["leaderRepresentativeArea"], 84.7)
         self.assertEqual(price[0]["leaderPriceTransactionCount12m"], 4)
 
-    def test_representative_area_range_boundaries_are_exact(self):
+    def test_84m2_actual_trade_range_boundaries_are_exact(self):
         transactions = [
-            _trade("2026-06-01", 100000, area=49.99),
-            _trade("2026-06-02", 100000, area=50.0),
-            _trade("2026-06-03", 100000, area=59.99),
-            _trade("2026-06-04", 100000, area=199.99),
-            _trade("2026-06-05", 100000, area=200.0),
+            _trade("2026-06-01", 100000, area=83.99),
+            _trade("2026-06-02", 100000, area=84.0),
+            _trade("2026-06-03", 100000, area=84.99),
+            _trade("2026-06-04", 100000, area=85.0),
         ]
 
         trades, area = apartment_leaders._leader_price_trades(transactions, "2026-06")
 
-        self.assertEqual([row["exclusiveArea"] for row in trades], [50.0, 59.99])
-        self.assertAlmostEqual(area, 54.995)
+        self.assertEqual([row["exclusiveArea"] for row in trades], [84.0, 84.99])
+        self.assertAlmostEqual(area, 84.495)
 
     def test_cache_key_uses_single_general_leader_definition(self):
         path = apartment_leaders._cache_path(

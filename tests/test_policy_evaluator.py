@@ -164,6 +164,5 @@ class PolicyEvaluatorTest(unittest.TestCase):
             scenarios["recent3_average"]["requiredCashEok"],
         ))
 
-
 if __name__ == "__main__":
     unittest.main()

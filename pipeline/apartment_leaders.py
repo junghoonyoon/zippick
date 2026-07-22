@@ -53,13 +53,13 @@ LEADERSHIP_LIMIT = 10
 DEFAULT_CATEGORY = "price"
 NATIONAL_AREA_BUCKET = "70-89"
 NATIONAL_AREA_TARGET = 84.0
-# 일반 대장은 단지별로 거래가 가장 많은 대표 평형을 고른 뒤 같은 84㎡ 상당가로
-# 환산한다. 84㎡는 공통 표시 기준이며, 84㎡ 거래만 후보로 제한하지 않는다.
-LEADER_AREA_MIN = 50.0
-LEADER_AREA_MAX = 200.0
+# 국민평형으로 통용되는 전용 84.x㎡의 실제 거래만 사용한다. 다른 면적을
+# 비례 환산하지 않아 59㎡·77㎡·104㎡ 가격이 84㎡ 대장 순위에 섞이지 않는다.
+LEADER_AREA_MIN = 84.0
+LEADER_AREA_MAX = 85.0
 LEADER_AREA_MIN_DEALS = 2
-LEADER_PRICE_AREA_EXPONENT = 0.75
-NATIONAL_AREA_LABEL = "대표 평형 84㎡ 면적 보정가"
+LEADER_PRICE_AREA_EXPONENT = None
+NATIONAL_AREA_LABEL = "전용 84㎡ 실거래 중위가"
 
 
 def _load_settings():
@@ -308,9 +308,9 @@ def _leader_price_trades(
     transactions,
     reference_month,
 ):
-    """최근 거래가 가장 많은 10㎡ 대표 평형과 중앙 전용면적을 반환한다."""
+    """최근 12개월 전용 84.x㎡ 실제 거래와 중앙 전용면적을 반환한다."""
     start, end = _window_dates(reference_month, 12)
-    bands = {}
+    trades = []
     for row in transactions:
         area = float(row.get("exclusiveArea") or 0)
         if (
@@ -319,36 +319,21 @@ def _leader_price_trades(
             or not start <= datetime.date.fromisoformat(str(row["dealDate"])[:10]) <= end
         ):
             continue
-        bands.setdefault(int(area // 10), []).append(row)
-    eligible = [
-        (band, rows)
-        for band, rows in bands.items()
-        if len(rows) >= LEADER_AREA_MIN_DEALS
-    ]
-    if not eligible:
+        trades.append(row)
+    if not trades:
         return [], None
-    _band, trades = max(
-        eligible,
-        key=lambda item: (
-            len(item[1]),
-            -abs(
-                statistics.median(
-                    float(row.get("exclusiveArea") or 0) for row in item[1]
-                ) - NATIONAL_AREA_TARGET
-            ),
-            -item[0],
-        ),
-    )
     areas = [float(row.get("exclusiveArea") or 0) for row in trades]
     return trades, statistics.median(areas)
 
 
 def _leader_adjusted_price(row, target_area=NATIONAL_AREA_TARGET):
+    """호환용 헬퍼. 대장 가격은 면적 보정 없이 84.x㎡ 실거래가를 그대로 쓴다."""
+    del target_area
     area = float(row.get("exclusiveArea") or 0)
     price = float(row.get("dealAmountManwon") or 0)
-    if area <= 0 or price <= 0:
+    if not LEADER_AREA_MIN <= area < LEADER_AREA_MAX or price <= 0:
         return None
-    return price * (float(target_area) / area) ** LEADER_PRICE_AREA_EXPONENT
+    return price
 
 
 def _format_area(area):
@@ -497,24 +482,24 @@ def _base_metrics(
     reference_month,
     bucket,
 ):
-    trades12 = _transactions_in_window(transactions, reference_month, 12, bucket)
-    trades24 = _transactions_in_window(transactions, reference_month, 24, bucket)
-    leader_price_trades, leader_representative_area = _leader_price_trades(
-        transactions,
-        reference_month,
-    )
+    # 대장 페이지의 가격·상승률·거래량·신뢰도를 모두 동일한 84.x㎡ 실제
+    # 거래로 계산한다. bucket은 이전 API 호환을 위해 인자로만 유지한다.
+    del bucket
+    trades12, leader_representative_area = _leader_price_trades(transactions, reference_month)
+    start24, end24 = _window_dates(reference_month, 24)
+    trades24 = [
+        row for row in transactions
+        if _valid_transaction(row)
+        and LEADER_AREA_MIN <= float(row.get("exclusiveArea") or 0) < LEADER_AREA_MAX
+        and start24 <= datetime.date.fromisoformat(str(row["dealDate"])[:10]) <= end24
+    ]
+    leader_price_trades = trades12
     prices = [float(row["dealAmountManwon"]) for row in trades12]
     leader_actual_prices = [
         float(row["dealAmountManwon"])
         for row in leader_price_trades
     ]
-    leader_prices = [
-        value for value in (
-            _leader_adjusted_price(row, NATIONAL_AREA_TARGET)
-            for row in leader_price_trades
-        )
-        if value is not None
-    ]
+    leader_prices = list(leader_actual_prices)
     ppsm = [_price_per_square_meter(row) for row in trades12]
     ppsm = [value for value in ppsm if value is not None]
     months = {_month_key(row.get("dealDate")) for row in trades12}
@@ -596,12 +581,7 @@ def _base_metrics(
         ),
         "leaderPriceAdjustmentTargetArea": NATIONAL_AREA_TARGET,
         "leaderPriceAdjustmentExponent": LEADER_PRICE_AREA_EXPONENT,
-        "leaderPriceBasisLabel": (
-            f"대표 전용 {_format_area(leader_representative_area)}㎡의 "
-            f"{_format_area(NATIONAL_AREA_TARGET)}㎡ 보정가"
-            if leader_representative_area is not None
-            else NATIONAL_AREA_LABEL
-        ),
+        "leaderPriceBasisLabel": NATIONAL_AREA_LABEL,
         "leaderPriceTransactionCount12m": leader_price_count,
         "leaderPriceConfidenceScore": leader_price_confidence_score,
         "leaderPriceConfidenceLevel": leader_price_confidence_level,

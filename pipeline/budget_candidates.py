@@ -2611,7 +2611,6 @@ def budget_candidates(
         # 선택 보강이다. 검색 완료를 막지 않고 서버가 별도로 캐시한다.
         include_naver_links=False,
     )
-
     # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.
     # all_matches 응답은 정책상 needs_input/restricted 후보도 candidates에 담지만,
     # 화면에서는 possible/short 및 가격 확인 후보만 노출한다.
