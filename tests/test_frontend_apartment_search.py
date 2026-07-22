@@ -8,6 +8,63 @@ APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    def test_chart_open_is_not_blocked_by_optional_leader_comparisons(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        load_match = re.search(
+            r"async function loadCandidateTrendInsight\b(?P<body>.*?)"
+            r"\n    function enrichMarketInsights",
+            html,
+            re.DOTALL,
+        )
+        direct_match = re.search(
+            r"async function loadAptSearchTrendInsight\b(?P<body>.*?)"
+            r"\n    function aptPolicyImpactHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(load_match)
+        self.assertIsNotNone(direct_match)
+        load_body = load_match.group("body")
+        self.assertIn("const loaded = await loadMarketInsight(item);", load_body)
+        self.assertNotIn("requireLeaderComparison:true", load_body)
+        self.assertIn("loaded && Boolean(sparklineSeries(item))", load_body)
+        self.assertIn("Boolean(sparklineSeries(candidate))", direct_match.group("body"))
+        self.assertIn(
+            'data-trend-action="load" aria-expanded="false">차트보기</button>',
+            html,
+        )
+
+    def test_budget_chart_resolves_the_exact_candidate_by_identity_key(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        handler_match = re.search(
+            r"async function handleBudgetResultClick\b(?P<body>.*?)"
+            r"\n    budgetResultEl.addEventListener",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(handler_match)
+        handler_body = handler_match.group("body")
+        self.assertIn("candidateCard?.dataset.candidateKey", handler_body)
+        self.assertIn("candidateIdentityKey(item) === candidateKey", handler_body)
+        self.assertNotIn("item.name === candidateName", handler_body)
+
+    def test_view_tab_round_trip_preserves_budget_candidate_state(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        clear_match = re.search(
+            r"function clearSharedSearchResult\b(?P<body>.*?)"
+            r"\n    function leaderReferenceLabel",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(clear_match)
+        clear_body = clear_match.group("body")
+        self.assertNotIn("resetComparisonState()", clear_body)
+        self.assertNotIn("currentBudgetData = null", clear_body)
+        self.assertIn('budgetResultEl.addEventListener("click", handleBudgetResultClick)', html)
+
     def test_leader_region_filters_use_os_native_select_menu(self):
         html = APP_HTML.read_text(encoding="utf-8")
         style_match = re.search(
@@ -352,10 +409,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("await Promise.all([", load_body)
         selected_body = selected_match.group("body")
         self.assertIn("await requestLeaderContext(item)", selected_body)
-        self.assertIn(
-            "await loadMarketInsight(item, { requireLeaderComparison:true })",
-            selected_body,
-        )
+        self.assertIn("await loadMarketInsight(item)", selected_body)
+        self.assertNotIn("requireLeaderComparison:true", selected_body)
+        self.assertIn("Boolean(sparklineSeries(item))", selected_body)
         self.assertIn("대장 비교 불러오는 중", html)
         self.assertIn("const loaded = await loadCandidateTrendInsight(candidate);", html)
 
