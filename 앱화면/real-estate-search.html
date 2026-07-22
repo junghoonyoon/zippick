@@ -4848,7 +4848,6 @@
     });
 
     function clearSharedSearchResult() {
-      resetComparisonState();
       clearInterval(progressTimer);
       document.body.classList.remove("result-mode");
       result.innerHTML = "";
@@ -6943,7 +6942,7 @@
       }
       const series = options.series || sparklineSeries(item);
       if (!series) {
-        return `<button class="trend-toggle" type="button" disabled>차트보기</button>`;
+        return `<button class="trend-toggle" type="button" data-trend-toggle data-trend-action="load" aria-expanded="false">차트보기</button>`;
       }
       return `<button class="trend-toggle" type="button" data-trend-toggle data-trend-action="toggle" aria-expanded="${expanded}">${expanded ? "차트 접기" : "차트보기"}</button>`;
     }
@@ -7808,14 +7807,15 @@
         const payload = await requestLeaderContext(item);
         applyLeaderContext(item, payload);
       } catch (_) {
-        item.leaderContextState = "error";
-        refreshMarketInsight(item);
-        return false;
+        // 대장 비교 정보는 차트의 보조선일 뿐이다. 이 요청이 실패해도
+        // 단지 자체 실거래 차트까지 막지 않고 아래 기본 조회를 계속한다.
+        item.leaderEstimateErrors = ["지역 대장 비교 정보"];
       }
-      const loaded = await loadMarketInsight(item, { requireLeaderComparison:true });
-      item.leaderContextState = loaded ? "ready" : "error";
+      const loaded = await loadMarketInsight(item);
+      const chartReady = loaded && Boolean(sparklineSeries(item));
+      item.leaderContextState = chartReady ? "ready" : "error";
       refreshMarketInsight(item);
-      return loaded;
+      return chartReady;
     }
 
     function enrichMarketInsights(rows) {
@@ -11660,10 +11660,14 @@
         const candidateMapPreview = trendToggle.closest("[data-candidate-map-preview]");
         const trendScope = candidateCard || candidateMapPreview;
         if (trendToggle.dataset.trendAction === "load") {
-          const candidateName = candidateCard?.dataset.candidateName;
-          const candidate = candidateMapPreview
-            ? currentBudgetData?.candidates?.find(item => candidateIdentityKey(item) === candidateMapSelectedKey)
-            : currentBudgetData?.candidates?.find(item => item.name === candidateName);
+          // 같은 이름의 단지가 여러 면적으로 노출될 수 있으므로 이름이 아닌
+          // 카드의 고유 키로 정확히 현재 후보를 찾는다.
+          const candidateKey = candidateMapPreview
+            ? candidateMapSelectedKey
+            : candidateCard?.dataset.candidateKey;
+          const candidate = currentBudgetData?.candidates?.find(
+            item => candidateIdentityKey(item) === candidateKey
+          );
           if (candidate) {
             const loaded = await loadCandidateTrendInsight(candidate);
             if (!loaded) return;
@@ -12831,12 +12835,13 @@
         const payload = await requestLeaderContext(candidate);
         applyLeaderContext(candidate, payload);
         await enrichAptLeaderEstimate(candidate);
-        candidate.leaderContextState = "ready";
-        return Boolean(sparklineSeries(candidate));
       } catch (_) {
-        candidate.leaderContextState = "error";
-        return false;
+        // 직접 검색에서도 대장 비교 조회 실패가 단지 자체 차트를 막지 않는다.
+        candidate.leaderEstimateErrors = ["지역 대장 비교 정보"];
       }
+      const chartReady = Boolean(sparklineSeries(candidate));
+      candidate.leaderContextState = chartReady ? "ready" : "error";
+      return chartReady;
     }
 
     function aptPolicyImpactHtml(data, priceText) {
