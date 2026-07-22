@@ -34,11 +34,37 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(open_match)
         self.assertIn("sparklineMonthlyTransactions(row.roneEstimate, periods)", data_match.group("body"))
         self.assertIn("value / basePrice * 100", data_match.group("body"))
+        self.assertIn("trades:monthly.trades", data_match.group("body"))
         self.assertIn('class="comparison-trend-line"', chart_match.group("body"))
-        self.assertIn("단지별 기준월", chart_match.group("body"))
+        self.assertIn('class="comparison-trend budget-sparkline"', chart_match.group("body"))
+        self.assertIn("data-sparkline", chart_match.group("body"))
+        self.assertIn('class="budget-sparkline-svg"', chart_match.group("body"))
+        self.assertIn('class="spark-grid"', chart_match.group("body"))
+        self.assertIn('class="spark-axis-label"', chart_match.group("body"))
+        self.assertIn('class="budget-sparkline-legend"', chart_match.group("body"))
+        self.assertIn('stroke-width="2.4"', chart_match.group("body"))
+        self.assertIn('class="spark-trade-point-group"', chart_match.group("body"))
+        self.assertIn("data-spark-point", chart_match.group("body"))
+        self.assertIn("data-spark-name", chart_match.group("body"))
+        self.assertIn("data-spark-trades", chart_match.group("body"))
+        self.assertIn('class="comparison-trend-point"', chart_match.group("body"))
+        self.assertIn('class="spark-trade-tooltip"', chart_match.group("body"))
+        self.assertIn('class="spark-tooltip-name"', html)
+        self.assertIn("point.dataset.sparkName", html)
+        self.assertIn('class="spark-dot comparison-trend-dot"', chart_match.group("body"))
+        self.assertNotIn("단지별 기준월", chart_match.group("body"))
+        self.assertNotIn("spark-legend-primary", chart_match.group("body"))
+        self.assertNotIn('stroke-width="${index === 0 ? "3" : "1.5"}"', chart_match.group("body"))
         self.assertIn("await Promise.allSettled(rows.map(row => loadMarketInsight(row)))", open_match.group("body"))
         self.assertIn("comparisonTrendHtml(currentRows)", open_match.group("body"))
-        self.assertIn(".comparison-trend-chart svg {", html)
+        self.assertIn('comparisonContent.addEventListener("click"', html)
+        self.assertIn('comparisonContent.addEventListener("keydown"', html)
+        self.assertIn("showSparkPointDetails(sparkPoint)", html)
+        self.assertIn(".comparison-trend { margin:22px 0 0; padding:0 }", html)
+        self.assertIn(".spark-trade-point-group.is-selected .comparison-trend-point", html)
+        self.assertIn(".comparison-trend-dot { border-color:var(--trend-color); border-top-width:2.4px }", html)
+        self.assertNotIn(".comparison-trend-chart svg {", html)
+        self.assertNotIn("border:1px solid #dfe7f1; border-radius:18px; padding:20px", html)
 
     def test_mobile_refresh_restores_the_current_spa_page(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -165,11 +191,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
     def test_mobile_leader_price_uses_budget_result_style_instead_of_circle(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
-        self.assertIn("grid-template-columns:minmax(0,1fr); gap:18px; padding:26px 16px;", html)
+        self.assertIn("grid-template-columns:minmax(0,1fr) auto; gap:10px 10px; padding:26px 16px;", html)
         self.assertIn(
-            "align-items:flex-start; width:100%; min-width:0; border-top:1px solid #edf0f4; border-left:0;",
+            "align-items:flex-end; justify-content:flex-start; align-self:start; width:auto; min-width:max-content;",
             html,
         )
+        self.assertIn("color:#191f28; text-align:right;", html)
+        self.assertIn(".leader-list-end { grid-column:3; justify-content:flex-end;", html)
         self.assertIn(".leader-score strong { margin-top:5px; font-size:24px;", html)
         self.assertNotIn("width:106px; height:106px; border-radius:50%", html)
 
@@ -383,7 +411,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("${esc(summary.regionName)} 평균 <em>", summary_html_body)
         self.assertIn("${esc(summary.series.leaderName)} <em>", summary_html_body)
         self.assertIn("candidateTrendSummaryHtml(summary)", chart_body)
-        self.assertIn("${regionName} 평균보다 더 많이 내려 흐름은 지켜봐야 해요", summary_body)
+        self.assertIn("const pattern = candidateTrendPattern(series);", summary_body)
+        self.assertIn("candidateTrendComparison(complexRate, regionRate, leaderRate, regionName, leaderRegionName)", summary_body)
+        self.assertIn('[pattern.message, comparison].filter(Boolean).join(" ")', summary_body)
         self.assertIn("${esc(regionName)} 평균 지수", chart_body)
         self.assertIn("series.regionSource.includes(\"R-ONE\")", chart_body)
         self.assertIn("가격 대비 · 지역 흐름은 ${esc(regionBasis)} 기준", chart_body)
@@ -393,7 +423,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("regionSource:String(payload?.index?.source || \"\")", series_body)
         self.assertNotIn("=100", chart_body)
         self.assertNotIn("%p", chart_body)
-        self.assertIn("${regionName} 평균보다 더 올라 흐름이 좋아요", summary_body)
+        self.assertIn("function candidateTrendPattern(series)", html)
+        self.assertIn("function candidateTrendComparison(complexRate, regionRate, leaderRate, regionName, leaderRegionName)", html)
         self.assertNotIn("아파트 시장", chart_body)
         self.assertIn(": [max, 100, min]", chart_body)
         self.assertIn("data-complex-trend-label", chart_body)
@@ -420,13 +451,47 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('stroke="#1677ff" stroke-width="3"', chart_body)
         self.assertIn("spark-dot spark-district-leader", chart_body)
         self.assertNotIn("지역 대장", chart_body)
-        self.assertIn("complexRate - leaderRate", summary_body)
-        self.assertIn("${regionName} 평균보다 강하고, ${leaderRegionName} 대장과 같은 방향으로 오르는 좋은 흐름이에요", summary_body)
-        self.assertIn("${regionName} 평균과 ${leaderRegionName} 대장을 모두 앞서는 강한 상승 흐름이에요", summary_body)
-        self.assertIn("하락장에서도 잘 버티고 있어요", summary_body)
-        self.assertIn("${regionName} 평균과 ${leaderRegionName} 대장보다 더 많이 내려 흐름은 지켜봐야 해요", summary_body)
+        self.assertIn('kind:"rebound"', html)
+        self.assertIn("최근 하락을 멈추고 반등했어요", html)
+        self.assertIn('kind:"downturn"', html)
+        self.assertIn("최근 상승을 멈추고 하락했어요", html)
+        self.assertIn('kind:"rise_continuing"', html)
+        self.assertIn("최근 거래에서 상승 흐름이 이어졌어요", html)
+        self.assertIn('kind:"rise_slowing"', html)
+        self.assertIn("상승은 이어졌지만 최근 상승 폭은 줄었어요", html)
+        self.assertIn('kind:"fall_continuing"', html)
+        self.assertIn('kind:"fall_slowing"', html)
+        self.assertIn('kind:"volatile"', html)
+        self.assertIn('kind:"high_flat"', html)
+        self.assertIn('kind:"low_flat"', html)
+        self.assertIn('kind:"insufficient"', html)
+        self.assertIn('kind:"stale"', html)
+        self.assertIn('${regionName} 평균·${leaderLabel}', html)
+        self.assertIn('상승 폭이 ${target.difference > 0 ? "컸어요" : "작았어요"}', html)
+        self.assertIn('하락 폭이 ${target.difference > 0 ? "작았어요" : "컸어요"}', html)
         self.assertNotIn("지역 대장", summary_body)
-        self.assertNotIn("가격 방어력이 약한 흐름이에요", summary_body)
+        pattern_match = re.search(
+            r"function candidateTrendPattern\b(?P<body>.*?)"
+            r"\n    function candidateTrendComparison",
+            html,
+            re.DOTALL,
+        )
+        comparison_match = re.search(
+            r"function candidateTrendComparison\b(?P<body>.*?)"
+            r"\n    function candidateTrendSummary",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(pattern_match)
+        self.assertIsNotNone(comparison_match)
+        factual_copy = pattern_match.group("body") + comparison_match.group("body")
+        self.assertNotIn("좋은 흐름", factual_copy)
+        self.assertNotIn("흐름이 좋아요", factual_copy)
+        self.assertNotIn("잘 버티", factual_copy)
+        self.assertNotIn("지켜봐야", factual_copy)
+        self.assertNotIn("방어력", factual_copy)
+        self.assertNotIn("매수", factual_copy)
+        self.assertNotIn("추천", factual_copy)
         self.assertIn('aria-label="${esc(`${regionName} 대장아파트 산정식 보기`)}"', html)
         self.assertIn("전용 ${leaderAreaText(targetArea)}㎡ 실거래 중위가", html)
         self.assertIn("leaderRepresentativeArea", html)
@@ -464,10 +529,12 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(chart_match)
         chart_body = chart_match.group("body")
         self.assertIn("item.signals?.isRegionalLeader", chart_body)
-        self.assertIn('class="spark-self-leader"', chart_body)
-        self.assertIn("${esc(complexName)} · ${esc(sharedLeaderRegionName)} 대장", chart_body)
+        self.assertIn('class="spark-leader-badge"', chart_body)
+        self.assertIn("(${esc(selfLeaderRegionName)} 대장)", chart_body)
+        self.assertIn("${esc(complexName)}${selfLeaderBadgeHtml}", chart_body)
         self.assertIn("item.signals?.isDistrictLeader", chart_body)
-        self.assertIn(".spark-self-leader {", html)
+        self.assertIn(".spark-leader-badge {", html)
+        self.assertNotIn(".spark-self-leader {", html)
 
     def test_budget_chart_loads_leader_context_then_both_series_in_parallel(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -506,32 +573,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("대장 비교 불러오는 중", html)
         self.assertIn("const loaded = await loadCandidateTrendInsight(candidate);", html)
 
-    def test_candidate_insight_combines_personal_choice_price_flow_and_news(self):
+    def test_candidate_insight_shows_factual_price_flow_and_news(self):
         html = APP_HTML.read_text(encoding="utf-8")
-        gains_match = re.search(
-            r"function candidateChoiceGains\(item\) \{(?P<body>.*?)"
-            r"\n    function candidateChoiceGainObject",
-            html,
-            re.DOTALL,
-        )
-        funding_severity_match = re.search(
-            r"function candidateChoiceFundingSeverity\(gap\) \{(?P<body>.*?)"
-            r"\n    function candidateChoiceFundingCost",
-            html,
-            re.DOTALL,
-        )
-        funding_match = re.search(
-            r"function candidateChoiceFundingCost\(item\) \{(?P<body>.*?)"
-            r"\n    function candidateChoiceCost",
-            html,
-            re.DOTALL,
-        )
-        cost_match = re.search(
-            r"function candidateChoiceCost\(item\) \{(?P<body>.*?)"
-            r"\n    function candidateChoiceCatalyst",
-            html,
-            re.DOTALL,
-        )
         summary_lines_match = re.search(
             r"function candidateChoiceSummaryLines\(item\) \{(?P<body>.*?)"
             r"\n    function candidateChoiceSummaryHtml",
@@ -551,140 +594,36 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             re.DOTALL,
         )
 
-        self.assertIsNotNone(gains_match)
-        self.assertIsNotNone(funding_severity_match)
-        self.assertIsNotNone(funding_match)
-        self.assertIsNotNone(cost_match)
         self.assertIsNotNone(summary_lines_match)
         self.assertIsNotNone(trend_insight_match)
         self.assertIsNotNone(verdict_match)
-        gains_body = gains_match.group("body")
-        funding_severity_body = funding_severity_match.group("body")
-        funding_body = funding_match.group("body")
-        cost_body = cost_match.group("body")
         summary_lines_body = summary_lines_match.group("body")
         trend_insight_body = trend_insight_match.group("body")
         verdict_body = verdict_match.group("body")
-        self.assertIn('rarity?.kind === "households"', gains_body)
-        self.assertIn('rarity?.kind === "age"', gains_body)
-        self.assertIn('["short", "restricted"].includes(fundingStatus) || cash?.gap < 0', gains_body)
-        self.assertIn('cash?.gap >= .3 && fundingStatus === "possible"', gains_body)
-        self.assertIn("!hasFundingShortfall", gains_body)
-        self.assertIn('gains.push("최근 고점보다 낮은 가격")', gains_body)
-        self.assertNotIn('gains.push("가격 여유")', gains_body)
-        self.assertIn("return gains.slice(0, 2);", gains_body)
-        self.assertIn("currentBudgetData?.budgetEok || currentPurchasePower?.budgetEok", funding_severity_body)
-        self.assertIn("Math.abs(value) / purchaseCeiling", funding_severity_body)
-        self.assertIn("shortageRatio <= .01", funding_severity_body)
-        self.assertIn("shortageRatio <= .03", funding_severity_body)
-        self.assertIn("shortageRatio <= .10", funding_severity_body)
-        self.assertIn('scenario?.type === "latest_deal"', funding_body)
-        self.assertIn('scenario?.type === "recent3_average"', funding_body)
-        self.assertIn("최근 실거래 기준 ${readableGapMoney(Math.abs(latestGap))} 조정 시 가능", funding_body)
-        self.assertIn("3개월 평균 기준 ${readableGapMoney(Math.abs(recentAverageGap))} 조정 필요", funding_body)
-        self.assertIn('severity === "near"', funding_body)
-        self.assertIn('severity === "negotiate"', funding_body)
-        self.assertIn('severity === "burden"', funding_body)
-        self.assertIn('severity === "high"', funding_body)
-        self.assertIn("매수 상한과 거의 맞음", funding_body)
-        self.assertIn("가격 협상 필요", funding_body)
-        self.assertIn("가격 부담 있음", funding_body)
-        self.assertIn("가격 부담 큼", funding_body)
-        self.assertIn("주담대 상한 영향", funding_body)
-        self.assertNotIn("소득 기준 대출한도 영향", funding_body)
-        self.assertIn("LTV 한도 영향", funding_body)
-        self.assertIn("DSR 기준 예상 대출 한도", html)
-        self.assertLess(
-            cost_body.index('item.policyImpact?.status === "restricted"'),
-            cost_body.index("cash?.gap < 0"),
-        )
-        self.assertLess(cost_body.index("cash?.gap < 0"), cost_body.index("ageDays != null && ageDays > 120"))
-        self.assertIn('item.policyImpact?.status === "short" || cash?.gap < 0', cost_body)
-        self.assertIn("candidateChoiceFundingCost(item)", cost_body)
-        self.assertIn("거래 표본이 적어 적정 가격 판단은 어려워요", cost_body)
-        self.assertIn("가격은 최근 2년 고점과 거의 비슷해요", cost_body)
-        self.assertNotIn("가격 메리트는 크지 않아요", cost_body)
-        self.assertIn("candidateChoiceRelativeCost(item)", cost_body)
-        self.assertIn("candidateDealAgeDays(item.latestDealDate)", html)
-        self.assertIn("candidateDealAgeDays(item.roneEstimate?.latestTrade?.dealDate)", html)
-        self.assertIn("Math.min(...ages)", html)
-        self.assertIn("candidateChoiceCatalystSubject(item)", summary_lines_body)
-        self.assertIn("candidateChoiceCompactText(cost)", summary_lines_body)
-        self.assertIn('["near", "negotiate"].includes(fundingSeverity)', summary_lines_body)
-        self.assertIn('`${gains.join(" · ")} · ${candidateChoiceCompactText(cost)}`', summary_lines_body)
-        self.assertIn('[/상승 흐름은 더 지켜봐야 해요$/, "상승 흐름 확인 필요"]', html)
-        self.assertNotIn('"상승 상승 흐름"', html)
         self.assertIn("const trendSummary = candidateTrendSummary(item);", summary_lines_body)
-        self.assertIn('lines.push(`${gainObject} 얻는 대신 ${candidateChoiceCompactText(cost)}`);', summary_lines_body)
-        self.assertIn('lines.push(`${catalystSubject} 긍정 변수`);', summary_lines_body)
-        self.assertIn("lines.push(candidateChoiceCompactText(trendMessage))", summary_lines_body)
-        self.assertIn("...new Set(lines)", summary_lines_body)
-        self.assertIn('row?.scope === "complex"', html)
-        self.assertIn('row?.status === "confirmed"', html)
-        self.assertIn('row?.scope === "area"', html)
-        self.assertIn('row?.status === "nearby"', html)
-        self.assertIn("인근 정비사업", html)
-        self.assertIn("row?.eventLabel", html)
-        self.assertIn("다른 후보보다 뚜렷한 강점은 아직 없음", summary_lines_body)
-        self.assertIn('<span class="insight-kicker">핵심 요약</span>', html)
-        self.assertIn('<div class="insight-summary">', html)
-        self.assertIn(".insight-trend { margin:14px 0 0; border:0; border-radius:0; padding:0; background:transparent }", html)
-        self.assertIn("font-size:11px", html)
-        self.assertIn(".budget-sparkline-legend { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; color:#8b95a1; font-size:13px", html)
-        self.assertIn(".spark-basis { flex-basis:100%; color:#8b95a1; font-size:13px", html)
-        self.assertNotIn("이 단지는 이런 선택이에요", html)
+        self.assertIn("? [trendMessage]", summary_lines_body)
+        self.assertIn("가격 흐름을 비교할 자료가 부족해요", summary_lines_body)
+        self.assertNotIn("candidateChoiceFundingCost", summary_lines_body)
+        self.assertNotIn("candidateChoiceCatalystSubject", summary_lines_body)
+        self.assertNotIn("candidateChoiceGains", summary_lines_body)
+        self.assertNotIn('<span class="insight-kicker">시세 흐름</span>', html)
+        self.assertNotIn(".insight-kicker {", html)
+        self.assertNotIn('<span class="insight-kicker">핵심 요약</span>', html)
         self.assertIn('<ul class="insight-title">${lines.map(line => `<li>${esc(line)}</li>`).join("")}</ul>', html)
-        self.assertIn("font-size:15px; font-weight:700", html)
+        self.assertIn(".insight-title {\n      display:grid; gap:6px; margin:0;", html)
+        self.assertIn(".condition-stage-results .insight-summary { padding:14px }", html)
         self.assertIn("${candidateTrendInsightHtml(item, options)}", verdict_body)
         self.assertIn("${candidateRelatedNewsHtml(item)}", verdict_body)
         self.assertLess(
             verdict_body.index("${candidateRelatedNewsHtml(item)}"),
             verdict_body.index("${candidateTrendInsightHtml(item, options)}"),
         )
-        self.assertIn('data-trend-toggle data-trend-action="toggle"', html)
-        self.assertIn("차트보기", html)
-        self.assertIn('border:1px solid #dfe3e8; border-radius:10px', html)
-        self.assertIn('color:#3182f6; font-size:15px; font-weight:800', html)
-        self.assertIn('.trend-toggle[data-trend-toggle]::after', html)
-        self.assertIn('border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor', html)
-        self.assertIn('max-width:100%; min-height:46px !important', html)
-        self.assertIn('width:auto; min-height:48px !important', html)
-        self.assertNotIn("차트로 확인", html)
         self.assertIn("candidateTrendPanelHtml(item, series)", trend_insight_body)
-        self.assertNotIn("insight-section-label", trend_insight_body)
         self.assertIn('<div class="trend-status" data-trend-control>${controlHtml}</div>', trend_insight_body)
         self.assertIn('class="insight-news"', html)
         self.assertIn('class="insight-news-item"', html)
-        self.assertNotIn("관련 변수", html)
-        self.assertNotIn("insight-news-head", html)
-        self.assertNotIn("현재 가격 흐름과 별도로 앞으로 확인할 뉴스예요.", html)
-        self.assertNotIn("insight-news-context", html)
-        self.assertIn("item.relatedNews", html)
-        self.assertIn('"인근 교통·개발"', html)
-        self.assertIn('status === "confirmed" && eventLabel', html)
-        self.assertIn("news:Array.isArray(row.news) ? row.news : []", html)
-        self.assertIn('getJson("/api/apartment-catalysts"', html)
-        self.assertIn("enrichNewsCatalysts(rows);", html)
-        self.assertIn("const CANDIDATE_PAGE_SIZE = 10;", html)
-        self.assertIn("allSortedRows.slice(0, candidateVisibleCount)", html)
-        self.assertIn("candidateLoadMoreHtml(rows.length, allSortedRows.length)", html)
-        self.assertIn("data-candidate-load-more", html)
-        self.assertIn("pending.slice(index, index + CANDIDATE_PAGE_SIZE)", html)
-        self.assertIn("visibleCandidates: rows", html)
-        self.assertNotIn('class="insight-tradeoff-label"', html)
-        self.assertNotIn('class="insight-next-action"', html)
-        self.assertNotIn('class="insight-action-label"', html)
-        self.assertNotIn('class="insight-action"', html)
-        self.assertNotIn(".insight-next-action {", html)
-        self.assertNotIn(".insight-tradeoffs {", html)
-        self.assertNotIn('class="insight-evidence-item"', html)
-        self.assertIn("font-size:12px; font-weight:700", html)
-        self.assertIn(".insight-trend .spark-summary-values em { font-size:inherit; font-weight:850 }", html)
-        self.assertIn(".insight-trend .budget-sparkline {\n      margin:12px 0 2px; padding-top:12px;", html)
-        self.assertNotIn("margin:12px 0 2px; border-top:1px solid #e5e5e7; padding-top:12px;", html)
-        self.assertNotIn(".insight-kicker::before", html)
-        self.assertIn("background:#f5f5f7", html)
-        self.assertNotIn(".candidate-verdict:has(.insight-good)", html)
+        self.assertIn('data-trend-toggle data-trend-action="toggle"', html)
+        self.assertIn("차트보기", html)
 
     def test_direct_apartment_search_keeps_funding_impact_in_core_summary(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -795,6 +734,25 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('>변경</button>', html)
         self.assertIn('{ label:"금액", value:budgetLabel', html)
         self.assertIn('{ label:"지역", value:regionLabel', html)
+
+    def test_candidate_map_header_shows_full_selected_conditions(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        condition_match = re.search(
+            r"function candidateMapConditionItems\b(?P<body>.*?)"
+            r"\n    function candidateMapConditionShortcutHtml",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(condition_match)
+        condition_body = condition_match.group("body")
+        self.assertIn('const regionLabel = selectionSummary("region")', condition_body)
+        self.assertNotIn('compactSelectionSummary("region")', condition_body)
+        self.assertIn('{ label:"전용면적", value:selectedOptionText(budgetMinArea)', condition_body)
+        self.assertIn('{ label:"세대수", value:selectedOptionText(budgetMinHouseholds)', condition_body)
+        self.assertIn('{ label:"연식", value:selectedOptionText(budgetMaxBuildingAge)', condition_body)
+        self.assertIn(".candidate-map-condition-copy {\n        flex-wrap:wrap;", html)
+        self.assertNotIn(".candidate-map-condition-shortcut:nth-child(n+3)", html)
 
     def test_apartment_suggestions_render_as_search_page_content(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -1418,6 +1376,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('aria-pressed="${selectedCandidateNames.has(item.name)}"', body)
         self.assertIn('"비교에서 빼기" : "비교 담기"', body)
         self.assertIn('grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)', html)
+        self.assertIn('padding:8px 12px !important; color:#475467; background:#fff', html)
+        self.assertNotIn('padding:8px 13px !important; color:#475467; background:#fff', html)
         self.assertIn('border:1px solid #e1e5ea !important; border-radius:14px !important;', html)
         self.assertIn('background:#fff !important; color:#4e5968 !important; font-size:14px; font-weight:800', html)
         self.assertIn(
@@ -1456,7 +1416,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('.comparison-mobile-subtitle { display:block }', html)
         self.assertNotIn("어떤 차이가 있는지 볼게요", html)
         self.assertNotIn('class="comparison-summary"', html)
-        self.assertIn('["핵심 요약", "summary"]', html)
+        self.assertIn('["시세 흐름", "summary"]', html)
         self.assertIn('["최근 가격·거래 흐름", "signal"]', html)
         self.assertIn("candidateChoiceSummaryLines(row)", html)
         self.assertIn("function comparisonSignalHtml(row)", html)
@@ -1640,10 +1600,17 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('if (trendToggle.dataset.trendAction === "load")', html)
         self.assertIn("const loaded = await loadAptSearchTrendInsight(candidate);", html)
         self.assertIn("candidateVerdictHtml(candidate, { trendExpanded:loaded })", html)
-        self.assertIn("await enrichAptLeaderEstimate(candidate);", html)
+        self.assertIn("async function refreshAptSearchTrendAfterAreaChange", html)
+        self.assertIn('const shouldReloadTrend = card.dataset.aptTrendExpanded === "true"', html)
+        self.assertIn('candidate.leaderContextState = "loading";', html)
+        self.assertIn('card.dataset.aptTrendExpanded = "true";', html)
+        self.assertIn(
+            "void refreshAptSearchTrendAfterAreaChange(card, item, data, candidate, requestToken);",
+            html,
+        )
         self.assertLess(
-            html.index("await enrichAptLeaderEstimate(candidate);"),
             html.index("renderAptCandidateResult(card, item, data, candidate, requestToken);"),
+            html.index("void refreshAptSearchTrendAfterAreaChange(card, item, data, candidate, requestToken);"),
         )
         self.assertIn(
             "function aptAffordabilityHtml(data, item = {}, report = {}, preparedCandidate = null)",
@@ -1708,7 +1675,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         html = APP_HTML.read_text(encoding="utf-8")
         render_match = re.search(
             r"function renderAptCandidateResult\b(?P<body>.*?)"
-            r"\n    async function selectAptArea",
+            r"\n    async function refreshAptSearchTrendAfterAreaChange",
             html,
             re.DOTALL,
         )
@@ -1859,6 +1826,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("candidate-map-view-switch-row", map_match.group("body"))
         self.assertIn('data-candidate-view="map"', html)
         self.assertIn('aria-label="지도에서 후보 보기"', html)
+        self.assertIn("grid-template-columns:minmax(0,1fr) auto auto 44px", html)
+        self.assertIn("grid-template-columns:40px minmax(0,1fr) auto", html)
+        self.assertIn('class="power-condition-change candidate-map-condition-change"', map_match.group("body"))
+        self.assertIn('data-condition-summary-open="power"', map_match.group("body"))
+        self.assertIn(".candidate-map-condition-change { grid-column:3; grid-row:1;", html)
         self.assertNotIn('data-candidate-view="list"', html)
         self.assertIn(
             "position:fixed; z-index:75; right:max(22px,env(safe-area-inset-right));",
@@ -1934,9 +1906,15 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const collapsedTargetRect = (comparison || summary).getBoundingClientRect();", setup_match.group("body"))
         self.assertIn("swipeDistance >= 48", drag_match.group("body"))
         self.assertIn("swipeDistance <= -48", drag_match.group("body"))
+        self.assertIn('"minimized"', drag_match.group("body"))
+        self.assertIn("drag.currentHeight <= minimizeThreshold", drag_match.group("body"))
         self.assertIn('preview?.dataset.mobileState === "collapsed" ? preview : null', pointer_match.group("body"))
         self.assertIn(
             '.candidate-map-preview[data-mobile-state="collapsed"] .candidate-price-comparison',
+            html,
+        )
+        self.assertIn(
+            '.candidate-map-preview[data-mobile-state="minimized"] .candidate-map-sheet-content',
             html,
         )
         self.assertIn(
@@ -1984,21 +1962,48 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('areaDisplayUnit = saved.preference?.areaDisplayUnit', html)
         self.assertIn('areaDisplayUnit,', html)
 
-    def test_naver_property_actions_open_in_a_safe_new_tab(self):
+    def test_naver_property_actions_stay_in_app_on_mobile(self):
         html = APP_HTML.read_text(encoding="utf-8")
-        match = re.search(
+        action_match = re.search(
             r"function candidateNaverPropertyActionHtml\b(?P<body>.*?)"
             r"\n    function candidateListMetaHtml",
             html,
             re.DOTALL,
         )
+        handler_match = re.search(
+            r"function handleNaverLandLinkClick\b(?P<body>.*?)"
+            r"\n    function candidateListMetaHtml",
+            html,
+            re.DOTALL,
+        )
+        budget_click_match = re.search(
+            r"async function handleBudgetResultClick\(event\) \{(?P<body>.*?)"
+            r"\n      const candidateMapSheetHandle",
+            html,
+            re.DOTALL,
+        )
+        apt_click_match = re.search(
+            r'aptSearchResults\.addEventListener\("click", async event => \{(?P<body>.*?)'
+            r"\n      const candidateViewButton",
+            html,
+            re.DOTALL,
+        )
 
-        self.assertIsNotNone(match)
-        body = match.group("body")
-        self.assertIn('target="_blank"', body)
-        self.assertIn('rel="noopener noreferrer"', body)
-        self.assertNotIn("뒤로가기로 결과에 복귀", html)
-        self.assertNotIn("뒤로가기로 지도에 복귀", html)
+        self.assertIsNotNone(action_match)
+        self.assertIsNotNone(handler_match)
+        self.assertIsNotNone(budget_click_match)
+        self.assertIsNotNone(apt_click_match)
+        action_body = action_match.group("body")
+        handler_body = handler_match.group("body")
+        self.assertIn('target="_blank"', action_body)
+        self.assertIn('rel="noopener noreferrer"', action_body)
+        self.assertIn('window.matchMedia?.("(max-width:700px)")?.matches', html)
+        self.assertIn("saveNaverReturnState();", handler_body)
+        self.assertIn("event.preventDefault();", handler_body)
+        self.assertIn("window.location.assign(link.href);", handler_body)
+        self.assertIn("handleNaverLandLinkClick(event, naverLandLink)", budget_click_match.group("body"))
+        self.assertIn("handleNaverLandLinkClick(event, naverLandLink)", apt_click_match.group("body"))
+        self.assertNotIn("새 탭으로 열기", html)
 
     def test_candidate_sort_and_filter_options_match_the_review_workflow(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -2012,13 +2017,26 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(sort_match)
         sort_body = sort_match.group("body")
         for label in (
-            "구매력 상한 근접순",
-            "최근 실거래가 낮은순",
-            "신축순",
-            "세대수 많은순",
-            "동일 면적 거래 많은순",
+            "흐름 좋은 순",
+            "반등 시작 순",
+            "대장보다 강한 순",
+            "지역보다 강한 순",
+            "고점보다 싼 순",
+            "예산에 가까운 순",
+            "실거래가 낮은 순",
+            "새 아파트 순",
+            "대단지 순",
+            "거래 많은 순",
         ):
             self.assertIn(label, sort_body)
+        for help_text in (
+            "가격과 거래가 함께 좋은 집",
+            "최근 3개월 다시 오르는 집",
+            "대장 아파트보다 더 오른 집",
+            "같은 구보다 더 오른 집",
+            "최근 2년 최고가보다 낮은 집",
+        ):
+            self.assertIn(help_text, sort_body)
         for removed in (
             "최근 가격·거래 흐름 점수 높은순",
             "최근 가격·거래 흐름 점수 낮은순",
@@ -2028,10 +2046,15 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             "추가 자금 적은순",
         ):
             self.assertNotIn(removed, sort_body)
+        self.assertIn("function candidateReboundRank", html)
+        self.assertIn('candidateSignalNumber(left, "leaderRelativePct")', html)
+        self.assertIn('candidateSignalNumber(left, "districtRelativePct")', html)
+        self.assertIn("candidateSortReasonHtml(item, budgetSort)", html)
+        self.assertIn('<strong>${esc(message)}</strong>', html)
         for label in (
             "1개월 이내 거래",
             "3개월 이내 거래",
-            "신뢰도 보통 이상",
+            "거래자료 충분",
             "추가 자금 +5%까지",
         ):
             self.assertIn(label, html)
@@ -2041,6 +2064,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("filterSourceRows.filter(candidateMatchesActiveFilters)", html)
         self.assertIn("function candidateSameAreaTradeAgeDays", html)
         self.assertIn('data-candidate-filter="${value}"', html)
+        self.assertNotIn("<strong>남길 집</strong>을 골라요", html)
+        self.assertNotIn("<strong>먼저 볼 순서</strong>를 정해요", html)
+        self.assertNotIn("candidate-sort-trigger-prefix", html)
+        self.assertIn('<h4 class="result-info-sheet-title" id="${titleId}">먼저 볼 순서</h4>', html)
         self.assertIn('`매수 후보 <span class="title-count">${esc(resultCount)}단지</span>`', html)
         self.assertNotIn('조건에 맞는 주요 단지 <span class="title-count">', html)
         self.assertIn(
@@ -2053,9 +2080,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             html,
         )
         self.assertNotIn(".condition-stage-results .candidate-filter-chip {", html)
-        self.assertIn('.condition-stage-results .budget-title { font-size:21px; line-height:1.38 }', html)
-        self.assertIn('grid-template-columns:minmax(0,1fr); align-items:stretch; gap:10px;', html)
-        self.assertIn('width:100%; align-self:stretch; justify-content:flex-end; margin-left:0', html)
+        self.assertIn("padding-bottom:2px; color:#1d1d1f; font-size:21px; font-weight:800; line-height:1.32;", html)
+        self.assertIn("margin:6px calc(50% - 50vw) 10px; padding:6px max(16px,calc((100vw - 760px) / 2));", html)
+        self.assertIn("grid-template-columns:minmax(0,1fr); align-items:stretch; gap:4px;", html)
+        self.assertIn("margin:4px calc(50% - 50vw) 8px; padding-top:4px;", html)
+        self.assertIn('width:100%; align-self:stretch; justify-items:start; margin-left:0', html)
 
     def test_listing_review_can_be_saved_shared_and_printed(self):
         html = APP_HTML.read_text(encoding="utf-8")

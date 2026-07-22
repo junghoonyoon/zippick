@@ -1,5 +1,5 @@
 #!/bin/bash
-# 부동산 유튜브 요약 웹앱을 실행한다.
+# 집픽 웹앱을 실행한다.
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 PARENT=""
 for candidate in "${BEAVER_V2_ROOT:-}" "$ROOT/../beaver-v2" "$ROOT/../지금사도될까요?/beaver-v2" "$ROOT/.."; do
@@ -12,7 +12,7 @@ PY="$PARENT/pipeline/.venv/bin/python"
 
 cd "$ROOT/pipeline" || exit 1
 clear
-echo "부동산 유튜브 요약"
+echo "집픽"
 echo "──────────────────────────────"
 
 if [ ! -x "$PY" ]; then
@@ -26,12 +26,6 @@ if ! "$PY" check_settings.py; then
   read -r -p "설정.txt를 확인한 뒤 다시 실행하세요. 엔터를 누르면 닫혀요..."
   exit 1
 fi
-
-echo ""
-echo "최근 부동산 유튜브 검색 인덱스를 확인할게요."
-echo "채널 ID가 비어 있어도 검색어 기반 최신 영상 보강으로 동작합니다."
-echo ""
-"$PY" sync_search_index.py
 
 echo ""
 echo "검색 화면을 여는 중이에요..."

@@ -31,6 +31,27 @@ def _rising_deals():
 
 
 class MomentumSignalsTest(unittest.TestCase):
+    def test_cached_district_leader_comparison_uses_the_same_momentum_window(self):
+        candidates = [{
+            "name": "검색후보",
+            "region": "테스트구",
+            "signals": {"momentumPct": 8.0},
+        }]
+        leader = {"name": "테스트구대장", "district": "테스트구"}
+
+        with mock.patch.object(
+            momentum_signals,
+            "_cached_district_leader",
+            return_value=(leader, {"momentumPct": 3.0}),
+        ):
+            momentum_signals._attach_cached_district_leaders(candidates)
+
+        signals = candidates[0]["signals"]
+        self.assertEqual(signals["sortLeaderName"], "테스트구대장")
+        self.assertEqual(signals["sortLeaderRegion"], "테스트구")
+        self.assertEqual(signals["leaderMomentumPct"], 3.0)
+        self.assertEqual(signals["leaderRelativePct"], 5.0)
+
     def test_attach_signals_marks_unavailable_when_api_is_not_configured(self):
         candidates = [{"name": "설정없는단지", "region": "강동구"}]
 
@@ -413,10 +434,14 @@ class MomentumSignalsTest(unittest.TestCase):
     def test_attach_signals_includes_distinct_district_leader(self):
         def fake_tx(name, **kwargs):
             prices = {
-                "검색후보": 1800,
                 "가동대장": 2400,
                 "나동구대장": 3200,
             }
+            if name == "검색후보":
+                return [
+                    _deal(month, 1980 if month <= 3 else 1800)
+                    for month in (1, 2, 3, 7, 8, 9)
+                ]
             return [_deal(month, prices[name]) for month in (1, 2, 3, 7, 8, 9)]
 
         candidates = [{
@@ -458,6 +483,8 @@ class MomentumSignalsTest(unittest.TestCase):
         signals = candidates[0]["signals"]
         self.assertEqual(signals["leaderName"], "가동대장")
         self.assertEqual(signals["leaderRegion"], "가동")
+        self.assertEqual(signals["leaderMomentumPct"], 0.0)
+        self.assertEqual(signals["leaderRelativePct"], 10.0)
         self.assertEqual(signals["districtLeaderName"], "나동구대장")
         self.assertEqual(signals["districtLeaderRegion"], "테스트구")
         self.assertEqual(signals["districtLeaderBasis"], "district_84m2_actual_price_v9")

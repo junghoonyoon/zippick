@@ -37,8 +37,9 @@ import real_estate_search
 LOOKBACK_MONTHS = config.MOLIT_SIGNAL_LOOKBACK_MONTHS
 MIN_WINDOW_DEALS = config.SIGNAL_MIN_WINDOW_DEALS
 MIN_TOTAL_DEALS = config.SIGNAL_MIN_TOTAL_DEALS
-# v17은 가격·거래 흐름 점수식 버전이며 대장 산정식은 별도 버전으로 관리한다.
-SCORE_FORMULA_VERSION = 17
+# v20은 예산 후보의 구 대장 비교 이름을 차트 정보와 분리해 추가 요청을 막는다.
+# 대장 산정식 자체는 별도 버전으로 관리한다.
+SCORE_FORMULA_VERSION = 20
 
 # 결측 항목의 중립값. '정보 없음'을 0점(최악)으로 처리하면 비교군이 없는
 # 구의 단지가 구조적으로 불리해지므로, 모르는 항목은 평균 수준으로 간주한다.
@@ -965,6 +966,98 @@ def _absolute_leader(
     return winner_entity, winner_signals, details
 
 
+def _cached_district_leader(region):
+    """이미 받은 지역 거래만으로 구 대장 한 곳의 흐름을 가볍게 계산한다."""
+    region_key = real_estate_search.compact(region)
+    entities = [
+        entity for entity in real_estate_search.APARTMENT_MASTER
+        if not entity.get("aggregate")
+        and not entity.get("status")
+        and real_estate_search.compact(entity.get("district")) == region_key
+    ]
+    if not entities:
+        return None
+    sido = str(entities[0].get("province") or "").strip()
+    if not sido:
+        return None
+    try:
+        payload = apartment_leaders.get_leaders(
+            sido,
+            region,
+            category=apartment_leaders.DEFAULT_CATEGORY,
+            limit=1,
+            cache_only=True,
+        )
+    except Exception:
+        return None
+    item = (payload.get("items") or [None])[0]
+    if not item:
+        return None
+    apartment_id = item.get("apartmentId")
+    leader_entity = next(
+        (
+            entity for entity in entities
+            if apartment_leaders._entity_id(entity) == apartment_id
+        ),
+        None,
+    )
+    if leader_entity is None:
+        leader_name_key = real_estate_search.compact(item.get("apartmentName"))
+        leader_entity = next(
+            (
+                entity for entity in entities
+                if real_estate_search.compact(entity.get("name")) == leader_name_key
+            ),
+            None,
+        )
+    if leader_entity is None:
+        return None
+    try:
+        leader_signals = raw_signals(
+            leader_entity.get("name", ""),
+            region=region,
+            cache_only=True,
+            entity=leader_entity,
+        )
+    except Exception:
+        return None
+    return leader_entity, leader_signals
+
+
+def _attach_cached_district_leaders(candidates):
+    """전체 단지를 다시 조회하지 않고 예산 후보에 구 대장 비교값을 붙인다."""
+    regions = sorted({row.get("region", "") for row in candidates if row.get("region")})
+    contexts = dict(
+        _SCOPE_EXECUTOR.map(
+            lambda region: (region, _cached_district_leader(region)),
+            regions,
+        )
+    ) if regions else {}
+    for row in candidates:
+        context = contexts.get(row.get("region", ""))
+        if not context:
+            continue
+        leader_entity, leader_signals = context
+        signals = row.get("signals") or {}
+        leader_momentum = leader_signals.get("momentumPct")
+        candidate_momentum = signals.get("momentumPct")
+        # 정렬 전용 이름으로 분리한다. 일반 leaderName을 채우면 카드마다
+        # 대장 차트 API까지 다시 요청하므로 목록 첫 화면이 불필요하게 느려진다.
+        signals["sortLeaderName"] = leader_entity.get("name")
+        signals["sortLeaderRegion"] = row.get("region", "")
+        signals["sortLeaderBasis"] = "district_84m2_actual_price_v9"
+        signals["leaderMomentumPct"] = leader_momentum
+        signals["leaderRelativePct"] = (
+            round(candidate_momentum - leader_momentum, 1)
+            if candidate_momentum is not None and leader_momentum is not None
+            else None
+        )
+        signals["isRegionalLeader"] = bool(
+            _row_name_keys(row).intersection(_entity_name_keys(leader_entity))
+        )
+        row["signals"] = signals
+
+
 def attach_signals(candidates, include_leader_context=True):
     """후보 목록에 signals를 부착한다. 대장은 같은 법정동에서 고정한다."""
     # API가 잠시 느려져 회로가 열려도 디스크에 저장된 월별 실거래로 계산한다.
@@ -1105,6 +1198,7 @@ def attach_signals(candidates, include_leader_context=True):
         # 분리해 모든 후보 차트가 대장 시계열을 요청할 수 있게 한다.
         if leader is not None:
             leader_entity = leader["entity"]
+            leader_signals = leader.get("signals") or {}
             is_leader = bool(_row_name_keys(row).intersection(_entity_name_keys(leader_entity)))
             calculation = leader.get("calculation") or {}
             leader_basis = calculation.get("basis") or "district_84m2_actual_price_v9"
@@ -1156,6 +1250,14 @@ def attach_signals(candidates, include_leader_context=True):
             signals["leaderBenchmarkAreaBand"] = calculation.get("referenceAreaBand")
             signals["leaderBenchmarkDealCount"] = calculation.get("referenceDealCount")
             signals["isRegionalLeader"] = is_leader
+            leader_momentum = leader_signals.get("momentumPct")
+            candidate_momentum = signals.get("momentumPct")
+            signals["leaderMomentumPct"] = leader_momentum
+            signals["leaderRelativePct"] = (
+                round(candidate_momentum - leader_momentum, 1)
+                if candidate_momentum is not None and leader_momentum is not None
+                else None
+            )
         if district_leader is not None:
             district_leader_entity = district_leader["entity"]
             signals["districtLeaderName"] = district_leader_entity.get("name")
@@ -1178,7 +1280,6 @@ def attach_signals(candidates, include_leader_context=True):
             and not signals.get("isRegionalLeader")
             and signals.get("currentPpsm")
         ):
-            leader_signals = leader.get("signals") or {}
             leader_ppsm = leader_signals.get("leaderReferencePpsm") or 0
             candidate_ppsm = signals.get("leaderReferencePpsm") or 0
             same_area_band = (
@@ -1208,6 +1309,9 @@ def attach_signals(candidates, include_leader_context=True):
                       if signals.get("status") == "stale" else [])
             )
         row["signals"] = signals
+
+    if not include_leader_context:
+        _attach_cached_district_leaders(candidates)
 
 
 def attach_cached_signals(candidates, only_missing=True):

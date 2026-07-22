@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""부동산 유튜브 요약 화면과 로컬 API를 제공한다."""
+"""집픽 화면과 로컬 API를 제공한다."""
 import datetime
 import hashlib
 import hmac
@@ -2783,9 +2783,7 @@ def main():
     # 검색 요청이 들어온 뒤 수백 개 결과 캐시를 다시 읽지 않도록 서버가
     # 준비되는 동안 단지별 시장 스냅샷 인덱스를 먼저 만든다.
     _load_market_snapshots()
-    print(f"부동산 유튜브 요약 서버: http://{HOST}:{PORT}")
-    if not config.ready_channels():
-        print("채널 ID가 아직 없어 검색어 기반 YouTube 보강으로 동작합니다.")
+    print(f"집픽 서버: http://{HOST}:{PORT}")
     if config.BUDGET_PREWARM_ENABLED:
         threading.Thread(target=_prewarm_budget_transaction_cache, daemon=True).start()
     SearchServer((HOST, PORT), Handler).serve_forever()
