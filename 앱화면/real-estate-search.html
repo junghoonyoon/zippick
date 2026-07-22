@@ -4077,6 +4077,8 @@
     } catch (_) {}
     const naverReturnStateKey = "realEstateSearch.naverReturn.v1";
     const naverReturnStateTtlMs = 30 * 60 * 1000;
+    const refreshPageStateKey = "realEstateSearch.refreshPage.v1";
+    const refreshPageStateTtlMs = 30 * 60 * 1000;
     const enhancedMortgageRateUx = true; // false로 바꾸면 기존 금리 입력 UI로 복구됩니다.
     const mortgageStressRatePercent = 3.0;
     const mortgageRateMarketAveragePercent = 4.3;
@@ -4397,6 +4399,130 @@
         renderBudgetCandidates(saved.currentBudgetData, { preserveSelection:true });
       }
       requestAnimationFrame(() => window.scrollTo({ top:Number(saved.scrollY || 0), behavior:"auto" }));
+      return true;
+    }
+
+    function refreshPageName() {
+      if (document.body.classList.contains("apt-search-mode")) {
+        return !aptSearchView.hidden && currentAptSearchItems.length ? "apt-result" : "apt-landing";
+      }
+      if (activeView === "region" || activeView === "leader") return activeView;
+      if (conditionStage === "results" && currentBudgetData) return "budget-result";
+      return `condition-${conditionStage}`;
+    }
+
+    function saveRefreshPageState() {
+      const page = refreshPageName();
+      const aptCard = page === "apt-result"
+        ? aptSearchResults.querySelector("[data-apt-card-index]")
+        : null;
+      const aptItem = page === "apt-result" && currentAptSearchItems[0]
+        ? {
+            ...currentAptSearchItems[0],
+            preferredArea:String(aptCard?.dataset.selectedAptAreaChoice || currentAptSearchItems[0].preferredArea || ""),
+          }
+        : null;
+      const budgetState = page === "budget-result" ? {
+        savedAt:Date.now(),
+        scrollY:window.scrollY,
+        currentBudgetData,
+        currentPurchasePower,
+        showPolicyExcludedCandidates,
+        includeAdditionalFundingCandidates,
+        candidateTradeAgeFilter,
+        candidateConfidenceFilter,
+        budgetSort,
+        candidateViewMode,
+        candidateVisibleCount,
+        selectedCandidateNames:[...selectedCandidateNames],
+        preference:{
+          regions:[...multiSelections.region],
+          minArea:budgetMinArea.value,
+          minHouseholds:budgetMinHouseholds.value,
+          maxBuildingAge:budgetMaxBuildingAge.value,
+        },
+      } : null;
+      try {
+        sessionStorage.setItem(refreshPageStateKey, JSON.stringify({
+          savedAt:Date.now(),
+          page,
+          scrollY:window.scrollY,
+          currentPurchasePower,
+          activeRegion,
+          activeRegionQuery,
+          activeLeaderCategory,
+          leaderSido:leaderSido.value,
+          leaderSigungu:leaderSigungu.value,
+          aptQuery:aptItem?.name || aptSearchInput.value.trim(),
+          aptItem,
+          budgetState,
+        }));
+      } catch (_) {}
+    }
+
+    async function restoreRefreshPageState() {
+      let saved = null;
+      try {
+        saved = JSON.parse(sessionStorage.getItem(refreshPageStateKey) || "null");
+        sessionStorage.removeItem(refreshPageStateKey);
+      } catch (_) {
+        saved = null;
+      }
+      if (!saved || typeof saved !== "object" || Date.now() - Number(saved.savedAt || 0) > refreshPageStateTtlMs) return false;
+
+      const restoreScroll = () => requestAnimationFrame(() => {
+        window.scrollTo({ top:Number(saved.scrollY || 0), behavior:"auto" });
+      });
+      if (saved.currentPurchasePower) {
+        currentPurchasePower = saved.currentPurchasePower;
+        renderPurchasePower(currentPurchasePower);
+        closePurchasePowerSheet();
+      }
+      if (saved.page === "budget-result" && saved.budgetState) {
+        try {
+          sessionStorage.setItem(naverReturnStateKey, JSON.stringify(saved.budgetState));
+        } catch (_) {}
+        const restored = restoreNaverReturnState();
+        if (restored) setActiveView("condition");
+        return restored;
+      }
+      if (saved.page === "apt-result" && saved.aptItem?.name) {
+        await runAptSearch(saved.aptQuery || saved.aptItem.name, saved.aptItem);
+        restoreScroll();
+        return true;
+      }
+      if (saved.page === "apt-landing") {
+        aptSearchInput.value = saved.aptQuery || "";
+        openAptSearchLanding({ focus:false });
+        restoreScroll();
+        return true;
+      }
+      if (saved.page === "region") {
+        activeRegion = regionGroups[saved.activeRegion] ? saved.activeRegion : "seoul";
+        activeRegionQuery = saved.activeRegionQuery || regionGroups[activeRegion].allQuery;
+        hasExplicitRegionScope = true;
+        setActiveView("region");
+        restoreScroll();
+        return true;
+      }
+      if (saved.page === "leader") {
+        await loadLeaderRegions();
+        if (leaderRegions.some(region => region.sido === saved.leaderSido)) leaderSido.value = saved.leaderSido;
+        syncLeaderDistricts(saved.leaderSigungu || "");
+        activeLeaderCategory = ["price", "leadership", "residence", "new", "value"].includes(saved.activeLeaderCategory)
+          ? saved.activeLeaderCategory
+          : "price";
+        setActiveView("leader");
+        await loadLeaderRanking();
+        restoreScroll();
+        return true;
+      }
+      if (saved.page === "condition-preference" && currentPurchasePower) {
+        setConditionStage("preference", false);
+      } else {
+        setConditionStage("power", false);
+      }
+      restoreScroll();
       return true;
     }
     let activeSearchQuery = "";
@@ -13653,7 +13779,13 @@
     renderPreferenceSinglePickers();
     renderMultiPickers();
     setConditionStage("power", false);
-    restoreNaverReturnState();
+    const restoredNaverReturn = restoreNaverReturnState();
+    if (restoredNaverReturn) {
+      try { sessionStorage.removeItem(refreshPageStateKey); } catch (_) {}
+    } else {
+      void restoreRefreshPageState();
+    }
+    window.addEventListener("pagehide", saveRefreshPageState);
     window.addEventListener("pageshow", () => restoreNaverReturnState());
     loadStatus();
     renderRegionTabs();

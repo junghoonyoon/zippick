@@ -8,6 +8,35 @@ APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    def test_mobile_refresh_restores_the_current_spa_page(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        save_match = re.search(
+            r"function saveRefreshPageState\b(?P<body>.*?)"
+            r"\n    async function restoreRefreshPageState",
+            html,
+            re.DOTALL,
+        )
+        restore_match = re.search(
+            r"async function restoreRefreshPageState\b(?P<body>.*?)"
+            r"\n    let activeSearchQuery",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(save_match)
+        self.assertIsNotNone(restore_match)
+        save_body = save_match.group("body")
+        restore_body = restore_match.group("body")
+        self.assertIn("refreshPageName()", save_body)
+        self.assertIn("currentBudgetData", save_body)
+        self.assertIn("currentAptSearchItems[0]", save_body)
+        self.assertIn('saved.page === "budget-result"', restore_body)
+        self.assertIn('saved.page === "apt-result"', restore_body)
+        self.assertIn('saved.page === "region"', restore_body)
+        self.assertIn('saved.page === "leader"', restore_body)
+        self.assertIn('window.addEventListener("pagehide", saveRefreshPageState)', html)
+        self.assertIn("void restoreRefreshPageState()", html)
+
     def test_chart_open_is_not_blocked_by_optional_leader_comparisons(self):
         html = APP_HTML.read_text(encoding="utf-8")
         load_match = re.search(
