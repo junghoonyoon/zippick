@@ -8,6 +8,38 @@ APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    def test_candidate_comparison_adds_a_shared_price_trend_chart(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        data_match = re.search(
+            r"function comparisonTrendData\b(?P<body>.*?)"
+            r"\n    function comparisonTrendSegments",
+            html,
+            re.DOTALL,
+        )
+        chart_match = re.search(
+            r"function comparisonTrendHtml\b(?P<body>.*?)"
+            r"\n    function comparisonTableHtml",
+            html,
+            re.DOTALL,
+        )
+        open_match = re.search(
+            r"async function openComparison\b(?P<body>.*?)"
+            r"\n    function closeComparison",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(data_match)
+        self.assertIsNotNone(chart_match)
+        self.assertIsNotNone(open_match)
+        self.assertIn("sparklineMonthlyTransactions(row.roneEstimate, periods)", data_match.group("body"))
+        self.assertIn("value / basePrice * 100", data_match.group("body"))
+        self.assertIn('class="comparison-trend-line"', chart_match.group("body"))
+        self.assertIn("단지별 기준월", chart_match.group("body"))
+        self.assertIn("await Promise.allSettled(rows.map(row => loadMarketInsight(row)))", open_match.group("body"))
+        self.assertIn("comparisonTrendHtml(currentRows)", open_match.group("body"))
+        self.assertIn(".comparison-trend-chart svg {", html)
+
     def test_mobile_refresh_restores_the_current_spa_page(self):
         html = APP_HTML.read_text(encoding="utf-8")
         save_match = re.search(

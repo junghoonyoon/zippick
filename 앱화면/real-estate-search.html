@@ -1668,6 +1668,29 @@
     .comparison-head h2 { margin:0; font-size:27px; line-height:1.25 }
     .comparison-mobile-subtitle { display:none; margin:5px 0 0; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.45 }
     .comparison-close { flex:0 0 auto; width:38px; height:38px; border:0; border-radius:50%; background:#f1f3f6; color:#555d6b; font-size:21px; cursor:pointer }
+    .comparison-trend {
+      margin-top:18px; border:1px solid #dfe7f1; border-radius:18px; padding:20px;
+      background:linear-gradient(145deg,#f8fbff,#fff 68%);
+    }
+    .comparison-trend-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px }
+    .comparison-trend-title { margin:0; color:#191f28; font-size:19px; font-weight:900; line-height:1.35 }
+    .comparison-trend-copy { margin:5px 0 0; color:#667085; font-size:13px; font-weight:650; line-height:1.5 }
+    .comparison-trend-badge { flex:0 0 auto; border-radius:999px; padding:6px 9px; background:#e8f3ff; color:#1267d8; font-size:12px; font-weight:850 }
+    .comparison-trend-chart { position:relative; width:100%; overflow:hidden }
+    .comparison-trend-chart svg { display:block; width:100%; height:auto; aspect-ratio:760 / 280 }
+    .comparison-trend-grid { stroke:#e8edf3; stroke-width:1 }
+    .comparison-trend-base { stroke:#bdc8d6; stroke-width:1; stroke-dasharray:4 4 }
+    .comparison-trend-axis { fill:#8b95a1; font-size:11px; font-weight:700 }
+    .comparison-trend-line { fill:none; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round }
+    .comparison-trend-end { stroke:#fff; stroke-width:2.5 }
+    .comparison-trend-legend { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:12px }
+    .comparison-trend-legend-item { display:inline-flex; align-items:center; gap:7px; min-width:0; color:#344054; font-size:13px; font-weight:750 }
+    .comparison-trend-legend-item i { width:9px; height:9px; border-radius:50%; background:var(--trend-color) }
+    .comparison-trend-legend-item strong { color:#191f28; font-weight:900 }
+    .comparison-trend-basis { display:block; margin-top:10px; color:#8b95a1; font-size:11px; font-weight:650; line-height:1.5 }
+    .comparison-trend-empty { border-radius:13px; padding:18px; background:#f5f7fa; color:#667085; font-size:13px; font-weight:700; line-height:1.6; text-align:center }
+    .comparison-trend-loading { display:flex; align-items:center; justify-content:center; gap:9px; min-height:120px; color:#667085; font-size:13px; font-weight:750 }
+    .comparison-trend-loading::before { content:""; width:17px; height:17px; border:2px solid #dbe5f1; border-top-color:#3182f6; border-radius:50%; animation:leader-spin .8s linear infinite }
     .comparison-table-wrap { overflow-x:auto; margin-top:18px; border:1px solid #e4e8ef; border-radius:16px }
     .comparison-table { width:100%; min-width:720px; border-collapse:collapse; table-layout:fixed }
     .comparison-table th,.comparison-table td { border-right:1px solid #e8ebf0; border-bottom:1px solid #e8ebf0; padding:14px 15px; vertical-align:top; text-align:left }
@@ -2001,6 +2024,13 @@
       .comparison-panel { max-height:92vh; border-radius:22px 22px 0 0; padding:20px 16px 24px }
       .comparison-head h2 { font-size:23px }
       .comparison-mobile-subtitle { display:block }
+      .comparison-trend { padding:16px 12px }
+      .comparison-trend-head { gap:9px }
+      .comparison-trend-title { font-size:17px }
+      .comparison-trend-copy { font-size:12px }
+      .comparison-trend-chart { overflow-x:auto }
+      .comparison-trend-chart svg { min-width:620px }
+      .comparison-trend-legend { display:grid; grid-template-columns:1fr; gap:7px }
       .region-tabs { width:100% }
       .region-tab { flex:1 1 0; padding:8px 10px }
       .lookback-select-wrap { width:100%; max-width:180px }
@@ -10741,9 +10771,102 @@
       return "-";
     }
 
-    function openComparison() {
-      const rows = selectedCandidates();
-      if (rows.length < 2) return;
+    const COMPARISON_TREND_COLORS = ["#3182f6", "#f59e0b", "#8b5cf6"];
+
+    function comparisonTrendData(rows) {
+      const periods = sparklineWindowPeriods();
+      const series = rows.map((row, index) => {
+        const monthly = sparklineMonthlyTransactions(row.roneEstimate, periods);
+        const baseIndex = monthly.prices.findIndex(value => value != null && value > 0);
+        if (baseIndex < 0) return null;
+        const basePrice = monthly.prices[baseIndex];
+        const values = monthly.prices.map(value => value == null ? null : value / basePrice * 100);
+        let latestIndex = -1;
+        values.forEach((value, valueIndex) => { if (value != null) latestIndex = valueIndex; });
+        return {
+          row,
+          color:COMPARISON_TREND_COLORS[index % COMPARISON_TREND_COLORS.length],
+          values,
+          baseIndex,
+          latestIndex,
+          latestValue:latestIndex >= 0 ? values[latestIndex] : null,
+        };
+      }).filter(Boolean);
+      return { periods, series, missing:rows.filter(row => !series.some(item => item.row === row)) };
+    }
+
+    function comparisonTrendSegments(values, x, y) {
+      const segments = [];
+      let points = [];
+      values.forEach((value, index) => {
+        if (value == null) {
+          if (points.length) segments.push(points.join(" "));
+          points = [];
+          return;
+        }
+        points.push(`${x(index).toFixed(1)},${y(value).toFixed(1)}`);
+      });
+      if (points.length) segments.push(points.join(" "));
+      return segments;
+    }
+
+    function comparisonTrendHtml(rows, loading = false) {
+      if (loading) {
+        return `<section class="comparison-trend" aria-label="선택 단지 가격 흐름 비교">
+          <div class="comparison-trend-head"><div><h3 class="comparison-trend-title">선택 단지 가격 흐름</h3><p class="comparison-trend-copy">같은 기준으로 비교할 실거래를 불러오고 있어요.</p></div><span class="comparison-trend-badge">최근 2년</span></div>
+          <div class="comparison-trend-loading">가격 흐름 준비 중</div>
+        </section>`;
+      }
+      const data = comparisonTrendData(rows);
+      if (!data.series.length) {
+        return `<section class="comparison-trend" aria-label="선택 단지 가격 흐름 비교">
+          <div class="comparison-trend-head"><div><h3 class="comparison-trend-title">선택 단지 가격 흐름</h3><p class="comparison-trend-copy">선택한 단지의 최근 2년 실거래 흐름을 비교해요.</p></div><span class="comparison-trend-badge">최근 2년</span></div>
+          <div class="comparison-trend-empty">비교할 실거래 월이 아직 부족해요. 잠시 후 다시 열어보세요.</div>
+        </section>`;
+      }
+      const width = 760, height = 280;
+      const plot = { left:48, right:24, top:18, bottom:34 };
+      const values = data.series.flatMap(item => item.values.filter(value => value != null));
+      const rawMin = Math.min(...values, 100);
+      const rawMax = Math.max(...values, 100);
+      const padding = Math.max(2, (rawMax - rawMin) * .12);
+      const min = rawMin - padding;
+      const max = rawMax + padding;
+      const span = Math.max(.1, max - min);
+      const chartWidth = width - plot.left - plot.right;
+      const chartHeight = height - plot.top - plot.bottom;
+      const x = index => plot.left + index * chartWidth / Math.max(1, data.periods.length - 1);
+      const y = value => plot.top + (max - value) * chartHeight / span;
+      const ticks = [max, (max + min) / 2, min];
+      const xIndexes = [0, Math.floor((data.periods.length - 1) / 2), data.periods.length - 1];
+      const periodLabel = period => `${String(period).slice(2, 4)}.${String(period).slice(4, 6)}`;
+      const lines = data.series.map(item => comparisonTrendSegments(item.values, x, y)
+        .map(points => `<polyline class="comparison-trend-line" points="${points}" stroke="${item.color}"/>`).join("")
+      ).join("");
+      const ends = data.series.map(item => item.latestIndex < 0 ? "" : `<circle class="comparison-trend-end" cx="${x(item.latestIndex).toFixed(1)}" cy="${y(item.latestValue).toFixed(1)}" r="5" fill="${item.color}"/>`).join("");
+      const legend = data.series.map(item => {
+        const rate = Number(item.latestValue || 100) - 100;
+        const rateText = `${rate > .05 ? "+" : ""}${Math.abs(rate) < .05 ? "0.0" : rate.toFixed(1)}%`;
+        return `<span class="comparison-trend-legend-item" style="--trend-color:${item.color}"><i aria-hidden="true"></i><span>${esc(candidateDisplayName(item.row))} <strong>${esc(rateText)}</strong></span></span>`;
+      }).join("");
+      const bases = data.series.map(item => `${candidateDisplayName(item.row)} ${periodLabel(data.periods[item.baseIndex])}=100`).join(" · ");
+      const missing = data.missing.length ? ` · 실거래 부족: ${data.missing.map(candidateDisplayName).join(", ")}` : "";
+      return `<section class="comparison-trend" aria-label="선택 단지 가격 흐름 비교">
+        <div class="comparison-trend-head"><div><h3 class="comparison-trend-title">선택 단지 가격 흐름</h3><p class="comparison-trend-copy">각 단지의 첫 거래 월을 100으로 맞춰 어느 단지가 더 강하게 움직였는지 비교해요.</p></div><span class="comparison-trend-badge">최근 2년</span></div>
+        <div class="comparison-trend-chart">
+          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(rows.map(candidateDisplayName).join(", "))} 최근 2년 가격 변화 비교 차트">
+            ${ticks.map(tick => `<line class="comparison-trend-grid" x1="${plot.left}" x2="${width - plot.right}" y1="${y(tick).toFixed(1)}" y2="${y(tick).toFixed(1)}"/><text class="comparison-trend-axis" x="${plot.left - 8}" y="${(y(tick) + 4).toFixed(1)}" text-anchor="end">${esc(`${(tick - 100).toFixed(0)}%`)}</text>`).join("")}
+            <line class="comparison-trend-base" x1="${plot.left}" x2="${width - plot.right}" y1="${y(100).toFixed(1)}" y2="${y(100).toFixed(1)}"/>
+            ${xIndexes.map(index => `<text class="comparison-trend-axis" x="${x(index).toFixed(1)}" y="${height - 10}" text-anchor="middle">${esc(periodLabel(data.periods[index]))}</text>`).join("")}
+            ${lines}${ends}
+          </svg>
+        </div>
+        <div class="comparison-trend-legend">${legend}</div>
+        <span class="comparison-trend-basis">${esc(`단지별 기준월: ${bases}${missing}`)}</span>
+      </section>`;
+    }
+
+    function comparisonTableHtml(rows) {
       const comparisonRows = [
         ["핵심 요약", "summary"],
         ["최근 가격·거래 흐름", "signal"],
@@ -10761,17 +10884,29 @@
         ["주의할 점", "risks"],
         ["다음 확인", "checks"],
       ];
-      comparisonContent.innerHTML = `
-        <div class="comparison-table-wrap">
+      return `<div class="comparison-table-wrap">
           <table class="comparison-table">
             <thead><tr><th scope="col">비교 항목</th>${rows.map(row => `<th scope="col"><span class="comparison-name">${esc(candidateDisplayName(row))}</span><span class="comparison-sub">${esc(candidateMetaText(row))}</span></th>`).join("")}</tr></thead>
             <tbody>${comparisonRows.map(([label, key]) => `<tr><th scope="row">${esc(label)}</th>${rows.map(row => `<td>${comparisonValue(row, key)}</td>`).join("")}</tr>`).join("")}</tbody>
           </table>
         </div>`;
+    }
+
+    async function openComparison() {
+      const rows = selectedCandidates();
+      if (rows.length < 2) return;
+      const needsTrendData = rows.some(row => !sparklineSeries(row));
+      comparisonContent.innerHTML = `${comparisonTrendHtml(rows, needsTrendData)}${comparisonTableHtml(rows)}`;
       comparisonOverlay.classList.add("show");
       comparisonOverlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("comparison-open");
       comparisonClose.focus();
+      if (!needsTrendData) return;
+      await Promise.allSettled(rows.map(row => loadMarketInsight(row)));
+      if (!comparisonOverlay.classList.contains("show")) return;
+      const currentRows = selectedCandidates();
+      if (currentRows.length < 2) return;
+      comparisonContent.innerHTML = `${comparisonTrendHtml(currentRows)}${comparisonTableHtml(currentRows)}`;
     }
 
     function closeComparison() {
