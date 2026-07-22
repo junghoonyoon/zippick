@@ -16,6 +16,49 @@ import search_server  # noqa: E402
 
 
 class BudgetResultCacheTest(unittest.TestCase):
+    def test_heavy_rate_limit_blocks_repeated_public_requests(self):
+        with mock.patch.object(search_server.config, "PUBLIC_RATE_LIMIT_WINDOW_SECONDS", 60), \
+             mock.patch.object(search_server.config, "PUBLIC_HEAVY_RATE_LIMIT", 2):
+            search_server.RATE_LIMIT_BUCKETS.clear()
+            first = search_server._rate_limit_check(
+                "203.0.113.10",
+                "/api/budget-candidates",
+                now=1000,
+            )
+            second = search_server._rate_limit_check(
+                "203.0.113.10",
+                "/api/budget-candidates",
+                now=1001,
+            )
+            third = search_server._rate_limit_check(
+                "203.0.113.10",
+                "/api/budget-candidates",
+                now=1002,
+            )
+
+        self.assertEqual(first, (True, None))
+        self.assertEqual(second, (True, None))
+        self.assertEqual(third[0], False)
+        self.assertGreaterEqual(third[1], 1)
+
+    def test_rate_limit_does_not_apply_to_light_status_request(self):
+        with mock.patch.object(search_server.config, "PUBLIC_HEAVY_RATE_LIMIT", 1):
+            search_server.RATE_LIMIT_BUCKETS.clear()
+            self.assertEqual(
+                search_server._rate_limit_check("203.0.113.20", "/api/status", now=1000),
+                (True, None),
+            )
+            self.assertEqual(
+                search_server._rate_limit_check("203.0.113.20", "/api/status", now=1001),
+                (True, None),
+            )
+
+    def test_admin_token_accepts_current_and_legacy_setting(self):
+        with mock.patch.object(search_server.config, "ADMIN_API_TOKEN", "secret-token"):
+            self.assertTrue(search_server._admin_token_configured())
+            self.assertTrue(search_server._admin_token_authorized("secret-token"))
+            self.assertFalse(search_server._admin_token_authorized("wrong-token"))
+
     def test_staged_result_returns_fast_payload_then_completed_enrichment(self):
         def calculate(**arguments):
             if arguments.get("fast_mode"):

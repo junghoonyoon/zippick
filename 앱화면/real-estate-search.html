@@ -42,22 +42,62 @@
     .apt-search input { flex:1; min-width:0; border:0; padding:0; background:transparent; color:#191f28; font-family:inherit; font-size:15px; font-weight:600; outline:none }
     .apt-search input::placeholder { color:#8b95a1 }
     .apt-search input::-webkit-search-cancel-button { -webkit-appearance:none }
-    .compare-cart {
-      position:relative; display:none; place-items:center; flex:0 0 auto; width:42px; height:42px;
-      border:1px solid #d8e0ea; border-radius:50%; padding:0; background:#fff; color:#475467;
-      cursor:pointer; box-shadow:0 4px 12px rgba(31,52,73,.06);
+    .compare-floating-bar {
+      position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); z-index:130;
+      display:flex; align-items:center; width:min(674px,calc(100% - 28px)); height:60px; border-radius:14px;
+      padding:0 12px; background:#0d0d0d; color:#fff;
+      box-shadow:0 2px 25px rgba(0,0,0,.24); transform:translateX(-50%);
     }
-    body.condition-stage-results:has(#conditionView:not([hidden])) .compare-cart:not([hidden]) { display:grid }
-    body.apt-search-mode .compare-cart { display:none !important }
-    .compare-cart:hover:not(:disabled) { border-color:#9fc8ff; background:#f5f9ff; color:#1267d8 }
-    .compare-cart:disabled { cursor:default }
-    .compare-cart:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:2px }
-    .compare-cart svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
-    .compare-cart-badge {
-      position:absolute; top:-4px; right:-4px; display:grid; place-items:center; min-width:19px; height:19px;
-      border:2px solid #f5f7f9; border-radius:999px; padding:0 4px; background:#3182f6; color:#fff;
-      font-size:11px; font-weight:900; line-height:1;
+    .compare-floating-bar[hidden],
+    body:not(.condition-stage-results) .compare-floating-bar,
+    body.condition-stage-results:has(#conditionView[hidden]) .compare-floating-bar,
+    body.apt-search-mode .compare-floating-bar { display:none !important }
+    .compare-floating-inner {
+      display:flex; align-items:center; justify-content:center; width:100%; min-height:60px; gap:20px;
+      padding:0;
     }
+    .compare-floating-count {
+      flex:1 1 auto; min-width:0; overflow:hidden; color:#fff; font-size:16px; font-weight:600;
+      line-height:24px; white-space:nowrap; text-overflow:ellipsis;
+    }
+    .compare-floating-hint { margin-left:8px; color:#d0d4da; font-size:14px; font-weight:650 }
+    .compare-floating-actions { display:flex; align-items:center; justify-content:flex-end; gap:20px; flex:0 0 auto }
+    .compare-floating-action {
+      appearance:none; display:inline-flex; align-items:center; justify-content:center; min-width:86px; min-height:32px; max-height:32px;
+      border:0; border-radius:6px; padding:0 10px; background:#fff; color:#0d0d0d; cursor:pointer;
+      font-family:inherit; font-size:13px; font-weight:800; line-height:1.4; white-space:nowrap;
+    }
+    .compare-floating-action[hidden] { display:none }
+    .compare-floating-action:disabled { color:#8b95a1; cursor:default }
+    .compare-floating-clear {
+      appearance:none; border:0; padding:0; background:transparent; color:#c8cdd4; cursor:pointer;
+      font-family:inherit; font-size:13px; font-weight:750; line-height:1.4; white-space:nowrap;
+    }
+    .compare-floating-clear:hover { color:#fff; text-decoration:underline; text-underline-offset:3px }
+    .compare-floating-clear:focus-visible,
+    .compare-floating-action:focus-visible,
+    .compare-floating-close:focus-visible { outline:3px solid rgba(255,255,255,.24); outline-offset:2px }
+    .compare-floating-close {
+      appearance:none; display:grid; place-items:center; flex:0 0 24px; width:24px; height:24px;
+      border:0; border-radius:6px; padding:1px; background:transparent; cursor:pointer;
+      color:#c8cdd4;
+    }
+    .compare-floating-close:hover { background:rgba(255,255,255,.1); color:#fff }
+    .compare-floating-close svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round }
+    .compare-floating-chip {
+      position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); z-index:130;
+      display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px;
+      border:0; border-radius:999px; padding:0 16px; background:#0d0d0d; color:#fff;
+      box-shadow:0 2px 18px rgba(0,0,0,.22); transform:translateX(-50%); cursor:pointer;
+      font-family:inherit; font-size:14px; font-weight:850; line-height:1.4;
+    }
+    .compare-floating-chip[hidden],
+    body:not(.condition-stage-results) .compare-floating-chip,
+    body.condition-stage-results:has(#conditionView[hidden]) .compare-floating-chip,
+    body.apt-search-mode .compare-floating-chip { display:none !important }
+    .compare-floating-chip::after { content:""; width:7px; height:7px; border-top:2px solid currentColor; border-right:2px solid currentColor; transform:rotate(-45deg) translateY(1px) }
+    .compare-floating-chip:hover { background:#191919 }
+    .compare-floating-chip:focus-visible { outline:3px solid rgba(49,130,246,.28); outline-offset:4px }
     .comparison-limit-toast {
       position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:150;
       max-width:calc(100% - 32px); border-radius:12px; padding:12px 16px;
@@ -236,6 +276,29 @@
       body.apt-search-mode .apt-search-landing { min-height:280px; padding-top:44px }
       body.apt-search-mode.apt-search-suggest-open .apt-search-landing:not([hidden]) { min-height:0; padding-top:14px }
       .apt-suggest-item { padding:16px 4px }
+      .apt-result-card { overflow:hidden; padding:14px }
+      .apt-result-card .candidate-price-comparison { grid-template-columns:minmax(0,1fr); gap:0 }
+      .apt-result-card .candidate-price-cell { padding:0 0 13px; min-width:0 }
+      .apt-result-card .candidate-price-cell + .candidate-price-cell {
+        border-top:1px solid #e5e9ef; border-left:0; padding:13px 0 0;
+      }
+      .apt-result-card .candidate-price-value { font-size:22px; white-space:normal }
+      .apt-result-card .candidate-price-direction,
+      .apt-result-card .candidate-price-note { word-break:keep-all }
+      .apt-result-card .policy-impact-grid,
+      .apt-result-card .policy-impact-grid.policy-cash-grid { grid-template-columns:minmax(0,1fr) }
+      .apt-result-card .policy-metric {
+        grid-template-columns:minmax(0,1fr); justify-items:start; gap:6px; min-width:0;
+      }
+      .apt-result-card .policy-metric strong,
+      .apt-result-card .policy-cash-scenario-result { justify-items:start; text-align:left }
+      .apt-affordability-row { grid-template-columns:minmax(0,1fr); gap:4px; padding:11px 0 }
+      .apt-affordability-row strong { text-align:left; white-space:normal }
+      .apt-result-actions .candidate-primary-actions {
+        display:grid; grid-template-columns:minmax(0,1fr); gap:8px; width:100%;
+      }
+      .apt-result-actions .candidate-primary-actions .naver-land-action,
+      .apt-result-report { width:100%; min-width:0; justify-content:center; text-align:center }
     }
     .brand {
       display:inline-flex; align-items:center; gap:8px; border:0; padding:0;
@@ -744,7 +807,7 @@
     .candidate-map-fab {
       position:fixed; z-index:75; right:max(22px,env(safe-area-inset-right));
       bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px));
-      display:inline-grid; place-items:center; width:64px; height:64px;
+      display:inline-grid; place-items:center; width:52px; height:52px;
       border:0; border-radius:50%; padding:0; background:#3182f6; color:#fff;
       box-shadow:0 12px 28px rgba(49,130,246,.32); cursor:pointer;
       transition:transform .16s ease,background .16s ease,box-shadow .16s ease;
@@ -754,7 +817,8 @@
     }
     .candidate-map-fab:active { transform:translateY(0) scale(.96) }
     .candidate-map-fab:focus-visible { outline:3px solid rgba(49,130,246,.28); outline-offset:4px }
-    .candidate-map-fab svg { width:32px; height:32px; fill:currentColor }
+    .candidate-map-fab svg { width:26px; height:26px; fill:currentColor }
+    body.compare-floating-visible .candidate-map-fab { bottom:max(96px,calc(env(safe-area-inset-bottom) + 94px)) }
     body.candidate-map-open .candidate-map-fab { display:none }
     body.candidate-map-open { overflow:hidden; overscroll-behavior:none }
     body.leader-map-open { overflow:hidden; overscroll-behavior:none }
@@ -846,6 +910,14 @@
       width:28px; height:28px; margin:0 auto 2px; border:3px solid #dbe8f8; border-top-color:#3182f6;
       border-radius:50%; animation:candidateSpin .8s linear infinite;
     }
+    .candidate-map-cluster {
+      display:grid; gap:4px; min-width:77px; border:2px solid #7f8792; border-radius:10px; padding:8px 10px;
+      background:#fff; color:#111827; font:inherit; line-height:1.18; text-align:left; box-shadow:0 7px 18px rgba(15,23,42,.16);
+      cursor:pointer;
+    }
+    .candidate-map-cluster strong { color:#111827; font-size:15px; font-weight:950; line-height:1.15 }
+    .candidate-map-cluster span { color:#1267d8; font-size:14px; font-weight:950; line-height:1.15 }
+    .candidate-map-cluster:hover { border-color:#3182f6; box-shadow:0 9px 22px rgba(49,130,246,.22) }
     .candidate-map-marker {
       --candidate-map-funding-tone:#191f28;
       --candidate-map-funding-shadow:rgba(24,35,52,.24);
@@ -1038,6 +1110,13 @@
       .candidate-map-map-tools {
         left:calc(var(--candidate-map-panel-width) + (100% - var(--candidate-map-panel-width)) / 2);
       }
+      .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) {
+        --candidate-map-panel-width:0px;
+        grid-template-columns:minmax(0,1fr);
+      }
+      .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-canvas { grid-column:1 }
+      .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-state { left:0 }
+      .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-map-tools { left:50% }
     }
     .candidate-sort-label { color:#475467; font-size:12px; font-weight:900 }
     .candidate-filter-chips { display:flex; align-items:center; gap:8px; min-width:0; overflow-x:auto; scrollbar-width:none }
@@ -1137,6 +1216,16 @@
     .candidate-top { display:flex; align-items:flex-start; gap:12px }
     .budget-main { display:block; min-width:0; flex:1 }
     .budget-name { display:block; color:#23272f; font-size:19px; font-weight:850; line-height:1.35; word-break:keep-all }
+    .candidate-name-row { display:flex; align-items:center; flex-wrap:wrap; gap:7px 10px; min-width:0 }
+    .candidate-name-row .budget-name { display:inline; min-width:0 }
+    .candidate-map-inline {
+      appearance:none; display:inline-flex; align-items:center; gap:4px; min-height:24px; border:0; border-radius:8px;
+      padding:0 2px; background:transparent; color:#1267d8; font:inherit; font-size:14px; font-weight:850;
+      line-height:1.2; white-space:nowrap; cursor:pointer;
+    }
+    .candidate-map-inline svg { flex:0 0 auto; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round }
+    .candidate-map-inline:hover { color:#0b57c8; background:#eef6ff }
+    .candidate-map-inline:focus-visible { outline:3px solid rgba(18,103,216,.22); outline-offset:2px }
     .budget-meta { display:block; margin-top:4px; color:#667085; font-size:13px; font-weight:550; line-height:1.5; word-break:keep-all }
     .budget-side { display:grid; justify-items:end; gap:8px; min-width:106px }
     .budget-price-row { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:7px; width:100% }
@@ -1186,7 +1275,7 @@
     .spark-summary-values em { margin-left:3px; color:#4e5968; font-size:20px; font-style:normal; font-weight:900 }
     .spark-summary-values em.up { color:#f04452 }
     .spark-summary-values em.down { color:#1267d8 }
-    .budget-sparkline-svg { display:block; width:100%; height:auto; aspect-ratio:210 / 97 }
+    .budget-sparkline-svg { display:block; width:100%; height:auto; aspect-ratio:210 / 146 }
     .spark-axis { stroke:#dfe4eb; stroke-width:1; vector-effect:non-scaling-stroke }
     .spark-grid { stroke:#edf0f4; stroke-width:1; vector-effect:non-scaling-stroke }
     .spark-axis-label { fill:#7b8491; font-size:var(--spark-axis-font-size,11px); font-weight:700 }
@@ -1361,37 +1450,6 @@
     .policy-metric span.policy-required-line { display:flex; align-items:baseline; justify-content:flex-end; gap:5px }
     .policy-required-line .policy-required-label { color:#8b95a1; font-size:11px; font-weight:750; white-space:nowrap }
     .policy-required-line strong { display:inline; margin-top:0 }
-    .asking-price-check { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #edf0f4; padding:14px 10px 2px }
-    .asking-price-check-form { display:flex; flex:1 1 auto; align-items:center; gap:9px; min-width:0 }
-    .asking-price-check-label { color:#30343b; font-size:15px; font-weight:900; white-space:nowrap }
-    .asking-price-check-controls { display:flex; align-items:center; justify-content:flex-end; gap:6px; min-width:0 }
-    .asking-price-input-shell { display:flex; flex:0 0 84px; align-items:center; width:84px; min-height:38px; border:1px solid #d8dee8; border-radius:10px; padding:0 9px; background:#fff }
-    .asking-price-input-shell:focus-within { border-color:#3182f6; box-shadow:0 0 0 3px rgba(49,130,246,.1) }
-    .asking-price-input-shell input { width:100%; min-width:0; border:0; outline:0; padding:0; background:transparent; color:#191f28; font:inherit; font-size:15px; font-weight:850; text-align:right }
-    .asking-price-input-shell input[type="number"] { appearance:textfield; -moz-appearance:textfield }
-    .asking-price-input-shell input[type="number"]::-webkit-inner-spin-button,
-    .asking-price-input-shell input[type="number"]::-webkit-outer-spin-button { margin:0; -webkit-appearance:none }
-    .asking-price-input-shell span { margin-left:4px; color:#6b7684; font-size:13px; font-weight:750 }
-    .asking-price-check-submit { min-height:38px; border:0; border-radius:10px; padding:0 12px; background:#3182f6; color:#fff; font-size:13px; font-weight:850; cursor:pointer }
-    .asking-price-check-submit:disabled { background:#9abcf0; cursor:wait }
-    .asking-price-check-result { flex:0 0 auto }
-    .asking-price-check-result[hidden] { display:none }
-    .asking-price-check-result .policy-metric { padding:0; border-radius:0 }
-    .condition-stage-results .asking-price-check-result .policy-metric {
-      display:grid; grid-template-columns:1fr; justify-content:initial; align-items:initial; justify-items:end; gap:3px;
-      border-bottom:0; padding:0; background:transparent;
-    }
-    .asking-price-check.is-ready .asking-price-check-submit { display:none }
-    .asking-price-check-error { color:var(--neg); font-size:13px; font-weight:750; line-height:1.45 }
-    @media (max-width:420px) {
-      .asking-price-check { gap:8px; padding-right:4px; padding-left:4px }
-      .asking-price-check-form { gap:7px }
-      .asking-price-check-label { font-size:13px }
-      .asking-price-check-controls { gap:4px }
-      .asking-price-input-shell { flex-basis:70px; width:70px; min-height:34px; padding:0 7px }
-      .asking-price-input-shell input { font-size:14px }
-      .asking-price-check-submit { min-height:34px; padding:0 8px; font-size:12px }
-    }
     .policy-impact-notes { display:grid; gap:5px; margin:10px 0 0; padding:0; list-style:none }
     .policy-impact-notes li { position:relative; padding-left:12px; color:#596273; font-size:13px; line-height:1.5 }
     .policy-impact-notes li::before { content:""; position:absolute; left:0; top:.62em; width:4px; height:4px; border-radius:50%; background:#d28a3b }
@@ -1691,6 +1749,7 @@
     .comparison-mobile-subtitle { display:none; margin:5px 0 0; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.45 }
     .comparison-close { flex:0 0 auto; width:38px; height:38px; border:0; border-radius:50%; background:#f1f3f6; color:#555d6b; font-size:21px; cursor:pointer }
     .comparison-trend { margin:22px 0 0; padding:0 }
+    .comparison-trend .budget-sparkline-svg { height:292px; aspect-ratio:auto }
     .comparison-trend .spark-summary { padding-top:0 }
     .comparison-trend .spark-summary-values em { font-size:inherit; font-weight:850 }
     .comparison-trend-line { fill:none; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke }
@@ -2036,6 +2095,7 @@
       .comparison-head h2 { font-size:23px }
       .comparison-mobile-subtitle { display:block }
       .comparison-trend { margin-top:18px }
+      .comparison-trend .budget-sparkline-svg { height:218px }
       .region-tabs { width:100% }
       .region-tab { flex:1 1 0; padding:8px 10px }
       .lookback-select-wrap { width:100%; max-width:180px }
@@ -2900,7 +2960,6 @@
     .condition-stage-results .policy-metric span { color:#4e5968; font-size:15px; font-weight:700 }
     .condition-stage-results .policy-metric span.policy-cash-scenario-copy { color:#151b24; font-size:16px; font-weight:900 }
     .condition-stage-results .policy-metric strong { flex:0 0 auto; margin-top:0; color:#191f28; font-size:19px; text-align:right }
-    .condition-stage-results .asking-price-check { padding:14px 0 0 }
     .condition-stage-results .candidate-verdict {
       justify-self:stretch; width:100%; margin-top:14px; padding:0;
       background:transparent; color:#1d1d1f; font-size:15px; line-height:1.5;
@@ -2955,9 +3014,10 @@
       .condition-stage-results .budget-head { align-items:flex-start; flex-direction:column; gap:18px }
       .candidate-map-fab {
         right:max(18px,env(safe-area-inset-right)); bottom:max(20px,calc(env(safe-area-inset-bottom) + 12px));
-        width:60px; height:60px;
+        width:52px; height:52px;
       }
-      .candidate-map-fab svg { width:30px; height:30px }
+      .candidate-map-fab svg { width:26px; height:26px }
+      body.compare-floating-visible .candidate-map-fab { bottom:max(90px,calc(env(safe-area-inset-bottom) + 86px)) }
       .candidate-map-view { grid-template-rows:auto auto minmax(0,1fr) }
       .candidate-map-header {
         grid-template-columns:40px minmax(0,1fr) auto; grid-template-rows:auto; gap:8px;
@@ -3378,9 +3438,6 @@
       .app-header .apt-search form:focus-within { border:0; background:transparent }
       .app-header .apt-search-icon { width:22px; height:22px; stroke:#191f28; stroke-width:2.4 }
       .app-header .apt-search input { position:absolute; inset:0; opacity:0; cursor:pointer }
-      body.condition-stage-results .app-header:has(.compare-cart:not([hidden])) .apt-search {
-        width:46px;
-      }
       body.apt-search-mode .app-header { display:flex }
       body.apt-search-mode .app-header .apt-search { flex:1 1 auto; width:auto; max-width:none; margin-left:0 }
       body.apt-search-mode .app-header .apt-search form {
@@ -3493,10 +3550,6 @@
           <input id="aptSearchInput" type="search" placeholder="아파트 단지명 바로 검색" aria-label="아파트 단지 검색" aria-expanded="false" aria-controls="aptSearchSuggest" autocomplete="off" enterkeyhint="search">
         </form>
       </div>
-      <button class="compare-cart" id="compareCart" type="button" aria-label="비교함이 비어 있어요" disabled hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.4L21 7H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>
-        <span class="compare-cart-badge" id="compareCartBadge" aria-hidden="true">0</span>
-      </button>
     </header>
 
     <div class="app-view apt-search-landing" id="aptSearchLanding" role="region" aria-label="아파트 단지 검색" hidden>
@@ -4007,6 +4060,22 @@
 
   <div class="comparison-limit-toast" id="comparisonLimitToast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+  <aside class="compare-floating-bar" id="compareCart" aria-label="매수 후보 비교" aria-live="polite" hidden>
+    <div class="compare-floating-inner">
+      <strong class="compare-floating-count" id="compareCartCount">매수 후보 0곳</strong>
+      <div class="compare-floating-actions">
+        <button class="compare-floating-clear" id="compareCartClear" type="button">선택 비우기</button>
+        <button class="compare-floating-action" id="compareCartAction" type="button" disabled>비교하기</button>
+        <button class="compare-floating-close" id="compareCartClose" type="button" aria-label="비교 바 작게 접기">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+  <button class="compare-floating-chip" id="compareCartChip" type="button" hidden>비교 후보 0곳</button>
+
   <div class="comparison-overlay" id="comparisonOverlay" aria-hidden="true">
     <section class="comparison-panel" role="dialog" aria-modal="true" aria-labelledby="comparisonTitle">
       <div class="comparison-head">
@@ -4132,7 +4201,11 @@
     const budgetSubmit = $("budgetSubmit");
     const budgetResultEl = $("budgetResult");
     const compareCart = $("compareCart");
-    const compareCartBadge = $("compareCartBadge");
+    const compareCartCount = $("compareCartCount");
+    const compareCartClear = $("compareCartClear");
+    const compareCartAction = $("compareCartAction");
+    const compareCartClose = $("compareCartClose");
+    const compareCartChip = $("compareCartChip");
     const comparisonLimitToast = $("comparisonLimitToast");
     const comparisonOverlay = $("comparisonOverlay");
     const comparisonClose = $("comparisonClose");
@@ -4170,6 +4243,7 @@
     let leaderMapTrigger = null;
     const purchasePowerStorageKey = "realEstateSearch.purchasePower.v1";
     const listingReportOwnerStorageKey = "realEstateSearch.listingReportOwner.v1";
+    const analyticsDailyActiveStorageKey = "realEstateSearch.analytics.activeDate.v1";
     let areaDisplayUnit = "sqm";
     // 점수 공식 버전. pipeline/momentum_signals.py의 SCORE_FORMULA_VERSION과 맞춘다.
     // 브라우저 캐시에 구버전 공식으로 계산된 결과가 남아 재사용되는 것을 막는다.
@@ -4650,12 +4724,18 @@
     let candidateViewMode = "list";
     let candidateMapOrigin = "budget";
     const CANDIDATE_PAGE_SIZE = 10;
+    const CANDIDATE_MAP_CLUSTER_LEVEL = 8;
     let candidateVisibleCount = CANDIDATE_PAGE_SIZE;
     let candidateMap = null;
     let candidateMapContainer = null;
     let candidateMapApiPromise = null;
     let candidateMapEntries = [];
+    let candidateMapClusterEntries = [];
+    let candidateMapLocatedEntries = [];
     let candidateMapSelectedKey = "";
+    let candidateMapPresentationMode = "clusters";
+    let candidateMapLastLevel = null;
+    let candidateMapSuppressPresentationSyncUntil = 0;
     let candidateMapRenderGeneration = 0;
     let candidateMapReturnScrollY = 0;
     let candidateMapTrigger = null;
@@ -4670,6 +4750,7 @@
     let searchUserClosed = false;
     let conditionStage = "power";
     const selectedCandidateNames = new Set();
+    let compareCartCollapsed = false;
     const roneEstimateCache = new Map();
     const roneEstimateInFlight = new Map();
     const leaderContextCache = new Map();
@@ -5321,7 +5402,7 @@
         <div class="leader-winner-body"${collapsible ? ` id="leader-winner-body-${esc(view.rank)}"` : ""}>
           <ul class="leader-reasons">${(item.reasons || []).slice(0, 3).map(reason => `<li>${esc(reason)}</li>`).join("")}</ul>
           <div class="leader-score-grid" aria-label="항목별 점수">${leaderComponentHtml(item)}</div>
-          <button class="leader-detail-button" type="button" data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-area-target="${esc(payload.areaTarget || item.leaderPriceAdjustmentTargetArea || "")}">단지 상세보기</button>
+          <button class="leader-detail-button" type="button" data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-area-target="84">단지 상세보기</button>
         </div>
       </${rootTag}>`;
     }
@@ -5388,7 +5469,7 @@
           </div>
         </div>
         <div class="candidate-map-sheet-actions">
-          <button class="leader-detail-button" type="button" data-leader-map-detail data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-area-target="${esc(currentLeaderPayload?.areaTarget || item.leaderPriceAdjustmentTargetArea || "")}">단지 상세보기</button>
+          <button class="leader-detail-button" type="button" data-leader-map-detail data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-area-target="84">단지 상세보기</button>
         </div>`;
       leaderMapPreview.hidden = false;
       setupCandidateMapPreviewSheet(leaderMapPreview);
@@ -5464,6 +5545,12 @@
 
     function openLeaderMap() {
       if (!currentLeaderPayload?.items?.length) return;
+      trackDailyActiveUser();
+      trackEvent("leader_map_opened", {
+        item_count:Number(currentLeaderPayload.items.length || 0),
+        region:[leaderSido.value, leaderSigungu.value].filter(Boolean).join(" "),
+        category:activeLeaderCategory,
+      });
       leaderMapReturnScrollY = window.scrollY;
       leaderMapTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : leaderMapFab;
       leaderMapRegion.textContent = [leaderSido.value, leaderSigungu.value].filter(Boolean).join(" ");
@@ -5550,6 +5637,11 @@
     async function loadLeaderRanking() {
       if (!leaderRegionsLoaded) await loadLeaderRegions();
       if (!leaderSido.value || !leaderSigungu.value) return;
+      trackDailyActiveUser();
+      trackEvent("leader_ranking_submitted", {
+        region:[leaderSido.value, leaderSigungu.value].filter(Boolean).join(" "),
+        category:activeLeaderCategory,
+      });
       leaderRequestController?.abort();
       leaderRequestController = new AbortController();
       leaderWinnerCollapsed = false;
@@ -5562,8 +5654,17 @@
         const signal = leaderRequestController.signal;
         const payload = await fetchLeaderRanking(activeLeaderCategory, 30, signal);
         renderLeaderResult(payload);
+        trackEvent("leader_ranking_completed", {
+          region:[leaderSido.value, leaderSigungu.value].filter(Boolean).join(" "),
+          category:activeLeaderCategory,
+          item_count:Number(payload?.items?.length || 0),
+        });
       } catch (error) {
         if (error.name === "AbortError") return;
+        trackEvent("leader_ranking_failed", {
+          region:[leaderSido.value, leaderSigungu.value].filter(Boolean).join(" "),
+          category:activeLeaderCategory,
+        });
         leaderReferenceCaption.hidden = true;
         leaderResult.innerHTML = `<div class="leader-empty">${esc(error.message || "지역 대장 순위를 불러오지 못했어요.")}</div>`;
       } finally {
@@ -5575,6 +5676,8 @@
       const aptView = document.getElementById("aptSearchView");
       if (aptView) aptView.hidden = true;
       activeView = ["region", "leader"].includes(view) ? view : "condition";
+      trackDailyActiveUser();
+      trackEvent("page_viewed", { page:activeView });
       const showingRegion = activeView === "region";
       const showingLeader = activeView === "leader";
       if (!showingLeader && !leaderMapView.hidden) closeLeaderMap({ restoreFocus:false });
@@ -5943,7 +6046,130 @@
       return data;
     }
 
+    const analyticsState = {
+      loading:false,
+      enabled:false,
+      ready:false,
+      queue:[],
+    };
+
+    function analyticsViewName() {
+      if (document.body.classList.contains("apt-search-mode")) return "apartment_search";
+      if (document.body.classList.contains("condition-stage-results")) return "budget_results";
+      return activeView || "condition";
+    }
+
+    function analyticsAssetHost(apiHost) {
+      try {
+        const url = new URL(apiHost);
+        if (url.hostname === "us.i.posthog.com") url.hostname = "us-assets.i.posthog.com";
+        else if (url.hostname === "eu.i.posthog.com") url.hostname = "eu-assets.i.posthog.com";
+        return url.origin;
+      } catch (_) {
+        return "https://us-assets.i.posthog.com";
+      }
+    }
+
+    function installPostHogSnippet(projectKey, config) {
+      if (!projectKey || window.posthog?.__loaded) return;
+      const queue = window.posthog || [];
+      window.posthog = queue;
+      if (!queue.__SV) {
+        queue._i = queue._i || [];
+        queue.init = function(token, options, name) {
+          const target = name ? (queue[name] = []) : queue;
+          target.people = target.people || [];
+          target.toString = () => (name ? `posthog.${name}` : "posthog");
+          target.people.toString = () => `${target.toString()}.people`;
+          const addMethod = method => {
+            target[method] = function() {
+              target.push([method].concat(Array.prototype.slice.call(arguments, 0)));
+            };
+          };
+          [
+            "capture", "identify", "reset", "group", "alias", "register", "register_once",
+            "unregister", "get_distinct_id", "get_session_id", "opt_in_capturing",
+            "opt_out_capturing", "has_opted_out_capturing", "debug", "set_config",
+          ].forEach(addMethod);
+          queue._i.push([token, options, name]);
+          if (!document.querySelector("script[data-posthog-sdk]")) {
+            const script = document.createElement("script");
+            script.async = true;
+            script.crossOrigin = "anonymous";
+            script.dataset.posthogSdk = "true";
+            script.src = `${analyticsAssetHost(options.api_host || config.apiHost)}/static/array.js`;
+            const firstScript = document.getElementsByTagName("script")[0];
+            firstScript.parentNode.insertBefore(script, firstScript);
+          }
+        };
+        queue.__SV = 1;
+      }
+      window.posthog.init(projectKey, config);
+    }
+
+    function flushAnalyticsQueue() {
+      const pending = analyticsState.queue.splice(0);
+      pending.forEach(item => trackEvent(item.name, item.properties));
+    }
+
+    function trackEvent(name, properties = {}) {
+      const eventName = String(name || "").trim();
+      if (!eventName) return;
+      const payload = {
+        ...properties,
+        app:"zippick",
+        view:analyticsViewName(),
+        path:window.location.pathname,
+      };
+      if (analyticsState.ready && window.posthog?.capture) {
+        try { window.posthog.capture(eventName, payload); } catch (_) {}
+        return;
+      }
+      if (analyticsState.loading && analyticsState.queue.length < 60) {
+        analyticsState.queue.push({ name:eventName, properties:payload });
+      }
+    }
+
+    function trackDailyActiveUser() {
+      const today = new Date().toISOString().slice(0, 10);
+      try {
+        if (localStorage.getItem(analyticsDailyActiveStorageKey) === today) return;
+        localStorage.setItem(analyticsDailyActiveStorageKey, today);
+      } catch (_) {}
+      trackEvent("active_user", { active_date:today });
+    }
+
+    async function initAnalytics() {
+      if (analyticsState.loading || analyticsState.ready) return;
+      analyticsState.loading = true;
+      try {
+        const config = await getJson("/api/analytics-config");
+        if (!config.enabled || !config.projectKey) return;
+        installPostHogSnippet(config.projectKey, {
+          api_host:config.apiHost || "https://us.i.posthog.com",
+          person_profiles:config.personProfiles || "identified_only",
+          capture_pageview:false,
+          autocapture:false,
+        });
+        analyticsState.enabled = true;
+        analyticsState.ready = true;
+        trackDailyActiveUser();
+        trackEvent("page_viewed", { page:"home" });
+        flushAnalyticsQueue();
+      } catch (_) {
+        analyticsState.queue = [];
+      } finally {
+        analyticsState.loading = false;
+      }
+    }
+
     async function search(query, months = 12) {
+      trackDailyActiveUser();
+      trackEvent("youtube_search_submitted", {
+        query_length:String(query || "").trim().length,
+        months,
+        origin_view:activeView,
+      });
       resetComparisonState();
       clearInterval(progressTimer);
       searchSuspended = false;
@@ -5962,6 +6188,13 @@
       try {
         const data = await getJson(`/api/search/start?q=${encodeURIComponent(query)}&months=${encodeURIComponent(activeLookbackMonths)}`);
         render(data);
+        if (!data.jobId || data.done !== false) {
+          trackEvent("youtube_search_completed", {
+            opinion_count:Number(data.opinions?.length || 0),
+            matched_video_count:Number(data.matchedVideos || data.mentionedVideoCount || 0),
+            months:activeLookbackMonths,
+          });
+        }
         if (data.jobId && data.done === false) {
           progressTimer = setInterval(async () => {
             try {
@@ -5969,6 +6202,11 @@
               render(next);
               if (next.done !== false) {
                 clearInterval(progressTimer);
+                trackEvent("youtube_search_completed", {
+                  opinion_count:Number(next.opinions?.length || 0),
+                  matched_video_count:Number(next.matchedVideos || next.mentionedVideoCount || 0),
+                  months:activeLookbackMonths,
+                });
               }
             } catch (error) {
               clearInterval(progressTimer);
@@ -5977,6 +6215,7 @@
           }, 700);
         }
       } catch (error) {
+        trackEvent("youtube_search_failed", { months:activeLookbackMonths });
         render({ error:error.error || "검색에 실패했어요." });
       }
     }
@@ -7184,8 +7423,8 @@
       const summary = candidateTrendSummary(item, series);
       if (!summary) return "";
       const complexName = summary.complexName || candidateDisplayName(item) || item.name || "해당 단지";
-      const w = 420, h = 194;
-      const plot = { left:58, right:10, top:12, bottom:34 };
+      const w = 420, h = 292;
+      const plot = { left:58, right:10, top:16, bottom:38 };
       const values = [
         ...series.complex.filter(value => value != null),
         ...(series.region || []).filter(value => value != null),
@@ -8395,6 +8634,13 @@
 
     function handleNaverLandLinkClick(event, link) {
       if (!link) return false;
+      let targetHost = "";
+      try { targetHost = new URL(link.href, window.location.href).hostname; } catch (_) {}
+      trackDailyActiveUser();
+      trackEvent("naver_land_opened", {
+        source:link.closest("#aptSearchResults") ? "apartment_search" : "budget_result",
+        target_host:targetHost,
+      });
       saveNaverReturnState();
       if (!shouldOpenNaverInCurrentTab(event)) return false;
       event.preventDefault();
@@ -8430,6 +8676,17 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M12 2a7 7 0 0 0-7 7c0 5.15 6.16 11.72 6.42 12a.8.8 0 0 0 1.16 0C12.84 20.72 19 14.15 19 9a7 7 0 0 0-7-7Zm0 9.65A2.65 2.65 0 1 1 12 6.35a2.65 2.65 0 0 1 0 5.3Z"/>
         </svg>
+      </button>`;
+    }
+
+    function candidateMapInlineButtonHtml(item) {
+      return `<button class="candidate-map-inline" type="button" data-candidate-view="map" data-candidate-map-key="${esc(candidateIdentityKey(item))}" aria-label="${esc(candidateDisplayName(item))} 지도에서 보기">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 5.5 9.5 3 14.5 5.5 20 3v15.5L14.5 21 9.5 18.5 4 21V5.5Z"></path>
+          <path d="M9.5 3v15.5"></path>
+          <path d="M14.5 5.5V21"></path>
+        </svg>
+        <span>지도보기</span>
       </button>`;
     }
 
@@ -8988,6 +9245,123 @@
       return entry;
     }
 
+    function candidateMapDistrictName(item) {
+      const text = [item?.region, item?.displayRegion, item?.address].filter(Boolean).join(" ");
+      const districts = [
+        ...regionGroups.seoul.districts,
+        ...regionGroups.gyeonggi.districts,
+      ];
+      const known = districts.find(name => text.includes(name));
+      if (known) return known;
+      const match = text.match(/[가-힣]+(?:구|시|군)/);
+      return match ? match[0] : "지역 미확인";
+    }
+
+    function clearCandidateMapMarkers() {
+      candidateMapEntries.forEach(entry => entry.overlay?.setMap?.(null));
+      candidateMapEntries = [];
+    }
+
+    function clearCandidateMapClusters() {
+      candidateMapClusterEntries.forEach(entry => entry.overlay?.setMap?.(null));
+      candidateMapClusterEntries = [];
+    }
+
+    function candidateMapBoundsForEntries(kakao, entries) {
+      const bounds = new kakao.maps.LatLngBounds();
+      entries.forEach(entry => bounds.extend(entry.position));
+      return bounds;
+    }
+
+    function candidateMapClusterGroups(entries) {
+      const groups = new Map();
+      entries.forEach(entry => {
+        const district = candidateMapDistrictName(entry.item);
+        if (!groups.has(district)) groups.set(district, []);
+        groups.get(district).push(entry);
+      });
+      return [...groups.entries()].map(([district, rows]) => ({ district, rows }));
+    }
+
+    function renderCandidateMapClusters(kakao, entries) {
+      clearCandidateMapMarkers();
+      clearCandidateMapClusters();
+      candidateMapPresentationMode = "clusters";
+      candidateMapSelectedKey = "";
+      setCandidateMapDetailOpen(false);
+      const preview = candidateMapQuery("[data-candidate-map-preview]");
+      if (preview) preview.hidden = true;
+      candidateMapClusterGroups(entries).forEach(group => {
+        const latitude = group.rows.reduce((sum, row) => sum + Number(row.latitude || 0), 0) / group.rows.length;
+        const longitude = group.rows.reduce((sum, row) => sum + Number(row.longitude || 0), 0) / group.rows.length;
+        const position = new kakao.maps.LatLng(latitude, longitude);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "candidate-map-cluster";
+        button.innerHTML = `<strong>${esc(group.district)}</strong><span>후보 ${esc(group.rows.length)}</span>`;
+        button.setAttribute("aria-label", `${group.district} 매수 후보 ${group.rows.length}곳 보기`);
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          suppressCandidateMapPresentationSync();
+          renderCandidateMapMarkers(kakao, group.rows, { fit:true, selectFirst:true });
+        });
+        const overlay = new kakao.maps.CustomOverlay({
+          map:candidateMap,
+          position,
+          content:button,
+          yAnchor:.5,
+        });
+        candidateMapClusterEntries.push({ district:group.district, rows:group.rows, overlay, element:button });
+      });
+    }
+
+    function renderCandidateMapMarkers(kakao, entries, options = {}) {
+      clearCandidateMapClusters();
+      clearCandidateMapMarkers();
+      candidateMapPresentationMode = "markers";
+      entries.forEach(entry => appendCandidateMapEntry(entry.item, entry.position));
+      if (!candidateMapEntries.length) return;
+      if (options.fit && candidateMap) {
+        suppressCandidateMapPresentationSync();
+        if (entries.length > 1) candidateMap.setBounds(candidateMapBoundsForEntries(kakao, entries));
+        else {
+          candidateMap.setCenter(entries[0].position);
+          candidateMap.setLevel(4);
+        }
+      }
+      const selected = entries.find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey)
+        || (options.selectFirst ? entries[0] : null);
+      if (selected) selectCandidateMapItem(selected.item, { pan:options.pan !== false });
+    }
+
+    function focusCandidateMapEntry(entry, level = 4) {
+      if (!candidateMap || !entry?.position) return;
+      suppressCandidateMapPresentationSync();
+      candidateMap.setCenter(entry.position);
+      candidateMap.setLevel(level);
+      candidateMapLastLevel = level;
+    }
+
+    function syncCandidateMapPresentation(kakao, options = {}) {
+      if (!candidateMap || !candidateMapLocatedEntries.length) return;
+      const level = Number(candidateMap.getLevel?.() || 99);
+      const previousLevel = Number.isFinite(candidateMapLastLevel) ? candidateMapLastLevel : level;
+      const zoomedOut = level > previousLevel;
+      const zoomedIn = level < previousLevel;
+      candidateMapLastLevel = level;
+      if (Date.now() < candidateMapSuppressPresentationSyncUntil) return;
+      if (candidateMapPresentationMode === "markers") {
+        if (zoomedOut && level >= CANDIDATE_MAP_CLUSTER_LEVEL) renderCandidateMapClusters(kakao, candidateMapLocatedEntries);
+        return;
+      }
+      if (candidateMapPresentationMode === "clusters" && zoomedIn && level < CANDIDATE_MAP_CLUSTER_LEVEL) {
+        renderCandidateMapMarkers(kakao, candidateMapLocatedEntries, { fit:options.fit, pan:false, selectFirst:true });
+      } else if (options.fit && candidateMapPresentationMode === "clusters" && candidateMapLocatedEntries.length > 1) {
+        renderCandidateMapClusters(kakao, candidateMapLocatedEntries);
+        candidateMap.setBounds(candidateMapBoundsForEntries(kakao, candidateMapLocatedEntries));
+      }
+    }
+
     function selectCandidateMapItem(item, options = {}) {
       const key = candidateIdentityKey(item);
       candidateMapSelectedKey = key;
@@ -9025,10 +9399,20 @@
       candidateMapRenderGeneration += 1;
       candidateMapEntries.forEach(entry => entry.overlay?.setMap?.(null));
       candidateMapEntries = [];
+      candidateMapClusterEntries.forEach(entry => entry.overlay?.setMap?.(null));
+      candidateMapClusterEntries = [];
+      candidateMapLocatedEntries = [];
+      candidateMapPresentationMode = "clusters";
+      candidateMapLastLevel = null;
+      candidateMapSuppressPresentationSyncUntil = 0;
       candidateMap?.setDraggable?.(false);
       if (candidateMapContainer) candidateMapContainer.replaceChildren();
       candidateMap = null;
       candidateMapContainer = null;
+    }
+
+    function suppressCandidateMapPresentationSync(duration = 450) {
+      candidateMapSuppressPresentationSyncUntil = Date.now() + duration;
     }
 
     function setCandidateMapState(title, copy, loading = false) {
@@ -9039,13 +9423,14 @@
     }
 
     async function renderCandidateMap(rows) {
-      // 보강 중에는 가격이 확인된 후보만 지도에 올린다(목록과 동일 기준).
+      // 지도는 현재 필터·정렬이 적용된 전체 후보를 보여준다. 주소 확인은
+      // 10개씩 나눠 처리해 지도 화면이 오래 빈 상태로 멈추지 않게 한다.
       if (currentBudgetData?.enrichmentPending) rows = rows.filter(candidateRowPriceReady);
       resetCandidateMap();
       const generation = candidateMapRenderGeneration;
       const container = candidateMapQuery("[data-candidate-map]");
       if (!container || candidateViewMode !== "map") return;
-      setCandidateMapState("단지 위치를 불러오고 있어요", "후보 주소를 지도에서 확인하고 있어요.", true);
+      setCandidateMapState("전체 후보 위치를 불러오고 있어요", `주소 확인 0/${rows.length}곳`, true);
       try {
         const kakao = await loadKakaoMapApi();
         if (generation !== candidateMapRenderGeneration || !container.isConnected) return;
@@ -9055,40 +9440,71 @@
           draggable:true,
           scrollwheel:true,
         });
+        candidateMapLastLevel = Number(candidateMap.getLevel?.() || 7);
         candidateMapContainer = container;
         const geocoder = new kakao.maps.services.Geocoder();
-        const located = (await Promise.all(rows.map(item => geocodeCandidate(geocoder, kakao, item)))).filter(Boolean);
-        if (generation !== candidateMapRenderGeneration || !container.isConnected) return;
+        const located = [];
+        const bounds = new kakao.maps.LatLngBounds();
+        const caption = candidateMapQuery("[data-candidate-map-caption]");
+        const openWithSelectedCandidate = Boolean(candidateMapSelectedKey);
+        let focusedSelectedCandidate = false;
+        for (let index = 0; index < rows.length; index += CANDIDATE_PAGE_SIZE) {
+          const chunk = rows.slice(index, index + CANDIDATE_PAGE_SIZE);
+          const chunkLocated = (await Promise.all(
+            chunk.map(item => geocodeCandidate(geocoder, kakao, item)),
+          )).filter(Boolean);
+          if (generation !== candidateMapRenderGeneration || !container.isConnected) return;
+          chunkLocated.forEach(entry => {
+            const position = new kakao.maps.LatLng(entry.latitude, entry.longitude);
+            bounds.extend(position);
+            located.push({ ...entry, position });
+          });
+          candidateMapLocatedEntries = located;
+          const processedCount = Math.min(index + CANDIDATE_PAGE_SIZE, rows.length);
+          const missingCount = processedCount - located.length;
+          if (located.length) {
+            const state = candidateMapQuery("[data-candidate-map-state]");
+            if (state) state.hidden = true;
+            if (openWithSelectedCandidate) {
+              renderCandidateMapMarkers(kakao, located, { fit:false, pan:false, selectFirst:false });
+              const selectedEntry = located.find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey);
+              if (selectedEntry && !focusedSelectedCandidate) {
+                focusCandidateMapEntry(selectedEntry);
+                focusedSelectedCandidate = true;
+              }
+            } else {
+              renderCandidateMapClusters(kakao, located);
+              if (located.length > 1) candidateMap.setBounds(bounds);
+              else candidateMap.setCenter(located[0].position);
+            }
+            if (caption) {
+              caption.hidden = false;
+              caption.textContent = `주소 확인 ${located.length}/${rows.length}곳${missingCount ? ` · 미확인 ${missingCount}곳` : ""}`;
+            }
+          } else {
+            setCandidateMapState("전체 후보 위치를 불러오고 있어요", `주소 확인 ${processedCount}/${rows.length}곳`, true);
+          }
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
         if (!located.length) {
           setCandidateMapState("지도에 표시할 주소를 찾지 못했어요", "목록에서 단지 주소를 확인해 주세요.");
           return;
         }
-        const bounds = new kakao.maps.LatLngBounds();
-        located.forEach(entry => {
-          const position = new kakao.maps.LatLng(entry.latitude, entry.longitude);
-          bounds.extend(position);
-          appendCandidateMapEntry(entry.item, position);
-        });
-        if (located.length > 1) candidateMap.setBounds(bounds);
-        else {
-          candidateMap.setCenter(candidateMapEntries[0].position);
-          candidateMap.setLevel(4);
-        }
-        const state = candidateMapQuery("[data-candidate-map-state]");
-        if (state) state.hidden = true;
-        const missingCount = rows.length - located.length;
-        const caption = candidateMapQuery("[data-candidate-map-caption]");
+        const totalMissingCount = rows.length - located.length;
         if (caption) {
-          caption.hidden = !missingCount;
-          caption.textContent = missingCount ? `주소 확인 ${located.length}곳 · 미확인 ${missingCount}곳` : "";
+          caption.hidden = !totalMissingCount;
+          caption.textContent = totalMissingCount ? `주소 확인 ${located.length}/${rows.length}곳 · 미확인 ${totalMissingCount}곳` : "";
         }
-        const selected = located.find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey) || located[0];
-        selectCandidateMapItem(selected.item, { pan:false });
+        if (!openWithSelectedCandidate) renderCandidateMapClusters(kakao, located);
+        else if (!focusedSelectedCandidate) {
+          renderCandidateMapMarkers(kakao, located, { fit:true, pan:false, selectFirst:true });
+        }
         requestAnimationFrame(() => {
           if (generation !== candidateMapRenderGeneration || candidateMapContainer !== container || !container.isConnected) return;
           candidateMap?.relayout();
           candidateMap?.setDraggable?.(true);
           candidateMap?.setZoomable?.(true);
+          kakao.maps.event.addListener(candidateMap, "zoom_changed", () => syncCandidateMapPresentation(kakao));
         });
       } catch (error) {
         if (generation !== candidateMapRenderGeneration) return;
@@ -9127,7 +9543,7 @@
           const directRows = [...aptCandidateResults.values()];
           const rows = candidateMapOrigin === "aptSearch"
             ? (directRows.length ? directRows : currentAptSearchItems)
-            : currentBudgetData?.visibleCandidates || currentBudgetData?.candidates || [];
+            : currentBudgetData?.candidates || currentBudgetData?.visibleCandidates || [];
           renderCandidateMap(rows);
         });
       } else {
@@ -10024,6 +10440,13 @@
 
     async function calculatePurchasePower() {
       if (!validateBudgetRequiredFields()) return;
+      trackDailyActiveUser();
+      trackEvent("purchase_power_submitted", {
+        home_ownership:policyHomeOwnership.value || "unknown",
+        first_time:policyFirstTime.value || "",
+        co_borrower:policyCoBorrower.value === "true",
+        loan_term_years:policyLoanTerm.value,
+      });
       powerCalculate.disabled = true;
       purchasePowerResult.classList.add("show");
       purchasePowerResult.classList.remove("is-sheet");
@@ -10033,88 +10456,20 @@
         const data = await getJson(`/api/purchase-power?${purchasePowerParams().toString()}`);
         currentPurchasePower = data;
         renderPurchasePower(data);
+        trackEvent("purchase_power_completed", {
+          budget_band_eok:Math.ceil(Number(data.budgetEok || 0) / 2) * 2,
+        });
       } catch (error) {
         currentPurchasePower = null;
+        trackEvent("purchase_power_failed", {
+          home_ownership:policyHomeOwnership.value || "unknown",
+        });
         setPreferenceReady(false);
         purchasePowerResult.innerHTML = `<div class="empty">${esc(error.error || "구매력을 계산하지 못했어요.")}</div>`;
         purchasePowerResult.classList.remove("is-sheet");
         document.body.classList.remove("purchase-power-sheet-open");
       } finally {
         powerCalculate.disabled = false;
-      }
-    }
-
-    function askingPriceCheckHtml(item) {
-      if (!item?.name || !item?.region) return "";
-      const displayName = candidateDisplayName(item);
-      return `<div class="asking-price-check" data-asking-price-check>
-        <form class="asking-price-check-form" data-asking-price-form data-asking-price-region="${esc(item.region)}">
-          <span class="asking-price-check-label">확인한 매물가</span>
-          <span class="asking-price-check-controls">
-            <label class="asking-price-input-shell">
-              <input name="asking_price_eok" type="number" min="0.1" step="0.01" inputmode="decimal" placeholder="예: 9.2" aria-label="${esc(displayName)} 확인한 매물가">
-              <span>억</span>
-            </label>
-            <button class="asking-price-check-submit" type="submit">계산</button>
-          </span>
-        </form>
-        <div class="asking-price-check-result" data-asking-price-result aria-live="polite" hidden></div>
-      </div>`;
-    }
-
-    async function calculateAskingPrice(form) {
-      const input = form.querySelector('input[name="asking_price_eok"]');
-      const submit = form.querySelector(".asking-price-check-submit");
-      const check = form.closest("[data-asking-price-check]");
-      const result = check?.querySelector("[data-asking-price-result]");
-      const askingPrice = Number(input?.value || 0);
-      if (!input || !submit || !result || !askingPrice || askingPrice <= 0) {
-        input?.focus();
-        return;
-      }
-      const profile = aptPurchaseProfile();
-      if (!profile) {
-        result.hidden = false;
-        result.innerHTML = `<div class="asking-price-check-error">먼저 구매력 조건을 완성해 주세요.</div>`;
-        return;
-      }
-      submit.disabled = true;
-      submit.textContent = "계산 중";
-      check.classList.remove("is-ready");
-      result.hidden = true;
-      try {
-        const payload = await getJson("/api/asking-price-financing", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body:JSON.stringify({
-            region:form.dataset.askingPriceRegion || "",
-            asking_price_eok:askingPrice,
-            profile,
-          }),
-        });
-        const cashGap = Number(payload.cashGapEok);
-        const hasCashGap = Number.isFinite(cashGap);
-        const gapText = !hasCashGap
-          ? ""
-          : cashGap < 0
-            ? `추가 자금 ${readableGapMoney(Math.abs(cashGap))}`
-            : cashGap > 0
-              ? `${readableGapMoney(cashGap)} 여유`
-              : "자기자금 충족";
-        const gapTone = cashGap < 0 ? "risk" : "up";
-        result.innerHTML = `<div class="policy-metric policy-cash-scenario-result">
-          <span class="policy-required-line"><small class="policy-required-label">자기자금</small><strong>${policyMoney(payload.requiredCashEok)} 필요</strong></span>
-          ${gapText ? `<small class="${gapTone}">${esc(gapText)}</small>` : ""}
-        </div>`;
-        result.hidden = false;
-        check.classList.add("is-ready");
-      } catch (error) {
-        check.classList.remove("is-ready");
-        result.hidden = false;
-        result.innerHTML = `<div class="asking-price-check-error">${esc(error.error || "매물가를 계산하지 못했어요.")}</div>`;
-      } finally {
-        submit.disabled = false;
-        submit.textContent = "계산";
       }
     }
 
@@ -10156,7 +10511,6 @@
         <div class="policy-impact-grid policy-cash-grid">
           ${scenarioRows || fallbackRow}
         </div>
-        ${askingPriceCheckHtml(item)}
       </section>`;
     }
 
@@ -11083,21 +11437,35 @@
           button.textContent = isSelected ? "비교에서 빼기" : "비교 담기";
         }
       });
-      compareCart.hidden = selected.length === 0;
-      compareCart.disabled = selected.length < 2;
-      compareCartBadge.textContent = String(selected.length);
+      if (!selected.length) compareCartCollapsed = false;
+      compareCart.hidden = selected.length === 0 || compareCartCollapsed;
+      compareCartChip.hidden = selected.length === 0 || !compareCartCollapsed;
+      compareCartChip.textContent = `비교 후보 ${selected.length}곳`;
+      compareCartChip.setAttribute("aria-label", `접힌 비교 바 열기, 매수 후보 ${selected.length}곳 담김`);
+      document.body.classList.toggle("compare-floating-visible", selected.length > 0);
+      compareCartAction.hidden = selected.length < 2;
+      compareCartAction.disabled = selected.length < 2;
+      compareCartClear.hidden = selected.length === 0;
+      compareCartCount.innerHTML = `매수 후보 ${selected.length}곳${selected.length === 1 ? ' <span class="compare-floating-hint">한 곳 더 선택하세요</span>' : ""}`;
       compareCart.setAttribute(
         "aria-label",
         selected.length < 2
-          ? `비교함에 ${selected.length}개 담김, 한 곳 더 선택해 주세요`
-          : `비교함에 ${selected.length}개 담김, 비교하기`,
+          ? `매수 후보 ${selected.length}곳 담김, 한 곳 더 선택해 주세요`
+          : `매수 후보 ${selected.length}곳 담김, 비교할 수 있어요`,
       );
     }
 
     function toggleComparison(name) {
-      if (selectedCandidateNames.has(name)) selectedCandidateNames.delete(name);
+      const wasSelected = selectedCandidateNames.has(name);
+      if (wasSelected) selectedCandidateNames.delete(name);
       else if (selectedCandidateNames.size < 3) selectedCandidateNames.add(name);
       else showComparisonLimitToast();
+      compareCartCollapsed = false;
+      trackDailyActiveUser();
+      trackEvent("candidate_compare_toggled", {
+        selected:!wasSelected && selectedCandidateNames.has(name),
+        selected_count:selectedCandidateNames.size,
+      });
       syncCompareSelection();
     }
 
@@ -11248,8 +11616,8 @@
           <div class="comparison-trend-empty">비교할 실거래 월이 아직 부족해요. 잠시 후 다시 열어보세요.</div>
         </section>`;
       }
-      const width = 420, height = 194;
-      const plot = { left:58, right:10, top:12, bottom:34 };
+      const width = 840, height = 292;
+      const plot = { left:44, right:6, top:16, bottom:38 };
       const values = data.series.flatMap(item => item.values.filter(value => value != null));
       const rawMin = Math.min(...values, 100);
       const rawMax = Math.max(...values, 100);
@@ -11350,6 +11718,11 @@
     async function openComparison() {
       const rows = selectedCandidates();
       if (rows.length < 2) return;
+      trackDailyActiveUser();
+      trackEvent("candidate_comparison_opened", {
+        candidate_count:rows.length,
+        source:candidateMapOrigin || "budget",
+      });
       const needsTrendData = rows.some(row => !sparklineSeries(row));
       comparisonContent.innerHTML = `${comparisonTrendHtml(rows, needsTrendData)}${comparisonTableHtml(rows)}`;
       comparisonOverlay.classList.add("show");
@@ -11368,11 +11741,32 @@
       comparisonOverlay.classList.remove("show");
       comparisonOverlay.setAttribute("aria-hidden", "true");
       document.body.classList.remove("comparison-open");
-      compareCart.focus();
+      if (!compareCart.hidden) compareCartAction.focus();
+      else if (!compareCartChip.hidden) compareCartChip.focus();
+    }
+
+    function clearComparisonSelection() {
+      selectedCandidateNames.clear();
+      compareCartCollapsed = false;
+      syncCompareSelection();
+    }
+
+    function collapseComparisonBar() {
+      if (!selectedCandidateNames.size) return;
+      compareCartCollapsed = true;
+      syncCompareSelection();
+      compareCartChip.focus({ preventScroll:true });
+    }
+
+    function expandComparisonBar() {
+      compareCartCollapsed = false;
+      syncCompareSelection();
+      (compareCartAction.hidden ? compareCartClear : compareCartAction).focus({ preventScroll:true });
     }
 
     function resetComparisonState() {
       selectedCandidateNames.clear();
+      compareCartCollapsed = false;
       currentBudgetData = null;
       syncCompareSelection();
       comparisonOverlay.classList.remove("show");
@@ -11563,7 +11957,10 @@
             <article class="budget-candidate" tabindex="-1" data-candidate-name="${esc(item.name)}" data-candidate-key="${esc(candidateIdentityKey(item))}">
               <div class="candidate-top">
                 <div class="budget-main">
-                  <span class="budget-name">${esc(candidateDisplayName(item))}</span>
+                  <span class="candidate-name-row">
+                    <span class="budget-name">${esc(candidateDisplayName(item))}</span>
+                    ${candidateMapInlineButtonHtml(item)}
+                  </span>
                   <span class="budget-meta">${candidateListMetaHtml(item)}</span>
                 </div>
               </div>
@@ -11797,6 +12194,14 @@
         return;
       }
       clearInterval(progressTimer);
+      trackDailyActiveUser();
+      trackEvent("budget_search_submitted", {
+        region_count:multiSelections.region.size,
+        min_area:Number(budgetMinArea.value || 0),
+        min_households:Number(budgetMinHouseholds.value || 0),
+        max_building_age:Number(budgetMaxBuildingAge.value || 0),
+        has_purchase_power:Boolean(currentPurchasePower),
+      });
       document.body.classList.remove("result-mode");
       result.innerHTML = "";
       budgetResultEl.classList.add("show");
@@ -11837,15 +12242,26 @@
           staged: "true",
         });
         const url = `/api/budget-candidates?${params.toString()}`;
-        const initialData = readBudgetBrowserCache(url) || await getJson(url, { signal:controller.signal });
+        const cachedData = readBudgetBrowserCache(url);
+        const initialData = cachedData || await getJson(url, { signal:controller.signal });
         const data = await waitForCompletedBudgetCandidates(initialData, url, controller);
         if (!data) return;
         writeBudgetBrowserCache(url, data);
         const revealed = await revealBudgetCandidatesTogether(data, controller);
         if (!revealed) return;
+        trackEvent("budget_search_completed", {
+          candidate_count:Number(data.candidates?.length || 0),
+          all_candidate_count:Number(data.allCandidates?.length || 0),
+          policy_excluded_count:Number(data.policyExcludedCandidates?.length || 0),
+          from_browser_cache:Boolean(cachedData),
+        });
         void enrichOptionalBudgetLinks(data);
       } catch (error) {
         if (budgetSearchController !== controller) return;
+        trackEvent("budget_search_failed", {
+          aborted:error?.name === "AbortError",
+          region_count:multiSelections.region.size,
+        });
         if (error?.name === "AbortError") {
           budgetResultEl.innerHTML = `<div class="empty"><strong>검색을 취소했어요.</strong><br>조건을 바꾸거나 그대로 다시 검색할 수 있어요.</div>`;
         } else {
@@ -12372,6 +12788,16 @@
       const candidateViewButton = event.target.closest("[data-candidate-view]");
       if (candidateViewButton) {
         candidateMapOrigin = "budget";
+        trackDailyActiveUser();
+        trackEvent("candidate_view_changed", {
+          mode:candidateViewButton.dataset.candidateView,
+          source:"budget_result",
+        });
+        if (candidateViewButton.dataset.candidateMapKey) {
+          candidateMapSelectedKey = candidateViewButton.dataset.candidateMapKey;
+        } else if (candidateViewButton.dataset.candidateView === "map") {
+          candidateMapSelectedKey = "";
+        }
         setCandidateViewMode(candidateViewButton.dataset.candidateView);
         return;
       }
@@ -12447,6 +12873,8 @@
       const candidateFilter = event.target.closest("[data-candidate-filter]");
       if (candidateFilter && currentBudgetData) {
         const filter = candidateFilter.dataset.candidateFilter;
+        trackDailyActiveUser();
+        trackEvent("candidate_filter_toggled", { filter });
         if (filter === "trade_1m") {
           candidateTradeAgeFilter = candidateTradeAgeFilter === "1m" ? "" : "1m";
         } else if (filter === "trade_3m") {
@@ -12464,6 +12892,8 @@
       if (candidateSortOption) {
         if (currentBudgetData) {
           budgetSort = candidateSortOption.dataset.candidateSortOption;
+          trackDailyActiveUser();
+          trackEvent("candidate_sort_selected", { sort:budgetSort });
           candidateVisibleCount = CANDIDATE_PAGE_SIZE;
           renderBudgetCandidates(currentBudgetData);
         } else {
@@ -12508,6 +12938,11 @@
       if (candidateDetailOpen) {
         const candidate = candidateDetailOpen.closest(".budget-candidate");
         const sheet = candidate?.querySelector("[data-candidate-detail-sheet]");
+        trackDailyActiveUser();
+        trackEvent("candidate_detail_toggled", {
+          opening:Boolean(sheet?.hidden ?? true),
+          source:"budget_result",
+        });
         setCandidateDetailOpen(sheet, sheet?.hidden ?? true);
         return;
       }
@@ -12604,23 +13039,6 @@
       search(button.dataset.query);
     }
     budgetResultEl.addEventListener("click", handleBudgetResultClick);
-    budgetResultEl.addEventListener("submit", event => {
-      const form = event.target.closest("[data-asking-price-form]");
-      if (!form) return;
-      event.preventDefault();
-      if (!form.reportValidity()) return;
-      void calculateAskingPrice(form);
-    });
-    budgetResultEl.addEventListener("input", event => {
-      if (!event.target.matches('[data-asking-price-form] input[name="asking_price_eok"]')) return;
-      const check = event.target.closest("[data-asking-price-check]");
-      const result = check?.querySelector("[data-asking-price-result]");
-      check?.classList.remove("is-ready");
-      if (result) {
-        result.hidden = true;
-        result.innerHTML = "";
-      }
-    });
     function handleCandidateMapPointerDown(event) {
       const preview = event.target.closest("[data-candidate-map-preview]");
       const handle = event.target.closest("[data-candidate-map-sheet-handle]")
@@ -12647,7 +13065,10 @@
       budgetResultEl.querySelectorAll(".signal-report").forEach(report => setSignalDefinitionOpen(report, false));
       aptReportSheet.querySelectorAll(".signal-report").forEach(report => setSignalDefinitionOpen(report, false));
     });
-    compareCart.addEventListener("click", openComparison);
+    compareCartAction.addEventListener("click", openComparison);
+    compareCartClear.addEventListener("click", clearComparisonSelection);
+    compareCartClose.addEventListener("click", collapseComparisonBar);
+    compareCartChip.addEventListener("click", expandComparisonBar);
     comparisonClose.addEventListener("click", closeComparison);
     comparisonContent.addEventListener("click", event => {
       const sparkPoint = event.target.closest("[data-spark-point]");
@@ -12935,6 +13356,12 @@
         openAptSearchLanding({ focus:false });
         return;
       }
+      trackDailyActiveUser();
+      trackEvent("apartment_search_submitted", {
+        query_length:String(query || "").trim().length,
+        has_exact_selection:Boolean(selectedItem),
+        source:selectedItem?.preferredArea ? "leader_or_candidate" : "search_box",
+      });
       hideAptSuggest();
       aptSearchInput.blur();
       openAptSearchView();
@@ -12955,6 +13382,10 @@
       }
       aptSearchInput.value = "";
       if (!items.length) {
+        trackEvent("apartment_search_completed", {
+          result_count:0,
+          has_exact_selection:Boolean(selectedItem),
+        });
         aptSearchResults.innerHTML = `<div class="apt-result-empty">‘${esc(query)}’와 일치하는 단지를 찾지 못했어요. 단지명 철자나 지역명을 함께 입력해 보세요.</div>`;
         return;
       }
@@ -12976,7 +13407,6 @@
           </div>
         </div>
         <div class="apt-affordability is-loading" data-apt-affordability aria-live="polite">예상 매수가와 필요한 자금을 계산하고 있어요…</div>
-        ${askingPriceCheckHtml(item)}
         <div class="apt-result-actions">
           <div class="candidate-primary-actions">
             ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "apt-result-naver")}
@@ -12986,6 +13416,10 @@
       </article>`).join("") + candidateMapFloatingButtonHtml() + candidateMapViewHtml(items, false, { directSearch:true });
       mountCandidateMapPortal(aptSearchResults);
       currentAptSearchItems = items;
+      trackEvent("apartment_search_completed", {
+        result_count:items.length,
+        has_exact_selection:Boolean(selectedItem),
+      });
       // 가격·정책·시그널은 예산 검색과 동일한 공통 후보 응답에서 함께 받는다.
       void enrichAptAffordability(items);
     }
@@ -13492,6 +13926,13 @@
       body.months = 24;
       body.profile = aptPurchaseProfile();
       body.owner_token = listingReportOwnerToken();
+      trackDailyActiveUser();
+      trackEvent("listing_review_submitted", {
+        has_profile:Boolean(body.profile),
+        has_area:Boolean(body.area),
+        has_building:Boolean(body.building),
+        region:body.region,
+      });
       submit.disabled = true;
       submit.textContent = "실거래와 자금 조건을 검토하고 있어요…";
       error.hidden = true;
@@ -13502,7 +13943,14 @@
           body:JSON.stringify(body),
         });
         showListingReviewReport(payload.review, payload.saved || null);
+        trackEvent("listing_review_completed", {
+          verdict:payload.review?.verdict?.tone || payload.review?.verdict?.label || "",
+          saved:Boolean(payload.saved),
+        });
       } catch (requestError) {
+        trackEvent("listing_review_failed", {
+          payment_required:requestError.code === "payment_required",
+        });
         if (requestError.code === "payment_required" && requestError.checkoutUrl) {
           error.innerHTML = `${esc(requestError.error)} <a href="${esc(requestError.checkoutUrl)}" target="_blank" rel="noopener">이용권 확인</a>`;
         } else {
@@ -13817,9 +14265,21 @@
       });
     }
 
+    function aptAreaOptionMatches(optionValue, selectedArea = "") {
+      const optionText = String(optionValue || "");
+      const selectedText = String(selectedArea || "");
+      if (!optionText || !selectedText) return false;
+      if (optionText === selectedText) return true;
+      const optionNumber = Number(optionText);
+      const selectedNumber = Number(selectedText);
+      if (!Number.isFinite(optionNumber) || !Number.isFinite(selectedNumber)) return false;
+      if (Math.abs(optionNumber - selectedNumber) < .05) return true;
+      return Math.floor(optionNumber) === Math.floor(selectedNumber);
+    }
+
     function syncAptAreaChipSelection(card, selectedArea = "") {
       card?.querySelectorAll("[data-apt-area]").forEach(button => {
-        const selected = String(button.dataset.aptArea || "") === String(selectedArea || "");
+        const selected = aptAreaOptionMatches(button.dataset.aptArea, selectedArea);
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-checked", String(selected));
       });
@@ -13837,7 +14297,7 @@
         options.innerHTML = cleanAreas.map(area => {
           const value = String(area.value);
           const label = String(area.label || "").replace(/^전용\s*/, "");
-          const selected = value === String(selectedArea);
+          const selected = aptAreaOptionMatches(value, selectedArea);
           const count = Number(area.transactionCount || 0);
           const title = count ? `전용 ${label} · 최근 거래 ${count.toLocaleString("ko-KR")}건` : `전용 ${label}`;
           return `<button class="apt-area-option${selected ? " is-selected" : ""}" type="button" role="radio" data-apt-area="${esc(value)}" data-apt-area-label="${esc(label)}" aria-checked="${selected ? "true" : "false"}" title="${esc(title)}">${esc(label)}</button>`;
@@ -13910,7 +14370,7 @@
       }
     }
 
-    async function selectAptArea(card, area, areaLabel = "", areaChoice = area) {
+    async function selectAptArea(card, area, areaLabel = "", areaChoice = area, source = "automatic") {
       const index = Number(card?.dataset.aptCardIndex);
       const item = currentAptSearchItems[index];
       const slot = card?.querySelector("[data-apt-affordability]");
@@ -13918,6 +14378,12 @@
       const shouldReloadTrend = card.dataset.aptTrendExpanded === "true"
         || Boolean(card.querySelector("[data-sparkline]:not([hidden])"));
       const displayLabel = areaLabel || (area ? `전용 ${Math.floor(Number(area))}㎡` : "상관없음");
+      trackDailyActiveUser();
+      trackEvent(source === "user" ? "apartment_area_selected" : "apartment_area_loaded", {
+        has_area:Boolean(area),
+        area_bucket:area ? Math.round(Number(area) / 10) * 10 : 0,
+        source,
+      });
       card.dataset.selectedAptArea = String(area || "");
       card.dataset.selectedAptAreaChoice = String(areaChoice || "");
       card.dataset.selectedAptAreaLabel = displayLabel;
@@ -14037,6 +14503,11 @@
     }
 
     async function openAptReport(name, region = "", candidate = null) {
+      trackDailyActiveUser();
+      trackEvent("apartment_report_opened", {
+        has_cached_candidate:Boolean(candidate),
+        region,
+      });
       aptReportSheet.hidden = false;
       aptReportSheet.setAttribute("aria-hidden", "false");
       syncCandidateDetailScrollLock();
@@ -14133,6 +14604,11 @@
       const candidateViewButton = event.target.closest("[data-candidate-view]");
       if (candidateViewButton) {
         candidateMapOrigin = "aptSearch";
+        trackDailyActiveUser();
+        trackEvent("candidate_view_changed", {
+          mode:candidateViewButton.dataset.candidateView,
+          source:"apartment_search",
+        });
         setCandidateViewMode(candidateViewButton.dataset.candidateView);
         return;
       }
@@ -14142,7 +14618,7 @@
         const area = String(areaOption.dataset.aptArea || "");
         if (!card || areaOption.getAttribute("aria-checked") === "true") return;
         const label = String(areaOption.dataset.aptAreaLabel || "");
-        selectAptArea(card, area, `전용 ${label}`, area);
+        selectAptArea(card, area, `전용 ${label}`, area, "user");
         return;
       }
       const areaChange = event.target.closest("[data-apt-area-change]");
@@ -14213,23 +14689,6 @@
         );
       }
     });
-    aptSearchResults.addEventListener("submit", event => {
-      const form = event.target.closest("[data-asking-price-form]");
-      if (!form) return;
-      event.preventDefault();
-      if (!form.reportValidity()) return;
-      void calculateAskingPrice(form);
-    });
-    aptSearchResults.addEventListener("input", event => {
-      if (!event.target.matches('[data-asking-price-form] input[name="asking_price_eok"]')) return;
-      const check = event.target.closest("[data-asking-price-check]");
-      const result = check?.querySelector("[data-asking-price-result]");
-      check?.classList.remove("is-ready");
-      if (result) {
-        result.hidden = true;
-        result.innerHTML = "";
-      }
-    });
     aptAreaSheet.addEventListener("click", event => {
       const option = event.target.closest("[data-apt-area-sheet-value]");
       if (option) {
@@ -14259,7 +14718,7 @@
       if (!card || !choice) return;
       const label = String(choice.label || "").replace(/^전용\s*/, "");
       closeAptAreaSheet(false);
-      selectAptArea(card, choice.value, label, choice.value);
+      selectAptArea(card, choice.value, label, choice.value, "user");
     });
     document.addEventListener("keydown", event => {
       if (event.key !== "Escape" || aptAreaSheet.hidden) return;
@@ -14301,7 +14760,7 @@
         name:detail.dataset.leaderDetailName || "",
         region:detail.dataset.leaderDetailRegion || "",
         households:Number(detail.dataset.leaderDetailHouseholds || 0),
-        preferredArea:detail.dataset.leaderDetailAreaTarget || "",
+        preferredArea:"84",
       });
     });
     document.addEventListener("keydown", event => {
@@ -14342,7 +14801,7 @@
         name:detail.dataset.leaderDetailName || "",
         region:detail.dataset.leaderDetailRegion || "",
         households:Number(detail.dataset.leaderDetailHouseholds || 0),
-        preferredArea:detail.dataset.leaderDetailAreaTarget || "",
+        preferredArea:"84",
       });
     });
     aptReportSheet.addEventListener("click", event => {
@@ -14469,6 +14928,7 @@
     }
     window.addEventListener("pagehide", saveRefreshPageState);
     window.addEventListener("pageshow", () => restoreNaverReturnState());
+    void initAnalytics();
     loadStatus();
     renderRegionTabs();
     void restoreListingReportFromUrl();

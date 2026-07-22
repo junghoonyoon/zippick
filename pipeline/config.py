@@ -40,6 +40,8 @@ def _load_settings_file(path):
         ("실거래가키", "PUBLIC_DATA_API_KEY"),
         ("카카오REST키", "KAKAO_REST_API_KEY"),
         ("카카오지도키", "KAKAO_MAP_JAVASCRIPT_KEY"),
+        ("포스트호그키", "POSTHOG_PROJECT_KEY"),
+        ("포스트호그호스트", "POSTHOG_API_HOST"),
         ("네이버API허브아이디", "NAVER_API_HUB_CLIENT_ID"),
         ("네이버API허브시크릿", "NAVER_API_HUB_CLIENT_SECRET"),
         ("네이버검색아이디", "NAVER_SEARCH_CLIENT_ID"),
@@ -86,6 +88,9 @@ MOLIT_APARTMENT_TRADE_API_KEY = os.environ.get("MOLIT_APARTMENT_TRADE_API_KEY", 
 MOLIT_PRESALE_TRADE_API_KEY = os.environ.get("MOLIT_PRESALE_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 KAKAO_MAP_JAVASCRIPT_KEY = os.environ.get("KAKAO_MAP_JAVASCRIPT_KEY", "")
 KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY", "")
+POSTHOG_PROJECT_KEY = os.environ.get("POSTHOG_PROJECT_KEY", "")
+POSTHOG_API_HOST = os.environ.get("POSTHOG_API_HOST", "https://us.i.posthog.com")
+POSTHOG_PERSON_PROFILES = os.environ.get("POSTHOG_PERSON_PROFILES", "identified_only")
 KAKAO_LOCAL_TIMEOUT_SECONDS = float(os.environ.get("KAKAO_LOCAL_TIMEOUT_SECONDS", "8"))
 KAKAO_STATION_RADIUS_METERS = max(
     1000,
@@ -184,6 +189,23 @@ NEWS_CATALYST_TIMEOUT_SECONDS = float(os.environ.get("NEWS_CATALYST_TIMEOUT_SECO
 NEWS_CATALYST_SEARCH_RESULTS = max(1, min(int(os.environ.get("NEWS_CATALYST_SEARCH_RESULTS", "100")), 100))
 NEWS_CATALYST_BATCH_LIMIT = max(1, min(int(os.environ.get("NEWS_CATALYST_BATCH_LIMIT", "12")), 24))
 NEWS_CATALYST_MAX_WORKERS = max(1, min(int(os.environ.get("NEWS_CATALYST_MAX_WORKERS", "4")), 8))
+
+PUBLIC_RATE_LIMIT_WINDOW_SECONDS = max(
+    10,
+    int(os.environ.get("PUBLIC_RATE_LIMIT_WINDOW_SECONDS", "60")),
+)
+PUBLIC_HEAVY_RATE_LIMIT = max(
+    1,
+    int(os.environ.get("PUBLIC_HEAVY_RATE_LIMIT", "20")),
+)
+PUBLIC_MEDIUM_RATE_LIMIT = max(
+    1,
+    int(os.environ.get("PUBLIC_MEDIUM_RATE_LIMIT", "60")),
+)
+ADMIN_API_TOKEN = (
+    os.environ.get("ADMIN_API_TOKEN", "")
+    or os.environ.get("APARTMENT_LEADER_ADMIN_TOKEN", "")
+).strip()
 
 TRANSCRIPT_FAILURE_TTL_HOURS = int(os.environ.get("TRANSCRIPT_FAILURE_TTL_HOURS", "12"))
 TRANSCRIPT_TRANSIENT_FAILURE_TTL_HOURS = int(os.environ.get("TRANSCRIPT_TRANSIENT_FAILURE_TTL_HOURS", "2"))

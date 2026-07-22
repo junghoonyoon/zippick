@@ -52,6 +52,31 @@ BUDGET_OPTIONAL_LINK_KEYS_LOCK = threading.Lock()
 BUDGET_JOB_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_TIMEOUT_SECONDS", "150"))
 BUDGET_JOB_HARD_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_HARD_TIMEOUT_SECONDS", "600"))
 BUDGET_PREWARM_STATE = {"running": False, "done": False, "pairCount": 0, "finishedAt": None}
+RATE_LIMIT_LOCK = threading.Lock()
+RATE_LIMIT_BUCKETS = {}
+RATE_LIMIT_MAX_CLIENTS = 5000
+RATE_LIMIT_HEAVY_PATHS = {
+    "/api/budget-candidates",
+    "/api/apartment-areas",
+    "/api/rone-estimate",
+    "/api/apartment-report",
+}
+RATE_LIMIT_MEDIUM_PATHS = {
+    "/api/search",
+    "/api/search/start",
+    "/api/apartment-catalysts",
+    "/api/apartment-affordability",
+    "/api/asking-price-financing",
+    "/api/listing-review",
+}
+OPERATIONS_LOCK = threading.Lock()
+OPERATIONS = {
+    "rateLimited": 0,
+    "budgetCandidateRequests": 0,
+    "budgetCandidateErrors": 0,
+    "budgetCandidateTimeouts": 0,
+    "externalDataFallbacks": 0,
+}
 MARKET_SNAPSHOT_LOCK = threading.Lock()
 MARKET_SIGNAL_SNAPSHOTS = {}
 MARKET_SIGNAL_SNAPSHOT_KEYS = {}
@@ -114,6 +139,72 @@ MARKET_SNAPSHOT_FIELDS = (
     "priceSource",
     "priceIdentityVerified",
 )
+
+
+def _record_operation(name, amount=1):
+    with OPERATIONS_LOCK:
+        OPERATIONS[name] = int(OPERATIONS.get(name) or 0) + amount
+
+
+def _operation_snapshot():
+    with OPERATIONS_LOCK:
+        return dict(OPERATIONS)
+
+
+def _client_ip(handler):
+    forwarded = handler.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+    if forwarded:
+        return forwarded[:80]
+    return str(handler.client_address[0] if handler.client_address else "unknown")[:80]
+
+
+def _rate_limit_kind(path):
+    if path in RATE_LIMIT_HEAVY_PATHS:
+        return "heavy", config.PUBLIC_HEAVY_RATE_LIMIT
+    if path in RATE_LIMIT_MEDIUM_PATHS:
+        return "medium", config.PUBLIC_MEDIUM_RATE_LIMIT
+    return None, None
+
+
+def _rate_limit_check(client_ip, path, now=None):
+    kind, limit = _rate_limit_kind(path)
+    if not kind:
+        return True, None
+    now = time.time() if now is None else float(now)
+    window = config.PUBLIC_RATE_LIMIT_WINDOW_SECONDS
+    bucket_key = (client_ip, kind)
+    with RATE_LIMIT_LOCK:
+        if len(RATE_LIMIT_BUCKETS) > RATE_LIMIT_MAX_CLIENTS:
+            cutoff = now - window
+            for key, values in list(RATE_LIMIT_BUCKETS.items()):
+                if not values or values[-1] < cutoff:
+                    RATE_LIMIT_BUCKETS.pop(key, None)
+        values = [
+            timestamp
+            for timestamp in RATE_LIMIT_BUCKETS.get(bucket_key, [])
+            if now - timestamp < window
+        ]
+        if len(values) >= limit:
+            retry_after = max(1, int(window - (now - values[0])))
+            RATE_LIMIT_BUCKETS[bucket_key] = values
+            _record_operation("rateLimited")
+            return False, retry_after
+        values.append(now)
+        RATE_LIMIT_BUCKETS[bucket_key] = values
+        return True, None
+
+
+def _public_error(message="결과를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."):
+    return {"error": message}
+
+
+def _admin_token_configured():
+    return bool(config.ADMIN_API_TOKEN)
+
+
+def _admin_token_authorized(supplied_token):
+    token = config.ADMIN_API_TOKEN
+    return bool(token and hmac.compare_digest(token, str(supplied_token or "").strip()))
 
 
 def _budget_cache_key(arguments):
@@ -2133,14 +2224,27 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print(f"[부동산 서버] {fmt % args}")
 
-    def _json(self, payload, status=200):
+    def _json(self, payload, status=200, extra_headers=None):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        for key, value in (extra_headers or {}).items():
+            self.send_header(key, str(value))
         self.end_headers()
         self.wfile.write(body)
+
+    def _apply_rate_limit(self, parsed):
+        allowed, retry_after = _rate_limit_check(_client_ip(self), parsed.path)
+        if allowed:
+            return True
+        self._json(
+            {"error": "요청이 잠시 많아요. 조금 뒤에 다시 시도해 주세요."},
+            429,
+            {"Retry-After": retry_after},
+        )
+        return False
 
     def _file(self, path):
         if not path.exists() or not path.is_file():
@@ -2157,6 +2261,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if not self._apply_rate_limit(parsed):
+            return
         report_share_match = re.fullmatch(
             r"/api/reports/([a-f0-9-]{16,64})/share",
             parsed.path,
@@ -2198,16 +2304,15 @@ class Handler(BaseHTTPRequestHandler):
             "/api/admin/apartment-leaders/recalculate",
             "/api/admin/apartment-station-distances/refresh",
         }:
-            configured_token = os.environ.get("APARTMENT_LEADER_ADMIN_TOKEN", "").strip()
             supplied_token = (
                 self.headers.get("X-Admin-Token", "").strip()
                 or self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
             )
             local_only = HOST in {"127.0.0.1", "localhost", "::1"}
-            if not configured_token and not local_only:
+            if not _admin_token_configured() and not local_only:
                 self._json({"error": "운영 환경의 재계산 인증 토큰이 설정되지 않았어요."}, 503)
                 return
-            if configured_token and not hmac.compare_digest(configured_token, supplied_token):
+            if _admin_token_configured() and not _admin_token_authorized(supplied_token):
                 self._json({"error": "재계산 권한을 확인해 주세요."}, 401)
                 return
             sido = str(arguments.get("sido") or "").strip()
@@ -2226,7 +2331,7 @@ class Handler(BaseHTTPRequestHandler):
                         dry_run=bool(arguments.get("dryRun")),
                     )
                 except kakao_station_distances.KakaoLocalError as exc:
-                    self._json({"error": str(exc)}, 503)
+                    self._json(_public_error(str(exc)), 503)
                     return
                 except (TypeError, ValueError) as exc:
                     self._json({"error": str(exc)}, 400)
@@ -2266,7 +2371,11 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(apartments, list):
                 self._json({"error": "단지 목록을 확인해 주세요."}, 400)
                 return
-            self._json(news_catalysts.catalysts_for_apartments(apartments))
+            try:
+                self._json(news_catalysts.catalysts_for_apartments(apartments))
+            except Exception:
+                _record_operation("externalDataFallbacks")
+                self._json({"items": [], "error": "최신 소식 확인이 늦어지고 있어요."}, 200)
             return
         if parsed.path == "/api/asking-price-financing":
             payload, status = _asking_price_financing(arguments)
@@ -2287,6 +2396,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if not self._apply_rate_limit(parsed):
+            return
         params = parse_qs(parsed.query)
         report_match = re.fullmatch(r"/api/reports/([a-f0-9-]{16,64})", parsed.path)
         if report_match:
@@ -2327,6 +2438,16 @@ class Handler(BaseHTTPRequestHandler):
                 "appKey": config.KAKAO_MAP_JAVASCRIPT_KEY,
             })
             return
+        if parsed.path == "/api/analytics-config":
+            project_key = str(config.POSTHOG_PROJECT_KEY or "").strip()
+            self._json({
+                "provider": "posthog",
+                "enabled": bool(project_key),
+                "projectKey": project_key,
+                "apiHost": str(config.POSTHOG_API_HOST or "https://us.i.posthog.com").strip(),
+                "personProfiles": str(config.POSTHOG_PERSON_PROFILES or "identified_only").strip(),
+            })
+            return
         if parsed.path == "/api/status":
             index = real_estate_search.load_index()
             self._json({
@@ -2346,6 +2467,7 @@ class Handler(BaseHTTPRequestHandler):
                 "kakaoLocalConfigured": kakao_station_distances.configured(),
                 "stationDistanceCache": kakao_station_distances.cache_stats(),
                 "budgetPrewarm": dict(BUDGET_PREWARM_STATE),
+                "operations": _operation_snapshot(),
             })
             return
         if parsed.path == "/api/apartment-leader-regions":
@@ -2591,12 +2713,16 @@ class Handler(BaseHTTPRequestHandler):
             if not molit_transactions.enabled():
                 self._json({"lastDeal": None, "error": molit_transactions.last_error() or "공공데이터키가 설정되어 있지 않아요."})
                 return
-            last_deal = molit_transactions.latest_transaction_for_apartment(
-                name,
-                region=region,
-                area_label=area_label,
-                skip_months=config.MOLIT_TRANSACTION_LOOKBACK_MONTHS,
-            )
+            try:
+                last_deal = molit_transactions.latest_transaction_for_apartment(
+                    name,
+                    region=region,
+                    area_label=area_label,
+                    skip_months=config.MOLIT_TRANSACTION_LOOKBACK_MONTHS,
+                )
+            except Exception:
+                _record_operation("externalDataFallbacks")
+                last_deal = None
             self._json({"lastDeal": last_deal})
             return
         if parsed.path == "/api/rone-estimate":
@@ -2671,6 +2797,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(payload)
             return
         if parsed.path == "/api/budget-candidates":
+            _record_operation("budgetCandidateRequests")
             budget = params.get("budget", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
             purpose = params.get("purpose", [""])[0].strip()
@@ -2731,6 +2858,12 @@ class Handler(BaseHTTPRequestHandler):
                 else _load_budget_payload(cache_key, candidate_arguments)
             )
             status = payload.pop("status", 200)
+            if status >= 400 or payload.get("error"):
+                _record_operation("budgetCandidateErrors")
+            if payload.get("enrichmentStage") == "timeout":
+                _record_operation("budgetCandidateTimeouts")
+            if payload.get("livePriceError") or payload.get("enrichmentStage") in {"live_data_slow", "timeout"}:
+                _record_operation("externalDataFallbacks")
             self._json(payload, status)
             return
         if parsed.path == "/api/search":
@@ -2741,8 +2874,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
             try:
                 self._json(real_estate_search.search_real_estate(query, lookback_months=months))
-            except Exception as exc:
-                self._json({"error": str(exc)}, 500)
+            except Exception:
+                self._json(_public_error(), 500)
             return
         if parsed.path == "/api/search/start":
             query = params.get("q", [""])[0].strip()
@@ -2752,8 +2885,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
             try:
                 self._json(start_search_job(query, lookback_months=months))
-            except Exception as exc:
-                self._json({"error": str(exc)}, 500)
+            except Exception:
+                self._json(_public_error(), 500)
             return
         if parsed.path == "/api/search/progress":
             job_id = params.get("id", [""])[0].strip()

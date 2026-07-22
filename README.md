@@ -115,7 +115,15 @@ PYTHONPATH=pipeline python3 pipeline/kakao_station_distances.py \
 - `공공데이터키`: 국토교통부_아파트 매매 실거래가 상세 자료 API 인증키. 있으면 예산 후보의 가격대를 최근 실거래가로 우선 보강하고, 없거나 권한 오류가 나면 `data/apartment_price_bands.csv`의 보강 가격대로 동작한다.
 - `카카오REST키`: 대장아파트의 주소 좌표와 가장 가까운 지하철역 직선거리를 일괄 수집하는 서버용 REST API 키. 화면 코드에는 노출하지 않는다.
 - `카카오지도키`: 후보 결과의 지도 보기에 사용할 카카오 지도 JavaScript 키. 카카오 개발자 사이트에서 앱의 JavaScript 키를 발급하고 실제 접속 도메인을 JavaScript SDK 도메인으로 등록해야 한다.
+- `포스트호그키`: **DAU와 행동데이터**를 PostHog으로 보낼 때 쓰는 공개 프로젝트 키. 없으면 행동데이터 측정은 자동으로 꺼진다.
+- `포스트호그호스트`: PostHog 수집 주소. 비우면 `https://us.i.posthog.com`을 사용한다.
 - `네이버API허브아이디`, `네이버API허브시크릿`: NAVER API HUB의 뉴스 검색 키. 설정하면 착공·개통·인가처럼 확인된 변화는 후보 카드 문장에 조합하고, 단지명이 제목에 직접 나온 소식, 같은 단지군 또는 법정동의 확정된 정비사업, 광역 교통·대규모 개발 소식만 카드 하단에 최대 2건 표시한다. 분양 홍보·생활행정·정치성 기사와 단순 업무협약은 제외한다. 기존 NAVER Developers 검색 키는 `네이버검색아이디`, `네이버검색시크릿`으로도 연결할 수 있다.
+- `ADMIN_API_TOKEN`: 운영 서버에서 관리자 재계산 API를 보호하는 비밀 토큰. 기존 `APARTMENT_LEADER_ADMIN_TOKEN`도 함께 인식한다.
+- `PUBLIC_HEAVY_RATE_LIMIT`: 조건 검색처럼 무거운 공개 API의 1분당 IP별 요청 수. 기본값은 20회다.
+- `PUBLIC_MEDIUM_RATE_LIMIT`: 일반 검색·리포트처럼 중간 무게 API의 1분당 IP별 요청 수. 기본값은 60회다.
+
+PostHog에서 **DAU**는 `active_user` 이벤트의 일별 사용자 수로 보면 된다. 예산 검색은 `budget_search_submitted`, 단지 검색은 `apartment_search_completed`, 네이버 부동산 이동은 `naver_land_opened` 이벤트로 확인한다.
+서버 상태는 `/api/status`에서 확인한다. `operations.rateLimited`, `budgetCandidateErrors`, `budgetCandidateTimeouts`, `externalDataFallbacks`가 갑자기 늘면 운영 점검이 필요하다.
 
 ## 폴더 구조
 
