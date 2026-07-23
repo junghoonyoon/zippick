@@ -5,7 +5,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
-NAVER_VIEWER_HTML = ROOT / "앱화면" / "naver-land-viewer.html"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
@@ -2118,33 +2117,17 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('rel="noopener noreferrer"', action_body)
         self.assertIn("const url = candidateNaverPropertyUrl(item);", action_body)
         self.assertIn("네이버 단지 연결 확인 중", action_body)
-        self.assertIn("data-naver-land-url", action_body)
         self.assertIn("data-naver-land-title", action_body)
         self.assertIn('window.matchMedia?.("(max-width:700px)")?.matches', html)
-        self.assertIn("function naverLandViewerUrl", html)
-        self.assertIn('new URLSearchParams({ url:targetUrl, title })', html)
         self.assertIn("saveNaverReturnState();", handler_body)
         self.assertIn("event.preventDefault();", handler_body)
         self.assertIn("isPlainPrimaryClick(event)", handler_body)
         self.assertIn("isMobileNaverInAppView()", handler_body)
-        self.assertIn("window.location.assign(naverLandViewerUrl(link));", handler_body)
+        self.assertIn("window.location.assign(link.href);", handler_body)
         self.assertIn('window.open(link.href, "_blank", "noopener,noreferrer");', handler_body)
         self.assertIn("handleNaverLandLinkClick(event, naverLandLink)", budget_click_match.group("body"))
         self.assertIn("handleNaverLandLinkClick(event, naverLandLink)", apt_click_match.group("body"))
         self.assertNotIn("새 탭으로 열기", html)
-
-    def test_naver_land_viewer_has_back_header_and_apartment_title(self):
-        html = NAVER_VIEWER_HTML.read_text(encoding="utf-8")
-
-        self.assertIn('class="viewer-back"', html)
-        self.assertIn('data-viewer-title', html)
-        self.assertIn('params.get("title")', html)
-        self.assertIn("window.history.back();", html)
-        self.assertIn('window.location.assign("/")', html)
-        self.assertIn('title="네이버 부동산 단지 화면"', html)
-        self.assertIn("/naver-land-frame?url=", html)
-        self.assertIn('url.hostname !== "fin.land.naver.com"', html)
-        self.assertIn('/^\\/complexes\\/\\d+/.test(url.pathname)', html)
 
     def test_candidate_sort_and_filter_options_match_the_review_workflow(self):
         html = APP_HTML.read_text(encoding="utf-8")

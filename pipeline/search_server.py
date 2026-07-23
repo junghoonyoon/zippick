@@ -15,8 +15,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-import requests
-
 import config
 import apartment_leaders
 import budget_candidates
@@ -34,7 +32,6 @@ import rone_estimates
 
 ROOT = config.ROOT
 APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
-NAVER_LAND_VIEWER_HTML = ROOT / "앱화면" / "naver-land-viewer.html"
 ASSETS_DIR = ROOT / "앱화면" / "assets"
 HOST = os.environ.get("REAL_ESTATE_HOST", "127.0.0.1")
 PORT = int(os.environ.get("REAL_ESTATE_PORT", "8766"))
@@ -144,14 +141,6 @@ MARKET_SNAPSHOT_FIELDS = (
     "priceSource",
     "priceIdentityVerified",
 )
-NAVER_LAND_FRAME_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Referer": "https://fin.land.naver.com/",
-}
 
 
 def _record_operation(name, amount=1):
@@ -2273,52 +2262,6 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _naver_land_frame(self, params):
-        raw_url = params.get("url", [""])[0].strip()
-        try:
-            target = urlparse(raw_url)
-        except Exception:
-            target = None
-        if (
-            not target
-            or target.scheme != "https"
-            or target.netloc != "fin.land.naver.com"
-            or not re.fullmatch(r"/complexes/\d+", target.path)
-        ):
-            self.send_error(400)
-            return
-        try:
-            response = requests.get(
-                raw_url,
-                headers=NAVER_LAND_FRAME_HEADERS,
-                timeout=20,
-                allow_redirects=True,
-            )
-            response.raise_for_status()
-        except Exception:
-            self.send_error(502)
-            return
-        final_url = urlparse(response.url)
-        if final_url.scheme != "https" or final_url.netloc != "fin.land.naver.com":
-            self.send_error(502)
-            return
-        body_text = response.text
-        if "<head" in body_text and "<base " not in body_text[:2000]:
-            body_text = re.sub(
-                r"(<head[^>]*>)",
-                r'\1<base href="https://fin.land.naver.com/">',
-                body_text,
-                count=1,
-                flags=re.IGNORECASE,
-            )
-        body = body_text.encode(response.encoding or "utf-8", errors="replace")
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
-
     def do_POST(self):
         parsed = urlparse(self.path)
         if not self._apply_rate_limit(parsed):
@@ -2552,9 +2495,6 @@ class Handler(BaseHTTPRequestHandler):
                 "budgetPrewarm": dict(BUDGET_PREWARM_STATE),
                 "operations": _operation_snapshot(),
             })
-            return
-        if parsed.path == "/naver-land-frame":
-            self._naver_land_frame(params)
             return
         if parsed.path == "/api/apartment-leader-regions":
             self._json({
@@ -2994,9 +2934,6 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path in ("/", "/real-estate-search.html"):
             self._file(APP_HTML)
-            return
-        if parsed.path == "/naver-land-viewer.html":
-            self._file(NAVER_LAND_VIEWER_HTML)
             return
         self.send_error(404)
 
