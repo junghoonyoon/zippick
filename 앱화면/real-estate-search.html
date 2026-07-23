@@ -898,6 +898,10 @@
       background:#eef2f6; box-shadow:none;
     }
     .candidate-map-canvas { width:100%; height:100%; min-height:0 }
+    .candidate-map-canvas .leaflet-container { width:100%; height:100%; font:inherit }
+    .candidate-leaflet-pane { position:absolute; inset:0; pointer-events:none; z-index:650 }
+    .candidate-leaflet-pane > button { pointer-events:auto }
+    .candidate-leaflet-anchor { position:absolute; transform:translate(-50%,-100%) }
     .candidate-map-state {
       position:absolute; z-index:5; inset:0; display:grid; place-content:center; gap:10px; padding:28px;
       background:rgba(247,249,252,.94); color:#667085; text-align:center;
@@ -4725,10 +4729,13 @@
     let candidateMapOrigin = "budget";
     const CANDIDATE_PAGE_SIZE = 10;
     const CANDIDATE_MAP_CLUSTER_LEVEL = 8;
+    const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     let candidateVisibleCount = CANDIDATE_PAGE_SIZE;
     let candidateMap = null;
     let candidateMapContainer = null;
     let candidateMapApiPromise = null;
+    let leafletMapApiPromise = null;
     let candidateMapEntries = [];
     let candidateMapClusterEntries = [];
     let candidateMapLocatedEntries = [];
@@ -5484,7 +5491,7 @@
       if (!rows.length || leaderMapView.hidden) return;
       setLeaderMapState("지역 대장 위치를 불러오고 있어요", "순위 단지의 주소를 지도에서 확인하고 있어요.", true);
       try {
-        const kakaoApi = await loadKakaoMapApi();
+        const kakaoApi = await loadMapApi();
         if (generation !== leaderMapRenderGeneration || leaderMapView.hidden) return;
         leaderMap = new kakaoApi.maps.Map(leaderMapCanvas, {
           center:new kakaoApi.maps.LatLng(37.5665, 126.9780),
@@ -8860,6 +8867,184 @@
       return candidateMapApiPromise;
     }
 
+    async function loadMapApi() {
+      try {
+        return await loadKakaoMapApi();
+      } catch (error) {
+        if (error?.code === "MAP_KEY_MISSING") throw error;
+        return loadLeafletMapApi();
+      }
+    }
+
+    function loadExternalResource(tagName, attributes, selector) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(selector);
+        if (existing) {
+          if (tagName === "link" || existing.dataset.loaded === "true") resolve();
+          else {
+            existing.addEventListener("load", resolve, { once:true });
+            existing.addEventListener("error", reject, { once:true });
+          }
+          return;
+        }
+        const element = document.createElement(tagName);
+        Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+        element.addEventListener("load", () => {
+          element.dataset.loaded = "true";
+          resolve();
+        }, { once:true });
+        element.addEventListener("error", reject, { once:true });
+        document.head.appendChild(element);
+      });
+    }
+
+    function leafletZoomFromKakaoLevel(level) {
+      return Math.max(6, Math.min(18, 20 - Number(level || 7)));
+    }
+
+    function kakaoLevelFromLeafletZoom(zoom) {
+      return Math.max(1, Math.min(14, 20 - Number(zoom || 13)));
+    }
+
+    async function loadLeafletMapApi() {
+      if (window.L?.map) return createLeafletKakaoAdapter(window.L);
+      if (leafletMapApiPromise) return leafletMapApiPromise;
+      leafletMapApiPromise = (async () => {
+        await loadExternalResource("link", {
+          rel:"stylesheet",
+          href:LEAFLET_CSS_URL,
+          integrity:"sha256-p4NxAoJBhIINfQzVkVey5ZxM6kc9Wlq82ts0YJkP44w=",
+          crossorigin:"",
+          "data-leaflet-map-css":"true",
+        }, "link[data-leaflet-map-css]");
+        await loadExternalResource("script", {
+          src:LEAFLET_JS_URL,
+          integrity:"sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=",
+          crossorigin:"",
+          "data-leaflet-map-sdk":"true",
+        }, "script[data-leaflet-map-sdk]");
+        if (!window.L?.map) throw new Error("대체 지도를 불러오지 못했어요.");
+        return createLeafletKakaoAdapter(window.L);
+      })().catch(error => {
+        leafletMapApiPromise = null;
+        throw error;
+      });
+      return leafletMapApiPromise;
+    }
+
+    function createLeafletKakaoAdapter(L) {
+      class LatLng {
+        constructor(latitude, longitude) {
+          this.latitude = Number(latitude);
+          this.longitude = Number(longitude);
+        }
+      }
+      class LatLngBounds {
+        constructor() {
+          this.points = [];
+        }
+        extend(position) {
+          this.points.push(position);
+        }
+        toLeafletBounds() {
+          return L.latLngBounds(this.points.map(point => [point.latitude, point.longitude]));
+        }
+      }
+      class MapAdapter {
+        constructor(container, options = {}) {
+          const center = options.center || new LatLng(37.5665, 126.9780);
+          this._map = L.map(container, {
+            center:[center.latitude, center.longitude],
+            zoom:leafletZoomFromKakaoLevel(options.level || 7),
+            zoomControl:true,
+            scrollWheelZoom:options.scrollwheel !== false,
+            dragging:options.draggable !== false,
+          });
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom:19,
+            attribution:"&copy; OpenStreetMap",
+          }).addTo(this._map);
+          this._overlayPane = L.DomUtil.create("div", "candidate-leaflet-pane", container);
+          this._map.on("move zoom viewreset", () => this._syncOverlays());
+        }
+        _syncOverlays() {
+          this._overlayPane?.querySelectorAll("[data-leaflet-overlay]").forEach(element => {
+            const latitude = Number(element.dataset.latitude);
+            const longitude = Number(element.dataset.longitude);
+            const point = this._map.latLngToContainerPoint([latitude, longitude]);
+            element.style.left = `${point.x}px`;
+            element.style.top = `${point.y}px`;
+          });
+        }
+        relayout() { this._map.invalidateSize(); this._syncOverlays(); }
+        setDraggable(enabled) { enabled ? this._map.dragging.enable() : this._map.dragging.disable(); }
+        setZoomable(enabled) { enabled ? this._map.scrollWheelZoom.enable() : this._map.scrollWheelZoom.disable(); }
+        getLevel() { return kakaoLevelFromLeafletZoom(this._map.getZoom()); }
+        setLevel(level) { this._map.setZoom(leafletZoomFromKakaoLevel(level)); }
+        setCenter(position) { this._map.setView([position.latitude, position.longitude], this._map.getZoom()); }
+        panTo(position) { this._map.panTo([position.latitude, position.longitude]); }
+        setBounds(bounds) {
+          if (!bounds?.points?.length) return;
+          this._map.fitBounds(bounds.toLeafletBounds(), { padding:[42, 42], maxZoom:16 });
+        }
+      }
+      class CustomOverlay {
+        constructor({ map, position, content, yAnchor = 1 }) {
+          this.position = position;
+          this.content = content;
+          this.yAnchor = yAnchor;
+          this.map = null;
+          if (map) this.setMap(map);
+        }
+        setMap(map) {
+          if (this.content?.parentNode) this.content.parentNode.removeChild(this.content);
+          this.map = map || null;
+          if (!map?._overlayPane || !this.content) return;
+          this.content.classList.add("candidate-leaflet-anchor");
+          this.content.dataset.leafletOverlay = "true";
+          this.content.dataset.latitude = String(this.position.latitude);
+          this.content.dataset.longitude = String(this.position.longitude);
+          this.content.style.transform = `translate(-50%,-${Math.max(.5, this.yAnchor) * 100}%)`;
+          map._overlayPane.appendChild(this.content);
+          map._syncOverlays();
+        }
+        setZIndex(value) {
+          if (this.content) this.content.style.zIndex = String(value);
+        }
+      }
+      return {
+        maps:{
+          Map:MapAdapter,
+          LatLng,
+          LatLngBounds,
+          CustomOverlay,
+          event:{
+            addListener(map, eventName, callback) {
+              if (eventName === "zoom_changed") map?._map?.on("zoomend", callback);
+            },
+          },
+          services:{
+            Status:{ OK:"OK" },
+            Geocoder:class {
+              addressSearch(address, callback) {
+                fetch(`/api/map-geocode?address=${encodeURIComponent(address)}`)
+                  .then(response => response.ok ? response.json() : Promise.reject(new Error("geocode failed")))
+                  .then(payload => {
+                    const coordinates = payload?.coordinates;
+                    if (!payload?.found || !coordinates) {
+                      callback([], "ZERO_RESULT");
+                      return;
+                    }
+                    callback([{ x:coordinates.longitude, y:coordinates.latitude }], "OK");
+                  })
+                  .catch(() => callback([], "ERROR"));
+              }
+            },
+          },
+        },
+      };
+    }
+
     function geocodeCandidate(geocoder, kakao, item) {
       const direct = candidateCoordinates(item);
       if (direct) return Promise.resolve({ item, ...direct });
@@ -9432,7 +9617,7 @@
       if (!container || candidateViewMode !== "map") return;
       setCandidateMapState("전체 후보 위치를 불러오고 있어요", `주소 확인 0/${rows.length}곳`, true);
       try {
-        const kakao = await loadKakaoMapApi();
+        const kakao = await loadMapApi();
         if (generation !== candidateMapRenderGeneration || !container.isConnected) return;
         candidateMap = new kakao.maps.Map(container, {
           center:new kakao.maps.LatLng(37.5665, 126.9780),
@@ -13491,7 +13676,7 @@
           name:String(resolved.name || name).trim(),
           region:String(resolved.region || region).trim(),
         };
-        const kakao = await loadKakaoMapApi();
+        const kakao = await loadMapApi();
         const geocoder = new kakao.maps.services.Geocoder();
         const located = await geocodeCandidate(geocoder, kakao, mapItem);
         if (!located) throw new Error("대장 단지 위치를 찾지 못했어요.");

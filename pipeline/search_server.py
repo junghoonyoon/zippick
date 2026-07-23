@@ -77,6 +77,8 @@ OPERATIONS = {
     "budgetCandidateTimeouts": 0,
     "externalDataFallbacks": 0,
 }
+MAP_GEOCODE_CACHE = {}
+MAP_GEOCODE_LOCK = threading.Lock()
 MARKET_SNAPSHOT_LOCK = threading.Lock()
 MARKET_SIGNAL_SNAPSHOTS = {}
 MARKET_SIGNAL_SNAPSHOT_KEYS = {}
@@ -2436,7 +2438,30 @@ class Handler(BaseHTTPRequestHandler):
                 "provider": "kakao",
                 "configured": bool(config.KAKAO_MAP_JAVASCRIPT_KEY),
                 "appKey": config.KAKAO_MAP_JAVASCRIPT_KEY,
+                "fallbackConfigured": kakao_station_distances.configured(),
             })
+            return
+        if parsed.path == "/api/map-geocode":
+            address = " ".join((params.get("address", [""])[0] or "").split())[:180]
+            if not address:
+                self._json({"found": False, "error": "주소가 비어 있어요."}, 400)
+                return
+            with MAP_GEOCODE_LOCK:
+                cached = MAP_GEOCODE_CACHE.get(address)
+            if cached is not None:
+                self._json({"found": bool(cached), "coordinates": cached})
+                return
+            try:
+                coordinates = kakao_station_distances.geocode_address(address)
+            except kakao_station_distances.KakaoLocalError:
+                _record_operation("externalDataFallbacks")
+                self._json({"found": False, "error": "주소를 지도 좌표로 바꾸지 못했어요."}, 502)
+                return
+            with MAP_GEOCODE_LOCK:
+                if len(MAP_GEOCODE_CACHE) > 2000:
+                    MAP_GEOCODE_CACHE.clear()
+                MAP_GEOCODE_CACHE[address] = coordinates
+            self._json({"found": bool(coordinates), "coordinates": coordinates})
             return
         if parsed.path == "/api/analytics-config":
             project_key = str(config.POSTHOG_PROJECT_KEY or "").strip()
