@@ -14421,7 +14421,7 @@
         if (aptAreaSheetCardIndex !== index || aptAreaSheet.hidden) return;
         const areas = Array.isArray(data.areas) && data.areas.length
           ? data.areas
-          : fallbackAptAreaOption(initialData);
+          : fallbackAptAreaOption(initialData, item, card);
         aptAreaSheetAreas = areas
           .filter(area => Number(area?.value || 0) > 0)
           .sort((left, right) => Number(left.value) - Number(right.value));
@@ -14436,7 +14436,7 @@
       });
     }
 
-    function fallbackAptAreaOption(data) {
+    function fallbackAptAreaOption(data, candidate = {}, card = null) {
       const transactionRows = Array.isArray(data?.market?.adjustedTransactions)
         ? data.market.adjustedTransactions
         : [];
@@ -14446,11 +14446,29 @@
           dealDate:String(row?.dealDate || ""),
         }))
         .filter(row => row.area > 0);
+      const appendKnownArea = (area, dealDate = "") => {
+        const value = Number(area || 0);
+        if (value <= 0) return;
+        if (rows.some(row => Math.abs(row.area - value) < .05)) return;
+        rows.push({ area:value, dealDate:String(dealDate || "") });
+      };
+      const canonical = data?.candidate && typeof data.candidate === "object"
+        ? data.candidate
+        : {};
+      [
+        [data?.latestTrade?.exclusiveArea, data?.latestTrade?.dealDate],
+        [data?.resolvedArea, data?.estimate?.latestTradeDate],
+        [data?.selectedArea, data?.estimate?.latestTradeDate],
+        [candidate?.latestDealExclusiveArea, candidate?.latestDealDate],
+        [candidate?.latestTrade?.exclusiveArea, candidate?.latestTrade?.dealDate],
+        [candidate?.preferredArea, ""],
+        [canonical?.latestDealExclusiveArea, canonical?.latestDealDate],
+        [canonical?.preferredArea, ""],
+        [card?.dataset?.selectedAptAreaChoice, ""],
+        [card?.dataset?.selectedAptArea, ""],
+      ].forEach(([area, dealDate]) => appendKnownArea(area, dealDate));
       if (!rows.length) {
-        const latestArea = Number(data?.latestTrade?.exclusiveArea || 0);
-        if (latestArea > 0) {
-          rows = [{ area:latestArea, dealDate:String(data?.latestTrade?.dealDate || "") }];
-        }
+        return [];
       }
       const clusters = [];
       rows.sort((left, right) => left.area - right.area).forEach(row => {
@@ -14527,9 +14545,9 @@
           fetchAptAreaOptions(item),
           initialData ? Promise.resolve(initialData) : fetchAptAffordability(item).catch(() => null),
         ]);
-        renderAptAreaOptions(card, data.areas?.length ? data.areas : fallbackAptAreaOption(fallbackData));
+        renderAptAreaOptions(card, data.areas?.length ? data.areas : fallbackAptAreaOption(fallbackData, item, card));
       } catch {
-        renderAptAreaOptions(card, fallbackAptAreaOption(initialData));
+        renderAptAreaOptions(card, fallbackAptAreaOption(initialData, item, card));
       }
     }
 
@@ -14548,6 +14566,9 @@
         card.dataset.selectedAptAreaChoice = resolvedArea;
         card.dataset.selectedAptAreaLabel = resolvedLabel;
         syncAptAreaChipSelection(card, resolvedArea);
+        if (!card.querySelector("[data-apt-area]")) {
+          renderAptAreaOptions(card, fallbackAptAreaOption(data, candidate, card), resolvedArea);
+        }
         const changeButton = card.querySelector("[data-apt-area-change]");
         if (changeButton) {
           const buttonLabel = resolvedLabel.replace(/^전용\s*/, "");

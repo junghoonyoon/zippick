@@ -1636,6 +1636,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         body = match.group("body")
         self.assertIn("data?.market?.adjustedTransactions", body)
         self.assertIn("data?.latestTrade?.exclusiveArea", body)
+        self.assertIn("data?.resolvedArea", body)
+        self.assertIn("candidate?.latestDealExclusiveArea", body)
+        self.assertIn("card?.dataset?.selectedAptAreaChoice", body)
         self.assertIn("clusters.map", body)
 
     def test_direct_search_renders_exclusive_areas_as_inline_chips(self):
@@ -1668,6 +1671,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn('data-apt-area-copy', search_match.group("body"))
         self.assertIn('role="radio"', render_match.group("body"))
         self.assertIn('data-apt-area-label', render_match.group("body"))
+        self.assertIn("fallbackAptAreaOption(fallbackData, item, card)", html)
+        self.assertIn("fallbackAptAreaOption(initialData, item, card)", html)
         self.assertIn("function aptAreaOptionMatches(optionValue, selectedArea = \"\")", html)
         self.assertIn("Math.floor(optionNumber) === Math.floor(selectedNumber)", html)
         self.assertIn("const selected = aptAreaOptionMatches(value, selectedArea);", render_match.group("body"))
@@ -1833,6 +1838,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         affordability_body = affordability_match.group("body")
         self.assertIn('const resolvedArea = String(data?.resolvedArea || "");', render_body)
         self.assertIn("card.dataset.selectedAptArea = resolvedArea;", render_body)
+        self.assertIn('if (!card.querySelector("[data-apt-area]"))', render_body)
+        self.assertIn("renderAptAreaOptions(card, fallbackAptAreaOption(data, candidate, card), resolvedArea);", render_body)
         self.assertIn("changeButton.textContent = buttonLabel;", render_body)
         self.assertIn("data.areaFallback && Number(data.requestedMinArea || 0)", affordability_body)
         self.assertIn("가장 가까운 실제 거래 평형 자동 선택", affordability_body)
