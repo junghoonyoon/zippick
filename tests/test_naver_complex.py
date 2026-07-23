@@ -23,10 +23,18 @@ class NaverComplexTest(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self._patch_cache = mock.patch.object(naver_complex, "CACHE_DIR", Path(self._tmp.name))
         self._patch_cache.start()
+        self._patch_static = mock.patch.object(
+            naver_complex,
+            "STATIC_OVERRIDES_PATH",
+            Path(self._tmp.name) / "naver_complex_overrides.json",
+        )
+        self._patch_static.start()
+        naver_complex._STATIC_COMPLEX_OVERRIDES = None
         naver_complex._DISABLED_UNTIL = 0
         naver_complex._CORTAR_COMPLEX_CACHE.clear()
 
     def tearDown(self):
+        self._patch_static.stop()
         self._patch_cache.stop()
         self._tmp.cleanup()
 
@@ -235,6 +243,38 @@ class NaverComplexTest(unittest.TestCase):
             naver_complex.complex_url(resolved["complexNo"]),
             "https://fin.land.naver.com/complexes/609?tab=article",
         )
+
+    def test_static_override_resolves_when_naver_is_unreachable(self):
+        naver_complex.STATIC_OVERRIDES_PATH.write_text(
+            """
+            {
+              "version": 1,
+              "entries": [
+                {
+                  "name": "집픽이름아파트",
+                  "legalDong": "상계동",
+                  "jibun": "1",
+                  "complexNo": "99999",
+                  "complexName": "네이버이름"
+                }
+              ]
+            }
+            """,
+            encoding="utf-8",
+        )
+        naver_complex._STATIC_COMPLEX_OVERRIDES = None
+
+        with mock.patch.object(naver_complex.requests, "get", side_effect=RuntimeError("blocked")):
+            resolved = naver_complex.resolve(
+                "집픽이름아파트",
+                legal_dong="상계동",
+                jibun="1",
+                cortar_no="1135010500",
+            )
+
+        self.assertEqual(resolved["complexNo"], "99999")
+        self.assertEqual(resolved["complexName"], "네이버이름")
+        self.assertEqual(naver_complex._DISABLED_UNTIL, 0)
 
     def test_api_error_disables_temporarily(self):
         with mock.patch.object(naver_complex.requests, "get", side_effect=RuntimeError("blocked")):

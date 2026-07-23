@@ -23,6 +23,7 @@ import real_estate_search
 SEARCH_ENDPOINT = "https://fin.land.naver.com/front-api/v1/search/autocomplete/complexes"
 MOBILE_COMPLEX_LIST_ENDPOINT = "https://m.land.naver.com/complex/ajax/complexListByCortarNo"
 CACHE_DIR = config.CACHE_DIR / "naver_complex"
+STATIC_OVERRIDES_PATH = config.ROOT / "data" / "naver_complex_overrides.json"
 CACHE_VERSION = "v6"
 NEGATIVE_TTL_SECONDS = 60 * 60 * 24 * 7  # 못 찾은 단지는 7일 후 재시도
 TIMEOUT_SECONDS = float(getattr(config, "NAVER_COMPLEX_TIMEOUT_SECONDS", 2))
@@ -41,6 +42,8 @@ _CORTAR_COMPLEX_CACHE = {}
 _CORTAR_REQUEST_LOCKS = tuple(threading.Lock() for _ in range(32))
 _DISABLED_LOCK = threading.Lock()
 _DISABLED_UNTIL = 0
+_STATIC_OVERRIDES_LOCK = threading.Lock()
+_STATIC_COMPLEX_OVERRIDES = None
 _EXECUTOR = ThreadPoolExecutor(
     max_workers=MAX_WORKERS,
     thread_name_prefix="naver-complex",
@@ -82,6 +85,72 @@ VERIFIED_COMPLEX_OVERRIDES = {
         "complexName": "문정시영",
     },
 }
+
+
+def _override_key(name, legal_dong="", jibun=""):
+    return (
+        real_estate_search.compact(name),
+        real_estate_search.compact(legal_dong),
+        real_estate_search.compact(jibun),
+    )
+
+
+def _static_complex_overrides():
+    """Load preverified ZipPick-to-Naver complex mappings bundled with deploys."""
+    global _STATIC_COMPLEX_OVERRIDES
+    with _STATIC_OVERRIDES_LOCK:
+        if _STATIC_COMPLEX_OVERRIDES is not None:
+            return _STATIC_COMPLEX_OVERRIDES
+        overrides = {}
+        try:
+            payload = json.loads(STATIC_OVERRIDES_PATH.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            _STATIC_COMPLEX_OVERRIDES = overrides
+            return overrides
+        entries = payload.get("entries") if isinstance(payload, dict) else payload
+        if not isinstance(entries, list):
+            _STATIC_COMPLEX_OVERRIDES = overrides
+            return overrides
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            complex_no = str(entry.get("complexNo") or "").strip()
+            name = str(entry.get("name") or "").strip()
+            if not complex_no.isdigit() or not name:
+                continue
+            key = _override_key(
+                name,
+                entry.get("legalDong", ""),
+                entry.get("jibun", ""),
+            )
+            overrides[key] = {
+                "complexNo": complex_no,
+                "complexName": str(entry.get("complexName") or "").strip(),
+            }
+        _STATIC_COMPLEX_OVERRIDES = overrides
+        return overrides
+
+
+def _verified_override(name, legal_dong="", jibun="", alternate_names=()):
+    names = []
+    seen = set()
+    for value in (name, *alternate_names):
+        key = real_estate_search.compact(value)
+        if key and key not in seen:
+            seen.add(key)
+            names.append(value)
+    for value in names:
+        override = VERIFIED_COMPLEX_OVERRIDES.get(
+            _override_key(value, legal_dong, jibun)
+        )
+        if override:
+            return dict(override)
+    static_overrides = _static_complex_overrides()
+    for value in names:
+        override = static_overrides.get(_override_key(value, legal_dong, jibun))
+        if override:
+            return dict(override)
+    return None
 
 
 def _cache_key(name, legal_dong, jibun):
@@ -336,12 +405,12 @@ def resolve(
     name = str(name or "").strip()
     if not name:
         return None
-    override_key = (
-        real_estate_search.compact(name),
-        real_estate_search.compact(legal_dong),
-        real_estate_search.compact(jibun),
+    override = _verified_override(
+        name,
+        legal_dong,
+        jibun,
+        alternate_names=alternate_names,
     )
-    override = VERIFIED_COMPLEX_OVERRIDES.get(override_key)
     if override:
         return dict(override)
     key = _cache_key(name, legal_dong, jibun)
