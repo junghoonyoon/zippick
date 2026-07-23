@@ -220,6 +220,7 @@ def _budget_cache_key(arguments):
         config.ROOT / "pipeline" / "verdicts.py",
         policy_evaluator.__file__,
         policy_evaluator.POLICY_SNAPSHOT_PATH,
+        config.ROOT / "data" / "naver_complex_overrides.json",
         config.ROOT / "data" / "apartment_price_bands.csv",
         config.ROOT / "data" / "seoul_small_apartment_price_bands.csv",
     ]
