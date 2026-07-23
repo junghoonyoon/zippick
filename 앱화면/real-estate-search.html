@@ -8623,11 +8623,20 @@
       return /^https:\/\/fin\.land\.naver\.com\/complexes\/\d+/.test(url) ? url : "";
     }
 
+    function candidateNaverPropertyFallbackUrl(item) {
+      const query = String(
+        item.naverPropertyQuery
+        || item.searchQuery
+        || item.displayName
+        || item.name
+        || ""
+      ).trim();
+      return query ? `https://fin.land.naver.com/search?q=${encodeURIComponent(query)}` : "";
+    }
+
     function candidateNaverPropertyActionHtml(item, label, extraClass = "", ariaLabel = "") {
-      const url = candidateNaverPropertyUrl(item);
-      if (!url) {
-        return `<span class="${esc(`${extraClass} naver-land-action is-disabled`.trim())}" aria-disabled="true" data-naver-land-pending data-naver-land-label="${esc(label)}" data-naver-land-extra-class="${esc(extraClass)}" data-naver-land-aria="${esc(ariaLabel)}">네이버 단지 연결 확인 중</span>`;
-      }
+      const url = candidateNaverPropertyUrl(item) || candidateNaverPropertyFallbackUrl(item);
+      if (!url) return "";
       const aria = ariaLabel ? ` aria-label="${esc(ariaLabel)}"` : "";
       const title = candidateDisplayName(item);
       return `<a class="${esc(`${extraClass} naver-land-action`.trim())}" href="${esc(url)}" rel="noopener noreferrer" data-naver-land-link data-naver-land-title="${esc(title)}"${aria}>${esc(label)}</a>`;

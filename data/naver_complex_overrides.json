@@ -1,14 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-23T05:51:26Z",
+  "generatedAt": "2026-07-23T07:08:18Z",
   "source": "pipeline/build_naver_complex_overrides.py",
   "stats": {
     "candidates": 16509,
     "resolved": 3824,
     "unresolved": 12685,
     "missingCortarNo": 355,
-    "entries": 11488,
-    "manualVerifiedEntries": 16
+    "entries": 11494,
+    "manualVerifiedEntries": 22,
+    "localSuccessCacheEntries": 0,
+    "sameAddressExistingEntries": 0
   },
   "entries": [
     {
@@ -74278,6 +74280,60 @@
       "complexNo": "2784",
       "complexName": "한솔6단지주공",
       "source": "local_cache"
+    },
+    {
+      "name": "산성동 산성역 헤리스톤",
+      "legalDong": "산성동",
+      "jibun": "1336",
+      "region": "성남수정구",
+      "complexNo": "119799",
+      "complexName": "산성역헤리스톤",
+      "source": "manual_verified_web"
+    },
+    {
+      "name": "산성동 산성역헤리스톤",
+      "legalDong": "산성동",
+      "jibun": "1336",
+      "region": "성남수정구",
+      "complexNo": "119799",
+      "complexName": "산성역헤리스톤",
+      "source": "manual_verified_web"
+    },
+    {
+      "name": "산성역 헤리스톤",
+      "legalDong": "산성동",
+      "jibun": "1336",
+      "region": "성남수정구",
+      "complexNo": "119799",
+      "complexName": "산성역헤리스톤",
+      "source": "manual_verified_web"
+    },
+    {
+      "name": "산성역헤리스톤",
+      "legalDong": "산성동",
+      "jibun": "1336",
+      "region": "성남수정구",
+      "complexNo": "119799",
+      "complexName": "산성역헤리스톤",
+      "source": "manual_verified_web"
+    },
+    {
+      "name": "헤리스톤",
+      "legalDong": "산성동",
+      "jibun": "1336",
+      "region": "성남수정구",
+      "complexNo": "119799",
+      "complexName": "산성역헤리스톤",
+      "source": "manual_verified_web"
+    },
+    {
+      "name": "헤리스톤아파트",
+      "legalDong": "산성동",
+      "jibun": "1336",
+      "region": "성남수정구",
+      "complexNo": "119799",
+      "complexName": "산성역헤리스톤",
+      "source": "manual_verified_web"
     },
     {
       "name": "두산",
