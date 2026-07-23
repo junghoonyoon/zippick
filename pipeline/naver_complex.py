@@ -23,7 +23,7 @@ import real_estate_search
 SEARCH_ENDPOINT = "https://fin.land.naver.com/front-api/v1/search/autocomplete/complexes"
 MOBILE_COMPLEX_LIST_ENDPOINT = "https://m.land.naver.com/complex/ajax/complexListByCortarNo"
 CACHE_DIR = config.CACHE_DIR / "naver_complex"
-CACHE_VERSION = "v5"
+CACHE_VERSION = "v6"
 NEGATIVE_TTL_SECONDS = 60 * 60 * 24 * 7  # 못 찾은 단지는 7일 후 재시도
 TIMEOUT_SECONDS = float(getattr(config, "NAVER_COMPLEX_TIMEOUT_SECONDS", 2))
 MAX_WORKERS = int(getattr(config, "NAVER_COMPLEX_MAX_WORKERS", 2))
