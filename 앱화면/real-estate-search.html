@@ -3180,14 +3180,24 @@
       border:0; border-radius:0; padding:0; background:transparent; box-shadow:none;
     }
     .leader-filter-card[data-region-depth="3"] { grid-template-columns:repeat(3,minmax(0,1fr)) }
-    .leader-field { display:grid; gap:8px; min-width:0 }
+    .leader-field { position:relative; display:grid; gap:8px; min-width:0 }
     .leader-field[hidden] { display:none }
+    .leader-field[hidden]::after { display:none }
     .leader-field label { color:#4e5968; font-size:14px; font-weight:800 }
-    .leader-field select {
-      appearance:auto; -webkit-appearance:menulist;
-      width:100%; min-height:52px; border:1px solid #d8dee7; border-radius:13px; padding:0 38px 0 14px;
-      background:#fff; color:#191f28; font-size:16px; font-weight:750; cursor:pointer;
+    .leader-field::after {
+      content:""; position:absolute; right:16px; bottom:20px; width:8px; height:8px;
+      border-right:2px solid #7b8da5; border-bottom:2px solid #7b8da5; transform:rotate(45deg);
+      pointer-events:none;
     }
+    .leader-field select {
+      appearance:none; -webkit-appearance:none;
+      width:100%; min-height:46px; border:1px solid #dfe4ec; border-radius:13px; padding:0 38px 0 13px;
+      background:#fff; color:#30343b; font-size:15px; font-weight:700; cursor:pointer; outline:0;
+      transition:background .12s ease,border-color .12s ease,box-shadow .12s ease;
+    }
+    .leader-field select:hover { background:#f8fafc }
+    .leader-field select:focus { border-color:#9fc8ff; box-shadow:0 0 0 3px rgba(0,113,227,.09) }
+    .leader-field select:disabled { color:#9aa3af; cursor:not-allowed }
     .leader-submit {
       grid-column:1 / -1; min-height:54px; border:0; border-radius:14px; padding:0 18px;
       background:#3182f6; color:#fff; font-size:17px; font-weight:900; cursor:pointer;
@@ -3466,10 +3476,12 @@
       .leader-filter-card[data-region-depth="3"] #leaderSigunguField { grid-column:1 }
       .leader-field { gap:9px }
       .leader-field label { color:#3f4650; font-size:15px; font-weight:750 }
+      .leader-field::after { right:18px; bottom:24px }
       .leader-field select {
-        min-height:56px; border-color:transparent; border-radius:13px; padding-right:38px; padding-left:15px;
+        min-height:56px; border:1px solid transparent; border-radius:13px; padding:0 42px 0 14px;
         background:#f0f2f5; color:#242a32; font-size:17px; font-weight:650;
       }
+      .leader-field select:hover { background:#e9edf1 }
       .leader-field select:focus { border-color:#79aff0; background:#fff; box-shadow:0 0 0 3px rgba(0,113,227,.1) }
       .leader-submit { grid-column:1 / -1 }
       .leader-submit { min-height:58px; margin-top:2px; border-radius:14px; font-size:17px; box-shadow:none }

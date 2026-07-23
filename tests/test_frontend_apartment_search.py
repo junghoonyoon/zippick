@@ -180,7 +180,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("currentBudgetData = null", clear_body)
         self.assertIn('budgetResultEl.addEventListener("click", handleBudgetResultClick)', html)
 
-    def test_leader_region_filters_use_os_native_select_menu(self):
+    def test_leader_region_filters_match_budget_input_style(self):
         html = APP_HTML.read_text(encoding="utf-8")
         style_match = re.search(
             r"\.leader-field select\s*\{(?P<body>.*?)\}",
@@ -190,9 +190,12 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIsNotNone(style_match)
         style_body = style_match.group("body")
-        self.assertIn("appearance:auto", style_body)
-        self.assertIn("-webkit-appearance:menulist", style_body)
-        self.assertNotIn("appearance:none", style_body)
+        self.assertIn("appearance:none", style_body)
+        self.assertIn("-webkit-appearance:none", style_body)
+        self.assertIn("border:1px solid #dfe4ec", style_body)
+        self.assertIn("background:#fff; color:#30343b; font-size:15px; font-weight:700", style_body)
+        self.assertNotIn("-webkit-appearance:menulist", style_body)
+        self.assertIn(".leader-field::after", html)
 
     def test_mobile_leader_submit_spans_all_gyeonggi_filter_columns(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -213,8 +216,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             "{ grid-column:1 }",
             html,
         )
-        self.assertIn("min-height:56px; border-color:transparent; border-radius:13px;", html)
-        self.assertIn("background:#f0f2f5; color:#242a32; font-size:17px;", html)
+        self.assertIn("min-height:56px; border:1px solid transparent; border-radius:13px;", html)
+        self.assertIn("background:#f0f2f5; color:#242a32; font-size:17px; font-weight:650;", html)
+        self.assertIn(".leader-field select:hover { background:#e9edf1 }", html)
 
     def test_mobile_leader_price_uses_budget_result_style_instead_of_circle(self):
         html = APP_HTML.read_text(encoding="utf-8")
