@@ -946,6 +946,32 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('params.set("legal_dong", item.legalDong)', body)
         self.assertIn('params.set("jibun", item.jibun)', body)
 
+    def test_leader_comparison_requests_do_not_reuse_candidate_area(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        leader_match = re.search(
+            r"function candidateLeaderEstimateItem\(item\) \{(?P<body>.*?)"
+            r"\n    function candidateDistrictLeaderEstimateItem",
+            html,
+            re.DOTALL,
+        )
+        district_match = re.search(
+            r"function candidateDistrictLeaderEstimateItem\(item\) \{(?P<body>.*?)"
+            r"\n    async function requestComparableEstimate",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(leader_match)
+        self.assertIsNotNone(district_match)
+        leader_body = leader_match.group("body")
+        district_body = district_match.group("body")
+        for body in (leader_body, district_body):
+            self.assertIn("legalDong:", body)
+            self.assertIn("jibun:", body)
+            self.assertNotIn("latestDealExclusiveArea", body)
+            self.assertNotIn("areaMin", body)
+            self.assertNotIn("areaMax", body)
+
     def test_pending_budget_enrichment_is_not_labeled_as_insufficient(self):
         html = APP_HTML.read_text(encoding="utf-8")
         score_match = re.search(
