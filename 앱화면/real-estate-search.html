@@ -277,12 +277,12 @@
       body.apt-search-mode.apt-search-suggest-open .apt-search-landing:not([hidden]) { min-height:0; padding-top:14px }
       .apt-suggest-item { padding:16px 4px }
       .apt-result-card { overflow:hidden; padding:14px }
-      .apt-result-card .candidate-price-comparison { grid-template-columns:minmax(0,1fr); gap:0 }
-      .apt-result-card .candidate-price-cell { padding:0 0 13px; min-width:0 }
+      .apt-result-card .candidate-price-comparison { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 }
+      .apt-result-card .candidate-price-cell { padding:0 12px 0 0; min-width:0 }
       .apt-result-card .candidate-price-cell + .candidate-price-cell {
-        border-top:1px solid #e5e9ef; border-left:0; padding:13px 0 0;
+        border-top:0; border-left:1px solid #e5e9ef; padding:0 0 0 12px;
       }
-      .apt-result-card .candidate-price-value { font-size:22px; white-space:normal }
+      .apt-result-card .candidate-price-value { font-size:21px; white-space:normal }
       .apt-result-card .candidate-price-direction,
       .apt-result-card .candidate-price-note { word-break:keep-all }
       .apt-result-card .policy-impact-grid,
