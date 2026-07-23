@@ -8617,17 +8617,10 @@
       return /^https:\/\/fin\.land\.naver\.com\/complexes\/\d+/.test(url) ? url : "";
     }
 
-    function candidateNaverSearchFallbackUrl(item) {
-      // 단지 번호가 아직 확정되지 않았어도 네이버 부동산 검색으로 즉시 이동할 수 있게 한다.
-      const query = String(item.name || item.displayName || "").trim();
-      if (!query) return "";
-      return `https://fin.land.naver.com/search?q=${encodeURIComponent(query)}`;
-    }
-
     function candidateNaverPropertyActionHtml(item, label, extraClass = "", ariaLabel = "") {
-      const url = candidateNaverPropertyUrl(item) || candidateNaverSearchFallbackUrl(item);
+      const url = candidateNaverPropertyUrl(item);
       if (!url) {
-        return `<span class="${esc(`${extraClass} naver-land-action is-disabled`.trim())}" aria-disabled="true">네이버 단지 연결 확인 중</span>`;
+        return `<span class="${esc(`${extraClass} naver-land-action is-disabled`.trim())}" aria-disabled="true" data-naver-land-pending data-naver-land-label="${esc(label)}" data-naver-land-extra-class="${esc(extraClass)}" data-naver-land-aria="${esc(ariaLabel)}">네이버 단지 연결 확인 중</span>`;
       }
       const aria = ariaLabel ? ` aria-label="${esc(ariaLabel)}"` : "";
       const title = candidateDisplayName(item);
@@ -12303,12 +12296,32 @@
         const patch = patchByKey.get(candidateIdentityKey(item));
         if (patch) Object.assign(item, patch);
       }));
+      const candidateByKey = new Map();
+      [
+        currentBudgetData.allCandidates,
+        currentBudgetData.policyDefaultCandidates,
+        currentBudgetData.policyExcludedCandidates,
+        currentBudgetData.candidates,
+        currentBudgetData.visibleCandidates,
+      ].forEach(rows => (Array.isArray(rows) ? rows : []).forEach(item => {
+        const key = candidateIdentityKey(item);
+        if (key && !candidateByKey.has(key)) candidateByKey.set(key, item);
+      }));
       budgetResultEl.querySelectorAll("[data-candidate-key]").forEach(card => {
         const patch = patchByKey.get(card.dataset.candidateKey || "");
-        const url = patch ? candidateNaverPropertyUrl(patch) : "";
+        const item = candidateByKey.get(card.dataset.candidateKey || "") || patch;
+        const url = item ? candidateNaverPropertyUrl(item) : "";
         if (!url) return;
         card.querySelectorAll("[data-naver-land-link]").forEach(link => {
           link.href = url;
+        });
+        card.querySelectorAll("[data-naver-land-pending]").forEach(pending => {
+          pending.outerHTML = candidateNaverPropertyActionHtml(
+            item,
+            pending.dataset.naverLandLabel || "네이버 부동산에서 시세보기 >",
+            pending.dataset.naverLandExtraClass || "",
+            pending.dataset.naverLandAria || "",
+          );
         });
       });
     }

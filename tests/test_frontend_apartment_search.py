@@ -1375,6 +1375,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         load_body = load_match.group("body")
         self.assertIn("/api/budget-candidates/optional-progress", optional_body)
         self.assertIn("applyOptionalNaverLinks(payload, optionalId)", optional_body)
+        self.assertIn("data-naver-land-pending", html)
+        self.assertIn("candidateNaverPropertyActionHtml(", html)
+        self.assertIn("pending.outerHTML", html)
         self.assertIn("void enrichOptionalBudgetLinks(data);", load_body)
         self.assertLess(
             load_body.index("await revealBudgetCandidatesTogether(data, controller)"),
@@ -2109,7 +2112,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         action_body = action_match.group("body")
         handler_body = handler_match.group("body")
         self.assertNotIn('target="_blank"', action_body)
+        self.assertNotIn("candidateNaverSearchFallbackUrl", html)
+        self.assertNotIn("fin.land.naver.com/search", action_body)
         self.assertIn('rel="noopener noreferrer"', action_body)
+        self.assertIn("const url = candidateNaverPropertyUrl(item);", action_body)
+        self.assertIn("네이버 단지 연결 확인 중", action_body)
         self.assertIn("data-naver-land-title", action_body)
         self.assertIn('window.matchMedia?.("(max-width:700px)")?.matches', html)
         self.assertIn("saveNaverReturnState();", handler_body)
