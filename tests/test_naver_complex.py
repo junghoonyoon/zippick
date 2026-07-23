@@ -221,6 +221,21 @@ class NaverComplexTest(unittest.TestCase):
         self.assertEqual({item["complexNo"] for item in resolved}, {"576"})
         self.assertEqual({item["complexName"] for item in resolved}, {"돈암삼부(삼부컨비니언)"})
 
+    def test_verified_munjeong_siyeong_opens_direct_complex_map(self):
+        resolved = naver_complex.resolve(
+            "문정시영",
+            legal_dong="문정동",
+            jibun="145",
+            region="송파구",
+            cortar_no="1171010800",
+        )
+
+        self.assertEqual(resolved["complexNo"], "609")
+        self.assertEqual(
+            naver_complex.complex_url(resolved["complexNo"]),
+            "https://fin.land.naver.com/complexes/609?tab=article",
+        )
+
     def test_api_error_disables_temporarily(self):
         with mock.patch.object(naver_complex.requests, "get", side_effect=RuntimeError("blocked")):
             self.assertIsNone(naver_complex.resolve("아무단지", legal_dong="둔촌동"))
