@@ -23,6 +23,7 @@ import real_estate_search
 DEFAULT_OUTPUT = config.ROOT / "data" / "naver_complex_overrides.json"
 COMPLEX_URL_RE = re.compile(r"/complexes/(\d+)")
 _CORTAR_CACHE = {}
+_MASTER_CORTAR_BY_DONG = None
 
 
 def _compact(value):
@@ -44,6 +45,37 @@ def _dedupe_values(values):
 def _source_complex_no(row):
     match = COMPLEX_URL_RE.search(str(row.get("sourceUrl") or ""))
     return match.group(1) if match else ""
+
+
+def _master_cortar_by_dong():
+    global _MASTER_CORTAR_BY_DONG
+    if _MASTER_CORTAR_BY_DONG is not None:
+        return _MASTER_CORTAR_BY_DONG
+    buckets = {}
+    for entity in real_estate_search.APARTMENT_MASTER:
+        cortar_no = re.sub(r"\D", "", str(entity.get("cortarNo") or ""))[:10]
+        legal_dong = _compact(entity.get("legalDong"))
+        region = _compact(entity.get("district") or entity.get("city"))
+        if len(cortar_no) != 10 or not legal_dong:
+            continue
+        buckets.setdefault((region, legal_dong), set()).add(cortar_no)
+        buckets.setdefault(("", legal_dong), set()).add(cortar_no)
+    _MASTER_CORTAR_BY_DONG = {
+        key: next(iter(values))
+        for key, values in buckets.items()
+        if len(values) == 1
+    }
+    return _MASTER_CORTAR_BY_DONG
+
+
+def _candidate_cortar_no(candidate):
+    cortar_no = re.sub(r"\D", "", str(candidate.get("cortarNo") or ""))[:10]
+    if len(cortar_no) == 10:
+        return cortar_no
+    lookup = _master_cortar_by_dong()
+    region = _compact(candidate.get("region"))
+    legal_dong = _compact(candidate.get("legalDong"))
+    return lookup.get((region, legal_dong)) or lookup.get(("", legal_dong)) or ""
 
 
 def _entry_by_complex_no(entries, complex_no):
@@ -199,7 +231,12 @@ def _candidate_identity(candidate):
     )
 
 
-def build_overrides(limit=0, sleep_seconds=0.08, include_master_cache=True):
+def build_overrides(
+    limit=0,
+    sleep_seconds=0.08,
+    include_master_cache=True,
+    resolve_master_live=False,
+):
     candidates_by_key = {}
     for candidate in _price_candidate_entities():
         candidates_by_key[_candidate_identity(candidate)] = candidate
@@ -218,11 +255,11 @@ def build_overrides(limit=0, sleep_seconds=0.08, include_master_cache=True):
     }
     for index, candidate in enumerate(candidates, 1):
         row = candidate["row"]
-        cortar_no = re.sub(r"\D", "", candidate.get("cortarNo", ""))[:10]
+        cortar_no = _candidate_cortar_no(candidate)
         resolved = None
         source = "local_cache"
         resolved = _cached_resolved_complex(candidate)
-        if candidate.get("cacheOnly") and not resolved:
+        if candidate.get("cacheOnly") and not resolve_master_live and not resolved:
             stats["unresolved"] += 1
             continue
         if cortar_no:
@@ -299,6 +336,11 @@ def main(argv=None):
         action="store_true",
         help="skip successful local cache mappings from the full apartment master",
     )
+    parser.add_argument(
+        "--resolve-master-live",
+        action="store_true",
+        help="resolve full apartment master rows through Naver mobile complex lists",
+    )
     args = parser.parse_args(argv)
 
     # The generated file is an offline artifact, so prefer completeness over the
@@ -308,6 +350,7 @@ def main(argv=None):
         limit=args.limit,
         sleep_seconds=args.sleep,
         include_master_cache=not args.price_only,
+        resolve_master_live=args.resolve_master_live,
     )
     output_arg = Path(args.output)
     output = output_arg if output_arg.is_absolute() else config.ROOT / output_arg
