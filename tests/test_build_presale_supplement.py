@@ -57,6 +57,33 @@ class BuildPresaleSupplementTests(unittest.TestCase):
             "고양창릉 S-4블록 공공분양주택",
         )
 
+    def test_applyhome_supply_size_becomes_households(self):
+        rows = [{
+            "공급지역명": "경기",
+            "입주예정월": "2028-12",
+            "주택명": "남양주왕숙 B-17블록 공공분양주택(본청약)",
+            "공급위치": "경기도 남양주시 진접읍 일원 남양주왕숙 공공주택지구 내 B-17블록",
+            "공급규모": "491세대",
+        }]
+        label_by_lawd = {
+            "41360": {
+                "시도": "경기도",
+                "시군구": "남양주시",
+                "법정동": "진접읍",
+                "법정동코드": "41360",
+            },
+        }
+        lawd_by_label = {"경기도남양주시": "41360"}
+
+        candidates = supplement.applyhome_candidates(
+            rows,
+            dt.date(2026, 7, 24),
+            label_by_lawd,
+            lawd_by_label,
+        )
+
+        self.assertEqual(candidates[0]["세대수"], "491")
+
 
 if __name__ == "__main__":
     unittest.main()

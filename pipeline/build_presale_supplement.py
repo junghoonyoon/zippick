@@ -542,6 +542,7 @@ def applyhome_candidates(rows, as_of, label_by_lawd, lawd_by_label):
                 "대표단지명": name,
                 "단지명_공시가격": name,
                 "단지종류명": "아파트",
+                "세대수": re.sub(r"\D", "", str(row.get("공급규모") or "")),
                 "상태": "입주예정",
                 "입주예정월": f"{planned_month[:4]}-{planned_month[4:]}",
             })
@@ -553,6 +554,9 @@ def applyhome_candidates(rows, as_of, label_by_lawd, lawd_by_label):
             candidate["_aliases"].add(clean_space(row.get("주택명")))
             if month_key(candidate.get("입주예정월")) < planned_month:
                 candidate["입주예정월"] = f"{planned_month[:4]}-{planned_month[4:]}"
+            households = re.sub(r"\D", "", str(row.get("공급규모") or ""))
+            if households and not candidate.get("세대수"):
+                candidate["세대수"] = households
     return list(deduped.values())
 
 
