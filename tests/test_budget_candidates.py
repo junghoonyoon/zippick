@@ -138,6 +138,8 @@ class BudgetCandidatesTest(unittest.TestCase):
             "displayName",
             "displayRegion",
             "mapAddress",
+            "educationEnvironment",
+            "locationScore",
             "reasons",
             "risks",
             "nextChecks",
@@ -780,6 +782,23 @@ class BudgetCandidatesTest(unittest.TestCase):
 
         self.assertEqual(link["naverPropertyQuery"], "산성역 헤리스톤")
 
+    def test_find_entity_accepts_city_district_spacing_variants(self):
+        entity = budget_candidates._find_entity("산성역포레스티아", "성남시 수정구")
+
+        self.assertIsNotNone(entity)
+        self.assertEqual(entity["name"], "산성역 포레스티아")
+        self.assertEqual(entity["district"], "성남수정구")
+        self.assertEqual(entity["legalDong"], "신흥동")
+
+    def test_find_entity_accepts_xi_brand_typo(self):
+        entity = budget_candidates._find_entity("서울숲 리버뷰 ZI")
+
+        self.assertIsNotNone(entity)
+        self.assertEqual(entity["name"], "서울숲리버뷰자이")
+        self.assertEqual(entity["district"], "성동구")
+        self.assertEqual(entity["legalDong"], "행당동")
+        self.assertEqual(entity["households"], 858)
+
     def test_naver_link_disambiguates_generic_name_and_removes_floor_marker(self):
         generic = budget_candidates._naver_property_link(
             {"name": "현대", "region": "구로구"},
@@ -851,6 +870,42 @@ class BudgetCandidatesTest(unittest.TestCase):
         ]
 
         self.assertEqual(len(budget_candidates._dedupe_candidate_rows(rows)), 1)
+
+    def test_presale_entity_with_jibun_builds_common_candidate_scores(self):
+        matches = budget_candidates._find_entities(
+            "산성역 헤리스톤",
+            "성남수정구",
+            "산성동",
+            "1336",
+        )
+
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["status"], "분양권")
+        result = budget_candidates.apartment_candidate_result(
+            "산성역 헤리스톤",
+            region="성남수정구",
+            legal_dong="산성동",
+            jibun="1336",
+            area="74",
+            min_households=0,
+            max_building_age=0,
+        )
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["status"], "분양권")
+        self.assertEqual(result["jibun"], "1336")
+        self.assertIsNotNone(result.get("locationScore", {}).get("score"))
+        self.assertIn("signals", result)
+
+    def test_parent_complex_does_not_claim_numbered_alias_location(self):
+        parent = budget_candidates._find_entity("산성역 자이푸르지오", "성남수정구")
+        alias_keys = budget_candidates._entity_alias_keys(parent)
+        self.assertNotIn("산성역자이푸르지오2단지", alias_keys)
+
+        matches = budget_candidates._find_entities("산성역자이푸르지오2단지", "성남수정구")
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["name"], "산성역자이푸르지오 2단지")
+        self.assertEqual(matches[0]["jibun"], "6963")
 
     def test_budget_is_automatically_derived_when_not_entered(self):
         result = budget_candidates.budget_candidates(

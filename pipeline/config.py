@@ -196,11 +196,11 @@ PUBLIC_RATE_LIMIT_WINDOW_SECONDS = max(
 )
 PUBLIC_HEAVY_RATE_LIMIT = max(
     1,
-    int(os.environ.get("PUBLIC_HEAVY_RATE_LIMIT", "20")),
+    int(os.environ.get("PUBLIC_HEAVY_RATE_LIMIT", "60")),
 )
 PUBLIC_MEDIUM_RATE_LIMIT = max(
     1,
-    int(os.environ.get("PUBLIC_MEDIUM_RATE_LIMIT", "60")),
+    int(os.environ.get("PUBLIC_MEDIUM_RATE_LIMIT", "120")),
 )
 ADMIN_API_TOKEN = (
     os.environ.get("ADMIN_API_TOKEN", "")

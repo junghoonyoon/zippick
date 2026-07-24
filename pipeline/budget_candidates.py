@@ -4,6 +4,8 @@ import datetime
 import re
 
 import config
+import education_environment
+import location_scores
 import molit_transactions
 import momentum_signals
 import naver_complex
@@ -17,7 +19,7 @@ MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_band
 PRICE_BAND_CSV_PATHS = [PRICE_BANDS_CSV, MOLIT_PRICE_BANDS_CSV]
 VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
-CANDIDATE_RESULT_SCHEMA_VERSION = 3
+CANDIDATE_RESULT_SCHEMA_VERSION = 5
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -380,6 +382,9 @@ def _is_rental_apartment(row, entity=None):
 
 
 def _entity_jibun(entity):
+    direct = str((entity or {}).get("jibun") or "").strip()
+    if direct:
+        return direct
     address = str((entity or {}).get("address") or "").strip()
     if not address:
         return ""
@@ -835,6 +840,7 @@ def _candidate_from_entity(entity, region, min_area, budget_eok, purpose, priori
         "legalDong": entity.get("legalDong", ""),
         "jibun": _entity_jibun(entity),
         "cortarNo": entity.get("cortarNo", ""),
+        "status": str(entity.get("status") or "").strip(),
         "areaLabel": area_label,
         "minPriceEok": 0,
         "midPriceEok": 0,
@@ -891,6 +897,7 @@ def _candidate_from_price_row(
         "legalDong": legal_dong,
         "jibun": jibun,
         "cortarNo": (entity or {}).get("cortarNo", ""),
+        "status": str((entity or {}).get("status") or row.get("status") or "").strip(),
         "areaLabel": row.get("areaLabel", ""),
         "minPriceEok": row.get("minPriceEok"),
         "midPriceEok": row.get("midPriceEok"),
@@ -1167,9 +1174,22 @@ def _entity_alias_keys(entity):
     # (for example, "... 그랑메종") must not claim its 1~6 complexes as
     # aliases or their prices and household counts will be mixed together.
     values = [entity.get("name", "")]
+    entity_has_unit_number = bool(real_estate_search._UNIT_ALIAS_RE.search(str(entity.get("name") or "")))
     if not entity.get("aggregate"):
-        values.extend(entity.get("aliases") or [])
+        for alias in entity.get("aliases") or []:
+            if not entity_has_unit_number and real_estate_search._UNIT_ALIAS_RE.search(str(alias or "")):
+                continue
+            values.append(alias)
+    values = [
+        variant
+        for value in values
+        for variant in [value, *real_estate_search.apartment_brand_variants(value)]
+    ]
     return {real_estate_search.compact(value) for value in values if real_estate_search.compact(value)}
+
+
+def _soft_region_key(value):
+    return real_estate_search.compact(value).replace("시", "")
 
 
 def _find_entities(name, region="", legal_dong="", jibun=""):
@@ -1196,11 +1216,18 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         region_key = real_estate_search.compact(region)
         regional_matches = []
         for entity in matches:
+            city_key = real_estate_search.compact(entity.get("city"))
+            district_key = real_estate_search.compact(entity.get("district"))
             entity_regions = {
-                real_estate_search.compact(entity.get("district")),
-                real_estate_search.compact(entity.get("city")),
+                district_key,
+                city_key,
+                real_estate_search.compact(f"{entity.get('city') or ''} {entity.get('district') or ''}"),
             }
-            if region_key in entity_regions:
+            if (
+                region_key in entity_regions
+                or (city_key and district_key and city_key in region_key and region_key.endswith(district_key))
+                or (district_key and _soft_region_key(region_key).endswith(_soft_region_key(district_key)))
+            ):
                 regional_matches.append(entity)
         matches = regional_matches
     if legal_dong:
@@ -1214,6 +1241,7 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         matches = [
             entity for entity in matches
             if real_estate_search.compact(entity.get("address")).endswith(jibun_key)
+            or real_estate_search.compact(entity.get("jibun")) == jibun_key
         ]
     unique = {}
     for entity in matches:
@@ -1892,8 +1920,11 @@ def _finalize_candidate_rows(
     region="",
     fast_mode=False,
     include_naver_links=True,
+    progress_callback=None,
 ):
     """Attach the common display, signal, link and verdict result model."""
+    if progress_callback:
+        progress_callback("card_prepare", processed=0, total=len(rows))
     for row in rows:
         if not _has_verified_price(row):
             _invalidate_unverified_price(row)
@@ -1904,6 +1935,8 @@ def _finalize_candidate_rows(
         row["displayRegion"] = _display_region(row, entity)
         row["mapAddress"] = _map_address(row, map_entity)
         row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
+        if entity:
+            row["educationEnvironment"] = education_environment.education_environment_for_entity(entity)
         row.update(_decision_support(
             row,
             entity,
@@ -1916,6 +1949,8 @@ def _finalize_candidate_rows(
         ))
 
     if not fast_mode and rows:
+        if progress_callback:
+            progress_callback("flow_score", processed=0, total=len(rows))
         if molit_transactions.configured():
             signal_months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
             signal_pairs = set()
@@ -1947,12 +1982,17 @@ def _finalize_candidate_rows(
             pass
 
     if rows:
+        if progress_callback:
+            progress_callback("location_score", processed=0, total=len(rows))
+        location_scores.attach_scores(rows, _price_lookup_entity)
         if not fast_mode and include_naver_links:
             try:
                 naver_complex.attach_links(rows)
             except Exception:
                 pass
         try:
+            if progress_callback:
+                progress_callback("final_rank", processed=len(rows), total=len(rows))
             verdicts.attach_verdicts(rows, budget_eok)
         except Exception:
             pass
@@ -2143,8 +2183,41 @@ def apartment_candidate_result(
     ))
     candidate = candidates[0]
     _attach_policy_impacts([candidate], policy_profile)
+    score_rows = [candidate]
+    try:
+        peer_rows = momentum_signals.district_peer_reports(
+            candidate.get("name", ""),
+            candidate.get("region", ""),
+            target_households=candidate.get("households") or 0,
+            target_price_eok=(
+                candidate.get("latestDealPriceEok")
+                or candidate.get("midPriceEok")
+                or candidate.get("averagePriceEok")
+                or 0
+            ),
+            area_label=candidate.get("displayAreaLabel") or candidate.get("areaLabel") or "",
+            target_legal_dong=candidate.get("legalDong") or "",
+        )
+        for peer in peer_rows or []:
+            score_rows.append({
+                "name": peer.get("name") or "",
+                "displayName": peer.get("name") or "",
+                "region": peer.get("region") or candidate.get("region") or "",
+                "legalDong": peer.get("legalDong") or "",
+                "households": peer.get("households") or 0,
+                "latestDealPriceEok": peer.get("latestDealPriceEok") or peer.get("priceEok") or 0,
+                "transactionCount": peer.get("recentDealCount") or 0,
+                "signals": {
+                    "status": "ok" if peer.get("score") is not None else "insufficient",
+                    "score": peer.get("score"),
+                    "momentumPct": peer.get("momentumPct"),
+                    "recent3Pct": peer.get("recent3Pct"),
+                },
+            })
+    except Exception:
+        pass
     _finalize_candidate_rows(
-        [candidate],
+        score_rows,
         budget_eok=budget_eok,
         purpose=purpose,
         priority=priority,
@@ -2184,7 +2257,17 @@ def budget_candidates(
     limit=6,
     all_matches=False,
     fast_mode=False,
+    progress_callback=None,
 ):
+    def progress(stage, *, processed=None, total=None):
+        if not progress_callback:
+            return
+        try:
+            progress_callback(stage, processed=processed, total=total)
+        except Exception:
+            pass
+
+    progress("candidate_filter")
     context = _candidate_policy_context(
         budget,
         region,
@@ -2440,6 +2523,7 @@ def budget_candidates(
         }
 
     if not fast_mode and molit_transactions.enabled():
+        progress("transaction_fetch", processed=0, total=len(rows))
         enrich_limit = max(1, (
             min(len(rows), config.MOLIT_TRANSACTION_ALL_MATCHES_ENRICH_LIMIT)
             if all_matches
@@ -2578,6 +2662,7 @@ def budget_candidates(
     if all_matches and len(unique_rows) > result_limit:
         unique_rows = unique_rows[:result_limit]
 
+    progress("policy_check", processed=0, total=len(unique_rows))
     _attach_policy_impacts(unique_rows, policy_profile)
 
     policy_excluded_rows = []
@@ -2610,6 +2695,7 @@ def budget_candidates(
         # 전체 후보의 네이버 단지 확인은 순위·가격 신뢰도와 무관한
         # 선택 보강이다. 검색 완료를 막지 않고 서버가 별도로 캐시한다.
         include_naver_links=False,
+        progress_callback=progress,
     )
     # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.
     # all_matches 응답은 정책상 needs_input/restricted 후보도 candidates에 담지만,

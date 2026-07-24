@@ -222,13 +222,43 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             search_server.molit_transactions,
             "prefetch_months",
         ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={"score": 80},
+        ), mock.patch.object(
             search_server.momentum_signals,
             "attach_signals",
         ) as attach_signals, mock.patch.object(
+            search_server.location_scores,
+            "attach_scores",
+        ) as attach_location_scores, mock.patch.object(
             search_server.momentum_signals,
             "district_peer_reports",
-            return_value=[],
-        ), mock.patch.object(
+            return_value=[
+                {
+                    "name": "비교1아파트",
+                    "region": "성남분당구",
+                    "legalDong": "정자동",
+                    "households": 1200,
+                    "priceEok": 12.0,
+                    "latestDealPriceEok": 12.0,
+                    "score": 61,
+                    "momentumPct": 1.2,
+                    "recent3Pct": 0.8,
+                },
+                {
+                    "name": "비교2아파트",
+                    "region": "성남분당구",
+                    "legalDong": "정자동",
+                    "households": 1000,
+                    "priceEok": 10.0,
+                    "latestDealPriceEok": 10.0,
+                    "score": 58,
+                    "momentumPct": 0.6,
+                    "recent3Pct": 0.3,
+                },
+            ],
+        ) as district_peer_reports, mock.patch.object(
             search_server.molit_transactions,
             "latest_transaction_for_apartment",
             return_value=None,
@@ -253,6 +283,70 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             latest_transaction.call_args.kwargs["entity"]["legalDong"],
             "정자동",
         )
+        self.assertEqual(district_peer_reports.call_args.kwargs["target_households"], 1651)
+        self.assertEqual(report["educationEnvironment"], {"score": 80})
+        attach_location_scores.assert_called_once()
+        score_rows = attach_location_scores.call_args.args[0]
+        self.assertEqual([row["name"] for row in score_rows], [entity["name"], "비교1아파트", "비교2아파트"])
+        self.assertEqual(score_rows[1]["latestDealPriceEok"], 12.0)
+
+    def test_apartment_report_resolves_xi_brand_typo_to_canonical_entity(self):
+        entity = {
+            "name": "서울숲리버뷰자이",
+            "aliases": ["행당동 서울숲리버뷰자이"],
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "성동구",
+            "legalDong": "행당동",
+            "jibun": "380",
+            "address": "서울특별시 성동구 행당동 380",
+            "households": 858,
+            "approvedAt": "2018-06-22",
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "source_rows_for_entity",
+            return_value=[{"필지고유번호": "1120010700103800000"}],
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "prefetch_months",
+        ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={"score": 80},
+        ), mock.patch.object(
+            search_server.momentum_signals,
+            "attach_signals",
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "latest_transaction_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            search_server.momentum_signals,
+            "district_peer_reports",
+            return_value=[],
+        ), mock.patch.object(
+            search_server.location_scores,
+            "attach_scores",
+        ) as attach_location_scores:
+            payload = search_server._apartment_report("서울숲 리버뷰 ZI", "")
+
+        report = payload["report"]
+        self.assertEqual(report["name"], "서울숲리버뷰자이")
+        self.assertEqual(report["displayName"], "서울숲리버뷰자이")
+        self.assertEqual(report["households"], 858)
+        self.assertEqual(report["buildYear"], 2018)
+        self.assertEqual(report["buildingAge"], 8)
+        self.assertEqual(attach_location_scores.call_args.args[0][0]["name"], "서울숲리버뷰자이")
 
     def test_leader_context_returns_only_chart_metadata_and_reuses_cache(self):
         entity = {
@@ -779,6 +873,22 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             search_server.rone_estimates,
             "estimate",
             side_effect=estimate,
+        ), mock.patch.object(
+            search_server,
+            "_regional_transaction_index",
+            return_value={
+                "source": "국토부 실거래 기반 지역 대표 단지 평균지수",
+                "region": "의왕시",
+                "latestPeriod": "202607",
+                "latestValue": 102.0,
+                "history": [
+                    {"period": "202605", "value": 99.0},
+                    {"period": "202606", "value": 100.0},
+                    {"period": "202607", "value": 102.0},
+                ],
+                "method": "district_transaction_median",
+                "comparisonComplexCount": 1,
+            },
         ):
             index = search_server._regional_index_for_apartment(
                 "분양권단지",
@@ -786,11 +896,67 @@ class ApartmentAffordabilityTest(unittest.TestCase):
                 24,
             )
 
-        self.assertEqual(index["method"], "official_rone")
-        self.assertEqual(index["sourceApartment"], "지역대표단지")
+        self.assertEqual(index["method"], "district_transaction_median")
         self.assertEqual(
             [row["period"] for row in index["history"]],
             ["202605", "202606", "202607"],
+        )
+
+    def test_regional_transaction_index_uses_each_complex_change_rate(self):
+        candidates = [
+            {"name": "저가단지", "region": "테스트구"},
+            {"name": "고가단지", "region": "테스트구"},
+        ]
+        transactions = {
+            "저가단지": [
+                {"dealDate": "2026-01-10", "dealAmountEok": 10, "exclusiveArea": 1},
+                {"dealDate": "2026-02-10", "dealAmountEok": 10, "exclusiveArea": 1},
+            ],
+            "고가단지": [
+                {"dealDate": "2026-01-10", "dealAmountEok": 100, "exclusiveArea": 1},
+                {"dealDate": "2026-02-10", "dealAmountEok": 130, "exclusiveArea": 1},
+            ],
+        }
+
+        with mock.patch.object(
+            search_server.molit_transactions,
+            "transactions_for_apartment",
+            side_effect=lambda name, **_kwargs: transactions.get(name, []),
+        ):
+            index = search_server._regional_transaction_index("테스트구", candidates, 24)
+
+        self.assertEqual(index["source"], "국토부 실거래 기반 지역 대표 단지 변화율")
+        self.assertEqual(
+            index["history"],
+            [
+                {"period": "202601", "value": 100.0},
+                {"period": "202602", "value": 115.0},
+            ],
+        )
+
+    def test_sparse_official_rone_index_is_used_when_enough_months_exist(self):
+        payload = {
+            "index": {
+                "source": "한국부동산원 R-ONE 월간 아파트 매매가격지수",
+                "region": "서울>영등포구",
+                "latestPeriod": "202606",
+                "latestValue": 105.5,
+            },
+            "adjustedTransactions": [
+                {"basePeriod": "202410", "baseIndex": 88.4},
+                {"basePeriod": "202503", "baseIndex": 89.5},
+                {"basePeriod": "202504", "baseIndex": 89.9},
+                {"basePeriod": "202506", "baseIndex": 91.7},
+            ],
+        }
+
+        index = search_server._regional_index_from_rone_payload(payload, "브라이튼 여의도")
+
+        self.assertEqual(index["method"], "official_rone")
+        self.assertEqual(index["sourceApartment"], "브라이튼 여의도")
+        self.assertEqual(
+            [row["period"] for row in index["history"]],
+            ["202410", "202503", "202504", "202506", "202606"],
         )
 
 

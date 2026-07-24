@@ -18,6 +18,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 import config
 import apartment_leaders
 import budget_candidates
+import education_environment
+import location_scores
 import kakao_station_distances
 import listing_review
 import molit_transactions
@@ -42,7 +44,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 19
+BUDGET_CACHE_SCHEMA_VERSION = 21
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -174,7 +176,7 @@ def _rate_limit_check(client_ip, path, now=None):
         return True, None
     now = time.time() if now is None else float(now)
     window = config.PUBLIC_RATE_LIMIT_WINDOW_SECONDS
-    bucket_key = (client_ip, kind)
+    bucket_key = (client_ip, kind, path)
     with RATE_LIMIT_LOCK:
         if len(RATE_LIMIT_BUCKETS) > RATE_LIMIT_MAX_CLIENTS:
             cutoff = now - window
@@ -213,6 +215,9 @@ def _budget_cache_key(arguments):
     global BUDGET_SOURCE_REVISIONS
     tracked_files = [
         budget_candidates.__file__,
+        education_environment.__file__,
+        education_environment.DATA_PATH,
+        location_scores.__file__,
         config.ROOT / "pipeline" / "region_adjacency.py",
         config.ROOT / "pipeline" / "molit_transactions.py",
         config.ROOT / "pipeline" / "momentum_signals.py",
@@ -842,7 +847,7 @@ def _apartment_leader_context(name, region, legal_dong="", jibun=""):
         return json.loads(json.dumps(payload, ensure_ascii=False)), 200
 
 
-def _apartment_report(name, region):
+def _apartment_report(name, region, target_households=0, target_price_eok=0, area_label=""):
     """예산 흐름 없이 단지 하나의 상승 흐름 리포트를 만든다.
 
     후보 카드와 같은 데이터 구조(row + signals)를 반환해 프론트의
@@ -874,8 +879,9 @@ def _apartment_report(name, region):
             effective_region = ""
     except Exception:
         pass
+    building = budget_candidates._building_profile(entity)
     row = {
-        "name": name,
+        "name": entity_name,
         "displayName": entity_name,
         "region": effective_region,
         "regionLabel": region_label,
@@ -887,9 +893,16 @@ def _apartment_report(name, region):
         "address": str(entity.get("address") or "").strip(),
         "aliases": aliases,
         "households": int(entity.get("households") or 0),
-        "buildYear": entity.get("buildYear") or 0,
+        "approvedAt": building.get("approvedAt") or "",
+        "buildYear": building.get("buildYear") or 0,
+        "buildingAge": building.get("buildingAge") or 0,
         "peers": [],
     }
+    if entity:
+        try:
+            row["educationEnvironment"] = education_environment.education_environment_for_entity(entity)
+        except Exception:
+            pass
     if molit_transactions.configured():
         try:
             months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
@@ -911,14 +924,8 @@ def _apartment_report(name, region):
         except Exception:
             pass
         try:
-            row["peers"] = momentum_signals.district_peer_reports(
-                row["name"], row.get("regionLabel") or row.get("region") or "",
-            )
-        except Exception:
-            row["peers"] = []
-        try:
             last_deal = molit_transactions.latest_transaction_for_apartment(
-                row["name"], region=row["region"], skip_months=0, entity=row,
+                row["name"], region=row["region"], area_label=area_label, skip_months=0, entity=row,
             )
             if last_deal:
                 row["latestDealPriceEok"] = last_deal.get("latestDealPriceEok")
@@ -926,6 +933,38 @@ def _apartment_report(name, region):
                 area = last_deal.get("latestDealExclusiveArea")
                 if area:
                     row["displayAreaLabel"] = f"{area}㎡"
+        except Exception:
+            pass
+        try:
+            row["peers"] = momentum_signals.district_peer_reports(
+                row["name"],
+                row.get("regionLabel") or row.get("region") or "",
+                target_households=target_households or row.get("households") or 0,
+                target_price_eok=target_price_eok or row.get("latestDealPriceEok") or 0,
+                area_label=area_label or row.get("displayAreaLabel") or "",
+                target_legal_dong=row.get("legalDong") or "",
+            )
+        except Exception:
+            row["peers"] = []
+        try:
+            score_rows = [row]
+            for peer in row.get("peers") or []:
+                score_rows.append({
+                    "name": peer.get("name") or "",
+                    "displayName": peer.get("name") or "",
+                    "region": peer.get("region") or row.get("region") or row.get("regionLabel") or "",
+                    "legalDong": peer.get("legalDong") or "",
+                    "households": peer.get("households") or 0,
+                    "latestDealPriceEok": peer.get("latestDealPriceEok") or peer.get("priceEok") or 0,
+                    "transactionCount": peer.get("recentDealCount") or 0,
+                    "signals": {
+                        "status": "ok" if peer.get("score") is not None else "insufficient",
+                        "score": peer.get("score"),
+                        "momentumPct": peer.get("momentumPct"),
+                        "recent3Pct": peer.get("recent3Pct"),
+                    },
+                })
+            location_scores.attach_scores(score_rows, budget_candidates._price_lookup_entity)
         except Exception:
             pass
     return {"report": row, "signalNote": momentum_signals.SIGNAL_NOTE}
@@ -937,44 +976,68 @@ def _regional_index_from_rone_payload(payload, source_apartment=""):
     index = payload.get("index")
     if not isinstance(index, dict):
         return None
-    values = {}
-    for row in payload.get("adjustedTransactions") or []:
-        if not isinstance(row, dict):
-            continue
-        period = str(row.get("basePeriod") or "")[:6]
+    def append_history_point(target, period, value):
+        period = str(period or "")[:6]
         try:
-            value = float(row.get("baseIndex") or 0)
+            value = float(value or 0)
         except (TypeError, ValueError):
             value = 0
         if re.fullmatch(r"\d{6}", period) and value > 0:
-            values[period] = value
-    latest_period = str(index.get("latestPeriod") or "")[:6]
-    try:
-        latest_value = float(index.get("latestValue") or 0)
-    except (TypeError, ValueError):
-        latest_value = 0
-    if re.fullmatch(r"\d{6}", latest_period) and latest_value > 0:
-        values[latest_period] = latest_value
-    if len(values) < 2:
+            target.append({"period": period, "value": value})
+
+    history = []
+    for row in index.get("history") or []:
+        if not isinstance(row, dict):
+            continue
+        append_history_point(history, row.get("period"), row.get("value"))
+    has_explicit_history = len(history) >= 2
+    if not has_explicit_history and "R-ONE" in str(index.get("source") or ""):
+        for row in payload.get("adjustedTransactions") or []:
+            if not isinstance(row, dict):
+                continue
+            append_history_point(history, row.get("basePeriod"), row.get("baseIndex"))
+        append_history_point(history, index.get("latestPeriod"), index.get("latestValue"))
+    history.sort(key=lambda row: row["period"])
+    unique_history = []
+    seen_periods = set()
+    for row in history:
+        if row["period"] in seen_periods:
+            continue
+        seen_periods.add(row["period"])
+        unique_history.append(row)
+    minimum_history_points = 2 if has_explicit_history else 4
+    if len(unique_history) < minimum_history_points:
         return None
-    history = [
-        {"period": period, "value": values[period]}
-        for period in sorted(values)
-    ]
     return {
         "source": index.get("source") or "한국부동산원 R-ONE 월간 아파트 매매가격지수",
         "region": index.get("region") or "",
-        "latestPeriod": history[-1]["period"],
-        "latestValue": history[-1]["value"],
-        "history": history,
+        "latestPeriod": unique_history[-1]["period"],
+        "latestValue": unique_history[-1]["value"],
+        "history": unique_history,
         "sourceApartment": source_apartment,
         "method": "official_rone",
     }
 
 
+def _apply_regional_index_history(exact_payload, regional_index):
+    if not isinstance(exact_payload, dict) or not isinstance(regional_index, dict):
+        return exact_payload
+    exact_payload["index"] = regional_index
+    index_by_period = {
+        str(row.get("period") or ""): row.get("value")
+        for row in regional_index.get("history") or []
+        if isinstance(row, dict)
+    }
+    for row in exact_payload.get("adjustedTransactions") or []:
+        period = str(row.get("basePeriod") or "")
+        row["baseIndex"] = index_by_period.get(period)
+    return exact_payload
+
+
 def _regional_transaction_index(region, source_candidates, months):
     """R-ONE 연결 실패 시 지역 대표 단지 실거래로 월별 평균지수를 만든다."""
     monthly_complex_values = {}
+    eligible_complex_count = 0
     for candidate in source_candidates:
         try:
             rows = molit_transactions.transactions_for_apartment(
@@ -995,7 +1058,8 @@ def _regional_transaction_index(region, source_candidates, months):
             if not re.fullmatch(r"\d{6}", period) or price <= 0 or area <= 0:
                 continue
             by_month.setdefault(period, []).append(price / area)
-        for period, values in by_month.items():
+        monthly_medians = []
+        for period, values in sorted(by_month.items()):
             ordered = sorted(values)
             middle = len(ordered) // 2
             median = (
@@ -1003,10 +1067,17 @@ def _regional_transaction_index(region, source_candidates, months):
                 if len(ordered) % 2
                 else (ordered[middle - 1] + ordered[middle]) / 2
             )
-            monthly_complex_values.setdefault(period, []).append(median)
+            monthly_medians.append((period, median))
+        if len(monthly_medians) < 2 or monthly_medians[0][1] <= 0:
+            continue
+        eligible_complex_count += 1
+        anchor = monthly_medians[0][1]
+        for period, median in monthly_medians:
+            monthly_complex_values.setdefault(period, []).append(median / anchor * 100)
     raw_history = []
+    minimum_complex_count = 2 if eligible_complex_count >= 2 else 1
     for period, values in sorted(monthly_complex_values.items()):
-        if not values:
+        if len(values) < minimum_complex_count:
             continue
         ordered = sorted(values)
         middle = len(ordered) // 2
@@ -1018,19 +1089,18 @@ def _regional_transaction_index(region, source_candidates, months):
         raw_history.append((period, median))
     if len(raw_history) < 2 or raw_history[0][1] <= 0:
         return None
-    anchor = raw_history[0][1]
     history = [
-        {"period": period, "value": round(value / anchor * 100, 6)}
+        {"period": period, "value": round(value, 6)}
         for period, value in raw_history
     ]
     return {
-        "source": "국토부 실거래 기반 지역 대표 단지 평균지수",
+        "source": "국토부 실거래 기반 지역 대표 단지 변화율",
         "region": region,
         "latestPeriod": history[-1]["period"],
         "latestValue": history[-1]["value"],
         "history": history,
         "method": "district_transaction_median",
-        "comparisonComplexCount": len(source_candidates),
+        "comparisonComplexCount": eligible_complex_count,
     }
 
 
@@ -1284,16 +1354,7 @@ def _merge_exact_transactions_with_index(exact_payload, index_payload, name=""):
     regional_index = _regional_index_from_rone_payload(index_payload, name)
     if not regional_index:
         return exact_payload
-    exact_payload["index"] = regional_index
-    index_by_period = {
-        str(row.get("period") or ""): row.get("value")
-        for row in regional_index.get("history") or []
-        if isinstance(row, dict)
-    }
-    for row in exact_payload.get("adjustedTransactions") or []:
-        period = str(row.get("basePeriod") or "")
-        row["baseIndex"] = index_by_period.get(period)
-    return exact_payload
+    return _apply_regional_index_history(exact_payload, regional_index)
 
 
 def _apartment_affordability(arguments):
@@ -1453,6 +1514,17 @@ def _apartment_affordability(arguments):
                 exact_payload = _merge_exact_transactions_with_index(
                     exact_payload, estimate_payload, name,
                 )
+            if not isinstance(exact_payload.get("index"), dict):
+                regional_index = _regional_index_for_apartment(
+                    name,
+                    region,
+                    months,
+                )
+                if regional_index:
+                    exact_payload = _apply_regional_index_history(
+                        exact_payload,
+                        regional_index,
+                    )
             estimate_payload, estimate_status = exact_payload, 200
         elif strict_identity:
             estimate_payload, estimate_status = {
@@ -1914,9 +1986,34 @@ def _budget_optional_link_snapshot(cache_key):
     }
 
 
+def _update_budget_job_progress(job_id, stage, *, processed=None, total=None):
+    progress = {
+        "enrichmentStage": stage,
+        "updatedAt": time.time(),
+    }
+    if processed is not None:
+        progress["processedCount"] = max(0, int(processed or 0))
+    if total is not None:
+        progress["totalCount"] = max(0, int(total or 0))
+    with BUDGET_JOBS_LOCK:
+        job = BUDGET_JOBS.get(job_id)
+        if job is not None and not job.get("done"):
+            job["progress"] = progress
+
+
 def _run_budget_enrichment(job_id, cache_key, candidate_arguments):
     try:
-        payload = _load_budget_payload(cache_key, candidate_arguments)
+        _update_budget_job_progress(job_id, "candidate_filter")
+        progress_arguments = dict(candidate_arguments)
+        progress_arguments["progress_callback"] = (
+            lambda stage, processed=None, total=None: _update_budget_job_progress(
+                job_id,
+                stage,
+                processed=processed,
+                total=total,
+            )
+        )
+        payload = _load_budget_payload(cache_key, progress_arguments)
         payload.update({"enrichmentPending": False, "enrichmentStage": "complete"})
         _schedule_budget_optional_links(cache_key, payload)
     except Exception as exc:
@@ -1957,14 +2054,19 @@ def _budget_job_snapshot(job_id):
                 job["result"] = payload
                 job["finishedAt"] = time.time()
                 return payload
+            progress = dict(job.get("progress") or {})
+            if not progress:
+                progress = {"enrichmentStage": "transaction_fetch"}
+            if elapsed >= BUDGET_JOB_TIMEOUT_SECONDS:
+                progress["slow"] = True
             return {
                 "done": False,
                 "enrichmentPending": True,
-                "enrichmentStage": (
-                    "live_data_slow"
-                    if elapsed >= BUDGET_JOB_TIMEOUT_SECONDS
-                    else "live_data"
-                ),
+                "enrichmentStage": progress.get("enrichmentStage") or "transaction_fetch",
+                "processedCount": progress.get("processedCount"),
+                "totalCount": progress.get("totalCount"),
+                "slow": bool(progress.get("slow")),
+                "elapsedSeconds": int(max(0, elapsed)),
             }
         payload = json.loads(json.dumps(job.get("result") or {}, ensure_ascii=False))
         payload["done"] = True
@@ -2019,6 +2121,7 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
             "done": False,
             "initial": initial,
             "result": None,
+            "progress": {"enrichmentStage": "transaction_fetch"},
         }
         _trim_budget_jobs_locked()
     thread = threading.Thread(
@@ -2031,7 +2134,7 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
     initial.update({
         "enrichmentJobId": job_id,
         "enrichmentPending": True,
-        "enrichmentStage": "live_data",
+        "enrichmentStage": "transaction_fetch",
     })
     return initial
 
@@ -2243,7 +2346,7 @@ class Handler(BaseHTTPRequestHandler):
         if allowed:
             return True
         self._json(
-            {"error": "요청이 잠시 많아요. 조금 뒤에 다시 시도해 주세요."},
+            {"error": f"요청이 잠시 많아요. 약 {retry_after}초 뒤에 다시 눌러 주세요."},
             429,
             {"Retry-After": retry_after},
         )
@@ -2724,10 +2827,13 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/apartment-report":
             name = params.get("name", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
+            target_households = policy_evaluator._float(params.get("households", ["0"])[0])
+            target_price_eok = policy_evaluator._float(params.get("price_eok", ["0"])[0])
+            area_label = params.get("area_label", [""])[0].strip()
             if len(name) < 2:
                 self._json({"error": "단지명을 확인해 주세요."}, 400)
                 return
-            self._json(_apartment_report(name, region))
+            self._json(_apartment_report(name, region, target_households, target_price_eok, area_label))
             return
         if parsed.path == "/api/apartment-last-deal":
             name = params.get("name", [""])[0].strip()

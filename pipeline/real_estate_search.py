@@ -173,6 +173,24 @@ def compact(text):
     return re.sub(r"[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]", "", str(text)).lower()
 
 
+def apartment_brand_variants(value):
+    """Return common brand spelling variants used in apartment search."""
+    text = str(value or "").strip()
+    key = compact(text)
+    if not key:
+        return []
+    variants = []
+    if "자이" in text:
+        variants.extend([
+            text.replace("자이", "XI"),
+            text.replace("자이", "X I"),
+            text.replace("자이", "ZI"),
+        ])
+    if "xi" in key or "zi" in key:
+        variants.append(re.sub(r"(?i)x\s*i|z\s*i", "자이", text))
+    return variants
+
+
 def _clean_entity_name(value):
     return re.sub(r"\s+", " ", str(value or "").strip())
 
@@ -431,6 +449,7 @@ def _load_apartment_csv_entities(limit=None):
                     )),
                     "households": _int_value(row.get("세대수")),
                     "approvedAt": str(row.get("사용승인일") or "").strip(),
+                    "plannedMoveInMonth": str(row.get("입주예정월") or "").strip(),
                     "lawdCd": lawd_cd,
                     "status": str(row.get("상태") or "").strip(),
                 })
@@ -450,6 +469,7 @@ def _load_apartment_csv_entities(limit=None):
                         "address": str(row.get("주소") or "").strip(),
                         "households": 0,
                         "approvedAt": str(row.get("사용승인일") or "").strip(),
+                        "plannedMoveInMonth": str(row.get("입주예정월") or "").strip(),
                         "lawdCd": lawd_cd,
                         "status": str(row.get("상태") or "").strip(),
                     })
@@ -458,6 +478,15 @@ def _load_apartment_csv_entities(limit=None):
                     approved_at = str(row.get("사용승인일") or "").strip()
                     if approved_at and (not group["approvedAt"] or approved_at < group["approvedAt"]):
                         group["approvedAt"] = approved_at
+                    planned_move_in_month = str(row.get("입주예정월") or "").strip()
+                    if (
+                        planned_move_in_month
+                        and (
+                            not group.get("plannedMoveInMonth")
+                            or planned_move_in_month < group["plannedMoveInMonth"]
+                        )
+                    ):
+                        group["plannedMoveInMonth"] = planned_move_in_month
                 if limit and len(entities) >= limit:
                     return _merge_entities(entities, numbered_groups.values())
     return _merge_entities(entities, numbered_groups.values())
@@ -485,6 +514,7 @@ def _merge_entities(*groups):
                     "dedupeKey": entity.get("dedupeKey", ""),
                     "households": _int_value(entity.get("households")),
                     "approvedAt": entity.get("approvedAt", ""),
+                    "plannedMoveInMonth": entity.get("plannedMoveInMonth", ""),
                     "aggregate": bool(entity.get("aggregate")),
                     "lawdCd": entity.get("lawdCd", ""),
                     "status": entity.get("status", ""),
@@ -502,6 +532,10 @@ def _merge_entities(*groups):
                 current_date = str(merged[key].get("approvedAt") or "")
                 if candidate_date and (not current_date or candidate_date < current_date):
                     merged[key]["approvedAt"] = candidate_date
+                candidate_move_in = str(entity.get("plannedMoveInMonth") or "")
+                current_move_in = str(merged[key].get("plannedMoveInMonth") or "")
+                if candidate_move_in and (not current_move_in or candidate_move_in < current_move_in):
+                    merged[key]["plannedMoveInMonth"] = candidate_move_in
             aliases = [*merged[key].get("aliases", []), *(entity.get("aliases") or [])]
             seen = {compact(merged[key]["name"])}
             deduped = []
@@ -626,6 +660,11 @@ _GENERIC_APARTMENT_NAME_PARTS = (
 
 def _entity_aliases(entity):
     values = [entity["name"], *(entity.get("aliases") or []), *(entity.get("keywords") or [])]
+    values = [
+        variant
+        for value in values
+        for variant in [value, *apartment_brand_variants(value)]
+    ]
     seen = set()
     out = []
     for value in values:
@@ -834,6 +873,16 @@ def suggest_apartments(query, limit=20):
                 virtual["aliases"] = [alias]
                 rows.append((base_best, 0, order, virtual))
             continue
+        if base_best is None:
+            for alias in [
+                variant
+                for value in [entity.get("name", ""), *base_aliases]
+                for variant in apartment_brand_variants(value)
+            ]:
+                score = _alias_match_score(key, compact(alias))
+                if score is not None:
+                    base_best = score
+                    break
         if base_best is None:
             continue
         rows.append((base_best, -_int_value(entity.get("households")), order, entity))

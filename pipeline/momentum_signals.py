@@ -79,6 +79,12 @@ LEADER_LIQUIDITY_FULL_DEALS = 20
 LEADER_SCALE_FULL_HOUSEHOLDS = 3000
 LEADER_STANDARD_AREA_MIN_DEALS = 2
 LEADER_MIN_PRICE_RATIO = 0.85
+PEER_HOUSEHOLD_RATIO_TOLERANCE = 0.20
+PEER_HOUSEHOLD_ABSOLUTE_TOLERANCE = 200
+PEER_PRICE_RATIO_TOLERANCE = 0.12
+PEER_PRICE_ABSOLUTE_TOLERANCE_EOK = 1.5
+PEER_NAME_PREFIX_PRICE_RATIO_TOLERANCE = 0.25
+PEER_NAME_PREFIX_BONUS = 1.0
 _LEADER_WEIGHTS = {
     "price": 55,
     "liquidity": 25,
@@ -106,6 +112,7 @@ _COMPONENT_LABELS = {
     "recentPersistence": "최근 3개월 지속성",
 }
 MAX_LATEST_DEAL_AGE_DAYS = 120
+PRESALE_MAX_LATEST_DEAL_AGE_DAYS = 240
 _DISTRICT_LEADER_INDEX = None
 _DISTRICT_LEADER_CANDIDATE_LIMIT = 20
 _LEADER_SCOPE_INDEX = None
@@ -392,7 +399,13 @@ def raw_signals(
         return result
 
     result["latestDealAgeDays"] = _deal_age_days(result["latestDealDate"])
-    if result["latestDealAgeDays"] is not None and result["latestDealAgeDays"] > MAX_LATEST_DEAL_AGE_DAYS:
+    status = str((entity or {}).get("status") or "").strip()
+    max_latest_age_days = (
+        PRESALE_MAX_LATEST_DEAL_AGE_DAYS
+        if status in molit_transactions.PRESALE_STATUSES
+        else MAX_LATEST_DEAL_AGE_DAYS
+    )
+    if result["latestDealAgeDays"] is not None and result["latestDealAgeDays"] > max_latest_age_days:
         result["status"] = "stale"
         return result
 
@@ -642,11 +655,29 @@ def _district_leader_index():
 
 
 _DISTRICT_ENTITY_SIGNALS_CACHE = {}
+_DISTRICT_PEER_ENTITY_SIGNALS_CACHE = {}
+
+
+def _soft_region_key(value):
+    return real_estate_search.compact(value).replace("시", "")
+
+
+def _district_region_key(region):
+    region_key = real_estate_search.compact(region)
+    if not region_key:
+        return ""
+    index = _district_leader_index()
+    if region_key in index:
+        return region_key
+    for candidate_key in index:
+        if region_key.endswith(candidate_key) or _soft_region_key(region_key).endswith(_soft_region_key(candidate_key)):
+            return candidate_key
+    return region_key
 
 
 def _district_entity_signals(region):
     """구 세대수 상위 고정 단지군(최대 12곳)의 (entity, signals) 목록. 프로세스 캐시."""
-    region_key = real_estate_search.compact(region)
+    region_key = _district_region_key(region)
     if not region_key:
         return []
     if region_key in _DISTRICT_ENTITY_SIGNALS_CACHE:
@@ -656,13 +687,57 @@ def _district_entity_signals(region):
         try:
             signals = raw_signals(
                 entity.get("name", ""),
-                region=region,
+                region=region_key,
                 entity=entity,
             )
         except Exception:
             continue
         pairs.append((entity, signals))
     _DISTRICT_ENTITY_SIGNALS_CACHE[region_key] = pairs
+    return pairs
+
+
+def _district_peer_entity_signals(region, target_households=0, candidate_limit=40):
+    """라이벌 전용 비교군. 같은 구 전체에서 세대수가 가까운 단지를 먼저 본다."""
+    region_key = _district_region_key(region)
+    target = int(target_households or 0)
+    if not region_key or target <= 0:
+        return _district_entity_signals(region)
+    cache_key = (region_key, target)
+    if cache_key in _DISTRICT_PEER_ENTITY_SIGNALS_CACHE:
+        return _DISTRICT_PEER_ENTITY_SIGNALS_CACHE[cache_key]
+
+    entities = []
+    for entity in real_estate_search.APARTMENT_MASTER:
+        households = int(entity.get("households") or 0)
+        if (
+            real_estate_search.compact(entity.get("district")) != region_key
+            or households <= 0
+            or entity.get("aggregate")
+            or entity.get("status")
+        ):
+            continue
+        entities.append(entity)
+    entities = sorted(
+        entities,
+        key=lambda entity: (
+            abs(int(entity.get("households") or 0) - target),
+            entity.get("name") or "",
+        ),
+    )[:candidate_limit]
+
+    pairs = []
+    for entity in entities:
+        try:
+            signals = raw_signals(
+                entity.get("name", ""),
+                region=region_key,
+                entity=entity,
+            )
+        except Exception:
+            continue
+        pairs.append((entity, signals))
+    _DISTRICT_PEER_ENTITY_SIGNALS_CACHE[cache_key] = pairs
     return pairs
 
 
@@ -673,7 +748,7 @@ def _district_benchmark(region):
     한국부동산원 단지 마스터에서 세대수 상위 단지로 기준을 고정한다.
     유효 표본이 3곳 미만이면 None을 반환하고 호출부가 검색 후보군으로 폴백한다.
     """
-    region_key = real_estate_search.compact(region)
+    region_key = _district_region_key(region)
     if not region_key:
         return {"momentumPct": None, "count": 0}
     if region_key in _DISTRICT_MOMENTUM_CACHE:
@@ -691,25 +766,159 @@ def _district_benchmark(region):
     return benchmark
 
 
-def district_peer_reports(name, region, limit=3):
-    """구 대표 단지(세대수 상위)의 점수 요약. 직접 검색 리포트의 비교 섹션용."""
+def _peer_latest_deal(entity, area_label=""):
+    try:
+        latest = molit_transactions.latest_transaction_for_apartment(
+            entity.get("name", ""),
+            region=entity.get("district") or "",
+            area_label=area_label,
+            skip_months=0,
+            entity=entity,
+        )
+        if latest:
+            return latest
+    except Exception:
+        pass
+    return {}
+
+
+def _peer_price_eok(entity, signals, latest_deal=None, area_label=""):
+    """라이벌 비교용 최근 실거래가. 없으면 84㎡ 기준 ㎡당가로 보수 추정한다."""
+    latest = latest_deal if latest_deal is not None else _peer_latest_deal(entity, area_label)
+    price = float((latest or {}).get("latestDealPriceEok") or 0)
+    if price > 0:
+        return round(price, 2)
+    ppsm = float((signals or {}).get("leaderReferencePpsm") or (signals or {}).get("currentPpsm") or 0)
+    if ppsm <= 0:
+        return None
+    return round(ppsm * 84 / 10000, 2)
+
+
+def _peer_household_limit(target_households):
+    target = int(target_households or 0)
+    if target <= 0:
+        return None
+    return max(
+        PEER_HOUSEHOLD_ABSOLUTE_TOLERANCE,
+        int(round(target * PEER_HOUSEHOLD_RATIO_TOLERANCE)),
+    )
+
+
+def _peer_price_limit(target_price_eok):
+    target = float(target_price_eok or 0)
+    if target <= 0:
+        return None
+    return max(PEER_PRICE_ABSOLUTE_TOLERANCE_EOK, target * PEER_PRICE_RATIO_TOLERANCE)
+
+
+def _peer_name_prefix_bonus(target_name, peer_name):
+    target = real_estate_search.compact(target_name)
+    peer = real_estate_search.compact(peer_name)
+    if len(target) < 2 or len(peer) < 2:
+        return 0.0
+    return PEER_NAME_PREFIX_BONUS if target[:2] == peer[:2] else 0.0
+
+
+def district_peer_reports(
+    name,
+    region,
+    limit=3,
+    target_households=0,
+    target_price_eok=0,
+    area_label="",
+    target_legal_dong="",
+):
+    """가격대와 세대수가 비슷한 구 대표 단지의 점수 요약."""
     name_key = real_estate_search.compact(name)
+    household_limit = _peer_household_limit(target_households)
+    price_limit = _peer_price_limit(target_price_eok)
     peers = []
-    for entity, signals in _district_entity_signals(region):
-        if real_estate_search.compact(entity.get("name", "")) == name_key:
-            continue
-        if signals.get("status") != "ok":
-            continue
-        details = _score_details(signals)
-        peers.append({
-            "name": entity.get("name", ""),
-            "region": region,
-            "households": int(entity.get("households") or 0),
-            "score": details["score"],
-            "momentumPct": signals.get("momentumPct"),
-        })
-        if len(peers) >= limit:
-            break
+    source_pairs = _district_peer_entity_signals(region, target_households)
+    def collect_peers(relaxed=False):
+        collected = []
+        for entity, signals in source_pairs:
+            if real_estate_search.compact(entity.get("name", "")) == name_key:
+                continue
+            if signals.get("status") != "ok":
+                continue
+            households = int(entity.get("households") or 0)
+            if (
+                not relaxed
+                and household_limit is not None
+                and abs(households - int(target_households or 0)) > household_limit
+            ):
+                continue
+            latest_deal = _peer_latest_deal(entity, area_label)
+            price_eok = _peer_price_eok(entity, signals, latest_deal, area_label)
+            if price_limit is not None:
+                same_name_group = _peer_name_prefix_bonus(name, entity.get("name") or "") > 0
+                effective_price_limit = price_limit
+                if same_name_group and target_price_eok:
+                    effective_price_limit = max(
+                        price_limit,
+                        float(target_price_eok or 0) * PEER_NAME_PREFIX_PRICE_RATIO_TOLERANCE,
+                    )
+                if not relaxed and (
+                    price_eok is None
+                    or abs(price_eok - float(target_price_eok or 0)) > effective_price_limit
+                ):
+                    continue
+            details = _score_details(signals)
+            collected.append({
+                "name": entity.get("name", ""),
+                "region": region,
+                "legalDong": entity.get("legalDong") or "",
+                "households": households,
+                "priceEok": price_eok,
+                "latestDealPriceEok": price_eok,
+                "latestDealDate": (latest_deal or {}).get("latestDealDate") or signals.get("latestDealDate"),
+                "latestDealExclusiveArea": (latest_deal or {}).get("latestDealExclusiveArea"),
+                "score": details["score"],
+                "momentumPct": signals.get("momentumPct"),
+                "recent3Pct": signals.get("recent3Pct"),
+            })
+        return collected
+
+    peers = collect_peers(False)
+    if not peers:
+        peers = collect_peers(True)
+
+    def peer_sort_key(peer):
+        household_gap = (
+            abs(int(peer.get("households") or 0) - int(target_households or 0)) / household_limit
+            if household_limit and target_households
+            else 0
+        )
+        effective_price_limit = price_limit
+        if (
+            price_limit
+            and target_price_eok
+            and _peer_name_prefix_bonus(name, peer.get("name") or "") > 0
+        ):
+            effective_price_limit = max(
+                price_limit,
+                float(target_price_eok or 0) * PEER_NAME_PREFIX_PRICE_RATIO_TOLERANCE,
+            )
+        price_gap = (
+            abs(float(peer.get("priceEok") or 0) - float(target_price_eok or 0)) / effective_price_limit
+            if effective_price_limit and target_price_eok
+            else 0
+        )
+        same_legal_dong = bool(target_legal_dong and peer.get("legalDong") == target_legal_dong)
+        same_name_group = _peer_name_prefix_bonus(name, peer.get("name") or "") > 0
+        location_gap = 0 if same_legal_dong else (0.35 if same_name_group else 1)
+        fit_gap = price_gap * 0.45 + household_gap * 0.35 + location_gap * 0.20
+        return (
+            fit_gap,
+            price_gap,
+            household_gap,
+            location_gap,
+            -float(peer.get("score") or 0),
+            peer.get("name") or "",
+        )
+
+    peers.sort(key=peer_sort_key)
+    peers = peers[:limit]
     return peers
 
 

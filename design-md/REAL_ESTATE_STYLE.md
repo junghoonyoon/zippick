@@ -54,6 +54,19 @@ Use a Korean financial-service visual language inspired by the clarity and comfo
 - Summary area: calm financial insight panel with large decision text and readable evidence.
 - Loading and progress states: restrained, direct, and status-oriented.
 
+## Candidate Chart
+
+Use this chart treatment for the expanded price-flow chart inside apartment result cards.
+
+- Keep the chart visually attached to the card width. The SVG should fill the available card width instead of sitting as a narrow centered chart.
+- Do not put the chart inside another card or framed box.
+- Keep chart labels calm and research-like: gray axis labels, light grid lines, blue as the selected apartment emphasis, and restrained secondary comparison lines.
+- Keep the summary row above the chart compact: basis label at 16px, apartment/region/leader names and rate values at 14px on web.
+- The `spark-axis-label` text is a chart-axis exception to the general essential-label rule. Use a fixed 12px size for x/y axis labels so date and percentage ticks stay stable.
+- On web, use a wider chart viewBox than mobile, currently `510 x 292`, with the rendered chart capped by the card layout and `max-height: 400px`.
+- On mobile, use the compact chart viewBox, currently `420 x 292`, and keep axis labels at the same fixed 12px size.
+- Keep the x-axis date labels close to the plot baseline; avoid large blank space between the bottom chart line and dates.
+
 ## Avoid
 
 - Do not make the page look like a landing page.

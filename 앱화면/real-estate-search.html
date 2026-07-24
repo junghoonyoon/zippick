@@ -134,6 +134,21 @@
     .apt-suggest-chip { flex:none; border:1px solid #5dcaa5; border-radius:6px; padding:2px 6px; color:#0f6e56; font-size:11px; font-weight:800; line-height:1.3 }
     .apt-suggest-name { overflow:hidden; font-size:15px; font-weight:800; text-overflow:ellipsis; white-space:nowrap }
     .apartment-name-row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; min-width:0 }
+    .location-score-badge {
+      display:inline-flex; align-items:center; flex:none; min-height:24px; border:1px solid #b9d6fb; border-radius:999px;
+      padding:3px 8px; background:#edf4ff; color:#1767c5; font-size:12px; font-weight:850; line-height:1.2; white-space:nowrap;
+      font-family:inherit; cursor:pointer;
+    }
+    .location-score-badge:hover { border-color:#93c5fd; background:#e2efff; color:#1451a3 }
+    .location-score-badge:focus-visible { outline:3px solid rgba(49,130,246,.18); outline-offset:2px }
+    .candidate-score-badges { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:7px }
+    .flow-score-badge {
+      display:inline-flex; align-items:center; flex:none; min-height:24px; border:1px solid #b9d6fb; border-radius:999px;
+      padding:3px 8px; background:#f4f8ff; color:#1767c5; font-size:12px; font-weight:850; line-height:1.2; white-space:nowrap;
+      font-family:inherit; cursor:pointer;
+    }
+    .flow-score-badge:hover { border-color:#93c5fd; background:#e2efff; color:#1451a3 }
+    .flow-score-badge:focus-visible { outline:3px solid rgba(49,130,246,.18); outline-offset:2px }
     .apartment-status-badge {
       display:inline-flex; align-items:center; flex:none; min-height:24px; border:1px solid #b9d6fb; border-radius:999px;
       padding:3px 8px; background:#eff6ff; color:#1267d8; font-size:12px; font-weight:850; line-height:1.2; white-space:nowrap;
@@ -294,10 +309,10 @@
       .apt-result-card .policy-cash-scenario-result { justify-items:start; text-align:left }
       .apt-affordability-row { grid-template-columns:minmax(0,1fr); gap:4px; padding:11px 0 }
       .apt-affordability-row strong { text-align:left; white-space:normal }
-      .apt-result-actions .candidate-primary-actions {
-        display:grid; grid-template-columns:minmax(0,1fr); gap:8px; width:100%;
+      .apt-result-actions .candidate-primary-actions.candidate-shared-actions {
+        display:flex; grid-template-columns:none; gap:8px; width:100%;
       }
-      .apt-result-actions .candidate-primary-actions .naver-land-action,
+      .apt-result-actions .candidate-primary-actions.candidate-shared-actions .naver-land-action { min-width:0; justify-content:center; text-align:center }
       .apt-result-report { width:100%; min-width:0; justify-content:center; text-align:center }
     }
     .brand {
@@ -704,8 +719,11 @@
     .budget-enrichment-head { display:flex; align-items:center; justify-content:space-between; gap:12px }
     .budget-enrichment-title { color:#2563a6; font-size:20px; font-weight:850; line-height:1.4 }
     .budget-enrichment-count { flex:0 0 auto; color:#6b8fbe; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums }
+    .budget-enrichment-live { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:-4px 0 4px; color:#4672a9; font-size:14px; font-weight:750; line-height:1.45 }
+    .budget-enrichment-subcount { display:inline-flex; align-items:center; min-height:28px; padding:5px 10px; border-radius:999px; background:#eaf3ff; color:#1767c5; font-variant-numeric:tabular-nums }
+    .budget-enrichment-slow { color:#6f7f91; font-weight:700 }
     .budget-enrichment-steps { display:grid; gap:0; margin:0; padding:0; list-style:none }
-    .budget-enrichment-step { position:relative; display:grid; grid-template-columns:34px minmax(0,1fr); align-items:start; gap:13px; min-width:0; min-height:82px; color:#8a9ab0 }
+    .budget-enrichment-step { position:relative; display:grid; grid-template-columns:34px minmax(0,1fr); align-items:start; gap:13px; min-width:0; min-height:68px; color:#8a9ab0 }
     .budget-enrichment-step:last-child { min-height:34px }
     .budget-enrichment-step:not(:last-child)::after { content:""; position:absolute; top:34px; bottom:0; left:15px; width:2px; background:#d8e4f3 }
     .budget-enrichment-step-icon { position:relative; z-index:1; display:grid; place-items:center; width:32px; height:32px; border:2px solid #c7d5e7; border-radius:50%; background:#f4f8ff; font-size:15px; font-weight:900; line-height:1 }
@@ -1217,16 +1235,19 @@
     .budget-candidate.is-map-target { outline:3px solid rgba(49,130,246,.2); outline-offset:3px }
     .budget-candidate.is-peer-target { border-color:#3182f6; box-shadow:0 0 0 4px rgba(49,130,246,.14),0 12px 28px rgba(35,88,150,.12) }
     .budget-candidate:focus-visible { outline:3px solid rgba(49,130,246,.26); outline-offset:4px }
-    .candidate-top { display:flex; align-items:flex-start; gap:12px }
+    .candidate-top { position:relative; display:flex; align-items:flex-start; gap:12px }
     .budget-main { display:block; min-width:0; flex:1 }
     .budget-name { display:block; color:#23272f; font-size:19px; font-weight:850; line-height:1.35; word-break:keep-all }
     .candidate-name-row { display:flex; align-items:center; flex-wrap:wrap; gap:7px 10px; min-width:0 }
+    .candidate-top.has-map-action .candidate-name-row,
+    .candidate-top.has-map-action .apartment-name-row { padding-right:82px }
     .candidate-name-row .budget-name { display:inline; min-width:0 }
     .candidate-map-inline {
-      appearance:none; display:inline-flex; align-items:center; gap:4px; min-height:24px; border:0; border-radius:8px;
+      appearance:none; display:inline-flex; align-items:center; flex:none; gap:4px; min-height:24px; border:0; border-radius:8px;
       padding:0 2px; background:transparent; color:#1267d8; font:inherit; font-size:14px; font-weight:850;
       line-height:1.2; white-space:nowrap; cursor:pointer;
     }
+    .candidate-top > .candidate-map-inline { position:absolute; top:0; right:0; margin-left:0; align-self:flex-start }
     .candidate-map-inline svg { flex:0 0 auto; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round }
     .candidate-map-inline:hover { color:#0b57c8; background:#eef6ff }
     .candidate-map-inline:focus-visible { outline:3px solid rgba(18,103,216,.22); outline-offset:2px }
@@ -1271,7 +1292,7 @@
     }
     .trend-toggle[data-trend-toggle][aria-expanded="true"]::after { transform:translateY(2px) rotate(225deg) }
     .spark-summary { display:grid; gap:7px; padding:4px 0 7px }
-    .spark-summary-basis { color:#868e99; font-size:12px; font-weight:750; line-height:1.35 }
+    .spark-summary-basis { color:#868e99; font-size:16px; font-weight:750; line-height:1.35 }
     .spark-summary-values { display:flex; align-items:baseline; flex-wrap:wrap; gap:5px 16px }
     .spark-summary-values strong,
     .spark-summary-values span { color:#4e5968; font-size:15px; font-weight:750; line-height:1.4; white-space:nowrap }
@@ -1279,10 +1300,10 @@
     .spark-summary-values em { margin-left:3px; color:#4e5968; font-size:20px; font-style:normal; font-weight:900 }
     .spark-summary-values em.up { color:#f04452 }
     .spark-summary-values em.down { color:#1267d8 }
-    .budget-sparkline-svg { display:block; width:100%; height:auto; aspect-ratio:210 / 146 }
+    .budget-sparkline-svg { display:block; width:100%; height:auto; max-height:400px; aspect-ratio:auto }
     .spark-axis { stroke:#dfe4eb; stroke-width:1; vector-effect:non-scaling-stroke }
     .spark-grid { stroke:#edf0f4; stroke-width:1; vector-effect:non-scaling-stroke }
-    .spark-axis-label { fill:#7b8491; font-size:var(--spark-axis-font-size,11px); font-weight:700 }
+    .spark-axis-label { fill:#7b8491; font-size:var(--spark-axis-font-size,12px); font-weight:700 }
     .spark-trade-point-group { cursor:pointer; outline:none }
     .spark-point-hit { fill:transparent; pointer-events:all }
     .spark-trade-point { fill:#fff; stroke:#1677ff; stroke-width:2.4; vector-effect:non-scaling-stroke }
@@ -1309,9 +1330,12 @@
     .spark-tooltip-row strong { color:#fff; font-size:14px; font-weight:800; white-space:nowrap }
     .spark-trade-tooltip-list { display:grid; gap:6px; max-height:156px; overflow:auto }
     .spark-tooltip-empty { color:#c7d0dc; line-height:1.5 }
-    .budget-sparkline-legend { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.3 }
+    .budget-sparkline-legend { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; color:#8b95a1; font-size:14px; font-weight:650; line-height:1.3 }
     .spark-legend-item { display:inline-flex; align-items:center; gap:5px; white-space:nowrap }
     .spark-legend-primary { color:#344054; font-weight:850 }
+    .spark-legend-rate { color:#191f28; font-size:14px; font-weight:900 }
+    .spark-legend-rate.up { color:#f04452 }
+    .spark-legend-rate.down { color:#1267d8 }
     .spark-primary-group { display:inline-flex; align-items:center; gap:5px; min-width:0 }
     .spark-dot { display:inline-block; width:16px; height:0; border-top:2px solid; flex:0 0 auto }
     .spark-complex { border-color:#1677ff; border-top-width:3px }
@@ -1481,7 +1505,7 @@
     }
     .candidate-insight { display:block; min-width:0 }
     .insight-summary {
-      border:1px solid rgba(0,0,0,.035); border-radius:18px; padding:18px;
+      border:1px solid rgba(0,0,0,.035); border-radius:18px; padding:18px 20px;
       background:#f5f5f7;
     }
     .insight-body { display:flex; flex-direction:column; width:100%; min-width:0 }
@@ -1536,6 +1560,12 @@
     .candidate-verdict b { margin-right:6px; color:#1267d8; font-weight:900 }
     .candidate-primary-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px }
     .candidate-primary-actions .naver-land-action { margin-right:auto }
+    .candidate-primary-actions.candidate-shared-actions { flex-wrap:nowrap; gap:8px; width:100% }
+    .candidate-primary-actions.candidate-shared-actions .naver-land-action { flex:1 1 auto; min-width:0; margin-right:0 }
+    .candidate-primary-actions.candidate-shared-actions .candidate-compare-action {
+      flex:0 0 auto; min-width:82px; min-height:38px; border-radius:14px !important; padding:0 12px !important;
+      white-space:nowrap;
+    }
     .candidate-details { margin-top:13px; border-top:1px solid #e7ebf0; padding-top:12px }
     .candidate-details summary {
       display:flex; align-items:center; justify-content:center; gap:6px; min-height:42px;
@@ -1710,6 +1740,24 @@
     .signal-score-cap { margin-top:16px; border-radius:12px; padding:13px 14px; background:#fff7e6; color:#805b16; font-size:13px; font-weight:700; line-height:1.6 }
     .signal-score-note { margin:17px 0 0; border:0; padding-top:0; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.6 }
     .signal-report-empty { border-radius:15px; padding:15px; background:#f5f7fa; color:#596273; font-size:14px; font-weight:650; line-height:1.6 }
+    .location-score-content { display:grid; gap:18px; min-height:0; overflow:auto; padding:0 28px calc(28px + env(safe-area-inset-bottom)) }
+    .location-score-hero { display:grid; gap:7px; border-radius:18px; padding:17px; background:#f4f8ff; color:#19345e }
+    .location-score-total { display:flex; align-items:baseline; gap:7px; color:#1767c5; font-size:32px; font-weight:950; line-height:1 }
+    .location-score-total span { color:#5a7396; font-size:14px; font-weight:850 }
+    .location-score-summary { margin:0; color:#3f5f4f; font-size:14px; font-weight:700; line-height:1.55 }
+    .location-score-coverage { margin:0; color:#667085; font-size:13px; font-weight:650; line-height:1.5 }
+    .location-score-table { display:grid; gap:13px }
+    .location-score-section-title { margin:2px 0 -4px; color:#191f28; font-size:15px; font-weight:900; line-height:1.4 }
+    .location-score-section-copy { margin:-2px 0 0; color:#667085; font-size:13px; font-weight:650; line-height:1.5 }
+    .location-score-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:7px 12px; border-top:1px solid #edf0f4; padding-top:13px }
+    .location-score-row:first-child { border-top:0; padding-top:0 }
+    .location-score-label { color:#303846; font-size:15px; font-weight:850; line-height:1.4 }
+    .location-score-points { color:#191f28; font-size:14px; font-weight:900; line-height:1.4; white-space:nowrap }
+    .location-score-points.is-missing { color:#98a2b3; font-weight:800 }
+    .location-score-reason { grid-column:1 / -1; color:#667085; font-size:13px; font-weight:650; line-height:1.5 }
+    .location-score-bar { grid-column:1 / -1; height:7px; border-radius:999px; background:#edf1f5; overflow:hidden }
+    .location-score-fill { display:block; height:100%; border-radius:999px; background:#3182f6 }
+    .location-score-note { margin:0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.55 }
     .signal-peer-section { margin-top:4px; border-top:1px solid #edf0f4; padding-top:24px }
     .signal-peer-title { margin:0; color:#191f28; font-size:17px; font-weight:850; line-height:1.4 }
     .signal-peer-description { margin:7px 0 0; color:#667085; font-size:14px; font-weight:600; line-height:1.6 }
@@ -1723,11 +1771,46 @@
     .signal-peer-name { min-width:0; overflow:hidden; color:#191f28; font-size:15px; font-weight:850; line-height:1.4; text-overflow:ellipsis; white-space:nowrap }
     .signal-peer-score { border-radius:999px; padding:5px 9px; background:#eaf2fe; color:#1d4ed8; font-size:13px; font-weight:850; line-height:1.3; white-space:nowrap }
     .signal-peer-meta { color:#667085; font-size:13px; font-weight:600; line-height:1.45 }
+    .signal-peer-meta strong { color:#191f28; font-weight:900 }
+    .signal-peer-flow { grid-column:1 / -1; color:#3f4b5f; font-size:13px; font-weight:750; line-height:1.45 }
     .signal-peer-reason { font-size:13px; font-weight:750; line-height:1.45; text-align:right }
     .signal-peer-reason.match { color:#1d4ed8 }
     .signal-peer-reason.partial { color:#805b16 }
     .signal-peer-reason.far { color:#8b95a1 }
     .signal-peer-empty { margin-top:12px; border-radius:13px; padding:13px 14px; background:#f5f7fa; color:#667085; font-size:13px; font-weight:650; line-height:1.55 }
+    .apt-rival-standalone { margin-top:12px }
+    .apt-rival-standalone[hidden] { display:none }
+    .apt-rival-section { margin-top:0 }
+    .apt-rival-section .signal-peer-section { margin-top:0; border-top:0; padding-top:0 }
+    .apt-rival-section .signal-peer-title { font-size:16px }
+    .apt-rival-section .signal-peer-description { font-size:13px }
+    .apt-rival-section .signal-peer-list { margin-top:12px }
+    .apt-rival-section .signal-peer-card {
+      grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:12px 12px;
+      border-color:#e2e8f0; border-radius:14px; padding:16px; background:#fff;
+    }
+    .apt-rival-section .signal-peer-card:hover { border-color:#b9d6fb; background:#f9fbff }
+    .apt-rival-section .signal-peer-score { background:#f3f7ff; color:#1767c5 }
+    .apt-rival-title-block { display:grid; gap:4px; min-width:0 }
+    .apt-rival-name-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; min-width:0 }
+    .apt-rival-area { color:#8b95a1; font-size:13px; font-weight:600; line-height:1.35; white-space:nowrap }
+    .apt-rival-meta { color:#8b95a1; font-size:13px; font-weight:600; line-height:1.4 }
+    .apt-rival-metrics {
+      grid-column:1 / -1; display:grid; gap:8px;
+    }
+    .apt-rival-metric {
+      display:grid; grid-template-columns:82px minmax(0,1fr); align-items:start; gap:10px;
+      min-width:0; color:#4e5968; font-size:13px; font-weight:700; line-height:1.45;
+    }
+    .apt-rival-metric span:first-child { color:#8b95a1; font-weight:750 }
+    .apt-rival-metric strong { overflow:hidden; color:#191f28; font-size:14px; font-weight:900; line-height:1.45; text-overflow:ellipsis; white-space:nowrap }
+    .apt-rival-flow-values { display:flex; flex-wrap:wrap; gap:4px 10px }
+    .apt-rival-flow-values span { display:inline-flex; align-items:center; gap:4px; min-width:max-content }
+    .apt-rival-flow-values b { color:#8b95a1; font-size:13px; font-weight:800 }
+    .apt-rival-rate { font-weight:850 }
+    .apt-rival-rate.up { color:#d92d20 }
+    .apt-rival-rate.down { color:#1767c5 }
+    .apt-rival-rate.flat { color:#667085 }
     .policy-excluded-actions { display:flex; justify-content:center; margin-top:16px }
     .policy-excluded-toggle {
       min-height:42px; border:1px solid #e0b7b1; border-radius:12px; padding:0 15px;
@@ -1752,8 +1835,11 @@
     .comparison-head h2 { margin:0; font-size:27px; line-height:1.25 }
     .comparison-mobile-subtitle { display:none; margin:5px 0 0; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.45 }
     .comparison-close { flex:0 0 auto; width:38px; height:38px; border:0; border-radius:50%; background:#f1f3f6; color:#555d6b; font-size:21px; cursor:pointer }
-    .comparison-trend { margin:22px 0 0; padding:0 }
-    .comparison-trend .budget-sparkline-svg { height:292px; aspect-ratio:auto }
+    .comparison-trend {
+      margin:22px 0 0; border:1px solid #e1e6ee; border-radius:18px; padding:20px;
+      background:#fff; box-shadow:0 4px 16px rgba(20,28,45,.04);
+    }
+    .comparison-trend .budget-sparkline-svg { width:100%; height:292px; max-height:292px; aspect-ratio:auto }
     .comparison-trend .spark-summary { padding-top:0 }
     .comparison-trend .spark-summary-values em { font-size:inherit; font-weight:850 }
     .comparison-trend-line { fill:none; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke }
@@ -2098,8 +2184,11 @@
       .comparison-panel { max-height:92vh; border-radius:22px 22px 0 0; padding:20px 16px 24px }
       .comparison-head h2 { font-size:23px }
       .comparison-mobile-subtitle { display:block }
-      .comparison-trend { margin-top:18px }
-      .comparison-trend .budget-sparkline-svg { height:218px }
+      .comparison-trend { margin-top:18px; padding:20px }
+      .apt-rival-section .signal-peer-card { padding:14px; gap:10px }
+      .apt-rival-metrics { gap:7px }
+      .apt-rival-metric { grid-template-columns:76px minmax(0,1fr); gap:8px }
+      .apt-rival-metric strong { white-space:normal }
       .region-tabs { width:100% }
       .region-tab { flex:1 1 0; padding:8px 10px }
       .lookback-select-wrap { width:100%; max-width:180px }
@@ -2414,6 +2503,15 @@
         grid-column:1 / -1; min-height:48px;
         border:1px solid #0b0b0c; border-radius:14px; padding:0 14px; background:#0b0b0c; color:#fff;
         font-weight:900; box-shadow:0 8px 18px rgba(0,0,0,.12);
+      }
+      .candidate-primary-actions.candidate-shared-actions {
+        display:flex; grid-template-columns:none; flex-wrap:nowrap; gap:8px;
+      }
+      .candidate-primary-actions.candidate-shared-actions .naver-land-action {
+        grid-column:auto; flex:1 1 auto; width:auto; min-width:0; min-height:48px;
+      }
+      .candidate-primary-actions.candidate-shared-actions .candidate-compare-action {
+        flex:0 0 auto; width:auto; min-width:82px; min-height:48px !important;
       }
       .candidate-primary-actions .naver-land-action:hover { background:#242426; color:#fff; text-decoration:none }
       .candidate-primary-actions .compare-toggle { border-radius:12px !important }
@@ -2844,11 +2942,11 @@
 
     /* Toss-inspired candidate results: keep every datum, simplify the reading order. */
     body.condition-stage-results #conditionView .condition-flow { display:none }
-    body.condition-stage-results .power-persistent { margin-top:8px }
+    body.condition-stage-results .power-persistent { top:calc(var(--app-header-sticky-height) + 12px); margin-top:8px }
     .condition-stage-results .budget-result { width:100%; max-width:760px; margin-right:auto; margin-left:auto }
     .condition-stage-results .budget-result { margin-top:24px }
     .condition-stage-results .budget-enrichment-note {
-      position:sticky; top:calc(var(--app-header-sticky-height) + 62px); z-index:18;
+      position:sticky; top:calc(var(--app-header-sticky-height) + 12px); z-index:18;
       width:100vw; margin:0 calc(50% - 50vw) 24px; border:0; border-radius:0; padding:26px max(20px,calc((100vw - 760px) / 2)) 30px;
       background:#f2f7ff; color:#2563a6;
       font-size:15px;
@@ -3074,12 +3172,13 @@
       .condition-stage-results .policy-summary-title,
       .condition-stage-results .policy-summary-detail { font-size:16px }
       .condition-stage-results .result-condition-profile { margin:24px 0 30px }
-      .condition-stage-results .candidate-options-bar {
-        grid-template-columns:minmax(0,1fr); align-items:stretch; gap:4px;
-        margin:4px calc(50% - 50vw) 8px; padding-top:4px; padding-right:max(16px,calc((100vw - 760px) / 2)); padding-bottom:4px; padding-left:max(16px,calc((100vw - 760px) / 2));
-      }
-      .condition-stage-results .candidate-filter-chips { width:100% }
-      .condition-stage-results .candidate-sort-group { width:100%; align-self:stretch; justify-items:start; margin-left:0; text-align:left }
+	      .condition-stage-results .candidate-options-bar {
+	        grid-template-columns:minmax(0,1fr); align-items:stretch; gap:10px;
+	        margin:6px calc(50% - 50vw) 12px; padding-top:6px; padding-right:max(16px,calc((100vw - 760px) / 2)); padding-bottom:8px; padding-left:max(16px,calc((100vw - 760px) / 2));
+	      }
+	      .condition-stage-results .candidate-filter-chips { width:100%; gap:6px }
+	      .condition-stage-results .candidate-filter-chip { min-height:34px; border-radius:10px; padding:0 12px; font-size:13px }
+	      .condition-stage-results .candidate-sort-group { width:100%; align-self:stretch; justify-items:start; margin-left:0; text-align:left }
       .condition-stage-results .additional-funding-toggle { min-height:36px }
       .condition-stage-results .candidate-sort-group { align-items:flex-start; padding-bottom:0 }
       .condition-stage-results .candidate-sort-trigger { min-height:24px; font-size:14px }
@@ -3612,6 +3711,20 @@
           <button class="result-info-sheet-close" type="button" data-apt-report-close aria-label="단지 리포트 닫기"></button>
         </div>
         <div class="candidate-detail-sheet-content" id="aptReportContent"></div>
+      </div>
+    </div>
+
+    <div class="result-info-sheet location-score-sheet" id="locationScoreSheet" role="dialog" aria-modal="true" aria-labelledby="locationScoreTitle" aria-hidden="true" hidden>
+      <button class="result-info-backdrop" type="button" data-location-score-close aria-label="종합 점수표 닫기"></button>
+      <div class="result-info-panel candidate-detail-panel">
+        <div class="result-info-grabber" aria-hidden="true"></div>
+        <div class="result-info-sheet-head">
+          <div>
+            <h4 class="result-info-sheet-title" id="locationScoreTitle">종합 점수표</h4>
+          </div>
+          <button class="result-info-sheet-close" type="button" data-location-score-close aria-label="종합 점수표 닫기"></button>
+        </div>
+        <div class="location-score-content" id="locationScoreContent"></div>
       </div>
     </div>
 
@@ -4226,6 +4339,9 @@
     const comparisonOverlay = $("comparisonOverlay");
     const comparisonClose = $("comparisonClose");
     const comparisonContent = $("comparisonContent");
+    const locationScoreSheet = $("locationScoreSheet");
+    const locationScoreTitle = $("locationScoreTitle");
+    const locationScoreContent = $("locationScoreContent");
     const listingReviewSheet = $("listingReviewSheet");
     const listingReviewTitle = $("listingReviewTitle");
     const listingReviewMeta = $("listingReviewMeta");
@@ -4265,6 +4381,7 @@
     // 브라우저 캐시에 구버전 공식으로 계산된 결과가 남아 재사용되는 것을 막는다.
     const SIGNAL_FORMULA_VERSION = 20;
     const MARKET_INSIGHT_TIMEOUT_MS = 12000;
+    const LEADER_COMPARISON_RETRY_DELAYS_MS = [1500, 3000, 6000, 10000, 15000, 30000];
     // v10부터 참고 가격·집계형 행까지 인접 지역 탐색 신호로 사용한다.
     // 이전 응답은 같은 조건에서도 추천이 비어 있을 수 있어 재사용하지 않는다.
     // v12부터 지도 지오코딩에 쓰는 원주소(mapAddress)를 포함한다.
@@ -4388,7 +4505,7 @@
     }
     function syncCandidateDetailScrollLock() {
       const openSheet = document.querySelector(
-        ".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden]), .listing-review-sheet:not([hidden])",
+        ".candidate-detail-sheet:not([hidden]), .apt-report-sheet:not([hidden]), .listing-review-sheet:not([hidden]), .location-score-sheet:not([hidden])",
       );
       document.body.classList.toggle("candidate-detail-sheet-open", Boolean(openSheet));
     }
@@ -4414,6 +4531,43 @@
       if (!button || !tooltip) return;
       tooltip.hidden = !open;
       button.setAttribute("aria-expanded", String(open));
+    }
+
+    let locationScoreReturnFocus = null;
+
+    function openLocationScoreSheet(item, trigger = null) {
+      if (!item?.locationScore) return;
+      locationScoreReturnFocus = trigger || document.activeElement;
+      locationScoreTitle.textContent = `${candidateDisplayName(item)} 종합 점수표`;
+      locationScoreContent.innerHTML = locationScoreSheetHtml(item);
+      locationScoreSheet.hidden = false;
+      locationScoreSheet.setAttribute("aria-hidden", "false");
+      syncCandidateDetailScrollLock();
+      requestAnimationFrame(() => {
+        locationScoreSheet.querySelector("[data-location-score-close]")?.focus();
+      });
+    }
+
+    function openFlowScoreSheet(item, trigger = null) {
+      if (!item?.signals) return;
+      locationScoreReturnFocus = trigger || document.activeElement;
+      locationScoreTitle.textContent = `${candidateDisplayName(item)} 가격·거래흐름 점수표`;
+      locationScoreContent.innerHTML = candidateLegacySignalReportHtml(item);
+      locationScoreSheet.hidden = false;
+      locationScoreSheet.setAttribute("aria-hidden", "false");
+      syncCandidateDetailScrollLock();
+      requestAnimationFrame(() => {
+        locationScoreSheet.querySelector("[data-location-score-close]")?.focus();
+      });
+    }
+
+    function closeLocationScoreSheet() {
+      if (locationScoreSheet.hidden) return;
+      locationScoreSheet.hidden = true;
+      locationScoreSheet.setAttribute("aria-hidden", "true");
+      syncCandidateDetailScrollLock();
+      if (locationScoreReturnFocus?.isConnected) locationScoreReturnFocus.focus();
+      locationScoreReturnFocus = null;
     }
     function purchasePowerFormValues() {
       return {
@@ -4589,7 +4743,7 @@
           ? saved.candidateTradeAgeFilter
           : "";
         candidateConfidenceFilter = Boolean(saved.candidateConfidenceFilter);
-        budgetSort = ["flow_best", "rebound", "leader_strong", "region_strong", "peak_room", "budget_near", "price_low", "newer", "households", "transactions"].includes(saved.budgetSort)
+        budgetSort = ["location_score", "flow_best", "region_strong", "budget_near", "price_low", "newer", "households", "transactions"].includes(saved.budgetSort)
           ? saved.budgetSort
           : "budget_near";
         candidateViewMode = saved.candidateViewMode === "map" ? "map" : "list";
@@ -4739,6 +4893,7 @@
     let budgetSort = "budget_near";
     let candidateViewMode = "list";
     let candidateMapOrigin = "budget";
+    const leaderComparisonRetryInFlight = new Set();
     const CANDIDATE_PAGE_SIZE = 10;
     const CANDIDATE_MAP_CLUSTER_LEVEL = 8;
     const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
@@ -6696,15 +6851,37 @@
 
     async function requestComparableEstimate(target) {
       let lastError = null;
+      const variants = [];
+      const seen = new Set();
+      const addVariant = variant => {
+        const normalized = {
+          ...target,
+          legalDong:String(variant.legalDong || "").trim(),
+          jibun:String(variant.jibun || "").trim(),
+        };
+        const key = roneEstimateKey(normalized);
+        if (seen.has(key)) return;
+        seen.add(key);
+        variants.push(normalized);
+      };
+      addVariant(target);
+      if (target?.jibun) addVariant({ ...target, jibun:"" });
+      if (target?.legalDong || target?.jibun) addVariant({ ...target, legalDong:"", jibun:"" });
       for (let attempt = 0; attempt < 2; attempt += 1) {
-        try {
-          const cached = roneEstimateCache.get(roneEstimateKey(target));
-          return cached || await requestRoneEstimate(target);
-        } catch (error) {
-          lastError = error;
+        for (const variant of variants) {
+          try {
+            const cached = roneEstimateCache.get(roneEstimateKey(variant));
+            return cached || await requestRoneEstimate(variant);
+          } catch (error) {
+            lastError = error;
+          }
         }
       }
       throw lastError || new Error("비교 단지 실거래를 불러오지 못했어요.");
+    }
+
+    function waitLeaderComparisonRetry(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     function leaderContextKey(item) {
@@ -7187,6 +7364,7 @@
         districtLeaderName:districtLeader ? districtLeaderName : "",
         districtLeaderSharesLocality,
         comparisonNotices,
+        comparisonPending:Boolean(item.leaderComparisonPending),
         regionSource:String(payload?.index?.source || ""),
         anchorPeriod:periods[anchor],
         observedMonthCount,
@@ -7254,6 +7432,15 @@
       ));
     }
 
+    function sparklineLatestValue(values = []) {
+      if (!Array.isArray(values)) return null;
+      for (let index = values.length - 1; index >= 0; index -= 1) {
+        const value = values[index];
+        if (Number.isFinite(value)) return Number(value);
+      }
+      return null;
+    }
+
     function candidateTrendPattern(series) {
       const points = sparklineFinitePoints(series);
       if (points.length < 3) {
@@ -7274,17 +7461,44 @@
       const [previousChange, latestChange] = lastTwoChanges;
       const directionThreshold = .5;
       const allValues = points.map(point => point.value);
-      const latestValue = latestPoint.value;
-      const fullHigh = Math.max(...allValues);
-      const fullLow = Math.min(...allValues);
-      const fullRange = fullHigh - fullLow;
-      const recentRange = Math.max(...recentValues) - Math.min(...recentValues);
-      const windowYears = Number(series?.windowMonths || SPARKLINE_WINDOW_MONTHS) / 12;
-      const windowLabel = Number.isInteger(windowYears) ? `최근 ${windowYears}년` : "최근";
+	      const latestValue = latestPoint.value;
+	      const fullHigh = Math.max(...allValues);
+	      const fullLow = Math.min(...allValues);
+	      const fullRange = fullHigh - fullLow;
+	      const recentRange = Math.max(...recentValues) - Math.min(...recentValues);
+	      const recentTotalChange = recentValues[recentValues.length - 1] - recentValues[0];
+	      const windowYears = Number(series?.windowMonths || SPARKLINE_WINDOW_MONTHS) / 12;
+	      const windowLabel = Number.isInteger(windowYears) ? `최근 ${windowYears}년` : "최근";
+	      const recentLowIndex = recentValues.reduce((bestIndex, value, index) => (
+	        value < recentValues[bestIndex] ? index : bestIndex
+	      ), 0);
+	      const recentLowPoint = recent[recentLowIndex];
+	      const monthsSinceRecentLow = recent.length - 1 - recentLowIndex;
+	      const rapidOneMonthThreshold = Math.max(3.5, fullRange * .35);
+	      const rapidMultiMonthThreshold = Math.max(5, fullRange * .5);
+	      if (Number.isFinite(latestChange) && latestChange >= rapidOneMonthThreshold) {
+	        return { kind:"surge", comparable:true, message:"최근 거래에서 가격이 크게 뛰었어요" };
+	      }
+	      if (Number.isFinite(latestChange) && latestChange <= -rapidOneMonthThreshold) {
+	        return { kind:"sharp_drop", comparable:true, message:"최근 거래에서 가격이 크게 떨어졌어요" };
+	      }
+	      if (recentTotalChange >= rapidMultiMonthThreshold) {
+	        return { kind:"fast_rise", comparable:true, message:"최근 몇 달 동안 가격이 빠르게 올랐어요" };
+	      }
+	      if (recentTotalChange <= -rapidMultiMonthThreshold) {
+	        return { kind:"fast_fall", comparable:true, message:"최근 몇 달 동안 가격이 빠르게 내렸어요" };
+	      }
+	      if (
+	        monthsSinceRecentLow >= 2
+	        && latestValue - recentLowPoint.value >= 2
+	        && latestValue >= fullHigh - .8
+	      ) {
+	        return { kind:"rise_continuing", comparable:true, message:"최근 몇 달 동안 상승 흐름이 이어졌어요" };
+	      }
 
-      if (lastTwoChanges.length === 2 && previousChange <= -directionThreshold && latestChange >= directionThreshold) {
-        return { kind:"rebound", comparable:true, message:"최근 하락을 멈추고 반등했어요" };
-      }
+	      if (lastTwoChanges.length === 2 && previousChange <= -directionThreshold && latestChange >= directionThreshold) {
+	        return { kind:"rebound", comparable:true, message:"최근 하락을 멈추고 반등했어요" };
+	      }
       if (lastTwoChanges.length === 2 && previousChange >= directionThreshold && latestChange <= -directionThreshold) {
         return { kind:"downturn", comparable:true, message:"최근 상승을 멈추고 하락했어요" };
       }
@@ -7332,16 +7546,34 @@
       return { kind:"mixed", comparable:true, message:"최근 가격 방향이 여러 번 바뀌었어요" };
     }
 
-    function candidateTrendComparison(complexRate, regionRate, leaderRate, regionName, leaderRegionName) {
-      const leaderLabel = leaderRegionName === regionName ? "대장" : `${leaderRegionName} 대장`;
+    function candidateTrendComparison(complexRate, regionRate, leaderRate, regionLabel, leaderRegionName, series = null) {
+      const leaderLabel = `${leaderRegionName} 대장`;
+      const relativePosition = (values = []) => {
+        if (!series || !Array.isArray(values)) return null;
+        const paired = [];
+        series.complex.forEach((value, index) => {
+          const compareValue = values[index];
+          if (Number.isFinite(value) && Number.isFinite(compareValue)) {
+            paired.push({ complex:value, compare:compareValue });
+          }
+        });
+        if (paired.length < 3) return null;
+        const recent = paired.slice(-6);
+        const latest = recent[recent.length - 1];
+        const aboveCount = recent.filter(point => point.complex >= point.compare + .5).length;
+        return {
+          latestDifference:latest.complex - latest.compare,
+          aboveShare:aboveCount / recent.length,
+        };
+      };
       const comparisons = [
-        Number.isFinite(regionRate) ? { label:`${regionName} 평균`, rate:regionRate } : null,
-        Number.isFinite(leaderRate) ? { label:leaderLabel, rate:leaderRate } : null,
+        Number.isFinite(regionRate) ? { label:regionLabel, rate:regionRate, position:relativePosition(series?.region) } : null,
+        Number.isFinite(leaderRate) ? { label:leaderLabel, rate:leaderRate, position:relativePosition(series?.leader) } : null,
       ].filter(Boolean).map(row => ({ ...row, difference:complexRate - row.rate }));
       if (!comparisons.length) return "";
       const similar = comparisons.filter(row => Math.abs(row.difference) < .5);
       const combinedLabel = comparisons.length === 2
-        ? `${regionName} 평균·${leaderLabel}`
+        ? `${regionLabel}·${leaderLabel}`
         : comparisons[0].label;
       if (similar.length === comparisons.length) {
         return `${combinedLabel}과 비슷하게 움직였어요`;
@@ -7351,6 +7583,14 @@
       const target = sameDirection
         ? { label:combinedLabel, difference:comparisons[0].difference }
         : [...comparisons].sort((left, right) => Math.abs(right.difference) - Math.abs(left.difference))[0];
+      const positionTarget = !sameDirection ? target : comparisons.find(row => row.position?.latestDifference >= .5 && row.position?.aboveShare >= .67);
+      if (
+        complexRate > .05
+        && positionTarget?.position?.latestDifference >= .5
+        && positionTarget.position.aboveShare >= .67
+      ) {
+        return `${positionTarget.label}보다 높은 흐름을 이어갔어요`;
+      }
       if (complexRate > .05) {
         return `${target.label}보다 상승 폭이 ${target.difference > 0 ? "컸어요" : "작았어요"}`;
       }
@@ -7369,38 +7609,29 @@
         || item.region || "지역";
       const leaderRegionName = String(item.signals?.leaderRegion || item.region || regionName).trim()
         || regionName;
-      let summaryIndex = -1;
-      series.complex.forEach((value, index) => {
-        if (
-          value != null
-          && (!series.region || series.region[index] != null)
-          && (!series.leader || series.leader[index] != null)
-        ) summaryIndex = index;
-      });
-      if (summaryIndex === -1) {
-        series.complex.forEach((value, index) => {
-          if (value != null) summaryIndex = index;
-        });
-      }
-      if (summaryIndex === -1) return null;
-      const complexValue = series.complex[summaryIndex];
-      const regionValue = series.region?.[summaryIndex] ?? null;
-      const leaderValue = series.leader?.[summaryIndex] ?? null;
-      const districtLeaderValue = series.districtLeader?.[summaryIndex] ?? null;
+      const regionLabel = series.regionSource.includes("R-ONE")
+        ? `${regionName} 평균`
+        : `${regionName} 대표 흐름`;
+      const complexValue = sparklineLatestValue(series.complex);
+      const regionValue = sparklineLatestValue(series.region);
+      const leaderValue = sparklineLatestValue(series.leader);
+      const districtLeaderValue = sparklineLatestValue(series.districtLeader);
+      if (!Number.isFinite(complexValue)) return null;
       const complexRate = complexValue - 100;
       const regionRate = regionValue == null ? null : regionValue - 100;
       const leaderRate = leaderValue == null ? null : leaderValue - 100;
       const tone = complexRate > .05 ? "up" : complexRate < -.05 ? "down" : "flat";
       const sentiment = "neutral";
-      const pattern = candidateTrendPattern(series);
-      const comparison = pattern.comparable
-        ? candidateTrendComparison(complexRate, regionRate, leaderRate, regionName, leaderRegionName)
-        : "";
+	      const pattern = candidateTrendPattern(series);
+	      const comparison = pattern.comparable
+	        ? candidateTrendComparison(complexRate, regionRate, leaderRate, regionLabel, leaderRegionName, series)
+	        : "";
       const message = [pattern.message, comparison].filter(Boolean).join(" ");
       return {
         series,
         complexName:candidateDisplayName(item) || item.name || "해당 단지",
         regionName,
+        regionLabel,
         leaderRegionName,
         complexValue,
         regionValue,
@@ -7413,7 +7644,7 @@
       };
     }
 
-    function candidateTrendSummaryHtml(summary) {
+    function candidateTrendSummaryHtml(summary, legendHtml = "") {
       if (!summary) return "";
       const windowMonths = Number(summary.series?.windowMonths || SPARKLINE_WINDOW_MONTHS);
       const windowLabel = windowMonths >= 12 && windowMonths % 12 === 0
@@ -7421,23 +7652,89 @@
         : `최근 ${windowMonths}개월 기준`;
       return `<div class="spark-summary">
         <span class="spark-summary-basis">${esc(windowLabel)}</span>
-        <div class="spark-summary-values">
-          <strong>${esc(summary.complexName)} <em class="${esc(summary.tone)}">${esc(sparklineTrendRateText(summary.complexValue))}</em></strong>
-          ${summary.regionValue == null ? "" : `<span>${esc(summary.regionName)} 평균 <em>${esc(sparklineTrendRateText(summary.regionValue))}</em></span>`}
-          ${summary.leaderValue == null ? "" : `<span>${esc(summary.series.leaderName)} <em>${esc(sparklineTrendRateText(summary.leaderValue))}</em></span>`}
-          ${summary.districtLeaderValue == null ? "" : `<span>${esc(summary.series.districtLeaderName)} <em>${esc(sparklineTrendRateText(summary.districtLeaderValue))}</em></span>`}
-        </div>
+        ${legendHtml}
       </div>`;
     }
 
-    function candidateSparklineHtml(item, existingSeries = null) {
+    function sparkLegendRateHtml(value, tone = "") {
+      if (value == null) return "";
+      return `<em class="spark-legend-rate ${esc(tone)}">${esc(sparklineTrendRateText(value))}</em>`;
+    }
+
+    function candidateSparklineLegendHtml(item, series, summary, context) {
+      const complexName = context.complexName;
+      const regionName = context.regionName;
+      const sharedLeaderRegionName = context.sharedLeaderRegionName;
+      const leaderSearchRegion = context.leaderSearchRegion;
+      const districtLeaderRegionName = context.districtLeaderRegionName;
+      const selfLeaderRegionName = context.selfLeaderRegionName;
+      const selfLeaderBadgeHtml = context.selfLeaderBadgeHtml;
+      const leaderFormula = context.leaderFormula;
+      return `<div class="budget-sparkline-legend" aria-label="차트 범례">
+        <div class="spark-primary-group">
+          <span class="spark-legend-item spark-legend-primary"><i class="spark-dot spark-complex" aria-hidden="true"></i>${esc(complexName)} ${sparkLegendRateHtml(summary.complexValue, summary.tone)}${selfLeaderBadgeHtml}</span>
+          ${selfLeaderRegionName ? leaderFormula : ""}
+        </div>
+        ${series.region ? `<span class="spark-legend-item" aria-label="${esc(`${summary.regionLabel} ${sparklineTrendRateText(summary.regionValue)}`)}"><i class="spark-dot spark-region" aria-hidden="true"></i>${esc(summary.regionLabel)} ${sparkLegendRateHtml(summary.regionValue)}</span>` : ""}
+        ${!item.signals?.isRegionalLeader && series.leader ? `<div class="spark-leader-group">
+          <button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.leaderName)}" data-leader-search-region="${esc(leaderSearchRegion)}" aria-label="${esc(`${series.leaderName} ${sharedLeaderRegionName} 대장 검색, ${sparklineTrendRateText(summary.leaderValue)}`)}"><i class="spark-dot spark-leader" aria-hidden="true"></i>${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.leaderValue)}</button>
+          ${leaderFormula}
+        </div>` : (selfLeaderRegionName ? "" : leaderFormula)}
+        ${item.signals?.isDistrictLeader ? "" : series.districtLeader ? `<button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.districtLeaderName)}" data-leader-search-region="${esc(districtLeaderRegionName)}" aria-label="${esc(`${series.districtLeaderName} ${districtLeaderRegionName} 대장 검색, ${sparklineTrendRateText(summary.districtLeaderValue)}`)}"><i class="spark-dot spark-district-leader" aria-hidden="true"></i>${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.districtLeaderValue)}</button>` : ""}
+      </div>`;
+    }
+
+    function candidateSparklineContext(item, series, summary) {
+      const complexName = summary.complexName || candidateDisplayName(item) || item.name || "해당 단지";
+      const regionName = summary.regionName;
+      const leaderSearchRegion = String(
+        item.signals?.leaderRegion
+        || item.region
+        || item.displayRegion
+        || regionName
+      ).trim();
+      const leaderRegionName = summary.leaderRegionName || leaderSearchRegion || regionName;
+      const districtLeaderRegionName = String(
+        item.signals?.districtLeaderRegion || item.region || regionName
+      ).trim() || regionName;
+      const sharedLeaderRegionName = (
+        (item.signals?.isDistrictLeader || series.districtLeaderSharesLocality)
+        && leaderRegionName !== districtLeaderRegionName
+      )
+        ? `${leaderRegionName}/${districtLeaderRegionName}`
+        : leaderRegionName;
+      const selfLeaderRegionName = item.signals?.isRegionalLeader
+        ? sharedLeaderRegionName
+        : item.signals?.isDistrictLeader
+          ? districtLeaderRegionName
+          : "";
+      const selfLeaderBadgeHtml = selfLeaderRegionName
+        ? `<span class="spark-leader-badge">(${esc(selfLeaderRegionName)} 대장)</span>`
+        : "";
+      const leaderFormula = item.signals?.leaderName ? leaderFormulaHtml(item, leaderRegionName) : "";
+      return {
+        complexName,
+        regionName,
+        leaderSearchRegion,
+        leaderRegionName,
+        districtLeaderRegionName,
+        sharedLeaderRegionName,
+        selfLeaderRegionName,
+        selfLeaderBadgeHtml,
+        leaderFormula,
+      };
+    }
+
+    function candidateSparklineHtml(item, existingSeries = null, existingSummary = null, existingContext = null) {
       const series = existingSeries || sparklineSeries(item);
       if (!series) return "";
-      const summary = candidateTrendSummary(item, series);
+      const summary = existingSummary || candidateTrendSummary(item, series);
       if (!summary) return "";
-      const complexName = summary.complexName || candidateDisplayName(item) || item.name || "해당 단지";
-      const w = 420, h = 292;
-      const plot = { left:58, right:10, top:16, bottom:38 };
+      const context = existingContext || candidateSparklineContext(item, series, summary);
+      const { complexName, regionName, leaderRegionName, districtLeaderRegionName } = context;
+      const w = window.matchMedia("(max-width: 760px)").matches ? 420 : 510;
+      const h = 292;
+      const plot = { left:58, right:10, top:16, bottom:24 };
       const values = [
         ...series.complex.filter(value => value != null),
         ...(series.region || []).filter(value => value != null),
@@ -7473,36 +7770,10 @@
           ? [100, 100 - (100 - min) / 2, min]
           : [max, 100, min];
       const xTickIndexes = [...new Set([0, Math.floor((series.periods.length - 1) / 2), series.periods.length - 1])];
-      const regionName = summary.regionName;
-      const leaderSearchRegion = String(
-        item.signals?.leaderRegion
-        || item.region
-        || item.displayRegion
-        || regionName
-      ).trim();
-      const leaderRegionName = summary.leaderRegionName || leaderSearchRegion || regionName;
-      const districtLeaderRegionName = String(
-        item.signals?.districtLeaderRegion || item.region || regionName
-      ).trim() || regionName;
-      const sharedLeaderRegionName = (
-        (item.signals?.isDistrictLeader || series.districtLeaderSharesLocality)
-        && leaderRegionName !== districtLeaderRegionName
-      )
-        ? `${leaderRegionName}/${districtLeaderRegionName}`
-        : leaderRegionName;
-      const label = `${summary.anchorLabel} 대비 최근 2년 가격 변화 · ${complexName}${series.region ? `, ${regionName} 평균 지수` : ""}${series.leader ? `, ${leaderRegionName} 대장 ${series.leaderName}` : ""}${series.districtLeader ? `, ${districtLeaderRegionName} 대장 ${series.districtLeaderName}` : ""}`;
+      const label = `${summary.anchorLabel} 대비 최근 2년 가격 변화 · ${complexName}${series.region ? `, ${summary.regionLabel}` : ""}${series.leader ? `, ${leaderRegionName} 대장 ${series.leaderName}` : ""}${series.districtLeader ? `, ${districtLeaderRegionName} 대장 ${series.districtLeaderName}` : ""}`;
       const regionBasis = series.regionSource.includes("R-ONE")
         ? "한국부동산원 매매가격지수"
-        : series.regionSource || "지역 대표 단지 평균지수";
-      const selfLeaderRegionName = item.signals?.isRegionalLeader
-        ? sharedLeaderRegionName
-        : item.signals?.isDistrictLeader
-          ? districtLeaderRegionName
-          : "";
-      const selfLeaderBadgeHtml = selfLeaderRegionName
-        ? `<span class="spark-leader-badge">(${esc(selfLeaderRegionName)} 대장)</span>`
-        : "";
-      const leaderFormula = item.signals?.leaderName ? leaderFormulaHtml(item, leaderRegionName) : "";
+        : series.regionSource || "지역 대표 단지 변화율";
       return `<svg class="budget-sparkline-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(label)}">
           ${yTicks.map(value => `<line class="spark-grid" x1="${plot.left}" x2="${w - plot.right}" y1="${y(value).toFixed(1)}" y2="${y(value).toFixed(1)}"/><text class="spark-axis-label" x="${plot.left - 6}" y="${(y(value) + 3).toFixed(1)}" text-anchor="end">${esc(axisTrend(value))}</text>`).join("")}
           <line class="spark-axis" x1="${plot.left}" x2="${plot.left}" y1="${plot.top}" y2="${h - plot.bottom}"/>
@@ -7518,7 +7789,7 @@
             const complexTrendLabel = `${complexName} ${sparklineTrendRateText(value)}`;
             const regionTrendLabel = series.region?.[index] == null
               ? ""
-              : `${regionName} 평균 지수 ${sparklineTrendRateText(series.region[index])}`;
+              : `${summary.regionLabel} ${sparklineTrendRateText(series.region[index])}`;
             const pointLabel = [
               axisPeriod(series.periods[index]),
               complexTrendLabel,
@@ -7535,17 +7806,8 @@
         </svg>
         <div class="spark-trade-tooltip" data-spark-tooltip role="status" aria-live="polite" hidden></div>
         <div class="budget-sparkline-legend" aria-label="차트 범례">
-          <div class="spark-primary-group">
-            <span class="spark-legend-item spark-legend-primary"><i class="spark-dot spark-complex" aria-hidden="true"></i>${esc(complexName)}${selfLeaderBadgeHtml}</span>
-            ${selfLeaderRegionName ? leaderFormula : ""}
-          </div>
-          ${series.region ? `<span class="spark-legend-item"><i class="spark-dot spark-region" aria-hidden="true"></i>${esc(regionName)} 평균 지수</span>` : ""}
-          ${!item.signals?.isRegionalLeader && series.leader ? `<div class="spark-leader-group">
-            <button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.leaderName)}" data-leader-search-region="${esc(leaderSearchRegion)}" aria-label="${esc(`${series.leaderName} ${sharedLeaderRegionName} 대장 검색`)}"><i class="spark-dot spark-leader" aria-hidden="true"></i>${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장</button>
-            ${leaderFormula}
-          </div>` : (selfLeaderRegionName ? "" : leaderFormula)}
-          ${item.signals?.isDistrictLeader ? "" : series.districtLeader ? `<button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.districtLeaderName)}" data-leader-search-region="${esc(districtLeaderRegionName)}" aria-label="${esc(`${series.districtLeaderName} ${districtLeaderRegionName} 대장 검색`)}"><i class="spark-dot spark-district-leader" aria-hidden="true"></i>${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장</button>` : ""}
-          ${series.comparisonNotices?.length ? `<span class="spark-compare-error">${esc([...new Set(series.comparisonNotices)].join(" · "))}. 다시 검색하면 자동으로 재시도해요.</span>` : ""}
+          ${series.comparisonPending ? `<span class="spark-compare-error">대장 비교선을 불러오는 중이에요. 완료되면 차트에 자동으로 추가돼요.</span>` : ""}
+          ${!series.comparisonPending && series.comparisonNotices?.length ? `<span class="spark-compare-error">${esc([...new Set(series.comparisonNotices)].join(" · "))}은 잠시 못 불러왔어요. 선택한 단지와 구 평균은 정상 표시 중이에요.</span>` : ""}
           <span class="spark-basis">${esc(summary.anchorLabel)} 가격 대비 · 지역 흐름은 ${esc(regionBasis)} 기준</span>
         </div>`;
     }
@@ -7554,7 +7816,9 @@
       const series = existingSeries || sparklineSeries(item);
       const summary = candidateTrendSummary(item, series);
       if (!summary) return "";
-      return `${candidateTrendSummaryHtml(summary)}${candidateSparklineHtml(item, series)}`;
+      const context = candidateSparklineContext(item, series, summary);
+      const legendHtml = candidateSparklineLegendHtml(item, series, summary, context);
+      return `${candidateTrendSummaryHtml(summary, legendHtml)}${candidateSparklineHtml(item, series, summary, context)}`;
     }
 
     function sparkTradeDetailDate(value) {
@@ -7573,8 +7837,8 @@
         const viewBoxWidth = svg.viewBox?.baseVal?.width || 0;
         if (!renderedWidth || !viewBoxWidth) return;
         const renderedScale = renderedWidth / viewBoxWidth;
-        const minRenderedSize = 11;
-        const maxRenderedSize = 11;
+        const minRenderedSize = 12;
+        const maxRenderedSize = 12;
         const targetRenderedSize = window.matchMedia("(max-width: 760px)").matches
           ? minRenderedSize
           : maxRenderedSize;
@@ -8369,8 +8633,13 @@
       }
       const card = [...budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-name]")]
         .find(element => element.dataset.candidateKey === candidateIdentityKey(item));
+      const previousTrendToggle = card?.querySelector("[data-trend-toggle]");
+      const previousTrendPanel = card?.querySelector("[data-sparkline]");
+      const trendExpanded = item.budgetTrendExpanded === true
+        || previousTrendToggle?.getAttribute("aria-expanded") === "true"
+        || (previousTrendPanel && !previousTrendPanel.hidden);
       const verdict = card?.querySelector(".candidate-verdict");
-      if (verdict) verdict.innerHTML = candidateVerdictHtml(item);
+      if (verdict) verdict.innerHTML = candidateVerdictHtml(item, { trendExpanded });
       const insightNumbersEl = card?.querySelector("[data-insight-numbers]");
       if (insightNumbersEl) insightNumbersEl.innerHTML = insightNumbersHtml(item);
       const signalReportEl = card?.querySelector("[data-signal-report]");
@@ -8378,14 +8647,15 @@
       const priceSummaryEl = card?.querySelector("[data-price-summary]");
       if (priceSummaryEl) priceSummaryEl.innerHTML = candidatePriceComparisonContentHtml(item);
       const trendControlEl = card?.querySelector("[data-trend-control]");
-      if (trendControlEl) trendControlEl.innerHTML = candidateTrendControlHtml(item);
+      if (trendControlEl) trendControlEl.innerHTML = candidateTrendControlHtml(item, { expanded:trendExpanded });
       const detailTriggerLabel = card?.querySelector("[data-candidate-signal-label]");
       if (detailTriggerLabel) detailTriggerLabel.textContent = "리포트 보기";
       const sparklineEl = card?.querySelector("[data-sparkline]");
       if (sparklineEl) {
         const html = candidateTrendPanelHtml(item);
         sparklineEl.innerHTML = html;
-        sparklineEl.hidden = true;
+        sparklineEl.hidden = !trendExpanded;
+        if (trendExpanded) requestAnimationFrame(() => syncSparkAxisLabelSizes(sparklineEl));
       }
       if (candidateViewMode === "map" && candidateIdentityKey(item) === candidateMapSelectedKey) {
         const preview = candidateMapQuery("[data-candidate-map-preview]");
@@ -8478,20 +8748,88 @@
       return item.marketInsightState === "ready";
     }
 
+    function leaderComparisonTargets(item) {
+      return [
+        { target:candidateLeaderEstimateItem(item), property:"leaderRoneEstimate", label:"동 대장 비교선" },
+        { target:candidateDistrictLeaderEstimateItem(item), property:"districtLeaderRoneEstimate", label:"구 대장 비교선" },
+      ].filter(entry => entry.target);
+    }
+
+    async function fillLeaderComparisonEstimates(item) {
+      const targets = leaderComparisonTargets(item);
+      if (!targets.length) return true;
+      const failures = [];
+      await Promise.all(targets.map(async entry => {
+        if (item[entry.property]) return;
+        try {
+          const result = await requestComparableEstimate(entry.target);
+          item[entry.property] = result.payload;
+        } catch (_) {
+          item[entry.property] = null;
+          failures.push(`${entry.target.name || entry.label} ${entry.label}`);
+        }
+      }));
+      item.leaderEstimateErrors = failures;
+      return failures.length === 0;
+    }
+
+    function scheduleLeaderComparisonRetry(item, onUpdate = refreshMarketInsight) {
+      if (!item || !item.roneEstimate) return;
+      const key = leaderContextKey(item);
+      if (leaderComparisonRetryInFlight.has(key)) return;
+      leaderComparisonRetryInFlight.add(key);
+      item.leaderComparisonPending = true;
+      onUpdate(item);
+      void (async () => {
+        try {
+          for (const delay of LEADER_COMPARISON_RETRY_DELAYS_MS) {
+            await waitLeaderComparisonRetry(delay);
+            try {
+              if (!candidateLeaderEstimateItem(item) && !candidateDistrictLeaderEstimateItem(item)) {
+                const payload = await requestLeaderContext(item);
+                applyLeaderContext(item, payload);
+              }
+              const complete = await fillLeaderComparisonEstimates(item);
+              if (complete) {
+                item.leaderComparisonPending = false;
+                item.leaderContextLookupFailed = false;
+                item.leaderContextState = "ready";
+                onUpdate(item);
+                return;
+              }
+            } catch (_) {
+              item.leaderEstimateErrors = ["대장 비교선"];
+            }
+            onUpdate(item);
+          }
+          item.leaderComparisonPending = false;
+          item.leaderContextLookupFailed = false;
+          onUpdate(item);
+        } finally {
+          leaderComparisonRetryInFlight.delete(key);
+        }
+      })();
+    }
+
     async function loadCandidateTrendInsight(item) {
       item.leaderContextState = "loading";
       refreshMarketInsight(item);
       try {
         const payload = await requestLeaderContext(item);
         applyLeaderContext(item, payload);
+        item.leaderContextLookupFailed = false;
       } catch (_) {
         // 대장 비교 정보는 차트의 보조선일 뿐이다. 이 요청이 실패해도
         // 단지 자체 실거래 차트까지 막지 않고 아래 기본 조회를 계속한다.
+        item.leaderContextLookupFailed = true;
         item.leaderEstimateErrors = ["지역 대장 비교 정보"];
       }
       const loaded = await loadMarketInsight(item);
       const chartReady = loaded && Boolean(sparklineSeries(item));
       item.leaderContextState = chartReady ? "ready" : "error";
+      if (chartReady && (item.leaderContextLookupFailed || item.leaderEstimateErrors?.length)) {
+        scheduleLeaderComparisonRetry(item);
+      }
       refreshMarketInsight(item);
       return chartReady;
     }
@@ -8642,6 +8980,19 @@
       return `<a class="${esc(`${extraClass} naver-land-action`.trim())}" href="${esc(url)}" rel="noopener noreferrer" data-naver-land-link data-naver-land-title="${esc(title)}"${aria}>${esc(label)}</a>`;
     }
 
+    function candidateCompareActionHtml(item) {
+      const name = item?.name || candidateDisplayName(item);
+      if (!name) return "";
+      return `<button class="compare-toggle candidate-compare-action" type="button" data-compare-name="${esc(name)}" aria-pressed="${selectedCandidateNames.has(name)}">${selectedCandidateNames.has(name) ? "담기 해제" : "비교 담기"}</button>`;
+    }
+
+    function candidateSharedActionsHtml(item, naverExtraClass = "") {
+      return `<div class="candidate-primary-actions candidate-shared-actions">
+        ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", naverExtraClass, `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
+        ${candidateCompareActionHtml(item)}
+      </div>`;
+    }
+
     function isMobileNaverInAppView() {
       if (!window.matchMedia?.("(max-width:700px)")?.matches) return false;
       return true;
@@ -8680,6 +9031,175 @@
         ? `<span>${esc(address)}</span>`
         : `<span>주소 미확인</span>`;
       return `${addressHtml} · ${esc(detail)}`;
+    }
+
+    function candidateLocationScoreBadgeHtml(item) {
+      const score = Number(item?.locationScore?.score);
+      if (!Number.isFinite(score)) return "";
+      return `<button class="location-score-badge" type="button" data-location-score-open title="종합 점수표 보기">종합 ${esc(Math.round(score))}점</button>`;
+    }
+
+    function candidateFlowScoreBadgeHtml(item) {
+      const signals = item?.signals || {};
+      const score = Number(signals.score);
+      if (!Number.isFinite(score) && !signals.status) return "";
+      const measurable = Number.isFinite(score) && score > 0;
+      const label = measurable ? `${Math.round(score)}점` : "측정 불가";
+      const title = measurable ? "가격·거래흐름 점수표 보기" : "가격·거래흐름 측정 불가";
+      return `<button class="flow-score-badge" type="button" data-flow-score-open title="${esc(title)}">가격·거래흐름 ${esc(label)}</button>`;
+    }
+
+	    function candidateTopScoreBadgesHtml(item) {
+	      const badges = `${candidateLocationScoreBadgeHtml(item)}${candidateFlowScoreBadgeHtml(item)}`;
+	      return badges ? `<span class="candidate-score-badges">${badges}</span>` : "";
+	    }
+
+    function locationScorePartHtml(part) {
+      const max = Number(part?.maxPoints || 0);
+      const points = Number(part?.points);
+      const score = Number(part?.score);
+      const missing = !Number.isFinite(points);
+      const width = !missing && max > 0 ? Math.max(0, Math.min(100, points / max * 100)) : 0;
+      return `<div class="location-score-row">
+        <span class="location-score-label">${esc(part?.label || "항목")}</span>
+        <span class="location-score-points${missing ? " is-missing" : ""}">${missing ? "준비 중" : `${esc(points.toFixed(1).replace(/\.0$/, ""))}/${esc(max)}점`}</span>
+        <span class="location-score-reason">${esc(part?.reason || "데이터 확인 중")}</span>
+        <span class="location-score-bar" aria-hidden="true"><span class="location-score-fill" style="width:${esc(width)}%"></span></span>
+      </div>`;
+    }
+
+    function locationScoreSheetHtml(item) {
+      const score = item?.locationScore || {};
+      const total = Number(score.score);
+      if (!Number.isFinite(total)) {
+        return `<div class="signal-report-empty">아직 종합점수를 만들 데이터가 부족해요.</div>`;
+      }
+      const coverage = Number(score.coverage || 0);
+      const parts = Array.isArray(score.parts) ? score.parts : [];
+      const areaAnalysis = score.areaAnalysis || {};
+      const areaParts = Array.isArray(areaAnalysis.parts) ? areaAnalysis.parts : [];
+      const areaSummary = [areaAnalysis.summary || "선택한 평형 기준 가격, 거래 수, 최근 흐름이에요.", areaAnalysis.leaderLabel].filter(Boolean).join(" · ");
+      const areaAnalysisHtml = areaParts.length
+        ? `<h5 class="location-score-section-title">${esc(areaAnalysis.title || "선택 평형 가격·거래 분석")}</h5>
+          <p class="location-score-section-copy">${esc(areaSummary)}</p>
+          <div class="location-score-table">${areaParts.map(locationScorePartHtml).join("")}</div>`
+        : "";
+      return `<section class="location-score-hero">
+          <div class="location-score-total">${esc(Math.round(total))}<span>점 · ${esc(score.label || "종합")}</span></div>
+          <p class="location-score-summary">${esc(score.summary || "평형과 상관없는 단지, 교통, 교육, 상품성을 함께 본 점수예요.")}</p>
+        </section>
+        <p class="location-score-coverage">반영된 데이터: ${esc(Math.round(coverage * 100))}%</p>
+        <div class="location-score-table">${parts.map(locationScorePartHtml).join("")}</div>
+        ${areaAnalysisHtml}
+        <p class="location-score-note">종합점수는 단지 기준이에요. 가격, 거래 수, 최근 흐름은 선택한 평형 기준으로 따로 봐 주세요.</p>`;
+    }
+
+    function candidateRowsForLookup() {
+      const rows = [
+        ...(currentBudgetData?.allCandidates || []),
+        ...(currentBudgetData?.candidates || []),
+        ...currentAptSearchItems,
+        ...currentAptSearchRivalItems,
+        ...Array.from(aptCandidateResults.values()),
+      ];
+      const unique = new Map();
+      rows.forEach(item => {
+        if (!item) return;
+        unique.set(candidateIdentityKey(item), item);
+      });
+      return [...unique.values()];
+    }
+
+    function aptSearchMapRows() {
+      const rows = [
+        ...currentAptSearchItems,
+        ...Array.from(aptCandidateResults.values()),
+        ...currentAptSearchRivalItems,
+      ];
+      const unique = new Map();
+      rows.forEach(item => {
+        if (!item?.name) return;
+        unique.set(candidateIdentityKey(item), item);
+      });
+      return [...unique.values()];
+    }
+
+    function sameCandidateIdentity(left, right) {
+      if (!left?.name || !right?.name) return false;
+      const leftName = compactText(candidateDisplayName(left));
+      const rightName = compactText(candidateDisplayName(right));
+      if (!leftName || leftName !== rightName) return false;
+      const leftRegion = compactText(left.region || left.displayRegion || left.address || "");
+      const rightRegion = compactText(right.region || right.displayRegion || right.address || "");
+      if (!leftRegion || !rightRegion) return true;
+      return leftRegion.includes(rightRegion) || rightRegion.includes(leftRegion);
+    }
+
+    function syncAptSearchCandidateData(index, candidate) {
+      if (!candidate?.name) return candidate;
+      const previous = currentAptSearchItems[index] || null;
+      const previousKey = previous ? candidateIdentityKey(previous) : "";
+      currentAptSearchItems[index] = { ...(previous || {}), ...candidate };
+      aptCandidateResults.set(index, currentAptSearchItems[index]);
+
+      if (candidateMapOrigin !== "aptSearch") return currentAptSearchItems[index];
+      const nextKey = candidateIdentityKey(currentAptSearchItems[index]);
+      candidateMapEntries.forEach(entry => {
+        const entryKey = candidateIdentityKey(entry.item);
+        if (entryKey !== previousKey && entryKey !== nextKey && !sameCandidateIdentity(entry.item, currentAptSearchItems[index])) return;
+        entry.item = { ...entry.item, ...currentAptSearchItems[index] };
+        entry.element.innerHTML = candidateMapMarkerHtml(entry.item, candidateIdentityKey(entry.item) === candidateMapSelectedKey);
+      });
+      candidateMapLocatedEntries.forEach(entry => {
+        if (candidateIdentityKey(entry.item) === previousKey || candidateIdentityKey(entry.item) === nextKey || sameCandidateIdentity(entry.item, currentAptSearchItems[index])) {
+          entry.item = { ...entry.item, ...currentAptSearchItems[index] };
+        }
+      });
+      if (candidateViewMode === "map" && (candidateMapSelectedKey === previousKey || candidateMapSelectedKey === nextKey)) {
+        selectCandidateMapItem(currentAptSearchItems[index], { pan:false });
+      }
+      return currentAptSearchItems[index];
+    }
+
+    function refreshAptSearchTrendCandidate(candidate) {
+      if (!candidate?.name) return;
+      const key = candidateIdentityKey(candidate);
+      aptCandidateResults.forEach((value, index) => {
+        if (candidateIdentityKey(value) !== key && !sameCandidateIdentity(value, candidate)) return;
+        aptCandidateResults.set(index, { ...value, ...candidate });
+        currentAptSearchItems[index] = aptCandidateResults.get(index);
+        const card = aptSearchResults.querySelector(`[data-apt-card-index="${index}"]`);
+        const verdict = card?.querySelector(".candidate-verdict");
+        if (verdict) {
+          verdict.innerHTML = candidateVerdictHtml(aptCandidateResults.get(index), {
+            trendExpanded:card?.dataset.aptTrendExpanded === "true",
+          });
+          requestAnimationFrame(() => syncSparkAxisLabelSizes(verdict));
+        }
+      });
+      if (candidateMapOrigin === "aptSearch" && candidateViewMode === "map" && candidateMapSelectedKey === key) {
+        const preview = candidateMapQuery("[data-candidate-map-preview]");
+        if (preview) {
+          const previousMode = preview.dataset.mobileState || (preview.classList.contains("is-expanded") ? "expanded" : "collapsed");
+          preview.innerHTML = candidateMapPreviewHtml(candidate);
+          setupCandidateMapPreviewSheet(preview, { mode:previousMode });
+          requestAnimationFrame(() => syncSparkAxisLabelSizes(preview));
+        }
+      }
+    }
+
+    function candidateForLocationScoreButton(button) {
+      const aptCard = button.closest("[data-apt-card-index]");
+      if (aptCard) return aptCandidateResults.get(Number(aptCard.dataset.aptCardIndex));
+      const mapPreview = button.closest("[data-candidate-map-preview]");
+      if (mapPreview) {
+        const previewKey = button.closest("[data-candidate-key]")?.dataset.candidateKey || candidateMapSelectedKey;
+        return candidateRowsForLookup().find(item => candidateIdentityKey(item) === previewKey);
+      }
+      const card = button.closest("[data-candidate-key]");
+      const key = card?.dataset.candidateKey || "";
+      if (key) return candidateRowsForLookup().find(item => candidateIdentityKey(item) === key);
+      return null;
     }
 
     function candidateDetailAreaText(item) {
@@ -9164,10 +9684,11 @@
     function candidateMapPreviewHtml(item) {
       return `<button class="candidate-map-sheet-handle" type="button" data-candidate-map-sheet-handle aria-expanded="false" aria-label="지도 상세 카드 펼치기"></button>
         <div class="candidate-map-sheet-content">
-          <div class="candidate-top">
+          <div class="candidate-top" data-candidate-key="${esc(candidateIdentityKey(item))}">
             <div class="budget-main">
-              <span class="budget-name">${esc(candidateDisplayName(item))}</span>
+              <span class="candidate-name-row"><span class="budget-name">${esc(candidateDisplayName(item))}</span></span>
               <span class="budget-meta">${candidateListMetaHtml(item)}</span>
+              ${candidateTopScoreBadgesHtml(item)}
             </div>
           </div>
           <div class="budget-side">
@@ -9177,12 +9698,7 @@
           ${policyImpactHtml(item.policyImpact, item, currentBudgetData?.budgetEok)}
         </div>
         <div class="candidate-map-sheet-actions">
-          <div class="candidate-primary-actions">
-            ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
-          </div>
-          <button class="candidate-detail-trigger" type="button" data-candidate-map-detail-open aria-expanded="false">
-            <span data-candidate-signal-label>검토 리포트</span>
-          </button>
+          ${candidateSharedActionsHtml(item)}
         </div>`;
     }
 
@@ -9262,7 +9778,7 @@
       const trendToggle = preview.querySelector('[data-trend-toggle][data-trend-action="toggle"]');
       const trendPanel = preview.querySelector("[data-sparkline]");
       if (trendToggle && trendPanel) {
-        const trendExpanded = usesBottomSheet ? nextExpanded : false;
+        const trendExpanded = nextExpanded;
         trendToggle.setAttribute("aria-expanded", String(trendExpanded));
         trendToggle.textContent = trendExpanded ? "차트 접기" : "차트보기";
         trendPanel.hidden = !trendExpanded;
@@ -9423,7 +9939,7 @@
       return "";
     }
 
-    function appendCandidateMapEntry(item, position) {
+    function appendCandidateMapEntry(kakao, item, position) {
       if (!candidateMap || !position) return null;
       const mapPrice = candidateMapDisplayPrice(item);
       const mapAverage = candidateMapAveragePrice(item);
@@ -9522,7 +10038,7 @@
       clearCandidateMapClusters();
       clearCandidateMapMarkers();
       candidateMapPresentationMode = "markers";
-      entries.forEach(entry => appendCandidateMapEntry(entry.item, entry.position));
+      entries.forEach(entry => appendCandidateMapEntry(kakao, entry.item, entry.position));
       if (!candidateMapEntries.length) return;
       if (options.fit && candidateMap) {
         suppressCandidateMapPresentationSync();
@@ -9743,9 +10259,8 @@
       if (openingMap) {
         requestAnimationFrame(() => {
           mapView?.querySelector("[data-candidate-map-close]")?.focus({ preventScroll:true });
-          const directRows = [...aptCandidateResults.values()];
           const rows = candidateMapOrigin === "aptSearch"
-            ? (directRows.length ? directRows : currentAptSearchItems)
+            ? aptSearchMapRows()
             : currentBudgetData?.candidates || currentBudgetData?.visibleCandidates || [];
           renderCandidateMap(rows);
         });
@@ -9913,11 +10428,9 @@
       void showCashGapSort;
       const groups = [
         ["시장 흐름", [
+          ["location_score", "종합점수순", "입지와 단지 힘을 함께 본 집"],
           ["flow_best", "흐름 좋은 순", "가격과 거래가 함께 좋은 집"],
-          ["rebound", "반등 시작 순", "최근 3개월 다시 오르는 집"],
-          ["leader_strong", "대장보다 강한 순", "대장 아파트보다 더 오른 집"],
           ["region_strong", "지역보다 강한 순", "같은 구보다 더 오른 집"],
-          ["peak_room", "고점보다 싼 순", "최근 2년 최고가보다 낮은 집"],
         ]],
         ["집 조건", [
           ["budget_near", "예산에 가까운 순", "내 예산을 알차게 쓰는 집"],
@@ -9959,6 +10472,13 @@
       return Number.isFinite(value) ? value : null;
     }
 
+    function candidateLocationScoreNumber(row) {
+      const raw = row?.locationScore?.score;
+      if (raw === null || raw === undefined || raw === "") return null;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : null;
+    }
+
     function candidateReboundRank(row) {
       const recent = candidateSignalNumber(row, "recent3Pct");
       const half = candidateSignalNumber(row, "momentumPct");
@@ -9975,9 +10495,10 @@
     function candidateSortReasonHtml(row, sortKey) {
       const signals = row?.signals || {};
       let message = "";
-      if (sortKey === "flow_best") {
-        const score = candidateSignalNumber(row, "score");
-        message = score === null ? "흐름을 비교할 자료가 부족해요" : `가격과 거래 흐름이 ${Math.round(score)}점이에요`;
+      if (sortKey === "location_score") {
+        message = "";
+      } else if (sortKey === "flow_best") {
+        message = "";
       } else if (sortKey === "rebound") {
         const recent = candidateSignalNumber(row, "recent3Pct");
         const half = candidateSignalNumber(row, "momentumPct");
@@ -10045,7 +10566,9 @@
       const sorted = [...rows];
       sorted.sort((left, right) => {
         let difference = 0;
-        if (sortKey === "flow_best") {
+        if (sortKey === "location_score") {
+          difference = compareHighFirst(candidateLocationScoreNumber(left), candidateLocationScoreNumber(right));
+        } else if (sortKey === "flow_best") {
           difference = compareHighFirst(candidateSignalNumber(left, "score"), candidateSignalNumber(right, "score"));
         } else if (sortKey === "rebound") {
           difference = compareHighFirst(candidateReboundRank(left), candidateReboundRank(right));
@@ -10915,6 +11438,17 @@
           ${badges ? `<div class="signal-panel-badges">${badges}</div>` : ""}
         </div>`;
       }
+      const scoreIsMeasurable = Number(signals.score) > 0;
+      if (!scoreIsMeasurable) {
+        const statusCaption = "확인된 자료로는 최근 가격·거래 흐름을 측정할 수 없어요";
+        return `<div class="signal-panel" aria-label="최근 가격·거래 흐름 산정 상태">
+          <div class="signal-panel-head">
+            <span class="signal-score">최근 가격·거래 흐름 측정 불가</span>
+            <span class="signal-panel-caption">${statusCaption}</span>
+          </div>
+          ${badges ? `<div class="signal-panel-badges">${badges}</div>` : ""}
+        </div>`;
+      }
       return `<div class="signal-panel" aria-label="최근 가격·거래 흐름 점수와 산정 근거">
         <div class="signal-panel-head">
           <span class="signal-score">최근 가격·거래 흐름 ${esc(signals.score)}점 · ${esc(signalTierLabel(signals.score))}</span>
@@ -11032,6 +11566,123 @@
           </button>`;
         }).join("")}</div>
       </section>`;
+    }
+
+    function aptSearchRivalsHtml(report) {
+      const peers = Array.isArray(report?.peers) ? report.peers : [];
+      const peerRegion = String(report?.regionLabel || report?.region || "같은 지역").trim() || "같은 지역";
+      if (!peers.length) return "";
+      return `<section class="apt-rival-section" aria-label="라이벌 아파트">
+        <section class="signal-peer-section" aria-label="${esc(peerRegion)} 라이벌 아파트">
+          <h4 class="signal-peer-title">라이벌 아파트</h4>
+          <p class="signal-peer-description">가격, 흐름, 규모를 나란히 보며 비교할 ${esc(peerRegion)} 단지예요.</p>
+          <div class="signal-peer-list">${peers.slice(0, 3).map(peer => {
+            const score = Number(peer.locationScore?.score ?? peer.score);
+            const scoreText = Number.isFinite(score) ? `종합 ${esc(Math.round(score))}점` : "종합 점수 확인 중";
+            const momentum = Number(peer.momentumPct);
+            const recent3 = Number(peer.recent3Pct);
+            const latestPrice = Number(peer.latestDealPriceEok || peer.priceEok || 0);
+            const latestArea = Number(peer.latestDealExclusiveArea || 0);
+            const latestAreaText = Number.isFinite(latestArea) && latestArea > 0
+              ? `${esc(latestArea.toLocaleString("ko-KR", { maximumFractionDigits:1 }).replace(/\\.0$/, ""))}㎡`
+              : "";
+            const rateTone = momentum > 0 ? "up" : momentum < 0 ? "down" : "flat";
+            const recent3Tone = recent3 > 0 ? "up" : recent3 < 0 ? "down" : "flat";
+            const dealDateText = peer.latestDealDate ? ` · ${shortKoreanDate(peer.latestDealDate)}` : "";
+            const priceText = Number.isFinite(latestPrice) && latestPrice > 0
+              ? `${esc(latestPrice.toFixed(1).replace(/\.0$/, ""))}억${esc(dealDateText)}`
+              : "확인 중";
+            const flowText = Number.isFinite(momentum)
+              ? `<span class="apt-rival-rate ${rateTone}">${esc(marketRateText(momentum))}</span>`
+              : "자료 부족";
+            const recent3Text = Number.isFinite(recent3)
+              ? `<span class="apt-rival-rate ${recent3Tone}">${esc(marketRateText(recent3))}</span>`
+              : "자료 부족";
+            const householdText = peer.households ? `${esc(Number(peer.households).toLocaleString())}세대` : "세대수 확인 필요";
+            return `<button class="signal-peer-card" type="button" data-apt-peer-name="${esc(peer.name)}" data-apt-peer-region="${esc(peer.region || peerRegion)}" data-apt-peer-households="${esc(peer.households || "")}" aria-label="${esc(peer.name)} 검색 결과 보기">
+              <span class="apt-rival-title-block">
+                <span class="apt-rival-name-row"><span class="signal-peer-name">${esc(peer.name)}</span>${latestAreaText ? `<span class="apt-rival-area">· ${latestAreaText}</span>` : ""}</span>
+                <span class="apt-rival-meta">${householdText}</span>
+              </span>
+              <span class="signal-peer-score">${scoreText}</span>
+              <span class="apt-rival-metrics" aria-label="${esc(peer.name)} 비교 정보">
+                <span class="apt-rival-metric"><span>최근 실거래</span><strong>${priceText}</strong></span>
+                <span class="apt-rival-metric">
+                  <span>가격 흐름</span>
+                  <strong class="apt-rival-flow-values"><span><b>6개월</b> ${flowText}</span><span><b>3개월</b> ${recent3Text}</span></strong>
+                </span>
+              </span>
+            </button>`;
+          }).join("")}</div>
+        </section>
+      </section>`;
+    }
+
+    function aptSearchRivalMapItem(peer, peerRegion = "") {
+      const latestPrice = Number(peer?.latestDealPriceEok || peer?.priceEok || 0);
+      const area = Number(peer?.latestDealExclusiveArea || 0);
+      const region = String(peer?.region || peerRegion || "").trim();
+      const legalDong = String(peer?.legalDong || "").trim();
+      const jibun = String(peer?.jibun || "").trim();
+      return {
+        ...peer,
+        name:String(peer?.name || "").trim(),
+        displayName:String(peer?.name || "").trim(),
+        region,
+        displayRegion:String(peer?.displayRegion || [region, legalDong].filter(Boolean).join(" ")).trim(),
+        legalDong,
+        jibun,
+        households:Number(peer?.households || 0),
+        latestDealPriceEok:latestPrice || undefined,
+        midPriceEok:latestPrice || Number(peer?.midPriceEok || 0) || undefined,
+        latestDealExclusiveArea:Number.isFinite(area) && area > 0 ? area : undefined,
+        latestDealDate:String(peer?.latestDealDate || ""),
+        displayAreaLabel:Number.isFinite(area) && area > 0 ? `전용 ${area.toLocaleString("ko-KR", { maximumFractionDigits:1 }).replace(/\.0$/, "")}㎡` : "",
+        locationScore:peer?.locationScore || (Number.isFinite(Number(peer?.score)) ? { score:Number(peer.score) } : null),
+        signals:{
+          ...(peer?.signals || {}),
+          status:peer?.signals?.status || (peer?.momentumPct == null ? "insufficient" : "ok"),
+          score:peer?.signals?.score ?? null,
+          momentumPct:peer?.momentumPct,
+          recent3Pct:peer?.recent3Pct,
+        },
+      };
+    }
+
+    function mergeAptSearchRivalsForMap(report) {
+      const peers = Array.isArray(report?.peers) ? report.peers.slice(0, 3) : [];
+      const peerRegion = String(report?.regionLabel || report?.region || "").trim();
+      if (!peers.length) return false;
+      const merged = new Map(currentAptSearchRivalItems.map(item => [candidateIdentityKey(item), item]));
+      peers.map(peer => aptSearchRivalMapItem(peer, peerRegion)).forEach(item => {
+        if (item.name) merged.set(candidateIdentityKey(item), item);
+      });
+      const nextItems = [...merged.values()];
+      const changed = nextItems.length !== currentAptSearchRivalItems.length;
+      currentAptSearchRivalItems = nextItems;
+      return changed;
+    }
+
+    async function enrichAptSearchRivals(card, item, requestToken) {
+      const slot = card?.nextElementSibling?.matches?.("[data-apt-rivals]")
+        ? card.nextElementSibling
+        : card?.querySelector("[data-apt-rivals]");
+      if (!slot || !item?.name) return;
+      try {
+        const data = await fetchAptReport(item.name, item.region || "", item);
+        if (String(card?.dataset?.aptAreaRequest || "0") !== String(requestToken)) return;
+        const report = data?.report || {};
+        const html = aptSearchRivalsHtml(report);
+        slot.innerHTML = html;
+        slot.hidden = !html;
+        if (mergeAptSearchRivalsForMap(report) && candidateMapOrigin === "aptSearch" && candidateViewMode === "map") {
+          void renderCandidateMap(aptSearchMapRows());
+        }
+      } catch (_) {
+        if (String(card?.dataset?.aptAreaRequest || "0") !== String(requestToken)) return;
+        slot.innerHTML = "";
+        slot.hidden = true;
+      }
     }
 
     function candidateSignalComponentDetail(key, signals, item) {
@@ -11196,6 +11847,9 @@
       }
 
       const score = Number(signals.score);
+      if (score <= 0) {
+        return `<div class="signal-report-empty">확인된 자료로는 최근 가격·거래 흐름을 측정할 수 없어요. 거래가 더 쌓이면 다시 판단할게요.</div>${candidateSignalPeersHtml(item)}`;
+      }
       const recovery = signals.recoveryPct == null ? Number.NaN : Number(signals.recoveryPct);
       const hasRecovery = Number.isFinite(recovery) && recovery > 0;
       const drop = hasRecovery ? Math.max(0, Math.round(100 - recovery)) : null;
@@ -11556,7 +12210,7 @@
       const signals = item?.signals || {};
       const recency = candidateReviewTradeRecency(item);
       const score = Number(signals.score);
-      const hasScore = signals.score !== null && Number.isFinite(score);
+      const hasScore = signals.score !== null && Number.isFinite(score) && score > 0;
       const recent = candidateReviewNumber(signals.recentDealCount);
       const prior = candidateReviewNumber(signals.priorDealCount);
       const comparisonCount = candidateReviewNumber(signals.districtComparisonCount);
@@ -11574,7 +12228,7 @@
         <h4>참고 정보</h4>
         <div class="candidate-review-reference-card">
           <div class="candidate-review-reference-score">
-            <strong>${hasScore ? `${flowLabel} ${esc(score)}점` : `${flowLabel} 점수 미산정`}</strong>
+            <strong>${hasScore ? `${flowLabel} ${esc(score)}점` : `${flowLabel} 측정 불가`}</strong>
             ${hasScore ? `<span>· ${esc(signalTierLabel(score))}</span>` : ""}
             <button class="signal-report-info-button" type="button" data-signal-definition-button aria-label="최근 가격·거래 흐름 지표 설명 보기" aria-expanded="false">i</button>
             <span class="signal-report-info-tooltip" data-signal-definition-tooltip role="tooltip" hidden>최근 실거래의 가격과 거래량 변화를 보여주는 참고 지표예요. 매수를 추천하거나 미래 가격을 예측하는 점수는 아니에요.</span>
@@ -11625,7 +12279,7 @@
     }
 
     function selectedCandidates() {
-      const rows = currentBudgetData?.candidates || [];
+      const rows = candidateRowsForLookup();
       return rows.filter(item => selectedCandidateNames.has(item.name));
     }
 
@@ -11634,11 +12288,11 @@
       document.querySelectorAll(".budget-candidate[data-candidate-name]").forEach(card => {
         const isSelected = selectedCandidateNames.has(card.dataset.candidateName);
         card.classList.toggle("selected", isSelected);
-        const button = card.querySelector("[data-compare-name]");
-        if (button) {
-          button.setAttribute("aria-pressed", String(isSelected));
-          button.textContent = isSelected ? "비교에서 빼기" : "비교 담기";
-        }
+      });
+      document.querySelectorAll("[data-compare-name]").forEach(button => {
+        const isSelected = selectedCandidateNames.has(button.dataset.compareName);
+        button.setAttribute("aria-pressed", String(isSelected));
+        button.textContent = isSelected ? "담기 해제" : "비교 담기";
       });
       if (!selected.length) compareCartCollapsed = false;
       compareCart.hidden = selected.length === 0 || compareCartCollapsed;
@@ -11819,8 +12473,8 @@
           <div class="comparison-trend-empty">비교할 실거래 월이 아직 부족해요. 잠시 후 다시 열어보세요.</div>
         </section>`;
       }
-      const width = 840, height = 292;
-      const plot = { left:44, right:6, top:16, bottom:38 };
+      const width = 420, height = 292;
+      const plot = { left:44, right:10, top:16, bottom:38 };
       const values = data.series.flatMap(item => item.values.filter(value => value != null));
       const rawMin = Math.min(...values, 100);
       const rawMax = Math.max(...values, 100);
@@ -11860,7 +12514,7 @@
           const pointLabel = `${complexName} ${periodText} ${axisTrend(value)} · ${trades.length}건`;
           return `<g class="spark-trade-point-group" data-spark-point data-spark-name="${esc(complexName)}" data-period-label="${esc(periodText)}" data-period-title="${esc(sparkTradeDetailPeriod(data.periods[index]))}" data-spark-trades="${tradePayload}" role="button" tabindex="0" aria-label="${esc(`${pointLabel}, 실거래 상세 보기`)}">
             <circle class="spark-point-hit" cx="${x(index).toFixed(1)}" cy="${y(value).toFixed(1)}" r="10"/>
-            <circle class="comparison-trend-point" style="--trend-color:${item.color}" cx="${x(index).toFixed(1)}" cy="${y(value).toFixed(1)}" r="4"><title>${esc(pointLabel)}</title></circle>
+            <circle class="comparison-trend-point" style="--trend-color:${item.color}" cx="${x(index).toFixed(1)}" cy="${y(value).toFixed(1)}" r="3"><title>${esc(pointLabel)}</title></circle>
           </g>`;
         })
         .join("")
@@ -11931,6 +12585,7 @@
       comparisonOverlay.classList.add("show");
       comparisonOverlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("comparison-open");
+      requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
       comparisonClose.focus();
       if (!needsTrendData) return;
       await Promise.allSettled(rows.map(row => loadMarketInsight(row)));
@@ -11938,6 +12593,7 @@
       const currentRows = selectedCandidates();
       if (currentRows.length < 2) return;
       comparisonContent.innerHTML = `${comparisonTrendHtml(currentRows)}${comparisonTableHtml(currentRows)}`;
+      requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
     }
 
     function closeComparison() {
@@ -11980,50 +12636,105 @@
 
     const BUDGET_ENRICHMENT_STAGES = [
       {
+        key:"candidate_filter",
         label:"조건에 맞는 후보 찾기",
-        title:"조건에 맞는 후보를 찾고 있어요",
-        detail:"선택한 지역·면적·세대수와 매수 가능 상한을 기준으로 비교할 단지를 추렸어요.",
+        title:"후보 단지를 고르고 있어요",
+        detail:"지역·면적·세대수·연식 조건에 맞는 단지를 먼저 골라요.",
       },
       {
+        key:"transaction_fetch",
         label:"최신 실거래 확인",
-        title:"최신 실거래를 확인하고 있어요",
-        detail:"각 단지의 동일 면적대 최근 거래 가격과 거래 건수를 확인하고 있어요.",
+        title:"최근 실거래를 모으고 있어요",
+        detail:"같은 면적대의 최신 거래 가격과 거래 건수를 확인해요.",
       },
       {
-        label:"가격·거래 흐름 분석",
+        key:"policy_check",
+        label:"자금 조건 확인",
+        title:"내 예산으로 살 수 있는지 보고 있어요",
+        detail:"매수 가능 상한을 넘는 단지는 결과에서 빼요.",
+      },
+      {
+        key:"card_prepare",
+        label:"카드 정보 정리",
+        title:"단지 정보를 카드로 정리하고 있어요",
+        detail:"이름, 위치, 면적, 세대수 같은 기본 정보를 맞춰요.",
+      },
+      {
+        key:"flow_score",
+        label:"가격·거래 흐름 계산",
         title:"가격·거래 흐름 점수를 계산하고 있어요",
-        detail:"최근 가격 변화와 거래량, 주변 지역 대비 움직임을 계산해 최종 순서를 정하고 있어요.",
+        detail:"가격 변화, 거래량, 주변 지역 대비 움직임을 함께 봐요.",
+      },
+      {
+        key:"location_score",
+        label:"단지 점수 계산",
+        title:"단지 종합점수를 계산하고 있어요",
+        detail:"교통, 교육환경, 세대수, 연식 같은 단지 요소를 더해요.",
+      },
+      {
+        key:"final_rank",
+        label:"먼저 볼 순서 정리",
+        title:"먼저 볼 단지 순서를 정하고 있어요",
+        detail:"계산한 점수를 모아 최종 후보 순서를 만들어요.",
       },
     ];
 
-    function budgetEnrichmentProgressHtml(activeStage = 0, completed = false) {
-      const safeStage = Math.max(0, Math.min(activeStage, BUDGET_ENRICHMENT_STAGES.length - 1));
+    function budgetEnrichmentStageIndex(activeStage = 0) {
+      if (typeof activeStage === "string") {
+        const foundIndex = BUDGET_ENRICHMENT_STAGES.findIndex(item => item.key === activeStage);
+        return foundIndex >= 0 ? foundIndex : 0;
+      }
+      return Math.max(0, Math.min(Number(activeStage || 0), BUDGET_ENRICHMENT_STAGES.length - 1));
+    }
+
+    function budgetEnrichmentProgressHtml(activeStage = 0, completed = false, progress = {}) {
+      const safeStage = budgetEnrichmentStageIndex(activeStage);
       const stage = BUDGET_ENRICHMENT_STAGES[safeStage];
       const title = completed ? "모든 분석이 완료됐어요" : stage.title;
-      const count = completed ? "3/3 완료" : `${safeStage + 1}/3`;
+      const stageCount = BUDGET_ENRICHMENT_STAGES.length;
+      const count = completed ? `${stageCount}/${stageCount} 완료` : `${safeStage + 1}/${stageCount}`;
+      const processed = Number(progress?.processedCount || 0);
+      const total = Number(progress?.totalCount || 0);
+      const elapsed = Number(progress?.elapsedSeconds || 0);
+      const countLine = total > 0
+        ? `<span class="budget-enrichment-subcount">${esc(Math.min(processed, total))} / ${esc(total)}단지 확인 중</span>`
+        : "";
+      const slowLine = !completed && progress?.slow
+        ? `<span class="budget-enrichment-slow">조금 오래 걸리고 있어요. 약 ${esc(elapsed || 15)}초째 꼼꼼히 확인 중이에요.</span>`
+        : "";
       return `<div class="budget-enrichment-head"><strong class="budget-enrichment-title" data-budget-enrichment-title>${esc(title)}${completed ? "" : '<span class="loading-dots" aria-hidden="true"></span>'}</strong><span class="budget-enrichment-count" data-budget-enrichment-count>${esc(count)}</span></div>
+        ${countLine || slowLine ? `<div class="budget-enrichment-live">${countLine}${slowLine}</div>` : ""}
         <ol class="budget-enrichment-steps" aria-label="최신 데이터 반영 진행 상태">
           ${BUDGET_ENRICHMENT_STAGES.map((item, index) => {
             const state = completed || index < safeStage ? "done" : index === safeStage ? "active" : "pending";
             return `<li class="budget-enrichment-step" data-budget-enrichment-step data-state="${state}"><span class="budget-enrichment-step-icon" aria-hidden="true"></span><span class="budget-enrichment-step-copy"><strong class="budget-enrichment-step-label">${esc(item.label)}</strong><span class="budget-enrichment-step-detail">${esc(item.detail)}</span></span></li>`;
           }).join("")}
         </ol>
-        <span class="budget-enrichment-message" data-budget-enrichment-message>${completed ? "모든 후보 카드가 준비됐어요." : "모든 후보 카드가 준비되면 한 번에 보여드릴게요."}</span>`;
+        <span class="budget-enrichment-message" data-budget-enrichment-message>${completed ? "모든 후보 카드가 준비됐어요." : "준비가 끝나면 후보 카드를 한 번에 보여드릴게요."}</span>`;
     }
 
-    function updateBudgetEnrichmentProgress(activeStage, completed = false) {
+    function updateBudgetEnrichmentProgress(activeStage, completed = false, progress = {}) {
       const note = budgetResultEl.querySelector("[data-budget-enrichment-note]");
       if (!note) return;
-      const progressState = `${activeStage}:${completed}`;
+      const requestedStage = completed
+        ? BUDGET_ENRICHMENT_STAGES.length - 1
+        : budgetEnrichmentStageIndex(activeStage);
+      const displayedStage = budgetEnrichmentStageIndex(note.dataset.activeStage || 0);
+      const safeStage = completed ? requestedStage : Math.max(displayedStage, requestedStage);
+      const progressState = `${safeStage}:${completed}:${progress?.processedCount || ""}:${progress?.totalCount || ""}:${progress?.slow || ""}:${progress?.elapsedSeconds || ""}`;
       if (note.dataset.progressState === progressState) return;
       note.dataset.progressState = progressState;
+      note.dataset.activeStage = String(safeStage);
+      note.dataset.processedCount = String(progress?.processedCount || "");
+      note.dataset.totalCount = String(progress?.totalCount || "");
       note.classList.toggle("is-complete", completed);
       note.setAttribute("aria-busy", String(!completed));
-      note.innerHTML = budgetEnrichmentProgressHtml(activeStage, completed);
+      note.innerHTML = budgetEnrichmentProgressHtml(safeStage, completed, progress);
     }
 
-    function budgetEnrichmentHtml(activeStage = 0, completed = false) {
-      return `<section class="budget-enrichment-note${completed ? " is-complete" : ""}" data-budget-enrichment-note data-progress-state="${activeStage}:${completed}" role="status" aria-live="polite" aria-busy="${String(!completed)}">${budgetEnrichmentProgressHtml(activeStage, completed)}</section>`;
+    function budgetEnrichmentHtml(activeStage = 0, completed = false, progress = {}) {
+      const safeStage = budgetEnrichmentStageIndex(activeStage);
+      return `<section class="budget-enrichment-note${completed ? " is-complete" : ""}" data-budget-enrichment-note data-progress-state="${safeStage}:${completed}" role="status" aria-live="polite" aria-busy="${String(!completed)}">${budgetEnrichmentProgressHtml(safeStage, completed, progress)}</section>`;
     }
 
     function candidateRowPriceReady(row) {
@@ -12069,8 +12780,9 @@
         setConditionStage("results", false);
         budgetResultEl.classList.add("show");
         if (!budgetResultEl.querySelector("[data-budget-enrichment-note]")) {
-          budgetResultEl.innerHTML = budgetEnrichmentHtml(1);
+          budgetResultEl.innerHTML = budgetEnrichmentHtml(data.enrichmentStage || "transaction_fetch");
         }
+        updateBudgetEnrichmentProgress(data.enrichmentStage || "transaction_fetch", false, data);
         return;
       }
       const allRows = (data.allCandidates || data.policyDefaultCandidates || data.candidates || [])
@@ -12158,14 +12870,15 @@
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
           ${rows.map((item, candidateIndex) => `
             <article class="budget-candidate" tabindex="-1" data-candidate-name="${esc(item.name)}" data-candidate-key="${esc(candidateIdentityKey(item))}">
-              <div class="candidate-top">
+              <div class="candidate-top has-map-action">
                 <div class="budget-main">
                   <span class="candidate-name-row">
                     <span class="budget-name">${esc(candidateDisplayName(item))}</span>
-                    ${candidateMapInlineButtonHtml(item)}
                   </span>
                   <span class="budget-meta">${candidateListMetaHtml(item)}</span>
+	                  ${candidateTopScoreBadgesHtml(item)}
                 </div>
+                ${candidateMapInlineButtonHtml(item)}
               </div>
               ${candidateSortReasonHtml(item, budgetSort)}
               <div class="candidate-price-divider" aria-hidden="true"></div>
@@ -12174,17 +12887,7 @@
                 <div class="candidate-verdict">${candidateVerdictHtml(item)}</div>
               </div>
               ${policyImpactHtml(item.policyImpact, item, data.budgetEok)}
-              <div class="candidate-primary-actions">
-                ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
-              </div>
-              <div class="candidate-secondary-actions">
-                <button class="candidate-detail-trigger" type="button" data-candidate-detail-open aria-expanded="false">
-                  <span data-candidate-signal-label>리포트 보기</span>
-                </button>
-                <button class="compare-toggle" type="button" data-compare-name="${esc(item.name)}" aria-pressed="${selectedCandidateNames.has(item.name)}">
-                  ${selectedCandidateNames.has(item.name) ? "비교에서 빼기" : "비교 담기"}
-                </button>
-              </div>
+              ${candidateSharedActionsHtml(item)}
               <div class="result-info-sheet candidate-detail-sheet" data-candidate-detail-sheet role="dialog" aria-modal="true" aria-labelledby="candidateDetailTitle${candidateIndex}" aria-hidden="true" hidden>
                 <button class="result-info-backdrop" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
                 <div class="result-info-panel candidate-detail-panel">
@@ -12259,18 +12962,29 @@
     }
 
     function budgetLoadingStageIndex(elapsedSeconds) {
-      if (elapsedSeconds < .7) return 0;
-      if (elapsedSeconds < 1.4) return 1;
-      return 2;
+      const totalSeconds = 10;
+      const stageCount = BUDGET_ENRICHMENT_STAGES.length;
+      const stageSeconds = totalSeconds / stageCount;
+      return Math.min(stageCount - 1, Math.floor(Math.max(0, elapsedSeconds) / stageSeconds));
     }
 
     function updateBudgetLoading(startedAt) {
       const elapsedSeconds = Math.max(0, (Date.now() - startedAt) / 1000);
-      const stageIndex = budgetLoadingStageIndex(elapsedSeconds);
-      updateBudgetEnrichmentProgress(stageIndex);
+      const note = budgetResultEl.querySelector("[data-budget-enrichment-note]");
+      const currentStage = budgetEnrichmentStageIndex(note?.dataset?.activeStage || 0);
+      const timeStage = budgetLoadingStageIndex(elapsedSeconds);
+      const stageIndex = Math.max(currentStage, timeStage);
+      const processedCount = Number(note?.dataset?.processedCount || 0);
+      const totalCount = Number(note?.dataset?.totalCount || 0);
+      updateBudgetEnrichmentProgress(stageIndex, false, {
+        processedCount,
+        totalCount,
+        slow:elapsedSeconds >= 15,
+        elapsedSeconds:Math.floor(elapsedSeconds),
+      });
       const message = budgetResultEl.querySelector("[data-budget-enrichment-message]");
-      if (message && elapsedSeconds >= 3) {
-        message.textContent = "예상보다 조금 오래 걸리고 있지만, 모든 후보 카드가 준비되면 한 번에 보여드릴게요.";
+      if (message && elapsedSeconds >= 15) {
+        message.textContent = "조금 오래 걸리지만, 실거래와 흐름 점수를 끝까지 확인하고 있어요.";
       }
     }
 
@@ -12280,8 +12994,13 @@
       // 지도 뷰에서 재검색해도 candidateViewMode는 유지하고,
       // 로딩 화면이 스크롤 잠금에 갇히지 않도록 오버레이 클래스만 해제한다.
       document.body.classList.remove("candidate-map-open");
+      removeCandidateMapPortal();
       resetCandidateMap();
       budgetResultEl.innerHTML = budgetEnrichmentHtml(0);
+      const note = budgetResultEl.querySelector("[data-budget-enrichment-note]");
+      if (note) note.dataset.activeStage = "0";
+      statusEl.classList.remove("show");
+      statusEl.textContent = "";
       updateBudgetLoading(startedAt);
       budgetLoadingTimer = setInterval(() => updateBudgetLoading(startedAt), 200);
     }
@@ -12391,16 +13110,14 @@
         if (controller.signal.aborted || budgetSearchController !== controller) return null;
         const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}`, { signal:controller.signal });
         if (!next.done) {
-          if (next.enrichmentStage === "live_data_slow") {
-            updateBudgetEnrichmentProgress(BUDGET_ENRICHMENT_STAGES.length - 1);
-          }
+          updateBudgetEnrichmentProgress(next.enrichmentStage || "transaction_fetch", false, next);
           continue;
         }
         if (next.error || next.enrichmentStage === "error" || next.enrichmentStage === "timeout") {
           throw { error:next.error || "모든 후보 데이터를 준비하지 못했어요. 잠시 후 다시 검색해 주세요." };
         }
         if (next.enrichmentPending) continue;
-        updateBudgetEnrichmentProgress(BUDGET_ENRICHMENT_STAGES.length - 1, true);
+        updateBudgetEnrichmentProgress("final_rank", true, next);
         writeBudgetBrowserCache(url, next);
         return next;
       }
@@ -12429,6 +13146,7 @@
       result.innerHTML = "";
       budgetResultEl.classList.add("show");
       budgetSubmit.disabled = true;
+      const restoreMapAfterSearch = candidateViewMode === "map" && candidateMapOrigin === "budget";
       resetComparisonState();
       showPolicyExcludedCandidates = false;
       includeAdditionalFundingCandidates = true;
@@ -12470,6 +13188,10 @@
         const data = await waitForCompletedBudgetCandidates(initialData, url, controller);
         if (!data) return;
         writeBudgetBrowserCache(url, data);
+        if (restoreMapAfterSearch) {
+          candidateMapOrigin = "budget";
+          candidateViewMode = "map";
+        }
         const revealed = await revealBudgetCandidatesTogether(data, controller);
         if (!revealed) return;
         trackEvent("budget_search_completed", {
@@ -12541,6 +13263,7 @@
           statusEl.classList.add("show");
         }
       } catch {
+        if (budgetSearchController || budgetResultEl.querySelector("[data-budget-enrichment-note]")) return;
         statusEl.textContent = "검색 서버에 연결할 수 없어요.";
         statusEl.classList.add("show");
       }
@@ -12991,6 +13714,18 @@
     async function handleBudgetResultClick(event) {
       const naverLandLink = event.target.closest("[data-naver-land-link]");
       if (naverLandLink && handleNaverLandLinkClick(event, naverLandLink)) return;
+      const locationScoreOpen = event.target.closest("[data-location-score-open]");
+      if (locationScoreOpen) {
+        const candidate = candidateForLocationScoreButton(locationScoreOpen);
+        openLocationScoreSheet(candidate, locationScoreOpen);
+        return;
+      }
+      const flowScoreOpen = event.target.closest("[data-flow-score-open]");
+      if (flowScoreOpen) {
+        const candidate = candidateForLocationScoreButton(flowScoreOpen);
+        openFlowScoreSheet(candidate, flowScoreOpen);
+        return;
+      }
       const candidateMapSheetHandle = event.target.closest("[data-candidate-map-sheet-handle]");
       if (candidateMapSheetHandle) {
         if (performance.now() < candidateMapSheetSuppressClickUntil) return;
@@ -13040,17 +13775,24 @@
         const candidateMapPreview = trendToggle.closest("[data-candidate-map-preview]");
         const trendScope = candidateCard || candidateMapPreview;
         if (trendToggle.dataset.trendAction === "load") {
-          // 같은 이름의 단지가 여러 면적으로 노출될 수 있으므로 이름이 아닌
-          // 카드의 고유 키로 정확히 현재 후보를 찾는다.
-          const candidateKey = candidateMapPreview
-            ? candidateMapSelectedKey
-            : candidateCard?.dataset.candidateKey;
-          const candidate = currentBudgetData?.candidates?.find(
-            item => candidateIdentityKey(item) === candidateKey
+          const candidateKey = candidateCard?.dataset.candidateKey || "";
+          const candidate = candidateMapPreview
+            ? candidateForLocationScoreButton(trendToggle)
+            : currentBudgetData?.candidates?.find(
+              item => candidateIdentityKey(item) === candidateKey
           );
           if (candidate) {
-            const loaded = await loadCandidateTrendInsight(candidate);
+            candidate.budgetTrendExpanded = true;
+            trendToggle.disabled = true;
+            trendToggle.textContent = "차트 불러오는 중";
+          const loaded = candidateMapPreview && candidateMapOrigin === "aptSearch"
+              ? (candidate.aptSearchTrendExpanded = true, await loadAptSearchTrendInsight(candidate))
+              : await loadCandidateTrendInsight(candidate);
             if (!loaded) return;
+            if (candidateMapPreview && candidateMapOrigin === "aptSearch") {
+              candidateMapPreview.innerHTML = candidateMapPreviewHtml(candidate);
+              setupCandidateMapPreviewSheet(candidateMapPreview, { mode:"expanded" });
+            }
             const refreshedPanel = trendScope?.querySelector("[data-sparkline]");
             const refreshedToggle = trendScope?.querySelector('[data-trend-toggle][data-trend-action="toggle"]');
             if (refreshedToggle) {
@@ -13072,6 +13814,12 @@
         }
         const panel = trendScope?.querySelector("[data-sparkline]");
         const expanded = trendToggle.getAttribute("aria-expanded") === "true";
+        const toggleCandidate = candidateMapPreview
+          ? candidateForLocationScoreButton(trendToggle)
+          : currentBudgetData?.candidates?.find(
+            item => candidateIdentityKey(item) === candidateCard?.dataset.candidateKey
+          );
+        if (toggleCandidate) toggleCandidate.budgetTrendExpanded = !expanded;
         trendToggle.setAttribute("aria-expanded", String(!expanded));
         trendToggle.textContent = expanded ? "차트보기" : "차트 접기";
         if (panel) {
@@ -13383,6 +14131,10 @@
     });
     document.addEventListener("keydown", event => {
       if (event.key !== "Escape") return;
+      if (!locationScoreSheet.hidden) {
+        closeLocationScoreSheet();
+        return;
+      }
       const candidateMapDetailSheet = candidateMapQuery("[data-candidate-map-detail-sheet]:not([hidden])");
       if (candidateMapDetailSheet) {
         setCandidateMapDetailOpen(false);
@@ -13617,12 +14369,15 @@
       removeCandidateMapPortal();
       resetCandidateMap();
       document.body.classList.remove("candidate-map-open");
+      currentAptSearchRivalItems = [];
       aptSearchResults.innerHTML = items.map((item, index) => `<article class="apt-result-card budget-candidate" data-apt-card-index="${index}" data-candidate-name="${esc(item.name)}">
-        <div class="candidate-top">
+        <div class="candidate-top has-map-action">
           <div class="budget-main">
             <span class="apartment-name-row"><span class="budget-name">${esc(item.name)}</span>${apartmentStatusBadgeHtml(item.status)}</span>
             <span class="budget-meta" data-apt-result-meta>${esc([item.address, item.households ? `${Number(item.households).toLocaleString()}세대` : ""].filter(Boolean).join(" · "))}</span>
+            <span data-apt-score-badges></span>
           </div>
+          ${candidateMapInlineButtonHtml(item)}
         </div>
         <div class="apt-area-picker" data-apt-area-picker>
           <div class="apt-area-options" data-apt-area-options role="radiogroup" aria-label="전용면적 선택">
@@ -13631,12 +14386,10 @@
         </div>
         <div class="apt-affordability is-loading" data-apt-affordability aria-live="polite">예상 매수가와 필요한 자금을 계산하고 있어요…</div>
         <div class="apt-result-actions">
-          <div class="candidate-primary-actions">
-            ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기 >", "apt-result-naver")}
-          </div>
-          <button class="apt-result-report candidate-detail-trigger" type="button" data-apt-card-signal data-signal-tone="loading" data-apt-report-name="${esc(item.name)}" data-apt-report-region="${esc(item.region || "")}">검토 리포트 준비 중…</button>
+          ${candidateSharedActionsHtml(item, "apt-result-naver")}
         </div>
-      </article>`).join("") + candidateMapFloatingButtonHtml() + candidateMapViewHtml(items, false, { directSearch:true });
+      </article>
+      <div class="apt-rival-standalone" data-apt-rivals hidden></div>`).join("") + candidateMapViewHtml(items, false, { directSearch:true });
       mountCandidateMapPortal(aptSearchResults);
       currentAptSearchItems = items;
       trackEvent("apartment_search_completed", {
@@ -13719,7 +14472,7 @@
         const located = await geocodeCandidate(geocoder, kakao, mapItem);
         if (!located) throw new Error("대장 단지 위치를 찾지 못했어요.");
         const position = new kakao.maps.LatLng(located.latitude, located.longitude);
-        const entry = appendCandidateMapEntry(mapItem, position);
+        const entry = appendCandidateMapEntry(kakao, mapItem, position);
         if (!entry) throw new Error("대장 단지를 지도에 표시하지 못했어요.");
         selectCandidateMapItem(entry.item);
         setCandidateMapCaption("");
@@ -13765,14 +14518,33 @@
     const aptAreaOptionsCache = new Map();
     const aptCandidateResults = new Map();
     let currentAptSearchItems = [];
+    let currentAptSearchRivalItems = [];
 
-    async function fetchAptReport(name, region) {
-      const cacheKey = `${name}${region || ""}`;
+    function aptReportContextParams(context = {}) {
+      const params = new URLSearchParams();
+      const households = Number(context?.households || 0);
+      const price = Number(context?.latestDealPriceEok || context?.midPriceEok || 0);
+      const area = String(context?.displayAreaLabel || (context?.latestDealExclusiveArea ? `전용 ${context.latestDealExclusiveArea}㎡` : "") || "");
+      if (Number.isFinite(households) && households > 0) params.set("households", String(Math.round(households)));
+      if (Number.isFinite(price) && price > 0) params.set("price_eok", String(price));
+      if (area) params.set("area_label", area);
+      return params;
+    }
+
+    async function fetchAptReport(name, region, context = {}) {
+      const contextParams = aptReportContextParams(context);
+      const contextKey = contextParams.toString();
+      const cacheKey = `${name}${region || ""}${contextKey}`;
       if (aptReportCache.has(cacheKey)) return aptReportCache.get(cacheKey);
+      const params = new URLSearchParams({
+        name,
+        region:region || "",
+      });
+      contextParams.forEach((value, key) => params.set(key, value));
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);
       const pending = getJson(
-        `/api/apartment-report?name=${encodeURIComponent(name)}&region=${encodeURIComponent(region || "")}`,
+        `/api/apartment-report?${params.toString()}`,
         { signal:controller.signal },
       ).finally(() => clearTimeout(timeout));
       aptReportCache.set(cacheKey, pending);
@@ -14211,12 +14983,13 @@
       return {
         ...item,
         ...canonical,
-        displayName:canonical.displayName || item.name,
-        displayRegion:canonical.displayRegion || item.address || item.region || "",
-        households:Number(canonical.households || item.households || 0),
-        policyImpact:canonical.policyImpact || data?.policyImpact || null,
-        signals:canonical.signals || {},
-        marketInsightState:"ready",
+	        displayName:canonical.displayName || item.name,
+	        displayRegion:canonical.displayRegion || item.address || item.region || "",
+	        households:Number(canonical.households || item.households || 0),
+	        policyImpact:canonical.policyImpact || data?.policyImpact || null,
+	        signals:canonical.signals || {},
+	        locationScore:canonical.locationScore || report?.locationScore || item?.locationScore || null,
+	        marketInsightState:"ready",
         roneEstimate:{
           estimate:data?.estimate || {},
           latestTrade,
@@ -14255,13 +15028,18 @@
       try {
         const payload = await requestLeaderContext(candidate);
         applyLeaderContext(candidate, payload);
+        candidate.leaderContextLookupFailed = false;
         await enrichAptLeaderEstimate(candidate);
       } catch (_) {
         // 직접 검색에서도 대장 비교 조회 실패가 단지 자체 차트를 막지 않는다.
+        candidate.leaderContextLookupFailed = true;
         candidate.leaderEstimateErrors = ["지역 대장 비교 정보"];
       }
       const chartReady = Boolean(sparklineSeries(candidate));
       candidate.leaderContextState = chartReady ? "ready" : "error";
+      if (chartReady && (candidate.leaderContextLookupFailed || candidate.leaderEstimateErrors?.length)) {
+        scheduleLeaderComparisonRetry(candidate, refreshAptSearchTrendCandidate);
+      }
       return chartReady;
     }
 
@@ -14566,7 +15344,8 @@
       const slot = card.querySelector("[data-apt-affordability]");
       const meta = card.querySelector("[data-apt-result-meta]");
       const signalEl = card.querySelector("[data-apt-card-signal]");
-      aptCandidateResults.set(index, candidate);
+      const scoreBadges = card.querySelector("[data-apt-score-badges]");
+      candidate = syncAptSearchCandidateData(index, candidate);
       const resolvedArea = String(data?.resolvedArea || "");
       if (resolvedArea) {
         const resolvedLabel = candidate.displayAreaLabel
@@ -14586,6 +15365,7 @@
         }
       }
       if (meta) meta.innerHTML = candidateListMetaHtml(candidate);
+	      if (scoreBadges) scoreBadges.innerHTML = candidateTopScoreBadgesHtml(candidate);
       if (signalEl) {
         const state = aptCardSignalState(candidate, candidate.latestDealDate);
         signalEl.textContent = state.text;
@@ -14598,6 +15378,8 @@
         slot.classList.remove("is-loading");
         syncSparkAxisLabelSizes(slot);
       }
+      void enrichAptSearchRivals(card, candidate, requestToken);
+      syncCompareSelection();
     }
 
     async function refreshAptSearchTrendAfterAreaChange(card, item, data, candidate, requestToken) {
@@ -14845,6 +15627,23 @@
       const naverLandLink = event.target.closest("[data-naver-land-link]");
       if (naverLandLink && handleNaverLandLinkClick(event, naverLandLink)) return;
       if (naverLandLink) return;
+      const locationScoreOpen = event.target.closest("[data-location-score-open]");
+      if (locationScoreOpen) {
+        const candidate = candidateForLocationScoreButton(locationScoreOpen);
+        openLocationScoreSheet(candidate, locationScoreOpen);
+        return;
+      }
+      const flowScoreOpen = event.target.closest("[data-flow-score-open]");
+      if (flowScoreOpen) {
+        const candidate = candidateForLocationScoreButton(flowScoreOpen);
+        openFlowScoreSheet(candidate, flowScoreOpen);
+        return;
+      }
+      const compareButton = event.target.closest("[data-compare-name]");
+      if (compareButton) {
+        toggleComparison(compareButton.dataset.compareName);
+        return;
+      }
       const candidateViewButton = event.target.closest("[data-candidate-view]");
       if (candidateViewButton) {
         candidateMapOrigin = "aptSearch";
@@ -14888,6 +15687,7 @@
         const candidate = aptCandidateResults.get(candidateIndex);
         if (trendToggle.dataset.trendAction === "load") {
           if (!candidate || !candidateCard) return;
+          candidate.aptSearchTrendExpanded = true;
           trendToggle.disabled = true;
           trendToggle.textContent = "차트 불러오는 중";
           const loaded = await loadAptSearchTrendInsight(candidate);
@@ -14920,6 +15720,15 @@
       const affordabilityProfile = event.target.closest("[data-apt-affordability-profile]");
       if (affordabilityProfile) {
         openPurchasePowerFromAptSearch(affordabilityProfile);
+        return;
+      }
+      const peer = event.target.closest("[data-apt-peer-name]");
+      if (peer) {
+        void runApartmentResultSearch({
+          name:peer.dataset.aptPeerName || "",
+          region:peer.dataset.aptPeerRegion || "",
+          households:Number(peer.dataset.aptPeerHouseholds || 0),
+        });
         return;
       }
       const button = event.target.closest("[data-apt-report-name]");
@@ -15070,6 +15879,11 @@
           region:peer.dataset.aptPeerRegion || "",
           households:Number(peer.dataset.aptPeerHouseholds || 0),
         });
+      }
+    });
+    locationScoreSheet.addEventListener("click", event => {
+      if (event.target.closest("[data-location-score-close]")) {
+        closeLocationScoreSheet();
       }
     });
     listingReviewSheet.addEventListener("submit", event => {

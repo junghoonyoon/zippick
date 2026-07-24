@@ -95,6 +95,15 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
             [],
         )
 
+    def test_xi_brand_typo_matches_jai_apartment_name(self):
+        suggestions = real_estate_search.suggest_apartments("서울숲 리버뷰 ZI")
+
+        self.assertGreaterEqual(len(suggestions), 1)
+        self.assertEqual(suggestions[0]["name"], "서울숲리버뷰자이")
+        self.assertEqual(suggestions[0]["region"], "성동구")
+        self.assertEqual(suggestions[0]["legalDong"], "행당동")
+        self.assertEqual(suggestions[0]["households"], 858)
+
     def test_apartment_suggestions_always_have_a_region_for_followup_apis(self):
         for entity in real_estate_search.MANUAL_APARTMENT_MASTER:
             with self.subTest(name=entity["name"]):

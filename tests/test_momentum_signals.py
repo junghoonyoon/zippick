@@ -815,6 +815,155 @@ class MomentumSignalsTest(unittest.TestCase):
             "households": 3000,
         }])
 
+    def test_district_peer_reports_keep_similar_price_and_households(self):
+        pairs = [
+            (
+                {"name": "가격규모비슷", "district": "강동구", "households": 560},
+                {"status": "ok", "momentumPct": 4.0, "turnoverSmoothed": 1.2, "recent3Pct": 2.0},
+            ),
+            (
+                {"name": "너무대형", "district": "강동구", "households": 1200},
+                {"status": "ok", "momentumPct": 8.0, "turnoverSmoothed": 1.5, "recent3Pct": 5.0},
+            ),
+            (
+                {"name": "너무비쌈", "district": "강동구", "households": 520},
+                {"status": "ok", "momentumPct": 9.0, "turnoverSmoothed": 1.5, "recent3Pct": 5.0},
+            ),
+            (
+                {"name": "검색단지", "district": "강동구", "households": 500},
+                {"status": "ok", "momentumPct": 10.0, "turnoverSmoothed": 1.5, "recent3Pct": 5.0},
+            ),
+        ]
+        prices = {"가격규모비슷": 20.5, "너무대형": 20.0, "너무비쌈": 24.0, "검색단지": 19.0}
+
+        with mock.patch.object(momentum_signals, "_district_peer_entity_signals", return_value=pairs), \
+             mock.patch.object(momentum_signals, "_peer_latest_deal", return_value={}), \
+             mock.patch.object(momentum_signals, "_peer_price_eok", side_effect=lambda entity, _signals, _latest=None, _area_label="": prices[entity["name"]]):
+            peers = momentum_signals.district_peer_reports(
+                "검색단지",
+                "강동구",
+                target_households=500,
+                target_price_eok=19.0,
+            )
+
+        self.assertEqual([peer["name"] for peer in peers], ["가격규모비슷"])
+        self.assertEqual(peers[0]["households"], 560)
+        self.assertEqual(peers[0]["priceEok"], 20.5)
+        self.assertEqual(peers[0]["latestDealPriceEok"], 20.5)
+        self.assertEqual(peers[0]["recent3Pct"], 2.0)
+
+    def test_district_peer_reports_prioritize_fit_before_score(self):
+        pairs = [
+            (
+                {"name": "서강 해모로", "district": "마포구", "households": 447},
+                {"status": "ok", "momentumPct": 9.6, "turnoverSmoothed": 1.4, "recent3Pct": None},
+            ),
+            (
+                {"name": "한강삼성", "district": "마포구", "households": 456},
+                {"status": "ok", "momentumPct": 11.3, "turnoverSmoothed": 1.4, "recent3Pct": 1.8},
+            ),
+            (
+                {"name": "태영아파트", "district": "마포구", "households": 553},
+                {"status": "ok", "momentumPct": 12.1, "turnoverSmoothed": 1.4, "recent3Pct": 7.1},
+            ),
+            (
+                {"name": "서강GS", "district": "마포구", "households": 538},
+                {"status": "ok", "momentumPct": 7.0, "turnoverSmoothed": 1.2, "recent3Pct": 16.4},
+            ),
+        ]
+        prices = {"서강 해모로": 18.5, "한강삼성": 17.5, "태영아파트": 15.9, "서강GS": 15.58}
+
+        with mock.patch.object(momentum_signals, "_district_peer_entity_signals", return_value=pairs), \
+             mock.patch.object(momentum_signals, "_peer_latest_deal", return_value={}), \
+             mock.patch.object(momentum_signals, "_peer_price_eok", side_effect=lambda entity, _signals, _latest=None, _area_label="": prices[entity["name"]]):
+            peers = momentum_signals.district_peer_reports(
+                "서강쌍용예가",
+                "마포구",
+                target_households=635,
+                target_price_eok=16.7,
+            )
+
+        self.assertIn("서강GS", [peer["name"] for peer in peers])
+
+    def test_district_peer_reports_relaxes_price_for_same_name_group(self):
+        pairs = [
+            (
+                {"name": "서강GS", "district": "마포구", "households": 538},
+                {"status": "ok", "momentumPct": 7.0, "turnoverSmoothed": 1.2, "recent3Pct": 16.4},
+            ),
+            (
+                {"name": "가격먼단지", "district": "마포구", "households": 540},
+                {"status": "ok", "momentumPct": 8.0, "turnoverSmoothed": 1.2, "recent3Pct": 3.0},
+            ),
+        ]
+        prices = {"서강GS": 16.5, "가격먼단지": 16.5}
+
+        with mock.patch.object(momentum_signals, "_district_peer_entity_signals", return_value=pairs), \
+             mock.patch.object(momentum_signals, "_peer_latest_deal", return_value={}), \
+             mock.patch.object(momentum_signals, "_peer_price_eok", side_effect=lambda entity, _signals, _latest=None, _area_label="": prices[entity["name"]]):
+            peers = momentum_signals.district_peer_reports(
+                "서강쌍용예가",
+                "마포구",
+                target_households=635,
+                target_price_eok=20.0,
+            )
+
+        self.assertEqual([peer["name"] for peer in peers], ["서강GS"])
+
+    def test_district_peer_reports_falls_back_when_strict_similarity_is_empty(self):
+        pairs = [
+            (
+                {"name": "검색대단지", "district": "성남수정구", "legalDong": "신흥동", "households": 4089},
+                {"status": "ok", "momentumPct": 14.0, "turnoverSmoothed": 1.2, "recent3Pct": 2.0},
+            ),
+            (
+                {"name": "같은동중형", "district": "성남수정구", "legalDong": "신흥동", "households": 1852},
+                {"status": "ok", "momentumPct": 16.0, "turnoverSmoothed": 1.2, "recent3Pct": 3.0},
+            ),
+            (
+                {"name": "근처중형", "district": "성남수정구", "legalDong": "신흥동", "households": 1270},
+                {"status": "ok", "momentumPct": 17.0, "turnoverSmoothed": 1.2, "recent3Pct": 4.0},
+            ),
+            (
+                {"name": "다른동중형", "district": "성남수정구", "legalDong": "창곡동", "households": 1540},
+                {"status": "ok", "momentumPct": 12.0, "turnoverSmoothed": 1.2, "recent3Pct": 1.0},
+            ),
+        ]
+        prices = {"검색대단지": 15.8, "같은동중형": 13.9, "근처중형": 14.3, "다른동중형": 14.6}
+
+        with mock.patch.object(momentum_signals, "_district_peer_entity_signals", return_value=pairs), \
+             mock.patch.object(momentum_signals, "_peer_latest_deal", return_value={}), \
+             mock.patch.object(momentum_signals, "_peer_price_eok", side_effect=lambda entity, _signals, _latest=None, _area_label="": prices[entity["name"]]):
+            peers = momentum_signals.district_peer_reports(
+                "검색대단지",
+                "성남시 수정구",
+                target_households=4089,
+                target_price_eok=15.8,
+                target_legal_dong="신흥동",
+            )
+
+        self.assertEqual([peer["name"] for peer in peers], ["같은동중형", "근처중형", "다른동중형"])
+
+    def test_district_peer_pool_starts_from_nearby_households_not_largest_complexes(self):
+        district_master = [
+            {"name": "대형1", "district": "강동구", "households": 5000},
+            {"name": "대형2", "district": "강동구", "households": 4000},
+            {"name": "비슷1", "district": "강동구", "households": 560},
+            {"name": "검색단지", "district": "강동구", "households": 500},
+            {"name": "비슷2", "district": "강동구", "households": 650},
+        ]
+
+        with mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", district_master), \
+             mock.patch.object(momentum_signals, "_DISTRICT_PEER_ENTITY_SIGNALS_CACHE", {}), \
+             mock.patch.object(
+                 momentum_signals,
+                 "raw_signals",
+                 side_effect=lambda name, **_kwargs: {"status": "ok", "name": name},
+             ):
+            pairs = momentum_signals._district_peer_entity_signals("강동구", 500, candidate_limit=3)
+
+        self.assertEqual([entity["name"] for entity, _signals in pairs], ["검색단지", "비슷1", "비슷2"])
+
     def test_cached_signal_attachment_never_calls_live_transaction_loader(self):
         candidates = [{"name": "캐시단지", "region": "강동구", "households": 1000}]
         with mock.patch.object(

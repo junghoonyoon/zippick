@@ -41,6 +41,12 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertEqual(third[0], False)
         self.assertGreaterEqual(third[1], 1)
 
+    def test_rate_limit_message_tells_when_to_retry(self):
+        html = (ROOT / "pipeline" / "search_server.py").read_text(encoding="utf-8")
+
+        self.assertIn("약 {retry_after}초 뒤에 다시 눌러 주세요.", html)
+        self.assertNotIn("요청이 잠시 많아요. 조금 뒤에 다시 시도해 주세요.", html)
+
     def test_rate_limit_does_not_apply_to_light_status_request(self):
         with mock.patch.object(search_server.config, "PUBLIC_HEAVY_RATE_LIMIT", 1):
             search_server.RATE_LIMIT_BUCKETS.clear()
@@ -52,6 +58,34 @@ class BudgetResultCacheTest(unittest.TestCase):
                 search_server._rate_limit_check("203.0.113.20", "/api/status", now=1001),
                 (True, None),
             )
+
+    def test_heavy_rate_limit_is_counted_per_endpoint(self):
+        with mock.patch.object(search_server.config, "PUBLIC_RATE_LIMIT_WINDOW_SECONDS", 60), \
+             mock.patch.object(search_server.config, "PUBLIC_HEAVY_RATE_LIMIT", 1):
+            search_server.RATE_LIMIT_BUCKETS.clear()
+            self.assertEqual(
+                search_server._rate_limit_check(
+                    "203.0.113.30",
+                    "/api/apartment-areas",
+                    now=1000,
+                ),
+                (True, None),
+            )
+            self.assertEqual(
+                search_server._rate_limit_check(
+                    "203.0.113.30",
+                    "/api/budget-candidates",
+                    now=1001,
+                ),
+                (True, None),
+            )
+            blocked = search_server._rate_limit_check(
+                "203.0.113.30",
+                "/api/budget-candidates",
+                now=1002,
+            )
+
+        self.assertFalse(blocked[0])
 
     def test_admin_token_accepts_current_and_legacy_setting(self):
         with mock.patch.object(search_server.config, "ADMIN_API_TOKEN", "secret-token"):
@@ -241,7 +275,9 @@ class BudgetResultCacheTest(unittest.TestCase):
 
         self.assertFalse(payload["done"])
         self.assertTrue(payload["enrichmentPending"])
-        self.assertEqual(payload["enrichmentStage"], "live_data_slow")
+        self.assertEqual(payload["enrichmentStage"], "transaction_fetch")
+        self.assertTrue(payload["slow"])
+        self.assertGreaterEqual(payload["elapsedSeconds"], 10)
 
     def test_staged_job_hard_timeout_returns_initial_payload(self):
         job_id = "stuck-job"
