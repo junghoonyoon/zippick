@@ -5401,7 +5401,9 @@
     }
 
     function leaderMetaHtml(item) {
-      const completion = Number(item.completionYear)
+      const completion = item.ageDisplayLabel
+        ? item.ageDisplayLabel
+        : Number(item.completionYear)
         ? `${Number(item.completionYear)}년 준공`
         : (item.status || "준공연도 미확인");
       const households = Number(item.householdCount)
@@ -5500,7 +5502,7 @@
         [`${item.leaderPriceBasisLabel || "최근 6개월 전용 84㎡ 실거래 중위가"} 가격 백분위`, item.scores?.price, "미반영"],
         ["상승률 순위", item.scores?.leadership, "비교 거래 부족"],
         ["거래 유동성", item.scores?.liquidity, "미반영"],
-        ["연식", item.scores?.age, "준공일 없음"],
+        [item.ageBasisLabel || "연식", item.scores?.age, item.status ? "입주예정월 없음" : "준공일 없음"],
         [`역 접근성${stationContext ? ` · ${stationContext}` : ""}`, item.scores?.station, "거리 미수집"],
         ["단지 규모", item.scores?.household, "세대수 없음"],
       ];
