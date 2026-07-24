@@ -98,6 +98,8 @@ class ApartmentLeadersTest(unittest.TestCase):
             "legalDong": "가동",
             "lawdCd": "11111",
             "status": "분양권",
+            "households": 800,
+            "plannedMoveInMonth": "2027-03",
             "dedupeKey": "presale-leader-test",
         }
         completed_entity = {
@@ -109,21 +111,35 @@ class ApartmentLeadersTest(unittest.TestCase):
             "approvedAt": "2020-01-01",
             "dedupeKey": "completed-leader-test",
         }
-        result = apartment_leaders.calculate_rankings_from_pairs(
-            "서울특별시",
-            "테스트구",
-            [
-                (
-                    presale_entity,
-                    [_trade("2026-05-10", 200000), _trade("2026-06-10", 220000)],
-                ),
-                (
-                    completed_entity,
-                    [_trade("2026-05-10", 300000), _trade("2026-06-10", 320000)],
-                ),
-            ],
-            reference_month="2026-06",
-        )
+        def cached_station(entity):
+            if entity.get("name") == "분양단지":
+                return {
+                    "nearestStationName": "분양역",
+                    "nearestStationDistance": 480,
+                    "stationDistanceType": "straight_line",
+                }
+            return {}
+
+        with mock.patch.object(
+            apartment_leaders.kakao_station_distances,
+            "cached_station",
+            side_effect=cached_station,
+        ):
+            result = apartment_leaders.calculate_rankings_from_pairs(
+                "서울특별시",
+                "테스트구",
+                [
+                    (
+                        presale_entity,
+                        [_trade("2026-05-10", 200000), _trade("2026-06-10", 220000)],
+                    ),
+                    (
+                        completed_entity,
+                        [_trade("2026-05-10", 300000), _trade("2026-06-10", 320000)],
+                    ),
+                ],
+                reference_month="2026-06",
+            )
 
         self.assertEqual(
             [row["apartmentName"] for row in result["rankings"]["price"]],
@@ -131,6 +147,13 @@ class ApartmentLeadersTest(unittest.TestCase):
         )
         price_item = result["rankings"]["price"][1]
         self.assertEqual(price_item["status"], "분양권")
+        self.assertEqual(price_item["plannedMoveInMonth"], "2027-03")
+        self.assertEqual(price_item["ageBasisLabel"], "입주예정월")
+        self.assertEqual(price_item["ageDisplayLabel"], "입주예정 2027년 3월")
+        self.assertEqual(price_item["scores"]["age"], 100)
+        self.assertEqual(price_item["householdCount"], 800)
+        self.assertEqual(price_item["nearestStationName"], "분양역")
+        self.assertEqual(price_item["scores"]["station"], 90)
         self.assertEqual(result["rankings"]["new_build"][0]["apartmentName"], "분양단지")
         self.assertIn("분양권·입주권 실거래", price_item["warnings"][0])
 
@@ -214,9 +237,12 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertIn("최근 6개월의 전용 84.00㎡ 이상 85.00㎡ 미만", html)
         self.assertIn("item.leaderPrice6m ?? item.leaderPrice12m", html)
         self.assertIn("function leaderMetaHtml(item)", html)
+        self.assertIn('item.ageDisplayLabel', html)
         self.assertIn('`${Number(item.completionYear)}년 준공`', html)
         self.assertIn('`${Number(item.householdCount).toLocaleString("ko-KR")}세대`', html)
         self.assertIn('class="leader-meta-detail">${esc(completion)} · ${esc(households)}</span>', html)
+        self.assertIn('item.ageBasisLabel || "연식"', html)
+        self.assertIn('item.status ? "입주예정월 없음" : "준공일 없음"', html)
         self.assertIn('class="leader-winner-sub">${view.meta}</p>', html)
         self.assertIn('class="leader-list-location">${leaderMetaHtml(item)}</span>', html)
         leader_meta_start = html.index("function leaderMetaHtml(item)")
