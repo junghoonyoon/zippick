@@ -241,6 +241,19 @@ class KakaoStationDistancesTest(unittest.TestCase):
         self.assertEqual(preview["pendingCount"], 1)
         self.assertFalse(preview["configured"])
 
+    def test_entities_for_region_includes_rankable_presale_statuses(self):
+        entities = [
+            dict(self.entity, name="일반단지", status="", dedupeKey="general"),
+            dict(self.entity, name="분양단지", status="분양권", dedupeKey="presale"),
+            dict(self.entity, name="임대단지", status="공공임대", dedupeKey="rental"),
+            dict(self.entity, name="집계단지", aggregate=True, dedupeKey="aggregate"),
+        ]
+
+        with mock.patch.object(kakao_station_distances.real_estate_search, "APARTMENT_MASTER", entities):
+            rows = kakao_station_distances.entities_for_region("서울특별시", "성동구")
+
+        self.assertEqual([row["name"] for row in rows], ["일반단지", "분양단지"])
+
 
 if __name__ == "__main__":
     unittest.main()
