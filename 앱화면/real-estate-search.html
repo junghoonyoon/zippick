@@ -1741,6 +1741,7 @@
     .signal-score-note { margin:17px 0 0; border:0; padding-top:0; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.6 }
     .signal-report-empty { border-radius:15px; padding:15px; background:#f5f7fa; color:#596273; font-size:14px; font-weight:650; line-height:1.6 }
     .location-score-content { display:grid; gap:18px; min-height:0; overflow:auto; padding:0 28px calc(28px + env(safe-area-inset-bottom)) }
+    .location-score-sheet { z-index:170 }
     .location-score-hero { display:grid; gap:7px; border-radius:18px; padding:17px; background:#f4f8ff; color:#19345e }
     .location-score-total { display:flex; align-items:baseline; gap:7px; color:#1767c5; font-size:32px; font-weight:950; line-height:1 }
     .location-score-total span { color:#5a7396; font-size:14px; font-weight:850 }
@@ -4535,6 +4536,59 @@
 
     let locationScoreReturnFocus = null;
 
+    function locationScoreNeedsRefresh(item) {
+      const parts = Array.isArray(item?.locationScore?.parts) ? item.locationScore.parts : [];
+      return parts.some(part => (
+        ["transport", "education"].includes(String(part?.key || ""))
+        && (part?.score === null || part?.score === undefined || part?.status === "missing")
+      ));
+    }
+
+    function locationScoreRefreshPayload(item) {
+      return {
+        name:item?.name || item?.displayName || "",
+        displayName:item?.displayName || item?.name || "",
+        region:item?.region || item?.displayRegion || "",
+        displayRegion:item?.displayRegion || "",
+        province:item?.province || "",
+        city:item?.city || "",
+        district:item?.district || "",
+        legalDong:item?.legalDong || "",
+        jibun:item?.jibun || "",
+        households:item?.households || 0,
+        buildingAge:item?.buildingAge || 0,
+        buildYear:item?.buildYear || 0,
+        status:item?.status || "",
+        midPriceEok:item?.midPriceEok || item?.priceEok || item?.latestDealPriceEok || 0,
+        latestDealPriceEok:item?.latestDealPriceEok || item?.priceEok || item?.midPriceEok || 0,
+        transactionCount:item?.transactionCount || item?.recentDealCount || 0,
+        recent3TradeCount:item?.recent3TradeCount || 0,
+        signals:item?.signals || {},
+      };
+    }
+
+    async function refreshLocationScoreSheet(item) {
+      if (!item || !locationScoreNeedsRefresh(item)) return;
+      try {
+        const originalKey = candidateIdentityKey(item);
+        const payload = await getJson("/api/apartment-location-score", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify(locationScoreRefreshPayload(item)),
+        });
+        if (!payload?.candidate?.locationScore) return;
+        Object.assign(item, payload.candidate);
+        if (!locationScoreSheet.hidden) {
+          locationScoreContent.innerHTML = locationScoreSheetHtml(item);
+        }
+        candidateRowsForLookup().forEach(row => {
+          if (row && candidateIdentityKey(row) === originalKey) {
+            Object.assign(row, payload.candidate);
+          }
+        });
+      } catch (_) {}
+    }
+
     function openLocationScoreSheet(item, trigger = null) {
       if (!item?.locationScore) return;
       locationScoreReturnFocus = trigger || document.activeElement;
@@ -4546,6 +4600,7 @@
       requestAnimationFrame(() => {
         locationScoreSheet.querySelector("[data-location-score-close]")?.focus();
       });
+      void refreshLocationScoreSheet(item);
     }
 
     function openFlowScoreSheet(item, trigger = null) {
@@ -8663,6 +8718,7 @@
         const preview = candidateMapQuery("[data-candidate-map-preview]");
         if (preview) {
           const previousMode = preview.dataset.mobileState || (preview.classList.contains("is-expanded") ? "expanded" : "collapsed");
+          preview.dataset.candidateKey = candidateIdentityKey(item);
           preview.innerHTML = candidateMapPreviewHtml(item);
           setupCandidateMapPreviewSheet(preview, { mode:previousMode });
         }
@@ -9103,6 +9159,8 @@
         ...currentAptSearchItems,
         ...currentAptSearchRivalItems,
         ...Array.from(aptCandidateResults.values()),
+        ...candidateMapEntries.map(entry => entry.item),
+        ...candidateMapLocatedEntries.map(entry => entry.item),
       ];
       const unique = new Map();
       rows.forEach(item => {
@@ -9183,6 +9241,7 @@
         const preview = candidateMapQuery("[data-candidate-map-preview]");
         if (preview) {
           const previousMode = preview.dataset.mobileState || (preview.classList.contains("is-expanded") ? "expanded" : "collapsed");
+          preview.dataset.candidateKey = candidateIdentityKey(candidate);
           preview.innerHTML = candidateMapPreviewHtml(candidate);
           setupCandidateMapPreviewSheet(preview, { mode:previousMode });
           requestAnimationFrame(() => syncSparkAxisLabelSizes(preview));
@@ -9195,7 +9254,7 @@
       if (aptCard) return aptCandidateResults.get(Number(aptCard.dataset.aptCardIndex));
       const mapPreview = button.closest("[data-candidate-map-preview]");
       if (mapPreview) {
-        const previewKey = button.closest("[data-candidate-key]")?.dataset.candidateKey || candidateMapSelectedKey;
+        const previewKey = mapPreview.dataset.candidateKey || button.closest("[data-candidate-key]")?.dataset.candidateKey || candidateMapSelectedKey;
         return candidateRowsForLookup().find(item => candidateIdentityKey(item) === previewKey);
       }
       const card = button.closest("[data-candidate-key]");
@@ -10095,6 +10154,7 @@
       });
       const preview = candidateMapQuery("[data-candidate-map-preview]");
       if (preview) {
+        preview.dataset.candidateKey = candidateIdentityKey(item);
         preview.innerHTML = candidateMapPreviewHtml(item);
         delete preview.dataset.mobileExpanded;
         preview.hidden = false;
@@ -13792,6 +13852,7 @@
               : await loadCandidateTrendInsight(candidate);
             if (!loaded) return;
             if (candidateMapPreview && candidateMapOrigin === "aptSearch") {
+              candidateMapPreview.dataset.candidateKey = candidateIdentityKey(candidate);
               candidateMapPreview.innerHTML = candidateMapPreviewHtml(candidate);
               setupCandidateMapPreviewSheet(candidateMapPreview, { mode:"expanded" });
             }

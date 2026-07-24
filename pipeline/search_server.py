@@ -62,6 +62,7 @@ RATE_LIMIT_HEAVY_PATHS = {
     "/api/apartment-areas",
     "/api/rone-estimate",
     "/api/apartment-report",
+    "/api/apartment-location-score",
 }
 RATE_LIMIT_MEDIUM_PATHS = {
     "/api/search",
@@ -968,6 +969,79 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         except Exception:
             pass
     return {"report": row, "signalNote": momentum_signals.SIGNAL_NOTE}
+
+
+def _apartment_location_score(arguments):
+    name = str(arguments.get("name") or arguments.get("displayName") or "").strip()
+    region = str(
+        arguments.get("region")
+        or arguments.get("displayRegion")
+        or arguments.get("regionLabel")
+        or ""
+    ).strip()
+    if len(name) < 2 or len(region) < 2:
+        return {"error": "단지명과 지역을 확인해 주세요."}, 400
+    try:
+        entity = budget_candidates._find_entity(name, region)
+    except Exception:
+        entity = None
+    if not entity:
+        return {"error": "단지 정보를 찾지 못했어요."}, 404
+
+    try:
+        if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
+            kakao_station_distances.enrich_entities([entity], retry_unavailable=True)
+    except Exception:
+        _record_operation("externalDataFallbacks")
+
+    building = budget_candidates._building_profile(entity)
+    row = {
+        **{
+            key: value
+            for key, value in arguments.items()
+            if isinstance(key, str) and not key.startswith("_")
+        },
+        "name": entity.get("name") or name,
+        "displayName": arguments.get("displayName") or entity.get("name") or name,
+        "region": entity.get("district") or region,
+        "province": entity.get("province") or arguments.get("province") or "",
+        "city": entity.get("city") or arguments.get("city") or "",
+        "district": entity.get("district") or arguments.get("district") or "",
+        "legalDong": entity.get("legalDong") or arguments.get("legalDong") or "",
+        "jibun": entity.get("jibun") or arguments.get("jibun") or "",
+        "households": int(entity.get("households") or arguments.get("households") or 0),
+        "approvedAt": building.get("approvedAt") or arguments.get("approvedAt") or "",
+        "buildYear": building.get("buildYear") or arguments.get("buildYear") or 0,
+        "buildingAge": building.get("buildingAge") or arguments.get("buildingAge") or 0,
+        "status": entity.get("status") or arguments.get("status") or "",
+    }
+    try:
+        row["educationEnvironment"] = education_environment.education_environment_for_entity(
+            entity,
+            allow_remote_lookup=True,
+        )
+    except Exception:
+        _record_operation("externalDataFallbacks")
+        row["educationEnvironment"] = {"status": "error", "score": None}
+    try:
+        row["locationScore"] = location_scores.score_for_candidate(row, entity)
+    except Exception:
+        return {"error": "종합점수를 다시 계산하지 못했어요."}, 502
+    return {
+        "candidate": {
+            "name": row["name"],
+            "displayName": row["displayName"],
+            "region": row["region"],
+            "legalDong": row.get("legalDong") or "",
+            "jibun": row.get("jibun") or "",
+            "households": row.get("households") or 0,
+            "buildingAge": row.get("buildingAge") or 0,
+            "buildYear": row.get("buildYear") or 0,
+            "status": row.get("status") or "",
+            "educationEnvironment": row.get("educationEnvironment"),
+            "locationScore": row.get("locationScore"),
+        },
+    }, 200
 
 
 def _regional_index_from_rone_payload(payload, source_apartment=""):
@@ -2376,6 +2450,7 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path not in {
             "/api/apartment-affordability",
             "/api/apartment-catalysts",
+            "/api/apartment-location-score",
             "/api/asking-price-financing",
             "/api/listing-review",
             "/api/admin/apartment-leaders/recalculate",
@@ -2482,6 +2557,10 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 _record_operation("externalDataFallbacks")
                 self._json({"items": [], "error": "최신 소식 확인이 늦어지고 있어요."}, 200)
+            return
+        if parsed.path == "/api/apartment-location-score":
+            payload, status = _apartment_location_score(arguments)
+            self._json(payload, status)
             return
         if parsed.path == "/api/asking-price-financing":
             payload, status = _asking_price_financing(arguments)

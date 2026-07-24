@@ -959,6 +959,61 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             ["202410", "202503", "202504", "202506", "202606"],
         )
 
+    def test_apartment_location_score_refreshes_transport_and_education(self):
+        entity = {
+            "name": "점수보강아파트",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "성동구",
+            "legalDong": "행당동",
+            "jibun": "1",
+            "households": 1200,
+            "approvedAt": "2018-01-01",
+        }
+        station = {
+            "nearestStationName": "행당역",
+            "nearestStationDistance": 420,
+            "latitude": 37.5,
+            "longitude": 127.0,
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "cached_station",
+            return_value=station,
+        ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={
+                "score": 76,
+                "elementarySchoolNames": ["행당초"],
+                "elementaryDistanceMeters": 320,
+            },
+        ):
+            payload, status = search_server._apartment_location_score({
+                "name": "점수보강아파트",
+                "region": "성동구",
+                "midPriceEok": 12,
+                "transactionCount": 6,
+                "signals": {"status": "insufficient"},
+            })
+
+        self.assertEqual(status, 200)
+        parts = {
+            row["key"]: row
+            for row in payload["candidate"]["locationScore"]["parts"]
+        }
+        self.assertEqual(parts["transport"]["reason"], "행당역 · 직선 420m")
+        self.assertEqual(parts["education"]["reason"], "행당초 · 320m 거리")
+
 
 if __name__ == "__main__":
     unittest.main()
