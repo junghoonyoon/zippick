@@ -1936,7 +1936,10 @@ def _finalize_candidate_rows(
         row["mapAddress"] = _map_address(row, map_entity)
         row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
         if entity:
-            row["educationEnvironment"] = education_environment.education_environment_for_entity(entity)
+            row["educationEnvironment"] = education_environment.education_environment_for_entity(
+                entity,
+                allow_remote_lookup=False,
+            )
         row.update(_decision_support(
             row,
             entity,

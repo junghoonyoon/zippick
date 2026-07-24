@@ -356,7 +356,7 @@ def _score_from_record(record):
     }
 
 
-def education_environment_for_entity(entity):
+def education_environment_for_entity(entity, allow_remote_lookup=True):
     if not _region_supported(entity):
         return {"status": "unsupported_region", "score": None}
     dataset = _load_dataset()
@@ -376,6 +376,8 @@ def education_environment_for_entity(entity):
     elementary_zones = _matching_zones(dataset, "elementary", lon, lat)
     middle_zones = _matching_zones(dataset, "middle", lon, lat)
     if not elementary_zones and not middle_zones:
+        if not allow_remote_lookup:
+            return _with_metadata({"status": "not_precomputed", "score": None}, dataset)
         try:
             nearby_record = _score_from_nearby_places(lat, lon)
         except Exception:

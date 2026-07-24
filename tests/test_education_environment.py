@@ -186,6 +186,25 @@ class EducationEnvironmentTest(unittest.TestCase):
         self.assertEqual(len(cached), 1)
         self.assertEqual(next(iter(cached.values()))["basis"], "nearby_school_access")
 
+    def test_remote_lookup_can_be_disabled_for_fast_candidate_search(self):
+        self._write_station_cache()
+        self.data_path.write_text(json.dumps({
+            "dataThrough": "2026-03-20",
+            "records": {},
+            "schools": [],
+            "zones": [],
+        }), encoding="utf-8")
+
+        with mock.patch.object(kakao_station_distances, "_request_json") as request_json:
+            result = education_environment.education_environment_for_entity(
+                self.entity,
+                allow_remote_lookup=False,
+            )
+
+        self.assertEqual(result["status"], "not_precomputed")
+        self.assertIsNone(result["score"])
+        request_json.assert_not_called()
+
     def test_unsupported_region_has_no_score(self):
         result = education_environment.education_environment_for_entity({
             **self.entity,
