@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
 import config
+import molit_transactions
 import real_estate_search
 
 
@@ -467,7 +468,10 @@ def entities_for_region(sido="", sigungu=""):
     rows = []
     seen = set()
     for entity in real_estate_search.APARTMENT_MASTER:
-        if entity.get("aggregate") or entity.get("status"):
+        status = str(entity.get("status") or "").strip()
+        if entity.get("aggregate") or (
+            status and status not in molit_transactions.PRESALE_STATUSES
+        ):
             continue
         if sido and not _region_matches(entity.get("province"), sido):
             continue

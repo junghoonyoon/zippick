@@ -139,6 +139,19 @@ def age_score(completion_date, reference_month):
     return 15.0
 
 
+def planned_move_in_score(planned_month, reference_month):
+    """입주예정월을 신축성 점수로 변환한다."""
+    return age_score(planned_month, reference_month)
+
+
+def _month_label(value):
+    text = str(value or "").strip()
+    match = re.search(r"(\d{4})\D?(\d{1,2})", text)
+    if not match:
+        return None
+    return f"{int(match.group(1))}년 {int(match.group(2))}월"
+
+
 def station_score(distance_meters):
     """가장 가까운 역까지의 거리 점수. 거리 미보유 시 None이다."""
     if distance_meters is None or distance_meters == "":
@@ -556,8 +569,22 @@ def _base_metrics(
     return6m, gap6m = _period_return(monthly_prices, reference_month, 6)
     return12m, gap12m = _period_return(monthly_prices, reference_month, 12)
     approved_at = entity.get("approvedAt")
-    age = age_score(approved_at, reference_month)
+    planned_move_in_month = entity.get("plannedMoveInMonth")
+    status = str(entity.get("status") or "").strip()
+    is_presale = status in RANKABLE_PRESALE_STATUSES
+    age = (
+        planned_move_in_score(planned_move_in_month, reference_month)
+        if is_presale and planned_move_in_month
+        else age_score(approved_at, reference_month)
+    )
     completion_year = int(str(approved_at)[:4]) if str(approved_at)[:4].isdigit() else None
+    planned_move_in_label = _month_label(planned_move_in_month)
+    age_basis_label = "입주예정월" if is_presale and planned_move_in_month else "준공연월"
+    age_display_label = (
+        f"입주예정 {planned_move_in_label}"
+        if planned_move_in_label
+        else (f"{completion_year}년 준공" if completion_year else None)
+    )
     cached_station = kakao_station_distances.cached_station(entity) or {}
     station_distance = (
         entity.get("nearestStationDistance")
@@ -578,7 +605,6 @@ def _base_metrics(
         if station_distance is not None
         else station_distance_lower_bound
     )
-    status = str(entity.get("status") or "").strip()
     return {
         "apartmentId": _entity_id(entity),
         "apartmentName": entity.get("name", ""),
@@ -590,6 +616,9 @@ def _base_metrics(
         "status": status or None,
         "householdCount": households or None,
         "completionYear": completion_year,
+        "plannedMoveInMonth": planned_move_in_month or None,
+        "ageBasisLabel": age_basis_label if age is not None else None,
+        "ageDisplayLabel": age_display_label,
         "brand": entity.get("brand") or None,
         "latitude": entity.get("latitude") or cached_station.get("latitude"),
         "longitude": entity.get("longitude") or cached_station.get("longitude"),
@@ -846,7 +875,7 @@ def _reason_candidates(row, category):
     if active_months:
         reasons.append(("active", row.get("activeTransactionMonthsPercentile") or 0, f"최근 12개월 중 {active_months}개월에서 거래 발생"))
     if row.get("ageScore") == 100:
-        reasons.append(("age", 100, "준공 5년 이하 신축 단지"))
+        reasons.append(("age", 100, row.get("ageDisplayLabel") or "준공 5년 이하 신축 단지"))
     if row.get("nearestStationDistance") is not None:
         distance_type = "도보거리" if row.get("stationDistanceType") == "walking" else "직선거리"
         reasons.append(("station", row.get("stationScore") or 0, f"가장 가까운 지하철역까지 {distance_type} {float(row['nearestStationDistance']):,.0f}m"))
@@ -899,7 +928,8 @@ def _warnings(row, category=None):
             or "6개월 가격 비교 데이터가 부족해 상승률을 계산하지 못했습니다."
         )
     if row.get("ageScore") is None:
-        warnings.append("준공연도 데이터가 없어 연식은 점수에서 제외했습니다.")
+        missing_age_label = "입주예정월" if row.get("status") in RANKABLE_PRESALE_STATUSES else "준공연도"
+        warnings.append(f"{missing_age_label} 데이터가 없어 연식은 점수에서 제외했습니다.")
     if row.get("householdCount") is None:
         warnings.append("세대수 데이터가 없어 거래 회전율과 규모 점수 일부를 계산하지 못했습니다.")
     if int(row.get("returnGapMonths6m") or 0) >= 3:
@@ -1096,6 +1126,7 @@ def calculate_rankings_from_pairs(
         "dataAvailability": {
             "transactions": bool(trade_complex_count),
             "completionYear": any(row.get("completionYear") is not None for row in metrics),
+            "plannedMoveInMonth": any(row.get("plannedMoveInMonth") for row in metrics),
             "households": any(row.get("householdCount") is not None for row in metrics),
             "stationDistance": any(row.get("stationScore") is not None for row in metrics),
             "brand": any(row.get("brandScore") is not None for row in metrics),
