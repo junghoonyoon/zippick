@@ -1094,6 +1094,128 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         refresh.assert_called_once()
         self.assertEqual(refresh.call_args.kwargs["area_label"], "전용 59㎡")
 
+    def test_apartment_location_score_uses_cached_jeonse_when_live_rent_api_fails(self):
+        entity = {
+            "name": "전세캐시아파트",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "성북구",
+            "legalDong": "삼선동2가",
+            "jibun": "1",
+            "households": 864,
+            "approvedAt": "2008-01-01",
+        }
+        cached = {
+            "latestJeonseDepositEok": 5.8,
+            "latestJeonseDate": "2026-06-21",
+            "medianJeonseDepositEok": 5.7,
+            "jeonseTransactionCount": 2,
+            "jeonseRatioPct": 61.7,
+            "jeonseSalePriceBasisEok": 9.4,
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={"score": None},
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "jeonse_ratio_for_apartment",
+            side_effect=RuntimeError("권한 없음"),
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "cached_jeonse_ratio_for_apartment",
+            return_value=cached,
+        ) as cached_refresh:
+            payload, status = search_server._apartment_location_score({
+                "name": "전세캐시아파트",
+                "region": "성북구",
+                "areaLabel": "전용 59㎡",
+                "currentEstimateMidPriceEok": 9.4,
+                "transactionCount": 6,
+                "signals": {"status": "insufficient"},
+            })
+
+        self.assertEqual(status, 200)
+        candidate = payload["candidate"]
+        self.assertEqual(candidate["jeonseDataStatus"], "cached")
+        self.assertEqual(candidate["jeonseRatioPct"], 61.7)
+        self.assertIn("저장된 전세 실거래", candidate["jeonseSourceNote"])
+        parts = {row["key"]: row for row in candidate["locationScore"]["parts"]}
+        self.assertIn("전세가율 61.7%", parts["jeonse"]["reason"])
+        cached_refresh.assert_called_once()
+
+    def test_apartment_location_score_hides_live_rent_api_permission_error(self):
+        entity = {
+            "name": "전세권한아파트",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "성북구",
+            "legalDong": "삼선동2가",
+            "jibun": "1",
+            "households": 864,
+            "approvedAt": "2008-01-01",
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={"score": None},
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "jeonse_ratio_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "last_error",
+            return_value="국토부 실거래가 API 권한이 없거나 인증키가 승인되지 않았어요.",
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "cached_jeonse_ratio_for_apartment",
+            return_value=None,
+        ):
+            payload, status = search_server._apartment_location_score({
+                "name": "전세권한아파트",
+                "region": "성북구",
+                "areaLabel": "전용 59㎡",
+                "currentEstimateMidPriceEok": 9.4,
+                "transactionCount": 6,
+                "signals": {"status": "insufficient"},
+            })
+
+        self.assertEqual(status, 200)
+        candidate = payload["candidate"]
+        self.assertEqual(candidate["jeonseDataStatus"], "api_error")
+        self.assertEqual(
+            candidate["jeonseSourceNote"],
+            "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요.",
+        )
+        self.assertNotIn("API 권한", candidate["jeonseSourceNote"])
+
 
 if __name__ == "__main__":
     unittest.main()

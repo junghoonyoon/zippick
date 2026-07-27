@@ -1096,8 +1096,20 @@ def _apply_jeonse_snapshot(row, entity):
         )
     except Exception:
         _record_operation("externalDataFallbacks")
+        cached = molit_transactions.cached_jeonse_ratio_for_apartment(
+            row.get("name") or row.get("displayName") or "",
+            region=row.get("region") or row.get("displayRegion") or "",
+            area_label=row.get("areaLabel") or row.get("displayAreaLabel") or "",
+            sale_price_eok=sale_price,
+            entity=entity,
+        )
+        if cached:
+            row.update(cached)
+            row["jeonseDataStatus"] = "cached"
+            row["jeonseSourceNote"] = "저장된 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요."
+            return row
         row["jeonseDataStatus"] = "api_error"
-        row["jeonseSourceNote"] = "전월세 실거래가 API를 다시 확인해야 해요."
+        row["jeonseSourceNote"] = "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요."
         return row
     if jeonse:
         row.update(jeonse)
@@ -1105,8 +1117,20 @@ def _apply_jeonse_snapshot(row, entity):
     else:
         last_error = molit_transactions.last_error(molit_transactions.TRANSACTION_KIND_RENT)
         if last_error:
+            cached = molit_transactions.cached_jeonse_ratio_for_apartment(
+                row.get("name") or row.get("displayName") or "",
+                region=row.get("region") or row.get("displayRegion") or "",
+                area_label=row.get("areaLabel") or row.get("displayAreaLabel") or "",
+                sale_price_eok=sale_price,
+                entity=entity,
+            )
+            if cached:
+                row.update(cached)
+                row["jeonseDataStatus"] = "cached"
+                row["jeonseSourceNote"] = "저장된 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요."
+                return row
             row["jeonseDataStatus"] = "api_error"
-            row["jeonseSourceNote"] = last_error
+            row["jeonseSourceNote"] = "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요."
         else:
             row["jeonseDataStatus"] = "same_area_missing"
             row["jeonseSourceNote"] = "국토부 전월세 실거래가에서 같은 평형 전세 거래를 찾지 못했어요."

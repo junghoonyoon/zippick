@@ -9580,10 +9580,12 @@
       const hasRatio = Number.isFinite(ratio) && ratio > 0;
       const hasDeposit = Number.isFinite(latestDeposit) && latestDeposit > 0;
       if (!hasRatio && !hasDeposit && !(count > 0)) {
-        const missingCopy = ["api_error", "key_missing", "sale_price_missing"].includes(status)
-          ? source
+        const missingCopy = ["api_error", "key_missing"].includes(status)
+          ? "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요."
+          : status === "sale_price_missing"
+            ? "전세가율 계산에 쓸 매매 기준가를 먼저 확인해야 해요."
           : "같은 평형 전세 실거래가 아직 없어요.";
-        const missingLabel = status === "api_error" ? "확인 필요" : status === "key_missing" ? "키 필요" : "미수집";
+        const missingLabel = ["api_error", "key_missing"].includes(status) ? "확인 중" : "미수집";
         return `<section class="location-score-jeonse is-missing" aria-label="전세가율">
           <div class="location-score-jeonse-head">
             <div>
