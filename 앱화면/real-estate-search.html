@@ -4700,6 +4700,12 @@
 	      const jeonseRatio = Number(item?.jeonseRatioPct);
 	      if (!Number.isFinite(jeonseRatio) || jeonseRatio <= 0) return true;
 	      const parts = Array.isArray(item?.locationScore?.parts) ? item.locationScore.parts : [];
+	      const partKeys = new Set(parts.map(part => String(part?.key || "")));
+	      if (!["price", "jeonse", "demand", "product", "market"].every(key => partKeys.has(key))) return true;
+	      const jeonsePart = parts.find(part => part?.key === "jeonse");
+	      const jeonseDetails = Array.isArray(jeonsePart?.details) ? jeonsePart.details : [];
+	      const jeonseDetailKeys = new Set(jeonseDetails.map(detail => String(detail?.key || "")));
+	      if (!["jeonse_ratio", "jeonse_freshness", "investment_gap"].every(key => jeonseDetailKeys.has(key))) return true;
 	      return parts.some(part => {
 	        const key = String(part?.key || "");
 	        if (["jeonse", "transport", "education"].includes(key) && (part?.score === null || part?.score === undefined || part?.status === "missing")) return true;
@@ -13005,6 +13011,10 @@
       const max = Number(part?.maxPoints || 0);
       const points = comparisonNumber(part?.points);
       const missing = !part || locationScorePartHasNoData(part) || points === null;
+      if (key === "jeonse" && missing) {
+        const fallback = comparisonJeonseFallbackCellHtml(row, max || 20);
+        if (fallback) return fallback;
+      }
       if (missing) {
         return `<div class="comparison-score-cell">
           <div class="comparison-score-cell-head"><strong>판단불가</strong>${locationScoreJudgeHtml(NaN, max)}</div>
@@ -13017,6 +13027,23 @@
           ${locationScoreJudgeHtml(points, max)}
         </div>
         <p>${esc(part.reason || "세부 근거를 확인해 주세요.")}</p>
+      </div>`;
+    }
+
+    function comparisonJeonseFallbackCellHtml(row, max = 20) {
+      const ratio = comparisonNumber(row?.jeonseRatioPct);
+      if (ratio === null || ratio <= 0) return "";
+      const deposit = comparisonNumber(row?.latestJeonseDepositEok) || comparisonNumber(row?.medianJeonseDepositEok);
+      const saleBasis = comparisonNumber(row?.jeonseSalePriceBasisEok) || comparisonNumber(row?.currentEstimateMidPriceEok) || comparisonNumber(row?.midPriceEok);
+      const count = comparisonNumber(row?.jeonseTransactionCount);
+      const gap = deposit !== null && saleBasis !== null ? Math.max(0, saleBasis - deposit) : null;
+      const details = [`전세가율 ${ratio.toFixed(1).replace(/\.0$/, "")}%`];
+      if (deposit !== null) details.push(`전세 ${transactionMoney(deposit)}`);
+      if (gap !== null) details.push(`필요 투자금 ${transactionMoney(gap)}`);
+      if (count !== null && count > 0) details.push(`전세 거래 ${Math.round(count)}건`);
+      return `<div class="comparison-score-cell">
+        <div class="comparison-score-cell-head"><strong>최신 계산 중</strong>${locationScoreJudgeHtml(NaN, max)}</div>
+        <p>${esc(details.join(" · "))}</p>
       </div>`;
     }
 
