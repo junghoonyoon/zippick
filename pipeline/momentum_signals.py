@@ -1,4 +1,4 @@
-"""후보 단지의 최근 가격·거래 흐름 지표.
+"""후보 단지의 최근 시장 신호 지표.
 
 과거 국토부 실거래 데이터로 계산한 시그널이며, 미래 수익률 예측이 아니다.
 점수는 항상 근거 배지와 함께 노출한다. 거래 표본이 적은 단지는 점수를
@@ -50,7 +50,7 @@ _NEUTRAL_VALUES = {
     "districtRelative": 0.0,
     "recentPersistence": 0.0,
 }
-SURGE_RECENT3_PCT = 10.0  # 최근 3개월 상승률이 이 이상이면 '단기 급등 직후'로 경고
+SURGE_RECENT3_PCT = 10.0  # 최근 3개월 상승률이 이 이상이면 '단기 급등 주의'로 경고
 
 # 상승 패턴(점수 밖 참고 정보) 판정 기준.
 # 월 2건 이상 거래된 '유효 월'의 전월 대비 변화만 사용하고,
@@ -127,8 +127,8 @@ _SCOPE_EXECUTOR = ThreadPoolExecutor(
 _LEADER_SCOPE_ENTITY_SIGNALS_CACHE = {}
 
 SIGNAL_NOTE = (
-    "최근 가격·거래 흐름 점수는 국토부 실거래가 기반 최근 6개월 같은 평형대 가격 변화·"
-    "거래량 변화·같은 구 대표 단지 대비·최근 3개월 지속성을 합산한 0~100점 지표입니다. "
+    "최근 시장 신호는 국토부 실거래가 기반 최근 6개월 같은 평형대 가격 변화·"
+    "거래량 변화·같은 구 대표 단지 대비·최근 3개월 지속성을 합산한 0~100점 참고 신호입니다. "
     "저평가 여부나 미래 수익률을 의미하지 않습니다."
 )
 
@@ -528,7 +528,7 @@ def _badges(signals):
     if pattern == "steady_rise":
         badges.append({
             "kind": "pattern",
-            "label": f"꾸준한 상승 · 월간 {signals.get('patternUpCount')}/{signals.get('patternChangeCount')}회 상승",
+            "label": f"오른 달 많음 · 월간 {signals.get('patternUpCount')}/{signals.get('patternChangeCount')}회 상승",
             "tone": "up",
         })
     elif pattern == "steady_fall":

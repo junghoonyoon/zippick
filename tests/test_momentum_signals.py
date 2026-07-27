@@ -644,7 +644,7 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertFalse(signals["isRecentSurge"])
 
     def test_steady_rise_pattern(self):
-        # 10개월 연속, 월 2건씩, 매달 약 +1%씩 계단식 상승 → 꾸준한 상승.
+        # 10개월 연속, 월 2건씩, 매달 약 +1%씩 계단식 상승 → 오른 달 많음.
         deals = []
         for m in range(1, 11):
             ppsm = round(1000 * (1.01 ** (10 - m)), 1)

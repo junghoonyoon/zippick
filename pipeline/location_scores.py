@@ -390,11 +390,11 @@ def _liquidity_score(row):
 def _flow_score(signals):
     score = _clamp_score(signals.get("score"))
     if score is None:
-        return None, "흐름 데이터 없음"
+        return None, "시장 신호 데이터 없음"
     momentum = _float_or_none(signals.get("momentumPct"))
     if momentum is None:
-        return score, "최근 가격·거래 흐름 기준"
-    return score, f"최근 6개월 {momentum:+.1f}% · 가격·거래 흐름"
+        return score, "최근 시장 신호 기준"
+    return score, f"최근 6개월 {momentum:+.1f}% · 최근 시장 신호"
 
 
 def _jeonse_ratio_score(row):
@@ -705,11 +705,13 @@ def _category_summary(key, score, metrics):
         ratio_score = _clamp_score(ratio.get("score"))
         if ratio_score is None:
             return "같은 평형 전세 거래를 더 확인해야 해요"
+        ratio_reason = str(ratio.get("reason") or "")
+        ratio_prefix = f"{ratio_reason.split(' · ', 1)[0]} · " if ratio_reason.startswith("전세가율 ") else ""
         if ratio_score >= 74:
-            return "전세금 비중이 높아 내 돈 부담이 낮은 편이에요"
+            return f"{ratio_prefix}전세금 비중이 높아 내 돈 부담이 낮은 편이에요"
         if ratio_score >= 44:
-            return "전세금 비중은 보통이에요"
-        return "전세금 비중이 낮아 내 돈이 많이 들어가요"
+            return f"{ratio_prefix}전세금 비중은 보통이에요"
+        return f"{ratio_prefix}전세금 비중이 낮아 내 돈이 많이 들어가요"
     if key == "demand":
         if score >= 80:
             return "역·학교 접근성이 좋은 편이에요"
@@ -797,7 +799,7 @@ def _purchase_score_parts(row, entity, signals):
             _metric("age", "준공연도", 6, *_product_score(row)),
             _metric("confirmed_change", "확정 변화", 3, change_score, change_reason),
         ]),
-        _category_part("market", "거래 유동성·시장 흐름", 15, [
+        _category_part("market", "거래 유동성·시장 신호", 15, [
             _metric("liquidity", "최근 거래량", 6, liquidity_score, liquidity_reason),
             _metric("relative_flow", "지역·대장 대비 흐름", 6, relative_flow_score, relative_flow_reason),
             _metric("sample_confidence", "표본 신뢰도", 3, confidence_score, confidence_reason),
