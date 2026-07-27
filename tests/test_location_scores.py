@@ -43,22 +43,35 @@ class LocationScoresTest(unittest.TestCase):
             "name": "종합점수아파트",
             "displayName": "종합점수아파트",
             "midPriceEok": 12,
+            "latestDealPriceEok": 11.8,
+            "currentEstimateMinPriceEok": 11.5,
+            "currentEstimateMaxPriceEok": 12.5,
             "households": 1500,
             "buildingAge": 8,
             "buildYear": 2018,
             "transactionCount": 12,
             "recent3TradeCount": 14,
+            "latestJeonseDepositEok": 7.4,
+            "latestJeonseDate": "2026-07-03",
+            "jeonseTransactionCount": 4,
+            "jeonseRatioPct": 61.7,
+            "jeonseSalePriceBasisEok": 12,
             "educationEnvironment": {
                 "score": 76,
                 "elementarySchoolNames": ["테스트초"],
                 "elementaryDistanceMeters": 320,
             },
+            "commuteMatched": True,
             "signals": {
                 "status": "ok",
                 "score": 68,
                 "momentumPct": 2.5,
+                "districtRelativePct": 1.5,
+                "leaderRelativePct": -1.0,
+                "recoveryPct": 88.0,
                 "currentPpsm": 2000,
                 "leaderReferencePpsm": 2400,
+                "sampleConfidence": "medium",
             },
         }
 
@@ -66,24 +79,35 @@ class LocationScoresTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "ok")
         self.assertGreaterEqual(result["score"], 60)
-        self.assertEqual(result["scoreFormulaVersion"], "complex-score-v2")
+        self.assertEqual(result["scoreFormulaVersion"], "purchase-judgment-v3")
+        self.assertEqual(result["title"], "현재 데이터 기준 종합 점수")
         self.assertEqual(
             [part["label"] for part in result["parts"]],
-            ["지역 위상", "단지 규모", "교통 접근성", "교육환경", "상품성"],
+            ["가격 적정성", "전세가율·투자금 효율", "입지·실수요", "상품성·희소성", "거래 유동성·시장 흐름"],
         )
         reasons = {part["label"]: part["reason"] for part in result["parts"]}
-        self.assertEqual(reasons["지역 위상"], "1,500세대 · 지역에서 비교하기 좋은 대단지")
-        self.assertEqual(reasons["단지 규모"], "1,500세대 · 1,000세대 이상")
-        self.assertEqual(reasons["교육환경"], "테스트초 · 320m 거리")
-        self.assertEqual(reasons["상품성"], "2018년 사용승인")
-        area_reasons = {
-            part["label"]: part["reason"]
-            for part in result["areaAnalysis"]["parts"]
+        self.assertEqual(reasons["가격 적정성"], "최근 거래가 예상 가격과 잘 맞아요")
+        self.assertEqual(reasons["전세가율·투자금 효율"], "전세금 비중이 높아 내 돈 부담이 낮은 편이에요")
+        self.assertEqual(reasons["입지·실수요"], "입지는 무난하지만 세부 확인이 필요해요")
+        self.assertEqual(reasons["상품성·희소성"], "단지 규모와 연식이 좋은 편이에요")
+        self.assertEqual(reasons["거래 유동성·시장 흐름"], "거래 흐름은 보통이에요")
+        bases = {part["label"]: part.get("basis") for part in result["parts"]}
+        self.assertEqual(bases["가격 적정성"], "산식: 반영 지표 4/4개 · 87/100 × 30점 = 26.1/30점")
+        details = {
+            part["label"]: {detail["label"]: detail for detail in part["details"]}
+            for part in result["parts"]
         }
-        self.assertEqual(area_reasons["가격 위치"], "㎡당 2,000만원 · 대표 단지보다 낮은 가격 추정")
-        self.assertEqual(area_reasons["거래 유동성"], "최근 3개월 거래 14건")
-        self.assertEqual(area_reasons["최근 흐름"], "최근 6개월 +2.5% · 가격·거래 흐름")
-        self.assertTrue(any(part["status"] == "missing" for part in result["parts"]))
+        self.assertEqual(details["상품성·희소성"]["세대수"]["reason"], "1,500세대 · 1,000~1,999세대 구간")
+        self.assertEqual(details["상품성·희소성"]["준공연도"]["reason"], "2018년 사용승인")
+        self.assertNotIn("주차·평면·브랜드", details["상품성·희소성"])
+        self.assertEqual(details["입지·실수요"]["교육 접근성"]["reason"], "테스트초 · 320m 거리")
+        self.assertEqual(details["전세가율·투자금 효율"]["필요 투자금"]["reason"], "필요한 내 돈 4.6억원 · 매매가의 38.3%")
+        self.assertEqual(result["areaAnalysis"]["parts"], [])
+        self.assertTrue(any(
+            detail["status"] == "missing"
+            for part in result["parts"]
+            for detail in part["details"]
+        ))
 
     def test_region_status_price_reason_names_the_price_basis(self):
         row = {
@@ -100,13 +124,71 @@ class LocationScoresTest(unittest.TestCase):
         result = location_scores.score_for_candidate(row, self.entity)
         reasons = {part["label"]: part["reason"] for part in result["parts"]}
 
-        self.assertEqual(reasons["지역 위상"], "800세대 · 단지 규모 기준")
-        area_reasons = {
-            part["label"]: part["reason"]
-            for part in result["areaAnalysis"]["parts"]
+        self.assertIn("지역 안에서는 가격 부담이 있는 편이에요", reasons["가격 적정성"])
+        product_details = {
+            detail["label"]: detail
+            for part in result["parts"] if part["label"] == "상품성·희소성"
+            for detail in part["details"]
         }
-        self.assertEqual(area_reasons["가격 위치"], "예상 매수가 8.6억원 기준")
-        self.assertNotIn("8.6억원 가격대", area_reasons["가격 위치"])
+        self.assertEqual(product_details["세대수"]["reason"], "800세대 · 500~999세대 구간")
+        self.assertNotIn("8.6억원 가격대", reasons["가격 적정성"])
+        self.assertNotIn("주차·평면·브랜드", product_details)
+
+    def test_purchase_score_uses_fallback_data_for_recovery_and_commute_only_when_requested(self):
+        row = {
+            "name": "보강아파트",
+            "midPriceEok": 9.4,
+            "latestDealPriceEok": 9.4,
+            "recentMaxPriceEok": 10.0,
+            "households": 900,
+            "buildingAge": 14,
+            "buildYear": 2012,
+            "transactionCount": 7,
+            "recent3TradeCount": 5,
+            "commuteAccessRequested": True,
+            "commuteAccessScore": 50,
+            "commuteAccessReason": "강남역 실제 경로는 미연결 · 권역 기준으로만 확인",
+            "educationEnvironment": {"score": 72},
+            "signals": {
+                "status": "ok",
+                "momentumPct": 3.0,
+                "districtRelativePct": 1.0,
+                "leaderPrice12m": 12.0,
+                "sampleConfidence": "medium",
+            },
+        }
+
+        result = location_scores.score_for_candidate(row, self.entity)
+        details = {
+            part["label"]: {detail["label"]: detail for detail in part["details"]}
+            for part in result["parts"]
+        }
+
+        self.assertIn("지역 대장보다 21.7% 낮음", details["가격 적정성"]["대장 가격 차이"]["reason"])
+        self.assertIn("최근 최고가 기준", details["가격 적정성"]["고점 회복률"]["reason"])
+        self.assertEqual(details["입지·실수요"]["직장권 접근성"]["score"], 50)
+        self.assertIn("권역 기준", details["입지·실수요"]["직장권 접근성"]["reason"])
+
+    def test_purchase_score_hides_commute_metric_when_user_did_not_enter_commute(self):
+        row = {
+            "name": "직장권없음아파트",
+            "midPriceEok": 8.8,
+            "households": 1200,
+            "buildingAge": 10,
+            "buildYear": 2016,
+            "transactionCount": 8,
+            "educationEnvironment": {"score": 80},
+            "signals": {"status": "ok", "momentumPct": 2.0, "districtRelativePct": 0.5},
+        }
+
+        result = location_scores.score_for_candidate(row, self.entity)
+        demand_details = {
+            detail["label"]
+            for part in result["parts"] if part["label"] == "입지·실수요"
+            for detail in part["details"]
+        }
+
+        self.assertNotIn("직장권 접근성", demand_details)
 
     def test_presale_candidate_gets_composite_score(self):
         row = {
@@ -130,12 +212,13 @@ class LocationScoresTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "ok")
         self.assertIsInstance(result["score"], int)
-        self.assertEqual(reasons["상품성"], "분양권 · 신축 예정")
-        area_reasons = {
-            part["label"]: part["reason"]
-            for part in result["areaAnalysis"]["parts"]
+        self.assertIn("신축 예정이라 연식은 좋은 편이에요", reasons["상품성·희소성"])
+        market_details = {
+            detail["label"]: detail
+            for part in result["parts"] if part["label"] == "거래 유동성·시장 흐름"
+            for detail in part["details"]
         }
-        self.assertEqual(area_reasons["거래 유동성"], "최근 3개월 거래 2건")
+        self.assertEqual(market_details["최근 거래량"]["reason"], "최근 3개월 거래 2건")
 
     def test_region_status_uses_candidate_price_rank_when_peers_exist(self):
         rows = []
@@ -156,16 +239,16 @@ class LocationScoresTest(unittest.TestCase):
 
         location_scores.attach_scores(rows, lambda _row: self.entity)
         reasons = [
-            {part["label"]: part["reason"] for part in row["locationScore"]["areaAnalysis"]["parts"]}["가격 위치"]
+            {part["label"]: part["reason"] for part in row["locationScore"]["parts"]}["가격 적정성"]
             for row in rows
         ]
 
-        self.assertEqual(reasons[0], "지역 후보 1/4위 · 상위 25% · 상위권 가격")
-        self.assertEqual(reasons[1], "지역 후보 2/4위 · 상위 50% · 중간권 가격")
-        self.assertEqual(reasons[3], "지역 후보 4/4위 · 상위 100% · 낮은 가격")
+        self.assertIn("지역 안에서는 가격 부담이 있는 편이에요", reasons[0])
+        self.assertIn("지역 안에서는 가격 부담이 낮은 편이에요", reasons[1])
+        self.assertIn("지역 안에서는 가격 부담이 낮은 편이에요", reasons[3])
         self.assertNotIn("지역 최상위권", " ".join(reasons))
 
-    def test_composite_score_stays_same_when_only_selected_area_market_changes(self):
+    def test_purchase_score_changes_when_selected_area_market_changes(self):
         base = {
             "name": "평형고정아파트",
             "displayName": "평형고정아파트",
@@ -205,13 +288,13 @@ class LocationScoresTest(unittest.TestCase):
         small_result = location_scores.score_for_candidate(small, self.entity)
         large_result = location_scores.score_for_candidate(large, self.entity)
 
-        self.assertEqual(small_result["score"], large_result["score"])
+        self.assertNotEqual(small_result["score"], large_result["score"])
+        small_reasons = {part["label"]: part["reason"] for part in small_result["parts"]}
+        large_reasons = {part["label"]: part["reason"] for part in large_result["parts"]}
         self.assertNotEqual(
-            small_result["areaAnalysis"]["parts"][1]["reason"],
-            large_result["areaAnalysis"]["parts"][1]["reason"],
+            small_reasons["거래 유동성·시장 흐름"],
+            large_reasons["거래 유동성·시장 흐름"],
         )
-        self.assertEqual(small_result["areaAnalysis"]["leaderLabel"], "지역 대표 가격 흐름")
-        self.assertEqual(large_result["areaAnalysis"]["leaderLabel"], "")
 
 
 if __name__ == "__main__":

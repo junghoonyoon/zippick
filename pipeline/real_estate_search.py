@@ -311,6 +311,13 @@ def _apartment_display_name(row):
         name_key = compact(name)
         if name_key.startswith(official_key) and len(official_key) < len(name_key):
             return official
+    if (
+        _is_usable_apartment_name(official)
+        and _is_usable_apartment_name(building_name)
+        and compact(official) == compact(building_name)
+        and compact(official) != compact(name)
+    ):
+        return official
     return _strip_building_dong_suffix(name)
 
 
@@ -559,13 +566,14 @@ def _entity_identity_keys(entity):
 
 
 def _link_manual_apartments_to_source(manual_entities, source_entities):
-    """Attach an incomplete editorial search name to one unambiguous source row.
+    """Attach an editorial search name to one unambiguous source row.
 
-    Manual rows are useful search aliases, but many intentionally contain no
-    location or building profile.  When one exact alias identifies one physical
-    source complex, reuse that source's dedupe key so the normal merge retains
-    the friendly name while filling every canonical field.  Ambiguous aliases
-    remain unlinked instead of borrowing metadata from the wrong complex.
+    Manual rows are useful search aliases, and some already include location or
+    household data before the official source catches up.  When one exact alias
+    identifies one physical source complex, reuse that source's dedupe key so
+    the normal merge keeps the friendly name while filling source-only fields
+    such as presale status.  Ambiguous aliases remain unlinked instead of
+    borrowing metadata from the wrong complex.
     """
     key_targets = {}
     for source in source_entities:
@@ -580,11 +588,6 @@ def _link_manual_apartments_to_source(manual_entities, source_entities):
     linked = []
     for original in manual_entities:
         entity = dict(original)
-        has_region = any(entity.get(field) for field in ("district", "city", "legalDong"))
-        has_profile = _int_value(entity.get("households")) > 0
-        if has_region and (has_profile or entity.get("status")):
-            linked.append(entity)
-            continue
         source = None
         # A long official alias is more discriminating than a short nickname.
         # Use the most specific exact key that resolves to one source identity.
@@ -959,15 +962,18 @@ def suggest_apartments(query, limit=20):
             address_parts.append(part)
             stripped_parts.append(stripped)
         entity_name = str(entity.get("name") or "")
+        full_address = str(entity.get("address") or "").strip()
+        jibun = str(entity.get("jibun") or "").strip()
+        map_address = full_address or " ".join([*address_parts, jibun]).strip()
         suggestions.append({
             "name": _unit_alias_display(entity_name) if _UNIT_ALIAS_RE.search(entity_name) else entity_name,
             # 일부 공공 원본은 자치구가 비어 있고 시·법정동만 있다. 검색 결과가
             # 빈 지역으로 넘어가면 전용면적 API가 단지를 식별하지 못하므로 가장
             # 구체적으로 남아 있는 지역값을 순서대로 사용한다.
             "region": district or city or str(entity.get("legalDong") or "").strip(),
-            "address": " ".join(address_parts) or str(entity.get("address") or "").strip(),
+            "address": map_address,
             "legalDong": str(entity.get("legalDong") or "").strip(),
-            "jibun": str(entity.get("jibun") or "").strip(),
+            "jibun": jibun,
             "cortarNo": str(entity.get("cortarNo") or "").strip(),
             "lawdCd": str(entity.get("lawdCd") or "").strip(),
             "households": _int_value(entity.get("households")),

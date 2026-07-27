@@ -48,6 +48,19 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertEqual(rachel.get("status"), "분양권")
         self.assertEqual(rachel.get("lawdCd"), "11440")
 
+    def test_jungnang_leaders_keep_riversen_as_one_presale_complex(self):
+        jungnang = apartment_leaders.matching_entities("서울특별시", "중랑구")
+        riversen = [
+            entity for entity in jungnang
+            if "리버센" in entity.get("name", "")
+            or any("리버센" in alias for alias in entity.get("aliases") or [])
+        ]
+
+        self.assertEqual(len(riversen), 1)
+        self.assertEqual(riversen[0]["name"], "리버센SK뷰롯데캐슬")
+        self.assertEqual(riversen[0]["households"], 1055)
+        self.assertEqual(riversen[0]["status"], "분양권")
+
     def test_region_prefetches_apartment_and_presale_feeds_separately(self):
         entities = [
             {"name": "기존단지", "district": "테스트구", "lawdCd": "11111"},
@@ -200,14 +213,21 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertIn('id="leaderSido"', html)
         self.assertIn('id="leaderSigungu"', html)
         self.assertNotIn('id="leaderAreaBucket"', html)
-        self.assertNotIn('id="leaderAreaTabs"', html)
+        self.assertIn('id="leaderAreaTabs"', html)
+        self.assertIn('data-leader-area-bucket="70-89"', html)
+        self.assertIn('data-leader-area-bucket="50-69"', html)
         self.assertNotIn('data-leader-area-profile=', html)
-        self.assertNotIn('id="leaderAreaComparison"', html)
+        self.assertIn('id="leaderAreaComparison"', html)
+        self.assertNotIn("59㎡ 대장은 ${esc(currentName)}로 바뀌었어요.", html)
+        self.assertNotIn("84㎡와 대장이 같아요.", html)
+        self.assertNotIn('2~30위 중 ${changedRanks.map(rank => `${rank}위`).join(", ")}는 바뀌었어요.', html)
+        self.assertNotIn("2~30위는 84㎡와 같아요.", html)
         self.assertNotIn('id="leaderMeta"', html)
         self.assertNotIn('id="leaderCategoryTabs"', html)
         self.assertIn('id="leaderReferenceCaption" hidden', html)
-        self.assertIn('leaderReferenceCaption.textContent = `${leaderReferenceLabel(payload?.referenceMonth)} 기준`;', html)
-        self.assertIn('${apartmentStatusBadgeHtml(item.status)}</${headingTag}>', html)
+        self.assertIn('leaderReferenceCaption.textContent = "";', html)
+        self.assertIn("leaderReferenceCaption.hidden = true;", html)
+        self.assertIn('${apartmentStatusBadgeHtml(item.status)}${leaderAreaRankBadgeHtml(item, payload)}</${headingTag}>', html)
         self.assertIn('${apartmentStatusBadgeHtml(item.status)}</span>', html)
         self.assertLess(html.index('id="leaderReferenceCaption"'), html.index('id="leaderPageTitle"'))
         self.assertNotIn("areaProfile,", html)
@@ -223,18 +243,20 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertIn('item.nearestStationName || "가까운 역"', html)
         self.assertIn("직선 ${Math.round(stationDistance)", html)
         self.assertNotIn("대장(면적별)", html)
-        self.assertIn('aria-label="대장아파트 실거래 기준 보기"', html)
-        self.assertIn("전용 84.00㎡ 이상 85.00㎡ 미만", html)
-        self.assertIn("다른 면적의 거래는 포함하거나 84㎡ 가격으로 환산하지 않습니다", html)
+        self.assertNotIn('aria-label="대장아파트 실거래 기준 보기"', html)
         self.assertNotIn("실거래가 × (84 ÷ 실제면적)", html)
         self.assertNotIn('data-leader-category="overall"', html)
         self.assertNotIn('data-leader-category="leadership"', html)
-        self.assertIn("fetchLeaderRanking(activeLeaderCategory, 30", html)
+        self.assertIn("const LEADER_RANK_LIMIT = 20;", html)
+        self.assertIn("fetchLeaderRanking(activeLeaderCategory, LEADER_RANK_LIMIT", html)
+        self.assertIn('fetchLeaderRanking("price", LEADER_RANK_LIMIT, signal, "70-89")', html)
+        self.assertNotIn("30위 밖", html)
         self.assertIn("leaderGrowthText(item.return6m)", html)
         self.assertIn("data-leader-expand-rank", html)
         self.assertIn('class="leader-list-name">${esc(item.apartmentName)}</span>', html)
-        self.assertIn('class="leader-list-area">최근 6개월 · 전용 84㎡ 실거래', html)
-        self.assertIn("최근 6개월의 전용 84.00㎡ 이상 85.00㎡ 미만", html)
+        self.assertIn('class="leader-list-location">${leaderMetaHtml(item)}</span>', html)
+        self.assertIn("기준 거래 ${esc(item.rankingTransactionCount", html)
+        self.assertIn("거래가격 순위와 가격 신뢰도는 선택한 면적의 최근 6개월 정상 거래로 계산합니다.", html)
         self.assertIn("item.leaderPrice6m ?? item.leaderPrice12m", html)
         self.assertIn("function leaderMetaHtml(item)", html)
         self.assertIn('item.ageDisplayLabel', html)
@@ -395,6 +417,54 @@ class ApartmentLeadersTest(unittest.TestCase):
 
         self.assertEqual([row["exclusiveArea"] for row in trades], [84.0, 84.99])
         self.assertAlmostEqual(area, 84.495)
+
+    def test_59m2_leader_list_uses_only_59m2_actual_trades(self):
+        def entity(name):
+            return {
+                "name": name,
+                "province": "서울특별시",
+                "district": "테스트구",
+                "legalDong": "가동",
+                "households": 500,
+                "approvedAt": "2011-01-01",
+                "dedupeKey": name,
+            }
+
+        data = [
+            (
+                entity("소형대장"),
+                [
+                    _trade("2026-06-15", 110000, area=59.8),
+                    _trade("2026-05-15", 100000, area=59.9),
+                    _trade("2026-04-15", 300000, area=84.8),
+                ],
+            ),
+            (
+                entity("국평대장"),
+                [
+                    _trade("2026-06-15", 200000, area=84.8),
+                    _trade("2026-05-15", 190000, area=84.9),
+                    _trade("2026-04-15", 90000, area=59.7),
+                    _trade("2026-03-15", 88000, area=59.6),
+                ],
+            ),
+        ]
+
+        result = apartment_leaders.calculate_rankings_from_pairs(
+            "서울특별시",
+            "테스트구",
+            data,
+            area_bucket_value="50-69",
+            reference_month="2026-06",
+        )
+        price = result["rankings"]["price"]
+
+        self.assertEqual(price[0]["apartmentName"], "소형대장")
+        self.assertEqual(price[0]["leaderPrice6m"], 105000)
+        self.assertAlmostEqual(price[0]["leaderRepresentativeArea"], 59.85)
+        self.assertEqual(price[0]["leaderPriceAdjustmentTargetArea"], 59.0)
+        self.assertEqual(result["areaTarget"], 59.0)
+        self.assertEqual(result["leaderPriceBasisLabel"], "최근 6개월 전용 59㎡ 실거래 중위가")
 
     def test_price_ranking_uses_six_month_median_but_keeps_twelve_month_activity(self):
         entity = {

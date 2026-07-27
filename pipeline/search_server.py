@@ -44,7 +44,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 21
+BUDGET_CACHE_SCHEMA_VERSION = 22
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -116,6 +116,18 @@ MARKET_SNAPSHOT_FIELDS = (
     "latestDealExclusiveArea",
     "latestDealFloor",
     "latestDealDate",
+    "latestJeonseDepositEok",
+    "latestJeonseDate",
+    "latestJeonseExclusiveArea",
+    "latestJeonseFloor",
+    "medianJeonseDepositEok",
+    "minJeonseDepositEok",
+    "maxJeonseDepositEok",
+    "jeonseTransactionCount",
+    "jeonseRatioPct",
+    "jeonseSalePriceBasisEok",
+    "jeonseDataStatus",
+    "jeonseSourceNote",
     "lastObservedDealPriceEok",
     "lastObservedDealExclusiveArea",
     "lastObservedDealFloor",
@@ -949,12 +961,14 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             row["peers"] = []
         try:
             score_rows = [row]
+            peer_score_rows = []
             for peer in row.get("peers") or []:
-                score_rows.append({
+                peer_score_row = {
                     "name": peer.get("name") or "",
                     "displayName": peer.get("name") or "",
                     "region": peer.get("region") or row.get("region") or row.get("regionLabel") or "",
                     "legalDong": peer.get("legalDong") or "",
+                    "jibun": peer.get("jibun") or "",
                     "households": peer.get("households") or 0,
                     "latestDealPriceEok": peer.get("latestDealPriceEok") or peer.get("priceEok") or 0,
                     "transactionCount": peer.get("recentDealCount") or 0,
@@ -964,8 +978,12 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                         "momentumPct": peer.get("momentumPct"),
                         "recent3Pct": peer.get("recent3Pct"),
                     },
-                })
+                }
+                peer_score_rows.append((peer, peer_score_row))
+                score_rows.append(peer_score_row)
             location_scores.attach_scores(score_rows, budget_candidates._price_lookup_entity)
+            for peer, score_row in peer_score_rows:
+                peer["locationScore"] = score_row.get("locationScore")
         except Exception:
             pass
     return {"report": row, "signalNote": momentum_signals.SIGNAL_NOTE}
@@ -1015,6 +1033,7 @@ def _apartment_location_score(arguments):
         "buildingAge": building.get("buildingAge") or arguments.get("buildingAge") or 0,
         "status": entity.get("status") or arguments.get("status") or "",
     }
+    _apply_jeonse_snapshot(row, entity)
     try:
         row["educationEnvironment"] = education_environment.education_environment_for_entity(
             entity,
@@ -1026,7 +1045,7 @@ def _apartment_location_score(arguments):
     try:
         row["locationScore"] = location_scores.score_for_candidate(row, entity)
     except Exception:
-        return {"error": "종합점수를 다시 계산하지 못했어요."}, 502
+        return {"error": "종합 점수를 다시 계산하지 못했어요."}, 502
     return {
         "candidate": {
             "name": row["name"],
@@ -1038,10 +1057,60 @@ def _apartment_location_score(arguments):
             "buildingAge": row.get("buildingAge") or 0,
             "buildYear": row.get("buildYear") or 0,
             "status": row.get("status") or "",
+            **{
+                field: row.get(field)
+                for field in MARKET_SNAPSHOT_FIELDS
+                if row.get(field) not in (None, "")
+            },
             "educationEnvironment": row.get("educationEnvironment"),
             "locationScore": row.get("locationScore"),
         },
     }, 200
+
+
+def _apply_jeonse_snapshot(row, entity):
+    """Fill missing jeonse-ratio fields before recalculating the score sheet."""
+    if budget_candidates._float_value(row.get("jeonseRatioPct")) > 0:
+        return row
+    if not molit_transactions.configured(molit_transactions.TRANSACTION_KIND_RENT):
+        row["jeonseDataStatus"] = "key_missing"
+        row["jeonseSourceNote"] = "전월세 실거래가 API 키가 아직 설정되지 않았어요."
+        return row
+    sale_price = (
+        budget_candidates._float_value(row.get("currentEstimateMidPriceEok"))
+        or budget_candidates._float_value(row.get("midPriceEok"))
+        or budget_candidates._float_value(row.get("latestDealPriceEok"))
+        or budget_candidates._float_value(row.get("recentMedianPriceEok"))
+    )
+    if sale_price <= 0:
+        row["jeonseDataStatus"] = "sale_price_missing"
+        row["jeonseSourceNote"] = "전세가율 계산에 쓸 매매 기준가가 아직 없어요."
+        return row
+    try:
+        jeonse = molit_transactions.jeonse_ratio_for_apartment(
+            row.get("name") or row.get("displayName") or "",
+            region=row.get("region") or row.get("displayRegion") or "",
+            area_label=row.get("areaLabel") or row.get("displayAreaLabel") or "",
+            sale_price_eok=sale_price,
+            entity=entity,
+        )
+    except Exception:
+        _record_operation("externalDataFallbacks")
+        row["jeonseDataStatus"] = "api_error"
+        row["jeonseSourceNote"] = "전월세 실거래가 API를 다시 확인해야 해요."
+        return row
+    if jeonse:
+        row.update(jeonse)
+        row["jeonseDataStatus"] = "ok"
+    else:
+        last_error = molit_transactions.last_error(molit_transactions.TRANSACTION_KIND_RENT)
+        if last_error:
+            row["jeonseDataStatus"] = "api_error"
+            row["jeonseSourceNote"] = last_error
+        else:
+            row["jeonseDataStatus"] = "same_area_missing"
+            row["jeonseSourceNote"] = "국토부 전월세 실거래가에서 같은 평형 전세 거래를 찾지 못했어요."
+    return row
 
 
 def _regional_index_from_rone_payload(payload, source_apartment=""):
@@ -2833,7 +2902,25 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/apartment-suggest":
             query = params.get("q", [""])[0].strip()
+            region = params.get("region", [""])[0].strip()
             suggestions = real_estate_search.suggest_apartments(query)
+            if region:
+                region_key = real_estate_search.compact(region)
+                scoped_suggestions = [
+                    item for item in suggestions
+                    if region_key and (
+                        region_key in real_estate_search.compact(
+                            " ".join([
+                                str(item.get("region") or ""),
+                                str(item.get("address") or ""),
+                                str(item.get("legalDong") or ""),
+                            ])
+                        )
+                        or real_estate_search.compact(str(item.get("region") or "")) in region_key
+                    )
+                ]
+                if scoped_suggestions:
+                    suggestions = scoped_suggestions
             resolve_naver = params.get("resolve_naver", ["false"])[0].strip().lower()
             if suggestions and resolve_naver in {"1", "true", "yes", "on"}:
                 try:

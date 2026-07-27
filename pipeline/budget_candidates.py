@@ -669,13 +669,19 @@ def _invalidate_unverified_price(row):
         "recent3AveragePriceEok", "recent3AdjustedAveragePriceEok",
         "previous3AveragePriceEok", "recent6AveragePriceEok",
         "previous6AveragePriceEok", "lastObservedDealPriceEok",
-        "lastObservedDealDate",
+        "lastObservedDealDate", "latestJeonseDepositEok",
+        "medianJeonseDepositEok", "minJeonseDepositEok",
+        "maxJeonseDepositEok", "jeonseRatioPct",
+        "jeonseSalePriceBasisEok",
     ):
-        row[field] = 0 if field.endswith("Eok") else ""
+        row[field] = 0 if field.endswith("Eok") or field.endswith("Pct") else ""
+    row["jeonseDataStatus"] = row.get("jeonseDataStatus", "")
+    row["jeonseSourceNote"] = row.get("jeonseSourceNote", "")
     for field in (
         "transactionCount", "recent3TradeCount", "recent3AdjustedTradeCount",
         "recent3ExcludedTradeCount", "previous3TradeCount", "recent6TradeCount",
         "previous6TradeCount", "comparisonDealSkippedOutlierCount",
+        "jeonseTransactionCount",
     ):
         row[field] = 0
     row.update({
@@ -781,7 +787,51 @@ def _apply_live_band(row, live, comparison=None):
         "priceIdentityVerified": True,
         "marketDataStatus": "verified",
     })
+    _apply_jeonse_ratio(row)
     return _apply_recent_trade_estimate(row)
+
+
+def _apply_jeonse_ratio(row):
+    if not molit_transactions.configured(molit_transactions.TRANSACTION_KIND_RENT):
+        row["jeonseDataStatus"] = "key_missing"
+        row["jeonseSourceNote"] = "전월세 실거래가 API 키가 아직 설정되지 않았어요."
+        return row
+    entity = _price_lookup_entity(row)
+    if not entity:
+        return row
+    sale_price = (
+        _float_value(row.get("currentEstimateMidPriceEok"))
+        or _float_value(row.get("midPriceEok"))
+        or _float_value(row.get("latestDealPriceEok"))
+    )
+    if sale_price <= 0:
+        row["jeonseDataStatus"] = "sale_price_missing"
+        row["jeonseSourceNote"] = "전세가율 계산에 쓸 매매 기준가가 아직 없어요."
+        return row
+    try:
+        jeonse = molit_transactions.jeonse_ratio_for_apartment(
+            row["name"],
+            region=row.get("region", ""),
+            area_label=row.get("areaLabel", ""),
+            sale_price_eok=sale_price,
+            entity=entity,
+        )
+    except Exception:
+        row["jeonseDataStatus"] = "api_error"
+        row["jeonseSourceNote"] = "전월세 실거래가 API를 다시 확인해야 해요."
+        return row
+    if not jeonse:
+        last_error = molit_transactions.last_error(molit_transactions.TRANSACTION_KIND_RENT)
+        if last_error:
+            row["jeonseDataStatus"] = "api_error"
+            row["jeonseSourceNote"] = last_error
+        else:
+            row["jeonseDataStatus"] = "same_area_missing"
+            row["jeonseSourceNote"] = "국토부 전월세 실거래가에서 같은 평형 전세 거래를 찾지 못했어요."
+        return row
+    row.update(jeonse)
+    row["jeonseDataStatus"] = "ok"
+    return row
 
 
 def _apply_last_observed_deal(row, preferred_min_area=0):
@@ -1451,11 +1501,15 @@ def _decision_support(row, entity, purpose, priority, commute, move_timing, pric
         breakdown.append({"label": "예산", "score": 0, "outOf": 35, "detail": "최근 거래 없음", "kind": "confidence"})
 
     commute_score, commute_reason = _commute_score(row, entity, commute)
+    commute_access_score = round(max(0, min(commute_score, 12)) / 12 * 100, 1) if commutes else None
+    commute_access_reason = ""
     if commute_reason and commute_score:
+        commute_access_reason = commute_reason
         reasons.append(commute_reason)
         breakdown.append({"label": "생활권", "score": commute_score, "outOf": 12, "detail": "권역 기준 1차 일치", "kind": "fit"})
         risks.append(f"{'·'.join(commutes)}까지 실제 출근 시간은 지도 경로로 재확인 필요")
     elif commutes:
+        commute_access_reason = f"{'·'.join(commutes)} 실제 경로는 미연결 · 권역 기준으로만 확인"
         risks.append(f"{'·'.join(commutes)}까지 실제 이동시간 데이터는 아직 연결되지 않았어요.")
         # 경로 데이터가 없어 판단하지 못한 것이므로 적합도(fit) 분모에 넣지 않는다.
         # kind="fit"으로 0점을 주면 결측이 곧 감점이 되어 적합도 라벨이 왜곡된다.
@@ -1475,8 +1529,15 @@ def _decision_support(row, entity, purpose, priority, commute, move_timing, pric
         reasons.append(f"{households:,}세대 규모로 실거주 비교 후보에 포함")
     if "move" in purposes and households >= 1500:
         reasons.append(f"{households:,}세대 규모로 갈아타기 비교 후보에 포함")
+    jeonse_ratio = _float_value(row.get("jeonseRatioPct"))
     if "invest" in purposes:
-        risks.append("전세가율·보유세·거래비용은 아직 반영되지 않음")
+        if jeonse_ratio:
+            reasons.append(
+                f"최근 전세 실거래 기준 전세가율 {jeonse_ratio:g}% 확인"
+            )
+            risks.append("보유세·거래비용은 아직 반영되지 않음")
+        else:
+            risks.append("전세가율·보유세·거래비용은 아직 반영되지 않음")
 
     if households:
         breakdown.append({"label": "단지 규모", "score": round(min(households, 5000) / 500, 1), "outOf": 10, "detail": f"{households:,}세대", "kind": "fit"})
@@ -1590,6 +1651,9 @@ def _decision_support(row, entity, purpose, priority, commute, move_timing, pric
         "risks": risks[:3],
         "nextChecks": checks[:3],
         "dataConfidence": confidence,
+        "commuteAccessRequested": bool(commutes),
+        "commuteAccessScore": commute_access_score,
+        "commuteAccessReason": commute_access_reason,
         "commuteMatched": bool(commute_reason and commute_score),
         "candidateType": candidate_type,
         "matchScore": max(0, min(100, fit_score)),
@@ -1974,12 +2038,12 @@ def _finalize_candidate_rows(
                     continue
             molit_transactions.prefetch_months(signal_pairs)
         try:
-            # 대장 비교 설명은 점수 밖 참고 정보이며 지역 전체 단지를 다시
-            # 계산한다. 핵심 순위에서는 네 가지 점수까지만 확정하고 대장
-            # 컨텍스트는 직접 리포트 같은 상세 조회 경로에 맡긴다.
+            # 매수 판단 점수표는 대장 가격 차이와 지역·대장 대비 흐름까지
+            # 함께 보여준다. 후보 응답 단계에서 대장 컨텍스트를 붙여
+            # 점수표의 "데이터 없음" 항목을 줄인다.
             momentum_signals.attach_signals(
                 rows,
-                include_leader_context=False,
+                include_leader_context=True,
             )
         except Exception:
             pass

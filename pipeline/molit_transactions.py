@@ -19,8 +19,10 @@ import config
 import real_estate_search
 
 APARTMENT_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade"
+RENT_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent"
 PRESALE_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade"
 TRANSACTION_KIND_APARTMENT = "apartment"
+TRANSACTION_KIND_RENT = "rent"
 TRANSACTION_KIND_PRESALE = "presale"
 PRESALE_STATUSES = {"분양권", "입주권", "입주예정"}
 TRANSACTION_CACHE_DIR = config.CACHE_DIR / "molit_transactions"
@@ -38,6 +40,7 @@ LAWD_CODE_SUCCESSORS = {
 }
 _CIRCUIT_STATE = {
     TRANSACTION_KIND_APARTMENT: {"disabledUntil": 0, "lastError": ""},
+    TRANSACTION_KIND_RENT: {"disabledUntil": 0, "lastError": ""},
     TRANSACTION_KIND_PRESALE: {"disabledUntil": 0, "lastError": ""},
 }
 _PRICE_BAND_CACHE_LOCK = threading.Lock()
@@ -62,6 +65,8 @@ def _service_key(transaction_kind=TRANSACTION_KIND_APARTMENT):
     configured_key = (
         config.MOLIT_PRESALE_TRADE_API_KEY
         if transaction_kind == TRANSACTION_KIND_PRESALE
+        else config.MOLIT_APARTMENT_RENT_API_KEY
+        if transaction_kind == TRANSACTION_KIND_RENT
         else config.MOLIT_APARTMENT_TRADE_API_KEY
     )
     key = (configured_key or "").strip()
@@ -151,7 +156,13 @@ def _deal_months(months=RECENT_LOOKBACK_MONTHS):
 
 
 def _cache_path(lawd_cd, deal_ymd, transaction_kind=TRANSACTION_KIND_APARTMENT):
-    prefix = "presale_" if transaction_kind == TRANSACTION_KIND_PRESALE else ""
+    prefix = (
+        "presale_"
+        if transaction_kind == TRANSACTION_KIND_PRESALE
+        else "rent_"
+        if transaction_kind == TRANSACTION_KIND_RENT
+        else ""
+    )
     return TRANSACTION_CACHE_DIR / f"{prefix}{lawd_cd}_{deal_ymd}.json"
 
 
@@ -336,6 +347,36 @@ def _parse_items(xml_text, transaction_kind=TRANSACTION_KIND_APARTMENT):
         raise RuntimeError(result_message or f"국토부 API 오류: {result_code}")
     rows = []
     for item in root.findall(".//item"):
+        if transaction_kind == TRANSACTION_KIND_RENT:
+            deposit_manwon = _clean_money(_xml_text(item, ["보증금액", "deposit"]))
+            monthly_manwon = _clean_money(_xml_text(item, ["월세금액", "monthlyRent"]))
+            if deposit_manwon <= 0:
+                continue
+            year = _xml_text(item, ["년", "dealYear"])
+            month = _xml_text(item, ["월", "dealMonth"])
+            day = _xml_text(item, ["일", "dealDay"])
+            deal_date = ""
+            if year and month and day:
+                deal_date = f"{year}-{int(month):02d}-{int(day):02d}"
+            rows.append({
+                "apartment": _xml_text(item, ["아파트", "aptNm"]),
+                "legalDong": _xml_text(item, ["법정동", "umdNm"]),
+                "jibun": _xml_text(item, ["지번", "jibun"]),
+                "exclusiveArea": _float_value(_xml_text(item, ["전용면적", "excluUseAr"])),
+                "floor": _xml_text(item, ["층", "floor"]),
+                "dealDate": deal_date,
+                "depositManwon": deposit_manwon,
+                "depositEok": round(deposit_manwon / 10000, 4),
+                "monthlyRentManwon": monthly_manwon,
+                "rentType": "전세" if monthly_manwon == 0 else "월세",
+                "contractType": _xml_text(item, ["계약구분", "contractType"]),
+                "contractTerm": _xml_text(item, ["계약기간", "contractTerm"]),
+                "renewalRightUsed": _xml_text(item, ["갱신요구권사용", "useRRRight"]),
+                "previousDepositManwon": _clean_money(_xml_text(item, ["종전계약보증금", "preDeposit"])),
+                "previousMonthlyRentManwon": _clean_money(_xml_text(item, ["종전계약월세", "preMonthlyRent"])),
+                "transactionKind": transaction_kind,
+            })
+            continue
         amount_manwon = _clean_money(_xml_text(item, ["거래금액", "dealAmount"]))
         if amount_manwon <= 0:
             continue
@@ -425,6 +466,8 @@ def _fetch_month_singleflight(
         endpoint = (
             PRESALE_ENDPOINT
             if transaction_kind == TRANSACTION_KIND_PRESALE
+            else RENT_ENDPOINT
+            if transaction_kind == TRANSACTION_KIND_RENT
             else APARTMENT_ENDPOINT
         )
         request_params = {
@@ -1322,7 +1365,7 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
                     key = (
                         item.get("apartment"),
                         item.get("dealDate"),
-                        item.get("dealAmountManwon"),
+                        item.get("dealAmountManwon") or item.get("depositManwon"),
                         item.get("exclusiveArea"),
                         item.get("floor"),
                     )
@@ -1407,6 +1450,156 @@ def transactions_for_apartment_cached(
             if items is not None:
                 monthly[(lawd_cd, deal_ymd)] = items
     return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def rent_transactions_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    """Return matching apartment rent contracts from the official MOLIT feed."""
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
+    if not rows:
+        return []
+    lawd_cds = sorted({
+        code
+        for row in rows
+        for code in related_lawd_codes(_row_lawd_cd(row))
+    })
+    month_values = _deal_months(lookback_months)
+    prefetch_months(
+        ((lawd_cd, deal_ymd) for lawd_cd in lawd_cds for deal_ymd in month_values),
+        transaction_kind=TRANSACTION_KIND_RENT,
+    )
+    monthly = {}
+    for lawd_cd in lawd_cds:
+        for deal_ymd in month_values:
+            try:
+                monthly[(lawd_cd, deal_ymd)] = fetch_month(
+                    lawd_cd,
+                    deal_ymd,
+                    transaction_kind=TRANSACTION_KIND_RENT,
+                )
+            except Exception:
+                continue
+    return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def rent_transactions_for_apartment_cached(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    entity=None,
+):
+    """Return matching rent contracts using only local month caches."""
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
+    if not rows:
+        return []
+    monthly = {}
+    month_values = _deal_months(lookback_months)
+    lawd_cds = sorted({
+        code
+        for row in rows
+        for code in related_lawd_codes(_row_lawd_cd(row))
+    })
+    for lawd_cd in lawd_cds:
+        for deal_ymd in month_values:
+            items = _read_cached_month_memory(
+                lawd_cd,
+                deal_ymd,
+                transaction_kind=TRANSACTION_KIND_RENT,
+            )
+            if items is not None:
+                monthly[(lawd_cd, deal_ymd)] = items
+    return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def _jeonse_payload(name, region, area_label, lookback_months, rents, sale_price_eok=0):
+    jeonse = [
+        row for row in rents
+        if _float_value(row.get("depositEok")) > 0
+        and _clean_money(row.get("monthlyRentManwon")) == 0
+    ]
+    if not jeonse:
+        return None
+    jeonse.sort(key=lambda row: str(row.get("dealDate") or ""), reverse=True)
+    deposits = sorted(_float_value(row.get("depositEok")) for row in jeonse)
+    latest = jeonse[0]
+    median_deposit = round(statistics.median(deposits), 2)
+    latest_deposit = round(_float_value(latest.get("depositEok")), 2)
+    sale_price = _float_value(sale_price_eok)
+    basis_deposit = latest_deposit or median_deposit
+    ratio = round(basis_deposit / sale_price * 100, 1) if sale_price > 0 and basis_deposit > 0 else None
+    return {
+        "name": name,
+        "region": region,
+        "areaLabel": area_label,
+        "lookbackMonths": lookback_months,
+        "latestJeonseDepositEok": latest_deposit,
+        "latestJeonseDate": latest.get("dealDate", ""),
+        "latestJeonseExclusiveArea": latest.get("exclusiveArea"),
+        "latestJeonseFloor": latest.get("floor", ""),
+        "medianJeonseDepositEok": median_deposit,
+        "minJeonseDepositEok": round(min(deposits), 2),
+        "maxJeonseDepositEok": round(max(deposits), 2),
+        "jeonseTransactionCount": len(jeonse),
+        "jeonseRatioPct": ratio,
+        "jeonseSalePriceBasisEok": round(sale_price, 2) if sale_price > 0 else 0,
+        "jeonseSourceNote": f"국토부 전월세 실거래가 최근 {lookback_months}개월 · 월세 제외",
+    }
+
+
+def jeonse_ratio_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    sale_price_eok=0,
+    entity=None,
+):
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    return _jeonse_payload(
+        name,
+        region,
+        area_label,
+        lookback_months,
+        rent_transactions_for_apartment(
+            name,
+            region=region,
+            area_label=area_label,
+            lookback_months=lookback_months,
+            entity=entity,
+        ),
+        sale_price_eok=sale_price_eok,
+    )
+
+
+def cached_jeonse_ratio_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    sale_price_eok=0,
+    entity=None,
+):
+    lookback_months = int(lookback_months or RECENT_LOOKBACK_MONTHS)
+    return _jeonse_payload(
+        name,
+        region,
+        area_label,
+        lookback_months,
+        rent_transactions_for_apartment_cached(
+            name,
+            region=region,
+            area_label=area_label,
+            lookback_months=lookback_months,
+            entity=entity,
+        ),
+        sale_price_eok=sale_price_eok,
+    )
 
 
 def cached_month_coverage_for_apartment(

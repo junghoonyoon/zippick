@@ -34,6 +34,7 @@ def _load_settings_file(path):
         ("유튜브키", "YOUTUBE_API_KEY"),
         ("자막키", "SUPADATA_API_KEY"),
         ("국토교통부_아파트 매매 실거래가 자료키", "MOLIT_APARTMENT_TRADE_API_KEY"),
+        ("국토교통부_아파트 전월세 실거래가 자료키", "MOLIT_APARTMENT_RENT_API_KEY"),
         ("국토교통부_아파트 분양권전매 실거래가 자료키", "MOLIT_PRESALE_TRADE_API_KEY"),
         ("공공데이터키", "PUBLIC_DATA_API_KEY"),
         ("국토부키", "PUBLIC_DATA_API_KEY"),
@@ -85,6 +86,7 @@ SEARCH_INDEX_JSON = CACHE_DIR / "search_index.json"
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 PUBLIC_DATA_API_KEY = os.environ.get("PUBLIC_DATA_API_KEY", os.environ.get("MOLIT_API_KEY", ""))
 MOLIT_APARTMENT_TRADE_API_KEY = os.environ.get("MOLIT_APARTMENT_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
+MOLIT_APARTMENT_RENT_API_KEY = os.environ.get("MOLIT_APARTMENT_RENT_API_KEY", MOLIT_APARTMENT_TRADE_API_KEY or PUBLIC_DATA_API_KEY)
 MOLIT_PRESALE_TRADE_API_KEY = os.environ.get("MOLIT_PRESALE_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 KAKAO_MAP_JAVASCRIPT_KEY = os.environ.get("KAKAO_MAP_JAVASCRIPT_KEY", "")
 KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY", "")

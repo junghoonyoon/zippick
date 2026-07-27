@@ -203,6 +203,14 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             "필지고유번호": "4113510100101010000",
         }
 
+        def attach_location_score_side_effect(rows, _lookup):
+            for index, score_row in enumerate(rows):
+                score_row["locationScore"] = {
+                    "status": "ok",
+                    "score": 80 - index,
+                }
+            return rows
+
         with mock.patch.object(
             search_server.budget_candidates,
             "_find_entity",
@@ -231,6 +239,7 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         ) as attach_signals, mock.patch.object(
             search_server.location_scores,
             "attach_scores",
+            side_effect=attach_location_score_side_effect,
         ) as attach_location_scores, mock.patch.object(
             search_server.momentum_signals,
             "district_peer_reports",
@@ -289,6 +298,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         score_rows = attach_location_scores.call_args.args[0]
         self.assertEqual([row["name"] for row in score_rows], [entity["name"], "비교1아파트", "비교2아파트"])
         self.assertEqual(score_rows[1]["latestDealPriceEok"], 12.0)
+        self.assertEqual(report["peers"][0]["locationScore"]["score"], 79)
+        self.assertEqual(report["peers"][1]["locationScore"]["score"], 78)
 
     def test_apartment_report_resolves_xi_brand_typo_to_canonical_entity(self):
         entity = {
@@ -997,6 +1008,10 @@ class ApartmentAffordabilityTest(unittest.TestCase):
                 "elementarySchoolNames": ["행당초"],
                 "elementaryDistanceMeters": 320,
             },
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "configured",
+            return_value=False,
         ):
             payload, status = search_server._apartment_location_score({
                 "name": "점수보강아파트",
@@ -1011,8 +1026,73 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             row["key"]: row
             for row in payload["candidate"]["locationScore"]["parts"]
         }
-        self.assertEqual(parts["transport"]["reason"], "행당역 · 직선 420m")
-        self.assertEqual(parts["education"]["reason"], "행당초 · 320m 거리")
+        demand_details = {
+            row["key"]: row
+            for row in parts["demand"]["details"]
+        }
+        self.assertEqual(demand_details["station"]["reason"], "행당역 · 직선 420m")
+        self.assertEqual(demand_details["education"]["reason"], "행당초 · 320m 거리")
+
+    def test_apartment_location_score_refreshes_missing_jeonse_ratio(self):
+        entity = {
+            "name": "전세보강아파트",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "성북구",
+            "legalDong": "삼선동2가",
+            "jibun": "1",
+            "households": 864,
+            "approvedAt": "2008-01-01",
+        }
+        jeonse = {
+            "latestJeonseDepositEok": 6.1,
+            "latestJeonseDate": "2026-07-03",
+            "latestJeonseExclusiveArea": 59.9,
+            "medianJeonseDepositEok": 6.0,
+            "jeonseTransactionCount": 4,
+            "jeonseRatioPct": 64.9,
+            "jeonseSalePriceBasisEok": 9.4,
+            "jeonseSourceNote": "국토부 전월세 실거래가 최근 6개월 · 월세 제외",
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={"score": None},
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "jeonse_ratio_for_apartment",
+            return_value=jeonse,
+        ) as refresh:
+            payload, status = search_server._apartment_location_score({
+                "name": "전세보강아파트",
+                "region": "성북구",
+                "areaLabel": "전용 59㎡",
+                "currentEstimateMidPriceEok": 9.4,
+                "transactionCount": 6,
+                "signals": {"status": "insufficient"},
+            })
+
+        self.assertEqual(status, 200)
+        candidate = payload["candidate"]
+        self.assertEqual(candidate["jeonseRatioPct"], 64.9)
+        self.assertEqual(candidate["latestJeonseDepositEok"], 6.1)
+        parts = {row["key"]: row for row in candidate["locationScore"]["parts"]}
+        self.assertIn("전세가율 64.9%", parts["jeonse"]["reason"])
+        refresh.assert_called_once()
+        self.assertEqual(refresh.call_args.kwargs["area_label"], "전용 59㎡")
 
 
 if __name__ == "__main__":

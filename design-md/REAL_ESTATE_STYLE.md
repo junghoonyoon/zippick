@@ -54,6 +54,18 @@ Use a Korean financial-service visual language inspired by the clarity and comfo
 - Summary area: calm financial insight panel with large decision text and readable evidence.
 - Loading and progress states: restrained, direct, and status-oriented.
 
+## Loading Spinner Convention
+
+Use a spinner for every state where the user is waiting for data, calculation, or map/chart rendering.
+
+- `small`: 14px spinner for compact inline states such as button labels, badges, chips, and short one-line loading text.
+- `default`: 20px spinner for card or panel-level loading such as affordability calculations, report loading, and bottom-sheet content loading.
+- `large`: 32px spinner for full loading blocks, map placeholders, search result loading, and page-level progress states.
+
+Keep the spinner next to a short Korean status sentence. Do not show a spinner by itself unless the surrounding card already says what is being loaded.
+
+Use **판단불가** for data that cannot be scored because there is no usable source data. Do not label missing data as **낮음**, because that makes it sound like the apartment performed poorly.
+
 ## Candidate Chart
 
 Use this chart treatment for the expanded price-flow chart inside apartment result cards.

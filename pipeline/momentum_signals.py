@@ -868,6 +868,7 @@ def district_peer_reports(
                 "name": entity.get("name", ""),
                 "region": region,
                 "legalDong": entity.get("legalDong") or "",
+                "jibun": entity.get("jibun") or "",
                 "households": households,
                 "priceEok": price_eok,
                 "latestDealPriceEok": price_eok,

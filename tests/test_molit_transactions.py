@@ -210,6 +210,124 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(estimate["maxPriceEok"], 9.6)
         self.assertEqual(estimate["trimmedCount"], 2)
 
+    def test_rent_feed_parses_jeonse_and_monthly_contracts(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+        <response><header><resultCode>00</resultCode></header><body><items>
+          <item>
+            <아파트>테스트아파트</아파트><법정동>테스트동</법정동><지번>1</지번>
+            <전용면적>84.9</전용면적><층>10</층>
+            <년>2026</년><월>7</월><일>3</일>
+            <보증금액>74,000</보증금액><월세금액>0</월세금액>
+          </item>
+          <item>
+            <아파트>테스트아파트</아파트><법정동>테스트동</법정동><지번>1</지번>
+            <전용면적>84.9</전용면적><층>11</층>
+            <년>2026</년><월>7</월><일>4</일>
+            <보증금액>30,000</보증금액><월세금액>120</월세금액>
+          </item>
+        </items></body></response>"""
+
+        rows = molit_transactions._parse_items(
+            xml,
+            molit_transactions.TRANSACTION_KIND_RENT,
+        )
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0]["depositEok"], 7.4)
+        self.assertEqual(rows[0]["monthlyRentManwon"], 0)
+        self.assertEqual(rows[0]["rentType"], "전세")
+        self.assertEqual(rows[1]["rentType"], "월세")
+
+    def test_jeonse_payload_excludes_monthly_rent_from_ratio(self):
+        payload = molit_transactions._jeonse_payload(
+            "테스트아파트",
+            "테스트구",
+            "전용 84㎡",
+            6,
+            [
+                {"depositEok": 7.4, "monthlyRentManwon": 0, "dealDate": "2026-07-03", "exclusiveArea": 84.9, "floor": "10"},
+                {"depositEok": 3.0, "monthlyRentManwon": 120, "dealDate": "2026-07-04", "exclusiveArea": 84.9, "floor": "11"},
+            ],
+            sale_price_eok=12,
+        )
+
+        self.assertEqual(payload["latestJeonseDepositEok"], 7.4)
+        self.assertEqual(payload["jeonseTransactionCount"], 1)
+        self.assertEqual(payload["jeonseRatioPct"], 61.7)
+
+    def test_jeonse_payload_uses_latest_dated_jeonse_and_median(self):
+        payload = molit_transactions._jeonse_payload(
+            "테스트아파트",
+            "테스트구",
+            "전용 84㎡",
+            6,
+            [
+                {"depositEok": 7.0, "monthlyRentManwon": 0, "dealDate": "2026-05-03", "exclusiveArea": 84.9, "floor": "8"},
+                {"depositEok": 7.8, "monthlyRentManwon": 0, "dealDate": "2026-07-03", "exclusiveArea": 84.9, "floor": "10"},
+                {"depositEok": 7.4, "monthlyRentManwon": 0, "dealDate": "2026-06-03", "exclusiveArea": 84.9, "floor": "9"},
+            ],
+            sale_price_eok=12,
+        )
+
+        self.assertEqual(payload["latestJeonseDepositEok"], 7.8)
+        self.assertEqual(payload["latestJeonseDate"], "2026-07-03")
+        self.assertEqual(payload["medianJeonseDepositEok"], 7.4)
+        self.assertEqual(payload["jeonseRatioPct"], 65.0)
+
+    def test_rent_matching_keeps_selected_area_only_for_jeonse_ratio(self):
+        source = {
+            "필지고유번호": "1111010100100010000",
+            "대표단지명": "테스트아파트",
+            "법정동": "테스트동",
+            "지번": "1",
+        }
+        same_area = {
+            "apartment": "테스트아파트",
+            "legalDong": "테스트동",
+            "jibun": "1",
+            "exclusiveArea": 59.9,
+            "dealDate": "2026-07-04",
+            "depositEok": 5.4,
+            "depositManwon": 54000,
+            "monthlyRentManwon": 0,
+        }
+        other_area = {
+            "apartment": "테스트아파트",
+            "legalDong": "테스트동",
+            "jibun": "1",
+            "exclusiveArea": 84.9,
+            "dealDate": "2026-07-05",
+            "depositEok": 7.8,
+            "depositManwon": 78000,
+            "monthlyRentManwon": 0,
+        }
+        with mock.patch.object(
+            molit_transactions,
+            "_deal_months",
+            return_value=["202607"],
+        ):
+            rows = molit_transactions._matching_transactions(
+                [source],
+                "테스트아파트",
+                "전용 59㎡",
+                6,
+                {("11110", "202607"): [other_area, same_area]},
+            )
+
+        payload = molit_transactions._jeonse_payload(
+            "테스트아파트",
+            "테스트구",
+            "전용 59㎡",
+            6,
+            rows,
+            sale_price_eok=9,
+        )
+
+        self.assertEqual(rows, [same_area])
+        self.assertEqual(payload["latestJeonseExclusiveArea"], 59.9)
+        self.assertEqual(payload["latestJeonseDepositEok"], 5.4)
+        self.assertEqual(payload["jeonseRatioPct"], 60.0)
+
     def test_configured_stays_true_during_temporary_circuit_breaker(self):
         with mock.patch.object(molit_transactions.config, "MOLIT_APARTMENT_TRADE_API_KEY", "test-key"):
             molit_transactions._disable_temporarily("테스트 장애", seconds=60)

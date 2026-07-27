@@ -66,6 +66,7 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
         self.assertIn("하안주공13단지", names)
         self.assertTrue(all(row["legalDong"] == "하안동" for row in suggestions))
         self.assertTrue(all("하안동" in row["address"] for row in suggestions))
+        self.assertTrue(all(row["jibun"] in row["address"] for row in suggestions))
 
     def test_manual_alias_uses_complete_unique_source_complex(self):
         cases = {
@@ -109,6 +110,32 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
             with self.subTest(name=entity["name"]):
                 suggestions = real_estate_search.suggest_apartments(entity["name"])
                 self.assertTrue(all(row["region"] for row in suggestions))
+
+    def test_riversen_manual_and_presale_source_are_one_search_result(self):
+        suggestions = real_estate_search.suggest_apartments("리버센")
+        jungnang_rows = [
+            row for row in suggestions
+            if row["region"] == "중랑구" and row["legalDong"] == "중화동"
+        ]
+
+        self.assertEqual(len(jungnang_rows), 1)
+        self.assertEqual(jungnang_rows[0]["name"], "리버센SK뷰롯데캐슬")
+        self.assertEqual(jungnang_rows[0]["households"], 1055)
+        self.assertEqual(jungnang_rows[0]["status"], "분양권")
+
+    def test_presale_source_typo_uses_consistent_official_name(self):
+        for query in ("선샤인힐스", "션샤인힐스"):
+            with self.subTest(query=query):
+                suggestions = real_estate_search.suggest_apartments(query)
+                target_rows = [
+                    row for row in suggestions
+                    if row["region"] == "부천원미구" and row["legalDong"] == "원미동"
+                ]
+
+                self.assertEqual(len(target_rows), 1)
+                self.assertEqual(target_rows[0]["name"], "선샤인힐스")
+                self.assertEqual(target_rows[0]["households"], 26)
+                self.assertEqual(target_rows[0]["status"], "분양권")
 
 
 if __name__ == "__main__":

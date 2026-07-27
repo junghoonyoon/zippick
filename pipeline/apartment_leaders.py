@@ -54,14 +54,30 @@ MAX_RESULT_LIMIT = 50
 DEFAULT_CATEGORY = "price"
 NATIONAL_AREA_BUCKET = "70-89"
 NATIONAL_AREA_TARGET = 84.0
-# 국민평형으로 통용되는 전용 84.x㎡의 실제 거래만 사용한다. 다른 면적을
-# 비례 환산하지 않아 59㎡·77㎡·104㎡ 가격이 84㎡ 대장 순위에 섞이지 않는다.
-LEADER_AREA_MIN = 84.0
-LEADER_AREA_MAX = 85.0
+# 대장 탭은 대표 면적의 실제 거래만 사용한다. 다른 면적을 비례 환산하지
+# 않아 59㎡·77㎡·104㎡ 가격이 84㎡ 대장 순위에 섞이지 않는다.
+LEADER_AREA_PROFILES = {
+    "50-69": {
+        "target": 59.0,
+        "min": 59.0,
+        "max": 60.0,
+        "label": "최근 6개월 전용 59㎡ 실거래 중위가",
+        "rangeLabel": "전용 59.00㎡ 이상 60.00㎡ 미만",
+    },
+    "70-89": {
+        "target": 84.0,
+        "min": 84.0,
+        "max": 85.0,
+        "label": "최근 6개월 전용 84㎡ 실거래 중위가",
+        "rangeLabel": "전용 84.00㎡ 이상 85.00㎡ 미만",
+    },
+}
+LEADER_AREA_MIN = LEADER_AREA_PROFILES[NATIONAL_AREA_BUCKET]["min"]
+LEADER_AREA_MAX = LEADER_AREA_PROFILES[NATIONAL_AREA_BUCKET]["max"]
 LEADER_AREA_MIN_DEALS = 2
 LEADER_PRICE_AREA_EXPONENT = None
 LEADER_PRICE_LOOKBACK_MONTHS = 6
-NATIONAL_AREA_LABEL = "최근 6개월 전용 84㎡ 실거래 중위가"
+NATIONAL_AREA_LABEL = LEADER_AREA_PROFILES[NATIONAL_AREA_BUCKET]["label"]
 RANKABLE_PRESALE_STATUSES = frozenset(molit_transactions.PRESALE_STATUSES)
 
 
@@ -320,19 +336,45 @@ def _price_per_square_meter(row):
     return price / area if area > 0 and price > 0 else None
 
 
+def _leader_area_profile(bucket=DEFAULT_AREA_BUCKET):
+    profile = LEADER_AREA_PROFILES.get(bucket)
+    if profile:
+        return profile
+    bucket_info = AREA_BUCKETS.get(bucket) or AREA_BUCKETS[NATIONAL_AREA_BUCKET]
+    low = bucket_info.get("low")
+    high = bucket_info.get("high")
+    target = (
+        NATIONAL_AREA_TARGET
+        if low is None or high is None
+        else round((float(low) + float(high)) / 2, 1)
+    )
+    return {
+        "target": target,
+        "min": low,
+        "max": high,
+        "label": f"최근 6개월 {bucket_info['label']} 실거래 중위가",
+        "rangeLabel": bucket_info["label"],
+    }
+
+
 def _exact_area_trades(
     transactions,
     reference_month,
     months,
+    bucket=DEFAULT_AREA_BUCKET,
 ):
-    """지정 기간의 전용 84.x㎡ 실제 거래와 중앙 전용면적을 반환한다."""
+    """지정 기간의 선택 대표면적 실제 거래와 중앙 전용면적을 반환한다."""
+    profile = _leader_area_profile(bucket)
+    low = profile["min"]
+    high = profile["max"]
     start, end = _window_dates(reference_month, months)
     trades = []
     for row in transactions:
         area = float(row.get("exclusiveArea") or 0)
         if (
             not _valid_transaction(row)
-            or not LEADER_AREA_MIN <= area < LEADER_AREA_MAX
+            or (low is not None and area < float(low))
+            or (high is not None and area >= float(high))
             or not start <= datetime.date.fromisoformat(str(row["dealDate"])[:10]) <= end
         ):
             continue
@@ -346,21 +388,28 @@ def _exact_area_trades(
 def _leader_price_trades(
     transactions,
     reference_month,
+    bucket=DEFAULT_AREA_BUCKET,
 ):
-    """최근 6개월 전용 84.x㎡ 실제 거래와 중앙 전용면적을 반환한다."""
+    """최근 6개월 선택 대표면적 실제 거래와 중앙 전용면적을 반환한다."""
     return _exact_area_trades(
         transactions,
         reference_month,
         LEADER_PRICE_LOOKBACK_MONTHS,
+        bucket,
     )
 
 
-def _leader_adjusted_price(row, target_area=NATIONAL_AREA_TARGET):
-    """호환용 헬퍼. 대장 가격은 면적 보정 없이 84.x㎡ 실거래가를 그대로 쓴다."""
+def _leader_adjusted_price(row, target_area=NATIONAL_AREA_TARGET, bucket=NATIONAL_AREA_BUCKET):
+    """호환용 헬퍼. 대장 가격은 면적 보정 없이 대표면적 실거래가를 그대로 쓴다."""
     del target_area
+    profile = _leader_area_profile(bucket)
     area = float(row.get("exclusiveArea") or 0)
     price = float(row.get("dealAmountManwon") or 0)
-    if not LEADER_AREA_MIN <= area < LEADER_AREA_MAX or price <= 0:
+    if (
+        (profile["min"] is not None and area < float(profile["min"]))
+        or (profile["max"] is not None and area >= float(profile["max"]))
+        or price <= 0
+    ):
         return None
     return price
 
@@ -524,23 +573,32 @@ def _base_metrics(
     reference_month,
     bucket,
 ):
-    # 대장 페이지의 가격·상승률·거래량·신뢰도를 모두 동일한 84.x㎡ 실제
-    # 거래로 계산한다. bucket은 이전 API 호환을 위해 인자로만 유지한다.
-    del bucket
+    # 대장 페이지의 가격·상승률·거래량·신뢰도를 모두 선택 대표면적의
+    # 실제 거래로 계산한다. 면적 환산은 하지 않는다.
+    area_profile = _leader_area_profile(bucket)
     trades12, _representative_area12 = _exact_area_trades(
         transactions,
         reference_month,
         12,
+        bucket,
     )
     leader_price_trades, leader_representative_area = _leader_price_trades(
         transactions,
         reference_month,
+        bucket,
     )
     start24, end24 = _window_dates(reference_month, 24)
     trades24 = [
         row for row in transactions
         if _valid_transaction(row)
-        and LEADER_AREA_MIN <= float(row.get("exclusiveArea") or 0) < LEADER_AREA_MAX
+        and (
+            area_profile["min"] is None
+            or float(row.get("exclusiveArea") or 0) >= float(area_profile["min"])
+        )
+        and (
+            area_profile["max"] is None
+            or float(row.get("exclusiveArea") or 0) < float(area_profile["max"])
+        )
         and start24 <= datetime.date.fromisoformat(str(row["dealDate"])[:10]) <= end24
     ]
     prices = [float(row["dealAmountManwon"]) for row in trades12]
@@ -655,9 +713,9 @@ def _base_metrics(
             round(statistics.median(leader_actual_prices), 1)
             if leader_actual_prices else None
         ),
-        "leaderPriceAdjustmentTargetArea": NATIONAL_AREA_TARGET,
+        "leaderPriceAdjustmentTargetArea": area_profile["target"],
         "leaderPriceAdjustmentExponent": LEADER_PRICE_AREA_EXPONENT,
-        "leaderPriceBasisLabel": NATIONAL_AREA_LABEL,
+        "leaderPriceBasisLabel": area_profile["label"],
         "leaderPriceTransactionCount6m": leader_price_count,
         "leaderPriceTransactionCount12m": leader_price_count,
         "leaderPriceConfidenceScore": leader_price_confidence_score,
@@ -1100,8 +1158,8 @@ def calculate_rankings_from_pairs(
         "referenceMonth": reference,
         "areaBucket": area_bucket_value,
         "areaBucketLabel": AREA_BUCKETS[area_bucket_value]["label"],
-        "areaTarget": NATIONAL_AREA_TARGET,
-        "leaderPriceBasisLabel": NATIONAL_AREA_LABEL,
+        "areaTarget": _leader_area_profile(area_bucket_value)["target"],
+        "leaderPriceBasisLabel": _leader_area_profile(area_bucket_value)["label"],
         "calculationVersion": CALCULATION_VERSION,
         "lookbackMonths": 12,
         "priceLookbackMonths": LEADER_PRICE_LOOKBACK_MONTHS,
