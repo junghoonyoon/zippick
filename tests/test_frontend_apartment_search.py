@@ -3105,7 +3105,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(sort_match)
         sort_body = sort_match.group("body")
         for label in (
-            "종합 정보 높은 순",
+            "종합 점수 높은 순",
             "시장 신호 강한 순",
             "지역보다 많이 움직인 순",
             "예산에 가까운 순",
