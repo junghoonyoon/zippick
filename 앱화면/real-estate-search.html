@@ -4809,6 +4809,7 @@
     } catch (_) {}
     const naverReturnStateKey = "realEstateSearch.naverReturn.v1";
     const naverReturnBackupKey = "realEstateSearch.naverReturn.backup.v1";
+    const naverReturnHistoryStateKey = "realEstateSearchNaverReturn";
     const naverReturnStateTtlMs = 30 * 60 * 1000;
     const refreshPageStateKey = "realEstateSearch.refreshPage.v1";
     const refreshPageStateTtlMs = 30 * 60 * 1000;
@@ -5249,25 +5250,47 @@
       try {
         const serialized = JSON.stringify(payload);
         sessionStorage.setItem(naverReturnStateKey, serialized);
+      } catch (_) {}
+      try {
+        const serialized = JSON.stringify(payload);
         localStorage.setItem(naverReturnBackupKey, serialized);
+      } catch (_) {}
+      try {
+        history.replaceState(
+          { ...(history.state || {}), [naverReturnHistoryStateKey]:payload },
+          "",
+          window.location.href,
+        );
       } catch (_) {}
     }
     function restoreNaverReturnState() {
-      let saved = null;
+      const candidates = [];
       try {
-        saved = JSON.parse(sessionStorage.getItem(naverReturnStateKey) || "null");
+        const saved = JSON.parse(sessionStorage.getItem(naverReturnStateKey) || "null");
+        if (saved) candidates.push(saved);
         sessionStorage.removeItem(naverReturnStateKey);
       } catch (_) {
-        saved = null;
       }
-      if (!saved) {
-        try {
-          saved = JSON.parse(localStorage.getItem(naverReturnBackupKey) || "null");
-        } catch (_) {
-          saved = null;
-        }
+      try {
+        const saved = JSON.parse(localStorage.getItem(naverReturnBackupKey) || "null");
+        if (saved) candidates.push(saved);
+      } catch (_) {
       }
       try { localStorage.removeItem(naverReturnBackupKey); } catch (_) {}
+      try {
+        const saved = history.state?.[naverReturnHistoryStateKey];
+        if (saved) candidates.push(saved);
+        if (saved) {
+          const nextState = { ...(history.state || {}) };
+          delete nextState[naverReturnHistoryStateKey];
+          history.replaceState(nextState, "", window.location.href);
+        }
+      } catch (_) {}
+      const freshCandidates = candidates
+        .filter(item => item && typeof item === "object")
+        .filter(item => Date.now() - Number(item.savedAt || 0) <= naverReturnStateTtlMs)
+        .sort((a, b) => Number(b.savedAt || 0) - Number(a.savedAt || 0));
+      const saved = freshCandidates[0];
       if (!saved || typeof saved !== "object" || Date.now() - Number(saved.savedAt || 0) > naverReturnStateTtlMs) return false;
 
       if (!currentBudgetData && saved.currentBudgetData) {
@@ -9774,12 +9797,9 @@
       });
       saveNaverReturnState();
       if (!isPlainPrimaryClick(event)) return false;
+      if (isMobileNaverInAppView()) return false;
       event.preventDefault();
-      if (isMobileNaverInAppView()) {
-        window.location.assign(link.href);
-      } else {
-        window.open(link.href, "_blank", "noopener,noreferrer");
-      }
+      window.open(link.href, "_blank", "noopener,noreferrer");
       return true;
     }
 
@@ -9889,6 +9909,7 @@
       const source = item?.jeonseSourceNote || "국토부 전월세 실거래가 · 월세 제외";
       const hasRatio = Number.isFinite(ratio) && ratio > 0;
       const hasDeposit = Number.isFinite(latestDeposit) && latestDeposit > 0;
+      const estimated = status === "estimated";
       if (!hasRatio && !hasDeposit && !(count > 0)) {
         const missingCopy = ["api_error", "key_missing"].includes(status)
           ? "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요."
@@ -9910,21 +9931,21 @@
         ? Math.max(0, saleBasis - latestDeposit)
         : null;
       const basisCopy = [
-        hasDeposit ? `최근 전세 ${transactionMoney(latestDeposit)}` : "",
+        hasDeposit ? `${estimated ? "추정 전세" : "최근 전세"} ${transactionMoney(latestDeposit)}` : "",
         date,
         Number.isFinite(area) && area > 0 ? `전용 ${area.toFixed(1).replace(/\.0$/, "")}㎡` : "",
       ].filter(Boolean).join(" · ");
       const metrics = [
-        ["최근 전세", hasDeposit ? transactionMoney(latestDeposit) : "확인 중"],
+        [estimated ? "추정 전세" : "최근 전세", hasDeposit ? transactionMoney(latestDeposit) : "확인 중"],
         ["매매 기준", Number.isFinite(saleBasis) && saleBasis > 0 ? transactionMoney(saleBasis) : "확인 중"],
         ["필요 투자금", investmentGap !== null ? transactionMoney(investmentGap) : "계산 전"],
-        ["전세 표본", count > 0 ? `${Math.round(count)}건${Number.isFinite(medianDeposit) && medianDeposit > 0 ? ` · 중앙 ${transactionMoney(medianDeposit)}` : ""}` : "표본 없음"],
+        ["전세 표본", estimated ? "추정값" : count > 0 ? `${Math.round(count)}건${Number.isFinite(medianDeposit) && medianDeposit > 0 ? ` · 중앙 ${transactionMoney(medianDeposit)}` : ""}` : "표본 없음"],
       ];
       return `<section class="location-score-jeonse" aria-label="전세가율 요약">
         <div class="location-score-jeonse-head">
           <div>
-            <h5 class="location-score-jeonse-title">전세 실거래 기준</h5>
-            <p class="location-score-jeonse-copy">${esc(basisCopy || "같은 평형 전세 실거래 기준이에요.")}</p>
+            <h5 class="location-score-jeonse-title">${estimated ? "전세 추정 기준" : "전세 실거래 기준"}</h5>
+            <p class="location-score-jeonse-copy">${esc(basisCopy || (estimated ? "실거래가 없어서 임시 추정했어요." : "같은 평형 전세 실거래 기준이에요."))}</p>
           </div>
           <strong class="location-score-jeonse-ratio">${hasRatio ? `${esc(ratio.toFixed(1).replace(/\.0$/, ""))}%` : "계산 전"}</strong>
         </div>

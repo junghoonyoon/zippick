@@ -109,6 +109,32 @@ class LocationScoresTest(unittest.TestCase):
             for detail in part["details"]
         ))
 
+    def test_jeonse_and_investment_gap_are_estimated_when_rent_data_is_missing(self):
+        row = {
+            "name": "전세추정아파트",
+            "displayName": "전세추정아파트",
+            "province": "서울특별시",
+            "region": "성북구",
+            "currentEstimateMidPriceEok": 10.0,
+            "latestDealPriceEok": 9.8,
+            "transactionCount": 6,
+            "signals": {"status": "insufficient"},
+        }
+
+        result = location_scores.score_for_candidate(row, self.entity)
+
+        self.assertEqual(row["jeonseDataStatus"], "estimated")
+        self.assertEqual(row["jeonseRatioPct"], 55.0)
+        self.assertEqual(row["latestJeonseDepositEok"], 5.5)
+        self.assertIn("임시 추정", row["jeonseSourceNote"])
+        parts = {part["key"]: part for part in result["parts"]}
+        self.assertEqual(parts["jeonse"]["status"], "ok")
+        self.assertIn("추정 전세가율 55%", parts["jeonse"]["reason"])
+        details = {detail["key"]: detail for detail in parts["jeonse"]["details"]}
+        self.assertEqual(details["jeonse_ratio"]["status"], "ok")
+        self.assertEqual(details["investment_gap"]["status"], "ok")
+        self.assertIn("추정 필요한 내 돈 4.5억원", details["investment_gap"]["reason"])
+
     def test_region_status_price_reason_names_the_price_basis(self):
         row = {
             "name": "가격근거아파트",

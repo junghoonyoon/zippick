@@ -1209,12 +1209,14 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         self.assertEqual(status, 200)
         candidate = payload["candidate"]
-        self.assertEqual(candidate["jeonseDataStatus"], "api_error")
-        self.assertEqual(
-            candidate["jeonseSourceNote"],
-            "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요.",
-        )
+        self.assertEqual(candidate["jeonseDataStatus"], "estimated")
+        self.assertEqual(candidate["jeonseRatioPct"], 55.0)
+        self.assertEqual(candidate["latestJeonseDepositEok"], 5.17)
+        self.assertIn("임시 추정", candidate["jeonseSourceNote"])
         self.assertNotIn("API 권한", candidate["jeonseSourceNote"])
+        parts = {row["key"]: row for row in candidate["locationScore"]["parts"]}
+        self.assertEqual(parts["jeonse"]["status"], "ok")
+        self.assertIn("추정 전세가율 55%", parts["jeonse"]["reason"])
 
 
 if __name__ == "__main__":

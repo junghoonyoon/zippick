@@ -4,6 +4,7 @@ set -euo pipefail
 readonly EXE_DEV_HOST="${EXE_DEV_HOST:-maesuhalkkayo.exe.xyz}"
 readonly EXE_DEV_DEPLOY_COMMAND="${EXE_DEV_DEPLOY_COMMAND:-/home/exedev/bin/deploy-zippick}"
 readonly REQUIRED_BRANCH="${EXE_DEV_BRANCH:-main}"
+readonly EXE_DEV_PUBLIC_URL="${EXE_DEV_PUBLIC_URL:-https://maesuhalkkayo.exe.xyz}"
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || {
   echo "오류: Git 저장소 안에서 실행해야 합니다." >&2
@@ -36,7 +37,10 @@ if [[ "$local_commit" != "$github_commit" ]]; then
   exit 1
 fi
 
-echo "[2/3] exe.dev에 GitHub 커밋 배포: ${local_commit:0:12}"
+echo "[2/4] exe.dev에 GitHub 커밋 배포: ${local_commit:0:12}"
 ssh -o BatchMode=yes "$EXE_DEV_HOST" "$EXE_DEV_DEPLOY_COMMAND" "$local_commit"
 
-echo "[3/3] 배포 완료: ${local_commit:0:12}"
+echo "[3/4] 운영 API 확인"
+python3 scripts/verify-exe-dev-apis.py "$EXE_DEV_PUBLIC_URL"
+
+echo "[4/4] 배포 완료: ${local_commit:0:12}"
