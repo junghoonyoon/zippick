@@ -1347,10 +1347,16 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("geocodeCandidate(geocoder, kakao, mapItem)", focus_body)
         self.assertIn("appendCandidateMapEntry(kakao, mapItem, position)", focus_body)
         self.assertIn("selectCandidateMapItem(entry.item)", focus_body)
+        self.assertIn("const existing = candidateMapEntryForApartment(target);", focus_body)
+        self.assertIn("legalDong:String(resolved.legalDong || target.legalDong || \"\").trim()", focus_body)
+        self.assertIn("jibun:String(resolved.jibun || target.jibun || \"\").trim()", focus_body)
         self.assertIn("aptSearchInput.value = name;", navigation_body)
         self.assertIn('candidateViewMode === "map" && candidateMap', navigation_body)
-        self.assertIn("await focusCandidateMapLeader(name, region);", navigation_body)
-        self.assertIn("await runApartmentResultSearch({ name, region });", navigation_body)
+        self.assertIn("await focusCandidateMapLeader(target);", navigation_body)
+        self.assertIn("await runApartmentResultSearch(target);", navigation_body)
+        self.assertIn("leaderSearchLegalDong", navigation_body)
+        self.assertIn("leaderSearchJibun", navigation_body)
+        self.assertIn("leaderSearchApartmentId", navigation_body)
 
     def test_map_geocode_cache_uses_complex_identity_not_only_address(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -1374,6 +1380,26 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("item.legalDong || item.dong", cache_body)
         self.assertIn("item.jibun", cache_body)
         self.assertIn("realEstateSearch.mapGeocode.v2", html)
+        identity_match = re.search(
+            r"function candidateIdentityKey\b(?P<body>.*?)"
+            r"\n    function candidatePeerArea",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(identity_match)
+        identity_body = identity_match.group("body")
+        self.assertIn("item.apartmentId || item.kaptCode || item.complexNo", identity_body)
+        self.assertIn("item.legalDong || item.dong", identity_body)
+        self.assertIn("item.jibun", identity_body)
+        same_match = re.search(
+            r"function sameCandidateIdentity\b(?P<body>.*?)"
+            r"\n    function syncAptSearchCandidateData",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(same_match)
+        self.assertIn("leftDong && rightDong && leftDong !== rightDong", same_match.group("body"))
+        self.assertIn("leftJibun && rightJibun && leftJibun !== rightJibun", same_match.group("body"))
         self.assertIn("inKoreaMetroBounds", coordinates_match.group("body"))
 
     def test_region_leader_area_field_switches_list_and_detail_area(self):
@@ -1417,8 +1443,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('data-leader-detail-area-target="${esc(detailAreaTarget)}"', html)
         self.assertIn('data-leader-detail-legal-dong="${esc(item.dong || "")}"', html)
         self.assertIn('data-leader-detail-jibun="${esc(item.jibun || "")}"', html)
+        self.assertIn('data-leader-detail-apartment-id="${esc(item.apartmentId || "")}"', html)
         self.assertIn("legalDong:detail.dataset.leaderDetailLegalDong || \"\"", html)
         self.assertIn("jibun:detail.dataset.leaderDetailJibun || \"\"", html)
+        self.assertIn("apartmentId:detail.dataset.leaderDetailApartmentId || \"\"", html)
         self.assertIn('data-leader-map-detail ${detailAttrs}', html)
         self.assertGreaterEqual(html.count("preferredArea:detail.dataset.leaderDetailAreaTarget || leaderAreaProfile().target"), 2)
 

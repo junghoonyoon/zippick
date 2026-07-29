@@ -6253,7 +6253,7 @@
         ? ` id="leader-winner-toggle" data-leader-winner-toggle aria-controls="leader-winner-body-${esc(view.rank)}"`
         : "";
       const detailAreaTarget = leaderSelectedAreaTarget(payload);
-      const detailAttrs = `data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-legal-dong="${esc(item.dong || "")}" data-leader-detail-jibun="${esc(item.jibun || "")}" data-leader-detail-area-target="${esc(detailAreaTarget)}"`;
+      const detailAttrs = `data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-legal-dong="${esc(item.dong || "")}" data-leader-detail-jibun="${esc(item.jibun || "")}" data-leader-detail-apartment-id="${esc(item.apartmentId || "")}" data-leader-detail-area-target="${esc(detailAreaTarget)}"`;
       return `<${rootTag} class="${rootClasses}"${rootAttributes}>
         ${showTop ? `<${topTag} class="leader-winner-top"${topAttributes}>
           <div>
@@ -6301,6 +6301,7 @@
         name:item.apartmentName || item.marketLeaderName || "",
         region:item.sigungu || "",
         legalDong:item.dong || "",
+        apartmentId:item.apartmentId || "",
         displayAreaLabel:`${Number(item.rank || 0)}위 · ${areaLabel}`,
         areaLabel:`${Number(item.rank || 0)}위 · ${areaLabel}`,
         latestDealPriceEok:priceEok,
@@ -6326,7 +6327,7 @@
       const view = leaderRankPresentation(item, currentLeaderPayload || {});
       const candidate = leaderMapCandidate(item);
       const detailAreaTarget = leaderSelectedAreaTarget(currentLeaderPayload);
-      const detailAttrs = `data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-legal-dong="${esc(item.dong || "")}" data-leader-detail-jibun="${esc(item.jibun || "")}" data-leader-detail-area-target="${esc(detailAreaTarget)}"`;
+      const detailAttrs = `data-leader-detail-name="${esc(item.apartmentName)}" data-leader-detail-region="${esc(item.sigungu || "")}" data-leader-detail-households="${esc(item.householdCount || 0)}" data-leader-detail-legal-dong="${esc(item.dong || "")}" data-leader-detail-jibun="${esc(item.jibun || "")}" data-leader-detail-apartment-id="${esc(item.apartmentId || "")}" data-leader-detail-area-target="${esc(detailAreaTarget)}"`;
       leaderMapPreview.innerHTML = `<button class="candidate-map-sheet-handle" type="button" data-candidate-map-sheet-handle aria-expanded="false" aria-label="지도 상세 카드 펼치기"></button>
         <div class="candidate-map-sheet-content">
           <div class="candidate-top">
@@ -8100,8 +8101,12 @@
         region,
         leader,
         leaderName:leader ? leaderName : "",
+        leaderLegalDong:leader ? String(item.signals?.leaderLegalDong || "") : "",
+        leaderJibun:leader ? String(item.signals?.leaderJibun || "") : "",
         districtLeader,
         districtLeaderName:districtLeader ? districtLeaderName : "",
+        districtLeaderLegalDong:districtLeader ? String(item.signals?.districtLeaderLegalDong || "") : "",
+        districtLeaderJibun:districtLeader ? String(item.signals?.districtLeaderJibun || "") : "",
         districtLeaderSharesLocality,
         comparisonNotices,
         comparisonPending:Boolean(item.leaderComparisonPending),
@@ -8415,10 +8420,10 @@
         </div>
         ${series.region ? `<span class="spark-legend-item" aria-label="${esc(`${summary.regionLabel} ${sparklineTrendRateText(summary.regionValue)}`)}"><i class="spark-dot spark-region" aria-hidden="true"></i>${esc(summary.regionLabel)} ${sparkLegendRateHtml(summary.regionValue)}</span>` : ""}
         ${!item.signals?.isRegionalLeader && series.leader ? `<div class="spark-leader-group">
-          <button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.leaderName)}" data-leader-search-region="${esc(leaderSearchRegion)}" aria-label="${esc(`${series.leaderName} ${sharedLeaderRegionName} 대장 검색, ${sparklineTrendRateText(summary.leaderValue)}`)}"><i class="spark-dot spark-leader" aria-hidden="true"></i>${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.leaderValue)}</button>
+          <button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.leaderName)}" data-leader-search-region="${esc(leaderSearchRegion)}" data-leader-search-legal-dong="${esc(series.leaderLegalDong || "")}" data-leader-search-jibun="${esc(series.leaderJibun || "")}" aria-label="${esc(`${series.leaderName} ${sharedLeaderRegionName} 대장 검색, ${sparklineTrendRateText(summary.leaderValue)}`)}"><i class="spark-dot spark-leader" aria-hidden="true"></i>${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.leaderValue)}</button>
           ${leaderFormula}
         </div>` : (selfLeaderRegionName ? "" : leaderFormula)}
-        ${item.signals?.isDistrictLeader ? "" : series.districtLeader ? `<button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.districtLeaderName)}" data-leader-search-region="${esc(districtLeaderRegionName)}" aria-label="${esc(`${series.districtLeaderName} ${districtLeaderRegionName} 대장 검색, ${sparklineTrendRateText(summary.districtLeaderValue)}`)}"><i class="spark-dot spark-district-leader" aria-hidden="true"></i>${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.districtLeaderValue)}</button>` : ""}
+        ${item.signals?.isDistrictLeader ? "" : series.districtLeader ? `<button class="spark-legend-item spark-leader-search" type="button" data-leader-search-name="${esc(series.districtLeaderName)}" data-leader-search-region="${esc(districtLeaderRegionName)}" data-leader-search-legal-dong="${esc(series.districtLeaderLegalDong || "")}" data-leader-search-jibun="${esc(series.districtLeaderJibun || "")}" aria-label="${esc(`${series.districtLeaderName} ${districtLeaderRegionName} 대장 검색, ${sparklineTrendRateText(summary.districtLeaderValue)}`)}"><i class="spark-dot spark-district-leader" aria-hidden="true"></i>${esc(series.districtLeaderName)} · ${esc(districtLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.districtLeaderValue)}</button>` : ""}
       </div>`;
     }
 
@@ -10067,6 +10072,12 @@
       const leftName = compactText(candidateDisplayName(left));
       const rightName = compactText(candidateDisplayName(right));
       if (!leftName || leftName !== rightName) return false;
+      const leftDong = compactText(left.legalDong || left.dong || "");
+      const rightDong = compactText(right.legalDong || right.dong || "");
+      if (leftDong && rightDong && leftDong !== rightDong) return false;
+      const leftJibun = compactText(left.jibun || "");
+      const rightJibun = compactText(right.jibun || "");
+      if (leftJibun && rightJibun && leftJibun !== rightJibun) return false;
       const leftRegion = compactText(left.region || left.displayRegion || left.address || "");
       const rightRegion = compactText(right.region || right.displayRegion || right.address || "");
       if (!leftRegion || !rightRegion) return true;
@@ -12484,8 +12495,11 @@
 
     function candidateIdentityKey(item) {
       return encodeURIComponent([
+        item.apartmentId || item.kaptCode || item.complexNo || "",
         item.region || "",
         item.name || candidateDisplayName(item),
+        item.legalDong || item.dong || "",
+        item.jibun || "",
         item.areaLabel || item.displayAreaLabel || "",
       ].join("\u001f"));
     }
@@ -15967,6 +15981,7 @@
         name,
         region:String(selectedItem?.region || ""),
         address:String(selectedItem?.address || ""),
+        apartmentId:String(selectedItem?.apartmentId || ""),
         households:Number(selectedItem?.households || 0),
         status:String(selectedItem?.status || ""),
       };
@@ -15980,6 +15995,7 @@
       const selectedRegion = String(selectedItem.region || "");
       const selectedDong = String(selectedItem.legalDong || "");
       const selectedJibun = String(selectedItem.jibun || "");
+      const selectedApartmentId = String(selectedItem.apartmentId || "");
       const regionMatches = (left, right) => {
         const leftKey = compactText(left);
         const rightKey = compactText(right);
@@ -15988,6 +16004,7 @@
       const exactSelectedItems = items.filter(item => (
         String(item.name || "") === selectedName
         && regionMatches(item.region || item.address || item.displayRegion || "", selectedRegion)
+        && (!selectedApartmentId || String(item.apartmentId || "") === selectedApartmentId)
         && (!selectedDong || String(item.legalDong || "") === selectedDong)
         && (!selectedJibun || String(item.jibun || "") === selectedJibun)
       ));
@@ -16003,6 +16020,7 @@
           displayRegion:String(exact.displayRegion || exact.address || selectedItem.displayRegion || selectedItem.address || selectedItem.region || ""),
           legalDong:String(exact.legalDong || selectedItem.legalDong || ""),
           jibun:String(exact.jibun || selectedItem.jibun || ""),
+          apartmentId:String(exact.apartmentId || selectedItem.apartmentId || ""),
           households:Number(exact.households || selectedItem.households || 0),
           status:String(exact.status || selectedItem.status || ""),
           signals:selectedSignals || exact.signals || {},
@@ -16101,6 +16119,7 @@
         address:String(item?.address || "").trim(),
         legalDong:String(item?.legalDong || item?.dong || "").trim(),
         jibun:String(item?.jibun || "").trim(),
+        apartmentId:String(item?.apartmentId || "").trim(),
         households:Number(item?.households || 0),
         status:String(item?.status || "").trim(),
         preferredArea:String(item?.preferredArea || "").trim(),
@@ -16140,12 +16159,23 @@
       };
     }
 
-    function candidateMapEntryForApartment(name, region = "") {
-      const targetName = compactText(name);
-      const targetRegion = compactText(region);
-      const nameMatches = candidateMapEntries.filter(entry => (
-        compactText(candidateDisplayName(entry.item)) === targetName
-      ));
+    function candidateMapEntryForApartment(target = {}) {
+      const targetKey = candidateIdentityKey(target);
+      if (targetKey) {
+        const exact = candidateMapEntries.find(entry => candidateIdentityKey(entry.item) === targetKey);
+        if (exact) return exact;
+      }
+      const targetName = compactText(target.name || candidateDisplayName(target));
+      const targetRegion = compactText(target.region || target.displayRegion || target.address || "");
+      const targetDong = compactText(target.legalDong || target.dong || "");
+      const targetJibun = compactText(target.jibun || "");
+      const nameMatches = candidateMapEntries.filter(entry => {
+        const item = entry.item || {};
+        if (compactText(candidateDisplayName(item)) !== targetName) return false;
+        if (targetDong && compactText(item.legalDong || item.dong || "") !== targetDong) return false;
+        if (targetJibun && compactText(item.jibun || "") !== targetJibun) return false;
+        return true;
+      });
       if (!targetRegion || nameMatches.length < 2) return nameMatches[0] || null;
       return nameMatches.find(entry => {
         const itemRegion = compactText(entry.item.region || entry.item.displayRegion || entry.item.address || "");
@@ -16160,8 +16190,10 @@
       caption.hidden = !message;
     }
 
-    async function focusCandidateMapLeader(name, region = "") {
-      const existing = candidateMapEntryForApartment(name, region);
+    async function focusCandidateMapLeader(target = {}) {
+      const name = String(target?.name || "").trim();
+      const region = String(target?.region || "").trim();
+      const existing = candidateMapEntryForApartment(target);
       if (existing) {
         selectCandidateMapItem(existing.item);
         return true;
@@ -16184,12 +16216,18 @@
         if (!resolved) throw new Error("대장 단지를 찾지 못했어요.");
 
         let mapItem = {
+          ...target,
           ...resolved,
           name:String(resolved.name || name).trim(),
           region:String(resolved.region || region).trim(),
+          legalDong:String(resolved.legalDong || target.legalDong || "").trim(),
+          jibun:String(resolved.jibun || target.jibun || "").trim(),
           mapAddress:candidateMapAddress({
+            ...target,
             ...resolved,
             region:String(resolved.region || region).trim(),
+            legalDong:String(resolved.legalDong || target.legalDong || "").trim(),
+            jibun:String(resolved.jibun || target.jibun || "").trim(),
           }),
         };
         const kakao = await loadMapApi();
@@ -16221,21 +16259,27 @@
     }
 
     async function runLeaderApartmentSearch(trigger) {
-      const name = String(trigger?.dataset?.leaderSearchName || "").trim();
-      const region = String(trigger?.dataset?.leaderSearchRegion || "").trim();
+      const target = {
+        name:String(trigger?.dataset?.leaderSearchName || trigger?.dataset?.leaderDetailName || "").trim(),
+        region:String(trigger?.dataset?.leaderSearchRegion || trigger?.dataset?.leaderDetailRegion || "").trim(),
+        legalDong:String(trigger?.dataset?.leaderSearchLegalDong || trigger?.dataset?.leaderDetailLegalDong || "").trim(),
+        jibun:String(trigger?.dataset?.leaderSearchJibun || trigger?.dataset?.leaderDetailJibun || "").trim(),
+        apartmentId:String(trigger?.dataset?.leaderSearchApartmentId || trigger?.dataset?.leaderDetailApartmentId || "").trim(),
+      };
+      const name = target.name;
       if (!name) return;
       aptSearchInput.value = name;
       hideAptSuggest();
       if (candidateViewMode === "map" && candidateMap) {
         trigger?.setAttribute("aria-busy", "true");
         try {
-          await focusCandidateMapLeader(name, region);
+          await focusCandidateMapLeader(target);
         } finally {
           trigger?.removeAttribute("aria-busy");
         }
         return;
       }
-      await runApartmentResultSearch({ name, region });
+      await runApartmentResultSearch(target);
     }
 
     const aptReportCache = new Map();
@@ -17550,6 +17594,7 @@
         region:detail.dataset.leaderDetailRegion || "",
         legalDong:detail.dataset.leaderDetailLegalDong || "",
         jibun:detail.dataset.leaderDetailJibun || "",
+        apartmentId:detail.dataset.leaderDetailApartmentId || "",
         households:Number(detail.dataset.leaderDetailHouseholds || 0),
         preferredArea:detail.dataset.leaderDetailAreaTarget || leaderAreaProfile().target,
       });
@@ -17593,6 +17638,7 @@
         region:detail.dataset.leaderDetailRegion || "",
         legalDong:detail.dataset.leaderDetailLegalDong || "",
         jibun:detail.dataset.leaderDetailJibun || "",
+        apartmentId:detail.dataset.leaderDetailApartmentId || "",
         households:Number(detail.dataset.leaderDetailHouseholds || 0),
         preferredArea:detail.dataset.leaderDetailAreaTarget || leaderAreaProfile().target,
       });
