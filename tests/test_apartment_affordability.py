@@ -1157,6 +1157,83 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertIn("전세가율 61.7%", parts["jeonse"]["reason"])
         cached_refresh.assert_called_once()
 
+    def test_apartment_location_score_uses_bundled_rent_snapshot_when_live_rent_api_fails(self):
+        entity = {
+            "name": "전세저장아파트",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "성북구",
+            "legalDong": "길음동",
+            "jibun": "1281",
+            "households": 1605,
+            "approvedAt": "2010-01-01",
+        }
+        bundled = {
+            "latestJeonseDepositEok": 6.7,
+            "latestJeonseDate": "2026-07-25",
+            "medianJeonseDepositEok": 4.71,
+            "minJeonseDepositEok": 3.4,
+            "maxJeonseDepositEok": 6.7,
+            "jeonseTransactionCount": 18,
+            "jeonseRatioPct": 71.3,
+            "jeonseSalePriceBasisEok": 9.4,
+            "jeonseSourceNote": "국토부 전월세 실거래가 최근 6개월 저장 요약 · 월세 제외",
+        }
+
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            search_server.education_environment,
+            "education_environment_for_entity",
+            return_value={"score": None},
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "jeonse_ratio_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "last_error",
+            return_value="전월세 API 확인 실패",
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "cached_jeonse_ratio_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "bundled_jeonse_ratio_for_apartment",
+            return_value=bundled,
+        ):
+            payload, status = search_server._apartment_location_score({
+                "name": "전세저장아파트",
+                "region": "성북구",
+                "areaLabel": "전용 59㎡",
+                "currentEstimateMidPriceEok": 9.4,
+                "transactionCount": 6,
+                "signals": {"status": "insufficient"},
+            })
+
+        self.assertEqual(status, 200)
+        candidate = payload["candidate"]
+        self.assertEqual(candidate["jeonseDataStatus"], "bundled")
+        self.assertEqual(candidate["jeonseRatioPct"], 71.3)
+        self.assertEqual(candidate["latestJeonseDepositEok"], 6.7)
+        self.assertIn("저장된 국토부 전세 실거래", candidate["jeonseSourceNote"])
+        parts = {row["key"]: row for row in candidate["locationScore"]["parts"]}
+        details = {row["key"]: row for row in parts["jeonse"]["details"]}
+        self.assertEqual(details["jeonse_ratio"]["status"], "ok")
+        self.assertEqual(details["investment_gap"]["status"], "ok")
+        self.assertIn("전세가율 71.3%", parts["jeonse"]["reason"])
+
     def test_apartment_location_score_does_not_estimate_when_live_rent_api_fails(self):
         entity = {
             "name": "전세권한아파트",
@@ -1196,6 +1273,10 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         ), mock.patch.object(
             search_server.molit_transactions,
             "cached_jeonse_ratio_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "bundled_jeonse_ratio_for_apartment",
             return_value=None,
         ):
             payload, status = search_server._apartment_location_score({

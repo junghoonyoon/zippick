@@ -1086,6 +1086,20 @@ def _apply_jeonse_snapshot(row, entity):
         row["jeonseDataStatus"] = "sale_price_missing"
         row["jeonseSourceNote"] = "전세가율 계산에 쓸 매매 기준가가 아직 없어요."
         return row
+    def apply_packaged_snapshot():
+        packaged = molit_transactions.bundled_jeonse_ratio_for_apartment(
+            row.get("name") or row.get("displayName") or "",
+            region=row.get("region") or row.get("displayRegion") or "",
+            area_label=row.get("areaLabel") or row.get("displayAreaLabel") or "",
+            sale_price_eok=sale_price,
+            entity=entity,
+        )
+        if packaged:
+            row.update(packaged)
+            row["jeonseDataStatus"] = "bundled"
+            row["jeonseSourceNote"] = "저장된 국토부 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요."
+            return True
+        return False
     try:
         jeonse = molit_transactions.jeonse_ratio_for_apartment(
             row.get("name") or row.get("displayName") or "",
@@ -1108,6 +1122,8 @@ def _apply_jeonse_snapshot(row, entity):
             row["jeonseDataStatus"] = "cached"
             row["jeonseSourceNote"] = "저장된 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요."
             return row
+        if apply_packaged_snapshot():
+            return row
         row["jeonseDataStatus"] = "api_error"
         row["jeonseSourceNote"] = "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요."
         return row
@@ -1129,9 +1145,13 @@ def _apply_jeonse_snapshot(row, entity):
                 row["jeonseDataStatus"] = "cached"
                 row["jeonseSourceNote"] = "저장된 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요."
                 return row
+            if apply_packaged_snapshot():
+                return row
             row["jeonseDataStatus"] = "api_error"
             row["jeonseSourceNote"] = "전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요."
         else:
+            if apply_packaged_snapshot():
+                return row
             row["jeonseDataStatus"] = "same_area_missing"
             row["jeonseSourceNote"] = "국토부 전월세 실거래가에서 같은 평형 전세 거래를 찾지 못했어요."
     return row

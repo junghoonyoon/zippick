@@ -27,6 +27,7 @@ TRANSACTION_KIND_PRESALE = "presale"
 PRESALE_STATUSES = {"분양권", "입주권", "입주예정"}
 TRANSACTION_CACHE_DIR = config.CACHE_DIR / "molit_transactions"
 PRICE_BAND_CACHE_DIR = config.CACHE_DIR / "molit_price_bands"
+BUNDLED_JEONSE_SNAPSHOT_PATH = config.ROOT / "data" / "jeonse_rent_snapshots.json"
 MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
@@ -59,6 +60,8 @@ _SOURCE_INDEX_SIGNATURE = None
 _SOURCE_INDEX_LOCK = threading.Lock()
 _PRESALE_ENTITY_INDEX = None
 _PRESALE_ENTITY_INDEX_SIGNATURE = None
+_BUNDLED_JEONSE_SNAPSHOT = None
+_BUNDLED_JEONSE_INDEX = None
 
 
 def _service_key(transaction_kind=TRANSACTION_KIND_APARTMENT):
@@ -1549,6 +1552,124 @@ def _jeonse_payload(name, region, area_label, lookback_months, rents, sale_price
         "jeonseRatioPct": ratio,
         "jeonseSalePriceBasisEok": round(sale_price, 2) if sale_price > 0 else 0,
         "jeonseSourceNote": f"국토부 전월세 실거래가 최근 {lookback_months}개월 · 월세 제외",
+    }
+
+
+def _bundled_jeonse_index():
+    global _BUNDLED_JEONSE_SNAPSHOT, _BUNDLED_JEONSE_INDEX
+    if _BUNDLED_JEONSE_INDEX is not None:
+        return _BUNDLED_JEONSE_SNAPSHOT or {}, _BUNDLED_JEONSE_INDEX
+    if not BUNDLED_JEONSE_SNAPSHOT_PATH.exists():
+        _BUNDLED_JEONSE_SNAPSHOT = {}
+        _BUNDLED_JEONSE_INDEX = {}
+        return _BUNDLED_JEONSE_SNAPSHOT, _BUNDLED_JEONSE_INDEX
+    try:
+        payload = json.loads(BUNDLED_JEONSE_SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        payload = {}
+    index = {}
+    for entry in payload.get("entries") or []:
+        lawd_cd = str(entry.get("lawdCd") or "").strip()
+        dong_key = str(entry.get("legalDongKey") or compact(entry.get("legalDong"))).strip()
+        jibun_key = str(entry.get("jibunKey") or compact(entry.get("jibun"))).strip()
+        if not (lawd_cd and dong_key and jibun_key):
+            continue
+        index.setdefault((lawd_cd, dong_key, jibun_key), []).append(entry)
+    _BUNDLED_JEONSE_SNAPSHOT = payload
+    _BUNDLED_JEONSE_INDEX = index
+    return payload, index
+
+
+def bundled_jeonse_ratio_for_apartment(
+    name,
+    region="",
+    area_label="",
+    lookback_months=RECENT_LOOKBACK_MONTHS,
+    sale_price_eok=0,
+    entity=None,
+):
+    """Return packaged real jeonse-trade summary when the live rent API is unavailable."""
+    snapshot, index = _bundled_jeonse_index()
+    rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
+    if not rows:
+        return None
+    target = _area_target(area_label)
+    candidates = []
+    seen = set()
+    for row in rows:
+        identity = (
+            _row_lawd_cd(row),
+            compact(_source_legal_dong(row)),
+            compact(_source_jibun(row)),
+        )
+        for entry in index.get(identity, []):
+            area = _float_value(entry.get("latestJeonseExclusiveArea")) or _float_value(entry.get("areaBucket"))
+            if target and not (target[0] <= area <= target[1]):
+                continue
+            key = (
+                entry.get("lawdCd"),
+                entry.get("legalDongKey"),
+                entry.get("jibunKey"),
+                entry.get("areaBucket"),
+                entry.get("latestJeonseDate"),
+                entry.get("latestJeonseDepositEok"),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            candidates.append(entry)
+    if not candidates:
+        return None
+    candidates.sort(
+        key=lambda entry: (
+            str(entry.get("latestJeonseDate") or ""),
+            _float_value(entry.get("jeonseTransactionCount")),
+        ),
+        reverse=True,
+    )
+    latest = candidates[0]
+    deposits = [
+        _float_value(entry.get("latestJeonseDepositEok"))
+        for entry in candidates
+        if _float_value(entry.get("latestJeonseDepositEok")) > 0
+    ]
+    medians = [
+        _float_value(entry.get("medianJeonseDepositEok"))
+        for entry in candidates
+        if _float_value(entry.get("medianJeonseDepositEok")) > 0
+    ]
+    min_deposits = [
+        _float_value(entry.get("minJeonseDepositEok"))
+        for entry in candidates
+        if _float_value(entry.get("minJeonseDepositEok")) > 0
+    ]
+    max_deposits = [
+        _float_value(entry.get("maxJeonseDepositEok"))
+        for entry in candidates
+        if _float_value(entry.get("maxJeonseDepositEok")) > 0
+    ]
+    if not deposits:
+        return None
+    sale_price = _float_value(sale_price_eok)
+    latest_deposit = round(_float_value(latest.get("latestJeonseDepositEok")), 2)
+    ratio = round(latest_deposit / sale_price * 100, 1) if sale_price > 0 and latest_deposit > 0 else None
+    months = snapshot.get("lookbackMonths") or lookback_months
+    return {
+        "name": name,
+        "region": region,
+        "areaLabel": area_label,
+        "lookbackMonths": months,
+        "latestJeonseDepositEok": latest_deposit,
+        "latestJeonseDate": latest.get("latestJeonseDate", ""),
+        "latestJeonseExclusiveArea": latest.get("latestJeonseExclusiveArea"),
+        "latestJeonseFloor": latest.get("latestJeonseFloor", ""),
+        "medianJeonseDepositEok": round(statistics.median(medians or deposits), 2),
+        "minJeonseDepositEok": round(min(min_deposits or deposits), 2),
+        "maxJeonseDepositEok": round(max(max_deposits or deposits), 2),
+        "jeonseTransactionCount": int(sum(_float_value(entry.get("jeonseTransactionCount")) for entry in candidates)),
+        "jeonseRatioPct": ratio,
+        "jeonseSalePriceBasisEok": round(sale_price, 2) if sale_price > 0 else 0,
+        "jeonseSourceNote": f"국토부 전월세 실거래가 최근 {months}개월 저장 요약 · 월세 제외",
     }
 
 
