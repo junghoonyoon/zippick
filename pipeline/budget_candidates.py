@@ -825,6 +825,38 @@ def _apply_jeonse_ratio(row):
         row["jeonseDataStatus"] = "sale_price_missing"
         row["jeonseSourceNote"] = "전세가율 계산에 쓸 매매 기준가가 아직 없어요."
         return row
+    def apply_saved_snapshot():
+        saved_sources = (
+            (
+                molit_transactions.cached_jeonse_ratio_for_apartment(
+                    row["name"],
+                    region=row.get("region", ""),
+                    area_label=row.get("areaLabel", ""),
+                    sale_price_eok=sale_price,
+                    entity=entity,
+                ),
+                "cached",
+                "저장된 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요.",
+            ),
+            (
+                molit_transactions.bundled_jeonse_ratio_for_apartment(
+                    row["name"],
+                    region=row.get("region", ""),
+                    area_label=row.get("areaLabel", ""),
+                    sale_price_eok=sale_price,
+                    entity=entity,
+                ),
+                "bundled",
+                "저장된 국토부 전세 실거래 기준이에요. 최신 전세 거래는 확인 중이에요.",
+            ),
+        )
+        for snapshot, status, note in saved_sources:
+            if snapshot:
+                row.update(snapshot)
+                row["jeonseDataStatus"] = status
+                row["jeonseSourceNote"] = note
+                return True
+        return False
     try:
         jeonse = molit_transactions.jeonse_ratio_for_apartment(
             row["name"],
@@ -834,11 +866,15 @@ def _apply_jeonse_ratio(row):
             entity=entity,
         )
     except Exception:
+        if apply_saved_snapshot():
+            return row
         row["jeonseDataStatus"] = "api_error"
         row["jeonseSourceNote"] = "전월세 실거래가 API를 다시 확인해야 해요."
         return row
     if not jeonse:
         last_error = molit_transactions.last_error(molit_transactions.TRANSACTION_KIND_RENT)
+        if apply_saved_snapshot():
+            return row
         if last_error:
             row["jeonseDataStatus"] = "api_error"
             row["jeonseSourceNote"] = last_error

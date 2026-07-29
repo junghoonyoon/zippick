@@ -26,6 +26,58 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
+    def test_jeonse_ratio_uses_bundled_snapshot_when_live_rent_api_fails(self):
+        row = {
+            "name": "전세후보아파트",
+            "region": "성북구",
+            "areaLabel": "전용 59㎡",
+            "currentEstimateMidPriceEok": 9.4,
+            "legalDong": "길음동",
+            "jibun": "1281",
+        }
+        entity = {
+            "name": "전세후보아파트",
+            "district": "성북구",
+            "legalDong": "길음동",
+            "jibun": "1281",
+        }
+        bundled = {
+            "latestJeonseDepositEok": 6.7,
+            "latestJeonseDate": "2026-07-25",
+            "jeonseTransactionCount": 20,
+            "jeonseRatioPct": 71.3,
+            "jeonseSalePriceBasisEok": 9.4,
+        }
+
+        with mock.patch.object(
+            budget_candidates.molit_transactions,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            budget_candidates,
+            "_price_lookup_entity",
+            return_value=entity,
+        ), mock.patch.object(
+            budget_candidates.molit_transactions,
+            "jeonse_ratio_for_apartment",
+            side_effect=RuntimeError("rent api failed"),
+        ), mock.patch.object(
+            budget_candidates.molit_transactions,
+            "cached_jeonse_ratio_for_apartment",
+            return_value=None,
+        ), mock.patch.object(
+            budget_candidates.molit_transactions,
+            "bundled_jeonse_ratio_for_apartment",
+            return_value=bundled,
+        ):
+            result = budget_candidates._apply_jeonse_ratio(row)
+
+        self.assertIs(result, row)
+        self.assertEqual(row["jeonseDataStatus"], "bundled")
+        self.assertEqual(row["jeonseRatioPct"], 71.3)
+        self.assertEqual(row["latestJeonseDepositEok"], 6.7)
+        self.assertNotIn("임시 추정", row["jeonseSourceNote"])
+
     def test_step_and_direct_search_share_the_same_canonical_candidate_fields(self):
         verified_payloads = []
         entity = {
