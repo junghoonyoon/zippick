@@ -123,7 +123,7 @@ def verify():
         if isinstance(part, dict)
     }
     jeonse = parts.get("jeonse") or {}
-    _assert(jeonse.get("status") == "ok", "전세가율·투자금 효율 점수가 판단불가예요.")
+    _assert(jeonse.get("status") == "ok", "전세가율·입주물량·투자금 점수가 판단불가예요.")
     details = {
         detail.get("key"): detail
         for detail in (jeonse.get("details") or [])

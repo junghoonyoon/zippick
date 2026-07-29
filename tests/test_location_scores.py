@@ -83,11 +83,11 @@ class LocationScoresTest(unittest.TestCase):
         self.assertEqual(result["title"], "현재 데이터 기준 종합 점수")
         self.assertEqual(
             [part["label"] for part in result["parts"]],
-            ["가격 적정성", "전세가율·투자금 효율", "입지·실수요", "상품성·희소성", "거래 유동성·시장 신호"],
+            ["가격 적정성", "전세가율·입주물량·투자금", "입지·실수요", "상품성·희소성", "거래 유동성·시장 신호"],
         )
         reasons = {part["label"]: part["reason"] for part in result["parts"]}
         self.assertEqual(reasons["가격 적정성"], "최근 거래가 예상 가격과 잘 맞아요")
-        self.assertEqual(reasons["전세가율·투자금 효율"], "전세가율 61.7% · 전세금 비중이 높아 내 돈 부담이 낮은 편이에요")
+        self.assertEqual(reasons["전세가율·입주물량·투자금"], "전세가율 61.7% · 전세금 비중이 높아 내 돈 부담이 낮은 편이에요")
         self.assertEqual(reasons["입지·실수요"], "입지는 무난하지만 세부 확인이 필요해요")
         self.assertEqual(reasons["상품성·희소성"], "단지 규모와 연식이 좋은 편이에요")
         self.assertEqual(reasons["거래 유동성·시장 신호"], "거래 흐름은 보통이에요")
@@ -101,7 +101,7 @@ class LocationScoresTest(unittest.TestCase):
         self.assertEqual(details["상품성·희소성"]["준공연도"]["reason"], "2018년 사용승인")
         self.assertNotIn("주차·평면·브랜드", details["상품성·희소성"])
         self.assertEqual(details["입지·실수요"]["교육 접근성"]["reason"], "테스트초 · 320m 거리")
-        self.assertEqual(details["전세가율·투자금 효율"]["필요 투자금"]["reason"], "필요한 내 돈 4.6억원 · 매매가의 38.3%")
+        self.assertEqual(details["전세가율·입주물량·투자금"]["필요 투자금"]["reason"], "필요한 내 돈 4.6억원 · 매매가의 38.3%")
         self.assertEqual(result["areaAnalysis"]["parts"], [])
         self.assertTrue(any(
             detail["status"] == "missing"

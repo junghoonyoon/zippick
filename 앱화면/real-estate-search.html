@@ -789,6 +789,15 @@
     .budget-enrichment-message { color:#2563a6; font-size:15px; font-weight:700; line-height:1.5 }
     .budget-enrichment-note.is-complete .budget-enrichment-title { color:#1767c5 }
     .budget-enrichment-note.is-complete .loading-dots { display:none }
+    .budget-background-status {
+      display:flex; align-items:flex-start; gap:9px; margin:0 0 16px; padding:12px 14px;
+      border-radius:10px; background:#f4f8ff; color:#315b91; font-size:14px; font-weight:700; line-height:1.5;
+    }
+    .budget-background-status .loading-spinner { flex:0 0 auto; margin-top:2px }
+    .candidate-score-pending {
+      display:flex; align-items:center; gap:9px; margin-top:14px; padding-top:14px;
+      border-top:1px solid #edf0f4; color:#667085; font-size:14px; font-weight:700; line-height:1.45;
+    }
     .budget-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:16px }
     .budget-title { color:var(--ink); font-size:23px; font-weight:880; line-height:1.3 }
     .budget-title-row { position:relative; display:flex; align-items:center; flex-wrap:wrap; gap:7px }
@@ -1279,6 +1288,8 @@
     .candidate-sort-option-help { color:#8b95a1; font-size:13px; font-weight:600 }
     .candidate-sort-option:hover,.candidate-sort-option[aria-selected="true"] { color:#191f28 }
     .candidate-sort-option[aria-selected="true"] .candidate-sort-option-name { font-weight:900 }
+    .candidate-sort-option:disabled { color:#a3abb6; cursor:wait }
+    .candidate-sort-option:disabled .candidate-sort-option-help { color:#b3bac3 }
     .candidate-sort-option-check { color:#2f82f6; font-size:21px; font-weight:900; line-height:1 }
     .candidate-sort-reason {
       margin:12px 0 0; border-radius:12px; padding:11px 13px; background:#eef6ff;
@@ -1849,18 +1860,24 @@
     .location-score-total span { color:#5a7396; font-size:14px; font-weight:850 }
     .location-score-summary { margin:0; color:#3f5f4f; font-size:14px; font-weight:700; line-height:1.55 }
     .location-score-coverage { margin:0; color:#667085; font-size:13px; font-weight:650; line-height:1.5 }
-    .location-score-jeonse { grid-column:1 / -1; display:grid; gap:8px; border-radius:10px; padding:9px 10px; background:#f7f8fa; color:#4e5968 }
+    .location-score-jeonse { grid-column:1 / -1; display:grid; gap:13px; border-radius:14px; padding:13px 14px; background:#f7f8fa; color:#4e5968 }
     .location-score-jeonse.is-missing { background:#f7f8fa }
     .location-score-jeonse-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px }
-    .location-score-jeonse-title { margin:0; color:#303846; font-size:12px; font-weight:850; line-height:1.45 }
-    .location-score-jeonse-copy { margin:2px 0 0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.45 }
-    .location-score-jeonse-ratio { color:#344054; font-size:12px; font-weight:850; line-height:1.45; white-space:nowrap }
+    .location-score-jeonse-title { margin:0; color:#303846; font-size:14px; font-weight:850; line-height:1.5 }
+    .location-score-jeonse-copy { margin:3px 0 0; color:#8b95a1; font-size:14px; font-weight:650; line-height:1.5 }
+    .location-score-jeonse-ratio { color:#1767c5; font-size:24px; font-weight:950; line-height:1.05; white-space:nowrap }
     .location-score-jeonse.is-missing .location-score-jeonse-ratio { color:#98a2b3 }
-    .location-score-jeonse-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 10px }
-    .location-score-jeonse-metric { min-width:0 }
-    .location-score-jeonse-metric span { display:block; color:#8b95a1; font-size:12px; font-weight:750; line-height:1.35 }
-    .location-score-jeonse-metric strong { display:block; margin-top:2px; color:#303846; font-size:12px; font-weight:850; line-height:1.35 }
-    .location-score-jeonse-note { margin:0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.5 }
+    .location-score-jeonse-visual { display:grid; gap:8px }
+    .location-score-jeonse-track { display:flex; height:18px; border-radius:999px; overflow:hidden; background:#eef2f6; box-shadow:inset 0 0 0 1px rgba(0,0,0,.03) }
+    .location-score-jeonse-fill { display:block; min-width:0; height:100% }
+    .location-score-jeonse-fill.is-deposit { background:#3182f6 }
+    .location-score-jeonse-fill.is-gap { background:#d0d7e2 }
+    .location-score-jeonse-legend { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px }
+    .location-score-jeonse-legend-item { display:inline-flex; align-items:baseline; gap:6px; min-width:0; color:#4e5968; font-size:14px; font-weight:750; line-height:1.45 }
+    .location-score-jeonse-legend-item span { display:inline-flex; align-items:center; gap:6px; color:#8b95a1; font-size:14px; font-weight:750; line-height:1.45 }
+    .location-score-jeonse-legend-item span::before { content:""; flex:none; width:8px; height:8px; border-radius:999px; background:#3182f6 }
+    .location-score-jeonse-legend-item.is-gap span::before { background:#d0d7e2 }
+    .location-score-jeonse-legend-item strong { color:#303846; font-size:15px; font-weight:900; line-height:1.35; white-space:nowrap }
     .location-score-table { display:grid; gap:9px }
     .location-score-section-title { margin:2px 0 -4px; color:#191f28; font-size:15px; font-weight:900; line-height:1.4 }
     .location-score-section-copy { margin:-2px 0 0; color:#667085; font-size:13px; font-weight:650; line-height:1.5 }
@@ -1879,7 +1896,7 @@
     .location-score-details summary {
       display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:36px;
       width:max-content; max-width:100%; margin-top:1px; border:0; border-radius:10px; padding:0 12px;
-      background:#fff; color:#3182f6; font-size:14px; font-weight:800; line-height:1.4; cursor:pointer; list-style:none;
+      background:#fff; color:#3182f6; font-size:15px; font-weight:850; line-height:1.45; cursor:pointer; list-style:none;
       transition:background .15s ease,color .15s ease;
     }
     .location-score-details summary:hover { background:#f8f9fa; color:#1b64da }
@@ -1890,16 +1907,16 @@
     }
     .location-score-details[open] summary::after { transform:translateY(2px) rotate(225deg) }
     .location-score-details summary:focus-visible { outline:2px solid #3182f6; outline-offset:2px }
-    .location-score-details-body { display:grid; gap:6px; margin-top:9px }
-    .location-score-detail-list { display:grid; gap:10px; margin:0; padding:0; list-style:none }
+    .location-score-details-body { display:grid; gap:10px; margin-top:11px }
+    .location-score-detail-list { display:grid; gap:12px; margin:0; padding:0; list-style:none }
     .location-score-detail-list li {
-      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 10px;
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 12px;
       padding:0;
-      color:#4e5968; font-size:13px; font-weight:650; line-height:1.42;
+      color:#4e5968; font-size:15px; font-weight:650; line-height:1.5;
     }
-    .location-score-detail-list strong { color:#303846; font-size:13px; font-weight:850; line-height:1.35 }
-    .location-score-detail-list small { grid-column:1 / -1; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.38 }
-    .location-score-detail-points { color:#344054; font-size:13px; font-weight:850; white-space:nowrap }
+    .location-score-detail-list strong { color:#303846; font-size:15px; font-weight:850; line-height:1.42 }
+    .location-score-detail-list small { grid-column:1 / -1; color:#8b95a1; font-size:14px; font-weight:650; line-height:1.5 }
+    .location-score-detail-points { color:#344054; font-size:15px; font-weight:850; white-space:nowrap }
     .location-score-detail-points.is-missing { color:#98a2b3 }
     .location-score-bar { grid-column:1 / -1; height:7px; border-radius:999px; background:#edf1f5; overflow:hidden }
     .location-score-fill { display:block; height:100%; border-radius:999px; background:#3182f6 }
@@ -2482,6 +2499,8 @@
       .comparison-verdict { grid-template-columns:1fr; gap:8px; margin-bottom:18px }
       .comparison-verdict-copy { width:100% }
       .comparison-result-edit { padding:7px 11px; font-size:12px }
+      .location-score-jeonse-head { flex-direction:column; gap:7px }
+      .location-score-jeonse-ratio { font-size:28px }
       .comparison-score-grid { grid-template-columns:1fr }
       .comparison-score-card { padding:14px }
       .comparison-score-facts { grid-template-columns:1fr }
@@ -3325,7 +3344,7 @@
       margin:0; border-color:#e4e8ef; border-radius:20px; padding:24px 16px; background:#fff; box-shadow:none;
     }
     .condition-stage-results .candidate-top { gap:12px }
-    .condition-stage-results .budget-name { color:#191f28; font-size:20px; font-weight:900; letter-spacing:-.025em }
+    .condition-stage-results .budget-name { color:#191f28; font-size:18px; font-weight:900; letter-spacing:0 }
     .condition-stage-results .budget-meta { margin-top:7px; color:#8b95a1; font-size:14px; line-height:1.5 }
     .condition-stage-results .candidate-price-divider { display:none }
     .condition-stage-results .budget-side { width:100%; justify-items:start; min-width:0; gap:8px }
@@ -3533,7 +3552,7 @@
       .condition-stage-results .budget-candidate { border-radius:16px; padding:26px 16px }
       .condition-stage-results .budget-candidate.selected { margin:0; border-radius:18px; padding:22px 16px }
       .condition-stage-results .candidate-top { gap:14px }
-      .condition-stage-results .budget-name { font-size:20px }
+      .condition-stage-results .budget-name { font-size:18px }
       .condition-stage-results .budget-meta { font-size:13px }
       .condition-stage-results .budget-side { border-top:0; padding-top:0 }
       .condition-stage-results .candidate-price-comparison { margin-top:16px }
@@ -4983,6 +5002,7 @@
 	      const partKeys = new Set(parts.map(part => String(part?.key || "")));
 	      if (!["price", "jeonse", "demand", "product", "market"].every(key => partKeys.has(key))) return true;
 	      const jeonsePart = parts.find(part => part?.key === "jeonse");
+	      if (String(jeonsePart?.label || "").trim() !== "전세가율·입주물량·투자금") return true;
 	      const jeonseDetails = Array.isArray(jeonsePart?.details) ? jeonsePart.details : [];
 	      const jeonseDetailKeys = new Set(jeonseDetails.map(detail => String(detail?.key || "")));
 	      if (!["jeonse_ratio", "jeonse_freshness", "investment_gap"].every(key => jeonseDetailKeys.has(key))) return true;
@@ -4996,6 +5016,14 @@
 	        ));
 	      });
 	    }
+
+    function budgetStateNeedsRefresh(savedState) {
+      const rows = [
+        ...(Array.isArray(savedState?.currentBudgetData?.allCandidates) ? savedState.currentBudgetData.allCandidates : []),
+        ...(Array.isArray(savedState?.currentBudgetData?.candidates) ? savedState.currentBudgetData.candidates : []),
+      ];
+      return rows.some(locationScoreNeedsRefresh);
+    }
 
     function locationScoreRefreshPayload(item) {
       return {
@@ -5323,8 +5351,20 @@
           Number(saved.candidateVisibleCount || CANDIDATE_PAGE_SIZE),
         );
         selectedCandidateNames.clear();
-        (saved.selectedCandidateNames || []).forEach(name => selectedCandidateNames.add(name));
+        if (budgetStateNeedsRefresh(saved)) {
+          void loadBudgetCandidates();
+          return true;
+        }
         renderBudgetCandidates(saved.currentBudgetData, { preserveSelection:true });
+        const rows = candidateRowsForLookup();
+        (saved.selectedCandidateNames || []).forEach(value => {
+          const text = String(value || "");
+          const key = rows.some(row => candidateIdentityKey(row) === text)
+            ? text
+            : candidateIdentityKey(rows.find(row => row?.name === text || candidateDisplayName(row) === text) || { name:text });
+          selectedCandidateNames.add(key);
+        });
+        syncCompareSelection();
       }
       requestAnimationFrame(() => window.scrollTo({ top:Number(saved.scrollY || 0), behavior:"auto" }));
       return true;
@@ -9237,6 +9277,9 @@
     }
 
     function candidateVerdictHtml(item, options = {}) {
+      if (currentBudgetData?.candidateScoreDataReady === false) {
+        return candidateScorePendingHtml();
+      }
       const insight = candidateInsight(item);
       return `<div class="candidate-insight insight-${esc(insight.tone)}">
         <div class="insight-summary">
@@ -9764,8 +9807,9 @@
 
     function candidateCompareActionHtml(item) {
       const name = item?.name || candidateDisplayName(item);
+      const key = candidateIdentityKey(item);
       if (!name) return "";
-      return `<button class="compare-toggle candidate-compare-action" type="button" data-compare-name="${esc(name)}" data-candidate-key="${esc(candidateIdentityKey(item))}" aria-pressed="${selectedCandidateNames.has(name)}">${selectedCandidateNames.has(name) ? "담기 해제" : "비교 담기"}</button>`;
+      return `<button class="compare-toggle candidate-compare-action" type="button" data-compare-name="${esc(name)}" data-candidate-key="${esc(key)}" aria-pressed="${selectedCandidateNames.has(key)}">${selectedCandidateNames.has(key) ? "담기 해제" : "비교 담기"}</button>`;
     }
 
     function candidateSharedActionsHtml(item, naverExtraClass = "") {
@@ -9829,6 +9873,7 @@
     }
 
 		    function candidateTopScoreBadgesHtml(item) {
+		      if (currentBudgetData?.candidateScoreDataReady === false) return "";
 		      const badges = `${candidateLocationScoreBadgeHtml(item)}${candidateFlowScoreBadgeHtml(item)}`;
 		      return badges ? `<span class="candidate-score-badges">${badges}</span>` : "";
 		    }
@@ -9900,13 +9945,9 @@
     function locationScoreJeonseSummaryHtml(item) {
       const ratio = Number(item?.jeonseRatioPct);
       const latestDeposit = Number(item?.latestJeonseDepositEok);
-      const medianDeposit = Number(item?.medianJeonseDepositEok);
       const saleBasis = Number(item?.jeonseSalePriceBasisEok);
       const count = Number(item?.jeonseTransactionCount || 0);
-      const date = String(item?.latestJeonseDate || "").trim();
-      const area = Number(item?.latestJeonseExclusiveArea);
       const status = String(item?.jeonseDataStatus || "").trim();
-      const source = item?.jeonseSourceNote || "국토부 전월세 실거래가 · 월세 제외";
       const hasRatio = Number.isFinite(ratio) && ratio > 0;
       const hasDeposit = Number.isFinite(latestDeposit) && latestDeposit > 0;
       const estimated = status === "estimated";
@@ -9930,29 +9971,35 @@
       const investmentGap = hasDeposit && Number.isFinite(saleBasis) && saleBasis > 0
         ? Math.max(0, saleBasis - latestDeposit)
         : null;
-      const basisCopy = [
-        hasDeposit ? `${estimated ? "추정 전세" : "최근 전세"} ${transactionMoney(latestDeposit)}` : "",
-        date,
-        Number.isFinite(area) && area > 0 ? `전용 ${area.toFixed(1).replace(/\.0$/, "")}㎡` : "",
-      ].filter(Boolean).join(" · ");
-      const metrics = [
-        [estimated ? "추정 전세" : "최근 전세", hasDeposit ? transactionMoney(latestDeposit) : "확인 중"],
-        ["매매 기준", Number.isFinite(saleBasis) && saleBasis > 0 ? transactionMoney(saleBasis) : "확인 중"],
-        ["필요 투자금", investmentGap !== null ? transactionMoney(investmentGap) : "계산 전"],
-        ["전세 표본", estimated ? "추정값" : count > 0 ? `${Math.round(count)}건${Number.isFinite(medianDeposit) && medianDeposit > 0 ? ` · 중앙 ${transactionMoney(medianDeposit)}` : ""}` : "표본 없음"],
-      ];
+      const basisCopy = estimated
+        ? "실거래가 없어서 임시 추정했어요."
+        : "같은 평형 전세 실거래를 기준으로 봤어요.";
+      const jeonseShare = hasRatio ? Math.max(0, Math.min(100, ratio)) : 0;
+      const gapShare = Math.max(0, 100 - jeonseShare);
       return `<section class="location-score-jeonse" aria-label="전세가율 요약">
         <div class="location-score-jeonse-head">
           <div>
             <h5 class="location-score-jeonse-title">${estimated ? "전세 추정 기준" : "전세 실거래 기준"}</h5>
-            <p class="location-score-jeonse-copy">${esc(basisCopy || (estimated ? "실거래가 없어서 임시 추정했어요." : "같은 평형 전세 실거래 기준이에요."))}</p>
+            <p class="location-score-jeonse-copy">${esc(basisCopy)}</p>
           </div>
           <strong class="location-score-jeonse-ratio">${hasRatio ? `${esc(ratio.toFixed(1).replace(/\.0$/, ""))}%` : "계산 전"}</strong>
         </div>
-        <div class="location-score-jeonse-grid">
-          ${metrics.map(([label, value]) => `<div class="location-score-jeonse-metric"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join("")}
+        <div class="location-score-jeonse-visual" aria-label="매매가 중 전세금과 필요 투자금 비중">
+          <div class="location-score-jeonse-track" aria-hidden="true">
+            <span class="location-score-jeonse-fill is-deposit" style="width:${esc(jeonseShare)}%"></span>
+            <span class="location-score-jeonse-fill is-gap" style="width:${esc(gapShare)}%"></span>
+          </div>
+          <div class="location-score-jeonse-legend">
+            <div class="location-score-jeonse-legend-item">
+              <span>${esc(estimated ? "추정 전세" : "최근 전세")}</span>
+              <strong>${hasDeposit ? esc(transactionMoney(latestDeposit)) : "확인 중"}</strong>
+            </div>
+            <div class="location-score-jeonse-legend-item is-gap">
+              <span>필요 투자금</span>
+              <strong>${investmentGap !== null ? esc(transactionMoney(investmentGap)) : "계산 전"}</strong>
+            </div>
+          </div>
         </div>
-        <p class="location-score-jeonse-note">${esc(source)}</p>
       </section>`;
     }
 
@@ -9979,7 +10026,7 @@
         <p class="location-score-coverage">반영된 데이터: ${esc(Math.round(coverage * 100))}%</p>
         <div class="location-score-table">${parts.map(part => locationScorePartHtml(part, item)).join("")}</div>
         ${areaAnalysisHtml}
-        <p class="location-score-note">현재 매물 호가와 입주 물량은 아직 반영하지 않았어요.</p>`;
+        <p class="location-score-note">현재 매물 호가는 아직 반영하지 않았어요. 입주 물량은 전세 여건 점수에 반영했어요.</p>`;
     }
 
     function candidateRowsForLookup() {
@@ -10595,8 +10642,9 @@
 
     function candidateMapPreviewHtml(item) {
       const name = item.name || candidateDisplayName(item);
+      const key = candidateIdentityKey(item);
       return `<button class="candidate-map-sheet-handle" type="button" data-candidate-map-sheet-handle aria-expanded="false" aria-label="지도 상세 카드 펼치기"></button>
-        <button class="candidate-map-compare-toggle" type="button" data-compare-name="${esc(name)}" data-candidate-key="${esc(candidateIdentityKey(item))}" aria-pressed="${selectedCandidateNames.has(name)}">${selectedCandidateNames.has(name) ? "담김" : "비교 담기"}</button>
+        <button class="candidate-map-compare-toggle" type="button" data-compare-name="${esc(name)}" data-candidate-key="${esc(key)}" aria-pressed="${selectedCandidateNames.has(key)}">${selectedCandidateNames.has(key) ? "담김" : "비교 담기"}</button>
         <div class="candidate-map-sheet-content">
           <div class="candidate-top" data-candidate-key="${esc(candidateIdentityKey(item))}">
             <div class="budget-main">
@@ -11364,8 +11412,9 @@
       </section>`;
     }
 
-    function candidateSortHtml(activeSort, showCashGapSort, idSuffix = "") {
+    function candidateSortHtml(activeSort, showCashGapSort, idSuffix = "", scoreDataReady = true) {
       void showCashGapSort;
+      const scoreSortKeys = new Set(["location_score", "flow_best", "region_strong"]);
       const groups = [
         ["시장 신호", [
           ["location_score", "종합 점수 높은 순", "가격·전세·입지·흐름을 함께 본 집"],
@@ -11397,7 +11446,11 @@
             <div class="candidate-sort-options" role="listbox" aria-label="결과 정렬 기준">
               ${groups.map(([groupLabel, rows]) => `<section class="candidate-sort-section" aria-label="${esc(groupLabel)}">
                 <h5 class="candidate-sort-section-title">${esc(groupLabel)}</h5>
-                ${rows.map(([value, label, help]) => `<button class="candidate-sort-option" type="button" data-candidate-sort-option="${value}" role="option" aria-selected="${activeSort === value}"><span class="candidate-sort-option-copy"><strong class="candidate-sort-option-name">${esc(label)}</strong><span class="candidate-sort-option-help">${esc(help)}</span></span>${activeSort === value ? '<span class="candidate-sort-option-check" aria-hidden="true">✓</span>' : ''}</button>`).join("")}
+                ${rows.map(([value, label, help]) => {
+                  const disabled = !scoreDataReady && scoreSortKeys.has(value);
+                  const optionHelp = disabled ? "종합 점수 계산이 끝나면 선택할 수 있어요" : help;
+                  return `<button class="candidate-sort-option" type="button" data-candidate-sort-option="${value}" role="option" aria-selected="${activeSort === value}"${disabled ? ' aria-disabled="true" disabled' : ""}><span class="candidate-sort-option-copy"><strong class="candidate-sort-option-name">${esc(label)}</strong><span class="candidate-sort-option-help">${esc(optionHelp)}</span></span>${activeSort === value ? '<span class="candidate-sort-option-check" aria-hidden="true">✓</span>' : ''}</button>`;
+                }).join("")}
               </section>`).join("")}
             </div>
           </div>
@@ -13201,6 +13254,9 @@
     }
 
     function candidateSignalReportHtml(item) {
+      if (currentBudgetData?.candidateScoreDataReady === false) {
+        return candidateScorePendingHtml();
+      }
       const general = candidateReviewGeneralOpinion(item);
       const price = candidateReviewPriceAnalysis(item);
       const caution = candidateReviewCaution(item);
@@ -13237,9 +13293,9 @@
     function selectedCandidates() {
       const rows = candidateRowsForLookup();
       const selected = [];
-      selectedCandidateNames.forEach(name => {
-        const saved = compareCandidateCart.get(name);
-        const matches = rows.filter(item => item?.name === name);
+      selectedCandidateNames.forEach(key => {
+        const saved = compareCandidateCart.get(key);
+        const matches = rows.filter(item => candidateIdentityKey(item) === key);
         const item = [saved, ...matches]
           .filter(Boolean)
           .sort((left, right) => comparisonCandidateQuality(right) - comparisonCandidateQuality(left))[0];
@@ -13267,20 +13323,21 @@
 
     function compareFloatingSelectedChipHtml(item) {
       const name = candidateDisplayName(item);
+      const key = candidateIdentityKey(item);
       return `<span class="compare-floating-selected-chip">
         <span class="compare-floating-selected-name">${esc(name)}</span>
-        <button class="compare-floating-selected-remove" type="button" data-compare-remove-name="${esc(item.name || name)}" aria-label="${esc(name)} 비교 후보 삭제" title="삭제">×</button>
+        <button class="compare-floating-selected-remove" type="button" data-compare-remove-name="${esc(key)}" aria-label="${esc(name)} 비교 후보 삭제" title="삭제">×</button>
       </span>`;
     }
 
     function syncCompareSelection() {
       const selected = selectedCandidates();
       document.querySelectorAll(".budget-candidate[data-candidate-name]").forEach(card => {
-        const isSelected = selectedCandidateNames.has(card.dataset.candidateName);
+        const isSelected = selectedCandidateNames.has(card.dataset.candidateKey);
         card.classList.toggle("selected", isSelected);
       });
       document.querySelectorAll("[data-compare-name]").forEach(button => {
-        const isSelected = selectedCandidateNames.has(button.dataset.compareName);
+        const isSelected = selectedCandidateNames.has(button.dataset.candidateKey);
         button.setAttribute("aria-pressed", String(isSelected));
         button.textContent = button.classList.contains("candidate-map-compare-toggle")
           ? (isSelected ? "담김" : "비교 담기")
@@ -13331,22 +13388,23 @@
     }
 
     function toggleComparison(name, candidateKey = "", options = {}) {
-      const wasSelected = selectedCandidateNames.has(name);
+      const key = candidateKey || encodeURIComponent(name || "");
+      const wasSelected = selectedCandidateNames.has(key);
       const stayCollapsed = options?.stayCollapsed === true;
       if (wasSelected) {
-        selectedCandidateNames.delete(name);
-        compareCandidateCart.delete(name);
+        selectedCandidateNames.delete(key);
+        compareCandidateCart.delete(key);
       } else if (selectedCandidateNames.size < 3) {
-        const matches = candidateRowsForLookup().filter(row => row?.name === name);
+        const matches = candidateRowsForLookup().filter(row => candidateIdentityKey(row) === key || row?.name === name);
         const keyed = candidateKey
           ? matches.find(row => candidateIdentityKey(row) === candidateKey)
           : null;
         const item = keyed || matches.sort((left, right) => comparisonCandidateQuality(right) - comparisonCandidateQuality(left))[0];
-        selectedCandidateNames.add(name);
-        if (item) compareCandidateCart.set(name, item);
+        selectedCandidateNames.add(key);
+        if (item) compareCandidateCart.set(key, item);
       } else showComparisonLimitToast();
       compareCartCollapsed = !selectedCandidateNames.size ? false : (stayCollapsed || candidateMapBottomSheetMedia.matches);
-      if (!wasSelected && selectedCandidateNames.has(name)) {
+      if (!wasSelected && selectedCandidateNames.has(key)) {
         compareCartCollapsed = stayCollapsed;
         if (!stayCollapsed) scheduleCompareCartAutoCollapse();
       } else {
@@ -13355,7 +13413,7 @@
       }
       trackDailyActiveUser();
       trackEvent("candidate_compare_toggled", {
-        selected:!wasSelected && selectedCandidateNames.has(name),
+        selected:!wasSelected && selectedCandidateNames.has(key),
         selected_count:selectedCandidateNames.size,
       });
       syncCompareSelection();
@@ -13948,7 +14006,7 @@
       const comparisonRows = [
         ["종합점수", "totalScore", "section"],
         ["가격 적정성", "score:price"],
-        ["전세가율·투자금 효율", "score:jeonse"],
+        ["전세가율·입주물량·투자금", "score:jeonse"],
         ["입지·실수요", "score:demand"],
         ["상품성·희소성", "score:product"],
         ["거래 유동성·시장 신호", "score:market"],
@@ -14200,6 +14258,18 @@
       return `<section class="budget-enrichment-note${completed ? " is-complete" : ""}" data-budget-enrichment-note data-progress-state="${safeStage}:${completed}" role="status" aria-live="polite" aria-busy="${String(!completed)}">${budgetEnrichmentProgressHtml(safeStage, completed, progress)}</section>`;
     }
 
+    function budgetBackgroundStatusHtml(data) {
+      if (data.candidateScoreDataReady !== false) return "";
+      if (["timeout", "score_error"].includes(data.enrichmentStage)) {
+        return `<div class="budget-background-status" role="status"><span><strong>후보 가격과 순서는 확인됐어요.</strong><br>종합 점수 계산이 오래 걸리고 있어요. 잠시 후 다시 검색해 주세요.</span></div>`;
+      }
+      return `<div class="budget-background-status" role="status" aria-live="polite">${spinnerHtml("small")}<span><strong>후보 가격과 순서는 확인됐어요.</strong><br>종합 점수를 계산하고 있어요. 점수 정렬은 완료 후 열립니다.</span></div>`;
+    }
+
+    function candidateScorePendingHtml() {
+      return `<div class="candidate-score-pending">${spinnerHtml("small")}<span>종합 점수를 계산하고 있어요</span></div>`;
+    }
+
     function candidateRowPriceReady(row) {
       return Number(row?.midPriceEok || 0) > 0 || Number(row?.lastObservedDealPriceEok || 0) > 0;
     }
@@ -14236,9 +14306,11 @@
       document.body.classList.remove("candidate-sort-sheet-open");
       removeCandidateMapPortal();
       resetCandidateMap();
-      // 단계형 응답의 일부 데이터가 도착해도 후보 카드는 노출하지 않는다.
-      // 실거래와 가격 흐름까지 모두 준비된 완료 응답만 목록으로 그린다.
-      if (data.enrichmentPending) {
+      const verifiedResultReady = data.verifiedResultReady === true
+        && data.candidateScoreDataReady === false;
+      // 가격·자금 검증 전의 빠른 응답은 후보 수와 순서가 바뀔 수 있으므로
+      // 화면에 노출하지 않는다. 검증 완료 결과부터 정확한 기본 정렬로 연다.
+      if (data.enrichmentPending && !verifiedResultReady) {
         currentBudgetData = null;
         setConditionStage("results", false);
         budgetResultEl.classList.add("show");
@@ -14247,6 +14319,10 @@
         }
         updateBudgetEnrichmentProgress(data.enrichmentStage || "transaction_fetch", false, data);
         return;
+      }
+      const scoreDataReady = data.candidateScoreDataReady !== false;
+      if (!scoreDataReady && ["location_score", "flow_best", "region_strong"].includes(budgetSort)) {
+        budgetSort = "budget_near";
       }
       const allRows = (data.allCandidates || data.policyDefaultCandidates || data.candidates || [])
         .filter(candidateHasVerifiedSelectedArea)
@@ -14308,7 +14384,7 @@
         const emptyMessage = filtersHideResults
           ? "선택한 필터에 해당하는 단지가 없어요."
           : data.allMatches ? "현재 자금 범위에 해당하는 단지가 없어요." : data.message || "예산 기준 후보를 찾지 못했어요.";
-        budgetResultEl.innerHTML = `<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false)}</div>${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
+        budgetResultEl.innerHTML = `${budgetBackgroundStatusHtml(data)}<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false, "", scoreDataReady)}</div>${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
         return;
       }
       const excluded = Number(data.excludedCount || 0);
@@ -14322,6 +14398,7 @@
       const resultCount = allSortedRows.length;
       const resultTitleHtml = `매수 후보 <span class="title-count">${esc(resultCount)}단지</span>`;
       budgetResultEl.innerHTML = `
+        ${budgetBackgroundStatusHtml(data)}
         <div class="budget-head">
           <div class="budget-title-row">
             <div class="budget-title">${resultTitleHtml}</div>
@@ -14330,7 +14407,7 @@
         ${profile.length ? `<div class="budget-profile result-condition-profile">${profile.map(item => `<span class="profile-pill">${esc(item)}</span>`).join("")}</div>` : ""}
         <div class="candidate-options-bar">
           ${candidateFiltersHtml()}
-          ${candidateSortHtml(budgetSort, false)}
+          ${candidateSortHtml(budgetSort, false, "", scoreDataReady)}
         </div>
         ${candidateMapFloatingButtonHtml()}
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
@@ -14342,7 +14419,7 @@
                     <span class="budget-name">${esc(candidateDisplayName(item))}</span>
                   </span>
                   <span class="budget-meta">${candidateListMetaHtml(item)}</span>
-	                  ${candidateTopScoreBadgesHtml(item)}
+	                  ${scoreDataReady ? candidateTopScoreBadgesHtml(item) : ""}
                 </div>
                 ${candidateMapInlineButtonHtml(item)}
               </div>
@@ -14350,7 +14427,7 @@
               <div class="candidate-price-divider" aria-hidden="true"></div>
               <div class="budget-side">
                 ${candidatePriceComparisonHtml(item)}
-                <div class="candidate-verdict">${candidateVerdictHtml(item)}</div>
+                <div class="candidate-verdict">${scoreDataReady ? candidateVerdictHtml(item) : candidateScorePendingHtml()}</div>
               </div>
               ${policyImpactHtml(item.policyImpact, item, data.budgetEok)}
               ${candidateSharedActionsHtml(item)}
@@ -14366,7 +14443,7 @@
                     <button class="result-info-sheet-close" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
                   </div>
                   <div class="candidate-detail-sheet-content">
-                    <div data-signal-report>${candidateSignalReportHtml(item)}</div>
+                    <div data-signal-report>${scoreDataReady ? candidateSignalReportHtml(item) : candidateScorePendingHtml()}</div>
                   </div>
                 </div>
               </div>
@@ -14380,10 +14457,10 @@
       // 조건 변경 결과도 카드가 노출되는 즉시 거래 흐름을 다시 채운다.
       // 상세 실거래는 후보 응답과 별도 요청이라 여기서 시작하지 않으면
       // 사용자가 각 카드의 '불러오기' 버튼을 눌러야만 그래프가 나타난다.
-      enrichMarketInsights(rows);
+      if (scoreDataReady) enrichMarketInsights(rows);
       // 기사 조회는 후보 노출을 막지 않고, 확정 단계의 변화가 있을 때만
       // 한눈에 문장과 출처 링크를 백그라운드에서 보강한다.
-      enrichNewsCatalysts(rows);
+      if (scoreDataReady) enrichNewsCatalysts(rows);
       document.body.classList.toggle("candidate-map-open", candidateViewMode === "map");
       if (candidateViewMode === "map") {
         if (!candidateMapTrigger?.isConnected) {
@@ -14472,10 +14549,12 @@
       budgetLoadingTimer = setInterval(() => updateBudgetLoading(startedAt), 200);
     }
 
-    async function revealBudgetCandidatesTogether(data, controller) {
+    async function revealBudgetCandidatesTogether(data, controller, options = {}) {
       clearInterval(budgetLoadingTimer);
       if (controller.signal.aborted || budgetSearchController !== controller) return false;
-      renderBudgetCandidates(data);
+      renderBudgetCandidates(data, {
+        preserveSelection:options.preserveSelection === true,
+      });
       return true;
     }
 
@@ -14568,25 +14647,57 @@
     }
 
     async function waitForCompletedBudgetCandidates(data, url, controller) {
-      if (!data.enrichmentPending) return data;
+      if (!data.enrichmentPending) return { data, verifiedShown:false };
       const jobId = data.enrichmentJobId;
       if (!jobId) throw { error:"후보 분석 진행 상태를 확인하지 못했어요." };
+      let verifiedShown = false;
+
+      const revealVerified = verified => {
+        if (!verified || controller.signal.aborted || budgetSearchController !== controller) return;
+        clearInterval(budgetLoadingTimer);
+        const payload = {
+          ...verified,
+          enrichmentJobId:jobId,
+          enrichmentPending:true,
+          enrichmentStage:"flow_score",
+          verifiedResultReady:true,
+          candidateScoreDataReady:false,
+        };
+        renderBudgetCandidates(payload, { preserveSelection:true });
+        verifiedShown = true;
+      };
+      if (data.verifiedResultReady && data.candidateScoreDataReady === false) {
+        revealVerified(data);
+      }
 
       for (let attempt = 0; attempt < 820; attempt += 1) {
         await waitForBudgetPoll(750, controller.signal);
         if (controller.signal.aborted || budgetSearchController !== controller) return null;
-        const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}`, { signal:controller.signal });
+        const includeVerified = verifiedShown ? "" : "&include_verified=true";
+        const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}${includeVerified}`, { signal:controller.signal });
+        if (!verifiedShown && next.verifiedResult) revealVerified(next.verifiedResult);
         if (!next.done) {
-          updateBudgetEnrichmentProgress(next.enrichmentStage || "transaction_fetch", false, next);
+          if (!verifiedShown) {
+            updateBudgetEnrichmentProgress(next.enrichmentStage || "transaction_fetch", false, next);
+          }
           continue;
         }
         if (next.error || next.enrichmentStage === "error" || next.enrichmentStage === "timeout") {
+          if (
+            verifiedShown
+            && next.verifiedResultReady
+            && next.candidateScoreDataReady === false
+            && Array.isArray(next.candidates)
+          ) {
+            renderBudgetCandidates(next, { preserveSelection:true });
+            return { data:next, verifiedShown:true };
+          }
           throw { error:next.error || "모든 후보 데이터를 준비하지 못했어요. 잠시 후 다시 검색해 주세요." };
         }
         if (next.enrichmentPending) continue;
         updateBudgetEnrichmentProgress("final_rank", true, next);
         writeBudgetBrowserCache(url, next);
-        return next;
+        return { data:next, verifiedShown };
       }
       throw { error:"후보 분석이 오래 걸리고 있어요. 잠시 후 다시 검색해 주세요." };
     }
@@ -14652,14 +14763,19 @@
         const url = `/api/budget-candidates?${params.toString()}`;
         const cachedData = readBudgetBrowserCache(url);
         const initialData = cachedData || await getJson(url, { signal:controller.signal });
-        const data = await waitForCompletedBudgetCandidates(initialData, url, controller);
-        if (!data) return;
+        const completed = await waitForCompletedBudgetCandidates(initialData, url, controller);
+        if (!completed) return;
+        const data = completed.data;
         writeBudgetBrowserCache(url, data);
         if (restoreMapAfterSearch) {
           candidateMapOrigin = "budget";
           candidateViewMode = "map";
         }
-        const revealed = await revealBudgetCandidatesTogether(data, controller);
+        const revealed = await revealBudgetCandidatesTogether(
+          data,
+          controller,
+          { preserveSelection:completed.verifiedShown },
+        );
         if (!revealed) return;
         trackEvent("budget_search_completed", {
           candidate_count:Number(data.candidates?.length || 0),
@@ -15341,6 +15457,7 @@
       }
       const candidateSortOption = event.target.closest("[data-candidate-sort-option]");
       if (candidateSortOption) {
+        if (candidateSortOption.disabled || candidateSortOption.getAttribute("aria-disabled") === "true") return;
         if (currentBudgetData) {
           budgetSort = candidateSortOption.dataset.candidateSortOption;
           trackDailyActiveUser();

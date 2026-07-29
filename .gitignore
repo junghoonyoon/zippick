@@ -9,6 +9,11 @@ node_modules
 .env
 .env.*
 
+# API 키가 들어 있다. 절대 커밋하지 않는다.
+설정.txt
+수익화/주문/
+수익화/리포트/
+
 *.log
 *.tmp
 .write_test

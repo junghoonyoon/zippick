@@ -1,12 +1,14 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "pipeline"))
 
 import real_estate_search  # noqa: E402
+import analyze_real_estate  # noqa: E402
 
 
 class ApartmentSearchSuggestionTest(unittest.TestCase):
@@ -136,6 +138,29 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
                 self.assertEqual(target_rows[0]["name"], "선샤인힐스")
                 self.assertEqual(target_rows[0]["households"], 26)
                 self.assertEqual(target_rows[0]["status"], "분양권")
+
+
+class OpinionAnalysisFailureTest(unittest.TestCase):
+    def tearDown(self):
+        analyze_real_estate._analysis_blocked_until = 0
+        analyze_real_estate._analysis_blocked_reason = ""
+
+    def test_openrouter_billing_error_blocks_repeated_slow_analysis(self):
+        calls = 0
+
+        def fail_once(_prompt):
+            nonlocal calls
+            calls += 1
+            raise RuntimeError("402 Client Error: Payment Required")
+
+        with mock.patch.object(analyze_real_estate.config, "ANALYSIS_PROVIDER", "openrouter"), \
+             mock.patch.object(analyze_real_estate, "_generate_openrouter", side_effect=fail_once):
+            with self.assertRaisesRegex(RuntimeError, "결제나 사용량 한도"):
+                analyze_real_estate._generate("prompt")
+            with self.assertRaisesRegex(RuntimeError, "결제나 사용량 한도"):
+                analyze_real_estate._generate("prompt")
+
+        self.assertEqual(calls, 1)
 
 
 if __name__ == "__main__":

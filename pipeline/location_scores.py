@@ -12,6 +12,7 @@ import datetime
 import apartment_leaders
 import kakao_station_distances
 import real_estate_search
+import supply_forecast
 
 
 SCORE_FORMULA_VERSION = "purchase-judgment-v3"
@@ -446,6 +447,42 @@ def _flow_score(signals):
     return score, f"최근 6개월 {momentum:+.1f}% · 최근 시장 신호"
 
 
+def _supply_pressure_score(row):
+    """앞으로 들어올 입주 물량을 점수로 바꾼다. 많을수록 낮은 점수다.
+
+    입주 물량은 전세를 먼저 누르고 매매가 따라간다. 그래서 전세 항목 안에서
+    본다. 근거 데이터가 분양 세대수라 조합원 분양분이 빠지므로 실제보다
+    적게 잡힌다. 물량이 확인되지 않아도 만점을 주지 않는 이유다.
+    """
+    region = str(row.get("region") or "").strip()
+    if not region:
+        return None, "지역 정보 없음"
+    try:
+        result = supply_forecast.outlook(region)
+    except Exception:
+        return None, "입주 물량 데이터를 불러오지 못함"
+
+    status = result.get("status")
+    if status == "unavailable":
+        return None, "입주 물량 자료 없음"
+    if status == "none":
+        # 자료상 물량이 없어도 조합원 분양분은 잡히지 않는다. 만점은 주지 않는다.
+        return 85, "향후 3년 입주 예정 물량이 확인되지 않음"
+
+    peak = result["peak"]
+    total = result["totalHouseholds"]
+    level = result["level"]
+    detail = (
+        f"{peak['label']} {peak['households']:,}세대 · 3년 누적 {total:,}세대"
+        f" (공고 {result.get('offeredHouseholds', 0):,}세대에 조합원분 보정)"
+    )
+    if level == "heavy":
+        return 25, f"입주 물량이 많아 전세 약세 가능성 · {detail}"
+    if level == "notable":
+        return 60, f"입주 물량이 보통 수준 · {detail}"
+    return 90, f"입주 물량이 적어 공급 부담 낮음 · {detail}"
+
+
 def _jeonse_ratio_score(row):
     ratio = _float_or_none(row.get("jeonseRatioPct"))
     if ratio is None or ratio <= 0:
@@ -845,10 +882,14 @@ def _purchase_score_parts(row, entity, signals):
             _metric("estimate_range", "추정 시세 범위", 8, estimate_score, estimate_reason),
             _metric("recovery", "고점 회복률", 5, recovery_score, recovery_reason),
         ]),
-        _category_part("jeonse", "전세가율·투자금 효율", 20, [
-            _metric("jeonse_ratio", "전세가율", 12, jeonse_score, jeonse_reason),
-            _metric("jeonse_freshness", "전세 거래", 5, jeonse_fresh_score, jeonse_fresh_reason),
-            _metric("investment_gap", "필요 투자금", 3, invest_gap_score, invest_gap_reason),
+        # 전세가율은 전세 실거래가 없으면 매매가 기준 추정치가 들어온다.
+        # 추정값에 12점을 걸면 실측 없는 점수가 커지므로, 실제로 수집한
+        # 입주 물량에 5점을 떼어 준다.
+        _category_part("jeonse", "전세가율·입주물량·투자금", 20, [
+            _metric("jeonse_ratio", "전세가율", 10, jeonse_score, jeonse_reason),
+            _metric("supply_pressure", "입주 물량", 5, *_supply_pressure_score(row)),
+            _metric("jeonse_freshness", "전세 거래", 3, jeonse_fresh_score, jeonse_fresh_reason),
+            _metric("investment_gap", "필요 투자금", 2, invest_gap_score, invest_gap_reason),
         ]),
         _category_part("demand", "입지·실수요", 20, demand_metrics),
         _category_part("product", "상품성·희소성", 15, [

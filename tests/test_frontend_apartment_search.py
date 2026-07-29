@@ -1684,7 +1684,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('"no_recent_trade"', latest_match.group("body"))
         self.assertIn("최근 6개월 거래 없음", latest_match.group("body"))
 
-    def test_budget_candidates_render_only_after_background_enrichment_finishes(self):
+    def test_budget_candidates_render_only_after_price_and_policy_are_verified(self):
         html = APP_HTML.read_text(encoding="utf-8")
         render_match = re.search(
             r"function renderBudgetCandidates\b(?P<body>.*?)"
@@ -1718,17 +1718,21 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             load_body,
         )
         self.assertIn(
-            "await revealBudgetCandidatesTogether(data, controller)",
+            "await revealBudgetCandidatesTogether(",
             load_body,
         )
         self.assertLess(
-            render_body.index("if (data.enrichmentPending)"),
+            render_body.index("if (data.enrichmentPending && !verifiedResultReady)"),
             render_body.index("const allRows"),
         )
-        self.assertNotIn("data-budget-background-status", render_body)
+        self.assertIn("budgetBackgroundStatusHtml(data)", render_body)
+        self.assertIn("candidateScoreDataReady", render_body)
+        self.assertIn("scoreDataReady ? candidateTopScoreBadgesHtml(item)", render_body)
+        self.assertIn('const includeVerified = verifiedShown ? "" : "&include_verified=true"', html)
+        self.assertIn("if (!verifiedShown && next.verifiedResult) revealVerified(next.verifiedResult)", html)
         self.assertLess(
             load_body.index("await waitForCompletedBudgetCandidates(initialData, url, controller)"),
-            load_body.index("await revealBudgetCandidatesTogether(data, controller)"),
+            load_body.index("await revealBudgetCandidatesTogether("),
         )
         self.assertIn("const stageCount = BUDGET_ENRICHMENT_STAGES.length", progress_body)
         self.assertIn("`${stageCount}/${stageCount} 완료`", progress_body)
@@ -1737,7 +1741,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('const state = completed || index < safeStage ? "done"', progress_body)
         self.assertIn("준비가 끝나면 후보 카드를 한 번에 보여드릴게요.", progress_body)
 
-    def test_condition_change_waits_for_complete_signal_enrichment(self):
+    def test_condition_change_shows_only_verified_rows_while_scores_finish(self):
         html = APP_HTML.read_text(encoding="utf-8")
         load_match = re.search(
             r"async function loadBudgetCandidates\b(?P<body>.*?)"
@@ -1752,9 +1756,12 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             load_body,
         )
         self.assertIn(
-            "await revealBudgetCandidatesTogether(data, controller)",
+            "await revealBudgetCandidatesTogether(",
             load_body,
         )
+        self.assertIn("renderBudgetCandidates(payload, { preserveSelection:true })", html)
+        self.assertIn("verifiedResultReady:true", html)
+        self.assertIn("candidateScoreDataReady:false", html)
 
     def test_map_condition_change_shows_loading_then_reopens_map(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -1791,7 +1798,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('candidateViewMode = "map";', load_body)
         self.assertLess(
             load_body.index('candidateViewMode = "map";'),
-            load_body.index("await revealBudgetCandidatesTogether(data, controller)"),
+            load_body.index("await revealBudgetCandidatesTogether("),
         )
 
     def test_frontend_signal_formula_version_matches_backend(self):
@@ -1861,10 +1868,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("if (!next.done)", completion_body)
         self.assertIn("if (next.enrichmentPending) continue;", completion_body)
         self.assertIn("writeBudgetBrowserCache(url, next)", completion_body)
-        self.assertIn("return next", completion_body)
+        self.assertIn("return { data:next, verifiedShown }", completion_body)
         self.assertLess(
             completion_body.index("writeBudgetBrowserCache(url, next)"),
-            completion_body.index("return next"),
+            completion_body.index("return { data:next, verifiedShown }"),
         )
 
     def test_optional_naver_links_update_after_complete_list_is_revealed(self):
@@ -1893,7 +1900,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("pending.outerHTML", html)
         self.assertIn("void enrichOptionalBudgetLinks(data);", load_body)
         self.assertLess(
-            load_body.index("await revealBudgetCandidatesTogether(data, controller)"),
+            load_body.index("await revealBudgetCandidatesTogether("),
             load_body.index("void enrichOptionalBudgetLinks(data);"),
         )
 
@@ -1937,7 +1944,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn('리포트 보기', body)
         self.assertIn('class="compare-toggle candidate-compare-action"', html)
         self.assertNotIn('data-compare-label="view"', html)
-        self.assertIn('${selectedCandidateNames.has(name) ? "담기 해제" : "비교 담기"}</button>', html)
+        self.assertIn('${selectedCandidateNames.has(key) ? "담기 해제" : "비교 담기"}</button>', html)
         self.assertIn('document.querySelectorAll("[data-compare-name]").forEach(button => {', html)
         self.assertIn('button.classList.contains("candidate-map-compare-toggle")', html)
         self.assertIn('? (isSelected ? "담김" : "비교 담기")', html)
@@ -1951,7 +1958,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('border:1px solid #e1e5ea !important; border-radius:14px !important;', html)
         self.assertIn('background:#fff !important; color:#4e5968 !important; font-size:14px; font-weight:800', html)
         self.assertIn(".budget-name { display:block; color:#23272f; font-size:20px;", html)
-        self.assertIn(".condition-stage-results .budget-name { color:#191f28; font-size:20px;", html)
+        self.assertIn(".condition-stage-results .budget-name { color:#191f28; font-size:18px;", html)
         self.assertIn(".condition-stage-results .budget-meta { margin-top:7px; color:#8b95a1; font-size:14px; line-height:1.5 }", html)
         self.assertIn(".condition-stage-results .budget-meta { font-size:13px }", html)
         self.assertIn(".candidate-score-badges { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:11px }", html)
@@ -1979,9 +1986,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('class="compare-floating-selected-chip"', html)
         self.assertIn('class="candidate-map-compare-toggle"', html)
         self.assertIn('data-compare-name="${esc(name)}"', html)
-        self.assertIn('${selectedCandidateNames.has(name) ? "담김" : "비교 담기"}</button>', html)
+        self.assertIn('${selectedCandidateNames.has(key) ? "담김" : "비교 담기"}</button>', html)
         self.assertIn('class="compare-floating-selected-name"', html)
-        self.assertIn('data-compare-remove-name="${esc(item.name || name)}"', html)
+        self.assertIn('data-compare-remove-name="${esc(key)}"', html)
         self.assertIn('aria-label="${esc(name)} 비교 후보 삭제"', html)
         self.assertIn('title="삭제">×</button>', html)
         self.assertNotIn("선택 비우기", html)
@@ -1994,13 +2001,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("compareCartChip.textContent = `비교할 집 ${selected.length}곳`", html)
         self.assertIn("let compareCartCollapsed = false;", html)
         self.assertIn("const compareCandidateCart = new Map();", html)
-        self.assertIn("const saved = compareCandidateCart.get(name);", html)
-        self.assertIn("if (item) compareCandidateCart.set(name, item);", html)
+        self.assertIn("const saved = compareCandidateCart.get(key);", html)
+        self.assertIn("if (item) compareCandidateCart.set(key, item);", html)
         self.assertIn("const stayCollapsed = options?.stayCollapsed === true;", html)
         self.assertIn("compareCartCollapsed = stayCollapsed;", html)
         self.assertIn('stayCollapsed:candidateMapBottomSheetMedia.matches && (', html)
         self.assertIn('document.body.classList.contains("candidate-map-open") || Boolean(compareButton.closest("[data-candidate-map-preview]"))', html)
-        self.assertIn("compareCandidateCart.delete(name);", html)
+        self.assertIn("compareCandidateCart.delete(key);", html)
         self.assertIn("compareCandidateCart.clear();", html)
         self.assertIn("body:not(.condition-stage-results):not(.apt-search-mode) .compare-floating-bar", html)
         self.assertIn("body:not(.condition-stage-results):not(.apt-search-mode) .compare-floating-chip", html)
@@ -2131,7 +2138,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('["시세 흐름", "summary"]', html)
         self.assertIn('["종합점수", "totalScore", "section"]', html)
         self.assertIn('["가격 적정성", "score:price"]', html)
-        self.assertIn('["전세가율·투자금 효율", "score:jeonse"]', html)
+        self.assertIn('["전세가율·입주물량·투자금", "score:jeonse"]', html)
         self.assertIn('["입지·실수요", "score:demand"]', html)
         self.assertIn('["상품성·희소성", "score:product"]', html)
         self.assertIn('["거래 유동성·시장 신호", "score:market"]', html)
@@ -2874,13 +2881,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("location-score-detail-list", html)
         self.assertIn(".location-score-reason { grid-column:1 / -1; color:#667085; font-size:14px;", html)
         self.assertIn("display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:36px;", html)
-        self.assertIn("background:#fff; color:#3182f6; font-size:14px; font-weight:800; line-height:1.4; cursor:pointer; list-style:none;", html)
+        self.assertIn("background:#fff; color:#3182f6; font-size:15px; font-weight:850; line-height:1.45; cursor:pointer; list-style:none;", html)
         self.assertIn(".location-score-details summary:hover { background:#f8f9fa; color:#1b64da }", html)
         self.assertIn(".location-score-details summary:focus-visible { outline:2px solid #3182f6; outline-offset:2px }", html)
-        self.assertIn(".location-score-detail-list { display:grid; gap:10px; margin:0; padding:0; list-style:none }", html)
-        self.assertIn(".location-score-detail-list strong { color:#303846; font-size:13px; font-weight:850; line-height:1.35 }", html)
-        self.assertIn(".location-score-detail-list small { grid-column:1 / -1; color:#8b95a1; font-size:13px; font-weight:650; line-height:1.38 }", html)
-        self.assertIn("padding:0;\n      color:#4e5968; font-size:13px;", html)
+        self.assertIn(".location-score-detail-list { display:grid; gap:12px; margin:0; padding:0; list-style:none }", html)
+        self.assertIn(".location-score-detail-list strong { color:#303846; font-size:15px; font-weight:850; line-height:1.42 }", html)
+        self.assertIn(".location-score-detail-list small { grid-column:1 / -1; color:#8b95a1; font-size:14px; font-weight:650; line-height:1.5 }", html)
+        self.assertIn("padding:0;\n      color:#4e5968; font-size:15px;", html)
         self.assertLess(
             html.index('<span class="location-score-bar" aria-hidden="true">'),
             html.index("${disclosureHtml}"),
@@ -2892,23 +2899,35 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("전세 실거래 기준", html)
         self.assertIn("전세 추정 기준", html)
         self.assertIn('const estimated = status === "estimated";', html)
-        self.assertIn('estimated ? "추정값"', html)
+        self.assertNotIn('estimated ? "추정값"', html)
         self.assertIn("전세 실거래를 지금 불러오지 못했어요. 잠시 후 다시 확인해 주세요.", html)
         self.assertIn("전세가율 계산에 쓸 매매 기준가를 먼저 확인해야 해요.", html)
         self.assertIn('const missingLabel = ["api_error", "key_missing"].includes(status) ? "확인 중" : "미수집";', html)
         self.assertNotIn("국토부 실거래가 API 권한이 없거나 인증키가 승인되지 않았어요.", html)
         self.assertNotIn('status === "key_missing" ? "키 필요"', html)
-        self.assertIn("location-score-jeonse-grid", html)
+        self.assertIn("location-score-jeonse-visual", html)
+        self.assertIn("location-score-jeonse-track", html)
+        self.assertIn("location-score-jeonse-fill is-deposit", html)
+        self.assertIn("location-score-jeonse-fill is-gap", html)
+        self.assertIn("location-score-jeonse-legend", html)
+        self.assertIn(".location-score-jeonse-legend { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px }", html)
+        self.assertIn(".location-score-jeonse-legend-item { display:inline-flex; align-items:baseline; gap:6px;", html)
+        self.assertNotIn("location-score-jeonse-legend-item { display:grid", html)
+        self.assertNotIn("location-score-jeonse-legend { display:grid", html)
+        self.assertIn("매매가 중 전세금과 필요 투자금 비중", html)
+        self.assertIn("const jeonseShare = hasRatio ? Math.max(0, Math.min(100, ratio)) : 0;", html)
+        self.assertIn("const gapShare = Math.max(0, 100 - jeonseShare);", html)
+        self.assertNotIn("location-score-jeonse-grid", html)
+        self.assertNotIn("location-score-jeonse-note", html)
         self.assertIn("parts.map(part => locationScorePartHtml(part, item)).join(\"\")", html)
         self.assertNotIn("<p class=\"location-score-coverage\">반영된 데이터: ${esc(Math.round(coverage * 100))}%</p>\\n        ${locationScoreJeonseSummaryHtml(item)}", html)
-        self.assertIn('const source = item?.jeonseSourceNote || "국토부 전월세 실거래가 · 월세 제외";', html)
         self.assertIn("medianJeonseDepositEok:item?.medianJeonseDepositEok || 0", html)
         self.assertIn("currentEstimateMinPriceEok:item?.currentEstimateMinPriceEok || 0", html)
         self.assertIn("currentEstimateMaxPriceEok:item?.currentEstimateMaxPriceEok || 0", html)
         self.assertIn("locationScoreTitle.textContent = `${candidateDisplayName(item)} 최근 시장 신호표`;", html)
         self.assertIn("locationScoreContent.innerHTML = candidateLegacySignalReportHtml(item);", html)
         self.assertIn('aria-label="최근 시장 신호 계산 기준"', html)
-        self.assertIn("현재 매물 호가와 입주 물량은 아직 반영하지 않았어요.", html)
+        self.assertIn("현재 매물 호가는 아직 반영하지 않았어요. 입주 물량은 전세 여건 점수에 반영했어요.", html)
         self.assertIn("${candidateSharedActionsHtml(item)}", preview_match.group("body"))
         self.assertNotIn("data-candidate-map-detail-open", preview_match.group("body"))
         self.assertNotIn("검토 리포트", preview_match.group("body"))
@@ -3121,6 +3140,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             "같은 구 평균보다 움직임이 큰 집",
         ):
             self.assertIn(help_text, sort_body)
+        self.assertIn(
+            'const scoreSortKeys = new Set(["location_score", "flow_best", "region_strong"])',
+            sort_body,
+        )
+        self.assertIn("!scoreDataReady && scoreSortKeys.has(value)", sort_body)
+        self.assertIn("종합 점수 계산이 끝나면 선택할 수 있어요", sort_body)
+        self.assertIn('aria-disabled="true" disabled', sort_body)
         for removed in (
             "반등 시작 순",
             "대장보다 강한 순",

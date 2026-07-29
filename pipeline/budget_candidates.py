@@ -51,6 +51,23 @@ BROAD_REGION_KEYS = {
 }
 
 
+def _name_variants(key):
+    """행정구역 이름과 접미사(시·구·군)를 뗀 형태를 함께 돌려준다."""
+    variants = {key}
+    if key.endswith(("시", "구", "군")) and len(key) > 2:
+        variants.add(key[:-1])
+    return variants
+
+
+# 실재하는 시·군·구 이름 목록. 서로 다른 지역이 부분 문자열로 겹칠 때
+# 오탐을 걸러내는 기준으로 쓴다.
+KNOWN_REGION_STEMS = {
+    variant
+    for item in (SEOUL_DISTRICTS | GYEONGGI_REGIONS)
+    for variant in _name_variants(real_estate_search.compact(item))
+}
+
+
 def _has_verified_price(row):
     return (
         row.get("priceSource") in VERIFIED_PRICE_SOURCES
@@ -1342,9 +1359,7 @@ def _matches_one_region(row, entity, region):
         if district_key in GYEONGGI_REGION_KEYS:
             return True
         return str(row.get("region") or "").strip() in GYEONGGI_REGIONS
-    region_variants = {region_key}
-    if region_key.endswith(("시", "구", "군")) and len(region_key) > 2:
-        region_variants.add(region_key[:-1])
+    region_variants = _name_variants(region_key)
     # 단지명에 들어간 지명(예: 송파구의 '강남팰리스')을 실제 소재지로
     # 오인하지 않도록 지역 필드는 행정구역 정보만 비교한다.
     row_values = [row.get("region", "")]
@@ -1361,16 +1376,31 @@ def _matches_one_region(row, entity, region):
         key = real_estate_search.compact(value)
         if not key:
             continue
-        key_variants = {key}
-        if key.endswith(("시", "구", "군")) and len(key) > 2:
-            key_variants.add(key[:-1])
+        key_variants = _name_variants(key)
         if any(
-            left == right or (len(left) >= 2 and left in right) or (len(right) >= 2 and right in left)
+            _region_keys_overlap(left, right)
             for left in region_variants
             for right in key_variants
         ):
             return True
     return False
+
+
+def _region_keys_overlap(left, right):
+    """서로 다른 행정구역이 부분 문자열로 겹쳐서 생기는 오탐을 막는다.
+
+    `남양주시`를 찾을 때 `양주시` 단지가 걸리면 안 된다. 반대로 `수원`으로
+    `수원영통구`를 찾는 상위-하위 관계는 그대로 통과시켜야 한다. 그래서
+    짧은 쪽이 그 자체로 실재하는 시·군·구 이름일 때만 접두 일치를 요구한다.
+    """
+    if left == right:
+        return True
+    shorter, longer = (left, right) if len(left) <= len(right) else (right, left)
+    if len(shorter) < 2 or shorter not in longer:
+        return False
+    if shorter in KNOWN_REGION_STEMS and not longer.startswith(shorter):
+        return False
+    return True
 
 
 def _fit_status(mid_price, budget):
@@ -1441,19 +1471,31 @@ def _commute_score(row, entity, commute):
 
 
 def _purpose_score(row, purpose):
+    """매수 목적이 요구하는 단지 속성만 본다.
+
+    예산을 얼마나 쓸지는 여기서 판단하지 않는다. 그건 사용자가 고른
+    `가격 전략`(buffer/stretch)이 전담하고 `_price_score`가 35점으로 반영한다.
+
+    예전에는 여기서 `실거주면 예산의 90% 이하일 때 +3점`처럼 싼 집에 가점을
+    줬는데, 그러면 사용자가 `예산 최대 활용(stretch)`을 골라도 목적 가점이
+    이를 되돌려 버린다. 실제로 상한 6.2억인 사용자에게 5.2억짜리가 1순위로
+    올라왔다. README의 `구매 가능 상한에 가까운 순으로 우선 비교한다`는
+    기준과도 어긋난다. 두 축은 독립이어야 한다.
+    """
     purposes = _multi_values(purpose)
     if not purposes:
         return 0
     households = row.get("households") or 0
-    ratio = (row.get("midPriceEok") or 0) / (row.get("_budgetEok") or 1)
     scores = []
     for item in purposes:
         if item == "live":
-            scores.append((4 if households >= 1000 else 1) + (3 if ratio <= 0.9 else 0))
+            scores.append(4 if households >= 1000 else 1)
         elif item == "move":
-            scores.append((4 if households >= 1500 else 1) + (2 if ratio <= 0.95 else 0))
+            scores.append(4 if households >= 1500 else 1)
         elif item == "invest":
-            scores.append((4 if _has_verified_price(row) and row.get("transactionCount") else 0) + (2 if ratio <= 0.9 else 0))
+            scores.append(
+                4 if _has_verified_price(row) and row.get("transactionCount") else 0
+            )
     return round(sum(scores) / len(scores), 1) if scores else 0
 
 
@@ -1985,6 +2027,7 @@ def _finalize_candidate_rows(
     fast_mode=False,
     include_naver_links=True,
     progress_callback=None,
+    verified_rows_callback=None,
 ):
     """Attach the common display, signal, link and verdict result model."""
     if progress_callback:
@@ -2014,6 +2057,12 @@ def _finalize_candidate_rows(
             price_strategy,
             region,
         ))
+
+    if verified_rows_callback:
+        try:
+            verified_rows_callback()
+        except Exception:
+            pass
 
     if not fast_mode and rows:
         if progress_callback:
@@ -2325,6 +2374,7 @@ def budget_candidates(
     all_matches=False,
     fast_mode=False,
     progress_callback=None,
+    verified_result_callback=None,
 ):
     def progress(stage, *, processed=None, total=None):
         if not progress_callback:
@@ -2749,21 +2799,6 @@ def budget_candidates(
     candidates = policy_allowed_rows if all_matches else policy_allowed_rows[:limit]
     policy_excluded_candidates = [] if all_matches else policy_excluded_rows[:limit]
     display_rows = [*candidates, *policy_excluded_candidates]
-    _finalize_candidate_rows(
-        display_rows,
-        budget_eok=budget_eok,
-        purpose=purpose,
-        priority=priority,
-        commute=commute,
-        move_timing=move_timing,
-        price_strategy=price_strategy,
-        region=region,
-        fast_mode=fast_mode,
-        # 전체 후보의 네이버 단지 확인은 순위·가격 신뢰도와 무관한
-        # 선택 보강이다. 검색 완료를 막지 않고 서버가 별도로 캐시한다.
-        include_naver_links=False,
-        progress_callback=progress,
-    )
     # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.
     # all_matches 응답은 정책상 needs_input/restricted 후보도 candidates에 담지만,
     # 화면에서는 possible/short 및 가격 확인 후보만 노출한다.
@@ -2797,57 +2832,93 @@ def budget_candidates(
     elif unverified_price_count and not candidates:
         result_message = "최신 실거래를 확인하지 못한 수동 가격 후보는 결과에서 제외했어요. 국토부 API 연결을 복구한 뒤 다시 확인해 주세요."
 
-    return {
-        "candidateResultSchemaVersion": CANDIDATE_RESULT_SCHEMA_VERSION,
-        "budgetEok": budget_eok,
-        "budgetText": _price_text(budget_eok),
-        "budgetSource": budget_source,
-        "region": region,
-        "purpose": purpose,
-        "priority": priority,
-        "priceStrategy": price_strategy,
-        "commute": commute,
-        "moveTiming": move_timing,
-        "purposeLabel": _multi_label(purpose, PURPOSE_LABELS, "매수 검토"),
-        "priorityLabel": _multi_label(priority, PRIORITY_LABELS, ""),
-        "moveTimingLabel": MOVE_TIMING_LABELS.get(move_timing, ""),
-        "candidates": candidates,
-        "policyExcludedCandidates": policy_excluded_candidates,
-        "policyExcludedCount": 0 if all_matches else len(policy_excluded_rows),
-        "policyEligibleCount": len(policy_allowed_rows),
-        "allMatches": bool(all_matches),
-        "initialStage": bool(fast_mode),
-        "totalMatchedCount": total_matched_count,
-        "resultLimited": total_matched_count > len(unique_rows),
-        "resultLimit": result_limit if all_matches else limit,
-        "excludedCount": filtered["price"],
-        "filterSummary": filtered,
-        "eligibleCount": len(rows),
-        "priceBandCount": len(rows),
-        "unverifiedPriceCount": unverified_price_count,
-        "lastDealOverBudgetCount": last_deal_over_budget_count,
-        "noLastDealCount": no_last_deal_count,
-        "rentalExcludedCount": filtered["rental"],
-        "liveSeedCount": live_seed_count,
-        "livePriceEnabled": molit_transactions.enabled(),
-        "livePriceCount": sum(1 for row in candidates if _has_verified_price(row)),
-        "officialPriceBandCount": sum(1 for row in rows if _has_verified_price(row)),
-        "livePriceError": molit_transactions.last_error(),
-        "policySnapshot": {
-            **policy_evaluator.summarize(
-                [row["policyImpact"] for row in unique_rows if row.get("policyImpact")],
-                policy_profile,
-            ),
-            "estimatedPurchaseCeilingEok": budget_eok,
+    def result_payload(score_data_ready):
+        public_candidates = candidates
+        public_excluded = policy_excluded_candidates
+        if not score_data_ready:
+            public_candidates = [
+                {key: value for key, value in row.items() if not key.startswith("_")}
+                for row in candidates
+            ]
+            public_excluded = [
+                {key: value for key, value in row.items() if not key.startswith("_")}
+                for row in policy_excluded_candidates
+            ]
+        return {
+            "candidateResultSchemaVersion": CANDIDATE_RESULT_SCHEMA_VERSION,
+            "budgetEok": budget_eok,
+            "budgetText": _price_text(budget_eok),
             "budgetSource": budget_source,
-        },
-        "rankingNote": (
-            "지역·최소면적·세대수·연식 조건을 통과하고, 최근 또는 마지막 국토부 실거래가가 확인된 단지입니다. 마지막 확인 실거래가가 매수 가능 상한을 넘는 단지와 실거래 이력 미확인 단지는 제외했습니다."
-            if all_matches
-            else "최신 실거래 근거가 확인된 후보만 표시합니다. 수동 가격과 주차·학군·매물 상태는 후보 판정에 사용하지 않습니다."
-        ),
-        "signalNote": momentum_signals.SIGNAL_NOTE,
-        "message": result_message,
-        "nearbyRegionsVersion": NEARBY_REGIONS_SCHEMA_VERSION,
-        "nearbyRegions": nearby_suggestions,
-    }
+            "region": region,
+            "purpose": purpose,
+            "priority": priority,
+            "priceStrategy": price_strategy,
+            "commute": commute,
+            "moveTiming": move_timing,
+            "purposeLabel": _multi_label(purpose, PURPOSE_LABELS, "매수 검토"),
+            "priorityLabel": _multi_label(priority, PRIORITY_LABELS, ""),
+            "moveTimingLabel": MOVE_TIMING_LABELS.get(move_timing, ""),
+            "candidates": public_candidates,
+            "policyExcludedCandidates": public_excluded,
+            "policyExcludedCount": 0 if all_matches else len(policy_excluded_rows),
+            "policyEligibleCount": len(policy_allowed_rows),
+            "allMatches": bool(all_matches),
+            "initialStage": bool(fast_mode),
+            "verifiedResultReady": not fast_mode,
+            "candidateScoreDataReady": bool(score_data_ready),
+            "totalMatchedCount": total_matched_count,
+            "resultLimited": total_matched_count > len(unique_rows),
+            "resultLimit": result_limit if all_matches else limit,
+            "excludedCount": filtered["price"],
+            "filterSummary": filtered,
+            "eligibleCount": len(rows),
+            "priceBandCount": len(rows),
+            "unverifiedPriceCount": unverified_price_count,
+            "lastDealOverBudgetCount": last_deal_over_budget_count,
+            "noLastDealCount": no_last_deal_count,
+            "rentalExcludedCount": filtered["rental"],
+            "liveSeedCount": live_seed_count,
+            "livePriceEnabled": molit_transactions.enabled(),
+            "livePriceCount": sum(1 for row in candidates if _has_verified_price(row)),
+            "officialPriceBandCount": sum(1 for row in rows if _has_verified_price(row)),
+            "livePriceError": molit_transactions.last_error(),
+            "policySnapshot": {
+                **policy_evaluator.summarize(
+                    [row["policyImpact"] for row in unique_rows if row.get("policyImpact")],
+                    policy_profile,
+                ),
+                "estimatedPurchaseCeilingEok": budget_eok,
+                "budgetSource": budget_source,
+            },
+            "rankingNote": (
+                "지역·최소면적·세대수·연식 조건을 통과하고, 최근 또는 마지막 국토부 실거래가가 확인된 단지입니다. 마지막 확인 실거래가가 매수 가능 상한을 넘는 단지와 실거래 이력 미확인 단지는 제외했습니다."
+                if all_matches
+                else "최신 실거래 근거가 확인된 후보만 표시합니다. 수동 가격과 주차·학군·매물 상태는 후보 판정에 사용하지 않습니다."
+            ),
+            "signalNote": momentum_signals.SIGNAL_NOTE,
+            "message": result_message,
+            "nearbyRegionsVersion": NEARBY_REGIONS_SCHEMA_VERSION,
+            "nearbyRegions": nearby_suggestions,
+        }
+
+    def emit_verified_result():
+        if verified_result_callback and not fast_mode:
+            verified_result_callback(result_payload(False))
+
+    _finalize_candidate_rows(
+        display_rows,
+        budget_eok=budget_eok,
+        purpose=purpose,
+        priority=priority,
+        commute=commute,
+        move_timing=move_timing,
+        price_strategy=price_strategy,
+        region=region,
+        fast_mode=fast_mode,
+        # 전체 후보의 네이버 단지 확인은 순위·가격 신뢰도와 무관한
+        # 선택 보강이다. 검색 완료를 막지 않고 서버가 별도로 캐시한다.
+        include_naver_links=False,
+        progress_callback=progress,
+        verified_rows_callback=emit_verified_result,
+    )
+    return result_payload(True)

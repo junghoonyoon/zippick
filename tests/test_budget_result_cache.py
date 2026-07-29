@@ -109,7 +109,8 @@ class BudgetResultCacheTest(unittest.TestCase):
              mock.patch.object(search_server.budget_candidates, "budget_candidates", side_effect=calculate):
             initial = search_server._start_staged_budget_payload("staged", {"budget": "7.9"})
             self.assertTrue(initial["enrichmentPending"])
-            self.assertEqual(initial["candidates"][0]["name"], "1차 후보")
+            self.assertEqual(initial["candidates"], [])
+            self.assertFalse(initial["verifiedResultReady"])
 
             deadline = time.time() + 2
             completed = None
@@ -122,6 +123,70 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertTrue(completed["done"])
         self.assertFalse(completed["enrichmentPending"])
         self.assertEqual(completed["candidates"][0]["name"], "보강 후보")
+
+    def test_staged_progress_returns_verified_rows_only_when_requested(self):
+        verified_ready = threading.Event()
+        release_final = threading.Event()
+
+        def calculate(**arguments):
+            if arguments.get("fast_mode"):
+                return {"candidates": [{"name": "검증 전 후보"}], "initialStage": True}
+            arguments["verified_result_callback"]({
+                "candidates": [{"name": "가격 검증 후보", "midPriceEok": 7.5}],
+                "verifiedResultReady": True,
+                "candidateScoreDataReady": False,
+            })
+            verified_ready.set()
+            release_final.wait(2)
+            return {
+                "candidates": [{"name": "점수 완료 후보", "midPriceEok": 7.5}],
+                "verifiedResultReady": True,
+                "candidateScoreDataReady": True,
+            }
+
+        with tempfile.TemporaryDirectory() as directory, \
+             mock.patch.object(search_server, "BUDGET_CACHE_DIR", Path(directory)), \
+             mock.patch.object(search_server, "BUDGET_JOBS", {}), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(search_server.budget_candidates, "budget_candidates", side_effect=calculate):
+            initial = search_server._start_staged_budget_payload(
+                "verified-staged",
+                {"budget": "7.9"},
+            )
+            self.assertTrue(verified_ready.wait(1))
+
+            lightweight = search_server._budget_job_snapshot(
+                initial["enrichmentJobId"],
+            )
+            self.assertTrue(lightweight["verifiedResultReady"])
+            self.assertNotIn("verifiedResult", lightweight)
+
+            included = search_server._budget_job_snapshot(
+                initial["enrichmentJobId"],
+                include_verified=True,
+            )
+            self.assertEqual(
+                included["verifiedResult"]["candidates"][0]["name"],
+                "가격 검증 후보",
+            )
+            self.assertFalse(
+                included["verifiedResult"]["candidateScoreDataReady"],
+            )
+            release_final.set()
+
+            deadline = time.time() + 2
+            completed = None
+            while time.time() < deadline:
+                completed = search_server._budget_job_snapshot(
+                    initial["enrichmentJobId"],
+                )
+                if completed and completed.get("done"):
+                    break
+                time.sleep(0.01)
+
+        self.assertTrue(completed["done"])
+        self.assertTrue(completed["candidateScoreDataReady"])
+        self.assertEqual(completed["candidates"][0]["name"], "점수 완료 후보")
 
     def test_critical_result_completes_before_optional_naver_links(self):
         link_started = threading.Event()

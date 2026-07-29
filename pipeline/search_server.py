@@ -2168,6 +2168,27 @@ def _update_budget_job_progress(job_id, stage, *, processed=None, total=None):
             job["progress"] = progress
 
 
+def _update_budget_job_verified_result(job_id, payload):
+    verified = json.loads(json.dumps(payload, ensure_ascii=False))
+    verified.update({
+        "enrichmentPending": True,
+        "enrichmentStage": "flow_score",
+        "verifiedResultReady": True,
+        "candidateScoreDataReady": False,
+    })
+    with BUDGET_JOBS_LOCK:
+        job = BUDGET_JOBS.get(job_id)
+        if job is None or job.get("done"):
+            return
+        job["verifiedResult"] = verified
+        job["progress"] = {
+            "enrichmentStage": "flow_score",
+            "processedCount": 0,
+            "totalCount": len(_budget_payload_rows(verified)),
+            "updatedAt": time.time(),
+        }
+
+
 def _run_budget_enrichment(job_id, cache_key, candidate_arguments):
     try:
         _update_budget_job_progress(job_id, "candidate_filter")
@@ -2180,16 +2201,36 @@ def _run_budget_enrichment(job_id, cache_key, candidate_arguments):
                 total=total,
             )
         )
+        progress_arguments["verified_result_callback"] = (
+            lambda payload: _update_budget_job_verified_result(job_id, payload)
+        )
         payload = _load_budget_payload(cache_key, progress_arguments)
-        payload.update({"enrichmentPending": False, "enrichmentStage": "complete"})
+        payload.update({
+            "enrichmentPending": False,
+            "enrichmentStage": "complete",
+            "verifiedResultReady": True,
+            "candidateScoreDataReady": True,
+        })
         _schedule_budget_optional_links(cache_key, payload)
     except Exception as exc:
-        payload = {
-            "done": True,
-            "enrichmentPending": False,
-            "enrichmentStage": "error",
-            "error": str(exc),
-        }
+        with BUDGET_JOBS_LOCK:
+            verified = (BUDGET_JOBS.get(job_id) or {}).get("verifiedResult")
+        if verified:
+            payload = json.loads(json.dumps(verified, ensure_ascii=False))
+            payload.update({
+                "done": True,
+                "enrichmentPending": False,
+                "enrichmentStage": "score_error",
+                "candidateScoreDataReady": False,
+                "error": "후보 가격과 순서는 확인했지만 종합 점수를 끝까지 계산하지 못했어요. 잠시 후 다시 검색해 주세요.",
+            })
+        else:
+            payload = {
+                "done": True,
+                "enrichmentPending": False,
+                "enrichmentStage": "error",
+                "error": str(exc),
+            }
     with BUDGET_JOBS_LOCK:
         job = BUDGET_JOBS.get(job_id)
         if not job:
@@ -2199,7 +2240,7 @@ def _run_budget_enrichment(job_id, cache_key, candidate_arguments):
         job["finishedAt"] = time.time()
 
 
-def _budget_job_snapshot(job_id):
+def _budget_job_snapshot(job_id, *, include_verified=False):
     with BUDGET_JOBS_LOCK:
         job = BUDGET_JOBS.get(job_id)
         if not job:
@@ -2210,12 +2251,21 @@ def _budget_job_snapshot(job_id):
             # 끝내지 않고 '오래 걸리는 중' 신호만 보낸다. 콜드 캐시 지역에서
             # 가격 없는 1차 결과가 최종으로 굳는 문제를 막는다.
             if elapsed >= BUDGET_JOB_HARD_TIMEOUT_SECONDS:
-                payload = json.loads(json.dumps(job.get("initial") or {}, ensure_ascii=False))
+                verified = job.get("verifiedResult")
+                payload = json.loads(json.dumps(
+                    verified or job.get("initial") or {},
+                    ensure_ascii=False,
+                ))
                 payload.update({
                     "done": True,
                     "enrichmentPending": False,
                     "enrichmentStage": "timeout",
-                    "error": "최신 실거래 확인이 오래 걸려 현재 확보한 결과만 표시합니다. 잠시 후 다시 검색하면 이어서 확인돼요.",
+                    "candidateScoreDataReady": False,
+                    "error": (
+                        "후보 가격과 순서는 확인했지만 종합 점수 계산이 오래 걸리고 있어요. 잠시 후 다시 검색해 주세요."
+                        if verified
+                        else "최신 실거래 확인이 오래 걸리고 있어요. 잠시 후 다시 검색해 주세요."
+                    ),
                 })
                 job["done"] = True
                 job["result"] = payload
@@ -2226,7 +2276,7 @@ def _budget_job_snapshot(job_id):
                 progress = {"enrichmentStage": "transaction_fetch"}
             if elapsed >= BUDGET_JOB_TIMEOUT_SECONDS:
                 progress["slow"] = True
-            return {
+            snapshot = {
                 "done": False,
                 "enrichmentPending": True,
                 "enrichmentStage": progress.get("enrichmentStage") or "transaction_fetch",
@@ -2234,7 +2284,14 @@ def _budget_job_snapshot(job_id):
                 "totalCount": progress.get("totalCount"),
                 "slow": bool(progress.get("slow")),
                 "elapsedSeconds": int(max(0, elapsed)),
+                "verifiedResultReady": bool(job.get("verifiedResult")),
             }
+            if include_verified and job.get("verifiedResult"):
+                snapshot["verifiedResult"] = json.loads(json.dumps(
+                    job["verifiedResult"],
+                    ensure_ascii=False,
+                ))
+            return snapshot
         payload = json.loads(json.dumps(job.get("result") or {}, ensure_ascii=False))
         payload["done"] = True
         return payload
@@ -2253,22 +2310,27 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
                 payload = json.loads(json.dumps(job["result"], ensure_ascii=False))
                 payload.update({"done": True, "enrichmentPending": False})
                 return payload
-            initial = json.loads(json.dumps(job.get("initial") or {}, ensure_ascii=False))
+            available = job.get("verifiedResult") or job.get("initial") or {}
+            initial = json.loads(json.dumps(available, ensure_ascii=False))
             initial.update({
                 "enrichmentJobId": job_id,
                 "enrichmentPending": True,
-                "enrichmentStage": "live_data",
+                "enrichmentStage": (
+                    "flow_score"
+                    if job.get("verifiedResult")
+                    else "live_data"
+                ),
             })
             return initial
 
-    initial_arguments = {**candidate_arguments, "fast_mode": True}
-    initial = budget_candidates.budget_candidates(**initial_arguments)
-    if initial.get("error") or int(initial.get("status") or 200) >= 400:
-        initial.update({"enrichmentPending": False, "enrichmentStage": "error"})
-        return initial
-    _attach_market_snapshots(initial)
-    _refresh_snapshot_policy_impacts(initial, candidate_arguments)
     if not molit_transactions.configured():
+        initial_arguments = {**candidate_arguments, "fast_mode": True}
+        initial = budget_candidates.budget_candidates(**initial_arguments)
+        if initial.get("error") or int(initial.get("status") or 200) >= 400:
+            initial.update({"enrichmentPending": False, "enrichmentStage": "error"})
+            return initial
+        _attach_market_snapshots(initial)
+        _refresh_snapshot_policy_impacts(initial, candidate_arguments)
         initial = json.loads(json.dumps(initial, ensure_ascii=False))
         momentum_signals.attach_signals(
             _budget_payload_rows(initial),
@@ -2280,6 +2342,14 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
         })
         return initial
 
+    # 검증 전 후보는 화면에 노출하지 않는다. 같은 조건을 fast/full 두 번
+    # 계산하는 대신 정확한 실거래·자금 검증 작업을 즉시 시작한다.
+    initial = {
+        "candidates": [],
+        "initialStage": True,
+        "verifiedResultReady": False,
+        "candidateScoreDataReady": False,
+    }
     job_id = uuid.uuid4().hex[:12]
     with BUDGET_JOBS_LOCK:
         BUDGET_JOBS[job_id] = {
@@ -2287,6 +2357,7 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
             "startedAt": time.time(),
             "done": False,
             "initial": initial,
+            "verifiedResult": None,
             "result": None,
             "progress": {"enrichmentStage": "transaction_fetch"},
         }
@@ -3103,7 +3174,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/budget-candidates/progress":
             job_id = params.get("id", [""])[0].strip()
-            payload = _budget_job_snapshot(job_id)
+            include_verified = (
+                params.get("include_verified", ["false"])[0].strip().lower()
+                in {"1", "true", "yes", "on"}
+            )
+            payload = _budget_job_snapshot(
+                job_id,
+                include_verified=include_verified,
+            )
             if not payload:
                 self._json({"error": "후보 보강 작업을 찾지 못했어요."}, 404)
                 return

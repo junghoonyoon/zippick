@@ -9,6 +9,8 @@ import config
 
 _client = None
 _working = None
+_analysis_blocked_until = 0
+_analysis_blocked_reason = ""
 _GEMINI_CANDIDATES = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-flash-latest"]
 LAST_GENERATION_PROVIDER = None
 
@@ -72,6 +74,33 @@ def _client_lazy():
 def _is_transient(message):
     message = message.lower()
     return any(token in message for token in ("503", "unavailable", "429", "resource_exhausted", "overloaded"))
+
+
+def _is_provider_account_error(message):
+    message = message.lower()
+    return any(token in message for token in (
+        "402",
+        "payment required",
+        "insufficient credits",
+        "quota",
+        "billing",
+        "credit",
+    ))
+
+
+def _provider_unavailable_message(reason):
+    return f"외부 의견 분석을 잠시 사용할 수 없어요. {reason}"
+
+
+def _block_analysis(reason, seconds=300):
+    global _analysis_blocked_until, _analysis_blocked_reason
+    _analysis_blocked_until = time.monotonic() + seconds
+    _analysis_blocked_reason = reason
+
+
+def _raise_if_analysis_blocked():
+    if time.monotonic() < _analysis_blocked_until:
+        raise RuntimeError(_provider_unavailable_message(_analysis_blocked_reason))
 
 
 def _generate_gemini(prompt):
@@ -161,6 +190,7 @@ def _validate_opinion_text(text):
 
 def _generate(prompt, validator=None):
     global LAST_GENERATION_PROVIDER
+    _raise_if_analysis_blocked()
     provider = config.ANALYSIS_PROVIDER.lower()
     errors = []
 
@@ -194,7 +224,12 @@ def _generate(prompt, validator=None):
             LAST_GENERATION_PROVIDER = f"openrouter:{config.OPENROUTER_MODEL}"
             return text
         except Exception as exc:
-            errors.append(f"OpenRouter: {str(exc)[:180]}")
+            message = str(exc)
+            if _is_provider_account_error(message):
+                reason = "결제나 사용량 한도를 확인해야 해요."
+                _block_analysis(reason)
+                raise RuntimeError(_provider_unavailable_message(reason)) from exc
+            errors.append(f"OpenRouter: {message[:180]}")
 
     LAST_GENERATION_PROVIDER = None
     raise RuntimeError(" / ".join(errors) or f"지원하지 않는 분석 방식: {provider}")

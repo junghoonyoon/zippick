@@ -39,6 +39,7 @@ def _load_settings_file(path):
         ("공공데이터키", "PUBLIC_DATA_API_KEY"),
         ("국토부키", "PUBLIC_DATA_API_KEY"),
         ("실거래가키", "PUBLIC_DATA_API_KEY"),
+        ("청약홈키", "APPLYHOME_API_KEY"),
         ("카카오REST키", "KAKAO_REST_API_KEY"),
         ("카카오지도키", "KAKAO_MAP_JAVASCRIPT_KEY"),
         ("포스트호그키", "POSTHOG_PROJECT_KEY"),
@@ -85,6 +86,7 @@ SEARCH_INDEX_JSON = CACHE_DIR / "search_index.json"
 
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 PUBLIC_DATA_API_KEY = os.environ.get("PUBLIC_DATA_API_KEY", os.environ.get("MOLIT_API_KEY", ""))
+APPLYHOME_API_KEY = os.environ.get("APPLYHOME_API_KEY", PUBLIC_DATA_API_KEY)
 MOLIT_APARTMENT_TRADE_API_KEY = os.environ.get("MOLIT_APARTMENT_TRADE_API_KEY", PUBLIC_DATA_API_KEY)
 MOLIT_APARTMENT_RENT_API_KEY = os.environ.get("MOLIT_APARTMENT_RENT_API_KEY", MOLIT_APARTMENT_TRADE_API_KEY or PUBLIC_DATA_API_KEY)
 MOLIT_PRESALE_TRADE_API_KEY = os.environ.get("MOLIT_PRESALE_TRADE_API_KEY", PUBLIC_DATA_API_KEY)

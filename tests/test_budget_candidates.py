@@ -27,6 +27,7 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
     def test_step_and_direct_search_share_the_same_canonical_candidate_fields(self):
+        verified_payloads = []
         entity = {
             "name": "공통파이프라인아파트",
             "dedupeKey": "common-apt",
@@ -110,6 +111,7 @@ class BudgetCandidatesTest(unittest.TestCase):
                 region="테스트구",
                 min_area=59,
                 all_matches=True,
+                verified_result_callback=verified_payloads.append,
             )
             direct_candidate = budget_candidates.apartment_candidate_result(
                 entity["name"],
@@ -120,6 +122,14 @@ class BudgetCandidatesTest(unittest.TestCase):
             )
 
         step_candidate = step_payload["candidates"][0]
+        self.assertEqual(len(verified_payloads), 1)
+        verified_candidate = verified_payloads[0]["candidates"][0]
+        self.assertTrue(verified_payloads[0]["verifiedResultReady"])
+        self.assertFalse(verified_payloads[0]["candidateScoreDataReady"])
+        self.assertNotIn("signals", verified_candidate)
+        self.assertNotIn("locationScore", verified_candidate)
+        self.assertNotIn("verdict", verified_candidate)
+        self.assertTrue(step_payload["candidateScoreDataReady"])
         common_fields = (
             "resultSchemaVersion",
             "name",
@@ -940,6 +950,56 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(result["budgetSource"], "region_adjusted")
         self.assertLess(result["budgetEok"], 8.9)
         self.assertEqual(result["policySnapshot"]["estimatedPurchaseCeilingEok"], result["budgetEok"])
+
+
+class RegionMatchTest(unittest.TestCase):
+    """이름이 부분적으로 겹치는 다른 지역이 후보에 섞이면 안 된다."""
+
+    def _entity(self, district, legal_dong):
+        return {
+            "province": "경기도",
+            "city": district,
+            "district": district,
+            "legalDong": legal_dong,
+        }
+
+    def _matches(self, entity, region):
+        return budget_candidates._matches_region(
+            {"region": entity["district"]}, entity, region
+        )
+
+    def test_yangju_is_not_matched_by_namyangju(self):
+        yangju = self._entity("양주시", "옥정동")
+        self.assertFalse(self._matches(yangju, "남양주시"))
+        self.assertTrue(self._matches(yangju, "양주시"))
+
+    def test_namyangju_is_not_matched_by_yangju(self):
+        namyangju = self._entity("남양주시", "호평동")
+        self.assertFalse(self._matches(namyangju, "양주시"))
+        self.assertTrue(self._matches(namyangju, "남양주시"))
+
+    def test_parent_region_still_matches_child_district(self):
+        suwon = self._entity("수원영통구", "매탄동")
+        self.assertTrue(self._matches(suwon, "수원"))
+        self.assertTrue(self._matches(suwon, "수원시"))
+        self.assertTrue(self._matches(suwon, "수원영통구"))
+
+    def test_nickname_inside_district_still_matches(self):
+        bundang = self._entity("성남분당구", "정자동")
+        self.assertTrue(self._matches(bundang, "분당"))
+
+    def test_seoul_districts_do_not_collide(self):
+        jungnang = {
+            "province": "서울특별시",
+            "city": "서울특별시",
+            "district": "중랑구",
+            "legalDong": "면목동",
+        }
+        self.assertFalse(
+            budget_candidates._matches_region(
+                {"region": "중랑구"}, jungnang, "중구"
+            )
+        )
 
 
 if __name__ == "__main__":
