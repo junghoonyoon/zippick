@@ -1157,7 +1157,7 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertIn("전세가율 61.7%", parts["jeonse"]["reason"])
         cached_refresh.assert_called_once()
 
-    def test_apartment_location_score_hides_live_rent_api_permission_error(self):
+    def test_apartment_location_score_does_not_estimate_when_live_rent_api_fails(self):
         entity = {
             "name": "전세권한아파트",
             "province": "서울특별시",
@@ -1209,14 +1209,16 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         self.assertEqual(status, 200)
         candidate = payload["candidate"]
-        self.assertEqual(candidate["jeonseDataStatus"], "estimated")
-        self.assertEqual(candidate["jeonseRatioPct"], 55.0)
-        self.assertEqual(candidate["latestJeonseDepositEok"], 5.17)
-        self.assertIn("임시 추정", candidate["jeonseSourceNote"])
+        self.assertEqual(candidate["jeonseDataStatus"], "api_error")
+        self.assertNotIn("jeonseRatioPct", candidate)
+        self.assertNotIn("latestJeonseDepositEok", candidate)
+        self.assertNotIn("임시 추정", candidate["jeonseSourceNote"])
         self.assertNotIn("API 권한", candidate["jeonseSourceNote"])
         parts = {row["key"]: row for row in candidate["locationScore"]["parts"]}
         self.assertEqual(parts["jeonse"]["status"], "ok")
-        self.assertIn("추정 전세가율 55%", parts["jeonse"]["reason"])
+        details = {row["key"]: row for row in parts["jeonse"]["details"]}
+        self.assertEqual(details["jeonse_ratio"]["status"], "missing")
+        self.assertIn("전세 실거래 데이터 없음", details["jeonse_ratio"]["reason"])
 
 
 if __name__ == "__main__":

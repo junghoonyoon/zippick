@@ -77,49 +77,6 @@ def _candidate_price_reason(row):
     return None, ""
 
 
-def _estimated_jeonse_ratio_pct(row, sale_price):
-    """Conservative fallback when same-area jeonse trades are not available."""
-    province_region = " ".join(str(row.get(key) or "") for key in (
-        "province", "city", "district", "region", "displayRegion",
-    ))
-    if "서울" in province_region:
-        if sale_price >= 15:
-            return 50.0
-        if sale_price >= 8:
-            return 55.0
-        return 58.0
-    if "경기" in province_region:
-        if sale_price >= 15:
-            return 53.0
-        if sale_price >= 8:
-            return 57.0
-        return 60.0
-    return 55.0
-
-
-def _apply_estimated_jeonse_snapshot(row):
-    if _float_or_none(row.get("jeonseRatioPct")) and _float_or_none(row.get("latestJeonseDepositEok")):
-        return row
-    sale_price, _basis_reason = _candidate_price_reason(row)
-    if not sale_price or sale_price <= 0:
-        return row
-    ratio = _estimated_jeonse_ratio_pct(row, sale_price)
-    estimated_deposit = round(sale_price * ratio / 100, 2)
-    row["latestJeonseDepositEok"] = estimated_deposit
-    row["medianJeonseDepositEok"] = estimated_deposit
-    row["minJeonseDepositEok"] = estimated_deposit
-    row["maxJeonseDepositEok"] = estimated_deposit
-    row["jeonseTransactionCount"] = 0
-    row["jeonseRatioPct"] = ratio
-    row["jeonseSalePriceBasisEok"] = round(sale_price, 2)
-    row["jeonseDataStatus"] = "estimated"
-    row["jeonseSourceNote"] = (
-        f"전세 실거래가 없어서 매매 기준가의 {ratio:g}%로 임시 추정했어요. "
-        "실제 전세 매물 확인이 필요해요."
-    )
-    return row
-
-
 def _parse_date(value):
     text = str(value or "").strip()
     if not text:
@@ -484,6 +441,8 @@ def _supply_pressure_score(row):
 
 
 def _jeonse_ratio_score(row):
+    if str(row.get("jeonseDataStatus") or "").strip() == "estimated":
+        return None, "전세 실거래 데이터 없음"
     ratio = _float_or_none(row.get("jeonseRatioPct"))
     if ratio is None or ratio <= 0:
         return None, "전세 실거래 데이터 없음"
@@ -491,7 +450,6 @@ def _jeonse_ratio_score(row):
     sale_basis = _float_or_none(row.get("jeonseSalePriceBasisEok"))
     count = int(_float_or_none(row.get("jeonseTransactionCount")) or 0)
     date = str(row.get("latestJeonseDate") or "").strip()
-    estimated = str(row.get("jeonseDataStatus") or "").strip() == "estimated"
     if ratio >= 70:
         score = 100
     elif ratio >= 65:
@@ -504,15 +462,13 @@ def _jeonse_ratio_score(row):
         score = 44
     else:
         score = 28
-    details = [f"{'추정 ' if estimated else ''}전세가율 {ratio:g}%"]
+    details = [f"전세가율 {ratio:g}%"]
     if deposit and sale_basis:
-        details.append(f"{'추정 전세' if estimated else '전세'} {_price_text(deposit)} · 매매 기준 {_price_text(sale_basis)}")
+        details.append(f"전세 {_price_text(deposit)} · 매매 기준 {_price_text(sale_basis)}")
     if count:
         details.append(f"전세 거래 {count}건")
     if date:
         details.append(f"마지막 거래 {date}")
-    if estimated:
-        details.append("실제 전세 매물 확인 필요")
     return score, " · ".join(details)
 
 
@@ -636,6 +592,8 @@ def _jeonse_freshness_score(row):
 
 
 def _investment_gap_score(row):
+    if str(row.get("jeonseDataStatus") or "").strip() == "estimated":
+        return None, "매매가와 전세가 차이 데이터 없음"
     deposit = _float_or_none(row.get("latestJeonseDepositEok"))
     sale_basis = _float_or_none(row.get("jeonseSalePriceBasisEok"))
     if not deposit or not sale_basis:
@@ -656,8 +614,7 @@ def _investment_gap_score(row):
         score = 44
     else:
         score = 28
-    prefix = "추정 " if str(row.get("jeonseDataStatus") or "").strip() == "estimated" else ""
-    return score, f"{prefix}필요한 내 돈 {_price_text(gap)} · 매매가의 {gap_ratio:.1f}%"
+    return score, f"필요한 내 돈 {_price_text(gap)} · 매매가의 {gap_ratio:.1f}%"
 
 
 def _commute_access_score(row):
@@ -798,7 +755,7 @@ def _category_summary(key, score, metrics):
         ratio_reason = str(ratio.get("reason") or "")
         ratio_prefix = (
             f"{ratio_reason.split(' · ', 1)[0]} · "
-            if ratio_reason.startswith(("전세가율 ", "추정 전세가율 "))
+            if ratio_reason.startswith("전세가율 ")
             else ""
         )
         if ratio_score >= 74:
@@ -882,9 +839,9 @@ def _purchase_score_parts(row, entity, signals):
             _metric("estimate_range", "추정 시세 범위", 8, estimate_score, estimate_reason),
             _metric("recovery", "고점 회복률", 5, recovery_score, recovery_reason),
         ]),
-        # 전세가율은 전세 실거래가 없으면 매매가 기준 추정치가 들어온다.
-        # 추정값에 12점을 걸면 실측 없는 점수가 커지므로, 실제로 수집한
-        # 입주 물량에 5점을 떼어 준다.
+        # 전세가율은 실제 전세 실거래나 저장된 실거래 스냅샷만 쓴다.
+        # 실거래가 없으면 임시 추정하지 않고 미수집으로 남긴다.
+        # 입주 물량은 전세 여건을 보완하는 별도 근거로 함께 본다.
         _category_part("jeonse", "전세가율·입주물량·투자금", 20, [
             _metric("jeonse_ratio", "전세가율", 10, jeonse_score, jeonse_reason),
             _metric("supply_pressure", "입주 물량", 5, *_supply_pressure_score(row)),
@@ -974,7 +931,6 @@ def _weighted_score_for_categories(parts):
 
 
 def score_for_candidate(row, entity):
-    _apply_estimated_jeonse_snapshot(row)
     signals = row.get("signals") or {}
     parts = _purchase_score_parts(row, entity, signals)
     score, coverage = _weighted_score_for_categories(parts)
@@ -989,8 +945,6 @@ def score_for_candidate(row, entity):
     else:
         label = "확인 필요"
     summary = "실거래가, 전세 실거래, 입지, 단지 조건, 거래 흐름을 함께 본 점수예요."
-    if str(row.get("jeonseDataStatus") or "").strip() == "estimated":
-        summary = "실거래가, 추정 전세가율, 입지, 단지 조건, 거래 흐름을 함께 본 점수예요."
     return {
         "status": "ok",
         "scoreFormulaVersion": SCORE_FORMULA_VERSION,
