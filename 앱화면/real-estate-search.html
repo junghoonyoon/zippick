@@ -328,6 +328,14 @@
     .apt-price-basis { margin-top:12px; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.55; word-break:keep-all }
     .apt-result-empty { border-radius:14px; padding:18px; background:#f5f7fa; color:#596273; font-size:15px; font-weight:650; line-height:1.6 }
     .apt-report-heading { min-width:0 }
+    .apt-report-head-actions { display:flex; align-items:center; gap:8px; flex:0 0 auto }
+    .apt-report-share {
+      display:inline-flex; align-items:center; justify-content:center; min-height:32px;
+      border:1px solid #d8dee8; border-radius:999px; padding:0 12px; background:#fff;
+      color:#4e5968; font-family:inherit; font-size:13px; font-weight:850; cursor:pointer;
+    }
+    .apt-report-share:hover { border-color:#b0b8c1; background:#f8fafc; color:#191f28 }
+    .apt-report-share:disabled { opacity:.65; cursor:default }
     .apt-report-sheet .result-info-sheet-title { font-size:17px; line-height:1.35 }
     .apt-report-meta { margin:5px 0 0; color:#667085; font-size:14px; font-weight:650; line-height:1.5; word-break:keep-all }
     .apt-report-sheet .signal-report { gap:34px }
@@ -1345,6 +1353,19 @@
     .zpr-warn.is-limit { border-left-color:#8b95a1; background:#f7f9fa; color:#4e5968; font-size:13px }
     .zpr-warn.is-peak { border-left-color:#e5432e; background:#fdecea; color:#8c2317 }
     .zpr-warn.is-peak b { color:#7a1c12; font-weight:900 }
+    .zpr-share {
+      display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;
+      border-top:1px solid #e5e8eb; padding-top:18px;
+    }
+    .zpr-share-copy { display:grid; gap:3px; min-width:0; color:#4e5968; font-size:13px; font-weight:700; line-height:1.55 }
+    .zpr-share-copy b { color:#191f28; font-size:14px; font-weight:900 }
+    .zpr-share button {
+      display:inline-flex; align-items:center; justify-content:center; min-height:42px;
+      border:0; border-radius:12px; padding:0 16px; background:#3182f6; color:#fff;
+      font-family:inherit; font-size:14px; font-weight:900; cursor:pointer;
+    }
+    .zpr-share button:hover { background:#1b64da }
+    .zpr-share button:disabled { background:#d8dee8; color:#8b95a1; cursor:default }
 
     /* 자금 조건. 점수 막대와 같은 자리에 두면 '깎인 항목'으로 읽힌다.
        통과·미통과를 가르는 조건이라 별도 카드로 뺀다. */
@@ -4439,7 +4460,10 @@
             <h4 class="result-info-sheet-title" id="aptReportTitle"></h4>
             <p class="apt-report-meta" id="aptReportMeta" hidden></p>
           </div>
-          <button class="result-info-sheet-close" type="button" data-apt-report-close aria-label="단지 리포트 닫기"></button>
+          <div class="apt-report-head-actions">
+            <button class="apt-report-share" id="aptReportShare" type="button" data-apt-report-share>공유</button>
+            <button class="result-info-sheet-close" type="button" data-apt-report-close aria-label="단지 리포트 닫기"></button>
+          </div>
         </div>
         <div class="candidate-detail-sheet-content" id="aptReportContent"></div>
       </div>
@@ -5860,10 +5884,13 @@
     const leaderComparisonRetryInFlight = new Set();
     const CANDIDATE_SHORTLIST_SIZE = 5;
     const CANDIDATE_PAGE_SIZE = 10;
+    const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.8;
+    const CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE = 0.95;
     const CANDIDATE_SHORTLIST_CRITERIA = [
-      { key:"overall", label:"종합점수", weight:45 },
-      { key:"market", label:"최근 시장 신호", weight:35 },
-      { key:"timing", label:"2년 가격 타이밍", weight:20 },
+      { key:"budget", label:"예산 상한 활용", weight:45 },
+      { key:"overall", label:"종합점수", weight:25 },
+      { key:"market", label:"최근 시장 신호", weight:20 },
+      { key:"timing", label:"2년 가격 타이밍", weight:10 },
     ];
     const CANDIDATE_MAP_CLUSTER_LEVEL = 8;
     const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
@@ -11435,24 +11462,81 @@
       return { score:60, label:"가격이 크게 치우치지 않은 구간이에요" };
     }
 
-    function candidateShortlistMetric(row, key) {
+    function candidateShortlistMetric(row, key, budgetEok = null) {
+      if (key === "budget") return candidateShortlistBudgetScore(row, budgetEok ?? currentBudgetData?.budgetEok);
       if (key === "overall") return candidateLocationScoreNumber(row) ?? 50;
       if (key === "market") return candidateSignalNumber(row, "score") ?? 50;
       if (key === "timing") return candidateShortlistTiming(row).score;
       return 50;
     }
 
+    function candidateShortlistComparablePrice(row) {
+      const price = Number(
+        row?.midPriceEok ||
+        row?.estimatedMidPriceEok ||
+        row?.latestDealPriceEok ||
+        row?.lastObservedDealPriceEok ||
+        row?.maxPriceEok ||
+        row?.minPriceEok ||
+        0
+      );
+      return price > 0 ? price : null;
+    }
+
+    function candidateBudgetUsageRatio(row, budgetEok) {
+      const budget = Number(budgetEok || 0);
+      const price = candidateShortlistComparablePrice(row);
+      return budget > 0 && price ? price / budget : null;
+    }
+
+    function candidateShortlistBudgetBand(row, budgetEok) {
+      const ratio = candidateBudgetUsageRatio(row, budgetEok);
+      if (ratio === null) return 4;
+      if (ratio >= 0.85 && ratio <= 1) return 0;
+      if (ratio > 1 && ratio <= 1.05) return 1;
+      if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return 2;
+      if (ratio >= 0.65) return 3;
+      return 4;
+    }
+
+    function candidateShortlistBudgetScore(row, budgetEok) {
+      const ratio = candidateBudgetUsageRatio(row, budgetEok);
+      if (ratio === null) return 0;
+      if (ratio > 1) return Math.max(60, 88 - (ratio - 1) * 500);
+      if (ratio >= 0.85) return Math.max(84, 100 - Math.abs(ratio - CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE) * 120);
+      if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return 72 + (ratio - CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) * 120;
+      return Math.max(0, ratio * 72);
+    }
+
+    function candidateShortlistBudgetReason(row, budgetEok) {
+      const ratio = candidateBudgetUsageRatio(row, budgetEok);
+      if (ratio === null) return "";
+      const percent = Math.round(ratio * 100);
+      if (ratio >= 0.85 && ratio <= 1) return `예산 상한의 ${percent}% 가격대예요`;
+      if (ratio > 1) return `추가자금까지 보면 상한에 가까운 가격대예요`;
+      if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return `상한보다 낮지만 ${percent}%까지 쓰는 가격대예요`;
+      return `상한보다 많이 낮아 조건 확인용이에요`;
+    }
+
     function candidateShortlistScore(row, budgetEok) {
       const score = CANDIDATE_SHORTLIST_CRITERIA.reduce((total, item) => (
-        total + candidateShortlistMetric(row, item.key) * item.weight / 100
+        total + candidateShortlistMetric(row, item.key, budgetEok) * item.weight / 100
       ), 0);
       const confidencePenalty = row?.signals?.sampleConfidence === "low" ? 5 : 0;
       return Math.max(0, score - confidencePenalty);
     }
 
     function shortlistCandidateRows(rows, budgetEok) {
-      return [...rows].sort((left, right) => (
-        candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)
+      const shortlistLimit = Math.min(CANDIDATE_SHORTLIST_SIZE, rows.length);
+      const nearBudgetRows = rows.filter(row => {
+        const ratio = candidateBudgetUsageRatio(row, budgetEok);
+        return ratio !== null && ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE;
+      });
+      const sourceRows = nearBudgetRows.length >= shortlistLimit ? nearBudgetRows : rows;
+      return [...sourceRows].sort((left, right) => (
+        candidateShortlistBudgetBand(left, budgetEok) - candidateShortlistBudgetBand(right, budgetEok)
+        || candidateShortlistBudgetScore(right, budgetEok) - candidateShortlistBudgetScore(left, budgetEok)
+        || candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)
         || candidateShortlistMetric(right, "overall") - candidateShortlistMetric(left, "overall")
         || candidateShortlistMetric(right, "market") - candidateShortlistMetric(left, "market")
         || (right._score || 0) - (left._score || 0)
@@ -11468,11 +11552,13 @@
         : row?.marketInsightState === "error"
           ? { label:"차트 자료가 부족해 가격 타이밍은 판단하기 어려워요" }
           : { label:"2년 가격 타이밍을 확인하고 있어요" };
+      const budgetLead = candidateShortlistBudgetReason(row, currentBudgetData?.budgetEok);
       const reasonLead = candidateShortlistReasonLead(overall, market, timing.label);
+      const reasonCopy = budgetLead ? `${budgetLead}. ${reasonLead}` : reasonLead;
       const rankLabel = Number(rank) > 0 ? `${rank}순위` : "먼저 보기";
       return `<div class="candidate-shortlist-reason" aria-label="먼저 보는 이유">
         <span class="candidate-shortlist-reason-label">${esc(rankLabel)}</span>
-        <span class="candidate-shortlist-reason-copy">${esc(reasonLead)}</span>
+        <span class="candidate-shortlist-reason-copy">${esc(reasonCopy)}</span>
       </div>`;
     }
 
@@ -11519,14 +11605,14 @@
             <div class="candidate-shortlist-info-popover" data-candidate-shortlist-info-popover hidden>
               <button class="candidate-shortlist-info-close" type="button" data-candidate-shortlist-info-close aria-label="먼저 볼 5곳 기준 닫기">×</button>
               <strong class="candidate-shortlist-info-title" id="candidate-shortlist-info-title">먼저 볼 5곳 기준</strong>
-              <p class="candidate-shortlist-info-copy">내 예산과 필수 조건을 통과한 단지 중 아래 세 가지가 함께 좋은 곳을 골라요.</p>
+              <p class="candidate-shortlist-info-copy">내 예산 상한에 가까운 가격대를 먼저 보고, 그 안에서 조건이 좋은 곳을 골라요.</p>
               <ul class="candidate-shortlist-info-list">
                 ${CANDIDATE_SHORTLIST_CRITERIA.map(item => `<li><span>${esc(item.label)}</span><strong>${esc(item.weight)}%</strong></li>`).join("")}
               </ul>
             </div>
           </div>
         </div>
-        <p class="candidate-shortlist-basis"><strong>추천 기준</strong> 종합점수 · 최근 시장 신호 · 2년 가격 타이밍</p>
+        <p class="candidate-shortlist-basis"><strong>추천 기준</strong> 예산 상한에 가까운 가격대 · 종합점수 · 시장 신호</p>
       </section>`;
     }
 
@@ -14801,7 +14887,7 @@
     }
 
     const ZIPPICK_DEVELOPMENT_PATTERN = /뉴타운|신도시|택지|재개발|재건축|정비사업|정비구역|신속통합|신통기획|모아타운|가로주택|리모델링|사업시행|관리처분|조합|시공사|착공|준공/i;
-    const ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN = /청년안심|역세권청년|임대주택|공공임대|공공주택|도심 공공|행복주택|장기전세|도시재생|희망하우징|도시계획사업 현황|법적 효력이 없는 참고자료/i;
+    const ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN = /청년안심|역세권청년|임대주택|공공임대|공공주택|도심 공공|행복주택|장기전세|도시재생|희망하우징/i;
 
     function zippickDevelopmentEvidenceText(row) {
       return [
@@ -14814,6 +14900,19 @@
         row?.stage,
         row?.source,
         row?.sourceNote,
+        row?.name,
+      ].map(value => String(value || "")).join(" ");
+    }
+
+    function zippickDevelopmentExclusionText(row) {
+      return [
+        row?.badge,
+        row?.eventLabel,
+        row?.title,
+        row?.summary,
+        row?.keyword,
+        row?.projectType,
+        row?.stage,
         row?.name,
       ].map(value => String(value || "")).join(" ");
     }
@@ -14837,7 +14936,7 @@
       const seen = new Set();
       return rows.filter(row => {
         const haystack = zippickDevelopmentEvidenceText(row);
-        if (ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(haystack)) return false;
+        if (ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(zippickDevelopmentExclusionText(row))) return false;
         if (!ZIPPICK_DEVELOPMENT_PATTERN.test(haystack)) return false;
         const key = String(row?.url || row?.title || row?.eventLabel || haystack).trim();
         if (!key || seen.has(key)) return false;
@@ -14848,7 +14947,8 @@
 
     function zippickDevelopmentZoneRelevant(zone) {
       const haystack = zippickDevelopmentEvidenceText(zone);
-      return !ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(haystack);
+      return ZIPPICK_DEVELOPMENT_PATTERN.test(haystack)
+        && !ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(zippickDevelopmentExclusionText(zone));
     }
 
     function zippickGeometryPairs(geometry) {
@@ -15185,7 +15285,7 @@
         : oldAgeText;
 
       const heading = !hasDevelopmentEvidence
-        ? "확인된 주변 개발은 없습니다"
+        ? (hasOldAgeSignal ? "가까운 정비사업은 아직 찾지 못했습니다" : "공식 구역 데이터에서 가까운 정비사업은 아직 찾지 못했습니다")
         : isSelf
           ? (tier === "late" ? `이 단지 ${zpJosa(word, "이", "가")} 막바지 단계입니다`
             : tier === "mid" ? `이 단지가 ${zpJosa(word, "을", "를")} 추진 중입니다`
@@ -15392,6 +15492,47 @@
       };
     }
 
+    function zippickOwnDevelopmentWord(item) {
+      const rows = zippickDevelopmentRows(item);
+      const officialZones = Array.isArray(item?.zippickDevelopmentInsight?.zones)
+        ? item.zippickDevelopmentInsight.zones
+        : [];
+      return (rows.length || officialZones.length) && zippickDevelopmentSelfMatch(item, rows, officialZones)
+        ? zippickDevelopmentProjectWord(rows, officialZones)
+        : "";
+    }
+
+    function zippickJeonseGapText(sale, jeonse) {
+      const gap = sale - jeonse;
+      if (!Number.isFinite(gap) || gap <= 0) return "";
+      return `매매가와 전세금 사이에 <b>${transactionMoney(gap)}</b>이 비어 있습니다.`;
+    }
+
+    function zippickLowJeonseReason(item, ratio) {
+      const age = zpNum(item?.buildingAge);
+      const word = zippickOwnDevelopmentWord(item);
+      if (word) {
+        return `전세보다 <b>${esc(word)} 기대</b>가 가격에 더 크게 들어간 모습입니다. 그래서 전세를 끼고 사도 필요한 현금이 커질 수 있어요.`;
+      }
+      if (Number.isFinite(age) && age >= 30) {
+        return "오래된 단지인데 전세가 매매가를 강하게 받치지 못합니다. 재건축 근거가 약하면 가격이 흔들릴 때 버틸 힘도 약해질 수 있어요.";
+      }
+      if (Number.isFinite(age) && age <= 15) {
+        return `다만 전세가율이 낮은 건 <b>${Math.round(age)}년차 신축이라 그렇습니다.</b> 단지가 나빠서가 아니에요.`;
+      }
+      return ratio < 40
+        ? "전세금보다 매매가에 붙은 기대가 훨씬 큽니다. 이 경우 매물 가격이 조금만 높아도 실제 부담이 크게 늘어요."
+        : "전세금이 매매가를 받쳐주는 힘이 약한 편입니다. 전세를 끼고 사도 내 돈이 꽤 들어갑니다.";
+    }
+
+    function zippickJeonseFallbackHeading(ratio) {
+      if (!Number.isFinite(ratio)) return "자금 조건부터 맞춰보세요";
+      if (ratio >= 70) return "전세금 비중이 높아 현금 부담은 낮습니다";
+      if (ratio >= 55) return "전세가 매매가를 어느 정도 받칩니다";
+      if (ratio >= 40) return "전세가 매매가를 약하게 받칩니다";
+      return "전세보다 매매 기대가 훨씬 큽니다";
+    }
+
     // ── 자금 조건 ───────────────────────────────────────────────────────
     // 전세가율은 '단지가 좋은가'를 재는 숫자가 아니다. 신축·대단지일수록
     // 구조적으로 낮게 나온다. 다른 항목과 같은 막대에 세우면 좋은 단지가
@@ -15439,17 +15580,24 @@
         lines.push(`실제로 <b>살려는 사람이 내는 값</b>이 매매가를 가깝게 받쳐준다는 뜻이에요. 값이 빠져도 <b>버텨줄 바닥이 두껍고</b>, 전세를 끼면 현금도 덜 듭니다. <b>이 후보군에서는 유리한 쪽입니다.</b>`);
       } else if (peer && peer.band === "low") {
         lines.push(`전세가율 <b>${zpPct(ratio)}</b>는 같은 조건으로 찾은 후보 <b>${peer.total}곳</b>의 중간값 <b>${zpPct(peer.median, 0)}</b>보다 <b>${zpPct(peer.diff, 0)}p 낮습니다.</b>`);
-        lines.push(`실사용 가치보다 <b>매매가가 앞서 있다</b>는 뜻입니다. <b>기대감이 얹힌 가격</b>이라 시장이 식으면 받쳐줄 바닥이 얕고, 전세를 껴도 현금이 많이 듭니다.`);
+        if (hasSale && hasJeonse) lines.push(`<b>매매 ${transactionMoney(sale)}, 전세 ${transactionMoney(jeonse)}</b>입니다. ${zippickJeonseGapText(sale, jeonse)}`);
+        lines.push(zippickLowJeonseReason(item, ratio));
       } else if (peer) {
         lines.push(`전세가율 <b>${zpPct(ratio)}</b>로, 같은 조건으로 찾은 후보 <b>${peer.total}곳</b>의 중간값 <b>${zpPct(peer.median, 0)}</b>에 <b>가깝습니다.</b> 자금 조건으로는 이 후보군에서 <b>유리하지도 불리하지도 않아요.</b>`);
       } else if (hasRatio) {
+        if (hasSale && hasJeonse) {
+          lines.push(`<b>매매 ${transactionMoney(sale)}, 전세 ${transactionMoney(jeonse)}</b>입니다. 전세가율은 <b>${zpPct(ratio)}</b>예요.`);
+          if (ratio < 55) lines.push(zippickJeonseGapText(sale, jeonse));
+        } else {
+          lines.push(`전세가율 <b>${zpPct(ratio)}</b>입니다.`);
+        }
         lines.push(ratio >= 55
-          ? `전세가율 <b>${zpPct(ratio)}</b>입니다. 실제로 살려는 사람이 내는 값이 매매가를 가깝게 받쳐준다는 뜻이라, <b>값이 빠질 때 버텨줄 바닥이 두껍습니다.</b>`
-          : `전세가율 <b>${zpPct(ratio)}</b>입니다. 실사용 가치보다 <b>매매가가 앞서 있다</b>는 뜻이라, 시장이 식으면 받쳐줄 바닥이 얕습니다.`);
+          ? "전세금이 매매가를 어느 정도 받쳐줍니다. 값이 빠질 때 전세 수요가 버팀목이 될 수 있어요."
+          : zippickLowJeonseReason(item, ratio));
       }
 
       // 낮은 전세가율을 단지 흠으로 읽지 않게 못 박는다.
-      if (hasRatio && ratio < 50 && isNew) {
+      if (hasRatio && ratio < 50 && isNew && !lines.some(line => line.includes("신축이라 그렇습니다"))) {
         lines.push(`다만 전세가율이 낮은 건 <b>${Math.round(age)}년차 신축이라 그렇습니다.</b> 단지가 나빠서가 아니에요.`);
       }
 
@@ -15473,7 +15621,7 @@
           : peer.band === "low" ? "주변보다 전세가율이 낮습니다"
           : "전세가율은 주변과 비슷합니다";
       } else if (hasRatio) {
-        heading = ratio >= 55 ? "전세가 매매가를 잘 받쳐줍니다" : "실사용 가치보다 매매가가 앞서 있습니다";
+        heading = zippickJeonseFallbackHeading(ratio);
       }
 
       // 해석은 표 안에 가두지 않는다. 다른 섹션과 똑같이 표 아래 본문으로
@@ -16075,15 +16223,30 @@
         const sale = zpNum(item?.currentEstimateMidPriceEok || item?.midPriceEok || item?.latestDealPriceEok);
         const jeonse = zpNum(item?.latestJeonseDepositEok || item?.medianJeonseDepositEok);
         if (Number.isFinite(ratio) && Number.isFinite(sale) && Number.isFinite(jeonse)) {
-          body = `전세가율 ${zpPct(ratio)}입니다. 매매가 ${zpEok(sale)}에 전세는 ${zpJosa(zpEok(jeonse), "이라", "라")}, <b>실제로 살려는 사람이 내는 값보다 매매가가 훨씬 앞서 있습니다.</b> 그만큼 기대감이 얹힌 가격이라, 시장이 식으면 <b>받쳐줄 바닥이 얕습니다.</b>`;
+          body = `전세가율 ${zpPct(ratio)}입니다. <b>매매 ${transactionMoney(sale)}, 전세 ${transactionMoney(jeonse)}</b>라 ${zippickJeonseGapText(sale, jeonse)} ${zippickLowJeonseReason(item, ratio)}`;
         } else if (Number.isFinite(ratio)) {
-          body = `전세가율 ${zpPct(ratio)}입니다. 실사용 가치보다 매매가가 앞서 있어, 값이 빠질 때 받쳐줄 힘이 약한 편이에요.`;
+          body = `전세가율 ${zpPct(ratio)}입니다. ${ratio >= 55 ? "전세금이 매매가를 어느 정도 받쳐줍니다." : zippickLowJeonseReason(item, ratio)}`;
         }
       } else if (key === "product") {
         const age = zpNum(item?.buildingAge);
         const year = zpNum(item?.buildYear);
         if (Number.isFinite(age) && age > 0) {
-          body = `준공 ${Number.isFinite(year) && year > 0 ? `${Math.round(year)}년 · ` : ""}${Math.round(age)}년차입니다. 건물은 시간이 지나도 새것이 되지 않으니 <b>연식에 따른 점수는 시간이 지나며 낮아질 수 있어요.</b> 연식 약점은 가격과 입지, 관리 상태를 함께 확인하세요.`;
+          const developmentRows = zippickDevelopmentRows(item);
+          const officialZones = Array.isArray(item?.zippickDevelopmentInsight?.zones)
+            ? item.zippickDevelopmentInsight.zones
+            : [];
+          const hasDevelopmentEvidence = developmentRows.length || officialZones.length;
+          const isOwnDevelopment = hasDevelopmentEvidence
+            && zippickDevelopmentSelfMatch(item, developmentRows, officialZones);
+          const ageText = `준공 ${Number.isFinite(year) && year > 0 ? `${Math.round(year)}년 · ` : ""}${Math.round(age)}년차입니다.`;
+          if (isOwnDevelopment) {
+            const word = zippickDevelopmentProjectWord(developmentRows, officialZones);
+            body = `${ageText} 다만 이 단지는 <b>${esc(word)} 단계가 연식보다 더 중요합니다.</b> 오래됐다는 사실만으로 끝낼 일이 아니에요. <b>현재 추진 단계, 대지지분, 추가분담금 추정치</b>를 함께 봐야 실제 매수가가 보입니다.`;
+          } else if (age >= 30) {
+            body = `${ageText} 오래된 단지는 <b>재건축 근거가 확인되는지</b>가 먼저입니다. 근거가 확인되지 않으면 연식은 관리비, 수리비, 거래 선호의 약점으로 봐야 해요.`;
+          } else {
+            body = `${ageText} 연식은 관리 상태와 수리비에 영향을 줍니다. 같은 가격이면 더 새 단지와 비교해 보세요.`;
+          }
         }
       } else if (key === "price") {
         body = `같은 예산 후보들과 견줘 가격 이점이 크지 않다는 뜻입니다. ${esc(String(weakest.reason || "").trim())}`;
@@ -16568,6 +16731,10 @@
           국토부에 신고된 <b>실거래</b>만 받아옵니다. 지금 부동산에 걸린 매물이 얼마인지는 알 수 없어요.
           이 리포트의 가격은 <b>기준선</b>이지 <b>살 수 있는 가격이 아닙니다.</b>
         </div>
+        <div class="zpr-share">
+          <span class="zpr-share-copy"><b>리포트 URL 공유</b>이 화면 주소를 복사해 함께 볼 수 있어요.</span>
+          <button type="button" data-apt-report-share>URL 공유하기</button>
+        </div>
       </article>`);
     }
 
@@ -16711,6 +16878,20 @@
       comparisonLimitToast.textContent = "";
       comparisonLimitToastFrame = requestAnimationFrame(() => {
         comparisonLimitToast.textContent = "비교는 최대 3건까지 담을 수 있어요.";
+        comparisonLimitToast.classList.add("is-visible");
+        comparisonLimitToastTimer = setTimeout(() => {
+          comparisonLimitToast.classList.remove("is-visible");
+        }, 2200);
+      });
+    }
+
+    function showAppToast(message) {
+      clearTimeout(comparisonLimitToastTimer);
+      cancelAnimationFrame(comparisonLimitToastFrame);
+      comparisonLimitToast.classList.remove("is-visible");
+      comparisonLimitToast.textContent = "";
+      comparisonLimitToastFrame = requestAnimationFrame(() => {
+        comparisonLimitToast.textContent = message;
         comparisonLimitToast.classList.add("is-visible");
         comparisonLimitToastTimer = setTimeout(() => {
           comparisonLimitToast.classList.remove("is-visible");
@@ -19943,6 +20124,19 @@
       return url.toString();
     }
 
+    async function shareAptReportUrl(button = null) {
+      const shareUrl = window.location.href;
+      if (button) button.disabled = true;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showAppToast("URL을 복사했습니다");
+      } catch (_) {
+        window.prompt("아래 주소를 복사해 주세요.", shareUrl);
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
     async function copyListingReviewShareLink(button) {
       const shareUrl = listingReviewShareUrl();
       if (!shareUrl) return;
@@ -21194,6 +21388,11 @@
     aptReportSheet.addEventListener("click", event => {
       if (event.target.closest("[data-apt-report-close]")) {
         closeAptReport();
+        return;
+      }
+      const shareButton = event.target.closest("[data-apt-report-share]");
+      if (shareButton) {
+        void shareAptReportUrl(shareButton);
         return;
       }
       const signalDefinitionButton = event.target.closest("[data-signal-definition-button]");

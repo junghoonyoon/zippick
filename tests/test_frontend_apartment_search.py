@@ -1,3 +1,4 @@
+import json
 import re
 import unittest
 from pathlib import Path
@@ -5,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
+REDEVELOPMENT_ZONES = ROOT / "data" / "redevelopment_zones.geojson"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
@@ -149,17 +151,29 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("년차 신축이라 그렇습니다.", html)
         self.assertNotIn("이 숫자가 안 맞으면 위의 점수는 볼 필요가 없습니다.", html)
         self.assertNotIn("값이 충분히 눌려 있지 않다면 굳이 감수할 이유가 없습니다.", html)
-        self.assertIn("연식에 따른 점수는 시간이 지나며 낮아질 수 있어요.", html)
-        self.assertIn("연식 약점은 가격과 입지, 관리 상태를 함께 확인하세요.", html)
+        self.assertIn("재건축 근거가 확인되는지", html)
+        self.assertIn("관리비, 수리비, 거래 선호의 약점", html)
+        self.assertNotIn("연식에 따른 점수는 시간이 지나며 낮아질 수 있어요.", html)
+        self.assertNotIn("연식 약점은 가격과 입지, 관리 상태를 함께 확인하세요.", html)
 
         # 전세가율은 숫자만 던지면 높은 건지 낮은 건지 알 수 없다.
         # 같은 검색에 뜬 다른 후보들의 전세가율 중간값과 견줘서 말한다.
         self.assertIn("function zippickJeonsePeerStat(item, ratio)", html)
+        self.assertIn("function zippickLowJeonseReason(item, ratio)", html)
+        self.assertIn("function zippickJeonseFallbackHeading(ratio)", html)
         self.assertIn("function zpJeonseRatioOf(row)", html)
         self.assertIn("const ZP_FUNDING_PEER_MIN = 5;", html)
         self.assertIn("const ZP_JEONSE_PEER_GAP_PT = 3;", html)
         self.assertIn("같은 조건으로 찾은 후보", html)
         self.assertIn("주변 후보 중간값", html)
+        self.assertIn("매매가와 전세금 사이에 <b>${transactionMoney(gap)}</b>이 비어 있습니다.", html)
+        self.assertIn("전세보다 <b>${esc(word)} 기대</b>가 가격에 더 크게 들어간 모습입니다.", html)
+        self.assertIn("전세보다 매매 기대가 훨씬 큽니다", html)
+        self.assertIn("전세가 매매가를 약하게 받칩니다", html)
+        self.assertIn("전세금 비중이 높아 현금 부담은 낮습니다", html)
+        self.assertNotIn("실사용 가치보다 <b>매매가가 앞서 있다</b>", html)
+        self.assertNotIn("실사용 가치보다 매매가가 앞서 있습니다", html)
+        self.assertNotIn("실사용 가치보다 매매가가 앞서 있어", html)
 
         # 세 갈래 해석이 모두 있어야 한다 (높다 / 비슷하다 / 낮다)
         self.assertIn("주변보다 전세가율이 높아 유리합니다", html)
@@ -202,6 +216,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("추가분담금", html)
         self.assertIn("대지지분", html)
         self.assertIn("조합원 분담금 추정치", html)
+        self.assertIn("단지는 <b>${esc(word)} 단계가 연식보다 더 중요합니다.</b>", html)
+        self.assertIn("현재 추진 단계, 대지지분, 추가분담금 추정치", html)
 
         # 조사 처리 — "재건축는", "재건축가"가 나가면 안 된다
         self.assertNotIn("${word}는 <b>추가분담금", html)
@@ -356,7 +372,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function zippickDevelopmentRows(item)", html)
         self.assertIn("function zippickDevelopmentHtml(item)", html)
         self.assertIn("function zippickDevelopmentHasConfirmedStage(rows = [], officialZones = [])", html)
-        self.assertIn("const ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN = /청년안심|역세권청년|임대주택|공공임대|공공주택|도심 공공|행복주택|장기전세|도시재생|희망하우징|도시계획사업 현황|법적 효력이 없는 참고자료/i;", html)
+        self.assertIn("const ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN = /청년안심|역세권청년|임대주택|공공임대|공공주택|도심 공공|행복주택|장기전세|도시재생|희망하우징/i;", html)
+        self.assertIn("function zippickDevelopmentExclusionText(row)", html)
+        self.assertIn("!ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(zippickDevelopmentExclusionText(zone))", html)
+        self.assertNotIn("도시계획사업 현황|법적 효력이 없는 참고자료", html)
         self.assertIn("row?.source,", html)
         self.assertIn("function zippickDevelopmentZoneRelevant(zone)", html)
         self.assertIn(".filter(zippickDevelopmentZoneRelevant)", html)
@@ -383,7 +402,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("주변 개발은 기대할 만하지만, 단계가 중요합니다", html)
         self.assertNotIn("개발 기대는 플러스지만 가격은 따로 봅니다", html)
         self.assertNotIn("비싼 호가는 따로 보세요", html)
-        self.assertIn("확인된 주변 개발은 없습니다", html)
+        self.assertIn("가까운 정비사업은 아직 찾지 못했습니다", html)
+        self.assertIn("공식 구역 데이터에서 가까운 정비사업은 아직 찾지 못했습니다", html)
+        self.assertNotIn("확인된 주변 개발은 없습니다", html)
         self.assertNotIn("개발 기대는 점수에 더하지 않았습니다", html)
         self.assertNotIn("데이터 부족을 좋거나 나쁘게 보지 않습니다", html)
         self.assertIn("단지와 맞닿은 개발 구역이 확인됩니다.", html)
@@ -404,12 +425,45 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("이 정보는 <b>매수 이유</b>가 아니라 확인할 배경입니다.", html)
         self.assertIn("구청 고시와 현재 단계를 함께 확인하세요.", html)
 
+    def test_yeouido_sujeong_reconstruction_zone_is_not_filtered_by_source_note(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        data = json.loads(REDEVELOPMENT_ZONES.read_text(encoding="utf-8"))
+        zone = next(
+            (
+                feature.get("properties") or {}
+                for feature in data.get("features", [])
+                if (feature.get("properties") or {}).get("name") == "여의도수정아파트"
+            ),
+            None,
+        )
+
+        self.assertIsNotNone(zone)
+        self.assertEqual(zone.get("projectType"), "재건축(공동)")
+        self.assertEqual(zone.get("stage"), "구역지정")
+        self.assertEqual(zone.get("sourceNote"), "법적 효력이 없는 참고자료")
+        self.assertIn("function zippickDevelopmentExclusionText(row)", html)
+        self.assertIn("row?.sourceNote,", html)
+        self.assertIn("!ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(zippickDevelopmentExclusionText(zone))", html)
+
     def test_zippick_report_modal_uses_most_of_viewport(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertIn(".candidate-detail-sheet .candidate-detail-panel,\n    .apt-report-sheet .candidate-detail-panel", html)
         self.assertIn("top:max(40px,env(safe-area-inset-top)); bottom:max(12px,env(safe-area-inset-bottom));", html)
         self.assertIn("height:auto; max-height:none;", html)
+
+    def test_zippick_report_can_share_url_from_top_and_bottom(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('id="aptReportShare" type="button" data-apt-report-share>공유</button>', html)
+        self.assertIn('<button type="button" data-apt-report-share>URL 공유하기</button>', html)
+        self.assertIn("async function shareAptReportUrl", html)
+        self.assertIn("const shareUrl = window.location.href;", html)
+        self.assertIn("navigator.clipboard.writeText(shareUrl)", html)
+        self.assertIn("URL을 복사했습니다", html)
+        self.assertNotIn("공유창을 열었어요.", html)
+        self.assertNotIn("navigator.share", html)
+        self.assertIn('event.target.closest("[data-apt-report-share]")', html)
 
     def test_purchase_power_required_fields_show_visible_message(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -2830,10 +2884,22 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('candidateListMode = "shortlist";', click_body)
         self.assertIn("targetIndex >= CANDIDATE_SHORTLIST_SIZE", focus_body)
         self.assertIn('candidateListMode = "all";', focus_body)
+        self.assertIn("const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.8;", html)
+        self.assertIn("const CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE = 0.95;", html)
         self.assertIn("const CANDIDATE_SHORTLIST_CRITERIA = [", html)
-        self.assertIn('key:"overall", label:"종합점수", weight:45', html)
-        self.assertIn('key:"market", label:"최근 시장 신호", weight:35', html)
-        self.assertIn('key:"timing", label:"2년 가격 타이밍", weight:20', html)
+        self.assertIn('key:"budget", label:"예산 상한 활용", weight:45', html)
+        self.assertIn('key:"overall", label:"종합점수", weight:25', html)
+        self.assertIn('key:"market", label:"최근 시장 신호", weight:20', html)
+        self.assertIn('key:"timing", label:"2년 가격 타이밍", weight:10', html)
+        self.assertIn("function candidateBudgetUsageRatio(row, budgetEok)", html)
+        self.assertIn("function candidateShortlistBudgetBand(row, budgetEok)", html)
+        self.assertIn("function candidateShortlistBudgetScore(row, budgetEok)", html)
+        self.assertIn("function candidateShortlistBudgetReason(row, budgetEok)", html)
+        self.assertIn("const nearBudgetRows = rows.filter(row => {", html)
+        self.assertIn("ratio !== null && ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE", html)
+        self.assertIn("const sourceRows = nearBudgetRows.length >= shortlistLimit ? nearBudgetRows : rows;", html)
+        self.assertIn("candidateShortlistBudgetBand(left, budgetEok) - candidateShortlistBudgetBand(right, budgetEok)", html)
+        self.assertIn("candidateShortlistBudgetScore(right, budgetEok) - candidateShortlistBudgetScore(left, budgetEok)", html)
         self.assertIn("function candidateShortlistTiming(row)", html)
         self.assertIn("const series = sparklineSeries(row);", html)
         self.assertIn("const temperature = candidateMarketTemperature(row, series);", html)
@@ -2862,8 +2928,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-candidate-shortlist-info-close", html)
         self.assertIn("popover.hidden = !open", html)
         self.assertIn(".candidate-shortlist-first .candidate-shortlist-tab { flex:0 0 auto; width:auto;", html)
-        self.assertIn("추천 기준</strong> 종합점수 · 최근 시장 신호 · 2년 가격 타이밍", html)
-        self.assertIn("내 예산과 필수 조건을 통과한 단지 중 아래 세 가지가 함께 좋은 곳", html)
+        self.assertIn("추천 기준</strong> 예산 상한에 가까운 가격대 · 종합점수 · 시장 신호", html)
+        self.assertIn("내 예산 상한에 가까운 가격대를 먼저 보고, 그 안에서 조건이 좋은 곳", html)
+        self.assertIn("예산 상한의 ${percent}% 가격대예요", html)
+        self.assertIn("상한보다 많이 낮아 조건 확인용이에요", html)
         self.assertIn("고점 근처지만 종합과 시장 신호가 함께 받쳐줘요", html)
         self.assertIn("최근 2년 고점보다", html)
         self.assertIn("2년 가격 타이밍을 확인하고 있어요", html)

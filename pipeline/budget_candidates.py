@@ -1302,12 +1302,7 @@ def _broad_region_live_seed_rows(
             seed_limit - len(lookup_entries),
         ))
 
-    cached_rows.sort(key=lambda row: (
-        row["_fitRank"],
-        -row["_score"],
-        abs(row["budgetGapEok"]),
-        row["name"],
-    ))
+    cached_rows.sort(key=_budget_near_sort_key)
     balanced_lookup = _balanced_live_seed_rows(lookup_entries, seed_limit)
     # 캐시 후보는 이미 가격 검증이 끝났으므로 결과 상한만큼 유지한다.
     # 미확인 후보만 별도 상한으로 제한해 실제 국토부 조회량을 통제한다.
@@ -1620,6 +1615,20 @@ def _candidate_score(row, entity, purpose, priority, commute, price_strategy):
         + min(commute_score, 12)
         + min(row.get("households") or 0, 5000) / 500
         + min((row.get("transactionCount") or 0), 20) / 2
+    )
+
+
+def _budget_near_sort_key(row):
+    try:
+        gap = abs(float(row.get("budgetGapEok", 999)))
+    except (TypeError, ValueError):
+        gap = 999
+    return (
+        row.get("_fitRank", 99),
+        gap,
+        -row.get("_score", 0),
+        -row.get("midPriceEok", 0),
+        row.get("name", ""),
     )
 
 
@@ -2406,11 +2415,7 @@ def apartment_candidate_result(
             price_strategy,
         )
 
-    candidates.sort(key=lambda row: (
-        row.get("_fitRank", 99),
-        -row.get("_score", 0),
-        abs(row.get("budgetGapEok", 0)),
-    ))
+    candidates.sort(key=_budget_near_sort_key)
     candidate = candidates[0]
     _attach_policy_impacts([candidate], policy_profile)
     score_rows = [candidate]
@@ -2764,7 +2769,7 @@ def budget_candidates(
         live_lookup_rows = [row for row in rows if row.get("_liveLookup")]
         ranked_priced = sorted(
             priced_rows,
-            key=lambda row: (row["_fitRank"], -row["_score"], abs(row["budgetGapEok"])),
+            key=_budget_near_sort_key,
         )
         ranked_live = sorted(
             live_lookup_rows,
@@ -2885,7 +2890,7 @@ def budget_candidates(
     rows = verified_rows
 
     picked = list(rows)
-    picked.sort(key=lambda row: (-row["_score"], abs(row["budgetGapEok"]), row["midPriceEok"]))
+    picked.sort(key=_budget_near_sort_key)
     unique_rows = _dedupe_candidate_rows(picked)
 
     total_matched_count = len(unique_rows)

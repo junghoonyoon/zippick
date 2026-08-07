@@ -26,6 +26,34 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
+    def test_budget_near_sort_key_prefers_prices_close_to_upper_budget(self):
+        cheap_high_score = {
+            "name": "저가고점수",
+            "midPriceEok": 11.0,
+            "budgetGapEok": 9.0,
+            "_fitRank": 1,
+            "_score": 99,
+        }
+        near_budget = {
+            "name": "상한근접",
+            "midPriceEok": 19.2,
+            "budgetGapEok": 0.8,
+            "_fitRank": 0,
+            "_score": 70,
+        }
+        middle_budget = {
+            "name": "중간가격",
+            "midPriceEok": 16.2,
+            "budgetGapEok": 3.8,
+            "_fitRank": 0,
+            "_score": 95,
+        }
+
+        rows = [cheap_high_score, middle_budget, near_budget]
+        rows.sort(key=budget_candidates._budget_near_sort_key)
+
+        self.assertEqual([row["name"] for row in rows], ["상한근접", "중간가격", "저가고점수"])
+
     def test_jeonse_ratio_uses_bundled_snapshot_when_live_rent_api_fails(self):
         row = {
             "name": "전세후보아파트",
