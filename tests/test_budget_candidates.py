@@ -474,6 +474,45 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(result["nearbyRegions"][0]["region"], "서초구")
         self.assertEqual(result["nearbyRegions"][0]["referencePriceCount"], 1)
 
+    def test_fast_mode_keeps_first_look_candidate_without_policy_price(self):
+        entity = {
+            "name": "빠른후보",
+            "dedupeKey": "fast-look",
+            "district": "강남구",
+            "legalDong": "역삼동",
+            "jibun": "1",
+            "households": 1000,
+        }
+        price_rows = [{
+            "name": "빠른후보",
+            "region": "강남구",
+            "legalDong": "역삼동",
+            "jibun": "1",
+            "areaLabel": "전용 59㎡",
+            "priceSource": "manual",
+        }]
+
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=price_rows), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", []), \
+             mock.patch.object(budget_candidates, "_find_entities", return_value=[entity]), \
+             mock.patch.object(budget_candidates, "_apply_stored_live_price"), \
+             mock.patch.object(budget_candidates.location_scores, "attach_scores"), \
+             mock.patch.object(budget_candidates.verdicts, "attach_verdicts"):
+            result = budget_candidates.budget_candidates(
+                "10억",
+                region="강남구",
+                fast_mode=True,
+                home_ownership="no_home",
+                first_time="true",
+                cash_eok="5",
+                annual_income="9000",
+                mortgage_rate="4.3",
+            )
+
+        self.assertEqual(len(result["candidates"]), 1)
+        self.assertIsNone(result["candidates"][0]["policyImpact"])
+        self.assertEqual(result["candidates"][0]["fitStatus"], "가격 확인 필요")
+
     def test_aggregate_master_row_can_signal_a_nearby_region(self):
         price_rows = [{
             "name": "서초집계단지",

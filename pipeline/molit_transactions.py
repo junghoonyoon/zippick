@@ -32,7 +32,7 @@ MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 10
+PRICE_BAND_CACHE_SCHEMA_VERSION = 11
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 # 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
 # 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
@@ -1391,6 +1391,33 @@ def transactions_for_apartment(
     if not rows:
         return []
     transaction_kind = transaction_kind_for_apartment(name, region)
+    transactions = _transactions_for_apartment_kind(
+        rows,
+        name,
+        area_label,
+        lookback_months,
+        transaction_kind,
+    )
+    if transaction_kind == TRANSACTION_KIND_PRESALE:
+        completed_transactions = _transactions_for_apartment_kind(
+            rows,
+            name,
+            area_label,
+            lookback_months,
+            TRANSACTION_KIND_APARTMENT,
+        )
+        if _latest_trade_date(completed_transactions) > _latest_trade_date(transactions):
+            return completed_transactions
+    return transactions
+
+
+def _transactions_for_apartment_kind(
+    rows,
+    name,
+    area_label,
+    lookback_months,
+    transaction_kind,
+):
     lawd_cds = sorted({
         code
         for row in rows
@@ -1417,6 +1444,17 @@ def transactions_for_apartment(
             except Exception:
                 continue
     return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+
+def _latest_trade_date(transactions):
+    return max(
+        (
+            str(row.get("dealDate") or "")
+            for row in transactions
+            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(row.get("dealDate") or ""))
+        ),
+        default="",
+    )
 
 
 def transactions_for_apartment_cached(

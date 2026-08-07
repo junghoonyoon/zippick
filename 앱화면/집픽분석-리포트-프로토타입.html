@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>집픽 분석 — 개봉동한진아파트 59㎡</title>
+<style>
+  :root{
+    --ink:#191f28; --sub:#4e5968; --dim:#8b95a1; --line:#e5e8eb; --line2:#f0f2f5;
+    --blue:#3182f6; --blue-soft:#eff6ff; --blue-ink:#1b4fa8;
+    --green:#0f9d58; --green-soft:#e9f7f0; --green-ink:#0b7a45;
+    --amber:#b4690e; --amber-soft:#fff8ed;
+    --red:#e5432e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    background:#f2f4f6; color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    display:flex; justify-content:center; padding:0 0 60px;
+    word-break:keep-all; -webkit-font-smoothing:antialiased;
+  }
+  .page{width:min(560px,100%); background:#fff; min-height:100vh}
+  .hl{background:linear-gradient(transparent 56%, #ffe27a 56%); font-weight:900}
+  b{font-weight:900}
+
+  /* ── nav ── */
+  .nav{
+    position:sticky; top:0; z-index:9; display:flex; align-items:center; gap:8px;
+    height:52px; padding:0 8px 0 4px; background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(180%) blur(12px); border-bottom:1px solid var(--line2);
+  }
+  .nav button{border:0; background:transparent; cursor:pointer; font-family:inherit}
+  .nav .back{padding:0 10px; font-size:22px; color:var(--ink); line-height:1}
+  .nav .ttl{flex:1; font-size:15px; font-weight:850; letter-spacing:-.3px}
+  .nav .share{padding:8px 12px; font-size:13px; font-weight:850; color:var(--sub)}
+
+  /* ── head ── */
+  .head{padding:22px 22px 4px}
+  h1{margin:0; font-size:23px; font-weight:900; letter-spacing:-.7px; line-height:1.35}
+  h1 span{color:var(--sub)}
+  .spec{margin:7px 0 0; font-size:13.5px; font-weight:700; color:var(--sub); line-height:1.55}
+  .basis{margin:3px 0 0; font-size:12px; font-weight:700; color:var(--dim); line-height:1.55}
+
+  /* ── verdict ── */
+  .verdict{margin:16px 22px 0; border:1px solid var(--line); border-radius:18px; overflow:hidden}
+  .vd-top{padding:18px 18px 16px}
+  .vd-badge{display:inline-flex; align-items:center; gap:7px; border-radius:999px; padding:6px 14px 6px 11px;
+    background:var(--green-soft); color:var(--green-ink); font-size:13.5px; font-weight:900}
+  .vd-badge i{width:7px; height:7px; border-radius:50%; background:var(--green)}
+  .vd-line{margin:13px 0 0; font-size:18.5px; font-weight:900; letter-spacing:-.45px; line-height:1.52}
+  .vd-sub{margin:9px 0 0; font-size:14px; font-weight:700; color:var(--sub); line-height:1.68}
+
+  .vd-scores{display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line)}
+  .vd-sc{padding:14px 18px}
+  .vd-sc + .vd-sc{border-left:1px solid var(--line)}
+  .vd-sc-lb{font-size:12px; font-weight:800; color:var(--dim)}
+  .vd-sc-vl{margin-top:3px; font-size:24px; font-weight:900; letter-spacing:-.8px}
+  .vd-sc-vl span{font-size:13px; font-weight:800; color:var(--dim); letter-spacing:0}
+  .vd-sc-tag{margin-top:4px; font-size:11.5px; font-weight:850; color:var(--green-ink)}
+
+  /* ── matrix ── */
+  .mx{margin:12px 22px 0; border:1px solid var(--line); border-radius:16px; overflow:hidden}
+  .mx-hd{padding:13px 16px 11px; border-bottom:1px solid var(--line)}
+  .mx-hd h3{margin:0; font-size:14px; font-weight:900; letter-spacing:-.2px}
+  .mx-hd p{margin:5px 0 0; font-size:12.5px; font-weight:700; color:var(--sub); line-height:1.6}
+  .mx-grid{display:grid; grid-template-columns:60px repeat(3,1fr); font-size:10.5px}
+  .mx-grid > div{padding:9px 3px; text-align:center; font-weight:850; color:var(--dim); line-height:1.35}
+  .mx-grid .hd{background:#fafbfc}
+  .mx-grid .rl{background:#fafbfc; display:grid; place-items:center}
+  .mx-grid .c{border-left:1px solid var(--line2); border-top:1px solid var(--line2); color:#aeb6bf; font-size:11px}
+  .mx-grid .c.on{background:var(--green-soft); color:var(--green-ink); font-weight:900; position:relative}
+  .mx-grid .c.on::after{content:"이 단지"; position:absolute; top:0; right:0; background:var(--green); color:#fff;
+    font-size:8px; font-weight:900; padding:2px 5px; border-radius:0 0 0 7px; letter-spacing:-.2px}
+
+  /* ── body ── */
+  section{padding:34px 22px 0}
+  .kicker{font-size:11.5px; font-weight:900; color:var(--blue); letter-spacing:.4px; margin-bottom:7px}
+  h2{margin:0 0 14px; font-size:20px; font-weight:900; letter-spacing:-.5px; line-height:1.45}
+  p{margin:0 0 15px; font-size:15.5px; font-weight:600; line-height:1.78; color:#2b3440}
+  p:last-child{margin-bottom:0}
+
+  /* bars */
+  .bars{margin:4px 0 18px; border:1px solid var(--line); border-radius:14px; padding:16px}
+  .bar + .bar{margin-top:14px}
+  .bar-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px}
+  .bar-lb{font-size:13.5px; font-weight:850}
+  .bar-vl{font-size:12.5px; font-weight:850; color:var(--dim); white-space:nowrap}
+  .bar-tr{height:8px; border-radius:99px; background:#eef1f4; overflow:hidden}
+  .bar-fl{height:100%; border-radius:99px; background:var(--blue); width:0; transition:width .8s cubic-bezier(.2,.85,.3,1)}
+  .bar-fl.g{background:var(--green)}
+  .bar-fl.a{background:#e39a2c}
+  .bar-rs{margin-top:7px; font-size:12.5px; font-weight:700; color:var(--dim); line-height:1.6}
+
+  h3.sub{margin:30px 0 12px; font-size:16.5px; font-weight:900; letter-spacing:-.35px}
+
+  /* commute */
+  .commute{margin:4px 0 16px; border:1px solid var(--line); border-radius:14px; padding:15px 16px 12px}
+  .cm-row{display:grid; grid-template-columns:52px 1fr 46px 58px; align-items:center; gap:9px; margin-bottom:11px}
+  .cm-nm{font-size:13.5px; font-weight:850}
+  .cm-bar{height:8px; border-radius:99px; background:#eef1f4; overflow:hidden}
+  .cm-bar i{display:block; height:100%; border-radius:99px; background:#c3cbd6}
+  .cm-row.best .cm-bar i{background:var(--green)}
+  .cm-row.best .cm-tm{color:var(--green-ink)}
+  .cm-tm{font-size:14px; font-weight:900; text-align:right}
+  .cm-tf{font-size:11.5px; font-weight:750; color:var(--dim); text-align:right}
+  .cm-rank{margin:4px 0 10px; border-top:1px solid var(--line2); padding-top:11px;
+    font-size:13px; font-weight:750; color:var(--ink); line-height:1.65}
+  .cm-rank span{color:var(--dim); font-size:12px; font-weight:700}
+  .cm-note{margin:2px 0 0; font-size:11.5px; font-weight:700; color:var(--dim); line-height:1.55}
+
+  /* callout */
+  .note{
+    margin:0 0 15px; border-left:3px solid var(--blue); border-radius:0 12px 12px 0;
+    padding:14px 16px; background:var(--blue-soft);
+    font-size:14.5px; font-weight:700; color:var(--blue-ink); line-height:1.72;
+  }
+  .warn{
+    margin:0 0 15px; border-left:3px solid #e39a2c; border-radius:0 12px 12px 0;
+    padding:14px 16px; background:var(--amber-soft);
+    font-size:14.5px; font-weight:700; color:#7c4a08; line-height:1.72;
+  }
+
+  /* action */
+  .act{counter-reset:a; margin:0; padding:0; list-style:none}
+  .act li{position:relative; padding:0 0 0 34px; margin-bottom:18px; font-size:15.5px; font-weight:650; line-height:1.75}
+  .act li:last-child{margin-bottom:0}
+  .act li::before{
+    counter-increment:a; content:counter(a); position:absolute; left:0; top:3px;
+    width:23px; height:23px; border-radius:8px; background:var(--ink); color:#fff;
+    font-size:12.5px; font-weight:900; display:grid; place-items:center;
+  }
+  .act .t{display:block; font-size:15.5px; font-weight:900; margin-bottom:2px}
+
+  /* closing */
+  .close{margin:34px 22px 0; border-top:1px solid var(--line); padding-top:24px}
+  .close p{font-size:16px; font-weight:700; line-height:1.8}
+
+  .disc{margin:26px 22px 0; border-radius:14px; padding:14px 16px; background:#f7f9fa;
+    font-size:11.5px; font-weight:700; color:var(--dim); line-height:1.68}
+
+  /* cta */
+  .cta{position:sticky; bottom:0; display:flex; gap:8px; margin-top:26px; padding:12px 16px 18px;
+    background:rgba(255,255,255,.94); backdrop-filter:blur(12px); border-top:1px solid var(--line2)}
+  .cta button{flex:1; height:52px; border:0; border-radius:14px; cursor:pointer; font-family:inherit;
+    font-size:15.5px; font-weight:900; letter-spacing:-.3px}
+  .cta .ghost{flex:0 0 112px; background:#f2f4f6; color:var(--sub)}
+  .cta .primary{background:var(--blue); color:#fff}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="nav">
+    <button class="back">‹</button>
+    <span class="ttl">집픽 분석</span>
+    <button class="share">공유</button>
+  </div>
+
+  <div class="head">
+    <h1>개봉동한진아파트 <span>59㎡</span></h1>
+    <p class="spec">서울 구로구 개봉동 · 26년차 · 1,371세대</p>
+    <p class="basis">국토교통부 실거래가 기준 · 2026년 8월 3일 계산</p>
+  </div>
+
+  <div class="verdict">
+    <div class="vd-top">
+      <div class="vd-badge"><i></i>적극 검토</div>
+      <p class="vd-line">단지 조건도 괜찮고, 최근 반년 동안 가격이 오르면서 거래도 늘었습니다.</p>
+      <p class="vd-sub">여의도 <b>33분</b>인데 최근 실거래가 <b>6.2억</b>입니다. 이 조합이 이 단지의 전부예요.<br>다만 이 숫자는 <b>이미 체결된 가격</b>입니다. 지금 나와 있는 호가가 여기서 얼마나 올라가 있는지가 실제 판단의 시작이에요.</p>
+    </div>
+    <div class="vd-scores">
+      <div class="vd-sc">
+        <div class="vd-sc-lb">단지·입지</div>
+        <div class="vd-sc-vl">78<span> / 100</span></div>
+        <div class="vd-sc-tag">좋음 구간</div>
+      </div>
+      <div class="vd-sc">
+        <div class="vd-sc-lb">최근 시장 신호</div>
+        <div class="vd-sc-vl">77<span> / 100</span></div>
+        <div class="vd-sc-tag">상승 확인됨</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mx">
+    <div class="mx-hd">
+      <h3>두 점수는 더하지 않습니다</h3>
+      <p>입지 점수는 <b>이 물건이 좋은가</b>를, 신호 점수는 <b>지금이 그 타이밍인가</b>를 봅니다. 보는 게 다르니 따로 놓고 판단합니다.</p>
+    </div>
+    <div class="mx-grid">
+      <div class="hd"></div>
+      <div class="hd">신호<br>70점 이상</div>
+      <div class="hd">신호<br>45~69점</div>
+      <div class="hd">신호<br>44점 이하</div>
+
+      <div class="rl">입지<br>65점↑</div>
+      <div class="c on">적극 검토</div>
+      <div class="c">급매만</div>
+      <div class="c">관망</div>
+
+      <div class="rl">입지<br>50~64</div>
+      <div class="c">조건부</div>
+      <div class="c">보류</div>
+      <div class="c">보류</div>
+
+      <div class="rl">입지<br>49점↓</div>
+      <div class="c">후보 제외</div>
+      <div class="c">후보 제외</div>
+      <div class="c">후보 제외</div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section>
+    <div class="kicker">첫 번째</div>
+    <h2>단지부터 보겠습니다</h2>
+    <p>이 단지가 78점을 받은 이유는 <b>가격과 위치의 조합</b>입니다. 화려한 신축이라서가 아니에요.</p>
+    <div class="bars">
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">입지·실수요</span><span class="bar-vl">16.1 / 20</span></div>
+        <div class="bar-tr"><div class="bar-fl g" data-w="81"></div></div>
+        <div class="bar-rs">직장권 접근성 6.8/8 · 역 접근성 3.8/5 · 교육 3.0/4 · 지역 대표성 2.5/3</div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">가격 적정성</span><span class="bar-vl">24.6 / 30</span></div>
+        <div class="bar-tr"><div class="bar-fl g" data-w="82"></div></div>
+        <div class="bar-rs">같은 예산 후보 중 ㎡당 가격 하위권 · 구 대장 단지와의 가격 차이도 아직 벌어져 있음</div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">전세가율·투자금</span><span class="bar-vl">15.2 / 20</span></div>
+        <div class="bar-tr"><div class="bar-fl" data-w="76"></div></div>
+        <div class="bar-rs">앞으로 3년간 근처 입주 물량이 적음 — 전세가 흔들릴 위험이 낮음</div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">거래 유동성</span><span class="bar-vl">11.7 / 15</span></div>
+        <div class="bar-tr"><div class="bar-fl" data-w="78"></div></div>
+        <div class="bar-rs">1,371세대 · 3개월에 11건이면 팔고 싶을 때 팔리는 규모</div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">상품성·희소성</span><span class="bar-vl">10.1 / 15</span></div>
+        <div class="bar-tr"><div class="bar-fl a" data-w="67"></div></div>
+        <div class="bar-rs">준공 26년차 — 다섯 항목 중 여기가 가장 낮습니다</div>
+      </div>
+    </div>
+    <p>정리하면 <b>직장 가까운 자리에, 세대수 많은 단지를, 싼 값에</b> 사는 구조입니다. 대신 건물이 낡았습니다. 이 교환을 받아들일 수 있느냐가 이 단지의 전부예요.</p>
+
+    <h3 class="sub">출퇴근은 이렇습니다</h3>
+    <p>집 앞에서 <b>7호선 광명사거리역까지 도보 10분</b>입니다. 여기서 세 업무지구까지 걸리는 시간이에요.</p>
+    <div class="commute">
+      <div class="cm-row best">
+        <span class="cm-nm">여의도</span>
+        <div class="cm-bar"><i style="width:55%"></i></div>
+        <span class="cm-tm">33분</span>
+        <span class="cm-tf">2회 환승</span>
+      </div>
+      <div class="cm-row">
+        <span class="cm-nm">광화문</span>
+        <div class="cm-bar"><i style="width:67%"></i></div>
+        <span class="cm-tm">40분</span>
+        <span class="cm-tf">1회 환승</span>
+      </div>
+      <div class="cm-row">
+        <span class="cm-nm">강남</span>
+        <div class="cm-bar"><i style="width:78%"></i></div>
+        <span class="cm-tm">47분</span>
+        <span class="cm-tf">1회 환승</span>
+      </div>
+      <div class="cm-rank">
+        수도권 전철 <b>779개 역</b> 중 여의도 접근성 <b class="hl">상위 19%</b><br>
+        <span>광화문 상위 35% · 강남 상위 41%</span>
+      </div>
+      <p class="cm-note">도보 10분 포함 · 지하철 역 수 기준 추정이라 실제와 5분 안팎 차이가 날 수 있습니다.</p>
+    </div>
+    <p><b>여의도 직장이면 좋은 자리입니다.</b> 33분이면 수도권 역 다섯 곳 중 하나 안에 드는 접근성인데, 가격은 6.2억이에요. 이 단지가 78점을 받은 이유의 상당 부분이 여기 있습니다.</p>
+    <p>반대로 <b>강남 직장이면 47분</b>입니다. 상위 41%면 특별할 게 없는 수준이라, 같은 예산으로 강남 쪽 후보를 더 보시는 게 낫습니다. <b>같은 단지도 직장이 어디냐에 따라 답이 갈립니다.</b></p>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <div class="kicker">두 번째</div>
+    <h2>이번에 눈에 띈 건 시장 흐름입니다</h2>
+    <p>신호 점수 77점은 그냥 높은 숫자가 아닙니다. <b>집픽이 걸어둔 상한선을 넘긴 점수</b>라서 의미가 있습니다.</p>
+    <div class="note">
+      집픽은 <b>최근 3개월 상승이 확인되지 않으면 아무리 잘해도 69점까지만</b> 줍니다.<br>
+      이 단지는 <b>77점</b>이에요. 상한을 넘겼다는 건, 최근 3개월 상승이 <span class="hl">데이터로 확인됐다</span>는 뜻입니다.
+    </div>
+    <div class="bars">
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">최근 6개월 가격 변화</span><span class="bar-vl">30 / 40</span></div>
+        <div class="bar-tr"><div class="bar-fl g" data-w="75"></div></div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">거래량 변화</span><span class="bar-vl">18 / 25</span></div>
+        <div class="bar-tr"><div class="bar-fl g" data-w="72"></div></div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">같은 구 대표 단지 대비</span><span class="bar-vl">14 / 20</span></div>
+        <div class="bar-tr"><div class="bar-fl" data-w="70"></div></div>
+      </div>
+      <div class="bar">
+        <div class="bar-top"><span class="bar-lb">최근 3개월 지속성</span><span class="bar-vl">15 / 15</span></div>
+        <div class="bar-tr"><div class="bar-fl g" data-w="100"></div></div>
+      </div>
+    </div>
+    <p>3개월 평균이 <b>6.17억</b>으로 직전 3개월보다 <b>3.0% 올랐습니다.</b> 거래도 11건 나왔어요. 값이 오르는데 거래까지 늘었다는 건, <b>오른 값에도 사겠다는 사람이 있었다</b>는 뜻입니다.</p>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <div class="kicker">그런데</div>
+    <h2>이건 걸립니다</h2>
+    <div class="warn">
+      최근 실거래 <b>6.23억</b>은 직전 거래보다 <b>5.3% 낮은 가격</b>입니다.<br>
+      3개월 평균은 오르는데, <b>마지막 한 건만 빠졌어요.</b>
+    </div>
+    <p>이런 건 보통 두 가지 중 하나입니다. <b>저층이거나 급매</b>입니다. 둘 다 아니라면 흐름이 꺾이기 시작한 거고요.</p>
+    <p>그래서 이건 <b class="hl">직접 확인하고 가셔야 합니다.</b> 7월 11일 거래가 몇 층이었는지 부동산에 물어보세요. 저층이면 이 단지 시세는 아직 안 빠진 겁니다.</p>
+    <div class="warn">
+      <b>집픽은 호가를 보지 못합니다.</b><br>
+      국토부에 신고된 <b>실거래</b>만 받아옵니다. 지금 부동산에 걸린 매물이 얼마인지는 알 수 없어요.<br>
+      특히 이 단지처럼 <b>오르는 중인 곳</b>은 호가가 실거래보다 꽤 위에 있는 경우가 많습니다. 이 리포트의 가격은 <b>기준선</b>이지 <b>살 수 있는 가격이 아닙니다.</b>
+    </div>
+    <p>그리고 <b>26년차</b>라는 점. 리모델링이나 재건축 얘기가 아직 없는 단지라, 시간이 갈수록 상품성 점수는 더 내려갑니다. 이건 데이터가 좋아질 요소가 아니라, <b>가격으로만 보상받는 요소</b>예요.</p>
+  </section>
+
+  <!-- 4 -->
+  <section>
+    <div class="kicker">그래서</div>
+    <h2>저라면 이렇게 하겠습니다</h2>
+    <ol class="act">
+      <li><span class="t">6.17억을 기준선으로 들고 갑니다</span>최근 3개월 실거래 평균입니다. 호가를 들었을 때 이 숫자와 얼마나 벌어져 있는지 먼저 보세요. <b>차이가 크면 그 이유를 물어보는 것</b>이 이 리포트로 할 수 있는 가장 실질적인 일입니다.</li>
+      <li><span class="t">7월 11일 거래의 층수를 먼저 묻습니다</span>이 한 건이 저층이었는지 아닌지에 따라 이 단지 판단이 통째로 바뀝니다. 가장 먼저 확인할 항목이에요.</li>
+      <li><span class="t">자기자금 3.3억이 안 되면 접습니다</span>필요한 자기자금은 <b>3.25~3.31억</b>입니다. 여유가 이보다 적으면 이 단지는 무리하지 않는 게 낫습니다.</li>
+      <li><span class="t">강남으로 출근한다면 다시 생각합니다</span>이 단지의 강점은 <b>여의도 33분</b>입니다. 강남은 47분이라 그 강점이 사라져요. 직장이 강남이면 같은 예산으로 다른 후보를 먼저 보세요.</li>
+    </ol>
+  </section>
+
+  <div class="close">
+    <p>26년차라는 약점을 <b>가격이 이미 반영</b>하고 있고, 최근 반년 값이 올랐고, 여의도까지 33분입니다.</p>
+    <p>그래서 <b>사지 말라고는 못 하겠습니다.</b> 다만 이 리포트가 말할 수 있는 건 여기까지입니다. <b>실거래 6.17억</b>과 <b>여의도 33분</b>, 이 두 숫자를 들고 가서 실제 매물이 여기에 맞는지 확인하는 건 직접 하셔야 해요.</p>
+  </div>
+
+  <div class="disc">
+    집픽 분석은 국토교통부 실거래가와 공개 데이터를 정해진 규칙으로 계산한 <b>참고 정보</b>입니다. 현재 매물 호가는 포함되지 않으며, 실거래는 신고까지 시차가 있어 지금 시세와 다를 수 있습니다. 매수 권유나 수익 보장이 아니며, 최종 판단과 책임은 이용자 본인에게 있습니다.
+  </div>
+
+  <div class="cta">
+    <button class="ghost">비교 담기</button>
+    <button class="primary">네이버 매물 보기</button>
+  </div>
+</div>
+
+<script>
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting) return;
+    e.target.querySelectorAll('.bar-fl').forEach((b,i)=>{
+      setTimeout(()=> b.style.width = b.dataset.w + '%', 80 + i*100);
+    });
+    io.unobserve(e.target);
+  });
+},{threshold:.25});
+document.querySelectorAll('.bars').forEach(n=>io.observe(n));
+</script>
+</body>
+</html>

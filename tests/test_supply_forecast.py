@@ -147,6 +147,54 @@ class SupplyForecastTest(unittest.TestCase):
         self.assertEqual(result["offeredHouseholds"], 700)
         self.assertEqual(result["complexCount"], 1)
 
+    def test_duplicate_complex_keeps_larger_household_count(self):
+        path = self._fixture(
+            [
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "산성동", "대표단지명": "산성역 헤리스톤", "세대수": "1224", "입주예정월": "2027-12"},
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "산성동", "대표단지명": "산성역 헤리스톤", "세대수": "3487", "입주예정월": "2027-12"},
+            ]
+        )
+        rows = supply_forecast.load_rows(path)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["households"], 3487)
+
+    def test_lifestyle_change_groups_split_city_districts(self):
+        path = self._fixture(
+            [
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "산성동", "대표단지명": "산성역 헤리스톤", "세대수": "3487", "입주예정월": "2027-12"},
+                {"시도": "경기도", "시군구": "성남중원구", "법정동": "중앙동", "대표단지명": "해링턴 스퀘어 신흥역", "세대수": "1319", "입주예정월": "2027-12"},
+            ]
+        )
+        result = supply_forecast.lifestyle_change(
+            {"name": "산성역 헤리스톤", "district": "성남수정구", "province": "경기도", "legalDong": "산성동"},
+            today=self.today,
+            path=path,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["lifestyleKey"], "구성남 생활권")
+        self.assertEqual(result["totalHouseholds"], 4806)
+        self.assertEqual(result["largeComplexCount"], 2)
+        self.assertEqual(result["complexes"][0]["name"], "산성역 헤리스톤")
+        self.assertTrue(result["complexes"][0]["isTarget"])
+
+    def test_lifestyle_change_excludes_rental_like_supply(self):
+        path = self._fixture(
+            [
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "창곡동", "대표단지명": "성남 장기전세 행복주택", "세대수": "5000", "입주예정월": "2027-03"},
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "산성동", "대표단지명": "산성역 헤리스톤", "세대수": "3487", "입주예정월": "2027-12"},
+            ]
+        )
+        result = supply_forecast.lifestyle_change(
+            {"name": "산성역 헤리스톤", "district": "성남수정구", "province": "경기도", "legalDong": "산성동"},
+            today=self.today,
+            path=path,
+        )
+
+        self.assertEqual(result["totalHouseholds"], 3487)
+        self.assertNotIn("장기전세", " ".join(row["name"] for row in result["complexes"]))
+
 
 class AdjustmentTest(unittest.TestCase):
     """조합원 분양분 보정이 적용되는지, 그리고 원본이 보존되는지 확인한다."""

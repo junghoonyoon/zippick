@@ -99,6 +99,113 @@ class PolicyEvaluatorTest(unittest.TestCase):
         self.assertGreater(ceiling, 0)
         self.assertLess(ceiling, 15)
 
+    def test_first_time_buyer_changes_regulated_ltv_and_purchase_ceiling(self):
+        base = {
+            "home_ownership": "no_home",
+            "cash_eok": "5",
+            "annual_income": "10000",
+            "mortgage_rate": "4.0",
+            "loan_term_years": "30",
+            "purchase_cost_rate": "3",
+        }
+        general = policy_evaluator.user_profile(first_time=False, **base)
+        first_time = policy_evaluator.user_profile(first_time=True, **base)
+
+        general_impact = policy_evaluator.evaluate_candidate(
+            {"region": "서울시", "midPriceEok": 10},
+            profile=general,
+        )
+        first_time_impact = policy_evaluator.evaluate_candidate(
+            {"region": "서울시", "midPriceEok": 10},
+            profile=first_time,
+        )
+
+        self.assertEqual(general_impact["ltvRate"], 40)
+        self.assertEqual(first_time_impact["ltvRate"], 70)
+        self.assertGreater(
+            policy_evaluator.estimated_purchase_ceiling(first_time, ["서울시"]),
+            policy_evaluator.estimated_purchase_ceiling(general, ["서울시"]),
+        )
+
+    def test_first_time_selection_does_not_override_existing_home_ownership(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="one_home_keep",
+            first_time=True,
+            cash_eok="5",
+        )
+        impact = policy_evaluator.evaluate_candidate(
+            {"region": "평택시", "midPriceEok": 8},
+            profile=profile,
+        )
+
+        self.assertTrue(profile["firstTimeRequested"])
+        self.assertFalse(profile["firstTimeBuyer"])
+        self.assertEqual(impact["ltvRate"], 0)
+        self.assertIn("모순", " ".join(impact["warnings"]))
+
+    def test_first_time_acquisition_tax_relief_reduces_purchase_cost(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home",
+            first_time=True,
+            cash_eok="6",
+            purchase_cost_rate="3",
+        )
+        eligible = policy_evaluator.evaluate_candidate(
+            {"region": "서울시", "midPriceEok": 10},
+            profile=profile,
+        )
+        over_price_limit = policy_evaluator.evaluate_candidate(
+            {"region": "서울시", "midPriceEok": 13},
+            profile=profile,
+        )
+
+        self.assertEqual(eligible["grossPurchaseCostEok"], 0.3)
+        self.assertEqual(eligible["firstTimeAcquisitionTaxReliefEok"], 0.02)
+        self.assertEqual(eligible["purchaseCostEok"], 0.28)
+        self.assertEqual(over_price_limit["firstTimeAcquisitionTaxReliefEok"], 0)
+
+    def test_first_time_policy_summary_exposes_policy_difference(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home",
+            first_time=True,
+        )
+        summary = policy_evaluator.summarize([], profile)
+
+        self.assertTrue(summary["firstTimePolicy"]["selected"])
+        self.assertEqual(summary["firstTimePolicy"]["regulatedGeneralLtvRate"], 40)
+        self.assertEqual(summary["firstTimePolicy"]["regulatedFirstTimeLtvRate"], 70)
+        self.assertEqual(summary["firstTimePolicy"]["acquisitionTaxMaxReliefManwon"], 200)
+
+    def test_purchase_ceiling_is_not_limited_to_thirty_eok(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home",
+            first_time=True,
+            cash_eok="60",
+            annual_income="8000",
+            mortgage_rate="4.1",
+            loan_term_years="30",
+            purchase_cost_rate="3",
+        )
+
+        ceiling = policy_evaluator.estimated_purchase_ceiling(profile, ["서울시"])
+
+        self.assertGreater(ceiling, 30)
+        self.assertEqual(ceiling, 60.1)
+
+    def test_cash_only_purchase_must_include_purchase_costs(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="one_home_keep",
+            cash_eok="5",
+            purchase_cost_rate="3",
+        )
+        impact = policy_evaluator.evaluate_candidate(
+            {"region": "강남구", "midPriceEok": 5},
+            profile=profile,
+        )
+
+        self.assertLess(impact["cashGapEok"], 0)
+        self.assertEqual(impact["status"], "short")
+
     def test_candidate_exposes_required_cash_for_full_transaction_range(self):
         profile = policy_evaluator.user_profile(
             home_ownership="no_home",
@@ -120,8 +227,8 @@ class PolicyEvaluatorTest(unittest.TestCase):
         )
 
         self.assertEqual(impact["dsrLoanLimitEok"], 4.42)
-        self.assertEqual(impact["minRequiredCashEok"], 3.59)
-        self.assertEqual(impact["maxRequiredCashEok"], 4.34)
+        self.assertEqual(impact["minRequiredCashEok"], 3.57)
+        self.assertEqual(impact["maxRequiredCashEok"], 4.32)
 
     def test_candidate_exposes_latest_and_outlier_adjusted_average_cash_scenarios(self):
         profile = policy_evaluator.user_profile(

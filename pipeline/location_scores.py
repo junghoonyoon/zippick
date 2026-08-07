@@ -10,12 +10,14 @@ this free score because those feeds are not connected yet.
 import datetime
 
 import apartment_leaders
+import commute_times
 import kakao_station_distances
 import real_estate_search
+import redevelopment_analysis
 import supply_forecast
 
 
-SCORE_FORMULA_VERSION = "purchase-judgment-v3"
+SCORE_FORMULA_VERSION = "purchase-judgment-v4"
 MIN_PRICE_RANK_PEERS = 3
 HOUSEHOLD_SCORE_BANDS = (
     (3000, None, 100.0, "3,000세대 이상"),
@@ -617,15 +619,42 @@ def _investment_gap_score(row):
     return score, f"필요한 내 돈 {_price_text(gap)} · 매매가의 {gap_ratio:.1f}%"
 
 
-def _commute_access_score(row):
+def commute_profile_for(entity):
+    """단지의 업무지구 접근성 프로필. 없으면 None."""
+    if not entity:
+        return None
+    station = kakao_station_distances.cached_station(entity) or {}
+    name = station.get("nearestStationName")
+    if not name:
+        return None
+    distance = station.get("nearestStationDistance")
+    if distance is None:
+        distance = station.get("stationDistanceLowerBound")
+    return commute_times.profile_for_apartment({
+        "nearestStationName": name,
+        "nearestStationDistance": distance,
+    })
+
+
+def _commute_access_score(row, entity=None):
+    """직장권 접근성.
+
+    사용자가 직장권을 직접 입력했으면 그 값을 우선한다. 입력이 없어도
+    여의도·광화문·강남까지의 지하철 소요시간으로 점수를 낸다. 예전에는
+    구 단위 하드코딩 표에 없는 지역이 전부 0점이 되어, 1호선·7호선으로
+    도심이 연결되는 단지가 '접근성 없음'으로 표시되는 문제가 있었다.
+    """
     score = _float_or_none(row.get("commuteAccessScore"))
     reason = str(row.get("commuteAccessReason") or "").strip()
     if score is not None:
         return score, reason or "입력한 직장권을 권역 기준으로 반영"
     if row.get("commuteMatched"):
         return 75.0, "입력한 직장권과 권역 기준 1차 일치"
-    if row.get("commuteAccessRequested"):
-        return None, "입력한 직장권의 실제 이동시간 데이터 없음"
+
+    profile = commute_profile_for(entity)
+    if profile:
+        row["commuteProfile"] = profile
+        return commute_times.commute_access_score(profile)
     return None, "직장권 실제 이동시간 데이터 없음"
 
 
@@ -814,9 +843,10 @@ def _purchase_score_parts(row, entity, signals):
     jeonse_score, jeonse_reason = _jeonse_ratio_score(row)
     jeonse_fresh_score, jeonse_fresh_reason = _jeonse_freshness_score(row)
     invest_gap_score, invest_gap_reason = _investment_gap_score(row)
-    commute_score, commute_reason = _commute_access_score(row)
+    commute_score, commute_reason = _commute_access_score(row, entity)
     station_score, station_reason = _transport_score(entity) if entity else (None, "역거리 미수집")
     education_score, education_reason = _education_score(row)
+    redevelopment_score, redevelopment_reason, redevelopment_detail = redevelopment_analysis.influence_score(row, entity)
     representative_score, representative_reason = _regional_representation_score(row, signals)
     household_score = _scale_score(row)
     change_score, change_reason = _confirmed_change_score(row)
@@ -828,7 +858,9 @@ def _purchase_score_parts(row, entity, signals):
         _metric("station", "역 접근성", 5, station_score, station_reason),
         _metric("education", "교육 접근성", 4, education_score, education_reason),
         _metric("representation", "지역 대표성", 3, representative_score, representative_reason),
+        _metric("redevelopment_influence", "주변 정비사업 영향", 4, redevelopment_score, redevelopment_reason),
     ]
+    demand_metrics[-1]["analysis"] = redevelopment_detail
     if row.get("commuteAccessRequested") or commute_score is not None:
         demand_metrics.insert(0, _metric("commute", "직장권 접근성", 8, commute_score, commute_reason))
 
@@ -848,13 +880,13 @@ def _purchase_score_parts(row, entity, signals):
             _metric("jeonse_freshness", "전세 거래", 3, jeonse_fresh_score, jeonse_fresh_reason),
             _metric("investment_gap", "필요 투자금", 2, invest_gap_score, invest_gap_reason),
         ]),
-        _category_part("demand", "입지·실수요", 20, demand_metrics),
-        _category_part("product", "상품성·희소성", 15, [
+        _category_part("demand", "입지·실수요", 30, demand_metrics),
+        _category_part("product", "상품성·희소성", 10, [
             _metric("households", "세대수", 6, household_score, _household_score_reason(row)),
             _metric("age", "준공연도", 6, *_product_score(row)),
             _metric("confirmed_change", "확정 변화", 3, change_score, change_reason),
         ]),
-        _category_part("market", "거래 유동성·시장 신호", 15, [
+        _category_part("market", "거래 유동성·시장 신호", 10, [
             _metric("liquidity", "최근 거래량", 6, liquidity_score, liquidity_reason),
             _metric("relative_flow", "지역·대장 대비 흐름", 6, relative_flow_score, relative_flow_reason),
             _metric("sample_confidence", "표본 신뢰도", 3, confidence_score, confidence_reason),

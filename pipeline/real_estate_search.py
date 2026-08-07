@@ -165,6 +165,9 @@ MANUAL_APARTMENT_MASTER = [
 APARTMENT_CSV_PATHS = [
     config.ROOT / "outputs" / "seoul_apartments_20260703" / "서울시_아파트_단지_목록_한국부동산원_20250918.csv",
     config.ROOT / "data" / "경기도_아파트_단지_목록_한국부동산원_20250918.csv",
+    # 인천은 원본에 별도 파일이 없어 전국 파일에서 추려 만든다.
+    # pipeline/build_incheon_complex_list.py 참고.
+    config.ROOT / "data" / "인천광역시_아파트_단지_목록_한국부동산원_20250918.csv",
     config.ROOT / "data" / "분양권_입주예정_아파트_보강.csv",
 ]
 
@@ -253,6 +256,10 @@ def _region_city(row):
     district = _clean_entity_name(row.get("시군구") or row.get("자치구"))
     if province == "서울특별시":
         return "서울시"
+    if province == "인천광역시":
+        # 인천도 광역시라 자치구가 시 바로 아래 붙는다. 서울과 같은 방식으로
+        # 시 이름을 city에 두고 자치구는 district에 남긴다.
+        return "인천시"
     if district.endswith(("시", "군")):
         return district
     for city in ("성남", "수원", "용인", "고양", "안양", "안산", "부천"):

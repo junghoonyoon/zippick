@@ -79,7 +79,7 @@ class LocationScoresTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "ok")
         self.assertGreaterEqual(result["score"], 60)
-        self.assertEqual(result["scoreFormulaVersion"], "purchase-judgment-v3")
+        self.assertEqual(result["scoreFormulaVersion"], "purchase-judgment-v4")
         self.assertEqual(result["title"], "현재 데이터 기준 종합 점수")
         self.assertEqual(
             [part["label"] for part in result["parts"]],
@@ -101,6 +101,11 @@ class LocationScoresTest(unittest.TestCase):
         self.assertEqual(details["상품성·희소성"]["준공연도"]["reason"], "2018년 사용승인")
         self.assertNotIn("주차·평면·브랜드", details["상품성·희소성"])
         self.assertEqual(details["입지·실수요"]["교육 접근성"]["reason"], "테스트초 · 320m 거리")
+        self.assertEqual(details["입지·실수요"]["주변 정비사업 영향"]["score"], 50)
+        self.assertEqual(
+            details["입지·실수요"]["주변 정비사업 영향"]["analysis"]["neutralPoints"],
+            2,
+        )
         self.assertEqual(details["전세가율·입주물량·투자금"]["필요 투자금"]["reason"], "필요한 내 돈 4.6억원 · 매매가의 38.3%")
         self.assertEqual(result["areaAnalysis"]["parts"], [])
         self.assertTrue(any(
@@ -215,6 +220,34 @@ class LocationScoresTest(unittest.TestCase):
         }
 
         self.assertNotIn("직장권 접근성", demand_details)
+
+    def test_redevelopment_projects_are_structured_in_demand_details(self):
+        row = {
+            "name": "정비영향아파트",
+            "midPriceEok": 8.8,
+            "latitude": 37.5471,
+            "longitude": 126.9609,
+            "households": 1200,
+            "buildingAge": 10,
+            "buildYear": 2016,
+            "transactionCount": 8,
+            "educationEnvironment": {"score": 80},
+            "signals": {"status": "ok", "momentumPct": 2.0, "districtRelativePct": 0.5},
+        }
+
+        result = location_scores.score_for_candidate(row, self.entity)
+        details = {
+            detail["label"]: detail
+            for part in result["parts"] if part["label"] == "입지·실수요"
+            for detail in part["details"]
+        }
+        redevelopment = details["주변 정비사업 영향"]
+
+        self.assertEqual(redevelopment["status"], "ok")
+        self.assertIn("analysis", redevelopment)
+        self.assertTrue(redevelopment["analysis"]["projects"])
+        self.assertLessEqual(redevelopment["analysis"]["projects"][0]["distanceMeters"], 1000)
+        self.assertIn(redevelopment["analysis"]["projects"][0]["type"], location_scores.redevelopment_analysis.PROJECT_TYPES)
 
     def test_presale_candidate_gets_composite_score(self):
         row = {

@@ -13,6 +13,11 @@
     "capitalFirstTime": 0.7,
     "additionalHomeInCapital": 0.0
   },
+  "firstTimeAcquisitionTaxRelief": {
+    "maxHomePriceEok": 12,
+    "maxReliefManwonApartment": 200,
+    "effectiveUntil": "2028-12-31"
+  },
   "stressRatePercent": 3.0,
   "moveInMonths": 6,
   "regulatedRegions": {
@@ -63,6 +68,13 @@
       "title": "다주택 중과유예 종료 안내",
       "publishedAt": "2026-03-01",
       "url": "https://www.nts.go.kr/nts/na/ntt/selectNttInfo.do?mi=2201&nttSn=1349339"
+    },
+    {
+      "id": "mois-first-home-tax-202601",
+      "agency": "행정안전부",
+      "title": "생애최초 주택 구입 취득세 감면 운영기준",
+      "publishedAt": "2026-01-13",
+      "url": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000016&nttId=123270"
     }
   ]
 }

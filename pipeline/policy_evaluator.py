@@ -70,6 +70,8 @@ def user_profile(
     purchase_cost_rate=0,
 ):
     ownership = home_ownership if home_ownership in HOME_OWNERSHIP_LABELS else "unknown"
+    first_time_requested = str(first_time).strip().lower() in {"1", "true", "yes", "y", "on"}
+    first_time_eligible_by_ownership = ownership == "no_home"
     joint = str(co_borrower).strip().lower() in {"1", "true", "yes", "y", "on"}
     borrower_income = max(0, _float(annual_income))
     borrower_debt = max(0, _float(monthly_debt_payment))
@@ -89,7 +91,10 @@ def user_profile(
     return {
         "homeOwnership": ownership,
         "homeOwnershipLabel": HOME_OWNERSHIP_LABELS[ownership],
-        "firstTimeBuyer": str(first_time).strip().lower() in {"1", "true", "yes", "y", "on"},
+        # 보유 주택 입력과 모순되면 생애최초 혜택을 적용하지 않는다.
+        "firstTimeBuyer": first_time_requested and first_time_eligible_by_ownership,
+        "firstTimeRequested": first_time_requested,
+        "firstTimeEligibleByOwnership": first_time_eligible_by_ownership,
         "cashEok": max(0, _float(cash_eok)),
         "annualIncomeManwon": borrower_income,
         "monthlyDebtPaymentManwon": borrower_debt,
@@ -178,6 +183,22 @@ def _ltv(profile, region, regulated, snapshot):
     return 0.7, "비수도권 일반 기준"
 
 
+def _first_time_acquisition_tax_relief(profile, price_eok, gross_cost_eok, snapshot):
+    """생애최초 아파트 취득세 예상 감면액을 억원 단위로 반환한다.
+
+    사용자가 입력한 부대비용 안에서만 빼서, 비용을 0%ub85c 선택한
+    경우에 혜택만 따로 더해지지 않게 한다. 실제 감면은 본인·배우자의
+    과거 보유 이력과 거주 요건을 관할 지자체에서 다시 확인해야 한다.
+    """
+    rule = snapshot.get("firstTimeAcquisitionTaxRelief") or {}
+    if not profile.get("firstTimeBuyer") or price_eok <= 0 or gross_cost_eok <= 0:
+        return 0.0
+    if price_eok > _float(rule.get("maxHomePriceEok")):
+        return 0.0
+    max_relief_eok = _float(rule.get("maxReliefManwonApartment")) / 10000
+    return max(0, round(min(gross_cost_eok, max_relief_eok), 2))
+
+
 def evaluate_candidate(candidate, entity=None, profile=None):
     snapshot = load_policy_snapshot()
     profile = profile or user_profile()
@@ -201,7 +222,14 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         loan_limits.append(profile["dsrLoanLimitEok"])
     estimated_loan = min(loan_limits)
     estimated_loan = max(0, round(estimated_loan, 2))
-    purchase_cost = round(price * profile.get("purchaseCostRatePercent", 0) / 100, 2)
+    gross_purchase_cost = round(price * profile.get("purchaseCostRatePercent", 0) / 100, 2)
+    first_time_tax_relief = _first_time_acquisition_tax_relief(
+        profile,
+        price,
+        gross_purchase_cost,
+        snapshot,
+    )
+    purchase_cost = max(0, round(gross_purchase_cost - first_time_tax_relief, 2))
     required_cash = max(0, round(price + purchase_cost - estimated_loan, 2))
     cash = profile["cashEok"]
     cash_gap = round(cash - required_cash, 2) if cash else None
@@ -216,10 +244,20 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         if profile.get("dsrLoanLimitEok") is not None:
             range_limits.append(profile["dsrLoanLimitEok"])
         range_loan = max(0, round(min(range_limits), 2))
-        range_cost = round(range_price * profile.get("purchaseCostRatePercent", 0) / 100, 2)
+        range_gross_cost = round(range_price * profile.get("purchaseCostRatePercent", 0) / 100, 2)
+        range_tax_relief = _first_time_acquisition_tax_relief(
+            profile,
+            range_price,
+            range_gross_cost,
+            snapshot,
+        )
+        range_cost = max(0, round(range_gross_cost - range_tax_relief, 2))
         return {
             "priceEok": range_price,
             "loanLimitEok": range_loan,
+            "grossPurchaseCostEok": range_gross_cost,
+            "firstTimeAcquisitionTaxReliefEok": range_tax_relief,
+            "purchaseCostEok": range_cost,
             "requiredCashEok": max(0, round(range_price + range_cost - range_loan, 2)),
         }
 
@@ -266,6 +304,8 @@ def evaluate_candidate(candidate, entity=None, profile=None):
     if profile["homeOwnership"] == "unknown":
         missing.append("보유 주택 수")
         warnings.append("보유 주택 수에 따라 LTV와 추가 주택 대출 가능 여부가 달라져요.")
+    if profile.get("firstTimeRequested") and not profile.get("firstTimeEligibleByOwnership"):
+        warnings.append("보유 주택 입력과 모순되어 생애최초 혜택을 적용하지 않았어요.")
     if not profile["annualIncomeManwon"]:
         missing.append("연소득")
     if profile["homeOwnership"] in {"one_home_keep", "multi_home"} and region["isCapitalRegion"]:
@@ -294,7 +334,7 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         status = "short"
         status_label = f"추가 자금 {_money(abs(cash_gap))} 필요"
 
-    if ltv_rate == 0 and cash and cash >= price:
+    if ltv_rate == 0 and cash and cash_gap is not None and cash_gap >= 0:
         status = "possible"
         status_label = "대출 없이 구매 가능"
     elif ltv_rate == 0 and (not cash or cash < price):
@@ -315,6 +355,8 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         "priceCapEok": price_cap,
         "estimatedLoanLimitEok": estimated_loan,
         "dsrLoanLimitEok": profile.get("dsrLoanLimitEok"),
+        "grossPurchaseCostEok": gross_purchase_cost,
+        "firstTimeAcquisitionTaxReliefEok": first_time_tax_relief,
         "purchaseCostEok": purchase_cost,
         "purchaseCostRatePercent": profile.get("purchaseCostRatePercent", 0),
         "requiredCashEok": required_cash,
@@ -336,20 +378,55 @@ def evaluate_candidate(candidate, entity=None, profile=None):
     }
 
 
-def estimated_purchase_ceiling(profile, regions=None, max_price_eok=30):
+def estimated_purchase_ceiling(profile, regions=None, max_price_eok=None):
+    """Return the highest price the profile can fund in the given regions.
+
+    The old implementation stopped checking at 30억원. That was an arbitrary
+    search limit, not a housing-price policy limit, so a user with more than
+    30억원 of available cash could still see a 30억원 ceiling. Search in
+    0.1억원 increments, expanding the upper bound until the first unaffordable
+    price is found. ``max_price_eok`` remains available for callers that need
+    an explicit upper bound.
+    """
     regions = regions or ["서울시", "경기도"]
+    explicit_limit = max_price_eok is not None
+    initial_high_step = max(1, int(round(_float(max_price_eok) * 10))) if explicit_limit else 300
     best = 0.0
+
     for region in regions:
-        for step in range(1, int(max_price_eok * 10) + 1):
-            price = step / 10
-            impact = evaluate_candidate({"region": region, "midPriceEok": price}, profile=profile)
-            if impact.get("cashGapEok") is not None and impact["cashGapEok"] >= 0:
-                best = max(best, price)
+        affordability_cache = {}
+
+        def is_affordable(step):
+            if step not in affordability_cache:
+                price = step / 10
+                impact = evaluate_candidate(
+                    {"region": region, "midPriceEok": price},
+                    profile=profile,
+                )
+                gap = impact.get("cashGapEok")
+                affordability_cache[step] = gap is not None and gap >= 0
+            return affordability_cache[step]
+
+        high_step = initial_high_step
+        if not explicit_limit:
+            while is_affordable(high_step) and high_step < 10_000_000:
+                high_step *= 2
+
+        low_step = high_step if explicit_limit and is_affordable(high_step) else 0
+        while high_step - low_step > 1:
+            middle_step = (low_step + high_step) // 2
+            if is_affordable(middle_step):
+                low_step = middle_step
+            else:
+                high_step = middle_step
+        best = max(best, low_step / 10)
+
     return round(best, 1)
 
 
 def summarize(impacts, profile):
     snapshot = load_policy_snapshot()
+    first_time_rule = snapshot.get("firstTimeAcquisitionTaxRelief") or {}
     counts = {"possible": 0, "short": 0, "restricted": 0, "needs_input": 0}
     for impact in impacts:
         status = impact.get("status")
@@ -361,9 +438,26 @@ def summarize(impacts, profile):
         "homeOwnership": profile["homeOwnership"],
         "homeOwnershipLabel": profile["homeOwnershipLabel"],
         "firstTimeBuyer": profile["firstTimeBuyer"],
+        "firstTimeRequested": profile.get("firstTimeRequested", False),
+        "firstTimeEligibleByOwnership": profile.get("firstTimeEligibleByOwnership", False),
+        "firstTimePolicy": {
+            "selected": profile["firstTimeBuyer"],
+            "eligibleByOwnership": profile.get("firstTimeEligibleByOwnership", False),
+            "regulatedGeneralLtvRate": int(round(float(snapshot["ltv"]["regulatedGeneral"]) * 100)),
+            "regulatedFirstTimeLtvRate": int(round(float(snapshot["ltv"]["capitalFirstTime"]) * 100)),
+            "acquisitionTaxMaxHomePriceEok": _float(first_time_rule.get("maxHomePriceEok")),
+            "acquisitionTaxMaxReliefManwon": int(_float(first_time_rule.get("maxReliefManwonApartment"))),
+            "acquisitionTaxEffectiveUntil": first_time_rule.get("effectiveUntil"),
+        },
         "cashEok": profile["cashEok"],
+        "annualIncomeManwon": profile.get("annualIncomeManwon", 0),
+        "monthlyDebtPaymentManwon": profile.get("monthlyDebtPaymentManwon", 0),
         "combinedIncomeManwon": profile.get("combinedIncomeManwon", 0),
+        "combinedMonthlyDebtPaymentManwon": profile.get("combinedMonthlyDebtPaymentManwon", 0),
+        "dsrAnnualRoomManwon": profile.get("dsrAnnualRoomManwon"),
         "coBorrower": profile.get("coBorrower", False),
+        "spouseAnnualIncomeManwon": profile.get("spouseAnnualIncomeManwon", 0),
+        "spouseMonthlyDebtPaymentManwon": profile.get("spouseMonthlyDebtPaymentManwon", 0),
         "dsrLoanLimitEok": profile.get("dsrLoanLimitEok"),
         "mortgageRatePercent": profile.get("mortgageRatePercent", 0),
         "loanTermYears": profile.get("loanTermYears", 30),

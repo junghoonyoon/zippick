@@ -92,6 +92,48 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(rows, [])
         exact.assert_called_once_with(entity, "테스트구")
 
+    def test_presale_complex_uses_completed_apartment_trades_when_newer(self):
+        entity = {
+            "name": "리버센SK뷰롯데캐슬",
+            "aliases": ["리버센"],
+            "district": "중랑구",
+            "legalDong": "중화동",
+            "jibun": "462",
+            "lawdCd": "11260",
+            "status": "분양권",
+        }
+        source_row = {
+            "대표단지명": "리버센SK뷰롯데캐슬",
+            "자치구": "중랑구",
+            "법정동": "중화동",
+            "지번": "462",
+            "필지고유번호": "1126010300104620000",
+        }
+
+        def fake_lookup(rows, name, area_label, lookback_months, transaction_kind):
+            if transaction_kind == molit_transactions.TRANSACTION_KIND_PRESALE:
+                return [{"dealDate": "2026-01-09", "dealAmountEok": 12.37}]
+            return [{"dealDate": "2026-05-26", "dealAmountEok": 10.2}]
+
+        with mock.patch.object(molit_transactions.real_estate_search, "APARTMENT_MASTER", [entity]), \
+             mock.patch.object(
+                 molit_transactions,
+                 "source_rows_for_entity",
+                 return_value=[source_row],
+             ), \
+             mock.patch.object(
+                 molit_transactions,
+                 "_transactions_for_apartment_kind",
+                 side_effect=fake_lookup,
+             ):
+            rows = molit_transactions.transactions_for_apartment(
+                "리버센SK뷰롯데캐슬",
+                region="중랑구",
+                entity=entity,
+            )
+
+        self.assertEqual(rows, [{"dealDate": "2026-05-26", "dealAmountEok": 10.2}])
+
     def test_split_region_matches_exact_name_when_address_changed(self):
         source = {
             "필지고유번호": "4159012900700030011",

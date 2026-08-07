@@ -109,7 +109,8 @@ class BudgetResultCacheTest(unittest.TestCase):
              mock.patch.object(search_server.budget_candidates, "budget_candidates", side_effect=calculate):
             initial = search_server._start_staged_budget_payload("staged", {"budget": "7.9"})
             self.assertTrue(initial["enrichmentPending"])
-            self.assertEqual(initial["candidates"], [])
+            self.assertEqual(initial["candidates"][0]["name"], "1차 후보")
+            self.assertTrue(initial["firstLookReady"])
             self.assertFalse(initial["verifiedResultReady"])
 
             deadline = time.time() + 2

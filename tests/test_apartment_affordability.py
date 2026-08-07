@@ -970,6 +970,48 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             ["202410", "202503", "202504", "202506", "202606"],
         )
 
+    def test_regional_index_merges_month_coverage_from_multiple_complexes(self):
+        """지수 관측월은 단지마다 달라, 여러 단지를 합쳐야 지역선이 끊기지 않는다."""
+        def build(periods):
+            return {
+                "index": {
+                    "source": "한국부동산원 R-ONE 월간 아파트 매매가격지수",
+                    "region": "서울>노원구",
+                    "latestPeriod": "202506",
+                    "latestValue": 105.0,
+                },
+                "adjustedTransactions": [
+                    {"basePeriod": period, "baseIndex": 90.0 + offset}
+                    for offset, period in enumerate(periods)
+                ],
+            }
+
+        payloads = {
+            "가단지": build(["202501", "202503"]),
+            "나단지": build(["202502", "202504", "202505"]),
+        }
+        search_server.REGIONAL_INDEX_CACHE.clear()
+
+        with mock.patch.object(
+            search_server.momentum_signals,
+            "district_index_source_candidates",
+            return_value=[{"name": "나단지", "region": "노원구", "households": 1200}],
+        ), mock.patch.object(
+            search_server.rone_estimates,
+            "estimate",
+            side_effect=lambda name, region, **_kwargs: (
+                (payloads[name], 200) if name in payloads else ({"detail": "미매칭"}, 404)
+            ),
+        ):
+            index = search_server._regional_index_for_apartment("가단지", "노원구", 24)
+
+        self.assertEqual(index["method"], "official_rone")
+        self.assertEqual(
+            [row["period"] for row in index["history"]],
+            ["202501", "202502", "202503", "202504", "202505", "202506"],
+        )
+        self.assertEqual(index["sourceApartmentCount"], 2)
+
     def test_apartment_location_score_refreshes_transport_and_education(self):
         entity = {
             "name": "점수보강아파트",

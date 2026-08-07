@@ -1,7 +1,9 @@
 """Budget-based apartment candidate filtering for the real estate MVP."""
 import csv
 import datetime
+import os
 import re
+import threading
 
 import config
 import education_environment
@@ -13,13 +15,14 @@ import verdicts
 import policy_evaluator
 import real_estate_search
 import region_adjacency
+import supply_forecast
 
 PRICE_BANDS_CSV = config.ROOT / "data" / "apartment_price_bands.csv"
 MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_bands.csv"
 PRICE_BAND_CSV_PATHS = [PRICE_BANDS_CSV, MOLIT_PRICE_BANDS_CSV]
 VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
-CANDIDATE_RESULT_SCHEMA_VERSION = 5
+CANDIDATE_RESULT_SCHEMA_VERSION = 7
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -45,9 +48,29 @@ GYEONGGI_REGIONS = {
     "이천시", "파주시", "평택시", "포천시", "하남시", "화성시",
 }
 GYEONGGI_REGION_KEYS = {real_estate_search.compact(item) for item in GYEONGGI_REGIONS}
+# 인천은 광역시라 자치구가 시 바로 아래 붙는다. 그런데 `중구`가 서울과 겹쳐서
+# 맨 이름만으로는 어느 중구인지 알 수 없다. 그래서 경기도의 `성남분당구`처럼
+# 시 이름을 앞에 붙인 형태를 표준으로 쓴다. 겹치지 않는 `연수구`, `부평구`
+# 같은 이름은 접두사 없이도 아래 일반 경로에서 매칭된다.
+INCHEON_DISTRICTS = {
+    "강화군", "계양구", "남동구", "동구", "미추홀구",
+    "부평구", "서구", "연수구", "옹진군", "중구",
+}
+INCHEON_REGIONS = {f"인천{district}" for district in INCHEON_DISTRICTS}
+INCHEON_REGION_KEYS = {real_estate_search.compact(item) for item in INCHEON_REGIONS}
+INCHEON_BROAD_KEYS = {
+    real_estate_search.compact(item) for item in ("인천", "인천시", "인천광역시")
+}
+# 서울과 인천에 같은 이름의 자치구가 있다(중구). 맨 이름으로 요청하면 기존처럼
+# 서울로 읽고, 인천 쪽을 원하면 `인천중구`라고 써야 한다. 이렇게 하지 않으면
+# 서울 중구를 검토하던 사람의 후보 목록에 인천 단지가 섞여 들어간다.
+AMBIGUOUS_DISTRICT_KEYS = {
+    real_estate_search.compact(item)
+    for item in (SEOUL_DISTRICTS & INCHEON_DISTRICTS)
+}
 BROAD_REGION_KEYS = {
     real_estate_search.compact(item)
-    for item in ("서울", "서울시", "서울특별시", "경기", "경기도")
+    for item in ("서울", "서울시", "서울특별시", "경기", "경기도", "인천", "인천시", "인천광역시")
 }
 
 
@@ -63,7 +86,7 @@ def _name_variants(key):
 # 오탐을 걸러내는 기준으로 쓴다.
 KNOWN_REGION_STEMS = {
     variant
-    for item in (SEOUL_DISTRICTS | GYEONGGI_REGIONS)
+    for item in (SEOUL_DISTRICTS | GYEONGGI_REGIONS | INCHEON_REGIONS | INCHEON_DISTRICTS)
     for variant in _name_variants(real_estate_search.compact(item))
 }
 
@@ -531,42 +554,65 @@ def _multi_label(value, labels, fallback):
     return " · ".join(names) if names else fallback
 
 
-def _load_price_bands():
-    rows = []
+_PRICE_BANDS_CACHE = None
+_PRICE_BANDS_CACHE_REVISION = None
+_PRICE_BANDS_LOCK = threading.Lock()
+
+
+def _price_bands_file_revision():
+    revisions = []
     for path in PRICE_BAND_CSV_PATHS:
-        if not path.exists():
-            continue
-        with path.open(encoding="utf-8-sig", newline="") as handle:
-            for row in csv.DictReader(handle):
-                name = str(row.get("name") or "").strip()
-                if not name:
-                    continue
-                price_source = str(row.get("price_source") or "manual").strip()
-                # 예전 국토부 집계 CSV는 직거래 제외 여부를 확인할 수 없다.
-                # 새 importer가 검증 표식을 기록한 데이터만 가격 계산에 사용한다.
-                if price_source == "molit_csv" and str(row.get("market_transaction_only") or "").strip().lower() not in {"1", "true", "yes"}:
-                    continue
-                rows.append({
-                    "name": name,
-                    "region": str(row.get("region") or "").strip(),
-                    "legalDong": str(row.get("legal_dong") or "").strip(),
-                    "jibun": str(row.get("jibun") or "").strip(),
-                    "minPriceEok": _float_value(row.get("min_price_억")),
-                    "midPriceEok": _float_value(row.get("mid_price_억")),
-                    # 이전에 만든 CSV에는 평균 컬럼이 없어서, 다음 데이터 갱신 전까지는
-                    # 중앙값을 호환값으로 사용한다.
-                    "averagePriceEok": _float_value(row.get("average_price_억")) or _float_value(row.get("mid_price_억")),
-                    "maxPriceEok": _float_value(row.get("max_price_억")),
-                    "areaLabel": str(row.get("area_label") or "").strip(),
-                    "updatedAt": str(row.get("updated_at") or "").strip(),
-                    "sourceNote": str(row.get("source_note") or "").strip(),
-                    "priceSource": price_source,
-                    "transactionCount": int(_float_value(row.get("transaction_count"))),
-                    "latestDealDate": str(row.get("latest_deal_date") or "").strip(),
-                    "latestDealPriceEok": _float_value(row.get("latest_deal_price_억") or row.get("latest_deal_price_eok")),
-                    "sourceUrl": str(row.get("source_url") or "").strip(),
-                })
-    return rows
+        try:
+            stat = path.stat()
+            revisions.append((os.fspath(path), stat.st_mtime_ns, stat.st_size))
+        except OSError:
+            revisions.append((os.fspath(path), None, None))
+    return tuple(revisions)
+
+
+def _load_price_bands():
+    global _PRICE_BANDS_CACHE, _PRICE_BANDS_CACHE_REVISION
+    revision = _price_bands_file_revision()
+    with _PRICE_BANDS_LOCK:
+        if _PRICE_BANDS_CACHE is not None and _PRICE_BANDS_CACHE_REVISION == revision:
+            return _PRICE_BANDS_CACHE
+        rows = []
+        for path in PRICE_BAND_CSV_PATHS:
+            if not path.exists():
+                continue
+            with path.open(encoding="utf-8-sig", newline="") as handle:
+                for row in csv.DictReader(handle):
+                    name = str(row.get("name") or "").strip()
+                    if not name:
+                        continue
+                    price_source = str(row.get("price_source") or "manual").strip()
+                    # 예전 국토부 집계 CSV는 직거래 제외 여부를 확인할 수 없다.
+                    # 새 importer가 검증 표식을 기록한 데이터만 가격 계산에 사용한다.
+                    if price_source == "molit_csv" and str(row.get("market_transaction_only") or "").strip().lower() not in {"1", "true", "yes"}:
+                        continue
+                    rows.append({
+                        "name": name,
+                        "region": str(row.get("region") or "").strip(),
+                        "legalDong": str(row.get("legal_dong") or "").strip(),
+                        "jibun": str(row.get("jibun") or "").strip(),
+                        "minPriceEok": _float_value(row.get("min_price_억")),
+                        "midPriceEok": _float_value(row.get("mid_price_억")),
+                        # 이전에 만든 CSV에는 평균 컬럼이 없어서, 다음 데이터 갱신 전까지는
+                        # 중앙값을 호환값으로 사용한다.
+                        "averagePriceEok": _float_value(row.get("average_price_억")) or _float_value(row.get("mid_price_억")),
+                        "maxPriceEok": _float_value(row.get("max_price_억")),
+                        "areaLabel": str(row.get("area_label") or "").strip(),
+                        "updatedAt": str(row.get("updated_at") or "").strip(),
+                        "sourceNote": str(row.get("source_note") or "").strip(),
+                        "priceSource": price_source,
+                        "transactionCount": int(_float_value(row.get("transaction_count"))),
+                        "latestDealDate": str(row.get("latest_deal_date") or "").strip(),
+                        "latestDealPriceEok": _float_value(row.get("latest_deal_price_억") or row.get("latest_deal_price_eok")),
+                        "sourceUrl": str(row.get("source_url") or "").strip(),
+                    })
+        _PRICE_BANDS_CACHE = rows
+        _PRICE_BANDS_CACHE_REVISION = revision
+        return rows
 
 
 def _apply_fit(row, budget_eok):
@@ -1395,6 +1441,35 @@ def _matches_one_region(row, entity, region):
         if district_key in GYEONGGI_REGION_KEYS:
             return True
         return str(row.get("region") or "").strip() in GYEONGGI_REGIONS
+    if region_key in INCHEON_BROAD_KEYS:
+        province_key = real_estate_search.compact((entity or {}).get("province") or "")
+        city_key = real_estate_search.compact((entity or {}).get("city") or "")
+        if province_key:
+            return province_key in INCHEON_BROAD_KEYS
+        if city_key:
+            return city_key in INCHEON_BROAD_KEYS
+        return real_estate_search.compact(row.get("region") or "") in {
+            real_estate_search.compact(item) for item in INCHEON_DISTRICTS
+        }
+    if region_key in INCHEON_REGION_KEYS:
+        # `인천중구`처럼 시 이름이 붙은 표기. 서울 중구와 섞이면 안 되므로
+        # 인천 소속인지부터 확인하고 자치구를 비교한다.
+        province_key = real_estate_search.compact((entity or {}).get("province") or "")
+        city_key = real_estate_search.compact((entity or {}).get("city") or "")
+        if province_key and province_key not in INCHEON_BROAD_KEYS:
+            return False
+        if not province_key and city_key and city_key not in INCHEON_BROAD_KEYS:
+            return False
+        district_key = real_estate_search.compact((entity or {}).get("district") or "")
+        target = region_key[len(real_estate_search.compact("인천")):]
+        return district_key == target or real_estate_search.compact(
+            row.get("region") or ""
+        ) == target
+    if region_key in AMBIGUOUS_DISTRICT_KEYS:
+        province_key = real_estate_search.compact((entity or {}).get("province") or "")
+        city_key = real_estate_search.compact((entity or {}).get("city") or "")
+        if province_key in INCHEON_BROAD_KEYS or city_key in INCHEON_BROAD_KEYS:
+            return False
     region_variants = _name_variants(region_key)
     # 단지명에 들어간 지명(예: 송파구의 '강남팰리스')을 실제 소재지로
     # 오인하지 않도록 지역 필드는 행정구역 정보만 비교한다.
@@ -1745,7 +1820,6 @@ def _action(status):
     return {
         "예산 여유": "남는 예산을 입지·연식·수리비와 함께 비교해볼 만해요.",
         "예산 안": "최근 실거래와 현재 호가를 바로 비교해볼 만해요.",
-        "상한 근접": "취득 부대비용과 대출 조건까지 함께 확인해야 해요.",
         "제외": "현재 예산에서는 후순위로 두는 편이 좋아요.",
     }.get(status, "가격 데이터를 더 보강해야 해요.")
 
@@ -2083,6 +2157,10 @@ def _finalize_candidate_rows(
                 entity,
                 allow_remote_lookup=False,
             )
+        try:
+            row["lifestyleChange"] = supply_forecast.lifestyle_change(row, entity)
+        except Exception:
+            row["lifestyleChange"] = {"status": "error"}
         row.update(_decision_support(
             row,
             entity,
@@ -2826,8 +2904,16 @@ def budget_candidates(
             if row.get("policyImpact") and row["policyImpact"].get("status") != "possible"
         ]
     elif policy_profile["cashEok"]:
-        policy_allowed_rows = [row for row in unique_rows if row["policyImpact"].get("status") == "possible"]
-        policy_excluded_rows = [row for row in unique_rows if row["policyImpact"].get("status") != "possible"]
+        policy_allowed_rows = [
+            row for row in unique_rows
+            if not row.get("policyImpact")
+            or row["policyImpact"].get("status") == "possible"
+        ]
+        policy_excluded_rows = [
+            row for row in unique_rows
+            if row.get("policyImpact")
+            and row["policyImpact"].get("status") != "possible"
+        ]
         policy_excluded_rows.sort(key=lambda row: (abs(row["policyImpact"].get("cashGapEok") or 999), -row["_score"]))
     else:
         policy_allowed_rows = unique_rows

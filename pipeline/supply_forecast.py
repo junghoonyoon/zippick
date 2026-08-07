@@ -35,6 +35,9 @@ def default_paths():
 # 절대 기준이 아니라 리포트 문구의 강약을 가르는 임계값이다.
 HEAVY_HOUSEHOLDS = 3000
 NOTABLE_HOUSEHOLDS = 1000
+LIFESTYLE_NOTABLE_TOTAL = 3000
+LIFESTYLE_STRONG_TOTAL = 5000
+LIFESTYLE_LARGE_COMPLEX = 1000
 
 SOURCE_LABEL = "청약홈 분양정보(한국부동산원) 기준 입주 예정"
 SOURCE_URL = "https://www.data.go.kr/data/15098547/openapi.do"
@@ -56,9 +59,42 @@ ADJUSTMENT_BASIS = (
 
 _CACHE = {}
 
+_CITY_DISTRICT_PREFIXES = (
+    "성남",
+    "수원",
+    "용인",
+    "고양",
+    "안양",
+    "안산",
+    "부천",
+    "청주",
+    "천안",
+    "전주",
+    "창원",
+    "포항",
+)
+_LIFESTYLE_REGION_GROUPS = {
+    "구성남 생활권": {"성남수정구", "성남중원구"},
+}
+_LIFESTYLE_EXCLUDED_PATTERN = re.compile(
+    r"청년안심|역세권청년|임대|공공임대|민간임대|행복주택|장기전세|공공전세|매입임대|전세임대",
+    re.IGNORECASE,
+)
+
 
 def _compact(value):
     return re.sub(r"[^0-9A-Za-z가-힣]", "", str(value or "")).lower()
+
+
+def _project_name_key(value):
+    text = str(value or "")
+    text = re.sub(r"\([^)]*(?:본청약|사전청약|잔여세대|추가모집|공공분양)[^)]*\)", "", text)
+    text = re.sub(r"(?:본청약|사전청약|잔여세대|추가입주자모집|입주자모집|추가모집).*$", "", text)
+    return _compact(text)
+
+
+def _display_month(year, month):
+    return f"{year}년 {month}월"
 
 
 def _half_label(year, month):
@@ -82,6 +118,38 @@ def _region_key(row):
     return str(row.get("자치구") or row.get("시군구") or "").strip()
 
 
+def _city_group(region, sido=""):
+    """생활권 변화는 광역시·시 안의 여러 구를 함께 봐야 할 때가 있다."""
+    value = str(region or "").strip()
+    province = str(sido or "").strip()
+    if not value:
+        return ""
+    for label, regions in _LIFESTYLE_REGION_GROUPS.items():
+        if value in regions:
+            return label
+    if province == "서울특별시":
+        return value
+    if value.endswith(("시", "군")):
+        return value
+    for prefix in _CITY_DISTRICT_PREFIXES:
+        if value.startswith(prefix) and value.endswith("구"):
+            return f"{prefix}시"
+    return value
+
+
+def _supply_lifestyle_key(row):
+    region = row.get("region") or ""
+    return _city_group(region, row.get("sido"))
+
+
+def _is_lifestyle_excluded(row):
+    haystack = " ".join(
+        str(row.get(key) or "")
+        for key in ("name", "legalDong", "region", "sido")
+    )
+    return bool(_LIFESTYLE_EXCLUDED_PATTERN.search(haystack))
+
+
 def _load_one(path):
     path = Path(path)
     if not path.exists():
@@ -97,6 +165,7 @@ def _load_one(path):
             rows.append(
                 {
                     "region": region,
+                    "lifestyleKey": _city_group(region, row.get("시도")),
                     "sido": str(row.get("시도") or "").strip(),
                     "legalDong": str(row.get("법정동") or "").strip(),
                     "name": str(row.get("대표단지명") or "").strip(),
@@ -115,16 +184,119 @@ def load_rows(path=None):
     부풀려진다. 단지명·지역·입주월이 같으면 한 건으로 본다.
     """
     paths = [path] if path else default_paths()
-    seen = set()
+    index = {}
     merged = []
     for one in paths:
         for row in _load_one(one):
-            key = (_compact(row["name"]), _compact(row["region"]), row["year"], row["month"])
-            if key in seen:
+            key = (_project_name_key(row["name"]), _compact(row["region"]), row["year"], row["month"])
+            if key in index:
+                current = merged[index[key]]
+                if row["households"] > current["households"]:
+                    merged[index[key]] = row
                 continue
-            seen.add(key)
+            index[key] = len(merged)
             merged.append(row)
     return merged
+
+
+def lifestyle_change(row, entity=None, today=None, past_months=36, horizon_months=60, path=None):
+    """단지 주변 생활권에 새 아파트가 이어지는지 요약한다.
+
+    좌표가 없는 입주예정 원천 자료라 반경 계산 대신 같은 시·구권을 1차로
+    본다. 서울은 구 단위, 성남·수원처럼 행정구가 나뉜 도시는 시 단위로
+    묶는다.
+    """
+    today = today or datetime.date.today()
+    source = entity or row or {}
+    region = str(
+        source.get("district")
+        or source.get("region")
+        or source.get("regionLabel")
+        or ""
+    ).strip()
+    sido = str(source.get("province") or source.get("sido") or "").strip()
+    legal_dong = str(source.get("legalDong") or "").strip()
+    target_name = _compact(source.get("name") or source.get("displayName") or "")
+    lifestyle_key = _city_group(region, sido)
+    if not lifestyle_key:
+        return {"status": "missing", "reason": "지역 정보가 없어 생활권 변화를 계산하지 못했어요."}
+
+    start = today.year * 12 + today.month - past_months
+    end = today.year * 12 + today.month + horizon_months
+    rows = []
+    seen = set()
+    for item in _rows(path):
+        if _supply_lifestyle_key(item) != lifestyle_key:
+            continue
+        if _is_lifestyle_excluded(item):
+            continue
+        month_key = item["year"] * 12 + item["month"]
+        if month_key < start or month_key > end:
+            continue
+        item_key = (_compact(item["name"]), _compact(item["region"]), item["year"], item["month"])
+        if item_key in seen:
+            continue
+        seen.add(item_key)
+        households = int(item.get("households") or 0)
+        if households <= 0:
+            continue
+        rows.append({
+            "name": item["name"],
+            "region": item["region"],
+            "legalDong": item.get("legalDong") or "",
+            "plannedMoveInMonth": f"{item['year']:04d}-{item['month']:02d}",
+            "moveInLabel": _display_month(item["year"], item["month"]),
+            "households": households,
+            "adjustedHouseholds": round(households * ADJUSTMENT_FACTOR),
+            "isLarge": households >= LIFESTYLE_LARGE_COMPLEX,
+            "isSameDong": bool(legal_dong and item.get("legalDong") == legal_dong),
+            "isTarget": bool(target_name and _compact(item["name"]) == target_name),
+        })
+    if not rows:
+        return {"status": "none", "region": region, "lifestyleKey": lifestyle_key}
+
+    rows.sort(key=lambda item: (
+        0 if item["isTarget"] else 1,
+        0 if item["isSameDong"] else 1,
+        -item["households"],
+        item["plannedMoveInMonth"],
+    ))
+    total = sum(item["households"] for item in rows)
+    adjusted_total = sum(item["adjustedHouseholds"] for item in rows)
+    large = [item for item in rows if item["isLarge"]]
+    same_dong = [item for item in rows if item["isSameDong"]]
+    level = (
+        "strong"
+        if total >= LIFESTYLE_STRONG_TOTAL or len(large) >= 2
+        else "notable"
+        if total >= LIFESTYLE_NOTABLE_TOTAL or large or len(rows) >= 3
+        else "light"
+    )
+    if level == "light":
+        return {
+            "status": "light",
+            "region": region,
+            "lifestyleKey": lifestyle_key,
+            "totalHouseholds": total,
+            "complexCount": len(rows),
+        }
+    return {
+        "status": "ok",
+        "region": region,
+        "lifestyleKey": lifestyle_key,
+        "level": level,
+        "totalHouseholds": total,
+        "adjustedHouseholds": adjusted_total,
+        "complexCount": len(rows),
+        "largeComplexCount": len(large),
+        "sameDongCount": len(same_dong),
+        "pastMonths": past_months,
+        "horizonMonths": horizon_months,
+        "basis": "입주예정·분양권 단지 기준",
+        "source": SOURCE_LABEL,
+        "sourceUrl": SOURCE_URL,
+        "complexes": rows[:5],
+    }
 
 
 def _rows(path=None):

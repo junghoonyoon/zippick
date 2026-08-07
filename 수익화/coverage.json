@@ -1,0 +1,2681 @@
+{
+  "강남구|소액": {
+    "region": "강남구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 668,
+    "filter": {
+      "region": 528,
+      "identity": 64,
+      "price": 9,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 660
+    },
+    "top": null
+  },
+  "강남구|고액": {
+    "region": "강남구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 0,
+    "seed": 668,
+    "filter": {
+      "region": 528,
+      "identity": 64,
+      "price": 8,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 660
+    },
+    "top": null
+  },
+  "강동구|소액": {
+    "region": "강동구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 490,
+    "filter": {
+      "region": 521,
+      "identity": 64,
+      "price": 12,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 486
+    },
+    "top": null
+  },
+  "강남구|중간": {
+    "region": "강남구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 668,
+    "filter": {
+      "region": 528,
+      "identity": 64,
+      "price": 9,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 660
+    },
+    "top": null
+  },
+  "광진구|소액": {
+    "region": "광진구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 2,
+    "seed": 237,
+    "filter": {
+      "region": 524,
+      "identity": 64,
+      "price": 10,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 229
+    },
+    "top": "중곡1단지"
+  },
+  "강동구|중간": {
+    "region": "강동구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 490,
+    "filter": {
+      "region": 521,
+      "identity": 64,
+      "price": 6,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 486
+    },
+    "top": "강동리엔파크14단지"
+  },
+  "강동구|고액": {
+    "region": "강동구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 490,
+    "filter": {
+      "region": 521,
+      "identity": 64,
+      "price": 5,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 486
+    },
+    "top": "선사현대"
+  },
+  "강서구|중간": {
+    "region": "강서구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 620,
+    "filter": {
+      "region": 492,
+      "identity": 64,
+      "price": 3,
+      "area": 4,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 617
+    },
+    "top": "염창동아아파트"
+  },
+  "관악구|소액": {
+    "region": "관악구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 310,
+    "filter": {
+      "region": 506,
+      "identity": 64,
+      "price": 16,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 306
+    },
+    "top": "LIG대학마을(건영아파트3차)"
+  },
+  "노원구|소액": {
+    "region": "노원구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 266,
+    "filter": {
+      "region": 450,
+      "identity": 64,
+      "price": 40,
+      "area": 13,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 262
+    },
+    "top": "상계주공16단지아파트"
+  },
+  "강북구|고액": {
+    "region": "강북구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 144,
+    "filter": {
+      "region": 515,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 141
+    },
+    "top": "에스케이북한산시티"
+  },
+  "강북구|중간": {
+    "region": "강북구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 144,
+    "filter": {
+      "region": 515,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 141
+    },
+    "top": "북서울자이 폴라리스"
+  },
+  "노원구|고액": {
+    "region": "노원구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 266,
+    "filter": {
+      "region": 450,
+      "identity": 64,
+      "price": 0,
+      "area": 13,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 262
+    },
+    "top": "보람아파트"
+  },
+  "관악구|고액": {
+    "region": "관악구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 310,
+    "filter": {
+      "region": 506,
+      "identity": 64,
+      "price": 0,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 306
+    },
+    "top": "봉천동 두산아파트"
+  },
+  "광진구|중간": {
+    "region": "광진구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 237,
+    "filter": {
+      "region": 524,
+      "identity": 64,
+      "price": 8,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 229
+    },
+    "top": "일성파크"
+  },
+  "강서구|고액": {
+    "region": "강서구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 620,
+    "filter": {
+      "region": 492,
+      "identity": 64,
+      "price": 0,
+      "area": 4,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 617
+    },
+    "top": "강서힐스테이트"
+  },
+  "강북구|소액": {
+    "region": "강북구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 144,
+    "filter": {
+      "region": 515,
+      "identity": 64,
+      "price": 11,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 141
+    },
+    "top": "수유벽산1차"
+  },
+  "광진구|고액": {
+    "region": "광진구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 237,
+    "filter": {
+      "region": 524,
+      "identity": 64,
+      "price": 8,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 229
+    },
+    "top": "일성파크"
+  },
+  "동작구|소액": {
+    "region": "동작구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 242,
+    "filter": {
+      "region": 520,
+      "identity": 64,
+      "price": 12,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 238
+    },
+    "top": null
+  },
+  "관악구|중간": {
+    "region": "관악구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 310,
+    "filter": {
+      "region": 506,
+      "identity": 64,
+      "price": 0,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 306
+    },
+    "top": "봉천동 두산아파트"
+  },
+  "강서구|소액": {
+    "region": "강서구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 620,
+    "filter": {
+      "region": 492,
+      "identity": 64,
+      "price": 31,
+      "area": 4,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 617
+    },
+    "top": "치현마을동일스위트리버"
+  },
+  "마포구|소액": {
+    "region": "마포구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 334,
+    "filter": {
+      "region": 522,
+      "identity": 64,
+      "price": 11,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 329
+    },
+    "top": null
+  },
+  "동대문구|고액": {
+    "region": "동대문구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 303,
+    "filter": {
+      "region": 503,
+      "identity": 64,
+      "price": 0,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 299
+    },
+    "top": "래미안장안2차"
+  },
+  "마포구|고액": {
+    "region": "마포구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 334,
+    "filter": {
+      "region": 522,
+      "identity": 64,
+      "price": 5,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 329
+    },
+    "top": "마포중동현대"
+  },
+  "금천구|소액": {
+    "region": "금천구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 166,
+    "filter": {
+      "region": 514,
+      "identity": 64,
+      "price": 8,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 164
+    },
+    "top": "관악산벽산타운5"
+  },
+  "금천구|고액": {
+    "region": "금천구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 166,
+    "filter": {
+      "region": 514,
+      "identity": 64,
+      "price": 0,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 164
+    },
+    "top": "관악산벽산타운5"
+  },
+  "도봉구|소액": {
+    "region": "도봉구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 205,
+    "filter": {
+      "region": 508,
+      "identity": 64,
+      "price": 11,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 202
+    },
+    "top": "래미안도봉"
+  },
+  "서초구|소액": {
+    "region": "서초구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 752,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 12,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 743
+    },
+    "top": null
+  },
+  "서초구|중간": {
+    "region": "서초구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 752,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 12,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 743
+    },
+    "top": null
+  },
+  "서초구|고액": {
+    "region": "서초구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 0,
+    "seed": 752,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 12,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 743
+    },
+    "top": null
+  },
+  "성동구|소액": {
+    "region": "성동구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 168,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 12,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 160
+    },
+    "top": null
+  },
+  "도봉구|고액": {
+    "region": "도봉구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 205,
+    "filter": {
+      "region": 508,
+      "identity": 64,
+      "price": 0,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 202
+    },
+    "top": "창동주공3단지(해등마을)"
+  },
+  "성동구|고액": {
+    "region": "성동구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 2,
+    "seed": 168,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 8,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 160
+    },
+    "top": "송정동 건영아파트"
+  },
+  "구로구|고액": {
+    "region": "구로구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 411,
+    "filter": {
+      "region": 470,
+      "identity": 64,
+      "price": 0,
+      "area": 12,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 408
+    },
+    "top": "개봉동 한마을아파트"
+  },
+  "구로구|중간": {
+    "region": "구로구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 411,
+    "filter": {
+      "region": 470,
+      "identity": 64,
+      "price": 0,
+      "area": 12,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 408
+    },
+    "top": "구로주공아파트"
+  },
+  "동대문구|중간": {
+    "region": "동대문구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 303,
+    "filter": {
+      "region": 503,
+      "identity": 64,
+      "price": 3,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 299
+    },
+    "top": "래미안장안2차"
+  },
+  "송파구|소액": {
+    "region": "송파구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 427,
+    "filter": {
+      "region": 517,
+      "identity": 64,
+      "price": 12,
+      "area": 5,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 423
+    },
+    "top": null
+  },
+  "금천구|중간": {
+    "region": "금천구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 166,
+    "filter": {
+      "region": 514,
+      "identity": 64,
+      "price": 0,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 164
+    },
+    "top": "금천롯데캐슬골드파크3차"
+  },
+  "송파구|고액": {
+    "region": "송파구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 427,
+    "filter": {
+      "region": 517,
+      "identity": 64,
+      "price": 8,
+      "area": 5,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 423
+    },
+    "top": "거여5단지"
+  },
+  "노원구|중간": {
+    "region": "노원구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 266,
+    "filter": {
+      "region": 450,
+      "identity": 64,
+      "price": 0,
+      "area": 13,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 262
+    },
+    "top": "삼호3"
+  },
+  "동대문구|소액": {
+    "region": "동대문구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 2,
+    "seed": 303,
+    "filter": {
+      "region": 503,
+      "identity": 64,
+      "price": 27,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 299
+    },
+    "top": "태솔아파트3차"
+  },
+  "도봉구|중간": {
+    "region": "도봉구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 205,
+    "filter": {
+      "region": 508,
+      "identity": 64,
+      "price": 0,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 202
+    },
+    "top": "북한산아이파크5차"
+  },
+  "구로구|소액": {
+    "region": "구로구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 411,
+    "filter": {
+      "region": 470,
+      "identity": 64,
+      "price": 27,
+      "area": 12,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 408
+    },
+    "top": "개봉동한진아파트"
+  },
+  "성남분당구|소액": {
+    "region": "성남분당구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 342,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 337
+    },
+    "top": null
+  },
+  "양천구|중간": {
+    "region": "양천구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 462,
+    "filter": {
+      "region": 511,
+      "identity": 64,
+      "price": 3,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 459
+    },
+    "top": "신트리1"
+  },
+  "성동구|중간": {
+    "region": "성동구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 2,
+    "seed": 168,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 10,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 160
+    },
+    "top": "송정동 건영아파트"
+  },
+  "동작구|중간": {
+    "region": "동작구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 242,
+    "filter": {
+      "region": 520,
+      "identity": 64,
+      "price": 4,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 238
+    },
+    "top": "경남아너스빌1차"
+  },
+  "구리시|중간": {
+    "region": "구리시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 180,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 170
+    },
+    "top": "갈매역아이파크"
+  },
+  "수원영통구|소액": {
+    "region": "수원영통구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 2,
+    "seed": 653,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 642
+    },
+    "top": "현대힐스테이트"
+  },
+  "인천연수구|소액": {
+    "region": "인천연수구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천연수구|고액": {
+    "region": "인천연수구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천연수구|중간": {
+    "region": "인천연수구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천서구|중간": {
+    "region": "인천서구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천부평구|소액": {
+    "region": "인천부평구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천서구|소액": {
+    "region": "인천서구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천부평구|중간": {
+    "region": "인천부평구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천부평구|고액": {
+    "region": "인천부평구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천서구|고액": {
+    "region": "인천서구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천미추홀구|소액": {
+    "region": "인천미추홀구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천미추홀구|고액": {
+    "region": "인천미추홀구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천미추홀구|중간": {
+    "region": "인천미추홀구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 0,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": null
+  },
+  "인천남동구|중간": {
+    "region": "인천남동구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 4,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": "용인 푸르지오 원클러스터 1단지"
+  },
+  "인천남동구|소액": {
+    "region": "인천남동구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 3,
+    "seed": 4,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": "용인 푸르지오 원클러스터 2단지"
+  },
+  "인천남동구|고액": {
+    "region": "인천남동구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 4,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 0
+    },
+    "top": "용인 푸르지오 원클러스터 1단지"
+  },
+  "하남시|고액": {
+    "region": "하남시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 125,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 117
+    },
+    "top": "미사강변 골든 센트로(GOLDEN CENTRO)"
+  },
+  "화성시|고액": {
+    "region": "화성시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 390,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 3,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 382
+    },
+    "top": "병점역 아이파크 캐슬"
+  },
+  "화성시|소액": {
+    "region": "화성시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 3,
+    "seed": 390,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 5,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 382
+    },
+    "top": "힐스테이트 봉담 프라이드시티"
+  },
+  "화성시|중간": {
+    "region": "화성시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 390,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 3,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 382
+    },
+    "top": "병점역 아이파크 캐슬"
+  },
+  "서대문구|소액": {
+    "region": "서대문구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 2,
+    "seed": 291,
+    "filter": {
+      "region": 504,
+      "identity": 64,
+      "price": 25,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 287
+    },
+    "top": "유원하나"
+  },
+  "마포구|중간": {
+    "region": "마포구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 334,
+    "filter": {
+      "region": 522,
+      "identity": 64,
+      "price": 5,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 329
+    },
+    "top": "마포중동현대"
+  },
+  "서대문구|고액": {
+    "region": "서대문구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 291,
+    "filter": {
+      "region": 504,
+      "identity": 64,
+      "price": 1,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 287
+    },
+    "top": "DMC파크뷰자이1단지"
+  },
+  "서대문구|중간": {
+    "region": "서대문구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 291,
+    "filter": {
+      "region": 504,
+      "identity": 64,
+      "price": 4,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 287
+    },
+    "top": "DMC래미안클라시스"
+  },
+  "동작구|고액": {
+    "region": "동작구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 242,
+    "filter": {
+      "region": 520,
+      "identity": 64,
+      "price": 1,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 238
+    },
+    "top": "대방동 대림아파트"
+  },
+  "성북구|소액": {
+    "region": "성북구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 157,
+    "filter": {
+      "region": 476,
+      "identity": 64,
+      "price": 48,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 153
+    },
+    "top": "정릉스카이쌍용아파트"
+  },
+  "성북구|중간": {
+    "region": "성북구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 157,
+    "filter": {
+      "region": 476,
+      "identity": 64,
+      "price": 3,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 153
+    },
+    "top": "길음뉴타운4단지(e편한세상)"
+  },
+  "송파구|중간": {
+    "region": "송파구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 3,
+    "seed": 427,
+    "filter": {
+      "region": 517,
+      "identity": 64,
+      "price": 9,
+      "area": 5,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 423
+    },
+    "top": "갑을"
+  },
+  "양천구|소액": {
+    "region": "양천구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 462,
+    "filter": {
+      "region": 511,
+      "identity": 64,
+      "price": 16,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 459
+    },
+    "top": "신정대성유니드아파트"
+  },
+  "성북구|고액": {
+    "region": "성북구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 157,
+    "filter": {
+      "region": 476,
+      "identity": 64,
+      "price": 0,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 153
+    },
+    "top": "롯데캐슬 클라시아"
+  },
+  "영등포구|소액": {
+    "region": "영등포구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 2,
+    "seed": 264,
+    "filter": {
+      "region": 517,
+      "identity": 64,
+      "price": 15,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 260
+    },
+    "top": "신기목련아파트"
+  },
+  "양천구|고액": {
+    "region": "양천구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 462,
+    "filter": {
+      "region": 511,
+      "identity": 64,
+      "price": 3,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 459
+    },
+    "top": "목동센트럴아이파크위브2단지"
+  },
+  "영등포구|중간": {
+    "region": "영등포구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 264,
+    "filter": {
+      "region": 517,
+      "identity": 64,
+      "price": 4,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 260
+    },
+    "top": "신길동경남아파트"
+  },
+  "영등포구|고액": {
+    "region": "영등포구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 264,
+    "filter": {
+      "region": 517,
+      "identity": 64,
+      "price": 3,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 260
+    },
+    "top": "영등포푸르지오"
+  },
+  "용산구|소액": {
+    "region": "용산구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 239,
+    "filter": {
+      "region": 529,
+      "identity": 64,
+      "price": 10,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 229
+    },
+    "top": null
+  },
+  "용산구|중간": {
+    "region": "용산구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 0,
+    "seed": 239,
+    "filter": {
+      "region": 529,
+      "identity": 64,
+      "price": 10,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 229
+    },
+    "top": null
+  },
+  "종로구|소액": {
+    "region": "종로구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 132,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 11,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 123
+    },
+    "top": null
+  },
+  "용산구|고액": {
+    "region": "용산구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 1,
+    "seed": 239,
+    "filter": {
+      "region": 529,
+      "identity": 64,
+      "price": 9,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 229
+    },
+    "top": "리버힐삼성"
+  },
+  "은평구|중간": {
+    "region": "은평구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 471,
+    "filter": {
+      "region": 500,
+      "identity": 64,
+      "price": 0,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 467
+    },
+    "top": "북한산 푸르지오"
+  },
+  "은평구|고액": {
+    "region": "은평구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 471,
+    "filter": {
+      "region": 500,
+      "identity": 64,
+      "price": 0,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 467
+    },
+    "top": "녹번역e편한세상캐슬"
+  },
+  "종로구|중간": {
+    "region": "종로구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 132,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 4,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 123
+    },
+    "top": "무악현대아파트"
+  },
+  "종로구|고액": {
+    "region": "종로구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 132,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 3,
+      "area": 2,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 123
+    },
+    "top": "아남1"
+  },
+  "은평구|소액": {
+    "region": "은평구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 471,
+    "filter": {
+      "region": 500,
+      "identity": 64,
+      "price": 25,
+      "area": 3,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 467
+    },
+    "top": "북한산한양수자인아파트"
+  },
+  "중구|중간": {
+    "region": "중구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 3,
+    "seed": 153,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 7,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 144
+    },
+    "top": "신당동 현대아파트"
+  },
+  "중구|소액": {
+    "region": "중구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 1,
+    "seed": 153,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 10,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 144
+    },
+    "top": "신당블루카운티"
+  },
+  "중구|고액": {
+    "region": "중구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 153,
+    "filter": {
+      "region": 527,
+      "identity": 64,
+      "price": 4,
+      "area": 1,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 144
+    },
+    "top": "남산타운"
+  },
+  "중랑구|중간": {
+    "region": "중랑구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 276,
+    "filter": {
+      "region": 497,
+      "identity": 64,
+      "price": 1,
+      "area": 4,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 68,
+      "noLastDeal": 273
+    },
+    "top": "라온프라이빗"
+  },
+  "중랑구|소액": {
+    "region": "중랑구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 276,
+    "filter": {
+      "region": 497,
+      "identity": 64,
+      "price": 11,
+      "area": 4,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 68,
+      "noLastDeal": 273
+    },
+    "top": "신내"
+  },
+  "중랑구|고액": {
+    "region": "중랑구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 276,
+    "filter": {
+      "region": 497,
+      "identity": 64,
+      "price": 0,
+      "area": 4,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 68,
+      "noLastDeal": 273
+    },
+    "top": "사가정 센트럴 아이파크"
+  },
+  "고양덕양구|소액": {
+    "region": "고양덕양구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산센트럴아이파크"
+  },
+  "고양덕양구|중간": {
+    "region": "고양덕양구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산 두산위브더제니스"
+  },
+  "고양일산동구|고액": {
+    "region": "고양일산동구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산 두산위브더제니스"
+  },
+  "고양일산동구|소액": {
+    "region": "고양일산동구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산센트럴아이파크"
+  },
+  "고양일산동구|중간": {
+    "region": "고양일산동구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산 두산위브더제니스"
+  },
+  "광명시|소액": {
+    "region": "광명시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 107,
+    "filter": {
+      "region": 528,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 100
+    },
+    "top": null
+  },
+  "고양덕양구|고액": {
+    "region": "고양덕양구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산 두산위브더제니스"
+  },
+  "고양일산서구|중간": {
+    "region": "고양일산서구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산 두산위브더제니스"
+  },
+  "고양일산서구|소액": {
+    "region": "고양일산서구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산센트럴아이파크"
+  },
+  "고양일산서구|고액": {
+    "region": "고양일산서구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 385,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 376
+    },
+    "top": "일산 두산위브더제니스"
+  },
+  "광명시|중간": {
+    "region": "광명시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 107,
+    "filter": {
+      "region": 528,
+      "identity": 64,
+      "price": 2,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 100
+    },
+    "top": "철산래미안자이"
+  },
+  "광명시|고액": {
+    "region": "광명시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 107,
+    "filter": {
+      "region": 528,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 100
+    },
+    "top": "철산자이더헤리티지"
+  },
+  "구리시|소액": {
+    "region": "구리시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 1,
+    "seed": 180,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 170
+    },
+    "top": "한진"
+  },
+  "구리시|고액": {
+    "region": "구리시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 180,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 170
+    },
+    "top": "인창1단지주공아파트"
+  },
+  "김포시|고액": {
+    "region": "김포시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 176,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 165
+    },
+    "top": "풍무 푸르지오"
+  },
+  "김포시|중간": {
+    "region": "김포시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 176,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 165
+    },
+    "top": "풍무 푸르지오"
+  },
+  "김포시|소액": {
+    "region": "김포시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 176,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 165
+    },
+    "top": "풍무 푸르지오"
+  },
+  "남양주시|소액": {
+    "region": "남양주시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 383,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 6,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 373
+    },
+    "top": "두산 알프하임"
+  },
+  "남양주시|고액": {
+    "region": "남양주시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 383,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 373
+    },
+    "top": "두산 알프하임"
+  },
+  "남양주시|중간": {
+    "region": "남양주시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 383,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 373
+    },
+    "top": "다산 펜테리움 리버테라스 Ⅰ"
+  },
+  "부천시|중간": {
+    "region": "부천시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 859,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 849
+    },
+    "top": "일루미스테이트"
+  },
+  "부천시|소액": {
+    "region": "부천시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 859,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 2,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 849
+    },
+    "top": "일루미스테이트"
+  },
+  "성남수정구|소액": {
+    "region": "성남수정구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 342,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 337
+    },
+    "top": null
+  },
+  "성남분당구|중간": {
+    "region": "성남분당구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 1,
+    "seed": 342,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 7,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 337
+    },
+    "top": "은행주공"
+  },
+  "부천시|고액": {
+    "region": "부천시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 859,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 849
+    },
+    "top": "일루미스테이트"
+  },
+  "성남분당구|고액": {
+    "region": "성남분당구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 342,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 4,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 338
+    },
+    "top": "산성역 헤리스톤"
+  },
+  "성남수정구|중간": {
+    "region": "성남수정구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 1,
+    "seed": 342,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 7,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 337
+    },
+    "top": "은행주공"
+  },
+  "성남수정구|고액": {
+    "region": "성남수정구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 342,
+    "filter": {
+      "region": 526,
+      "identity": 64,
+      "price": 4,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 338
+    },
+    "top": "산성역 헤리스톤"
+  },
+  "수원영통구|중간": {
+    "region": "수원영통구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 653,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 642
+    },
+    "top": "화서역 파크 푸르지오"
+  },
+  "수원장안구|소액": {
+    "region": "수원장안구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 2,
+    "seed": 653,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 642
+    },
+    "top": "현대힐스테이트"
+  },
+  "수원영통구|고액": {
+    "region": "수원영통구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 653,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 642
+    },
+    "top": "화서역 파크 푸르지오"
+  },
+  "수원장안구|고액": {
+    "region": "수원장안구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 653,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 642
+    },
+    "top": "화서역 파크 푸르지오"
+  },
+  "수원장안구|중간": {
+    "region": "수원장안구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 653,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 642
+    },
+    "top": "화서역 파크 푸르지오"
+  },
+  "안양동안구|중간": {
+    "region": "안양동안구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 411,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 399
+    },
+    "top": "평촌센텀퍼스트"
+  },
+  "안양동안구|소액": {
+    "region": "안양동안구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 1,
+    "seed": 411,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 9,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 399
+    },
+    "top": "더 포레스트 힐"
+  },
+  "용인수지구|소액": {
+    "region": "용인수지구",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 671,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 6,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 661
+    },
+    "top": "용인 푸르지오 원클러스터 2단지"
+  },
+  "안양동안구|고액": {
+    "region": "안양동안구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 411,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 399
+    },
+    "top": "평촌센텀퍼스트"
+  },
+  "용인수지구|중간": {
+    "region": "용인수지구",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 671,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 661
+    },
+    "top": "새터마을죽전힐스테이트"
+  },
+  "하남시|소액": {
+    "region": "하남시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 0,
+    "seed": 125,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 8,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 117
+    },
+    "top": null
+  },
+  "의정부시|중간": {
+    "region": "의정부시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 311,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 300
+    },
+    "top": "탑석센트럴자이"
+  },
+  "용인수지구|고액": {
+    "region": "용인수지구",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 671,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 661
+    },
+    "top": "진산마을삼성5차"
+  },
+  "의정부시|고액": {
+    "region": "의정부시",
+    "tier": "고액",
+    "cash": 12,
+    "budget": 15.5,
+    "count": 4,
+    "seed": 311,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 300
+    },
+    "top": "탑석센트럴자이"
+  },
+  "의정부시|소액": {
+    "region": "의정부시",
+    "tier": "소액",
+    "cash": 3,
+    "budget": 6.2,
+    "count": 4,
+    "seed": 311,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 0,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 300
+    },
+    "top": "탑석센트럴자이"
+  },
+  "하남시|중간": {
+    "region": "하남시",
+    "tier": "중간",
+    "cash": 7,
+    "budget": 12.5,
+    "count": 4,
+    "seed": 125,
+    "filter": {
+      "region": 530,
+      "identity": 64,
+      "price": 1,
+      "area": 0,
+      "households": 0,
+      "buildingAge": 0,
+      "rental": 69,
+      "noLastDeal": 117
+    },
+    "top": "미사강변 골든 센트로(GOLDEN CENTRO)"
+  }
+}

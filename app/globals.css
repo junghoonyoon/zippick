@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: #f6f8fb;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #f6f8fb;
+  color: #191f28;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Noto Sans KR", sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: rgba(49, 130, 246, 0.18);
+  color: #191f28;
+}
+
+.heatmap-range {
+  accent-color: #f97316;
+}
+
+.market-flow-pulse {
+  animation: market-flow-pulse 2.4s linear infinite;
+}
+
+.market-flow-selected {
+  filter: drop-shadow(0 2px 3px rgba(220, 38, 38, 0.22));
+}
+
+.market-flow-dot {
+  filter: drop-shadow(0 1px 3px rgba(220, 38, 38, 0.35));
+}
+
+@keyframes market-flow-pulse {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -44;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-flow-pulse {
+    animation: none;
+  }
+
+  .market-flow-dot {
+    display: none;
+  }
+}

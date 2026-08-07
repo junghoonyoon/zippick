@@ -31,6 +31,7 @@ import policy_evaluator
 import real_estate_search
 import report_store
 import rone_estimates
+import supply_forecast
 
 ROOT = config.ROOT
 APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
@@ -44,7 +45,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 22
+BUDGET_CACHE_SCHEMA_VERSION = 23
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -54,6 +55,9 @@ BUDGET_OPTIONAL_LINK_KEYS_LOCK = threading.Lock()
 BUDGET_JOB_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_TIMEOUT_SECONDS", "150"))
 BUDGET_JOB_HARD_TIMEOUT_SECONDS = float(os.environ.get("BUDGET_JOB_HARD_TIMEOUT_SECONDS", "600"))
 BUDGET_PREWARM_STATE = {"running": False, "done": False, "pairCount": 0, "finishedAt": None}
+REDEVELOPMENT_ZONES_PATH = ROOT / "data" / "redevelopment_zones.geojson"
+REDEVELOPMENT_ZONES_CACHE = {"mtime": None, "zones": []}
+REDEVELOPMENT_ZONES_LOCK = threading.Lock()
 RATE_LIMIT_LOCK = threading.Lock()
 RATE_LIMIT_BUCKETS = {}
 RATE_LIMIT_MAX_CLIENTS = 5000
@@ -72,6 +76,121 @@ RATE_LIMIT_MEDIUM_PATHS = {
     "/api/asking-price-financing",
     "/api/listing-review",
 }
+
+
+def _geometry_bbox(geometry):
+    points = []
+
+    def collect(value):
+        if not isinstance(value, list):
+            return
+        if len(value) >= 2 and all(isinstance(item, (int, float)) for item in value[:2]):
+            points.append((float(value[0]), float(value[1])))
+            return
+        for child in value:
+            collect(child)
+
+    collect((geometry or {}).get("coordinates"))
+    if not points:
+        return None
+    lngs = [point[0] for point in points]
+    lats = [point[1] for point in points]
+    return (min(lngs), min(lats), max(lngs), max(lats))
+
+
+def _bbox_intersects(left, right):
+    if not left or not right:
+        return True
+    west, south, east, north = left
+    other_west, other_south, other_east, other_north = right
+    return not (
+        east < other_west
+        or other_east < west
+        or north < other_south
+        or other_north < south
+    )
+
+
+def _request_bbox(params):
+    raw = (params.get("bbox", [""])[0] or "").strip()
+    if raw:
+        parts = [part.strip() for part in raw.split(",")]
+        if len(parts) == 4:
+            try:
+                west, south, east, north = [float(part) for part in parts]
+                return (west, south, east, north)
+            except ValueError:
+                return None
+    keys = ("west", "south", "east", "north")
+    if all(params.get(key, [""])[0] for key in keys):
+        try:
+            return tuple(float(params[key][0]) for key in keys)
+        except ValueError:
+            return None
+    return None
+
+
+def _request_limit(params, default, maximum):
+    try:
+        raw = int((params.get("limit", [""])[0] or default))
+    except (TypeError, ValueError):
+        raw = default
+    return max(1, min(maximum, raw))
+
+
+def _redevelopment_zones():
+    try:
+        mtime = REDEVELOPMENT_ZONES_PATH.stat().st_mtime
+    except OSError:
+        return []
+    with REDEVELOPMENT_ZONES_LOCK:
+        if REDEVELOPMENT_ZONES_CACHE["mtime"] == mtime:
+            return REDEVELOPMENT_ZONES_CACHE["zones"]
+        zones = []
+        try:
+            with REDEVELOPMENT_ZONES_PATH.open("r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+        except (json.JSONDecodeError, OSError):
+            REDEVELOPMENT_ZONES_CACHE.update({"mtime": mtime, "zones": []})
+            return []
+        features = payload.get("features") if isinstance(payload, dict) else []
+        for feature in features or []:
+            if not isinstance(feature, dict):
+                continue
+            geometry = feature.get("geometry") or {}
+            properties = feature.get("properties") or {}
+            if geometry.get("type") not in {"Polygon", "MultiPolygon"}:
+                continue
+            zones.append({
+                "id": str(feature.get("id") or properties.get("id") or properties.get("zoneId") or properties.get("구역ID") or ""),
+                "name": str(properties.get("name") or properties.get("구역명") or properties.get("zoneName") or "정비구역"),
+                "projectType": str(properties.get("projectType") or properties.get("사업종류") or properties.get("type") or "정비사업"),
+                "stage": str(properties.get("stage") or properties.get("진행단계") or properties.get("status") or "단계 확인 필요"),
+                "areaSqm": properties.get("areaSqm") or properties.get("면적") or properties.get("area"),
+                "source": str(properties.get("source") or properties.get("출처") or "서울시 공간정보"),
+                "sourceNote": str(properties.get("sourceNote") or properties.get("비고") or ""),
+                "geometry": geometry,
+                "_bbox": _geometry_bbox(geometry),
+            })
+        REDEVELOPMENT_ZONES_CACHE.update({"mtime": mtime, "zones": zones})
+        return zones
+
+
+def _redevelopment_zones_payload(params=None):
+    bbox = _request_bbox(params or {})
+    limit = _request_limit(params or {}, 240 if bbox else 80, 240)
+    zones = [
+        {key: value for key, value in zone.items() if key != "_bbox"}
+        for zone in _redevelopment_zones()
+        if _bbox_intersects(zone.get("_bbox"), bbox)
+    ][:limit]
+    return {
+        "zones": zones,
+        "source": "data/redevelopment_zones.geojson" if zones or REDEVELOPMENT_ZONES_PATH.exists() else "none",
+        "count": len(zones),
+        "limited": bool(bbox and len(zones) >= limit),
+    }
+
 OPERATIONS_LOCK = threading.Lock()
 OPERATIONS = {
     "rateLimited": 0,
@@ -916,6 +1035,10 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             row["educationEnvironment"] = education_environment.education_environment_for_entity(entity)
         except Exception:
             pass
+    try:
+        row["lifestyleChange"] = supply_forecast.lifestyle_change(row, entity)
+    except Exception:
+        row["lifestyleChange"] = {"status": "error"}
     if molit_transactions.configured():
         try:
             months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
@@ -1033,6 +1156,10 @@ def _apartment_location_score(arguments):
         "buildingAge": building.get("buildingAge") or arguments.get("buildingAge") or 0,
         "status": entity.get("status") or arguments.get("status") or "",
     }
+    try:
+        row["lifestyleChange"] = supply_forecast.lifestyle_change(row, entity)
+    except Exception:
+        row["lifestyleChange"] = {"status": "error"}
     _apply_jeonse_snapshot(row, entity)
     try:
         row["educationEnvironment"] = education_environment.education_environment_for_entity(
@@ -1063,6 +1190,7 @@ def _apartment_location_score(arguments):
                 if row.get(field) not in (None, "")
             },
             "educationEnvironment": row.get("educationEnvironment"),
+            "lifestyleChange": row.get("lifestyleChange"),
             "locationScore": row.get("locationScore"),
         },
     }, 200
@@ -1157,7 +1285,7 @@ def _apply_jeonse_snapshot(row, entity):
     return row
 
 
-def _regional_index_from_rone_payload(payload, source_apartment=""):
+def _regional_index_from_rone_payload(payload, source_apartment="", minimum_points=None):
     if not isinstance(payload, dict):
         return None
     index = payload.get("index")
@@ -1192,7 +1320,9 @@ def _regional_index_from_rone_payload(payload, source_apartment=""):
             continue
         seen_periods.add(row["period"])
         unique_history.append(row)
-    minimum_history_points = 2 if has_explicit_history else 4
+    # 단독으로 쓸 때는 관측점이 너무 적으면 버리지만, 여러 단지를 합칠 때는
+    # 한 점이라도 지역선의 빈 달을 메우므로 호출부가 기준을 낮출 수 있다.
+    minimum_history_points = minimum_points if minimum_points else (2 if has_explicit_history else 4)
     if len(unique_history) < minimum_history_points:
         return None
     return {
@@ -1202,6 +1332,49 @@ def _regional_index_from_rone_payload(payload, source_apartment=""):
         "latestValue": unique_history[-1]["value"],
         "history": unique_history,
         "sourceApartment": source_apartment,
+        "method": "official_rone",
+    }
+
+
+def _merge_regional_index_histories(indexes):
+    """여러 단지에서 얻은 R-ONE 지수 관측점을 한 시계열로 합친다.
+
+    지수 값은 단지와 무관한 지역 공통값이지만, 관측할 수 있는 달은
+    그 단지가 거래된 달로 제한된다. 한 단지만 쓰면 지역선이 뚝뚝 끊겨
+    "지역 평균보다 강한가" 판단의 기준월 자체가 사라진다.
+    """
+    merged = {}
+    source = ""
+    region = ""
+    apartments = []
+    for entry in indexes:
+        if not isinstance(entry, dict):
+            continue
+        for row in entry.get("history") or []:
+            if not isinstance(row, dict):
+                continue
+            period = str(row.get("period") or "")
+            try:
+                value = float(row.get("value") or 0)
+            except (TypeError, ValueError):
+                continue
+            if re.fullmatch(r"\d{6}", period) and value > 0:
+                merged.setdefault(period, value)
+        source = source or str(entry.get("source") or "")
+        region = region or str(entry.get("region") or "")
+        if entry.get("sourceApartment"):
+            apartments.append(str(entry["sourceApartment"]))
+    if len(merged) < 4:
+        return None
+    history = [{"period": period, "value": merged[period]} for period in sorted(merged)]
+    return {
+        "source": source or "한국부동산원 R-ONE 월간 아파트 매매가격지수",
+        "region": region,
+        "latestPeriod": history[-1]["period"],
+        "latestValue": history[-1]["value"],
+        "history": history,
+        "sourceApartment": apartments[0] if apartments else "",
+        "sourceApartmentCount": len(apartments),
         "method": "official_rone",
     }
 
@@ -1332,7 +1505,11 @@ def _regional_index_for_apartment(name, region, months):
         ): probe
         for probe in unique_probes
     }
-    official = None
+    # 한 단지에서 멈추지 않고 여러 단지의 관측점을 모아 지역선을 촘촘하게 만든다.
+    # 다만 이미 창 대부분을 덮었으면 남은 응답은 기다리지 않는다.
+    officials = []
+    covered_periods = set()
+    enough_periods = max(4, int(lookback_months * 0.8))
     try:
         for future in as_completed(futures):
             probe = futures[future]
@@ -1342,18 +1519,27 @@ def _regional_index_for_apartment(name, region, months):
                 continue
             if status != 200:
                 continue
-            official = _regional_index_from_rone_payload(
+            entry = _regional_index_from_rone_payload(
                 payload,
                 source_apartment=probe["name"],
+                minimum_points=1,
             )
-            if official:
+            if not entry:
+                continue
+            officials.append(entry)
+            covered_periods.update(
+                str(row.get("period") or "")
+                for row in entry.get("history") or []
+                if isinstance(row, dict)
+            )
+            if len(covered_periods) >= enough_periods:
                 break
     finally:
         for future in futures:
             future.cancel()
         executor.shutdown(wait=False, cancel_futures=True)
 
-    regional_index = official or _regional_transaction_index(
+    regional_index = _merge_regional_index_histories(officials) or _regional_transaction_index(
         normalized_region,
         candidates,
         lookback_months,
@@ -2362,14 +2548,36 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
         })
         return initial
 
-    # 검증 전 후보는 화면에 노출하지 않는다. 같은 조건을 fast/full 두 번
-    # 계산하는 대신 정확한 실거래·자금 검증 작업을 즉시 시작한다.
-    initial = {
-        "candidates": [],
+    initial_arguments = {
+        **candidate_arguments,
+        "all_matches": False,
+        "fast_mode": True,
+        "limit": min(max(int(candidate_arguments.get("limit") or 6), 1), 6),
+    }
+    try:
+        initial = budget_candidates.budget_candidates(**initial_arguments)
+    except Exception:
+        initial = {
+            "candidates": [],
+            "initialStage": True,
+            "verifiedResultReady": False,
+            "candidateScoreDataReady": False,
+        }
+    if initial.get("error") or int(initial.get("status") or 200) >= 400:
+        initial = {
+            "candidates": [],
+            "initialStage": True,
+            "verifiedResultReady": False,
+            "candidateScoreDataReady": False,
+        }
+    initial = json.loads(json.dumps(initial, ensure_ascii=False))
+    initial.update({
         "initialStage": True,
         "verifiedResultReady": False,
-        "candidateScoreDataReady": False,
-    }
+        "enrichmentPending": True,
+        "enrichmentStage": "transaction_fetch",
+        "firstLookReady": bool(_budget_payload_rows(initial)),
+    })
     job_id = uuid.uuid4().hex[:12]
     with BUDGET_JOBS_LOCK:
         BUDGET_JOBS[job_id] = {
@@ -2830,6 +3038,9 @@ class Handler(BaseHTTPRequestHandler):
                 MAP_GEOCODE_CACHE[address] = coordinates
             self._json({"found": bool(coordinates), "coordinates": coordinates})
             return
+        if parsed.path == "/api/redevelopment-zones":
+            self._json(_redevelopment_zones_payload(params))
+            return
         if parsed.path == "/api/analytics-config":
             project_key = str(config.POSTHOG_PROJECT_KEY or "").strip()
             self._json({
@@ -2991,6 +3202,9 @@ class Handler(BaseHTTPRequestHandler):
                 loan_term_years=params.get("loan_term_years", ["30"])[0].strip(),
                 purchase_cost_rate=params.get("purchase_cost_rate", ["0"])[0].strip(),
             )
+            if profile.get("firstTimeRequested") and not profile.get("firstTimeEligibleByOwnership"):
+                self._json({"error": "생애최초는 보유 주택을 '무주택'으로 선택한 경우에만 '예'로 적용할 수 있어요."}, 400)
+                return
             if profile["homeOwnership"] == "unknown" or first_time not in {"true", "false"} or not profile["cashEok"] or not profile["annualIncomeManwon"] or not profile["mortgageRatePercent"]:
                 self._json({"error": "보유 주택, 생애최초 여부, 자기자금, 연소득과 예상 금리를 입력해 주세요."}, 400)
                 return
@@ -3000,6 +3214,25 @@ class Handler(BaseHTTPRequestHandler):
                 return
             snapshot = policy_evaluator.summarize([], profile)
             snapshot["estimatedPurchaseCeilingEok"] = ceiling
+            if profile["homeOwnership"] == "no_home":
+                general_profile = dict(profile, firstTimeBuyer=False)
+                first_time_profile = dict(profile, firstTimeBuyer=True)
+                general_regulated_ceiling = policy_evaluator.estimated_purchase_ceiling(
+                    general_profile,
+                    ["서울시"],
+                )
+                first_time_regulated_ceiling = policy_evaluator.estimated_purchase_ceiling(
+                    first_time_profile,
+                    ["서울시"],
+                )
+                snapshot["firstTimePolicy"].update({
+                    "generalRegulatedCeilingEok": general_regulated_ceiling,
+                    "firstTimeRegulatedCeilingEok": first_time_regulated_ceiling,
+                    "regulatedCeilingDifferenceEok": round(
+                        max(0, first_time_regulated_ceiling - general_regulated_ceiling),
+                        1,
+                    ),
+                })
             ceiling_impacts = [
                 policy_evaluator.evaluate_candidate(
                     {"region": region, "midPriceEok": ceiling},
@@ -3013,6 +3246,9 @@ class Handler(BaseHTTPRequestHandler):
             )
             snapshot["estimatedLoanLimitEok"] = best_impact.get("estimatedLoanLimitEok")
             snapshot["priceCapEok"] = best_impact.get("priceCapEok")
+            snapshot["grossPurchaseCostEok"] = best_impact.get("grossPurchaseCostEok")
+            snapshot["firstTimeAcquisitionTaxReliefEok"] = best_impact.get("firstTimeAcquisitionTaxReliefEok")
+            snapshot["purchaseCostEok"] = best_impact.get("purchaseCostEok")
             self._json({"budgetEok": ceiling, "snapshot": snapshot})
             return
         if parsed.path == "/api/apartment-suggest":
@@ -3334,8 +3570,12 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     # 검색 요청이 들어온 뒤 수백 개 결과 캐시를 다시 읽지 않도록 서버가
-    # 준비되는 동안 단지별 시장 스냅샷 인덱스를 먼저 만든다.
+    # 준비되는 동안 단지별 시장 스냅샷 인덱스와 가격대를 미리 메모리에 올린다.
     _load_market_snapshots()
+    try:
+        budget_candidates._load_price_bands()
+    except Exception:
+        pass
     print(f"집픽 서버: http://{HOST}:{PORT}")
     if config.BUDGET_PREWARM_ENABLED:
         threading.Thread(target=_prewarm_budget_transaction_cache, daemon=True).start()
