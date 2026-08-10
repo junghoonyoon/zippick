@@ -1419,22 +1419,31 @@
     .candidate-map-compare-cart:focus-visible { outline:3px solid rgba(49,130,246,.24); outline-offset:3px }
     .candidate-map-funding-filters {
       pointer-events:auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px;
-      max-width:min(520px,calc(100vw - 92px)); min-height:34px; margin:0; border:1px solid rgba(224,230,238,.9);
-      border-radius:14px; padding:7px; background:rgba(255,255,255,.94);
-      box-shadow:0 5px 16px rgba(24,35,52,.12); color:#4e5968; font-size:13px; font-weight:850;
-      line-height:1.35; backdrop-filter:blur(10px);
+      max-width:min(520px,calc(100vw - 92px)); min-height:34px; margin:0; color:#4e5968;
+      font-size:13px; font-weight:850; line-height:1.35;
     }
     .candidate-map-funding-filters[hidden] { display:none }
     .candidate-map-funding-filter {
-      display:inline-flex; align-items:center; gap:5px; min-height:28px; border:1px solid transparent;
-      border-radius:999px; padding:4px 8px 4px 6px; background:transparent; white-space:nowrap; cursor:pointer;
+      display:inline-flex; align-items:center; gap:5px; min-height:34px; border:1px solid rgba(205,222,245,.94);
+      border-radius:999px; padding:6px 10px 6px 7px; background:rgba(255,255,255,.94);
+      box-shadow:0 5px 16px rgba(24,35,52,.12); white-space:nowrap; cursor:pointer; backdrop-filter:blur(10px);
     }
-    .candidate-map-funding-filter:hover { background:#f4f7fb }
-    .candidate-map-funding-filter:has(input:checked) { border-color:#d7e7ff; background:#eff6ff; color:#1767c5 }
+    .candidate-map-funding-filter:hover { background:rgba(247,251,255,.97) }
+    .candidate-map-funding-filter:has(input:checked) { border-color:#bcd9ff; background:rgba(239,246,255,.97); color:#1767c5 }
     .candidate-map-funding-filter input { width:15px; height:15px; margin:0; accent-color:#3182f6 }
     .candidate-map-funding-swatch { width:9px; height:9px; border-radius:3px; background:#191f28 }
     .candidate-map-funding-swatch.is-short { background:#d97706 }
     .candidate-map-funding-swatch.is-roomy { background:#147a55 }
+    @media (max-width:700px) {
+      .candidate-map-funding-filters {
+        flex-wrap:nowrap; justify-content:flex-end; max-width:calc(100vw - 92px); gap:4px;
+      }
+      .candidate-map-funding-filter {
+        gap:4px; min-height:32px; padding:5px 7px 5px 5px; font-size:12px;
+      }
+      .candidate-map-funding-filter input { width:14px; height:14px }
+      .candidate-map-funding-swatch { width:8px; height:8px }
+    }
     .candidate-map-tool-rail {
       pointer-events:auto; display:grid; overflow:hidden; width:58px; border:1px solid rgba(224,230,238,.92);
       border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 8px 22px rgba(24,35,52,.16);
@@ -11844,7 +11853,6 @@
             </div>
           </div>
         </div>
-        ${isShortlist ? `<p class="candidate-shortlist-basis">가격대를 먼저 자르지 않고, 종합점수와 최근 가격·거래 흐름이 좋은 ${esc(firstCount)}곳을 먼저 보여드려요.</p>` : ""}
       </section>`;
     }
 
