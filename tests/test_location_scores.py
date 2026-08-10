@@ -1,3 +1,4 @@
+import json
 import sys
 import tempfile
 import unittest
@@ -248,6 +249,40 @@ class LocationScoresTest(unittest.TestCase):
         self.assertTrue(redevelopment["analysis"]["projects"])
         self.assertLessEqual(redevelopment["analysis"]["projects"][0]["distanceMeters"], 1000)
         self.assertIn(redevelopment["analysis"]["projects"][0]["type"], location_scores.redevelopment_analysis.PROJECT_TYPES)
+
+    def test_completed_redevelopment_zone_is_not_counted_as_active_project(self):
+        path = Path(self.temporary.name) / "redevelopment_zones.geojson"
+        path.write_text(json.dumps({
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "id": "completed-zone",
+                "properties": {
+                    "name": "완료된 재정비구역",
+                    "projectType": "재건축",
+                    "stage": "준공",
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [126.9600, 37.5460],
+                        [126.9620, 37.5460],
+                        [126.9620, 37.5480],
+                        [126.9600, 37.5480],
+                        [126.9600, 37.5460],
+                    ]],
+                },
+            }],
+        }), encoding="utf-8")
+        with mock.patch.object(location_scores.redevelopment_analysis, "DATA_PATH", path):
+            location_scores.redevelopment_analysis._CACHE.update({"mtime": None, "projects": []})
+            projects, status = location_scores.redevelopment_analysis.nearby_projects(
+                {"latitude": 37.5471, "longitude": 126.9609},
+                self.entity,
+            )
+
+        self.assertEqual(status, "ok")
+        self.assertEqual(projects, [])
 
     def test_presale_candidate_gets_composite_score(self):
         row = {

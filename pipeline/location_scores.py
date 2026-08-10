@@ -8,12 +8,15 @@ this free score because those feeds are not connected yet.
 """
 
 import datetime
+import re
 
 import apartment_leaders
+import breakeven
 import commute_times
 import kakao_station_distances
 import real_estate_search
 import redevelopment_analysis
+import redevelopment_track_record
 import supply_forecast
 
 
@@ -962,6 +965,50 @@ def _weighted_score_for_categories(parts):
     return score, round(available_weight / total_weight, 2) if total_weight else 0.0
 
 
+def _area_sqm_from_label(row):
+    """평형 표시에서 전용면적을 뽑는다. 취득세 농특세 판단에만 쓴다."""
+    label = str(row.get("displayAreaLabel") or row.get("areaLabel") or "")
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(㎡|m2|평)", label)
+    if not match:
+        return None
+    value = float(match.group(1))
+    return round(value * 3.3058, 2) if match.group(2) == "평" else value
+
+
+def verdict_card(row, entity, years=3):
+    """단지 화면 맨 위에 붙는 결론 카드를 만든다.
+
+    미래 가격을 예측하지 않는다. 아래 세 가지만 담는다.
+    1. 본전선   - 세금 규칙으로 정해지는 계산값
+    2. 트랙레코드 - 과거에 같은 일이 몇 번 있었는지 센 값
+    3. 다른 점  - 이 단지가 비교 대상과 어떻게 다른지
+    """
+    price_eok = _float_or_none(row.get("latestDealPriceEok"))
+    price = int(round(price_eok * 100000000)) if price_eok else None
+
+    card = {
+        "years": years,
+        "price": price,
+        "areaLabel": row.get("displayAreaLabel") or row.get("areaLabel"),
+        "breakeven": breakeven.calculate(price, years, _area_sqm_from_label(row)) if price else None,
+        "trackRecord": redevelopment_track_record.summary(row, entity, years),
+        "notes": [],
+    }
+
+    _, _, detail = redevelopment_analysis.influence_score(row, entity)
+    for project in (detail.get("moveOutNearby") or [])[:1]:
+        card["notes"].append({
+            "tone": "watch",
+            "text": f"{project['distanceMeters']}m 앞 {project['name']}이 이주를 앞두고 있어요",
+        })
+    if card["breakeven"] is None:
+        card["status"] = "insufficient"
+        card["message"] = "최근 실거래가 없어 본전선을 계산하지 못했어요"
+    else:
+        card["status"] = "ok"
+    return card
+
+
 def score_for_candidate(row, entity):
     signals = row.get("signals") or {}
     parts = _purchase_score_parts(row, entity, signals)
@@ -986,6 +1033,7 @@ def score_for_candidate(row, entity):
         "title": "현재 데이터 기준 종합 점수",
         "summary": summary,
         "parts": parts,
+        "verdictCard": verdict_card(row, entity),
         "areaAnalysis": {"parts": []},
         "source": "현재 앱 데이터 기준",
         "apartmentKey": real_estate_search.compact(row.get("displayName") or row.get("name")),

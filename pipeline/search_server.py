@@ -58,6 +58,10 @@ BUDGET_PREWARM_STATE = {"running": False, "done": False, "pairCount": 0, "finish
 REDEVELOPMENT_ZONES_PATH = ROOT / "data" / "redevelopment_zones.geojson"
 REDEVELOPMENT_ZONES_CACHE = {"mtime": None, "zones": []}
 REDEVELOPMENT_ZONES_LOCK = threading.Lock()
+COMPLETED_REDEVELOPMENT_ZONE_IDS = {
+    # 새절역 두산위브 트레지움. 원본 공간정보에는 신사1/착공으로 남아 있어 지도에서 제외한다.
+    "11000UQ120PS202411014108",
+}
 RATE_LIMIT_LOCK = threading.Lock()
 RATE_LIMIT_BUCKETS = {}
 RATE_LIMIT_MAX_CLIENTS = 5000
@@ -173,17 +177,72 @@ def _redevelopment_zones():
                 "_bbox": _geometry_bbox(geometry),
             })
         REDEVELOPMENT_ZONES_CACHE.update({"mtime": mtime, "zones": zones})
-        return zones
+    return zones
+
+
+def _redevelopment_zone_completed(stage):
+    return bool(re.search(
+        r"(?:준공|사용승인|사업완료|입주완료|입주자\s*모집공고\s*완료|해제|폐지)(?!\s*예정)",
+        str(stage or "").strip(),
+    ))
+
+
+def _redevelopment_zone_public_rental_like(zone):
+    text = " ".join(str(zone.get(key) or "") for key in ("name", "projectType", "stage", "sourceNote"))
+    return bool(re.search(
+        r"청년안심|역세권청년|장기전세|행복주택|희망하우징|공공임대|국민임대|영구임대|임대주택|미리내집",
+        text,
+    ))
+
+
+def _redevelopment_zone_active(zone):
+    text = " ".join(str(zone.get(key) or "") for key in ("name", "projectType", "stage", "sourceNote"))
+    if str(zone.get("id") or "") in COMPLETED_REDEVELOPMENT_ZONE_IDS:
+        return False
+    if _redevelopment_zone_completed(zone.get("stage")):
+        return False
+    if _redevelopment_zone_public_rental_like(zone):
+        return False
+    if re.search(r"존치관리|재정비촉진지구|지구단위계획|기타", text):
+        return False
+    if re.search(r"단계 확인 필요", str(zone.get("stage") or "")):
+        return False
+    return True
+
+
+def _redevelopment_zone_sort_key(zone):
+    text = " ".join(str(zone.get(key) or "") for key in ("name", "projectType", "stage"))
+    if re.search(r"재개발|재건축|주택정비형", text):
+        type_rank = 0
+    elif re.search(r"재정비촉진구역|신속통합기획|모아타운|가로주택|소규모", text):
+        type_rank = 1
+    else:
+        type_rank = 2
+    stage = str(zone.get("stage") or "")
+    if re.search(r"착공|이주|철거|관리처분", stage):
+        stage_rank = 0
+    elif re.search(r"사업시행|건축심의", stage):
+        stage_rank = 1
+    elif re.search(r"조합설립|위원회|추진위", stage):
+        stage_rank = 2
+    elif re.search(r"구역지정|촉진계획|지구계획", stage):
+        stage_rank = 3
+    else:
+        stage_rank = 4
+    return (type_rank, stage_rank, float(zone.get("areaSqm") or 0) * -1)
 
 
 def _redevelopment_zones_payload(params=None):
     bbox = _request_bbox(params or {})
-    limit = _request_limit(params or {}, 240 if bbox else 80, 240)
+    limit = _request_limit(params or {}, 3000 if bbox else 400, 3000)
     zones = [
         {key: value for key, value in zone.items() if key != "_bbox"}
         for zone in _redevelopment_zones()
         if _bbox_intersects(zone.get("_bbox"), bbox)
-    ][:limit]
+        and _redevelopment_zone_active(zone)
+    ]
+    zones.sort(key=_redevelopment_zone_sort_key)
+    zones = zones[:limit]
     return {
         "zones": zones,
         "source": "data/redevelopment_zones.geojson" if zones or REDEVELOPMENT_ZONES_PATH.exists() else "none",

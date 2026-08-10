@@ -10,6 +10,7 @@ Environment=PYTHONUNBUFFERED=1
 Environment=REAL_ESTATE_HOST=0.0.0.0
 Environment=REAL_ESTATE_PORT=8766
 Environment=BEAVER_V2_SETTINGS=/home/exedev/maesuhalkkayo/설정.txt
+Environment=SUPABASE_CACHE_ENABLED=0
 ExecStart=/home/exedev/maesuhalkkayo/.venv/bin/python pipeline/search_server.py
 Restart=on-failure
 RestartSec=3

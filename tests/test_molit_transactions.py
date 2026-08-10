@@ -825,6 +825,57 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(options[0]["transactionCount"], 2)
         self.assertEqual(options[0]["latestDealDate"], "2026-07-01")
 
+    def test_presale_area_options_keep_older_unit_types_after_completion(self):
+        entity = {
+            "name": "리버센SK뷰롯데캐슬",
+            "aliases": ["리버센"],
+            "district": "중랑구",
+            "legalDong": "중화동",
+            "jibun": "462",
+            "lawdCd": "11260",
+            "status": "분양권",
+        }
+        source_row = {
+            "대표단지명": "리버센SK뷰롯데캐슬",
+            "자치구": "중랑구",
+            "법정동": "중화동",
+            "지번": "462",
+            "필지고유번호": "1126010300104620000",
+        }
+
+        def fake_lookup(rows, name, area_label, lookback_months, transaction_kind):
+            if transaction_kind == molit_transactions.TRANSACTION_KIND_PRESALE:
+                return [
+                    {"exclusiveArea": 70.98, "dealDate": "2025-09-22", "transactionKind": "presale"},
+                    {"exclusiveArea": 84.54, "dealDate": "2025-07-27", "transactionKind": "presale"},
+                ]
+            return [
+                {"exclusiveArea": 59.99, "dealDate": "2026-05-26", "transactionKind": "apartment"},
+            ]
+
+        with mock.patch.object(molit_transactions.real_estate_search, "APARTMENT_MASTER", [entity]), \
+             mock.patch.object(
+                 molit_transactions,
+                 "source_rows_for_entity",
+                 return_value=[source_row],
+             ), \
+             mock.patch.object(
+                 molit_transactions,
+                 "_transactions_for_apartment_kind",
+                 side_effect=fake_lookup,
+             ):
+            options = molit_transactions.area_options_for_apartment(
+                "리버센SK뷰롯데캐슬",
+                "중랑구",
+                lookback_months=24,
+                entity=entity,
+            )
+
+        self.assertEqual(
+            [option["label"] for option in options],
+            ["전용 59㎡", "전용 70㎡", "전용 84㎡"],
+        )
+
     def test_minimum_area_lookup_uses_actual_smallest_available_type(self):
         transactions = [
             {"dealAmountEok": 22.0, "exclusiveArea": 64.26, "floor": "8", "dealDate": "2026-06-24"},

@@ -192,16 +192,20 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         """내 단지 재건축과 옆 동네 개발은 완전히 다른 얘기다.
 
         내 단지가 재건축이면 '생활권이 좋아진다'가 아니라 '이 집이 새
-        아파트가 된다'는 뜻이다. 그런데 heading이 하드코딩돼 있어 자체
-        사업이어도 "주변 개발은 기대할 만하지만..."이 떴다. 단지명이
-        기사 제목에 그대로 있어도 주변 개발로 넘어갔다.
+        아파트가 된다'는 뜻이다. 반대로 옆 구역이 재개발 중일 뿐이면
+        단지 자체 사업이라고 쓰면 안 된다.
         """
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertIn("function zippickDevelopmentSelfMatch(item, rows = [], officialZones = [])", html)
+        self.assertIn("function zippickDevelopmentOfficialZoneSelfMatch(item, zone)", html)
+        self.assertIn("function zippickConfirmedOwnDevelopmentRow(row)", html)
+        self.assertIn("function zippickOwnDevelopmentProgressRow(row)", html)
+        self.assertIn("function zippickConfirmedOwnDevelopmentRows(rows = [])", html)
+        self.assertIn("function zippickOwnDevelopmentRows(rows = [])", html)
+        self.assertIn("function zippickOwnDevelopmentZones(item, officialZones = [])", html)
         self.assertIn("function zippickDevelopmentStageTier(rows = [], officialZones = [])", html)
         self.assertIn("function zippickDevelopmentProjectWord(rows = [], officialZones = [])", html)
-        self.assertIn("function zpComplexNameCompact(value)", html)
 
         # heading이 자체/주변으로 갈려야 한다
         self.assertIn("이 단지가 ${zpJosa(word, \"을\", \"를\")} 추진 중입니다", html)
@@ -223,15 +227,54 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("${word}는 <b>추가분담금", html)
         self.assertNotIn("이 단지 ${word}가 막바지", html)
 
-        # '아파트'를 뗀 두 글자 이름으로 매칭하면 오탐이 난다.
-        # 붙여쓴 전체 이름을 먼저 쓰고, 세 글자 미만은 버린다.
+        # 이름이 비슷하거나 재개발 구역 안에 있으면 오탐이 난다.
+        # 직접 기사도 '재건축 탄력' 같은 전망만으로는 부족하다. 인가·고시처럼
+        # 확정 단계가 있거나 공식 구역명이 단지명과 맞을 때만 자체 개발이다.
         match_body = re.search(
             r"function zippickDevelopmentSelfMatch\(item, rows = \[\], officialZones = \[\]\) \{(?P<body>.*?)\n    \}",
             html,
             re.DOTALL,
         ).group("body")
-        self.assertIn("zpComplexNameCompact(source)", match_body)
-        self.assertIn("key.length >= 3", match_body)
+        self.assertIn("zippickOwnDevelopmentRows(rows).length > 0", match_body)
+        self.assertIn("zippickOwnDevelopmentZones(item, officialZones).length > 0", match_body)
+        self.assertNotIn('rows.some(row => String(row?.scope || "") === "complex")', match_body)
+        self.assertNotIn("if (activeZones.some(zone => zone.inside === true)) return true;", match_body)
+        self.assertNotIn("activeZones.map(zone => zone?.name)", match_body)
+        self.assertNotIn("text.includes(key)", match_body)
+
+        own_row_match = re.search(
+            r"function zippickConfirmedOwnDevelopmentRow\(row\) \{(?P<body>.*?)\n    \}",
+            html,
+            re.DOTALL,
+        ).group("body")
+        self.assertIn('String(row?.status || "") !== "confirmed"', own_row_match)
+        self.assertIn("hasConfirmedStage", own_row_match)
+
+        progress_row_match = re.search(
+            r"function zippickOwnDevelopmentProgressRow\(row\) \{(?P<body>.*?)\n    \}",
+            html,
+            re.DOTALL,
+        ).group("body")
+        self.assertIn('String(row?.scope || "") !== "complex"', progress_row_match)
+        self.assertIn("재건축불가", progress_row_match)
+        self.assertIn("탄력", progress_row_match)
+        self.assertIn("hasProgress", progress_row_match)
+
+        report_match = re.search(
+            r"function zippickDevelopmentHtml\(item\) \{(?P<body>.*?)\n    \}\n\n    function zippickLifestyleHouseholds",
+            html,
+            re.DOTALL,
+        ).group("body")
+        self.assertIn("const rows = zippickOwnDevelopmentRows(allRows);", report_match)
+        self.assertIn("const officialZones = zippickOwnDevelopmentZones(item, allOfficialZones);", report_match)
+        self.assertIn('if (!rows.length && !officialZones.length) return "";', report_match)
+        self.assertIn("const hasOfficialStage = confirmedRows.length > 0 || officialZones.length > 0;", report_match)
+        self.assertIn(': "signal";', report_match)
+        self.assertIn('<span class="zpr-kicker">단지 변화</span>', report_match)
+        self.assertNotIn('<span class="zpr-kicker">단지 개발</span>', report_match)
+        self.assertIn("이 단지 ${word} 추진 소식이 있습니다", report_match)
+        self.assertIn("공식 추진 단계는 아직 확인되지 않았습니다", report_match)
+        self.assertIn("기사만으로 ${esc(word)} 대상이나 일정을 확정할 수는 없어요", report_match)
 
     def test_zippick_lifestyle_change_ignores_tiny_complexes(self):
         """100~200세대 나홀로 아파트로는 생활권이 바뀌지 않는다.
@@ -245,6 +288,14 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIn("const ZP_LIFESTYLE_MIN_HOUSEHOLDS = 300;", html)
         self.assertIn("const ZP_LIFESTYLE_MIN_TOTAL = 1000;", html)
+        self.assertIn("const ZP_LIFESTYLE_SMALL_AREA_MAX = 10000;", html)
+        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_COUNT = 3;", html)
+        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_DISTANCE = 700;", html)
+        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_AREA = 20000;", html)
+        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_ADVANCED = 2;", html)
+        self.assertIn("function zippickLifestyleDevelopmentAssessment(item)", html)
+        self.assertIn("function zippickDevelopmentMajorReason(zone)", html)
+        self.assertIn("function zippickDevelopmentIsSmallProject(zone)", html)
 
         body_match = re.search(
             r"function zippickLifestyleChangeHtml\(item\) \{(?P<body>.*?)\n    \}",
@@ -256,7 +307,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         # 개별 필터와 합계 하한이 모두 있어야 한다
         self.assertIn("Number(row?.households) >= ZP_LIFESTYLE_MIN_HOUSEHOLDS", body)
-        self.assertIn("if (totalHouseholds < ZP_LIFESTYLE_MIN_TOTAL) return \"\";", body)
+        self.assertIn("if (complexes.length && totalHouseholds < ZP_LIFESTYLE_MIN_TOTAL && !lifestyleZones.length) return \"\";", body)
+        self.assertIn("const lifestyleAssessment = zippickLifestyleDevelopmentAssessment(item);", body)
+        self.assertIn("const lifestyleZones = lifestyleAssessment.zones;", body)
 
         # 백엔드 합계를 그대로 쓰면 뺀 단지가 총량에 남아 숫자가 안 맞는다
         self.assertNotIn("change.totalHouseholds", body)
@@ -267,6 +320,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         # 무엇을 뺐는지 밝힌다
         self.assertIn("세대 미만 단지", html)
         self.assertIn("생활권을 바꿀 규모로 보기 어려워 목록에서 뺐습니다.", html)
+        self.assertIn("작은 정비사업 1곳은 생활권 변화로 보지 않고, 지도 참고 정보로만 봅니다.", html)
 
     def test_zippick_report_measures_liquidity_in_falling_months(self):
         """환금성은 하락 구간 거래량으로 잰다.
@@ -379,11 +433,23 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("row?.source,", html)
         self.assertIn("function zippickDevelopmentZoneRelevant(zone)", html)
         self.assertIn(".filter(zippickDevelopmentZoneRelevant)", html)
+        self.assertIn("function zippickDevelopmentCompletedOfficialZone(zone)", html)
+        self.assertIn("function zippickActiveOfficialDevelopmentZones(zones = [])", html)
+        self.assertIn("&& !zippickDevelopmentCompletedOfficialZone(zone)", html)
+        self.assertIn("zippickActiveOfficialDevelopmentZones(officialZones).filter", html)
+        self.assertIn("zone.inside === true && zippickDevelopmentOfficialZoneSelfMatch(item, zone)", html)
+        self.assertIn("const allOfficialZones = Array.isArray(insight.zones) ? insight.zones : [];", html)
+        self.assertIn("const officialZones = zippickOwnDevelopmentZones(item, allOfficialZones);", html)
         self.assertIn('return "신도시·택지";', html)
         self.assertNotIn('return "신규 주거지";', html)
         self.assertIn("const zippickDevelopmentCache = new Map();", html)
         self.assertIn("function ensureZippickDevelopmentInsight(item, onUpdate = refreshMarketInsight)", html)
         self.assertIn("function zippickPointInGeometry(point, geometry)", html)
+        self.assertIn("function zippickGeometryRings(geometry)", html)
+        self.assertIn("function zippickPointToSegmentDistanceMeters(point, start, end)", html)
+        self.assertIn("const inside = zippickPointInGeometry(point, zone.geometry);", html)
+        self.assertIn("inside,", html)
+        self.assertNotIn("inside:distanceMeters <= 0", html)
         self.assertIn("/api/redevelopment-zones?bbox=", html)
         self.assertIn("ensureZippickDevelopmentInsight(item);", html)
         self.assertIn("ensureZippickDevelopmentInsight(report, rerender)", html)
@@ -394,36 +460,51 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("${zippickDevelopmentHtml(item)}", html)
         self.assertIn("${zippickLifestyleChangeHtml(item)}", html)
         self.assertIn("function zippickLifestyleChangeHtml(item)", html)
+        self.assertIn("function zippickLifestyleDevelopmentZones(item)", html)
+        self.assertIn("function zippickLifestyleDevelopmentAssessment(item)", html)
         self.assertIn("생활권 변화", html)
         self.assertIn("새 아파트가 이어지며 생활권이 바뀌는 중입니다", html)
+        self.assertIn("큰 정비사업이 생활권을 바꿀 수 있어요", html)
+        self.assertIn("작은 정비사업이 여러 곳에서 같이 움직입니다", html)
+        self.assertIn("새 아파트와 정비사업이 생활권을 바꾸는 중입니다", html)
+        self.assertIn("규모가 있는 재개발·재정비촉진구역·재건축이 확인됩니다.", html)
         self.assertIn("상권, 학원, 도로, 생활 편의가 같이 좋아질 가능성", html)
         self.assertIn("입주가 몰리는 시기에는 전세와 매물 흐름이 흔들릴 수 있습니다.", html)
+        self.assertIn("정비사업은 규모와 단계에 따라 영향이 달라집니다.", html)
         self.assertNotIn("좋거나 나쁘게 보지 않습니다", html)
-        self.assertIn("주변 개발은 기대할 만하지만, 단계가 중요합니다", html)
+        self.assertIn('return "재정비촉진";', html)
+        self.assertIn("/재개발|재건축|재정비촉진구역|모아타운|뉴타운|가로주택|소규모/.test(text)", html)
+        self.assertIn("areaSqm:Number(zone.areaSqm || 0)", html)
+        self.assertIn(".slice(0, 8);", html)
+        self.assertNotIn("근처 신축은 이 단지의 비교 가격을 바꿀 수 있습니다", html)
+        self.assertNotIn("주변 개발은 기대할 만하지만, 단계가 중요합니다", html)
         self.assertNotIn("개발 기대는 플러스지만 가격은 따로 봅니다", html)
         self.assertNotIn("비싼 호가는 따로 보세요", html)
-        self.assertIn("가까운 정비사업은 아직 찾지 못했습니다", html)
-        self.assertIn("공식 구역 데이터에서 가까운 정비사업은 아직 찾지 못했습니다", html)
+        self.assertNotIn("가까운 정비사업은 아직 찾지 못했습니다", html)
+        self.assertNotIn("공식 구역 데이터에서 가까운 정비사업은 아직 찾지 못했습니다", html)
         self.assertNotIn("확인된 주변 개발은 없습니다", html)
         self.assertNotIn("개발 기대는 점수에 더하지 않았습니다", html)
         self.assertNotIn("데이터 부족을 좋거나 나쁘게 보지 않습니다", html)
-        self.assertIn("단지와 맞닿은 개발 구역이 확인됩니다.", html)
-        self.assertIn("주변 개발 구역이 확인됩니다.", html)
-        self.assertIn('hasComplexDevelopment ? "단지 개발" : "주변 개발"', html)
-        self.assertIn("생활권 개선에는 도움이 될 수 있습니다.", html)
-        self.assertIn("실제 추진 단계가 어디까지 왔는지는 따로 확인해야 합니다.", html)
+        self.assertNotIn("단지와 맞닿은 정비구역이 확인됩니다.", html)
+        self.assertNotIn("이 단지 자체 사업은 아닙니다. 다만 가까운 정비사업이 새 아파트로 완공되면", html)
+        self.assertNotIn('hasComplexDevelopment ? "단지 개발" : "주변 개발"', html)
+        self.assertNotIn(">주변 개발<", html)
+        self.assertNotIn("주변 신축 가격과 이 단지의 가격 차이입니다.", html)
+        self.assertNotIn("새 단지 예상 가격", html)
+        self.assertIn("주변 신축과의 가격 차이", html)
+        self.assertNotIn("생활권 개선에는 도움이 될 수 있습니다.", html)
         self.assertNotIn("최근 실거래보다 비싼 가격", html)
         self.assertNotIn("최근 실거래보다 비싼 호가", html)
         self.assertNotIn("비싸게 살 이유는 약합니다", html)
-        self.assertIn("확인된 추진 단계", html)
-        self.assertIn("추진위원회·조합설립 같은 초기 단계는 실제 변화까지 시간이 오래 걸릴 수 있어요.", html)
-        self.assertIn("확인된 추진 단계가 없으면", html)
+        self.assertNotIn("확인된 추진 단계가 없으면", html)
+        self.assertNotIn("추진위원회·조합설립 같은 초기 단계는 실제 변화까지 시간이 오래 걸릴 수 있어요.", html)
         self.assertNotIn("확정된 추진 단계가 없다면", html)
         self.assertNotIn("생활권이 바뀌는지도 봅니다", html)
         self.assertNotIn("개발 기대가 가격에 얼마나 섞였는지 봅니다", html)
         self.assertNotIn("공식 구역 데이터에서 <b>단지와 맞닿은 정비사업 구역</b>이 확인됩니다.", html)
-        self.assertIn("이 정보는 <b>매수 이유</b>가 아니라 확인할 배경입니다.", html)
-        self.assertIn("구청 고시와 현재 단계를 함께 확인하세요.", html)
+        self.assertNotIn("주변 신축 효과를 가격에 반영해 볼 수 있습니다.", html)
+        self.assertNotIn("이 정보는 <b>매수 이유</b>가 아니라 확인할 배경입니다.", html)
+        self.assertNotIn("구청 고시와 현재 단계를 함께 확인하세요.", html)
 
     def test_yeouido_sujeong_reconstruction_zone_is_not_filtered_by_source_note(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -490,7 +571,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIsNotNone(verdict_match)
         body = verdict_match.group("body")
-        self.assertIn("currentBudgetData?.candidateScoreDataReady === false", body)
+        self.assertIn("currentBudgetData?.candidateScoreDataReady === false", html)
+        self.assertIn("!candidateHasScoreData(item)", html)
+        self.assertIn("function candidateShouldWaitForScores(item)", html)
+        self.assertIn("if (candidateShouldWaitForScores(item))", body)
         self.assertIn("${candidateScorePendingHtml()}", body)
         self.assertIn("${candidateTrendInsightHtml(item, options)}", body)
 
@@ -765,8 +849,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("...rows.map(row => loadMarketInsight(row))", open_match.group("body"))
         self.assertIn("...rows.map(row => refreshLocationScoreSheet(row))", open_match.group("body"))
         self.assertIn("comparisonContentHtml(currentRows)", open_match.group("body"))
-        self.assertIn("const preserveStep = options?.preserveStep === true;", open_match.group("body"))
-        self.assertIn("if (!preserveStep) {", open_match.group("body"))
+        self.assertIn('comparisonStep = "results";', open_match.group("body"))
+        self.assertNotIn("preserveStep", open_match.group("body"))
         self.assertIn('comparisonContent.addEventListener("click"', html)
         self.assertIn('comparisonContent.addEventListener("keydown"', html)
         self.assertIn('comparisonContent.addEventListener("pointerover", handleSparkPointHover)', html)
@@ -1327,6 +1411,17 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const SPARKLINE_WINDOW_MONTHS = 24;", html)
         self.assertNotIn("const SPARKLINE_RANGE_OPTIONS", html)
         self.assertNotIn('{ months:3, label:"3개월" }', html)
+
+        stats_match = re.search(
+            r"function recentQuarterStats\b(?P<body>.*?)"
+            r"\n    // 대표가격 원칙",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(stats_match)
+        stats_body = stats_match.group("body")
+        self.assertLess(stats_body.index("payload?.adjustedTransactions"), stats_body.index("if (item.statsThrough)"))
+        self.assertIn("currentTrades = transactions.filter", stats_body)
         self.assertNotIn('{ months:6, label:"6개월" }', html)
         self.assertNotIn('{ months:12, label:"1년" }', html)
         self.assertIn("function sparklineWindowLabel(months = SPARKLINE_WINDOW_MONTHS)", html)
@@ -1376,6 +1471,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("최근 거래에서 가격이 크게 떨어졌어요", html)
         self.assertIn("Math.max(3.5, fullRange * .35)", html)
         self.assertIn('kind:"fast_rise"', html)
+        self.assertIn("const recentRiseSteps = recentChanges.filter(change => change >= directionThreshold).length;", html)
+        self.assertIn("recentRiseSteps >= 2", html)
+        self.assertIn("latestChange >= -directionThreshold", html)
         self.assertIn("최근 몇 달 동안 가격이 빠르게 올랐어요", html)
         self.assertIn('kind:"fast_fall"', html)
         self.assertIn("최근 몇 달 동안 가격이 빠르게 내렸어요", html)
@@ -1393,6 +1491,12 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('kind:"rise_slowing"', html)
         self.assertIn("상승은 이어졌지만 최근 상승 폭은 줄었어요", html)
         self.assertIn('kind:"fall_continuing"', html)
+        self.assertIn("최근에도 상승 흐름이 이어지고 있어요", html)
+        self.assertIn("다만 최근 한 건의 상승 폭이 커 거래량을 함께 확인해야 해요", html)
+        self.assertIn("다만 최근 몇 건 사이 오른 폭이 커 거래량을 함께 확인해야 해요", html)
+        self.assertNotIn("다만 최근 상승이 가팔라 거래량을 함께 확인해야 해요", html)
+        self.assertIn("다만 최근에도 하락 흐름이 이어졌어요", html)
+        self.assertNotIn("최근 흐름도 이어지고 있어요", html)
         self.assertIn('kind:"fall_slowing"', html)
         self.assertIn('kind:"volatile"', html)
         self.assertIn('kind:"high_flat"', html)
@@ -1596,8 +1700,15 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(candidate_match)
         body = candidate_match.group("body")
         self.assertIn("...canonical", body)
+        self.assertIn("latestDealPriceEok:latestTradePrice || canonical.latestDealPriceEok", body)
+        self.assertIn("latestDealDate:String(latestTrade.dealDate || canonical.latestDealDate", body)
+        self.assertIn("latestDealExclusiveArea:latestTradeArea || canonical.latestDealExclusiveArea", body)
+        self.assertIn("previousDealPriceEok:previousTradePrice", body)
+        self.assertIn("comparisonDealPriceEok:comparisonTradePrice", body)
+        self.assertIn("recentAveragePriceEok:estimateMid || canonical.recentAveragePriceEok", body)
+        self.assertIn("transactionCount:estimateCount || canonical.transactionCount", body)
         self.assertIn("policyImpact:canonical.policyImpact || data?.policyImpact || null", body)
-        self.assertIn("signals:canonical.signals || {}", body)
+        self.assertIn("signals:{ ...(item.signals || {}), ...canonicalSignals }", body)
         self.assertIn("locationScore:canonical.locationScore || report?.locationScore || item?.locationScore || null", body)
 
     def test_condition_stepper_is_hidden_on_candidate_results(self):
@@ -2161,7 +2272,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('data-leader-map-detail ${detailAttrs}', html)
         self.assertGreaterEqual(html.count("preferredArea:detail.dataset.leaderDetailAreaTarget || leaderAreaProfile().target"), 2)
 
-    def test_unverified_candidate_over_cap_is_removed_after_price_enrichment(self):
+    def test_unverified_candidate_over_cap_rerenders_shortlist_after_price_enrichment(self):
         html = APP_HTML.read_text(encoding="utf-8")
         prices_match = re.search(
             r"function candidatePurchaseCapPrices\b(?P<body>.*?)"
@@ -2192,16 +2303,19 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("item?.policyImpact?.cashScenarios", price_body)
         self.assertIn("budget * 1.05", cap_match.group("body"))
         self.assertIn("candidatePurchaseCapPrices(item).every", cap_match.group("body"))
+        refresh_body = refresh_match.group("body")
         self.assertIn(
-            "item.marketInsightState === \"ready\" && unverifiedCandidateOverCap(item)",
-            refresh_match.group("body"),
+            "item.marketInsightState === \"ready\" && candidateListMode !== \"all\" && unverifiedCandidateOverCap(item)",
+            refresh_body,
         )
-        self.assertIn("previousTrendToggle", refresh_match.group("body"))
-        self.assertIn("previousTrendPanel", refresh_match.group("body"))
+        self.assertIn("renderBudgetCandidates(currentBudgetData, { preserveSelection:true });", refresh_body)
+        self.assertNotIn("removeOverCapCandidate(item);", refresh_body)
+        self.assertIn("previousTrendToggle", refresh_body)
+        self.assertIn("previousTrendPanel", refresh_body)
         self.assertIn("candidateVerdictHtml(item, { trendExpanded })", refresh_match.group("body"))
         self.assertIn("candidateShortlistReasonHtml(item, candidateShortlistRank(item))", refresh_match.group("body"))
         self.assertIn("sparklineEl.hidden = !trendExpanded;", refresh_match.group("body"))
-        self.assertIn("removeOverCapCandidate(item);", refresh_match.group("body"))
+        self.assertNotIn("removeOverCapCandidate(item);", refresh_match.group("body"))
 
     def test_policy_impact_omits_manual_naver_asking_price_check(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -2379,7 +2493,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("light gray", skill)
         self.assertIn("Do not render apartment metadata in bold", skill)
 
-    def test_budget_render_filters_all_server_and_cached_rows_by_purchase_cap(self):
+    def test_budget_render_keeps_all_rows_and_caps_shortlist_only(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(
             r"function renderBudgetCandidates\b(?P<body>.*?)"
@@ -2390,10 +2504,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIsNotNone(match)
         body = match.group("body")
-        self.assertGreaterEqual(
-            body.count(".filter(row => candidateWithinPurchaseCap(row, data.budgetEok))"),
-            2,
-        )
+        self.assertNotIn(".filter(row => candidateWithinPurchaseCap(row, data.budgetEok))", body)
+        self.assertIn("const shortlistSortedRows = shortlistCandidateRows(allSortedRows, data.budgetEok);", body)
         self.assertGreaterEqual(
             body.count(".filter(candidateHasVerifiedSelectedArea)"),
             2,
@@ -2800,18 +2912,42 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn(".candidate-map-view {\n      position:fixed; z-index:120;", html)
         self.assertIn(".comparison-overlay {\n      display:none; position:fixed; z-index:180;", html)
         self.assertIn("width:52px; height:52px;", html)
-        self.assertIn("currentBudgetData?.candidates || currentBudgetData?.visibleCandidates || []", html)
+        self.assertIn("function budgetCandidateMapRowsForOpen()", html)
+        self.assertIn("const visibleRows = currentBudgetData?.visibleCandidates || [];", html)
+        self.assertIn("if (!candidateMapSelectedKey) return visibleRows.length ? visibleRows : allRows;", html)
+        self.assertIn(": budgetCandidateMapRowsForOpen();", html)
         self.assertIn("const CANDIDATE_MAP_CLUSTER_LEVEL = 8", html)
+        self.assertIn("const CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL = 5;", html)
         self.assertIn("for (let index = 0; index < rows.length; index += CANDIDATE_PAGE_SIZE)", html)
         self.assertIn("주소 확인 ${located.length}/${rows.length}곳", html)
-        self.assertIn("전체 후보 위치를 불러오고 있어요", html)
+        self.assertIn("후보 위치를 불러오고 있어요", html)
         self.assertIn(".candidate-map-cluster {", html)
         self.assertIn("min-width:77px", html)
         self.assertIn(".candidate-map-cluster span { color:#1267d8; font-size:13px;", html)
         self.assertIn(".candidate-map-shell:not(:has(.candidate-map-preview:not([hidden])))", html)
         self.assertIn("grid-template-columns:minmax(0,1fr)", html)
         self.assertIn(".candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-canvas { grid-column:1 }", html)
-        self.assertIn(".candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-map-tools { left:50% }", html)
+        self.assertIn(".candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-map-tools { right:12px }", html)
+        self.assertIn(".candidate-map-tool-rail {", html)
+        self.assertIn('class="candidate-map-tool-text">정비</span>', html)
+        self.assertIn('class="candidate-map-tool-text">측정</span>', html)
+        self.assertIn(".redevelopment-zone-name-label {", html)
+        self.assertIn("max-width:190px;", html)
+        self.assertIn("background:#f05a28;", html)
+        self.assertIn("font-size:12px;", html)
+        self.assertIn(".redevelopment-zone-name-label small { color:rgba(255,255,255,.88); font-size:10px;", html)
+        self.assertIn("pointer-events:none;", html)
+        self.assertIn("const CANDIDATE_MAP_REDEVELOPMENT_CORE_LABEL_LIMIT = 12;", html)
+        self.assertIn("const CANDIDATE_MAP_REDEVELOPMENT_CLOSE_LABEL_LIMIT = 28;", html)
+        self.assertIn("function redevelopmentZoneNameLabel(zone)", html)
+        self.assertIn('<small>${esc(stage)}</small>', html)
+        self.assertIn("function createCandidateMapRedevelopmentNameLabel(kakao, zone, polygon)", html)
+        self.assertIn("function syncCandidateMapRedevelopmentNameLabels(kakao)", html)
+        self.assertIn("function redevelopmentZoneLabelRank(layer, selectedPoint)", html)
+        self.assertIn("layer.nameLabel?.setMap?.(null);", html)
+        self.assertIn("nameLabel:null, path, polygonPath:polygon, zone", html)
+        self.assertIn("syncCandidateMapRedevelopmentNameLabels(kakao);", html)
+        self.assertIn("level > CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL", html)
         self.assertIn("function renderCandidateMapClusters(kakao, entries)", html)
         self.assertIn("function renderCandidateMapMarkers(kakao, entries, options = {})", html)
         self.assertIn("function focusCandidateMapEntry(entry, level = 4)", html)
@@ -2876,30 +3012,44 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const shortlistSortedRows = shortlistCandidateRows(allSortedRows, data.budgetEok);", render_body)
         self.assertIn("const shortlistRows = shortlistSortedRows.slice(0, Math.min(CANDIDATE_SHORTLIST_SIZE, shortlistSortedRows.length));", render_body)
         self.assertIn('const showingShortlist = candidateListMode !== "all";', render_body)
-        self.assertIn('candidateShortlistSummaryHtml(resultCount, rows.length, showingShortlist ? "shortlist" : "all")', render_body)
+        self.assertIn('candidateShortlistSummaryHtml(resultCount, shortlistRows.length, showingShortlist ? "shortlist" : "all")', render_body)
         self.assertIn('data-candidate-list-mode="shortlist"', html)
         self.assertIn('data-candidate-list-mode="all"', html)
         self.assertIn('${showingShortlist ? "" : candidateLoadMoreHtml(rows.length, allSortedRows.length)}', render_body)
         self.assertIn('candidateListModeButton.dataset.candidateListMode === "all" ? "all" : "shortlist"', click_body)
         self.assertIn('candidateListMode = "shortlist";', click_body)
-        self.assertIn("targetIndex >= CANDIDATE_SHORTLIST_SIZE", focus_body)
+        self.assertIn("const shortlistHasTarget = (currentBudgetData.shortlistCandidates || [])", focus_body)
+        self.assertIn("candidateListMode !== \"all\" && !shortlistHasTarget", focus_body)
         self.assertIn('candidateListMode = "all";', focus_body)
-        self.assertIn("const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.8;", html)
+        self.assertIn("const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.9;", html)
+        self.assertNotIn("const CANDIDATE_SHORTLIST_MAX_BUDGET_USAGE", html)
         self.assertIn("const CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE = 0.95;", html)
         self.assertIn("const CANDIDATE_SHORTLIST_CRITERIA = [", html)
-        self.assertIn('key:"budget", label:"예산 상한 활용", weight:45', html)
-        self.assertIn('key:"overall", label:"종합점수", weight:25', html)
-        self.assertIn('key:"market", label:"최근 시장 신호", weight:20', html)
+        self.assertNotIn('key:"review", label:"분석 판정"', html)
+        self.assertIn('key:"budget", label:"예산 활용", weight:35', html)
+        self.assertIn('key:"overall", label:"종합점수", weight:30', html)
+        self.assertIn('key:"market", label:"최근 시장 신호", weight:25', html)
         self.assertIn('key:"timing", label:"2년 가격 타이밍", weight:10', html)
         self.assertIn("function candidateBudgetUsageRatio(row, budgetEok)", html)
         self.assertIn("function candidateShortlistBudgetBand(row, budgetEok)", html)
         self.assertIn("function candidateShortlistBudgetScore(row, budgetEok)", html)
         self.assertIn("function candidateShortlistBudgetReason(row, budgetEok)", html)
-        self.assertIn("const nearBudgetRows = rows.filter(row => {", html)
-        self.assertIn("ratio !== null && ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE", html)
-        self.assertIn("const sourceRows = nearBudgetRows.length >= shortlistLimit ? nearBudgetRows : rows;", html)
-        self.assertIn("candidateShortlistBudgetBand(left, budgetEok) - candidateShortlistBudgetBand(right, budgetEok)", html)
+        self.assertNotIn("function candidateShortlistVerdict(row)", html)
+        self.assertNotIn("function candidateShortlistReviewRank(row)", html)
+        self.assertNotIn("function candidateShortlistReviewScore(row)", html)
+        self.assertNotIn("function candidateShortlistReviewReason(row)", html)
+        self.assertNotIn("분석 결과는 급매만 검토예요", html)
+        self.assertNotIn("const nearBudgetRows = rows.filter(row => {", html)
+        self.assertNotIn("ratio <= CANDIDATE_SHORTLIST_MAX_BUDGET_USAGE", html)
+        self.assertNotIn("&& candidateWithinPurchaseCap(row, budgetEok);", html)
+        self.assertNotIn("const sourceRows = nearBudgetRows.length >= shortlistLimit ? nearBudgetRows : rows;", html)
+        self.assertIn("return [...rows].sort((left, right) => (", html)
+        self.assertLess(
+            html.index("candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)"),
+            html.index("Math.abs((candidateBudgetUsageRatio(left, budgetEok) ?? 999) - 1)"),
+        )
         self.assertIn("candidateShortlistBudgetScore(right, budgetEok) - candidateShortlistBudgetScore(left, budgetEok)", html)
+        self.assertNotIn("candidateShortlistReviewRank(left) - candidateShortlistReviewRank(right)", html)
         self.assertIn("function candidateShortlistTiming(row)", html)
         self.assertIn("const series = sparklineSeries(row);", html)
         self.assertIn("const temperature = candidateMarketTemperature(row, series);", html)
@@ -2916,6 +3066,14 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function candidateShortlistScore(row, budgetEok)", html)
         self.assertIn("function shortlistCandidateRows(rows, budgetEok)", html)
         self.assertIn("function candidateShortlistReasonHtml(row, rank)", html)
+        self.assertNotIn("function candidateShortlistLabel(rank)", html)
+        self.assertNotIn('<span class="candidate-shortlist-reason-label">검토 이유</span>', html)
+        self.assertNotIn("const reviewLead = candidateShortlistReviewReason(row);", html)
+        self.assertIn("const reasonCopy = [budgetLead, reasonLead].filter(Boolean).join(\". \");", html)
+        self.assertNotIn('"먼저 보기";', html)
+        self.assertNotIn('"다음 보기";', html)
+        self.assertNotIn('"함께 보기";', html)
+        self.assertNotIn('`${rank}순위`', html)
         self.assertIn("function candidateShortlistRank(row)", html)
         self.assertIn("${showingShortlist && scoreDataReady ? candidateShortlistReasonHtml(item, candidateIndex + 1) : \"\"}", render_body)
         self.assertIn("candidateShortlistReasonHtml(item, candidateShortlistRank(item))", html)
@@ -2928,10 +3086,14 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-candidate-shortlist-info-close", html)
         self.assertIn("popover.hidden = !open", html)
         self.assertIn(".candidate-shortlist-first .candidate-shortlist-tab { flex:0 0 auto; width:auto;", html)
-        self.assertIn("추천 기준</strong> 예산 상한에 가까운 가격대 · 종합점수 · 시장 신호", html)
-        self.assertIn("내 예산 상한에 가까운 가격대를 먼저 보고, 그 안에서 조건이 좋은 곳", html)
-        self.assertIn("예산 상한의 ${percent}% 가격대예요", html)
-        self.assertIn("상한보다 많이 낮아 조건 확인용이에요", html)
+        self.assertIn("가격대를 먼저 자르지 않아요.", html)
+        self.assertIn("전체 후보에서 종합점수, 최근 가격·거래 흐름, 예산 활용도를 함께 보고 고릅니다.", html)
+        self.assertIn("가격대를 먼저 자르지 않고, 종합점수와 최근 가격·거래 흐름이 좋은", html)
+        self.assertNotIn("같은 상승률이라도 집값이 높을수록 자산 증가액이 커집니다.", html)
+        self.assertNotIn("매수 상한에 가까우면서 종합점수와 최근 가격·거래 흐름이 좋은", html)
+        self.assertNotIn("매수 상한의 90%~105% 후보가 없어요", html)
+        self.assertNotIn("추천 기준</strong> 예산 안 후보 · 예산 상한에 가까운 가격대", html)
+        self.assertNotIn("상한보다 많이 낮아 조건 확인용이에요", html)
         self.assertIn("고점 근처지만 종합과 시장 신호가 함께 받쳐줘요", html)
         self.assertIn("최근 2년 고점보다", html)
         self.assertIn("2년 가격 타이밍을 확인하고 있어요", html)
@@ -2968,16 +3130,16 @@ class FrontendApartmentSearchTest(unittest.TestCase):
     def test_candidate_comparison_uses_report_highlights_without_auto_summary(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
-        self.assertIn('<h2 id="comparisonTitle">사전 질문</h2>', html)
-        self.assertIn('id="comparisonClose" type="button" aria-label="비교 화면 닫기" hidden', html)
-        self.assertIn('class="comparison-stepper"', html)
-        self.assertIn('data-comparison-stepper-item="questions"', html)
-        self.assertIn('data-comparison-stepper-item="results"', html)
-        self.assertIn(".comparison-head { position:relative; display:grid; justify-items:center; gap:18px }", html)
-        self.assertIn(".comparison-head > div { display:grid; justify-items:center; width:100%; min-width:0 }", html)
-        self.assertIn("grid-template-columns:minmax(0,1fr) minmax(42px,88px) minmax(0,1fr)", html)
-        self.assertIn(".comparison-stepper-item:first-child { justify-self:end }", html)
-        self.assertIn(".comparison-stepper-item:last-child { justify-self:start }", html)
+        self.assertIn('<h2 id="comparisonTitle">후보 비교 결과</h2>', html)
+        self.assertIn('id="comparisonClose" type="button" aria-label="비교 화면 닫기">×</button>', html)
+        self.assertNotIn('class="comparison-stepper"', html)
+        self.assertNotIn('data-comparison-stepper-item="questions"', html)
+        self.assertNotIn('data-comparison-stepper-item="results"', html)
+        self.assertIn(".comparison-head { position:relative; display:flex; align-items:center; justify-content:space-between;", html)
+        self.assertIn(".comparison-head > div { display:block; width:100%; min-width:0 }", html)
+        self.assertNotIn("grid-template-columns:minmax(0,1fr) minmax(42px,88px) minmax(0,1fr)", html)
+        self.assertNotIn(".comparison-stepper-item:first-child", html)
+        self.assertNotIn(".comparison-stepper-item:last-child", html)
         self.assertIn(".comparison-close { position:absolute; top:0; right:0;", html)
         self.assertNotIn("점수와 필요한 돈을 먼저 보고, 아래에서 근거를 확인하세요.", html)
         self.assertNotIn("어떤 차이가 있는지 볼게요", html)
@@ -3021,13 +3183,14 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function comparisonPreferenceScore(row, preference = comparisonPreference)", html)
         self.assertIn("function comparisonContentHtml(rows, loading = {})", html)
         self.assertIn("let comparisonPreferenceQuestionIndex = 0;", html)
-        self.assertIn('let comparisonStep = "questions";', html)
-        self.assertIn("let comparisonQuestionsCompleted = false;", html)
+        self.assertIn('let comparisonStep = "results";', html)
+        self.assertNotIn("let comparisonQuestionsCompleted", html)
         self.assertNotIn("먼저 기준을 골라주세요", html)
-        self.assertIn('comparisonTitle.textContent = "사전 질문";', html)
-        self.assertIn('comparisonTitle.textContent = "후보 비교";', html)
-        self.assertIn('questionStep?.classList.add("is-active");', html)
-        self.assertIn('questionStep?.classList.add("is-complete");', html)
+        self.assertIn('comparisonTitle.textContent = "후보 비교 결과";', html)
+        self.assertNotIn('comparisonTitle.textContent = "사전 질문";', html)
+        self.assertNotIn('comparisonTitle.textContent = "후보 비교";', html)
+        self.assertNotIn('questionStep?.classList.add("is-active");', html)
+        self.assertNotIn('questionStep?.classList.add("is-complete");', html)
         self.assertIn('type="radio" name="comparisonPreference_${esc(group.key)}"', html)
         self.assertNotIn("한 가지씩 고르면, 내 기준에 가장 잘 맞는 후보를 먼저 보여드릴게요.", html)
         self.assertIn("먼저 하나를 선택해 주세요", html)
@@ -3036,7 +3199,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("다음", html)
         self.assertIn("추천 보기", html)
         self.assertNotIn("function comparisonResultHeadHtml()", html)
-        self.assertIn("기준 다시 선택", html)
+        self.assertNotIn("기준 다시 선택", html)
         self.assertNotIn("comparison-result-head", html)
         self.assertNotIn("comparison-result-step", html)
         self.assertNotIn('${esc(comparisonPreferenceLabel("type", comparisonPreference.type))} · ${esc(comparisonPreferenceLabel("period", comparisonPreference.period))} · ${esc(comparisonPreferenceLabel("priority", comparisonPreference.priority))} 기준</span>', html)
@@ -3049,16 +3212,15 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("background:#edf4ff; color:#2f82f6; font-size:17px; font-weight:800;", html)
         self.assertIn("comparisonPreferenceQuestionIndex += 1;", html)
         self.assertIn("comparisonPreferenceQuestionIndex = Math.max(0, comparisonPreferenceQuestionIndex - 1);", html)
-        self.assertIn("comparisonPreferenceQuestionIndex = 0;", html)
-        self.assertIn('if (comparisonStep === "questions") {', html)
-        self.assertIn("return comparisonPreferenceHtml();", html)
-        self.assertIn('comparisonStep = "questions";', html)
+        self.assertNotIn('if (comparisonStep === "questions") {', html)
+        self.assertNotIn("return comparisonPreferenceHtml();", html)
+        self.assertNotIn('comparisonStep = "questions";', html)
         self.assertIn('comparisonStep = "results";', html)
-        self.assertIn("if (comparisonQuestionsCompleted && comparisonPreferenceComplete())", html)
-        self.assertIn("comparisonQuestionsCompleted = true;", html)
-        self.assertIn("comparisonQuestionsCompleted = false;", html)
-        self.assertIn("[data-comparison-preference-edit]", html)
-        self.assertIn('<button class="comparison-result-edit" type="button" data-comparison-preference-edit>기준 다시 선택</button>', html)
+        self.assertNotIn("if (comparisonQuestionsCompleted && comparisonPreferenceComplete())", html)
+        self.assertNotIn("comparisonQuestionsCompleted = true;", html)
+        self.assertNotIn("comparisonQuestionsCompleted = false;", html)
+        self.assertNotIn("[data-comparison-preference-edit]", html)
+        self.assertNotIn('<button class="comparison-result-edit" type="button" data-comparison-preference-edit>기준 다시 선택</button>', html)
         self.assertIn("어떤 선택이 더 편하세요?", html)
         self.assertIn("이 집을 얼마나 오래 볼 생각인가요?", html)
         self.assertIn("가장 중요하게 보는 건 뭐예요?", html)
@@ -3166,7 +3328,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function closeCandidateMapView()", html)
         self.assertIn("const shouldReturnToComparison = candidateMapReturnToComparison;", html)
         self.assertIn("candidateMapReturnToComparison = false;", html)
-        self.assertIn('void openComparison({ preserveStep:true });', html)
+        self.assertIn("if (shouldReturnToComparison) requestAnimationFrame(() => void openComparison());", html)
         self.assertIn("closeCandidateMapView();", html)
         self.assertIn('const candidateViewButton = event.target.closest("[data-candidate-view]");', html)
         self.assertIn('if (candidateViewButton.dataset.candidateMapKey) candidateMapSelectedKey = candidateViewButton.dataset.candidateMapKey;', html)
@@ -3674,6 +3836,83 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertNotIn("position:static; display:grid; width:52px; height:52px", html)
 
+    def test_floating_candidate_map_opens_with_visible_shortlist_rows(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        rows_match = re.search(
+            r"function budgetCandidateMapRowsForOpen\b(?P<body>.*?)"
+            r"\n    async function renderCandidateMap",
+            html,
+            re.DOTALL,
+        )
+        mode_match = re.search(
+            r"function setCandidateViewMode\b(?P<body>.*?)"
+            r"\n    function closeCandidateMapView",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(rows_match)
+        self.assertIsNotNone(mode_match)
+        rows_body = rows_match.group("body")
+        mode_body = mode_match.group("body")
+        self.assertIn("const visibleRows = currentBudgetData?.visibleCandidates || [];", rows_body)
+        self.assertIn("const allRows = currentBudgetData?.candidates || [];", rows_body)
+        self.assertIn("if (!candidateMapSelectedKey) return visibleRows.length ? visibleRows : allRows;", rows_body)
+        self.assertIn("const selected = allRows.find(item => candidateIdentityKey(item) === candidateMapSelectedKey);", rows_body)
+        self.assertIn("return selected ? [selected, ...visibleRows] : (visibleRows.length ? visibleRows : allRows);", rows_body)
+        self.assertIn(": budgetCandidateMapRowsForOpen();", mode_body)
+
+    def test_candidate_map_funding_filters_toggle_three_budget_states(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        filters_match = re.search(
+            r"function candidateMapFundingFiltersHtml\b(?P<body>.*?)"
+            r"\n    function candidateMapViewHtml",
+            html,
+            re.DOTALL,
+        )
+        status_match = re.search(
+            r"function candidateMapStatus\b(?P<body>.*?)"
+            r"\n    function candidateAdditionalFundingSummary",
+            html,
+            re.DOTALL,
+        )
+        visible_match = re.search(
+            r"function candidateMapVisibleLocatedEntries\b(?P<body>.*?)"
+            r"\n    function syncCandidateMapFundingFilterControls",
+            html,
+            re.DOTALL,
+        )
+        refresh_match = re.search(
+            r"function refreshCandidateMapFundingView\b(?P<body>.*?)"
+            r"\n    function renderCandidateMapMarkers",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(filters_match)
+        self.assertIsNotNone(status_match)
+        self.assertIsNotNone(visible_match)
+        self.assertIsNotNone(refresh_match)
+        self.assertIn("const CANDIDATE_MAP_ROOMY_BUDGET_USAGE = 0.9;", html)
+        self.assertIn('key:"short", label:"추가 자금 필요", className:"is-short"', html)
+        self.assertIn('key:"fit", label:"자금 적정", className:""', html)
+        self.assertIn('key:"roomy", label:"자금 여유", className:"is-roomy"', html)
+        self.assertIn('role="group" aria-label="자금 상태 보기"', filters_match.group("body"))
+        self.assertIn('type="checkbox" data-candidate-map-funding-filter="${esc(item.key)}"', filters_match.group("body"))
+        self.assertIn("candidateMapFundingFilters.has(item.key)", filters_match.group("body"))
+        self.assertIn('return { key:"short", className:"is-short", label:"추가자금 필요" };', status_match.group("body"))
+        self.assertIn("price / budget < CANDIDATE_MAP_ROOMY_BUDGET_USAGE", status_match.group("body"))
+        self.assertIn('return { key:"roomy", className:"is-roomy", label:"자금 여유" };', status_match.group("body"))
+        self.assertIn("candidateMapFundingFilters.has(candidateMapFundingKey(entry.item))", visible_match.group("body"))
+        self.assertIn("showCandidateMapFilteredEmptyState();", refresh_match.group("body"))
+        self.assertIn("renderCandidateMapMarkers(kakao, visibleEntries", refresh_match.group("body"))
+        self.assertIn("renderCandidateMapClusters(kakao, visibleEntries);", refresh_match.group("body"))
+        self.assertIn("setCandidateMapFundingFilter(fundingFilter.dataset.candidateMapFundingFilter, fundingFilter.checked);", html)
+        self.assertIn(".candidate-map-marker.is-roomy", html)
+        self.assertIn(".candidate-map-state {\n      position:absolute; z-index:5;", html)
+        self.assertIn("pointer-events:none;", html)
+        self.assertIn(".candidate-map-map-tools {\n      position:absolute; z-index:6;", html)
+
     def test_flow_score_badge_opens_the_score_sheet_like_total_score(self):
         html = APP_HTML.read_text(encoding="utf-8")
         lookup_match = re.search(
@@ -3708,6 +3947,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('const label = measurable ? `${Math.round(score)}점` : "측정 불가";', html)
         self.assertIn('최근 시장 신호 ${esc(label)}', html)
         self.assertIn("function candidateTopScoreBadgesHtml(item)", html)
+        self.assertIn("function candidateHasScoreData(item)", html)
+        self.assertIn("function candidateShouldWaitForScores(item)", html)
+        self.assertIn("if (candidateShouldWaitForScores(item)) return \"\";", html)
+        self.assertNotIn("if (currentBudgetData?.candidateScoreDataReady === false) return \"\";", html)
         self.assertIn("const badges = `${candidateLocationScoreBadgeHtml(item)}${candidateFlowScoreBadgeHtml(item)}`;", html)
         self.assertIn("signals:item?.signals || {}", html)
         self.assertIn("locationScore:item?.locationScore || null", html)
@@ -3841,6 +4084,95 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("candidateMapContainer !== container", body)
         self.assertIn("candidateMap?.setDraggable?.(true);", body)
         self.assertIn("candidateMap?.setZoomable?.(true);", body)
+
+    def test_candidate_map_distance_measurement_waits_for_start_and_end_clicks(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        render_match = re.search(
+            r"async function renderCandidateMap\b(?P<body>.*?)"
+            r"\n    function setCandidateViewMode",
+            html,
+            re.DOTALL,
+        )
+        select_match = re.search(
+            r"function appendCandidateMapEntry\b(?P<body>.*?)"
+            r"\n    function candidateMapDistrictName",
+            html,
+            re.DOTALL,
+        )
+        reset_match = re.search(
+            r"function resetCandidateMap\b(?P<body>.*?)"
+            r"\n    function setCandidateMapState",
+            html,
+            re.DOTALL,
+        )
+        click_match = re.search(
+            r"function handleCandidateMapMeasurementClick\b(?P<body>.*?)"
+            r"\n    function setCandidateMapMeasurementEnabled",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(render_match)
+        self.assertIsNotNone(select_match)
+        self.assertIsNotNone(reset_match)
+        self.assertIsNotNone(click_match)
+        self.assertIn('data-candidate-map-measure-toggle aria-pressed="${candidateMapMeasurementEnabled ? "true" : "false"}" aria-label="${candidateMapMeasurementEnabled ? "거리 측정 중" : "거리 측정"}"', html)
+        self.assertIn("function setCandidateMapMeasurementEnabled(enabled)", html)
+        self.assertIn("let candidateMapMeasurementStart = null;", html)
+        self.assertIn('button.setAttribute("aria-label", candidateMapMeasurementEnabled ? "거리 측정 중" : "거리 측정");', html)
+        self.assertIn('if (text) text.textContent = candidateMapMeasurementEnabled ? "측정중" : "측정";', html)
+        self.assertIn("function beginCandidateMapMeasurement(kakao, start)", html)
+        self.assertIn("function handleCandidateMapMeasurementClick(kakao, position)", html)
+        self.assertIn("new kakao.maps.Polyline({", html)
+        self.assertIn("candidateMapMeasurementLine.getLength()", html)
+        self.assertIn('class="candidate-map-measure-label-copy"', html)
+        self.assertIn('class="candidate-map-measure-close" type="button" data-candidate-map-measure-close aria-label="거리 측정 끄기"', html)
+        self.assertIn('const close = event.target.closest("[data-candidate-map-measure-close]");', html)
+        self.assertIn("setCandidateMapMeasurementEnabled(false);", html)
+        self.assertIn("도보 약 ${esc(candidateMapWalkMinutes(meters))}분", html)
+        self.assertIn('kakao.maps.event.addListener(candidateMap, "mousemove", event => {', render_match.group("body"))
+        self.assertIn("if (handleCandidateMapMeasurementClick(kakao, event?.latLng)) return;", render_match.group("body"))
+        self.assertIn("handleCandidateMapMeasurementClick(candidateMapKakao, position);", select_match.group("body"))
+        self.assertIn('candidateMapMeasureStatus("시작점을 눌러주세요");', html)
+        self.assertIn('candidateMapMeasureStatus("끝 지점을 눌러주세요");', html)
+        self.assertIn("if (candidateMapMeasurementFixed) return true;", click_match.group("body"))
+        self.assertIn('candidateMapMeasureStatus("X를 누르면 측정이 꺼져요");', click_match.group("body"))
+        self.assertIn(".candidate-map-measure-dot {\n      width:8px; height:8px; border:0;", html)
+        self.assertIn("clearCandidateMapMeasurementOverlays();", reset_match.group("body"))
+        self.assertIn("class Polyline {", html)
+        self.assertIn("function mapDistanceMeters(left, right)", html)
+
+    def test_candidate_map_requests_all_visible_redevelopment_zones(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        match = re.search(
+            r"async function renderCandidateMapRedevelopmentZones\b(?P<body>.*?)"
+            r"\n    function scheduleCandidateMapRedevelopmentZones",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(match)
+        body = match.group("body")
+        self.assertIn("const CANDIDATE_MAP_REDEVELOPMENT_REQUEST_LIMIT = 3000;", html)
+        self.assertIn("limit=${CANDIDATE_MAP_REDEVELOPMENT_REQUEST_LIMIT}", body)
+        self.assertNotIn("payload.zones.slice(0, 20)", body)
+        self.assertIn("주변 정비구역 ${candidateMapRedevelopmentLayers.length.toLocaleString(\"ko-KR\")}곳 표시 중", body)
+
+    def test_candidate_map_preview_puts_rank_reason_above_apartment_name(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        preview_match = re.search(
+            r"function candidateMapPreviewHtml\b(?P<body>.*?)"
+            r"\n    function candidateMapUsesBottomSheet",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(preview_match)
+        body = preview_match.group("body")
+        self.assertLess(
+            body.index("candidateShortlistReasonHtml(item, candidateShortlistRank(item))"),
+            body.index('<div class="candidate-top"'),
+        )
 
     def test_candidate_map_mobile_sheet_starts_compact_and_swipes_full(self):
         html = APP_HTML.read_text(encoding="utf-8")

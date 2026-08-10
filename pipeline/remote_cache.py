@@ -1,7 +1,7 @@
 """Supabase Storage 기반 영속 캐시.
 
-Render의 로컬 파일은 재배포/재시작 때 사라질 수 있으므로, 자막과 검색 인덱스는
-가능하면 Supabase Storage에도 저장해 로컬/배포 환경이 같은 캐시를 공유한다.
+서버의 로컬 파일은 재배포/재시작 때 사라질 수 있으므로, 자막과 검색 인덱스는
+필요하면 Supabase Storage에도 저장해 로컬/배포 환경이 같은 캐시를 공유한다.
 """
 import hashlib
 import json

@@ -1380,6 +1380,26 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
     return matches
 
 
+def _dedupe_transactions(transactions):
+    deduped = []
+    seen = set()
+    for item in transactions:
+        key = (
+            item.get("apartment"),
+            item.get("dealDate"),
+            item.get("dealAmountManwon") or item.get("depositManwon"),
+            item.get("exclusiveArea"),
+            item.get("floor"),
+            item.get("transactionKind"),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+    deduped.sort(key=lambda row: row.get("dealDate", ""), reverse=True)
+    return deduped
+
+
 def transactions_for_apartment(
     name,
     region="",
@@ -1907,6 +1927,19 @@ def area_options_for_apartment(
         lookback_months=lookback_months,
         entity=entity,
     )
+    if transaction_kind_for_apartment(name, region) == TRANSACTION_KIND_PRESALE:
+        rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
+        if rows:
+            transactions = _dedupe_transactions([
+                *transactions,
+                *_transactions_for_apartment_kind(
+                    rows,
+                    name,
+                    "",
+                    lookback_months,
+                    TRANSACTION_KIND_PRESALE,
+                ),
+            ])
     clusters = []
     for transaction in sorted(
         transactions,

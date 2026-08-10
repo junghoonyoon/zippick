@@ -1362,15 +1362,35 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         for entity in matches:
             city_key = real_estate_search.compact(entity.get("city"))
             district_key = real_estate_search.compact(entity.get("district"))
+            dong_key = real_estate_search.compact(entity.get("legalDong"))
             entity_regions = {
                 district_key,
                 city_key,
                 real_estate_search.compact(f"{entity.get('city') or ''} {entity.get('district') or ''}"),
             }
+            # 사람들은 '서울 동작구 대방동'처럼 법정동까지 붙여서 검색한다.
+            # 자치구까지만 비교하면 이런 검색이 통째로 0건이 된다.
+            if dong_key:
+                entity_regions.update({
+                    dong_key,
+                    real_estate_search.compact(
+                        f"{entity.get('district') or ''} {entity.get('legalDong') or ''}"
+                    ),
+                    real_estate_search.compact(
+                        f"{entity.get('city') or ''} {entity.get('district') or ''} "
+                        f"{entity.get('legalDong') or ''}"
+                    ),
+                })
             if (
                 region_key in entity_regions
                 or (city_key and district_key and city_key in region_key and region_key.endswith(district_key))
                 or (district_key and _soft_region_key(region_key).endswith(_soft_region_key(district_key)))
+                or (
+                    dong_key
+                    and district_key
+                    and district_key in region_key
+                    and region_key.endswith(dong_key)
+                )
             ):
                 regional_matches.append(entity)
         matches = regional_matches
@@ -1620,16 +1640,36 @@ def _candidate_score(row, entity, purpose, priority, commute, price_strategy):
 
 def _budget_near_sort_key(row):
     try:
-        gap = abs(float(row.get("budgetGapEok", 999)))
+        raw_gap = float(row.get("budgetGapEok", 999))
     except (TypeError, ValueError):
-        gap = 999
+        raw_gap = 999
+    budget_bucket = 0 if raw_gap >= 0 else 1
+    gap = raw_gap if raw_gap >= 0 else abs(raw_gap)
     return (
+        budget_bucket,
         row.get("_fitRank", 99),
         gap,
         -row.get("_score", 0),
         -row.get("midPriceEok", 0),
         row.get("name", ""),
     )
+
+
+def _limit_budget_near_rows(rows, result_limit, budget_eok):
+    """Keep the closest candidates, including rows within the 5% stretch cap."""
+    if len(rows) <= result_limit:
+        return rows
+    ordered = sorted(rows, key=_budget_near_sort_key)
+    def closeness_key(row):
+        price = float(row.get("midPriceEok") or 0)
+        return (
+            abs(price - budget_eok),
+            1 if price > budget_eok else 0,
+            -float(row.get("_score") or 0),
+            row.get("name", ""),
+        )
+    selected = sorted(ordered, key=closeness_key)[:result_limit]
+    return sorted(selected, key=_budget_near_sort_key)
 
 
 def _priority_reason(row, priority):
@@ -2896,7 +2936,7 @@ def budget_candidates(
     total_matched_count = len(unique_rows)
     result_limit = max(1, config.BUDGET_ALL_MATCHES_RESULT_LIMIT)
     if all_matches and len(unique_rows) > result_limit:
-        unique_rows = unique_rows[:result_limit]
+        unique_rows = _limit_budget_near_rows(unique_rows, result_limit, budget_eok)
 
     progress("policy_check", processed=0, total=len(unique_rows))
     _attach_policy_impacts(unique_rows, policy_profile)

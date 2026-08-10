@@ -621,7 +621,19 @@
     .power-advanced { grid-column:1 / -1; border-top:1px solid #edf0f4; margin-top:4px; padding-top:4px }
     .power-advanced > summary { padding:10px 0; color:#596273; font-size:15px; font-weight:800; cursor:pointer }
     .power-advanced-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:12px; padding-top:6px }
-    .power-calculate { grid-column:1 / -1 }
+    .power-actions { grid-column:1 / -1; display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px }
+    .power-calculate { grid-column:auto }
+    .power-detail-action {
+      min-width:170px; border:1px solid #d7deea !important; background:#fff !important; color:#475467 !important;
+      box-shadow:none !important;
+    }
+    .power-detail-action:hover { border-color:#9fc8ff !important; background:#f7fbff !important; color:#1267d8 !important }
+    .budget-form .power-reset {
+      grid-column:1 / -1; justify-self:start; min-height:28px !important; border:0 !important; padding:0 !important;
+      background:transparent !important; color:#8b95a1 !important; font-size:13px !important; font-weight:800 !important;
+      box-shadow:none !important;
+    }
+    .power-reset:hover { background:transparent !important; color:#667085 !important; transform:none !important }
     .purchase-power-result { display:none; grid-column:1 / -1; margin-top:4px }
     .purchase-power-result.show { display:block }
     .purchase-power-result.is-sheet { margin-top:0 }
@@ -629,8 +641,11 @@
     .power-result-kicker { color:#1267d8; font-size:16px; font-weight:900 }
     .power-result-value { margin-top:4px; color:#172033; font-size:29px; font-weight:900; letter-spacing:-.03em }
     .power-result-detail { margin-top:7px; color:#586577; font-size:14px; font-weight:650; line-height:1.55 }
+    .power-result-change { margin-top:12px; border-radius:14px; padding:12px 14px; background:#edf4ff; color:#174ea6; font-size:14px; font-weight:750; line-height:1.55 }
+    .power-result-change strong { color:#0f5fd1; font-weight:900 }
     .power-result-breakdown { margin-top:16px }
     .power-result-row { display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:center; gap:10px; padding:12px 0 }
+    .power-result-row.has-stacked-meta { align-items:start; row-gap:2px }
     .power-result-row-no { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#eaf3ff; color:#1267d8; font-size:12px; font-weight:900 }
     .power-result-row-copy { min-width:0 }
     .power-result-row-label { display:block; color:#303846; font-size:14px; font-weight:800; line-height:1.35 }
@@ -640,6 +655,8 @@
     .power-result-note { margin:9px 0 0; color:#7a8493; font-size:14px; font-weight:600; line-height:1.45 }
     .power-result-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:13px }
     .budget-form .power-result-actions button { grid-column:auto; min-height:38px; width:auto; border:1px solid #cad5e3; padding:0 12px; background:#fff; color:#475467; font-size:13px; box-shadow:none }
+    .purchase-power-result.is-sheet .power-result-row { grid-template-columns:28px minmax(0,1fr) auto; column-gap:12px; row-gap:0; padding:15px 0 }
+    .purchase-power-result.is-sheet .power-result-row-meta { margin-top:0; font-size:14px }
     .preference-step { transition:opacity .15s ease,background .15s ease }
     .preference-step.is-locked { background:#f6f7f9; opacity:.64 }
     .preference-step.is-locked .preference-fields { pointer-events:none }
@@ -1045,6 +1062,7 @@
     .candidate-map-state {
       position:absolute; z-index:5; inset:0; display:grid; place-content:center; gap:10px; padding:28px;
       background:rgba(247,249,252,.94); color:#667085; text-align:center;
+      pointer-events:none;
     }
     .candidate-map-state[hidden] { display:none }
     .candidate-map-state strong { color:#263244; font-size:18px; font-weight:900; line-height:1.4 }
@@ -1075,6 +1093,10 @@
     .candidate-map-marker.is-short {
       --candidate-map-funding-tone:#d97706;
       --candidate-map-funding-shadow:rgba(217,119,6,.28);
+    }
+    .candidate-map-marker.is-roomy {
+      --candidate-map-funding-tone:#147a55;
+      --candidate-map-funding-shadow:rgba(20,122,85,.24);
     }
     .candidate-map-marker.is-unknown {
       --candidate-map-funding-tone:#65758b;
@@ -1384,8 +1406,8 @@
       padding-bottom:calc(40px + env(safe-area-inset-bottom));
     }
     .candidate-map-map-tools {
-      position:absolute; z-index:3; top:12px; left:50%; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:7px;
-      width:max-content; max-width:calc(100% - 24px); transform:translateX(-50%); pointer-events:none;
+      position:absolute; z-index:6; top:14px; right:12px; display:grid; justify-items:end; gap:8px;
+      width:max-content; max-width:calc(100% - 24px); pointer-events:none;
     }
     .candidate-map-compare-cart {
       flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
@@ -1395,24 +1417,80 @@
     .candidate-map-compare-cart[hidden] { display:none }
     .candidate-map-compare-cart:disabled { background:#e5e8eb; color:#8b95a1; box-shadow:none; cursor:default }
     .candidate-map-compare-cart:focus-visible { outline:3px solid rgba(49,130,246,.24); outline-offset:3px }
-    .candidate-map-legend {
-      display:flex; align-items:center; gap:8px; min-height:34px; border:1px solid rgba(224,230,238,.9);
+    .candidate-map-funding-filters {
+      pointer-events:auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px;
+      max-width:min(520px,calc(100vw - 92px)); min-height:34px; margin:0; border:1px solid rgba(224,230,238,.9);
+      border-radius:14px; padding:7px; background:rgba(255,255,255,.94);
+      box-shadow:0 5px 16px rgba(24,35,52,.12); color:#4e5968; font-size:13px; font-weight:850;
+      line-height:1.35; backdrop-filter:blur(10px);
+    }
+    .candidate-map-funding-filters[hidden] { display:none }
+    .candidate-map-funding-filter {
+      display:inline-flex; align-items:center; gap:5px; min-height:28px; border:1px solid transparent;
+      border-radius:999px; padding:4px 8px 4px 6px; background:transparent; white-space:nowrap; cursor:pointer;
+    }
+    .candidate-map-funding-filter:hover { background:#f4f7fb }
+    .candidate-map-funding-filter:has(input:checked) { border-color:#d7e7ff; background:#eff6ff; color:#1767c5 }
+    .candidate-map-funding-filter input { width:15px; height:15px; margin:0; accent-color:#3182f6 }
+    .candidate-map-funding-swatch { width:9px; height:9px; border-radius:3px; background:#191f28 }
+    .candidate-map-funding-swatch.is-short { background:#d97706 }
+    .candidate-map-funding-swatch.is-roomy { background:#147a55 }
+    .candidate-map-tool-rail {
+      pointer-events:auto; display:grid; overflow:hidden; width:58px; border:1px solid rgba(224,230,238,.92);
+      border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 8px 22px rgba(24,35,52,.16);
+      backdrop-filter:blur(10px);
+    }
+    .candidate-map-layer-toggle {
+      pointer-events:auto; display:grid; justify-items:center; align-content:center; gap:4px; min-height:62px;
+      border:0; border-radius:0; padding:7px 4px; background:transparent; color:#191f28;
+      font-size:12px; font-weight:900; line-height:1.15; white-space:nowrap; cursor:pointer;
+    }
+    .candidate-map-layer-toggle input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none }
+    .candidate-map-layer-toggle:has(input:checked) { background:#3182f6; color:#fff }
+    .candidate-map-measure-toggle {
+      pointer-events:auto; display:grid; justify-items:center; align-content:center; gap:4px; min-height:62px;
+      border:0; border-top:1px solid #edf0f4; border-radius:0; padding:7px 4px; background:transparent;
+      color:#191f28; font:inherit; font-size:12px; font-weight:900; line-height:1.15; white-space:nowrap; cursor:pointer;
+    }
+    .candidate-map-measure-toggle[aria-pressed="true"] {
+      background:#3182f6; color:#fff;
+    }
+    .candidate-map-layer-toggle:focus-within,
+    .candidate-map-measure-toggle:focus-visible { outline:3px solid rgba(49,130,246,.24); outline-offset:-3px }
+    .candidate-map-tool-icon {
+      display:grid; place-items:center; width:24px; height:24px; color:currentColor;
+    }
+    .candidate-map-tool-icon svg { width:24px; height:24px; stroke:currentColor; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round }
+    .candidate-map-tool-text { display:block; font-size:12px; font-weight:900; line-height:1.15 }
+    .candidate-map-measure-status {
+      display:flex; align-items:center; min-height:34px; margin:0; border:1px solid rgba(224,230,238,.9);
       border-radius:999px; padding:7px 11px; background:rgba(255,255,255,.94);
-      box-shadow:0 5px 16px rgba(24,35,52,.12); color:#4e5968; font-size:14px; font-weight:800;
+      box-shadow:0 5px 16px rgba(24,35,52,.12); color:#4e5968; font-size:12px; font-weight:800;
       line-height:1.35; white-space:nowrap; backdrop-filter:blur(10px);
     }
-    .candidate-map-legend-item { display:inline-flex; align-items:center; gap:4px }
-    .candidate-map-legend-swatch { width:9px; height:9px; border-radius:3px; background:#191f28 }
-    .candidate-map-legend-swatch.is-short { background:#d97706 }
-    .candidate-map-layer-toggle {
-      pointer-events:auto; display:inline-flex; align-items:center; gap:7px; min-height:34px;
-      border:1px solid rgba(224,230,238,.9); border-radius:999px; padding:7px 11px;
-      background:rgba(255,255,255,.94); box-shadow:0 5px 16px rgba(24,35,52,.12);
-      color:#4e5968; font-size:14px; font-weight:850; line-height:1.35; white-space:nowrap;
-      backdrop-filter:blur(10px); cursor:pointer;
+    .candidate-map-measure-status[hidden] { display:none }
+    .candidate-map-measure-label {
+      display:inline-flex; align-items:center; gap:6px; color:#191f28; text-align:left;
+      pointer-events:none;
     }
-    .candidate-map-layer-toggle input { width:16px; height:16px; margin:0; accent-color:#3182f6 }
-    .candidate-map-layer-toggle:has(input:checked) { border-color:#b7dcff; background:rgba(239,246,255,.96); color:#1267d8 }
+    .candidate-map-measure-label-copy {
+      display:grid; gap:2px; min-width:112px; border:1px solid rgba(49,130,246,.24);
+      border-radius:12px; padding:8px 11px; background:rgba(255,255,255,.97);
+      box-shadow:0 8px 22px rgba(24,35,52,.16); backdrop-filter:blur(10px);
+    }
+    .candidate-map-measure-label-copy strong { color:#1267d8; font-size:16px; font-weight:950; line-height:1.2 }
+    .candidate-map-measure-label-copy span { color:#4e5968; font-size:12px; font-weight:800; line-height:1.35; white-space:nowrap }
+    .candidate-map-measure-close {
+      pointer-events:auto; display:inline-grid; place-items:center; flex:0 0 auto; width:26px; height:26px;
+      border:1px solid rgba(224,230,238,.95); border-radius:999px; padding:0; background:rgba(255,255,255,.97);
+      box-shadow:0 6px 16px rgba(24,35,52,.18); color:#4e5968; font:inherit; font-size:17px;
+      font-weight:950; line-height:1; cursor:pointer; backdrop-filter:blur(10px);
+    }
+    .candidate-map-measure-close:hover { background:#f2f4f6; color:#191f28 }
+    .candidate-map-measure-close:focus-visible { outline:3px solid rgba(49,130,246,.24); outline-offset:3px }
+    .candidate-map-measure-dot {
+      width:8px; height:8px; border:0; border-radius:999px; background:#1267d8; pointer-events:none;
+    }
     .redevelopment-zone-label {
       display:grid; gap:2px; max-width:220px; border:1px solid rgba(49,130,246,.22);
       border-radius:12px; padding:8px 10px; background:rgba(255,255,255,.96);
@@ -1421,6 +1499,13 @@
     }
     .redevelopment-zone-label strong { font-size:13px; font-weight:900; line-height:1.35 }
     .redevelopment-zone-label span { color:#667085; font-size:12px; font-weight:750; line-height:1.35 }
+    .redevelopment-zone-name-label {
+      display:grid; gap:1px; max-width:190px; border:1.5px solid rgba(255,255,255,.92); border-radius:7px;
+      padding:3px 8px 4px; background:#f05a28; box-shadow:0 4px 10px rgba(24,35,52,.2);
+      color:#fff; font-size:12px; font-weight:900; line-height:1.2; text-align:center;
+      word-break:keep-all; overflow-wrap:anywhere; pointer-events:none;
+    }
+    .redevelopment-zone-name-label small { color:rgba(255,255,255,.88); font-size:10px; font-weight:800; line-height:1.2 }
     .candidate-map-caption {
       display:flex; align-items:center; min-height:34px; margin:0; border:1px solid rgba(224,230,238,.9);
       border-radius:999px; padding:7px 11px; background:rgba(255,255,255,.94);
@@ -1452,7 +1537,7 @@
       .candidate-map-sheet-content { padding:28px 24px 30px }
       .candidate-map-sheet-actions { padding:16px 24px 20px }
       .candidate-map-map-tools {
-        left:calc(var(--candidate-map-panel-width) + (100% - var(--candidate-map-panel-width)) / 2);
+        right:12px;
       }
       .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) {
         --candidate-map-panel-width:0px;
@@ -1460,7 +1545,7 @@
       }
       .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-canvas { grid-column:1 }
       .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-state { left:0 }
-      .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-map-tools { left:50% }
+      .candidate-map-shell:not(:has(.candidate-map-preview:not([hidden]))) .candidate-map-map-tools { right:12px }
     }
     .candidate-sort-label { color:#475467; font-size:12px; font-weight:900 }
     .candidate-filter-group {
@@ -2216,6 +2301,31 @@
     .location-score-bar { grid-column:1 / -1; height:7px; border-radius:999px; background:#edf1f5; overflow:hidden }
     .location-score-fill { display:block; height:100%; border-radius:999px; background:#3182f6 }
     .location-score-note { margin:0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.55 }
+    .verdict-card { display:grid; gap:14px; margin-bottom:18px; border:1px solid #e5e8eb; border-radius:18px; padding:18px }
+    .verdict-card-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px }
+    .verdict-card-name { color:#191f28; font-size:15px; font-weight:850; line-height:1.4 }
+    .verdict-card-price { color:#4e5968; font-size:14px; font-weight:750; white-space:nowrap }
+    .verdict-headline { margin:0; color:#191f28; font-size:22px; font-weight:900; line-height:1.35 }
+    .verdict-sub { margin:6px 0 0; color:#4e5968; font-size:14px; font-weight:650; line-height:1.6 }
+    .verdict-cost { display:grid; gap:7px; border-radius:14px; padding:14px 15px; background:#f7f8fa }
+    .verdict-cost-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; font-size:14px; font-weight:650 }
+    .verdict-cost-row span:first-child { color:#4e5968 }
+    .verdict-cost-row span:last-child { color:#191f28; font-weight:750; white-space:nowrap }
+    .verdict-cost-row.is-total { margin-top:3px; border-top:1px solid #e5e8eb; padding-top:9px }
+    .verdict-cost-row.is-total span { color:#191f28; font-weight:900 }
+    .verdict-record { display:grid; gap:9px; border-top:1px solid #edf0f4; padding-top:15px }
+    .verdict-record-title { margin:0; color:#191f28; font-size:16px; font-weight:850; line-height:1.4 }
+    .verdict-record-copy { margin:0; color:#667085; font-size:13px; font-weight:650; line-height:1.6 }
+    .verdict-dots { display:flex; flex-wrap:wrap; gap:4px }
+    .verdict-dots i { width:20px; height:20px; border-radius:5px; background:#e5e8eb }
+    .verdict-dots i.is-hit { background:#3182f6 }
+    .verdict-legend { display:flex; flex-wrap:wrap; gap:14px; color:#667085; font-size:13px; font-weight:650 }
+    .verdict-legend b { display:inline-block; width:9px; height:9px; margin-right:6px; border-radius:3px; background:#e5e8eb; vertical-align:0 }
+    .verdict-legend b.is-hit { background:#3182f6 }
+    .verdict-risk { border-radius:14px; padding:13px 15px; background:#fff0ed; color:#b42318; font-size:14px; font-weight:750; line-height:1.6 }
+    .verdict-notes { display:grid; gap:8px; border-top:1px solid #edf0f4; padding-top:15px; color:#4e5968; font-size:14px; font-weight:650; line-height:1.6 }
+    .verdict-pending { border-radius:14px; padding:13px 15px; background:#f7f8fa; color:#8b95a1; font-size:13px; font-weight:700; line-height:1.6 }
+    .verdict-fine { margin:0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.55 }
     .signal-peer-section { margin-top:4px; border-top:1px solid #edf0f4; padding-top:24px }
     .signal-peer-title { margin:0; color:#191f28; font-size:17px; font-weight:850; line-height:1.4 }
     .signal-peer-description { margin:7px 0 0; color:#667085; font-size:14px; font-weight:600; line-height:1.6 }
@@ -2289,33 +2399,11 @@
       width:min(1040px,100%); max-height:calc(100vh - 56px); overflow:auto;
       border-radius:24px; padding:26px; background:#fff; box-shadow:0 30px 80px rgba(0,0,0,.24);
     }
-    .comparison-head { position:relative; display:grid; justify-items:center; gap:18px }
-    .comparison-head > div { display:grid; justify-items:center; width:100%; min-width:0 }
+    .comparison-head { position:relative; display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; padding-right:48px }
+    .comparison-head > div { display:block; width:100%; min-width:0 }
     .comparison-head h2 {
-      position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden;
-      clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;
+      margin:0; color:#191f28; font-size:24px; font-weight:900; line-height:1.35; word-break:keep-all;
     }
-    .comparison-stepper {
-      display:grid; grid-template-columns:minmax(0,1fr) minmax(42px,88px) minmax(0,1fr);
-      align-items:center; gap:22px; min-width:0; width:min(520px,100%); margin:0 auto; padding-top:2px;
-    }
-    .comparison-stepper-item {
-      display:inline-flex; align-items:center; gap:10px; min-width:0;
-      color:#9aa2ac; font-size:21px; font-weight:850; line-height:1.2; white-space:normal; word-break:keep-all;
-    }
-    .comparison-stepper-item:first-child { justify-self:end }
-    .comparison-stepper-item:last-child { justify-self:start }
-    .comparison-stepper-item.is-active { color:#1d1d1f }
-    .comparison-stepper-item.is-complete { color:#5d6874 }
-    .comparison-stepper-number {
-      display:grid; place-items:center; flex:0 0 auto; width:30px; height:30px; border-radius:50%;
-      background:#c9cacc; color:#fff; font-size:16px; font-weight:900; line-height:1;
-    }
-    .comparison-stepper-item.is-active .comparison-stepper-number,
-    .comparison-stepper-item.is-complete .comparison-stepper-number { background:#0878df }
-    .comparison-stepper-rule { height:2px; margin:0 8px; background:#e1e3e6 }
-    .comparison-mobile-subtitle { margin:6px 0 0; color:#667085; font-size:14px; font-weight:650; line-height:1.5 }
-    .comparison-mobile-subtitle:empty { display:none }
     .comparison-close { position:absolute; top:0; right:0; width:38px; height:38px; border:0; border-radius:50%; background:#f1f3f6; color:#555d6b; font-size:21px; cursor:pointer }
     .comparison-close:focus-visible { outline:2px solid #3182f6; outline-offset:2px }
     .comparison-preference {
@@ -2794,9 +2882,6 @@
       .candidate-primary-actions { align-items:center; gap:12px }
       .comparison-overlay { padding:0; align-items:flex-end }
       .comparison-panel { max-height:92vh; border-radius:22px 22px 0 0; padding:20px 16px 24px }
-      .comparison-stepper { grid-template-columns:minmax(0,1fr) minmax(34px,54px) minmax(0,1fr); gap:12px }
-      .comparison-stepper-item { gap:8px; font-size:20px }
-      .comparison-stepper-rule { margin:0 10px }
       .comparison-preference-head { flex-direction:column; align-items:stretch }
       .comparison-preference-actions { flex-direction:column; align-items:stretch }
       .comparison-preference-submit { width:100% }
@@ -3257,6 +3342,7 @@
     .condition-stage-power .power-advanced > summary::after { content:"＋"; color:#8a929d; font-size:19px; font-weight:500 }
     .condition-stage-power .power-advanced[open] > summary::after { content:"−" }
     .condition-stage-power .power-advanced-fields { gap:18px 16px; padding-top:12px }
+    .condition-stage-power .power-actions { grid-template-columns:minmax(0,1fr) minmax(180px,auto); gap:10px }
     .condition-stage-power .power-calculate {
       min-height:58px; margin-top:2px; border-radius:14px; font-size:17px; box-shadow:none;
       transition:background .14s ease,transform .1s ease;
@@ -3317,12 +3403,14 @@
       content:""; position:fixed; inset:0; z-index:70;
       background:rgba(0,0,0,.24); backdrop-filter:saturate(120%) blur(1px);
     }
+    body.condition-summary-open .purchase-power-result.is-sheet::before { z-index:170 }
     .purchase-power-result.is-sheet .power-result-card {
       position:fixed; right:auto; bottom:max(12px,env(safe-area-inset-bottom)); left:50%; z-index:80;
       width:min(var(--bottom-sheet-max-width),calc(100vw - 20px)); transform:translateX(-50%);
       display:flex; flex-direction:column; max-height:min(88vh,760px); max-height:min(88svh,760px); margin:0; border:0; border-radius:30px;
       padding:0; background:#fff; box-shadow:0 -10px 34px rgba(18,24,33,.18); overflow:hidden;
     }
+    body.condition-summary-open .purchase-power-result.is-sheet .power-result-card { z-index:180 }
     .purchase-power-result.is-sheet .multi-sheet-grabber {
       display:block; flex:0 0 auto; width:54px; height:5px; margin:14px auto 0;
       border-radius:999px; background:#e2e5e9;
@@ -3396,6 +3484,8 @@
       .condition-stage-power .budget-panel { margin-top:28px }
       .condition-stage-power .power-fields,
       .condition-stage-power .power-advanced-fields { grid-template-columns:1fr }
+      .condition-stage-power .power-actions { grid-template-columns:1fr }
+      .condition-stage-power .power-detail-action { min-width:0 }
       .condition-stage-preference .budget-panel { margin-top:28px }
       .condition-stage-preference #budgetPanelTitle { font-size:30px }
       .condition-stage-preference #budgetPanelIntro { margin-bottom:26px; font-size:16px }
@@ -4728,8 +4818,8 @@
               <label for="policySpouseDebt">배우자 기존 대출 월 상환액</label>
               <div class="input-with-unit"><input id="policySpouseDebt" type="number" min="0" step="10" inputmode="numeric" placeholder="예: 50" disabled><span class="input-unit" aria-hidden="true">만원/월</span></div>
             </div>
-            <details class="power-advanced" open>
-              <summary>계산 기준 조정</summary>
+            <details class="power-advanced" id="purchasePowerAdvanced">
+              <summary>내 상황 더 입력하기</summary>
               <div class="power-advanced-fields">
                 <div class="budget-field">
                   <label for="policyCreditScore">신용점수 <span aria-hidden="true">(선택)</span></label>
@@ -4788,7 +4878,11 @@
                 </div>
               </div>
             </details>
-            <button class="power-calculate" id="powerCalculate" type="button">구매력 계산</button>
+            <div class="power-actions">
+              <button class="power-calculate" id="powerApproximateCalculate" type="button" data-purchase-power-mode="approximate">대략 계산하기</button>
+              <button class="power-calculate power-detail-action" id="powerCalculate" type="button">내 상황 더 입력하기</button>
+            </div>
+            <button class="power-reset" id="purchasePowerReset" type="button">입력값 초기화</button>
             <div class="purchase-power-result" id="purchasePowerResult" aria-live="polite"></div>
           </div>
         </section>
@@ -4980,15 +5074,9 @@
     <section class="comparison-panel" role="dialog" aria-modal="true" aria-labelledby="comparisonTitle">
       <div class="comparison-head">
         <div>
-          <h2 id="comparisonTitle">사전 질문</h2>
-          <div class="comparison-stepper" id="comparisonStepper" aria-hidden="true">
-            <span class="comparison-stepper-item is-active" data-comparison-stepper-item="questions"><span class="comparison-stepper-number">1</span><span>사전 질문</span></span>
-            <span class="comparison-stepper-rule"></span>
-            <span class="comparison-stepper-item" data-comparison-stepper-item="results"><span class="comparison-stepper-number">2</span><span>후보 비교</span></span>
-          </div>
-          <p class="comparison-mobile-subtitle"></p>
+          <h2 id="comparisonTitle">후보 비교 결과</h2>
         </div>
-        <button class="comparison-close" id="comparisonClose" type="button" aria-label="비교 화면 닫기" hidden>×</button>
+        <button class="comparison-close" id="comparisonClose" type="button" aria-label="비교 화면 닫기">×</button>
       </div>
       <div id="comparisonContent"></div>
     </section>
@@ -5088,7 +5176,10 @@
     const purchaseCostInfoButton = $("purchaseCostInfoButton");
     const purchaseCostInfo = $("purchaseCostInfo");
     const purchaseCostInfoClose = $("purchaseCostInfoClose");
+    const purchasePowerAdvanced = $("purchasePowerAdvanced");
+    const powerApproximateCalculate = $("powerApproximateCalculate");
     const powerCalculate = $("powerCalculate");
+    const purchasePowerReset = $("purchasePowerReset");
     const purchasePowerResult = $("purchasePowerResult");
     const preferenceStep = $("preferenceStep");
     const preferenceFields = $("preferenceFields");
@@ -5121,8 +5212,6 @@
     const comparisonLimitToast = $("comparisonLimitToast");
     const comparisonOverlay = $("comparisonOverlay");
     const comparisonTitle = $("comparisonTitle");
-    const comparisonStepper = $("comparisonStepper");
-    const comparisonSubtitle = document.querySelector(".comparison-mobile-subtitle");
     const comparisonClose = $("comparisonClose");
     const comparisonContent = $("comparisonContent");
     const locationScoreSheet = $("locationScoreSheet");
@@ -5144,8 +5233,7 @@
     const comparisonPreferenceDefaults = { type:"", period:"", priority:"" };
     let comparisonPreference = { ...comparisonPreferenceDefaults };
     let comparisonPreferenceQuestionIndex = 0;
-    let comparisonStep = "questions";
-    let comparisonQuestionsCompleted = false;
+    let comparisonStep = "results";
     let chipTabsData = [];
     let activeChipTab = "all";
     let activeRegion = "seoul";
@@ -5884,15 +5972,25 @@
     const leaderComparisonRetryInFlight = new Set();
     const CANDIDATE_SHORTLIST_SIZE = 5;
     const CANDIDATE_PAGE_SIZE = 10;
-    const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.8;
+    const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.9;
     const CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE = 0.95;
     const CANDIDATE_SHORTLIST_CRITERIA = [
-      { key:"budget", label:"예산 상한 활용", weight:45 },
-      { key:"overall", label:"종합점수", weight:25 },
-      { key:"market", label:"최근 시장 신호", weight:20 },
+      { key:"budget", label:"예산 활용", weight:35 },
+      { key:"overall", label:"종합점수", weight:30 },
+      { key:"market", label:"최근 시장 신호", weight:25 },
       { key:"timing", label:"2년 가격 타이밍", weight:10 },
     ];
     const CANDIDATE_MAP_CLUSTER_LEVEL = 8;
+    const CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL = 5;
+    const CANDIDATE_MAP_REDEVELOPMENT_REQUEST_LIMIT = 3000;
+    const CANDIDATE_MAP_REDEVELOPMENT_CORE_LABEL_LIMIT = 12;
+    const CANDIDATE_MAP_REDEVELOPMENT_CLOSE_LABEL_LIMIT = 28;
+    const CANDIDATE_MAP_ROOMY_BUDGET_USAGE = 0.9;
+    const CANDIDATE_MAP_FUNDING_FILTERS = [
+      { key:"short", label:"추가 자금 필요", className:"is-short" },
+      { key:"fit", label:"자금 적정", className:"" },
+      { key:"roomy", label:"자금 여유", className:"is-roomy" },
+    ];
     const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
     const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     let candidateVisibleCount = CANDIDATE_PAGE_SIZE;
@@ -5915,6 +6013,15 @@
     let candidateMapRedevelopmentLastBbox = "";
     let candidateMapRedevelopmentRequestSeq = 0;
     let candidateMapRedevelopmentTimer = null;
+    let candidateMapMeasurementEnabled = false;
+    let candidateMapMeasurementFixed = false;
+    let candidateMapMeasurementStart = null;
+    let candidateMapMeasurementLine = null;
+    let candidateMapMeasurementStartDot = null;
+    let candidateMapMeasurementLabel = null;
+    let candidateMapMeasurementLabelElement = null;
+    let candidateMapMeasurementEndDot = null;
+    let candidateMapFundingFilters = new Set(CANDIDATE_MAP_FUNDING_FILTERS.map(item => item.key));
     let candidateMapReturnScrollY = 0;
     let candidateMapTrigger = null;
     let candidateMapReturnToComparison = false;
@@ -6634,6 +6741,7 @@
             ? leaderPriceText(item.leaderPrice6m ?? item.leaderPrice12m)
             : leaderScoreText(item.score);
       const displayName = item.marketLeaderName || item.apartmentName;
+      const displayTitle = [displayName, `${areaTarget}㎡`].filter(Boolean).join(" · ");
       const meta = leaderMetaHtml(item);
       const region = item.sigungu || payload.region?.sigungu || "";
       const rankLabel = isPriceLeader
@@ -6643,7 +6751,7 @@
           : (rank === 1
               ? `${region} ${payload.categoryLabel || ""} 대장`
               : `${region} ${payload.categoryLabel || ""} ${rank}위`);
-      return { rank, isPriceLeader, isGrowthRanking, isValueRanking, scoreTitle, metric, displayName, meta, rankLabel };
+      return { rank, isPriceLeader, isGrowthRanking, isValueRanking, scoreTitle, metric, displayName, displayTitle, meta, rankLabel };
     }
 
     function leaderRankCardHtml(item, payload, { expanded = false, collapsible = false, collapsed = false, showTop = true } = {}) {
@@ -6662,7 +6770,7 @@
         ${showTop ? `<${topTag} class="leader-winner-top"${topAttributes}>
           <div>
             <p class="leader-rank-label">${esc(view.rankLabel)}</p>
-            <${headingTag} class="leader-winner-name"><span>${esc(view.displayName)}</span>${apartmentStatusBadgeHtml(item.status)}${leaderAreaRankBadgeHtml(item, payload)}</${headingTag}>
+            <${headingTag} class="leader-winner-name"><span>${esc(view.displayTitle)}</span>${apartmentStatusBadgeHtml(item.status)}${leaderAreaRankBadgeHtml(item, payload)}</${headingTag}>
             <p class="leader-winner-sub">${view.meta}</p>
             ${leaderValueScoreHtml(item, payload)}
           </div>
@@ -6737,7 +6845,7 @@
           <div class="candidate-top">
             <div class="budget-main">
               <span class="leader-rank-label">${esc(view.rankLabel)}</span>
-              <span class="budget-name">${esc(view.displayName)}</span>
+              <span class="budget-name">${esc(view.displayTitle)}</span>
               <span class="budget-meta">${view.meta}</span>
             </div>
           </div>
@@ -8107,6 +8215,30 @@
     }
 
     function recentQuarterStats(item) {
+      const payload = item.roneEstimate;
+      const transactions = Array.isArray(payload?.adjustedTransactions) ? payload.adjustedTransactions : [];
+      if (transactions.length) {
+        const endPeriod = marketPeriod(payload.latestTrade?.dealDate)
+          || String(payload.index?.latestPeriod || "");
+        if (/^\d{6}$/.test(endPeriod)) {
+          const itemPeriod = marketPeriod(item.latestDealDate || item.lastObservedDealDate);
+          if (itemPeriod && itemPeriod > endPeriod) {
+            return { stale:true, currentCount:0, previousCount:0, currentAverage:0, previousAverage:0 };
+          }
+          const currentPeriods = new Set([-2, -1, 0].map(offset => shiftMarketPeriod(endPeriod, offset)));
+          const previousPeriods = new Set([-5, -4, -3].map(offset => shiftMarketPeriod(endPeriod, offset)));
+          const currentTrades = transactions.filter(row => currentPeriods.has(marketPeriod(row.dealDate)));
+          const previousTrades = transactions.filter(row => previousPeriods.has(marketPeriod(row.dealDate)));
+          return {
+            currentCount: currentTrades.length,
+            previousCount: previousTrades.length,
+            currentAverage: marketAverage(currentTrades),
+            previousAverage: marketAverage(previousTrades),
+            statsThrough:String(payload.latestTrade?.dealDate || ""),
+            source:"rone",
+          };
+        }
+      }
       if (item.statsThrough) {
         return {
           currentCount:Number(item.recent3TradeCount || 0),
@@ -8117,9 +8249,7 @@
           source:"molit",
         };
       }
-      const payload = item.roneEstimate;
       if (!payload) return null;
-      const transactions = Array.isArray(payload.adjustedTransactions) ? payload.adjustedTransactions : [];
       const endPeriod = marketPeriod(payload.latestTrade?.dealDate)
         || String(payload.index?.latestPeriod || "");
       if (!/^\d{6}$/.test(endPeriod) || !transactions.length) return null;
@@ -8791,6 +8921,7 @@
 	      const fullRange = fullHigh - fullLow;
       const recentRange = Math.max(...recentValues) - Math.min(...recentValues);
       const recentTotalChange = recentValues[recentValues.length - 1] - recentValues[0];
+      const recentRiseSteps = recentChanges.filter(change => change >= directionThreshold).length;
       const shape = candidateTrendShape(points);
 	      const windowYears = Number(series?.windowMonths || SPARKLINE_WINDOW_MONTHS) / 12;
 	      const windowLabel = Number.isInteger(windowYears) ? `최근 ${windowYears}년` : "최근";
@@ -8812,7 +8943,11 @@
 	      if (Number.isFinite(latestChange) && latestChange <= -rapidOneMonthThreshold) {
 	        return { kind:"sharp_drop", comparable:true, message:"최근 거래에서 가격이 크게 떨어졌어요" };
 	      }
-	      if (recentTotalChange >= rapidMultiMonthThreshold) {
+	      if (
+        recentTotalChange >= rapidMultiMonthThreshold
+        && recentRiseSteps >= 2
+        && (!Number.isFinite(latestChange) || latestChange >= -directionThreshold)
+      ) {
 	        return { kind:"fast_rise", comparable:true, message:"최근 몇 달 동안 가격이 빠르게 올랐어요" };
 	      }
 	      if (recentTotalChange <= -rapidMultiMonthThreshold) {
@@ -9630,13 +9765,13 @@
         return "다만 실거래가 적어 한 건에도 크게 움직여요";
       }
       const caveats = {
-        surge:"다만 최근 상승이 가팔라 거래량을 함께 확인해야 해요",
-        fast_rise:"다만 최근 상승이 가팔라 거래량을 함께 확인해야 해요",
+        surge:"다만 최근 한 건의 상승 폭이 커 거래량을 함께 확인해야 해요",
+        fast_rise:"다만 최근 몇 건 사이 오른 폭이 커 거래량을 함께 확인해야 해요",
         sharp_drop:"다만 최근 거래에서 가격이 크게 내렸어요",
         fast_fall:"다만 최근 몇 달 가격이 빠르게 내렸어요",
-        downturn:"다만 최근에는 상승이 멈추고 내렸어요",
-        fall_continuing:"다만 최근에도 하락이 이어졌어요",
-        fall_slowing:"다만 하락은 이어졌고 폭만 줄었어요",
+        downturn:"다만 최근에는 상승 흐름이 멈추고 내렸어요",
+        fall_continuing:"다만 최근에도 하락 흐름이 이어졌어요",
+        fall_slowing:"다만 하락 흐름은 이어졌고 폭만 줄었어요",
         rise_slowing:"다만 최근 상승 폭은 줄었어요",
         volatile:"다만 최근 등락이 커 방향이 뚜렷하지 않아요",
         near_low:"다만 최근 가격은 저점 부근이에요",
@@ -9644,9 +9779,9 @@
         mixed:"다만 최근 방향이 여러 번 바뀌었어요",
         fall:"다만 기준 시점보다는 내렸어요",
         flat:"최근 가격 변화는 크지 않아요",
-        rise_continuing:"최근 흐름도 이어지고 있어요",
-        rise:"최근 흐름도 이어지고 있어요",
-        rebound:"최근에는 하락을 멈추고 반등했어요",
+        rise_continuing:"최근에도 상승 흐름이 이어지고 있어요",
+        rise:"최근에도 상승 흐름이 이어지고 있어요",
+        rebound:"최근에는 하락 흐름을 멈추고 반등했어요",
         near_high:"최근에도 고점 부근을 지키고 있어요",
         high_flat:"최근에는 고점 부근에서 보합이에요",
       };
@@ -10422,8 +10557,18 @@
       </section>`;
     }
 
+    function candidateHasScoreData(item) {
+      return Number.isFinite(Number(item?.locationScore?.score))
+        || Number.isFinite(Number(item?.signals?.score))
+        || Boolean(item?.signals?.status);
+    }
+
+    function candidateShouldWaitForScores(item) {
+      return currentBudgetData?.candidateScoreDataReady === false && !candidateHasScoreData(item);
+    }
+
     function candidateVerdictHtml(item, options = {}) {
-      if (currentBudgetData?.candidateScoreDataReady === false) {
+      if (candidateShouldWaitForScores(item)) {
         return `<div class="candidate-insight insight-neutral">
           ${candidateScorePendingHtml()}
           ${candidateTrendInsightHtml(item, options)}
@@ -10514,8 +10659,8 @@
     }
 
     function refreshMarketInsight(item) {
-      if (item.marketInsightState === "ready" && unverifiedCandidateOverCap(item)) {
-        removeOverCapCandidate(item);
+      if (item.marketInsightState === "ready" && candidateListMode !== "all" && unverifiedCandidateOverCap(item)) {
+        renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
         return;
       }
       const card = [...budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-name]")]
@@ -10918,10 +11063,9 @@
     }
 
     function candidateListMetaDetailText(item) {
-      const area = item.displayAreaLabel || item.areaLabel || "전용면적 미확인";
       const age = item.buildingAge ? `${Number(item.buildingAge).toLocaleString("ko-KR")}년차` : "연식 미확인";
       const households = item.households ? `${Number(item.households).toLocaleString("ko-KR")}세대` : "세대수 미확인";
-      return `${area} ㅣ ${age} · ${households}`;
+      return `${age} · ${households}`;
     }
 
     function candidateNaverPropertyUrl(item) {
@@ -11030,7 +11174,27 @@
       const addressHtml = address
         ? `<span>${esc(address)}</span>`
         : `<span>주소 미확인</span>`;
-      return `${addressHtml} · ${esc(detail)}`;
+      return `${addressHtml}ㅣ ${esc(detail)}`;
+    }
+
+    function candidateTitleAreaText(item) {
+      const label = String(item?.displayAreaLabel || item?.areaLabel || "").trim();
+      if (!label) return "";
+      const area = label
+        .replace(/^\d+\s*위\s*·\s*/u, "")
+        .replace(/^전용\s*/u, "")
+        .trim();
+      return area || "";
+    }
+
+    function candidateTitleText(item, fallbackName = "") {
+      const name = String(fallbackName || candidateDisplayName(item) || item?.name || item?.apartmentName || "").trim();
+      const area = candidateTitleAreaText(item);
+      return [name, area].filter(Boolean).join(" · ");
+    }
+
+    function candidateTitleHtml(item, fallbackName = "", extraHtml = "") {
+      return `<span class="budget-name">${esc(candidateTitleText(item, fallbackName))}</span>${extraHtml || ""}`;
     }
 
     function candidateLocationScoreBadgeHtml(item) {
@@ -11049,11 +11213,11 @@
       return `<button class="flow-score-badge" type="button" data-flow-score-open title="${esc(title)}">최근 시장 신호 ${esc(label)}</button>`;
     }
 
-		    function candidateTopScoreBadgesHtml(item) {
-		      if (currentBudgetData?.candidateScoreDataReady === false) return "";
-		      const badges = `${candidateLocationScoreBadgeHtml(item)}${candidateFlowScoreBadgeHtml(item)}`;
-		      return badges ? `<span class="candidate-score-badges">${badges}</span>` : "";
-		    }
+    function candidateTopScoreBadgesHtml(item) {
+      if (candidateShouldWaitForScores(item)) return "";
+      const badges = `${candidateLocationScoreBadgeHtml(item)}${candidateFlowScoreBadgeHtml(item)}`;
+      return badges ? `<span class="candidate-score-badges">${badges}</span>` : "";
+    }
 
     function locationScoreJudge(points, max) {
       const value = Number(points);
@@ -11204,6 +11368,83 @@
       </section>`;
     }
 
+    function verdictMoneyText(won) {
+      const value = Number(won);
+      if (!Number.isFinite(value)) return "";
+      if (value === 0) return "0원";
+      const eok = Math.floor(value / 100000000);
+      const manwon = Math.round((value - eok * 100000000) / 10000);
+      if (eok && manwon) return `${eok}억 ${manwon.toLocaleString()}만원`;
+      if (eok) return `${eok}억원`;
+      return `${manwon.toLocaleString()}만원`;
+    }
+
+    function verdictDotsHtml(total, hit) {
+      const safeTotal = Math.max(0, Math.min(60, Number(total) || 0));
+      const safeHit = Math.max(0, Math.min(safeTotal, Number(hit) || 0));
+      let html = "";
+      for (let index = 0; index < safeTotal; index += 1) {
+        html += `<i class="${index < safeHit ? "is-hit" : ""}"></i>`;
+      }
+      return `<div class="verdict-dots" role="img" aria-label="${esc(safeTotal)}곳 중 ${esc(safeHit)}곳">${html}</div>`;
+    }
+
+    function verdictRecordHtml(record) {
+      if (!record) return "";
+      if (record.status !== "ok") {
+        if (record.reason === "no_move_out_nearby") return "";
+        return `<div class="verdict-pending">${esc(record.message || "자료를 모으는 중이에요")}</div>`;
+      }
+      const risk = record.worstDropNote
+        ? `<div class="verdict-risk">${esc(record.worstDropNote)}</div>`
+        : "";
+      return `<div class="verdict-record">
+          <p class="verdict-record-title">${esc(record.headline)}</p>
+          <p class="verdict-record-copy">${esc(record.description || "")}</p>
+          ${verdictDotsHtml(record.total, record.outperformed)}
+          <div class="verdict-legend">
+            <span><b class="is-hit"></b>더 오른 곳 ${esc(record.outperformed)}곳</span>
+            <span><b></b>아닌 곳 ${esc(record.total - record.outperformed)}곳</span>
+          </div>
+        </div>
+        ${risk}
+        <p class="verdict-fine">${esc(record.disclaimer || "")}</p>`;
+    }
+
+    function verdictCardHtml(item) {
+      const card = item?.locationScore?.verdictCard;
+      if (!card || card.status !== "ok" || !card.breakeven) return "";
+      const breakeven = card.breakeven;
+      const rows = (breakeven.items || []).map(entry => `<div class="verdict-cost-row">
+          <span>${esc(entry.label)}${entry.estimated ? " (약)" : ""}</span>
+          <span>${esc(entry.amount === 0 ? (entry.note || "0원") : verdictMoneyText(entry.amount))}</span>
+        </div>`).join("");
+      const notes = (card.notes || []).map(note => `<div>${esc(note.text)}</div>`).join("");
+      const excluded = (breakeven.uncertainItems || []).length
+        ? `${(breakeven.uncertainItems || []).join(", ")}는 조건에 따라 달라져서 뺐어요. `
+        : "";
+      return `<section class="verdict-card">
+          <div class="verdict-card-head">
+            <span class="verdict-card-name">${esc(candidateDisplayName(item))} ${esc(card.areaLabel || "")}</span>
+            <span class="verdict-card-price">${esc(verdictMoneyText(card.price))}</span>
+          </div>
+          <div>
+            <p class="verdict-headline">${esc(breakeven.headline)}</p>
+            <p class="verdict-sub">${esc(verdictMoneyText(card.price))}에 사서 ${esc(card.years)}년 뒤 팔면 세금과 중개비로 ${esc(verdictMoneyText(breakeven.totalAmount))}이 나가요. 그만큼은 올라야 본전이에요.</p>
+          </div>
+          <div class="verdict-cost">
+            ${rows}
+            <div class="verdict-cost-row is-total">
+              <span>합계</span>
+              <span>${esc(verdictMoneyText(breakeven.totalAmount))} · ${esc(breakeven.ratePercent)}%</span>
+            </div>
+          </div>
+          ${verdictRecordHtml(card.trackRecord)}
+          ${notes ? `<div class="verdict-notes">${notes}</div>` : ""}
+          <p class="verdict-fine">${esc(excluded)}${esc((breakeven.excludes || []).join(", "))}는 넣지 않았어요. 실제 거래된 값으로만 계산했고, 앞으로 오른다는 뜻이 아니에요.</p>
+        </section>`;
+    }
+
     function locationScoreSheetHtml(item) {
       const score = item?.locationScore || {};
       const total = Number(score.score);
@@ -11220,7 +11461,8 @@
           <p class="location-score-section-copy">${esc(areaSummary)}</p>
           <div class="location-score-table">${areaParts.map(locationScorePartHtml).join("")}</div>`
         : "";
-      return `<section class="location-score-hero">
+      return `${verdictCardHtml(item)}
+        <section class="location-score-hero">
           <div class="location-score-total">${esc(Math.round(total))}<span>점 · ${esc(score.label || "종합")}</span></div>
           <p class="location-score-summary">${esc(score.summary || "실거래가, 전세 실거래, 입지, 단지 조건, 거래 흐름을 함께 본 점수예요.")}</p>
         </section>
@@ -11472,10 +11714,10 @@
 
     function candidateShortlistComparablePrice(row) {
       const price = Number(
-        row?.midPriceEok ||
-        row?.estimatedMidPriceEok ||
         row?.latestDealPriceEok ||
         row?.lastObservedDealPriceEok ||
+        row?.estimatedMidPriceEok ||
+        row?.midPriceEok ||
         row?.maxPriceEok ||
         row?.minPriceEok ||
         0
@@ -11493,16 +11735,16 @@
       const ratio = candidateBudgetUsageRatio(row, budgetEok);
       if (ratio === null) return 4;
       if (ratio >= 0.85 && ratio <= 1) return 0;
-      if (ratio > 1 && ratio <= 1.05) return 1;
-      if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return 2;
-      if (ratio >= 0.65) return 3;
+      if (ratio > 1 && ratio <= 1.05) return 3;
+      if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return 1;
+      if (ratio >= 0.65) return 2;
       return 4;
     }
 
     function candidateShortlistBudgetScore(row, budgetEok) {
       const ratio = candidateBudgetUsageRatio(row, budgetEok);
       if (ratio === null) return 0;
-      if (ratio > 1) return Math.max(60, 88 - (ratio - 1) * 500);
+      if (ratio > 1) return Math.max(30, 66 - (ratio - 1) * 500);
       if (ratio >= 0.85) return Math.max(84, 100 - Math.abs(ratio - CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE) * 120);
       if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return 72 + (ratio - CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) * 120;
       return Math.max(0, ratio * 72);
@@ -11512,10 +11754,10 @@
       const ratio = candidateBudgetUsageRatio(row, budgetEok);
       if (ratio === null) return "";
       const percent = Math.round(ratio * 100);
-      if (ratio >= 0.85 && ratio <= 1) return `예산 상한의 ${percent}% 가격대예요`;
+      if (ratio >= 0.85 && ratio <= 1) return "";
       if (ratio > 1) return `추가자금까지 보면 상한에 가까운 가격대예요`;
       if (ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE) return `상한보다 낮지만 ${percent}%까지 쓰는 가격대예요`;
-      return `상한보다 많이 낮아 조건 확인용이에요`;
+      return "";
     }
 
     function candidateShortlistScore(row, budgetEok) {
@@ -11527,18 +11769,13 @@
     }
 
     function shortlistCandidateRows(rows, budgetEok) {
-      const shortlistLimit = Math.min(CANDIDATE_SHORTLIST_SIZE, rows.length);
-      const nearBudgetRows = rows.filter(row => {
-        const ratio = candidateBudgetUsageRatio(row, budgetEok);
-        return ratio !== null && ratio >= CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE;
-      });
-      const sourceRows = nearBudgetRows.length >= shortlistLimit ? nearBudgetRows : rows;
-      return [...sourceRows].sort((left, right) => (
-        candidateShortlistBudgetBand(left, budgetEok) - candidateShortlistBudgetBand(right, budgetEok)
+      return [...rows].sort((left, right) => (
+        candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)
         || candidateShortlistBudgetScore(right, budgetEok) - candidateShortlistBudgetScore(left, budgetEok)
-        || candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)
+        || candidateShortlistBudgetBand(left, budgetEok) - candidateShortlistBudgetBand(right, budgetEok)
         || candidateShortlistMetric(right, "overall") - candidateShortlistMetric(left, "overall")
         || candidateShortlistMetric(right, "market") - candidateShortlistMetric(left, "market")
+        || Math.abs((candidateBudgetUsageRatio(left, budgetEok) ?? 999) - 1) - Math.abs((candidateBudgetUsageRatio(right, budgetEok) ?? 999) - 1)
         || (right._score || 0) - (left._score || 0)
         || Math.abs(left.budgetGapEok || 0) - Math.abs(right.budgetGapEok || 0)
       ));
@@ -11549,15 +11786,13 @@
       const market = candidateSignalNumber(row, "score");
       const timing = sparklineSeries(row)
         ? candidateShortlistTiming(row)
-        : row?.marketInsightState === "error"
-          ? { label:"차트 자료가 부족해 가격 타이밍은 판단하기 어려워요" }
-          : { label:"2년 가격 타이밍을 확인하고 있어요" };
+          : row?.marketInsightState === "error"
+            ? { label:"차트 자료가 부족해 가격 타이밍은 판단하기 어려워요" }
+            : { label:"2년 가격 타이밍을 확인하고 있어요" };
       const budgetLead = candidateShortlistBudgetReason(row, currentBudgetData?.budgetEok);
       const reasonLead = candidateShortlistReasonLead(overall, market, timing.label);
-      const reasonCopy = budgetLead ? `${budgetLead}. ${reasonLead}` : reasonLead;
-      const rankLabel = Number(rank) > 0 ? `${rank}순위` : "먼저 보기";
+      const reasonCopy = [budgetLead, reasonLead].filter(Boolean).join(". ");
       return `<div class="candidate-shortlist-reason" aria-label="먼저 보는 이유">
-        <span class="candidate-shortlist-reason-label">${esc(rankLabel)}</span>
         <span class="candidate-shortlist-reason-copy">${esc(reasonCopy)}</span>
       </div>`;
     }
@@ -11576,12 +11811,12 @@
       if (strongOverall && strongMarket && pullbackTiming) return "조건 좋고 매수 타이밍도 나쁘지 않아요";
       if (strongOverall && strongMarket && riskTiming) return "점수는 높지만 가격 확인이 필요해요";
       if (strongOverall && strongMarket) return "입지와 시장 흐름이 같이 좋아요";
-      if (strongOverall && goodMarket) return "종합 조건이 좋고 시장 흐름도 받쳐줘요";
-      if (goodOverall && strongMarket) return "시장 흐름이 좋아 먼저 볼 만해요";
-      if (goodOverall && risingTiming) return "조건이 무난하고 가격 흐름도 좋아요";
-      if (goodOverall) return "기본 조건이 좋아 먼저 볼 만해요";
-      if (goodMarket) return "시장 흐름이 좋아 확인할 만해요";
-      return "조건과 가격 흐름을 함께 봤어요";
+      if (strongOverall && goodMarket) return "종합점수가 높고 최근 가격·거래 흐름도 받쳐줘요";
+      if (goodOverall && strongMarket) return "최근 가격·거래 흐름이 좋아 먼저 볼 만해요";
+      if (goodOverall && risingTiming) return "종합점수가 무난하고 최근 가격·거래 흐름도 좋아요";
+      if (goodOverall) return "종합점수가 높아 먼저 볼 만해요";
+      if (goodMarket) return "최근 가격·거래 흐름이 좋아 확인할 만해요";
+      return "입지·단지 조건과 최근 가격·거래 흐름을 함께 확인했어요";
     }
 
     function candidateShortlistRank(row) {
@@ -11591,8 +11826,8 @@
       return index >= 0 ? index + 1 : null;
     }
 
-    function candidateShortlistSummaryHtml(totalCount, visibleCount, mode) {
-      const firstCount = Math.min(CANDIDATE_SHORTLIST_SIZE, totalCount);
+    function candidateShortlistSummaryHtml(totalCount, shortlistCount, mode) {
+      const firstCount = Math.min(CANDIDATE_SHORTLIST_SIZE, shortlistCount);
       const isShortlist = mode !== "all";
       return `<section class="candidate-shortlist-first" aria-label="후보 보기 방식">
         <div class="candidate-shortlist-head">
@@ -11605,14 +11840,11 @@
             <div class="candidate-shortlist-info-popover" data-candidate-shortlist-info-popover hidden>
               <button class="candidate-shortlist-info-close" type="button" data-candidate-shortlist-info-close aria-label="먼저 볼 5곳 기준 닫기">×</button>
               <strong class="candidate-shortlist-info-title" id="candidate-shortlist-info-title">먼저 볼 5곳 기준</strong>
-              <p class="candidate-shortlist-info-copy">내 예산 상한에 가까운 가격대를 먼저 보고, 그 안에서 조건이 좋은 곳을 골라요.</p>
-              <ul class="candidate-shortlist-info-list">
-                ${CANDIDATE_SHORTLIST_CRITERIA.map(item => `<li><span>${esc(item.label)}</span><strong>${esc(item.weight)}%</strong></li>`).join("")}
-              </ul>
+              <p class="candidate-shortlist-info-copy">가격대를 먼저 자르지 않아요. 전체 후보에서 종합점수, 최근 가격·거래 흐름, 예산 활용도를 함께 보고 고릅니다.</p>
             </div>
           </div>
         </div>
-        <p class="candidate-shortlist-basis"><strong>추천 기준</strong> 예산 상한에 가까운 가격대 · 종합점수 · 시장 신호</p>
+        ${isShortlist ? `<p class="candidate-shortlist-basis">가격대를 먼저 자르지 않고, 종합점수와 최근 가격·거래 흐름이 좋은 ${esc(firstCount)}곳을 먼저 보여드려요.</p>` : ""}
       </section>`;
     }
 
@@ -11641,6 +11873,17 @@
         <span class="candidate-map-condition-label">${esc(item.label || "조건")}</span>
         <strong title="${esc(value)}">${esc(value)}</strong>
       </button>`;
+    }
+
+    function candidateMapFundingFiltersHtml(directSearch = false) {
+      if (directSearch) return "";
+      return `<div class="candidate-map-funding-filters" role="group" aria-label="자금 상태 보기">
+        ${CANDIDATE_MAP_FUNDING_FILTERS.map(item => `<label class="candidate-map-funding-filter">
+          <input type="checkbox" data-candidate-map-funding-filter="${esc(item.key)}"${candidateMapFundingFilters.has(item.key) ? " checked" : ""}>
+          <span class="candidate-map-funding-swatch ${esc(item.className)}" aria-hidden="true"></span>
+          <span>${esc(item.label)}</span>
+        </label>`).join("")}
+      </div>`;
     }
 
     function candidateMapViewHtml(rows = [], showCashGapSort = false, options = {}) {
@@ -11673,14 +11916,19 @@
           </div>
           <aside class="candidate-map-preview" data-candidate-map-preview hidden></aside>
           <div class="candidate-map-map-tools">
-            ${directSearch ? "" : `<div class="candidate-map-legend" aria-label="지도 마커 범례">
-              <span class="candidate-map-legend-item"><span class="candidate-map-legend-swatch is-short" aria-hidden="true"></span>추가 자금 필요</span>
-              <span class="candidate-map-legend-item"><span class="candidate-map-legend-swatch" aria-hidden="true"></span>자금 적정</span>
-            </div>`}
-            <label class="candidate-map-layer-toggle">
-              <input type="checkbox" data-candidate-map-redevelopment-toggle${candidateMapRedevelopmentEnabled ? " checked" : ""}>
-              주변 정비구역
-            </label>
+            ${candidateMapFundingFiltersHtml(directSearch)}
+            <div class="candidate-map-tool-rail" aria-label="지도 도구">
+              <label class="candidate-map-layer-toggle" title="주변 정비구역">
+                <input type="checkbox" data-candidate-map-redevelopment-toggle${candidateMapRedevelopmentEnabled ? " checked" : ""}>
+                <span class="candidate-map-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6.5 9 3l6 3.5 6-3.5v14l-6 3.5-6-3.5-6 3.5z"></path><path d="M9 3v14"></path><path d="M15 6.5v14"></path></svg></span>
+                <span class="candidate-map-tool-text">정비</span>
+              </label>
+              <button class="candidate-map-measure-toggle" type="button" data-candidate-map-measure-toggle aria-pressed="${candidateMapMeasurementEnabled ? "true" : "false"}" aria-label="${candidateMapMeasurementEnabled ? "거리 측정 중" : "거리 측정"}" title="거리 측정">
+                <span class="candidate-map-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20 20 4"></path><path d="m8 16 2 2"></path><path d="m11 13 2 2"></path><path d="m14 10 2 2"></path></svg></span>
+                <span class="candidate-map-tool-text">측정</span>
+              </button>
+            </div>
+            <p class="candidate-map-measure-status" data-candidate-map-measure-status hidden></p>
             <p class="candidate-map-caption" data-candidate-map-caption hidden></p>
           </div>
         </div>
@@ -11863,6 +12111,21 @@
       return Math.max(1, Math.min(14, 20 - Number(zoom || 13)));
     }
 
+    function mapDistanceMeters(left, right) {
+      const leftLat = mapLatLngLat(left);
+      const leftLng = mapLatLngLng(left);
+      const rightLat = mapLatLngLat(right);
+      const rightLng = mapLatLngLng(right);
+      if (![leftLat, leftLng, rightLat, rightLng].every(Number.isFinite)) return 0;
+      const toRadians = value => value * Math.PI / 180;
+      const earthRadiusMeters = 6371000;
+      const deltaLat = toRadians(rightLat - leftLat);
+      const deltaLng = toRadians(rightLng - leftLng);
+      const a = Math.sin(deltaLat / 2) ** 2
+        + Math.cos(toRadians(leftLat)) * Math.cos(toRadians(rightLat)) * Math.sin(deltaLng / 2) ** 2;
+      return earthRadiusMeters * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
     async function loadLeafletMapApi() {
       if (window.L?.map) return createLeafletKakaoAdapter(window.L);
       if (leafletMapApiPromise) return leafletMapApiPromise;
@@ -11945,6 +12208,47 @@
           this._map.fitBounds(bounds.toLeafletBounds(), { padding:[42, 42], maxZoom:16 });
         }
       }
+      class Polyline {
+        constructor({ map, path = [], strokeWeight = 3, strokeColor = "#3182f6", strokeOpacity = .95, zIndex = 1 }) {
+          this.path = path;
+          this.map = null;
+          this._layer = L.polyline(this._latLngs(), {
+            color:strokeColor,
+            weight:strokeWeight,
+            opacity:strokeOpacity,
+            interactive:false,
+          });
+          this.zIndex = zIndex;
+          if (map) this.setMap(map);
+        }
+        _latLngs() {
+          return (this.path || []).map(point => [mapLatLngLat(point), mapLatLngLng(point)]).filter(([lat, lng]) => (
+            Number.isFinite(lat) && Number.isFinite(lng)
+          ));
+        }
+        setMap(map) {
+          if (this.map?._map && this._layer) this.map._map.removeLayer(this._layer);
+          this.map = map || null;
+          if (this.map?._map && this._layer) {
+            this._layer.addTo(this.map._map);
+            if (this.zIndex > 1) this._layer.bringToFront();
+          }
+        }
+        setPath(path = []) {
+          this.path = path;
+          this._layer?.setLatLngs(this._latLngs());
+        }
+        getLength() {
+          const points = this.path || [];
+          return points.reduce((total, point, index) => (
+            index ? total + mapDistanceMeters(points[index - 1], point) : 0
+          ), 0);
+        }
+        setZIndex(value) {
+          this.zIndex = Number(value) || 1;
+          if (this.zIndex > 1) this._layer?.bringToFront?.();
+        }
+      }
       class CustomOverlay {
         constructor({ map, position, content, yAnchor = 1 }) {
           this.position = position;
@@ -11965,6 +12269,13 @@
           map._overlayPane.appendChild(this.content);
           map._syncOverlays();
         }
+        setPosition(position) {
+          this.position = position;
+          if (!this.content) return;
+          this.content.dataset.latitude = String(position.latitude);
+          this.content.dataset.longitude = String(position.longitude);
+          this.map?._syncOverlays?.();
+        }
         setZIndex(value) {
           if (this.content) this.content.style.zIndex = String(value);
         }
@@ -11974,10 +12285,17 @@
           Map:MapAdapter,
           LatLng,
           LatLngBounds,
+          Polyline,
           CustomOverlay,
           event:{
             addListener(map, eventName, callback) {
               if (eventName === "zoom_changed") map?._map?.on("zoomend", callback);
+              else if (eventName === "idle") map?._map?.on("moveend zoomend", callback);
+              else if (["click", "mousemove"].includes(eventName)) {
+                map?._map?.on(eventName, event => {
+                  callback({ latLng:new LatLng(event.latlng.lat, event.latlng.lng) });
+                });
+              }
             },
           },
           services:{
@@ -12053,7 +12371,7 @@
 
     function candidateMapRedevelopmentBbox() {
       const level = Number(candidateMap?.getLevel?.() || 99);
-      if (!candidateMapRedevelopmentEnabled || candidateMapPresentationMode !== "markers" || level >= CANDIDATE_MAP_CLUSTER_LEVEL) return "";
+      if (!candidateMapRedevelopmentEnabled || candidateMapPresentationMode !== "markers" || level > CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL) return "";
       return candidateMapBoundsBbox();
     }
 
@@ -12066,7 +12384,10 @@
 
     function clearCandidateMapRedevelopmentLayers() {
       clearCandidateMapRedevelopmentLabels();
-      candidateMapRedevelopmentLayers.forEach(layer => layer.polygon?.setMap?.(null));
+      candidateMapRedevelopmentLayers.forEach(layer => {
+        layer.polygon?.setMap?.(null);
+        layer.nameLabel?.setMap?.(null);
+      });
       candidateMapRedevelopmentLayers = [];
       candidateMapContainer?.setAttribute?.("data-redevelopment-zone-count", "0");
     }
@@ -12124,6 +12445,13 @@
       return value.replace(/\(.+?\)/g, "").trim();
     }
 
+    function isPriceRelevantRedevelopmentZone(zone = {}) {
+      const text = `${zone.name || ""} ${zone.projectType || ""} ${zone.stage || ""} ${zone.sourceNote || ""}`;
+      if (String(zone.id || "") === "11000UQ120PS202411014108") return false;
+      if (/준공|사용승인|사업완료|입주완료|입주자\s*모집공고\s*완료|해제|폐지/.test(text) && !/예정/.test(text)) return false;
+      return !/청년안심|역세권청년|장기전세|행복주택|희망하우징|공공임대|국민임대|영구임대|임대주택|미리내집/.test(text);
+    }
+
     function redevelopmentZoneAlias(zone = {}) {
       const id = String(zone.id || "");
       const name = String(zone.name || "").replace(/\s+/g, " ").trim();
@@ -12157,6 +12485,12 @@
       return `<span class="redevelopment-zone-label"><strong>${esc(title)}</strong><span>${esc(stage)}</span></span>`;
     }
 
+    function redevelopmentZoneNameLabel(zone) {
+      const alias = redevelopmentZoneAlias(zone);
+      const stage = alias?.stage || redevelopmentZoneStageLabel(zone?.stage);
+      return `<span class="redevelopment-zone-name-label"><span>${esc(redevelopmentZoneTitle(zone))}</span><small>${esc(stage)}</small></span>`;
+    }
+
     function redevelopmentZonePriority(zone = {}) {
       const text = `${zone.projectType || ""} ${zone.name || ""}`;
       if (/재개발|재건축/.test(text)) return 1;
@@ -12165,6 +12499,71 @@
       if (/도심 공공|공공주택|역세권/.test(text)) return 4;
       if (/도시재생|청년안심|장기전세/.test(text)) return 8;
       return 5;
+    }
+
+    function redevelopmentZoneStagePriority(zone = {}) {
+      const text = `${redevelopmentZoneAlias(zone)?.stage || zone.stage || ""} ${zone.name || ""}`;
+      if (/착공|이주|철거|관리처분/.test(text)) return 1;
+      if (/사업시행/.test(text)) return 2;
+      if (/조합설립/.test(text)) return 3;
+      if (/추진위원회|정비구역 지정/.test(text)) return 4;
+      if (/후보|검토|공람|대상지/.test(text)) return 6;
+      return 5;
+    }
+
+    function candidateMapSelectedLatLng(kakao) {
+      const selected = candidateMapLocatedEntries
+        .find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey)
+        || candidateMapLocatedEntries[0];
+      const latitude = Number(selected?.latitude);
+      const longitude = Number(selected?.longitude);
+      if (![latitude, longitude].every(Number.isFinite)) return null;
+      return new kakao.maps.LatLng(latitude, longitude);
+    }
+
+    function redevelopmentZoneDistanceFromPoint(point, polygon = []) {
+      if (!point) return Infinity;
+      const center = redevelopmentZoneCenter(candidateMapKakao, polygon);
+      if (!center) return Infinity;
+      return zippickDistanceMeters(
+        { latitude:mapLatLngLat(point), longitude:mapLatLngLng(point) },
+        { latitude:mapLatLngLat(center), longitude:mapLatLngLng(center) },
+      );
+    }
+
+    function candidateMapRedevelopmentNameLabelLimit() {
+      const level = Number(candidateMap?.getLevel?.() || 99);
+      const isMobile = window.matchMedia?.("(max-width:700px)")?.matches;
+      if (level <= 4) return isMobile ? 10 : CANDIDATE_MAP_REDEVELOPMENT_CLOSE_LABEL_LIMIT;
+      return isMobile ? 6 : CANDIDATE_MAP_REDEVELOPMENT_CORE_LABEL_LIMIT;
+    }
+
+    function redevelopmentZoneLabelRank(layer, selectedPoint) {
+      const distance = redevelopmentZoneDistanceFromPoint(selectedPoint, layer.polygonPath);
+      const distanceRank = Number.isFinite(distance) ? Math.min(distance / 1000, 8) : 8;
+      return (
+        redevelopmentZonePriority(layer.zone) * 100
+        + redevelopmentZoneStagePriority(layer.zone) * 12
+        + distanceRank
+        + Number(layer.zone?.areaSqm || 999999999) / 100000000
+      );
+    }
+
+    function syncCandidateMapRedevelopmentNameLabels(kakao) {
+      if (!candidateMap || !kakao?.maps?.CustomOverlay) return;
+      candidateMapRedevelopmentLayers.forEach(layer => {
+        layer.nameLabel?.setMap?.(null);
+        layer.nameLabel = null;
+      });
+      const selectedPoint = candidateMapSelectedLatLng(kakao);
+      const limit = candidateMapRedevelopmentNameLabelLimit();
+      candidateMapRedevelopmentLayers
+        .slice()
+        .sort((left, right) => redevelopmentZoneLabelRank(left, selectedPoint) - redevelopmentZoneLabelRank(right, selectedPoint))
+        .slice(0, limit)
+        .forEach(layer => {
+          layer.nameLabel = createCandidateMapRedevelopmentNameLabel(kakao, layer.zone, layer.polygonPath);
+        });
     }
 
     function showCandidateMapRedevelopmentLabel(kakao, layer, zone, polygon, event = null) {
@@ -12181,6 +12580,21 @@
         yAnchor:1.08,
       });
       layer.label.setZIndex?.(8);
+    }
+
+    function createCandidateMapRedevelopmentNameLabel(kakao, zone, polygon) {
+      const position = redevelopmentZoneCenter(kakao, polygon);
+      if (!candidateMap || !position || !kakao?.maps?.CustomOverlay) return null;
+      const element = document.createElement("span");
+      element.innerHTML = redevelopmentZoneNameLabel(zone);
+      const overlay = new kakao.maps.CustomOverlay({
+        map:candidateMap,
+        position,
+        content:element.firstElementChild,
+        yAnchor:.5,
+      });
+      overlay.setZIndex?.(7);
+      return overlay;
     }
 
     function showCandidateMapRedevelopmentLabelAt(kakao, position) {
@@ -12204,19 +12618,24 @@
       if (!candidateMap) return;
       const bbox = candidateMapRedevelopmentBbox();
       candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", bbox ? "loading" : "hidden");
+      if (bbox) setCandidateMapCaption("주변 정비구역을 불러오고 있어요.");
       if (!bbox) {
         candidateMapRedevelopmentLastBbox = "";
         clearCandidateMapRedevelopmentLayers();
         return;
       }
-      if (bbox === candidateMapRedevelopmentLastBbox) return;
+      if (bbox === candidateMapRedevelopmentLastBbox) {
+        syncCandidateMapRedevelopmentNameLabels(kakao);
+        return;
+      }
       const requestSeq = ++candidateMapRedevelopmentRequestSeq;
       candidateMapRedevelopmentLastBbox = bbox;
       try {
-        const payload = await getJson(`/api/redevelopment-zones?bbox=${encodeURIComponent(bbox)}&limit=20`);
+        const payload = await getJson(`/api/redevelopment-zones?bbox=${encodeURIComponent(bbox)}&limit=${CANDIDATE_MAP_REDEVELOPMENT_REQUEST_LIMIT}`);
         if (requestSeq !== candidateMapRedevelopmentRequestSeq || !candidateMap) return;
         clearCandidateMapRedevelopmentLayers();
-        const zones = Array.isArray(payload?.zones) ? payload.zones.slice(0, 20) : [];
+        const zones = (Array.isArray(payload?.zones) ? payload.zones : [])
+          .filter(isPriceRelevantRedevelopmentZone);
         zones.forEach(zone => {
           const polygons = redevelopmentZoneRings(kakao, zone.geometry);
           polygons.forEach(polygon => {
@@ -12235,15 +12654,22 @@
               clickable:false,
             });
             polygonLayer.setZIndex?.(1);
-            candidateMapRedevelopmentLayers.push({ polygon:polygonLayer, label:null, path, polygonPath:polygon, zone });
+            candidateMapRedevelopmentLayers.push({ polygon:polygonLayer, label:null, nameLabel:null, path, polygonPath:polygon, zone });
           });
         });
+        syncCandidateMapRedevelopmentNameLabels(kakao);
         candidateMapContainer?.setAttribute?.("data-redevelopment-zone-count", String(candidateMapRedevelopmentLayers.length));
         candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", "ready");
+        setCandidateMapCaption(
+          candidateMapRedevelopmentLayers.length
+            ? `주변 정비구역 ${candidateMapRedevelopmentLayers.length.toLocaleString("ko-KR")}곳 표시 중`
+            : "현재 지도 범위에 표시할 정비구역이 없어요."
+        );
       } catch (_) {
         if (requestSeq !== candidateMapRedevelopmentRequestSeq) return;
         clearCandidateMapRedevelopmentLayers();
         candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", "error");
+        setCandidateMapCaption("정비구역을 지금 불러오지 못했어요.");
       }
     }
 
@@ -12252,6 +12678,165 @@
       candidateMapRedevelopmentTimer = setTimeout(() => {
         void renderCandidateMapRedevelopmentZones(kakao);
       }, delay);
+    }
+
+    function candidateMapMeasureStatus(copy = "") {
+      const status = candidateMapQuery("[data-candidate-map-measure-status]");
+      if (!status) return;
+      status.hidden = !copy;
+      status.textContent = copy;
+    }
+
+    function syncCandidateMapMeasureButton() {
+      candidateMapViewElement()?.querySelectorAll("[data-candidate-map-measure-toggle]").forEach(button => {
+        button.setAttribute("aria-pressed", String(candidateMapMeasurementEnabled));
+        button.setAttribute("aria-label", candidateMapMeasurementEnabled ? "거리 측정 중" : "거리 측정");
+        const text = button.querySelector(".candidate-map-tool-text");
+        if (text) text.textContent = candidateMapMeasurementEnabled ? "측정중" : "측정";
+      });
+    }
+
+    function clearCandidateMapMeasurementOverlays() {
+      candidateMapMeasurementLine?.setMap?.(null);
+      candidateMapMeasurementStartDot?.setMap?.(null);
+      candidateMapMeasurementLabel?.setMap?.(null);
+      candidateMapMeasurementEndDot?.setMap?.(null);
+      candidateMapMeasurementStart = null;
+      candidateMapMeasurementLine = null;
+      candidateMapMeasurementStartDot = null;
+      candidateMapMeasurementLabel = null;
+      candidateMapMeasurementLabelElement = null;
+      candidateMapMeasurementEndDot = null;
+      candidateMapMeasurementFixed = false;
+    }
+
+    function formatCandidateMapDistance(meters) {
+      const value = Number(meters || 0);
+      if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}km`;
+      return `${Math.round(value).toLocaleString("ko-KR")}m`;
+    }
+
+    function candidateMapWalkMinutes(meters) {
+      const value = Number(meters || 0);
+      if (!Number.isFinite(value) || value <= 0) return 0;
+      return Math.max(1, Math.round(value / 67));
+    }
+
+    function candidateMapMeasurementLabelHtml(meters) {
+      return `<span class="candidate-map-measure-label-copy"><strong>${esc(formatCandidateMapDistance(meters))}</strong><span>도보 약 ${esc(candidateMapWalkMinutes(meters))}분</span></span><button class="candidate-map-measure-close" type="button" data-candidate-map-measure-close aria-label="거리 측정 끄기">×</button>`;
+    }
+
+    function candidateMapMeasurementDistance() {
+      if (candidateMapMeasurementLine?.getLength) return candidateMapMeasurementLine.getLength();
+      const path = candidateMapMeasurementLine?.getPath?.() || [];
+      return path.length >= 2 ? mapDistanceMeters(path[0], path[path.length - 1]) : 0;
+    }
+
+    function createCandidateMapMeasureDot(kakao, position) {
+      if (!candidateMap || !kakao?.maps?.CustomOverlay || !position) return null;
+      const dot = document.createElement("span");
+      dot.className = "candidate-map-measure-dot";
+      const overlay = new kakao.maps.CustomOverlay({
+        map:candidateMap,
+        position,
+        content:dot,
+        yAnchor:.5,
+      });
+      overlay.setZIndex?.(21);
+      return overlay;
+    }
+
+    function beginCandidateMapMeasurement(kakao, start) {
+      if (!candidateMapMeasurementEnabled || !start) return false;
+      clearCandidateMapMeasurementOverlays();
+      candidateMapMeasurementStart = start;
+      candidateMapMeasurementStartDot = createCandidateMapMeasureDot(kakao, start);
+      candidateMapMeasureStatus("끝 지점을 눌러주세요");
+      return true;
+    }
+
+    function ensureCandidateMapMeasurementOverlays(kakao, start, end) {
+      if (!candidateMap || !kakao?.maps?.Polyline || !start || !end) return false;
+      if (!candidateMapMeasurementLine) {
+        candidateMapMeasurementLine = new kakao.maps.Polyline({
+          map:candidateMap,
+          path:[start, end],
+          strokeWeight:4,
+          strokeColor:"#3182f6",
+          strokeOpacity:.95,
+          strokeStyle:"solid",
+          clickable:false,
+          zIndex:20,
+        });
+        candidateMapMeasurementLine.setZIndex?.(20);
+      } else {
+        candidateMapMeasurementLine.setPath?.([start, end]);
+      }
+      const meters = candidateMapMeasurementDistance();
+      if (!candidateMapMeasurementLabel) {
+        const label = document.createElement("span");
+        label.className = "candidate-map-measure-label";
+        label.innerHTML = candidateMapMeasurementLabelHtml(meters);
+        label.addEventListener("click", event => {
+          const close = event.target.closest("[data-candidate-map-measure-close]");
+          if (!close) return;
+          event.preventDefault();
+          event.stopPropagation();
+          setCandidateMapMeasurementEnabled(false);
+        });
+        candidateMapMeasurementLabelElement = label;
+        candidateMapMeasurementLabel = new kakao.maps.CustomOverlay({
+          map:candidateMap,
+          position:end,
+          content:label,
+          yAnchor:1.35,
+        });
+        candidateMapMeasurementLabel.setZIndex?.(21);
+      } else {
+        candidateMapMeasurementLabel.setPosition?.(end);
+        if (candidateMapMeasurementLabelElement) candidateMapMeasurementLabelElement.innerHTML = candidateMapMeasurementLabelHtml(meters);
+      }
+      if (!candidateMapMeasurementEndDot) {
+        candidateMapMeasurementEndDot = createCandidateMapMeasureDot(kakao, end);
+      } else {
+        candidateMapMeasurementEndDot.setPosition?.(end);
+      }
+      return true;
+    }
+
+    function updateCandidateMapMeasurement(kakao, end) {
+      if (!candidateMapMeasurementEnabled || candidateMapMeasurementFixed || !end) return false;
+      if (!candidateMapMeasurementStart) return false;
+      if (!ensureCandidateMapMeasurementOverlays(kakao, candidateMapMeasurementStart, end)) return false;
+      candidateMapMeasureStatus("끝 지점을 누르면 거리가 고정돼요");
+      return true;
+    }
+
+    function handleCandidateMapMeasurementClick(kakao, position) {
+      if (!candidateMapMeasurementEnabled || !position) return false;
+      if (candidateMapMeasurementFixed) return true;
+      if (!candidateMapMeasurementStart) {
+        beginCandidateMapMeasurement(kakao, position);
+        return true;
+      }
+      candidateMapMeasurementFixed = false;
+      const updated = updateCandidateMapMeasurement(kakao, position);
+      if (updated) {
+        candidateMapMeasurementFixed = true;
+        candidateMapMeasureStatus("X를 누르면 측정이 꺼져요");
+      }
+      return true;
+    }
+
+    function setCandidateMapMeasurementEnabled(enabled) {
+      candidateMapMeasurementEnabled = Boolean(enabled);
+      clearCandidateMapMeasurementOverlays();
+      syncCandidateMapMeasureButton();
+      if (!candidateMapMeasurementEnabled) {
+        candidateMapMeasureStatus("");
+        return;
+      }
+      candidateMapMeasureStatus("시작점을 눌러주세요");
     }
 
     function candidateMapMarkerTone(item) {
@@ -12310,11 +12895,11 @@
       const budget = Number(currentBudgetData?.budgetEok || 0);
       const price = candidateMapComparablePriceEok(item);
       if (budget > 0 && price > 0) {
-        return price <= budget
-          ? { className:"is-possible", label:"예산 내" }
-          : { className:"is-short", label:"추가자금 필요" };
+        if (price > budget) return { key:"short", className:"is-short", label:"추가자금 필요" };
+        if (price / budget < CANDIDATE_MAP_ROOMY_BUDGET_USAGE) return { key:"roomy", className:"is-roomy", label:"자금 여유" };
+        return { key:"fit", className:"is-possible", label:"자금 적정" };
       }
-      return { className:"is-unknown", label:"가격 확인 필요" };
+      return { key:"fit", className:"is-unknown", label:"가격 확인 필요" };
     }
 
     function candidateAdditionalFundingSummary(item) {
@@ -12329,19 +12914,41 @@
       return { className:"is-unknown", value:"확인 필요", aria:"확인 필요" };
     }
 
+    function candidateMapFundingKey(item) {
+      return candidateMapStatus(item).key || "fit";
+    }
+
+    function candidateMapVisibleLocatedEntries(entries = candidateMapLocatedEntries) {
+      return (entries || []).filter(entry => candidateMapFundingFilters.has(candidateMapFundingKey(entry.item)));
+    }
+
+    function syncCandidateMapFundingFilterControls() {
+      candidateMapViewElement()?.querySelectorAll("[data-candidate-map-funding-filter]").forEach(input => {
+        input.checked = candidateMapFundingFilters.has(input.dataset.candidateMapFundingFilter);
+      });
+    }
+
+    function setCandidateMapFundingFilter(key, enabled) {
+      if (!CANDIDATE_MAP_FUNDING_FILTERS.some(item => item.key === key)) return;
+      if (enabled) candidateMapFundingFilters.add(key);
+      else candidateMapFundingFilters.delete(key);
+      syncCandidateMapFundingFilterControls();
+      if (candidateMap && candidateMapKakao) refreshCandidateMapFundingView(candidateMapKakao, { fit:true });
+    }
+
     function candidateMapPreviewHtml(item) {
       return `<button class="candidate-map-sheet-handle" type="button" data-candidate-map-sheet-handle aria-expanded="false" aria-label="지도 상세 카드 펼치기"></button>
         <div class="candidate-map-sheet-content">
+          ${candidateListMode !== "all" && currentBudgetData?.candidateScoreDataReady !== false
+            ? candidateShortlistReasonHtml(item, candidateShortlistRank(item))
+            : ""}
           <div class="candidate-top" data-candidate-key="${esc(candidateIdentityKey(item))}">
             <div class="budget-main">
-              <span class="candidate-name-row"><span class="budget-name">${esc(candidateDisplayName(item))}</span></span>
+              <span class="candidate-name-row">${candidateTitleHtml(item)}</span>
               <span class="budget-meta">${candidateListMetaHtml(item)}</span>
               ${candidateTopScoreBadgesHtml(item)}
             </div>
           </div>
-          ${candidateListMode !== "all" && currentBudgetData?.candidateScoreDataReady !== false
-            ? candidateShortlistReasonHtml(item, candidateShortlistRank(item))
-            : ""}
           <div class="budget-side">
             ${candidatePriceComparisonHtml(item)}
           </div>
@@ -12604,6 +13211,10 @@
       const entry = { item, position, element:marker, overlay:null };
       marker.addEventListener("click", event => {
         event.stopPropagation();
+        if (candidateMapMeasurementEnabled && candidateMapKakao) {
+          handleCandidateMapMeasurementClick(candidateMapKakao, position);
+          return;
+        }
         selectCandidateMapItem(entry.item);
       });
       entry.overlay = new kakao.maps.CustomOverlay({
@@ -12655,6 +13266,7 @@
     }
 
     function renderCandidateMapClusters(kakao, entries) {
+      if (candidateMapMeasurementEnabled) setCandidateMapMeasurementEnabled(false);
       clearCandidateMapMarkers();
       clearCandidateMapClusters();
       clearCandidateMapRedevelopmentLayers();
@@ -12688,6 +13300,38 @@
       });
     }
 
+    function showCandidateMapFilteredEmptyState() {
+      clearCandidateMapMarkers();
+      clearCandidateMapClusters();
+      candidateMapSelectedKey = "";
+      setCandidateMapDetailOpen(false);
+      const preview = candidateMapQuery("[data-candidate-map-preview]");
+      if (preview) preview.hidden = true;
+      setCandidateMapState("선택한 자금 상태의 후보가 없어요", "체크박스를 다시 켜면 지도에 표시돼요.");
+    }
+
+    function refreshCandidateMapFundingView(kakao, options = {}) {
+      if (!candidateMap || !kakao) return;
+      const visibleEntries = candidateMapVisibleLocatedEntries();
+      if (!visibleEntries.length) {
+        showCandidateMapFilteredEmptyState();
+        return;
+      }
+      const state = candidateMapQuery("[data-candidate-map-state]");
+      if (state) state.hidden = true;
+      const level = Number(candidateMap.getLevel?.() || 99);
+      const showMarkers = candidateMapPresentationMode === "markers" || level < CANDIDATE_MAP_CLUSTER_LEVEL;
+      if (showMarkers) renderCandidateMapMarkers(kakao, visibleEntries, { fit:options.fit === true, pan:false, selectFirst:options.selectFirst === true });
+      else {
+        renderCandidateMapClusters(kakao, visibleEntries);
+        if (options.fit && visibleEntries.length > 1) candidateMap.setBounds(candidateMapBoundsForEntries(kakao, visibleEntries));
+        else if (options.fit && visibleEntries.length === 1) {
+          candidateMap.setCenter(visibleEntries[0].position);
+          candidateMap.setLevel(4);
+        }
+      }
+    }
+
     function renderCandidateMapMarkers(kakao, entries, options = {}) {
       clearCandidateMapClusters();
       clearCandidateMapMarkers();
@@ -12718,6 +13362,11 @@
 
     function syncCandidateMapPresentation(kakao, options = {}) {
       if (!candidateMap || !candidateMapLocatedEntries.length) return;
+      const visibleEntries = candidateMapVisibleLocatedEntries();
+      if (!visibleEntries.length) {
+        showCandidateMapFilteredEmptyState();
+        return;
+      }
       const level = Number(candidateMap.getLevel?.() || 99);
       const previousLevel = Number.isFinite(candidateMapLastLevel) ? candidateMapLastLevel : level;
       const zoomedOut = level > previousLevel;
@@ -12725,14 +13374,18 @@
       candidateMapLastLevel = level;
       if (Date.now() < candidateMapSuppressPresentationSyncUntil) return;
       if (candidateMapPresentationMode === "markers") {
-        if (zoomedOut && level >= CANDIDATE_MAP_CLUSTER_LEVEL) renderCandidateMapClusters(kakao, candidateMapLocatedEntries);
+        if (zoomedOut && level >= CANDIDATE_MAP_CLUSTER_LEVEL) renderCandidateMapClusters(kakao, visibleEntries);
         return;
       }
       if (candidateMapPresentationMode === "clusters" && zoomedIn && level < CANDIDATE_MAP_CLUSTER_LEVEL) {
-        renderCandidateMapMarkers(kakao, candidateMapLocatedEntries, { fit:options.fit, pan:false, selectFirst:true });
-      } else if (options.fit && candidateMapPresentationMode === "clusters" && candidateMapLocatedEntries.length > 1) {
-        renderCandidateMapClusters(kakao, candidateMapLocatedEntries);
-        candidateMap.setBounds(candidateMapBoundsForEntries(kakao, candidateMapLocatedEntries));
+        renderCandidateMapMarkers(kakao, visibleEntries, { fit:options.fit, pan:false, selectFirst:true });
+      } else if (options.fit && candidateMapPresentationMode === "clusters" && visibleEntries.length > 1) {
+        renderCandidateMapClusters(kakao, visibleEntries);
+        candidateMap.setBounds(candidateMapBoundsForEntries(kakao, visibleEntries));
+      } else if (options.fit && candidateMapPresentationMode === "clusters" && visibleEntries.length === 1) {
+        renderCandidateMapClusters(kakao, visibleEntries);
+        candidateMap.setCenter(visibleEntries[0].position);
+        candidateMap.setLevel(4);
       }
     }
 
@@ -12776,6 +13429,10 @@
       candidateMapRedevelopmentTimer = null;
       candidateMapRedevelopmentRequestSeq += 1;
       candidateMapRedevelopmentLastBbox = "";
+      candidateMapMeasurementEnabled = false;
+      clearCandidateMapMeasurementOverlays();
+      candidateMapMeasureStatus("");
+      syncCandidateMapMeasureButton();
       candidateMapEntries.forEach(entry => entry.overlay?.setMap?.(null));
       candidateMapEntries = [];
       candidateMapClusterEntries.forEach(entry => entry.overlay?.setMap?.(null));
@@ -12803,15 +13460,25 @@
       state.innerHTML = `${loading ? '<span class="loading-spinner loading-spinner--large candidate-map-loader" aria-hidden="true"></span>' : ""}<strong>${esc(title)}</strong><span>${esc(copy)}</span>`;
     }
 
+    function budgetCandidateMapRowsForOpen() {
+      const visibleRows = currentBudgetData?.visibleCandidates || [];
+      const allRows = currentBudgetData?.candidates || [];
+      if (!candidateMapSelectedKey) return visibleRows.length ? visibleRows : allRows;
+      const hasSelectedVisible = visibleRows.some(item => candidateIdentityKey(item) === candidateMapSelectedKey);
+      if (hasSelectedVisible) return visibleRows.length ? visibleRows : allRows;
+      const selected = allRows.find(item => candidateIdentityKey(item) === candidateMapSelectedKey);
+      return selected ? [selected, ...visibleRows] : (visibleRows.length ? visibleRows : allRows);
+    }
+
     async function renderCandidateMap(rows) {
-      // 지도는 현재 필터·정렬이 적용된 전체 후보를 보여준다. 주소 확인은
+      // 지도는 현재 화면에 표시할 후보를 보여준다. 주소 확인은
       // 10개씩 나눠 처리해 지도 화면이 오래 빈 상태로 멈추지 않게 한다.
       if (currentBudgetData?.enrichmentPending) rows = rows.filter(candidateRowPriceReady);
       resetCandidateMap();
       const generation = candidateMapRenderGeneration;
       const container = candidateMapQuery("[data-candidate-map]");
       if (!container || candidateViewMode !== "map") return;
-      setCandidateMapState("전체 후보 위치를 불러오고 있어요", `주소 확인 0/${rows.length}곳`, true);
+      setCandidateMapState("후보 위치를 불러오고 있어요", `주소 확인 0/${rows.length}곳`, true);
       try {
         const kakao = await loadMapApi();
         if (generation !== candidateMapRenderGeneration || !container.isConnected) return;
@@ -12842,29 +13509,36 @@
             located.push({ ...entry, position });
           });
           candidateMapLocatedEntries = located;
+          const visibleLocated = candidateMapVisibleLocatedEntries(located);
           const processedCount = Math.min(index + CANDIDATE_PAGE_SIZE, rows.length);
           const missingCount = processedCount - located.length;
-          if (located.length) {
+          if (visibleLocated.length) {
             const state = candidateMapQuery("[data-candidate-map-state]");
             if (state) state.hidden = true;
             if (openWithSelectedCandidate) {
-              renderCandidateMapMarkers(kakao, located, { fit:false, pan:false, selectFirst:false });
-              const selectedEntry = located.find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey);
+              renderCandidateMapMarkers(kakao, visibleLocated, { fit:false, pan:false, selectFirst:false });
+              const selectedEntry = visibleLocated.find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey);
               if (selectedEntry && !focusedSelectedCandidate) {
                 focusCandidateMapEntry(selectedEntry);
                 focusedSelectedCandidate = true;
               }
             } else {
-              renderCandidateMapClusters(kakao, located);
-              if (located.length > 1) candidateMap.setBounds(bounds);
-              else candidateMap.setCenter(located[0].position);
+              renderCandidateMapClusters(kakao, visibleLocated);
+              if (visibleLocated.length > 1) candidateMap.setBounds(candidateMapBoundsForEntries(kakao, visibleLocated));
+              else candidateMap.setCenter(visibleLocated[0].position);
             }
             if (caption) {
               caption.hidden = false;
-              caption.textContent = `주소 확인 ${located.length}/${rows.length}곳${missingCount ? ` · 미확인 ${missingCount}곳` : ""}`;
+              caption.textContent = `주소 확인 ${located.length}/${rows.length}곳 · 표시 ${visibleLocated.length}곳${missingCount ? ` · 미확인 ${missingCount}곳` : ""}`;
+            }
+          } else if (located.length) {
+            showCandidateMapFilteredEmptyState();
+            if (caption) {
+              caption.hidden = false;
+              caption.textContent = `주소 확인 ${located.length}/${rows.length}곳 · 표시 0곳${missingCount ? ` · 미확인 ${missingCount}곳` : ""}`;
             }
           } else {
-            setCandidateMapState("전체 후보 위치를 불러오고 있어요", `주소 확인 ${processedCount}/${rows.length}곳`, true);
+            setCandidateMapState("후보 위치를 불러오고 있어요", `주소 확인 ${processedCount}/${rows.length}곳`, true);
           }
           await new Promise(resolve => setTimeout(resolve, 0));
         }
@@ -12873,13 +13547,21 @@
           return;
         }
         const totalMissingCount = rows.length - located.length;
+        const finalVisibleLocated = candidateMapVisibleLocatedEntries(located);
         if (caption) {
-          caption.hidden = !totalMissingCount;
-          caption.textContent = totalMissingCount ? `주소 확인 ${located.length}/${rows.length}곳 · 미확인 ${totalMissingCount}곳` : "";
+          const hasFilteredRows = finalVisibleLocated.length !== located.length;
+          caption.hidden = !totalMissingCount && !hasFilteredRows;
+          caption.textContent = [
+            `주소 확인 ${located.length}/${rows.length}곳`,
+            hasFilteredRows ? `표시 ${finalVisibleLocated.length}곳` : "",
+            totalMissingCount ? `미확인 ${totalMissingCount}곳` : "",
+          ].filter(Boolean).join(" · ");
         }
-        if (!openWithSelectedCandidate) renderCandidateMapClusters(kakao, located);
+        if (!finalVisibleLocated.length) {
+          showCandidateMapFilteredEmptyState();
+        } else if (!openWithSelectedCandidate) renderCandidateMapClusters(kakao, finalVisibleLocated);
         else if (!focusedSelectedCandidate) {
-          renderCandidateMapMarkers(kakao, located, { fit:true, pan:false, selectFirst:true });
+          renderCandidateMapMarkers(kakao, finalVisibleLocated, { fit:true, pan:false, selectFirst:true });
         }
         requestAnimationFrame(() => {
           if (generation !== candidateMapRenderGeneration || candidateMapContainer !== container || !container.isConnected) return;
@@ -12888,7 +13570,11 @@
           candidateMap?.setZoomable?.(true);
           kakao.maps.event.addListener(candidateMap, "zoom_changed", () => syncCandidateMapPresentation(kakao));
           kakao.maps.event.addListener(candidateMap, "idle", () => scheduleCandidateMapRedevelopmentZones(kakao));
+          kakao.maps.event.addListener(candidateMap, "mousemove", event => {
+            updateCandidateMapMeasurement(kakao, event?.latLng);
+          });
           kakao.maps.event.addListener(candidateMap, "click", event => {
+            if (handleCandidateMapMeasurementClick(kakao, event?.latLng)) return;
             showCandidateMapRedevelopmentLabelAt(kakao, event?.latLng);
           });
           scheduleCandidateMapRedevelopmentZones(kakao, 0);
@@ -12929,7 +13615,7 @@
           mapView?.querySelector("[data-candidate-map-close]")?.focus({ preventScroll:true });
           const rows = candidateMapOrigin === "aptSearch"
             ? aptSearchMapRows()
-            : currentBudgetData?.candidates || currentBudgetData?.visibleCandidates || [];
+            : budgetCandidateMapRowsForOpen();
           renderCandidateMap(rows);
         });
       } else {
@@ -12947,11 +13633,7 @@
       const shouldReturnToComparison = candidateMapReturnToComparison;
       candidateMapReturnToComparison = false;
       setCandidateViewMode("list");
-      if (shouldReturnToComparison) {
-        requestAnimationFrame(() => {
-          void openComparison({ preserveStep:true });
-        });
-      }
+      if (shouldReturnToComparison) requestAnimationFrame(() => void openComparison());
     }
 
     function policyStatusClass(status) {
@@ -13235,26 +13917,17 @@
         );
         return price > 0 ? price : Number.POSITIVE_INFINITY;
       };
-      const hasBudgetComparablePrice = row => [
-        row.midPriceEok,
-        row.estimatedMidPriceEok,
-        row.latestDealPriceEok,
-        row.lastObservedDealPriceEok,
-        row.minPriceEok,
-        row.maxPriceEok,
-      ].some(value => Number(value || 0) > 0);
-      const budgetComparisonGap = row => {
-        const gap = Number(row.budgetGapEok);
-        if (Number.isFinite(gap) && hasBudgetComparablePrice(row)) return gap;
-        const budget = Number(budgetEok || 0);
+      const budgetComparisonPrice = row => {
         const price = Number(
           row.midPriceEok ||
           row.estimatedMidPriceEok ||
           row.latestDealPriceEok ||
           row.lastObservedDealPriceEok ||
+          row.minPriceEok ||
+          row.maxPriceEok ||
           0
         );
-        return budget > 0 && price > 0 ? budget - price : Number.POSITIVE_INFINITY;
+        return price > 0 ? price : null;
       };
       const compareHighFirst = (leftValue, rightValue) => {
         if (leftValue === null && rightValue === null) return 0;
@@ -13290,17 +13963,96 @@
         } else if (sortKey === "transactions") {
           difference = Number(right.transactionCount || 0) - Number(left.transactionCount || 0);
         } else {
-          const leftGap = budgetComparisonGap(left);
-          const rightGap = budgetComparisonGap(right);
-          difference = Math.abs(leftGap) - Math.abs(rightGap);
-          if (!difference) difference = Number(rightGap >= 0) - Number(leftGap >= 0);
+          const budget = Number(budgetEok || 0);
+          const leftPrice = budgetComparisonPrice(left);
+          const rightPrice = budgetComparisonPrice(right);
+          if (budget && leftPrice !== null && rightPrice !== null) {
+            const leftOver = leftPrice > budget;
+            const rightOver = rightPrice > budget;
+            difference = Number(leftOver) - Number(rightOver);
+            if (!difference) {
+              difference = leftOver
+                ? leftPrice - rightPrice
+                : rightPrice - leftPrice;
+            }
+          } else {
+            difference = (leftPrice === null ? 1 : 0) - (rightPrice === null ? 1 : 0);
+          }
         }
         return difference || String(left.name || "").localeCompare(String(right.name || ""), "ko");
       });
       return sorted;
     }
 
-    function purchasePowerParams() {
+    let purchasePowerAdvancedOpenSource = "";
+    let purchasePowerAdvancedTrackingReady = false;
+
+    function purchasePowerHasCustomDetails() {
+      const estimatedRate = estimatedMortgageRate().rate.toFixed(1);
+      return Boolean(
+        policyCreditScore.value.trim() ||
+        mortgageRateManuallyEdited ||
+        policyMortgageRate.value.trim() !== estimatedRate ||
+        policyLoanTerm.value !== "30" ||
+        policyPurchaseCostRate.value !== "3"
+      );
+    }
+
+    function syncPurchasePowerActionLabels() {
+      const advancedOpen = purchasePowerAdvanced.open;
+      powerApproximateCalculate.textContent = advancedOpen ? "입력한 기준으로 계산하기" : "대략 계산하기";
+      powerApproximateCalculate.dataset.purchasePowerMode = advancedOpen ? "exact" : "approximate";
+      powerCalculate.textContent = advancedOpen ? "기본 기준으로 계산하기" : "내 상황 더 입력하기";
+      purchasePowerAdvanced.querySelector("summary").textContent = advancedOpen ? "상세 입력 닫기" : "내 상황 더 입력하기";
+    }
+
+    function openPurchasePowerDetails(source = "summary") {
+      if (!purchasePowerAdvanced.open) {
+        purchasePowerAdvancedOpenSource = source;
+        purchasePowerAdvanced.open = true;
+        trackEvent("purchase_power_advanced_opened", { source:purchasePowerAdvancedOpenSource });
+      }
+      syncPurchasePowerActionLabels();
+      requestAnimationFrame(() => policyCreditScore.focus({ preventScroll:false }));
+    }
+
+    function resetPurchasePowerInputs() {
+      [policyCash, policyAnnualIncome, policyMonthlyDebt, policySpouseIncome, policySpouseDebt, policyCreditScore].forEach(input => {
+        input.value = "";
+        clearFieldError(input);
+      });
+      policyHomeOwnership.value = "";
+      policyFirstTime.value = "";
+      policyMaritalStatus.value = "single";
+      policyCoBorrower.value = "false";
+      policyLoanTerm.value = "30";
+      policyPurchaseCostRate.value = "3";
+      mortgageRateManuallyEdited = false;
+      applyEstimatedMortgageRate(true);
+      syncMaritalFields();
+      renderHomeOwnershipPicker();
+      renderMaritalStatusPicker();
+      renderPowerSinglePickers();
+      invalidatePurchasePower(false);
+      purchasePowerResult.classList.remove("show", "is-sheet");
+      savePurchasePowerForm();
+      trackEvent("purchase_power_reset", {});
+      policyHomeOwnership.focus({ preventScroll:false });
+      syncPurchasePowerActionLabels();
+    }
+
+    function handlePowerDetailedAction() {
+      if (!purchasePowerAdvanced.open) {
+        openPurchasePowerDetails("secondary_action");
+        return;
+      }
+      purchasePowerAdvanced.open = false;
+      syncPurchasePowerActionLabels();
+      calculatePurchasePower("approximate");
+    }
+
+    function purchasePowerParams(mode = "exact") {
+      const useSimpleDefaults = mode === "approximate" && !purchasePowerAdvanced.open;
       return new URLSearchParams({
         home_ownership: policyHomeOwnership.value,
         first_time: policyFirstTime.value,
@@ -13310,9 +14062,9 @@
         co_borrower: policyCoBorrower.value,
         spouse_annual_income: policySpouseIncome.value.trim(),
         spouse_monthly_debt_payment: policySpouseDebt.value.trim(),
-        mortgage_rate: policyMortgageRate.value.trim(),
-        loan_term_years: policyLoanTerm.value,
-        purchase_cost_rate: policyPurchaseCostRate.value,
+        mortgage_rate: useSimpleDefaults ? mortgageRateMarketAveragePercent.toFixed(1) : policyMortgageRate.value.trim(),
+        loan_term_years: useSimpleDefaults ? "30" : policyLoanTerm.value,
+        purchase_cost_rate: useSimpleDefaults ? "3" : policyPurchaseCostRate.value,
       });
     }
 
@@ -13352,9 +14104,71 @@
       setConditionStage("power", false);
     }
 
-    function renderPurchasePower(data) {
+    function readableManwon(value) {
+      const amount = Number(value || 0);
+      if (!Number.isFinite(amount) || amount <= 0) return "0만원";
+      if (amount >= 10000) return `${(amount / 10000).toFixed(1).replace(/\.0$/, "")}억원`;
+      return `${Math.round(amount).toLocaleString("ko-KR")}만원`;
+    }
+
+    function purchasePowerLoanBasisMeta(snapshot, inputMortgageRate, dsrMortgageRate, policyCapMeta) {
+      const fallbackIncome = Number(policyAnnualIncome?.value || 0);
+      const combinedIncome = Number(snapshot.combinedIncomeManwon || fallbackIncome || 0);
+      const monthlyDebt = Number(snapshot.combinedMonthlyDebtPaymentManwon ?? policyMonthlyDebt?.value ?? 0);
+      const dsrAnnualLimit = Math.max(0, Math.round(combinedIncome * 0.4));
+      const dsrAnnualRoom = Math.max(0, Math.round(combinedIncome * 0.4 - monthlyDebt * 12));
+      const monthlyRoom = Math.max(0, Math.round(dsrAnnualRoom / 12));
+      const rateText = Number.isFinite(inputMortgageRate)
+        ? `변동형 DSR ${dsrMortgageRate.toFixed(1)}% = 입력 ${inputMortgageRate.toFixed(1)}% + 스트레스 ${mortgageStressRatePercent.toFixed(1)}%p · ${snapshot.loanTermYears}년${policyCapMeta}`
+        : `${snapshot.loanTermYears}년 상환 기준`;
+      const debtText = monthlyDebt > 0
+        ? `기존 월상환 ${readableManwon(monthlyDebt)} 차감 → 월 ${readableManwon(monthlyRoom)} 기준`
+        : `월 ${readableManwon(monthlyRoom)} 상환 기준`;
+      return [
+        esc(rateText),
+        esc(`연소득 ${readableManwon(combinedIncome)} × DSR 40% = 연 ${readableManwon(dsrAnnualLimit)}`),
+        esc(debtText),
+      ].map(text => `<span>${text}</span>`).join("");
+    }
+
+    function powerCoreInputSnapshot() {
+      return {
+        cash:String(policyCash.value || "").trim(),
+        annualIncome:String(policyAnnualIncome.value || "").trim(),
+        monthlyDebt:String(policyMonthlyDebt.value || "").trim(),
+      };
+    }
+
+    function powerCoreChangeLabels(before, after) {
+      return [
+        ["cash", "자기자금"],
+        ["annualIncome", "연소득"],
+        ["monthlyDebt", "월 대출 상환액"],
+      ].filter(([key]) => String(before?.[key] || "") !== String(after?.[key] || ""))
+        .map(([, label]) => label);
+    }
+
+    function purchasePowerChangeHtml(context) {
+      if (!context) return "";
+      const changedLabels = Array.isArray(context.changedLabels) && context.changedLabels.length
+        ? context.changedLabels.join(", ")
+        : "바뀐 조건";
+      const previousBudget = Number(context.previousBudgetEok);
+      const nextBudget = Number(context.nextBudgetEok);
+      const hasPrevious = Number.isFinite(previousBudget) && previousBudget > 0;
+      const hasNext = Number.isFinite(nextBudget) && nextBudget > 0;
+      const changeText = hasPrevious && hasNext
+        ? `매매가 상한이 <strong>${esc(policyMoney(previousBudget))}</strong>에서 <strong>${esc(policyMoney(nextBudget))}</strong>으로 바뀌었어요.`
+        : `바뀐 조건을 반영한 새 매매가 상한이에요.`;
+      return `<div class="power-result-change"><strong>${esc(changedLabels)}</strong> 변경을 반영했어요.<br>${changeText}</div>`;
+    }
+
+    function renderPurchasePower(data, options = {}) {
       const snapshot = data.snapshot || {};
       const ceiling = policyMoney(data.budgetEok);
+      const changeContext = options.changeContext
+        ? { ...options.changeContext, nextBudgetEok:data.budgetEok }
+        : null;
       const inputMortgageRate = Number(snapshot.mortgageRatePercent);
       const dsrMortgageRate = inputMortgageRate + mortgageStressRatePercent;
       const purchaseCostRate = Number(snapshot.purchaseCostRatePercent || 0);
@@ -13372,9 +14186,7 @@
       const policyCapMeta = Number(snapshot.dsrLoanLimitEok || 0) > Number(effectiveLoanLimit || 0)
         ? ` · DSR 계산 한도 ${policyMoney(snapshot.dsrLoanLimitEok)} 중 정책 상한 반영`
         : "";
-      const loanRateMeta = Number.isFinite(inputMortgageRate)
-        ? `변동형 DSR ${dsrMortgageRate.toFixed(1)}% = 입력 ${inputMortgageRate.toFixed(1)}% + 스트레스 ${mortgageStressRatePercent.toFixed(1)}%p · ${snapshot.loanTermYears}년${policyCapMeta}`
-        : `${snapshot.loanTermYears}년 상환 기준`;
+      const loanRateMeta = purchasePowerLoanBasisMeta(snapshot, inputMortgageRate, dsrMortgageRate, policyCapMeta);
       const purchaseCostMeta = hasPurchaseCostAllowance
         ? `취득세·중개비 등 매매가의 ${purchaseCostRate}% 반영`
         : "취득세·중개비 등 부대비용은 제외";
@@ -13385,17 +14197,18 @@
       purchasePowerResult.innerHTML = `<div class="power-result-card" role="dialog" aria-modal="true" aria-label="현재 정책 기준 예상 결과">
         <div class="multi-sheet-grabber" aria-hidden="true"></div>
         <div class="power-result-content">
-          <div class="power-result-kicker">변동형 주담대 가정과 현재 정책 기준을 반영한 예상 결과예요.</div>
+          <div class="power-result-kicker">${changeContext ? "입력한 조건이 바뀌어 매매가 상한을 다시 계산했어요." : "변동형 주담대 가정과 현재 정책 기준을 반영한 예상 결과예요."}</div>
           <div class="power-result-value">${esc(purchaseCeilingLabel)} ${esc(ceiling)}</div>
+          ${purchasePowerChangeHtml(changeContext)}
           <div class="power-result-breakdown" aria-label="매수 가능 상한 산출 과정">
             <div class="power-result-row">
               <span class="power-result-row-no">1</span>
               <div class="power-result-row-copy"><span class="power-result-row-label">자기자금</span></div>
               <strong class="power-result-row-value">${esc(policyMoney(snapshot.cashEok))}</strong>
             </div>
-            <div class="power-result-row">
+            <div class="power-result-row has-stacked-meta">
               <span class="power-result-row-no">2</span>
-              <div class="power-result-row-copy"><span class="power-result-row-label">DSR 기준 예상 대출 한도</span><span class="power-result-row-meta">${esc(loanRateMeta)}</span></div>
+              <div class="power-result-row-copy"><span class="power-result-row-label">DSR 기준 예상 대출 한도</span><span class="power-result-row-meta">${loanRateMeta}</span></div>
               <strong class="power-result-row-value">${effectiveLoanLimit == null ? "금융사 확인" : `+ ${esc(policyMoney(effectiveLoanLimit))}`}</strong>
             </div>
             <div class="power-result-row">
@@ -13403,7 +14216,7 @@
               <div class="power-result-row-copy"><span class="power-result-row-label">부대비용</span><span class="power-result-row-meta">${esc(purchaseCostMeta)}</span></div>
               <strong class="power-result-row-value">${purchaseCostRate ? `- ${esc(policyMoney(purchaseCost))}` : "미반영"}</strong>
             </div>
-            <div class="power-result-row total">
+            <div class="power-result-row has-stacked-meta total">
               <span class="power-result-row-no">4</span>
               <div class="power-result-row-copy"><span class="power-result-row-label">${esc(purchaseCeilingLabel)}</span><span class="power-result-row-meta">${esc(ceilingMeta)}</span></div>
               <strong class="power-result-row-value">${esc(ceiling)}</strong>
@@ -13412,14 +14225,15 @@
           ${policyDateLabel || reason ? `<div class="power-result-note">${policyDateLabel ? esc(policyDateLabel) : ""}${policyDateLabel && reason ? " · " : ""}${reason ? esc(reason) : ""}</div>` : ""}
         </div>
         <div class="power-result-actions">
-          <button type="button" data-flow-next>집 조건 선택하기</button>
-          <button class="power-result-reselect" type="button" data-flow-reselect>다시 선택하기</button>
+          ${changeContext
+            ? `<button type="button" data-flow-confirm-change>확인했어요</button><button class="power-result-reselect" type="button" data-flow-change-edit>다시 수정하기</button>`
+            : `<button type="button" data-flow-next>집 조건 선택하기</button><button class="power-result-reselect" type="button" data-flow-reselect>다시 선택하기</button>`}
         </div>
       </div>`;
       purchasePowerResult.classList.add("show", "is-sheet");
       document.body.classList.add("purchase-power-sheet-open");
       syncPurchasePowerSummary();
-      setConditionStage("power", false);
+      if (!options.preserveConditionStage) setConditionStage("power", false);
     }
 
     function selectedOptionText(select) {
@@ -13731,19 +14545,37 @@
     async function submitConditionItemEdit() {
       const config = conditionEditConfig(activeConditionEditTarget);
       if (!config || !conditionItemEditForm.reportValidity()) return;
+      const previousPower = currentPurchasePower ? { ...currentPurchasePower } : null;
+      const beforePowerCore = powerCoreInputSnapshot();
+      const powerChangeTargets = new Set(["powerCalculate", "policyCash", "policyAnnualIncome", "policyMonthlyDebt"]);
+      const shouldShowPowerChange = config.stage === "power" && powerChangeTargets.has(activeConditionEditTarget);
       conditionItemEditApply.disabled = true;
       conditionItemEditError.hidden = true;
       try {
+        let powerChangeContext = null;
         applyConditionEditValues(config);
+        const changedPowerLabels = powerCoreChangeLabels(beforePowerCore, powerCoreInputSnapshot());
         if (config.stage === "power") {
           const data = await getJson(`/api/purchase-power?${purchasePowerParams().toString()}`);
           currentPurchasePower = data;
           syncPurchasePowerSummary();
+          if (shouldShowPowerChange && changedPowerLabels.length) {
+            powerChangeContext = {
+              changedLabels:changedPowerLabels,
+              previousBudgetEok:previousPower?.budgetEok,
+            };
+          }
         }
         closeConditionItemEdit(false);
         renderConditionSummary();
         setConditionSummaryTab(config.stage);
         syncConditionSummaryCta();
+        if (powerChangeContext && currentPurchasePower) {
+          renderPurchasePower(currentPurchasePower, {
+            changeContext:powerChangeContext,
+            preserveConditionStage:true,
+          });
+        }
       } catch (error) {
         conditionItemEditError.textContent = error.error || "조건을 적용하지 못했어요. 입력값을 확인해 주세요.";
         conditionItemEditError.hidden = false;
@@ -13881,7 +14713,7 @@
       return !firstInvalid;
     }
 
-    async function calculatePurchasePower() {
+    async function calculatePurchasePower(mode = "exact") {
       if (!validateBudgetRequiredFields()) return;
       trackDailyActiveUser();
       trackEvent("purchase_power_submitted", {
@@ -13889,6 +14721,7 @@
         first_time:policyFirstTime.value || "",
         co_borrower:policyCoBorrower.value === "true",
         loan_term_years:policyLoanTerm.value,
+        calculation_mode:mode,
       });
       powerCalculate.disabled = true;
       purchasePowerResult.classList.add("show");
@@ -13896,7 +14729,7 @@
       document.body.classList.remove("purchase-power-sheet-open");
       purchasePowerResult.innerHTML = `<div class="loading">${spinnerHtml("large")}<b>구매력을 계산하고 있어요</b><span class="loading-copy">소득·부채와 현재 정책을 함께 반영합니다.</span></div>`;
       try {
-        const data = await getJson(`/api/purchase-power?${purchasePowerParams().toString()}`);
+        const data = await getJson(`/api/purchase-power?${purchasePowerParams(mode).toString()}`);
         currentPurchasePower = data;
         renderPurchasePower(data);
         trackEvent("purchase_power_completed", {
@@ -14929,7 +15762,7 @@
           url:catalyst.url,
           publishedAt:catalyst.publishedAt,
           articleCount:catalyst.articleCount,
-          scope:catalyst.scope,
+          scope:catalyst.scope || "complex",
           status:catalyst.status || "confirmed",
         });
       }
@@ -14948,32 +15781,17 @@
     function zippickDevelopmentZoneRelevant(zone) {
       const haystack = zippickDevelopmentEvidenceText(zone);
       return ZIPPICK_DEVELOPMENT_PATTERN.test(haystack)
-        && !ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(zippickDevelopmentExclusionText(zone));
+        && !ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN.test(zippickDevelopmentExclusionText(zone))
+        && !zippickDevelopmentCompletedOfficialZone(zone);
     }
 
-    function zippickGeometryPairs(geometry) {
-      const out = [];
-      const walk = value => {
-        if (!Array.isArray(value)) return;
-        if (value.length >= 2 && Number.isFinite(Number(value[0])) && Number.isFinite(Number(value[1]))) {
-          out.push([Number(value[0]), Number(value[1])]);
-          return;
-        }
-        value.forEach(walk);
-      };
-      walk(geometry?.coordinates);
-      return out;
+    function zippickDevelopmentCompletedOfficialZone(zone) {
+      const stage = String(zone?.stage || "").trim();
+      return /(?:준공|입주|완료)(?!\s*예정)/.test(stage);
     }
 
-    function zippickGeometryBbox(geometry) {
-      const pairs = zippickGeometryPairs(geometry);
-      if (!pairs.length) return null;
-      return pairs.reduce((box, pair) => ({
-        minLng:Math.min(box.minLng, pair[0]),
-        minLat:Math.min(box.minLat, pair[1]),
-        maxLng:Math.max(box.maxLng, pair[0]),
-        maxLat:Math.max(box.maxLat, pair[1]),
-      }), { minLng:Infinity, minLat:Infinity, maxLng:-Infinity, maxLat:-Infinity });
+    function zippickActiveOfficialDevelopmentZones(zones = []) {
+      return zones.filter(zone => !zippickDevelopmentCompletedOfficialZone(zone));
     }
 
     function zippickPointInRing(point, ring) {
@@ -15005,6 +15823,14 @@
       });
     }
 
+    function zippickGeometryRings(geometry) {
+      if (geometry?.type === "Polygon") return geometry.coordinates || [];
+      if (geometry?.type === "MultiPolygon") {
+        return (geometry.coordinates || []).flatMap(polygon => Array.isArray(polygon) ? polygon : []);
+      }
+      return [];
+    }
+
     function zippickDistanceMeters(a, b) {
       const lat1 = Number(a.latitude) * Math.PI / 180;
       const lat2 = Number(b.latitude) * Math.PI / 180;
@@ -15016,13 +15842,40 @@
       return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(Math.max(0, 1 - h)));
     }
 
+    function zippickPointToSegmentDistanceMeters(point, start, end) {
+      const lat = Number(point?.latitude);
+      const lng = Number(point?.longitude);
+      const startLng = Number(start?.[0]);
+      const startLat = Number(start?.[1]);
+      const endLng = Number(end?.[0]);
+      const endLat = Number(end?.[1]);
+      if (![lat, lng, startLat, startLng, endLat, endLng].every(Number.isFinite)) return Infinity;
+      const radius = 6371000;
+      const toXY = (pairLng, pairLat) => ({
+        x:(pairLng - lng) * Math.PI / 180 * radius * Math.cos(lat * Math.PI / 180),
+        y:(pairLat - lat) * Math.PI / 180 * radius,
+      });
+      const a = toXY(startLng, startLat);
+      const b = toXY(endLng, endLat);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      if (!dx && !dy) return Math.hypot(a.x, a.y);
+      const t = Math.max(0, Math.min(1, (-(a.x * dx + a.y * dy)) / (dx * dx + dy * dy)));
+      return Math.hypot(a.x + t * dx, a.y + t * dy);
+    }
+
     function zippickZoneDistanceMeters(point, zone) {
       if (zippickPointInGeometry(point, zone?.geometry)) return 0;
-      const box = zippickGeometryBbox(zone?.geometry);
-      if (!box) return Infinity;
-      const latitude = Math.max(box.minLat, Math.min(box.maxLat, Number(point.latitude)));
-      const longitude = Math.max(box.minLng, Math.min(box.maxLng, Number(point.longitude)));
-      return zippickDistanceMeters(point, { latitude, longitude });
+      let best = Infinity;
+      zippickGeometryRings(zone?.geometry).forEach(ring => {
+        if (!Array.isArray(ring) || ring.length < 2) return;
+        for (let index = 0; index < ring.length; index += 1) {
+          const start = ring[index];
+          const end = ring[(index + 1) % ring.length];
+          best = Math.min(best, zippickPointToSegmentDistanceMeters(point, start, end));
+        }
+      });
+      return best;
     }
 
     function zippickDevelopmentDistanceText(meters) {
@@ -15035,6 +15888,7 @@
     function zippickDevelopmentOfficialType(type = "") {
       const text = String(type || "");
       if (/뉴타운/.test(text)) return "뉴타운";
+      if (/재정비촉진/.test(text)) return "재정비촉진";
       if (/재건축/.test(text)) return "재건축";
       if (/재개발/.test(text)) return "재개발";
       if (/모아타운/.test(text)) return "모아타운";
@@ -15105,21 +15959,23 @@
         const zones = (Array.isArray(payload?.zones) ? payload.zones : [])
           .filter(zippickDevelopmentZoneRelevant)
           .map(zone => {
-            const distanceMeters = zippickZoneDistanceMeters(point, zone);
+            const inside = zippickPointInGeometry(point, zone.geometry);
+            const distanceMeters = inside ? 0 : zippickZoneDistanceMeters(point, zone);
             return {
               id:zone.id,
               name:zone.name || "정비구역",
               projectType:zone.projectType || "정비사업",
               stage:zone.stage || "단계 확인 필요",
-              source:zone.source || "",
-              sourceNote:zone.sourceNote || "",
-              distanceMeters,
-              inside:distanceMeters <= 0,
-            };
-          })
-          .filter(zone => zone.inside || zone.distanceMeters <= 1200)
-          .sort((a, b) => Number(b.inside) - Number(a.inside) || a.distanceMeters - b.distanceMeters)
-          .slice(0, 3);
+	              source:zone.source || "",
+	              sourceNote:zone.sourceNote || "",
+	              areaSqm:Number(zone.areaSqm || 0),
+	              distanceMeters,
+	              inside,
+	            };
+	          })
+	          .filter(zone => zone.inside || zone.distanceMeters <= 1200)
+	          .sort((a, b) => Number(b.inside) - Number(a.inside) || a.distanceMeters - b.distanceMeters)
+	          .slice(0, 8);
         const insight = { zones, source:payload?.source || "data/redevelopment_zones.geojson" };
         zippickDevelopmentCache.set(key, insight);
         applyZippickDevelopmentInsight(item, insight);
@@ -15155,45 +16011,66 @@
       if (!rows.length) return "";
       const hasComplex = rows.some(row => row?.scope === "complex" || row?.status === "confirmed");
       return hasComplex
-        ? "이 단지와 직접 관련되었거나 가까운 생활권에서 확인된 개발 흐름입니다."
-        : "단지 주변 생활권에서 확인된 개발 흐름입니다.";
+        ? "이 단지와 직접 관련되었거나 가까운 곳에서 확인된 개발 흐름입니다."
+        : "단지 주변에서 확인된 개발 흐름입니다.";
     }
 
-    // ── 단지 자체 사업인가, 옆 동네 얘기인가 ────────────────────────────
-    // 이 구분이 리포트에서 제일 크게 갈리는 지점이다. 내 단지가 재건축이면
-    // '생활권이 좋아진다'가 아니라 '내 집이 새 아파트가 된다'는 얘기라
-    // 값어치의 성격 자체가 다르다. 그런데 지금까지는 뉴스 제목에 단지명이
-    // 그대로 있어도 '주변 개발'로 넘어갔다.
-    // 두 가지로 맞춰본다.
-    //  ① 붙여쓴 전체 이름 — "미성아파트"
-    //  ② 흔한 꼬리말을 뗀 이름 — "상계주공6단지" → "상계6"
-    // ①을 먼저 쓴다. '아파트'를 떼면 "미성"처럼 두 글자가 남아 다른 말과
-    // 겹치기 쉬운데, 붙여쓴 원래 이름은 그럴 일이 거의 없다.
-    function zpComplexNameCompact(value) {
-      return String(value || "")
-        .replace(/\d+(\.\d+)?\s*(㎡|m2|평)/g, "")   // 66㎡ 같은 면적 표기
-        .replace(/\([^)]*\)/g, "")
-        .replace(/\s+/g, "")
-        .trim();
+    // ── 단지 자체 사업인가, 옆 구역 얘기인가 ────────────────────────────
+    // 단지 변화는 신뢰가 가장 중요하다. 이름이 비슷하거나 구역 안에
+    // 있다는 이유만으로는 단지 자체 사업이라고 쓰지 않는다.
+    // 보강 뉴스가 단지 자체의 확정 단계라고 확인됐거나, 공식 구역명이
+    // 단지명과 맞는 재개발·재건축·리모델링일 때만 "단지 변화"로 본다.
+    function zippickDevelopmentOfficialZoneSelfMatch(item, zone) {
+      const zoneType = `${zone?.projectType || ""} ${zone?.name || ""}`;
+      if (!/(재개발|재건축|리모델링)/.test(zoneType)) return false;
+      const zoneName = compactText(zone?.name || "");
+      if (zoneName.length < 4) return false;
+      const keys = [
+        candidateDisplayName(item),
+        item?.name,
+        item?.displayName,
+        item?.naverComplexName,
+      ].map(value => compactText(value)).filter(key => key.length >= 4);
+      return keys.some(key => zoneName.includes(key) || key.includes(zoneName));
     }
 
-    function zpComplexNameKey(value) {
-      return zpComplexNameCompact(value).replace(/아파트|주공|단지|제?\d+차/g, "");
+    function zippickConfirmedOwnDevelopmentRow(row) {
+      if (String(row?.scope || "") !== "complex") return false;
+      if (String(row?.status || "") !== "confirmed") return false;
+      const text = zippickDevelopmentEvidenceText(row);
+      const hasProject = /(재개발|재건축|정비사업|리모델링)/.test(text);
+      const hasConfirmedStage = /관리처분(?:계획)?인가|사업시행(?:계획)?인가|조합설립인가|정비구역(?:지정|고시)|정비계획(?:확정|결정|고시|통과)|(?:안전진단|재건축진단)(?:통과|면제)/.test(compactText(text));
+      return hasProject && hasConfirmedStage;
+    }
+
+    function zippickOwnDevelopmentProgressRow(row) {
+      if (String(row?.scope || "") !== "complex") return false;
+      const text = compactText(zippickDevelopmentEvidenceText(row));
+      if (/무산|철회|중단|취소|재건축불가|재개발불가/.test(text)) return false;
+      const hasProject = /(재개발|재건축|정비사업|리모델링)/.test(text);
+      const hasProgress = /(?:재개발|재건축|정비사업|리모델링).{0,24}(?:추진|검토|논의|탄력|안전진단|재건축진단|정비계획|추진위|조합)|(?:추진|검토|논의|탄력|안전진단|재건축진단|정비계획|추진위|조합).{0,24}(?:재개발|재건축|정비사업|리모델링)/.test(text);
+      return hasProject && hasProgress;
+    }
+
+    function zippickConfirmedOwnDevelopmentRows(rows = []) {
+      return rows.filter(zippickConfirmedOwnDevelopmentRow);
+    }
+
+    function zippickOwnDevelopmentRows(rows = []) {
+      return rows.filter(row => (
+        zippickConfirmedOwnDevelopmentRow(row) || zippickOwnDevelopmentProgressRow(row)
+      ));
+    }
+
+    function zippickOwnDevelopmentZones(item, officialZones = []) {
+      return zippickActiveOfficialDevelopmentZones(officialZones).filter(zone => (
+        zone.inside === true && zippickDevelopmentOfficialZoneSelfMatch(item, zone)
+      ));
     }
 
     function zippickDevelopmentSelfMatch(item, rows = [], officialZones = []) {
-      if (officialZones.some(zone => zone.inside)) return true;
-      if (rows.some(row => String(row?.scope || "") === "complex")) return true;
-      const source = item?.name || item?.displayName;
-      // 세 글자 미만은 흔한 말과 겹쳐 오탐이 난다.
-      const keys = [zpComplexNameCompact(source), zpComplexNameKey(source)]
-        .filter(key => key.length >= 3);
-      if (!keys.length) return false;
-      const haystacks = [
-        ...rows.map(row => zippickDevelopmentEvidenceText(row)),
-        ...officialZones.map(zone => zone?.name),
-      ].map(text => zpComplexNameCompact(text));
-      return keys.some(key => haystacks.some(text => text.includes(key)));
+      return zippickOwnDevelopmentRows(rows).length > 0
+        || zippickOwnDevelopmentZones(item, officialZones).length > 0;
     }
 
     // 정비사업은 단계가 곧 시간이다. 같은 '재건축'이어도 정비구역 지정과
@@ -15230,74 +16107,52 @@
     }
 
     function zippickDevelopmentHtml(item) {
-      const rows = zippickDevelopmentRows(item);
+      const allRows = zippickDevelopmentRows(item);
       const insight = item?.zippickDevelopmentInsight || {};
-      const officialZones = Array.isArray(insight.zones) ? insight.zones : [];
-      const officialState = String(item?.zippickDevelopmentInsightState || "");
-      const age = zpNum(item?.buildingAge);
-      const hasOldAgeSignal = Number.isFinite(age) && age >= 30;
-      if (!rows.length && !officialZones.length && !hasOldAgeSignal && officialState !== "loading" && officialState !== "ready") return "";
-      const scopeText = zippickDevelopmentScopeText(rows);
-      const hasConfirmedStage = zippickDevelopmentHasConfirmedStage(rows, officialZones);
-      const oldAgeText = hasOldAgeSignal
-        ? (hasConfirmedStage
-          ? `준공 ${esc(Math.round(age))}년차이고 <b>확인된 추진 단계</b>가 있습니다. 다만 추진위원회·조합설립 같은 초기 단계는 실제 변화까지 시간이 오래 걸릴 수 있어요.`
-          : `준공 ${esc(Math.round(age))}년차라 <b>개발 기대가 붙을 수 있는 조건</b>은 있습니다. 다만 <b>확인된 추진 단계가 없으면</b> 실제 사업으로 이어진다고 보기는 어렵습니다.`)
-        : "";
-      const hasInsideZone = officialZones.some(zone => zone.inside);
-      const hasDevelopmentEvidence = officialZones.length || rows.length;
-      // 단지 자체 사업이면 이건 '생활권' 얘기가 아니다.
-      const isSelf = hasDevelopmentEvidence && zippickDevelopmentSelfMatch(item, rows, officialZones);
-      const hasComplexDevelopment = hasInsideZone || isSelf;
-      const tier = zippickDevelopmentStageTier(rows, officialZones);
+      const allOfficialZones = Array.isArray(insight.zones) ? insight.zones : [];
+      const rows = zippickOwnDevelopmentRows(allRows);
+      const officialZones = zippickOwnDevelopmentZones(item, allOfficialZones);
+      if (!rows.length && !officialZones.length) return "";
+      const confirmedRows = zippickConfirmedOwnDevelopmentRows(rows);
+      const hasOfficialStage = confirmedRows.length > 0 || officialZones.length > 0;
+      const tier = hasOfficialStage
+        ? zippickDevelopmentStageTier(confirmedRows, officialZones)
+        : "signal";
       const word = zippickDevelopmentProjectWord(rows, officialZones);
 
       // ── 단지 자체 사업 ──
       // "생활권 개선에 도움이 될 수 있습니다"로 넘길 사안이 아니다.
       // 내 집이 새 아파트로 바뀌는 문제이고, 동시에 분담금이 붙는 문제다.
       // 단계별로 남은 시간이 크게 달라서 그것부터 못 박는다.
-      const selfLead = [
-        `<b>이 단지가 ${esc(word)} 대상입니다.</b> 주변이 좋아진다는 얘기가 아니라, <b>이 집 자체가 바뀐다</b>는 뜻이에요.`,
-        tier === "late"
-          ? "<b>관리처분 이후 단계</b>라 일정이 어느 정도 보이는 구간입니다. 대신 그만큼 <b>기대가 이미 값에 들어가 있을 가능성</b>이 큽니다."
-          : tier === "mid"
-            ? "<b>조합설립·사업시행 단계</b>입니다. 여기서 입주까지는 보통 <b>몇 년이 더</b> 걸리고, <b>분담금 규모와 이주 시기</b>가 다음 관문이에요."
-            : tier === "early"
-              ? "다만 <b>아직 초기 단계</b>입니다. 구역 지정에서 입주까지 <b>10년을 넘기는 경우도 흔합니다.</b> 지금 값에 기대가 얼마나 얹혔는지부터 보셔야 합니다."
-              : "다만 <b>추진 단계가 확인되지 않았습니다.</b> 단계에 따라 남은 기간이 10년 가까이 갈리니, 현재 단계부터 확인하세요.",
-        `${esc(zpJosa(word, "은", "는"))} <b>추가분담금</b>이 붙습니다. <b>매매가만으로는 실제로 얼마에 사는 건지 알 수 없어요.</b> 대지지분과 조합원 분담금 추정치를 함께 보셔야 합니다.`,
-      ].join(" ");
+      const selfLead = tier === "signal"
+        ? [
+            `<b>이 단지의 ${esc(word)} 추진 소식이 있습니다.</b> 다만 <b>공식 추진 단계는 아직 확인되지 않았습니다.</b>`,
+            `기사만으로 ${esc(word)} 대상이나 일정을 확정할 수는 없어요. 구청 고시에서 정비계획, 안전진단, 조합설립 여부를 확인하세요.`,
+            `${esc(zpJosa(word, "이", "가"))} 실제로 진행되면 <b>추가분담금</b>이 생길 수 있습니다.`,
+          ].join(" ")
+        : [
+            `<b>이 단지가 ${esc(word)} 대상입니다.</b> 주변이 좋아진다는 얘기가 아니라, <b>이 집 자체가 바뀐다</b>는 뜻이에요.`,
+            tier === "late"
+              ? "<b>관리처분 이후 단계</b>라 일정이 어느 정도 보이는 구간입니다. 대신 그만큼 <b>기대가 이미 값에 들어가 있을 가능성</b>이 큽니다."
+              : tier === "mid"
+                ? "<b>조합설립·사업시행 단계</b>입니다. 여기서 입주까지는 보통 <b>몇 년이 더</b> 걸리고, <b>분담금 규모와 이주 시기</b>가 다음 관문이에요."
+                : tier === "early"
+                  ? "다만 <b>아직 초기 단계</b>입니다. 구역 지정에서 입주까지 <b>10년을 넘기는 경우도 흔합니다.</b> 지금 값에 기대가 얼마나 얹혔는지부터 보셔야 합니다."
+                  : "다만 <b>추진 단계가 확인되지 않았습니다.</b> 단계에 따라 남은 기간이 10년 가까이 갈리니, 현재 단계부터 확인하세요.",
+            `${esc(zpJosa(word, "은", "는"))} <b>추가분담금</b>이 붙습니다. <b>매매가만으로는 실제로 얼마에 사는 건지 알 수 없어요.</b> 대지지분과 조합원 분담금 추정치를 함께 보셔야 합니다.`,
+          ].join(" ");
 
-      const lead = isSelf
-        ? selfLead
-        : officialZones.length
-        ? (hasInsideZone
-          ? "단지와 맞닿은 개발 구역이 확인됩니다. 생활권에는 <b>플러스가 될 수 있지만</b>, 추진 단계가 초기라면 실제 변화까지 시간이 오래 걸릴 수 있어요."
-          : "주변 개발 구역이 확인됩니다. <b>생활권 개선에는 도움이 될 수 있지만</b>, 단지 자체 사업은 아니어서 우리 단지에 직접 영향을 주는지는 따로 확인해야 합니다.")
-        : officialState === "loading"
-          ? "주변 정비사업 구역을 확인하고 있습니다."
-        : officialState === "ready" && !rows.length
-          ? (hasOldAgeSignal
-            ? "가까운 정비사업 구역은 아직 찾지 못했습니다. 연식만으로 재건축이 진행된다고 보기는 어려워요."
-            : "공식 구역 데이터에서 가까운 정비사업 구역은 아직 찾지 못했습니다.")
-        : rows.length
-        ? `${scopeText} <b>생활권 개선에는 도움이 될 수 있습니다.</b> 다만 단지 자체 사업인지, 실제 추진 단계가 어디까지 왔는지는 따로 확인해야 합니다.`
-        : oldAgeText;
+      const lead = selfLead;
 
-      const heading = !hasDevelopmentEvidence
-        ? (hasOldAgeSignal ? "가까운 정비사업은 아직 찾지 못했습니다" : "공식 구역 데이터에서 가까운 정비사업은 아직 찾지 못했습니다")
-        : isSelf
-          ? (tier === "late" ? `이 단지 ${zpJosa(word, "이", "가")} 막바지 단계입니다`
-            : tier === "mid" ? `이 단지가 ${zpJosa(word, "을", "를")} 추진 중입니다`
-            : tier === "early" ? `이 단지 ${zpJosa(word, "은", "는")} 아직 초기 단계입니다`
-            : `이 단지가 ${word} 대상입니다`)
-          : "주변 개발은 기대할 만하지만, 단계가 중요합니다";
+      const heading = tier === "signal" ? `이 단지 ${word} 추진 소식이 있습니다`
+        : tier === "late" ? `이 단지 ${zpJosa(word, "이", "가")} 막바지 단계입니다`
+        : tier === "mid" ? `이 단지가 ${zpJosa(word, "을", "를")} 추진 중입니다`
+        : tier === "early" ? `이 단지 ${zpJosa(word, "은", "는")} 아직 초기 단계입니다`
+        : `이 단지가 ${word} 대상입니다`;
 
-      const note = !hasDevelopmentEvidence
-        ? ""
-        : isSelf
-          ? "확인할 것은 세 가지입니다. <b>현재 추진 단계</b>(구청 고시), <b>대지지분</b>, <b>조합원 분담금 추정치</b>. 이 셋을 모르면 이 단지의 실제 매수가를 계산할 수 없습니다."
-          : "이 정보는 <b>매수 이유</b>가 아니라 확인할 배경입니다. 뉴타운·재개발·재건축은 추진 단계에 따라 실제 영향이 달라서, 구청 고시와 현재 단계를 함께 확인하세요.";
+      const note = tier === "signal"
+        ? "현재는 기사에서 추진 움직임만 확인된 상태입니다. <b>공식 고시가 나오기 전에는 재건축 일정과 분담금을 확정할 수 없습니다.</b>"
+        : "확인할 것은 세 가지입니다. <b>현재 추진 단계</b>(구청 고시), <b>대지지분</b>, <b>조합원 분담금 추정치</b>. 이 셋을 모르면 이 단지의 실제 매수가를 계산할 수 없습니다.";
       const officialHtml = officialZones.length ? `<div class="zpr-development-list">
         ${officialZones.map(zone => {
           const distance = zippickDevelopmentDistanceText(zone.distanceMeters);
@@ -15310,9 +16165,7 @@
             ${meta ? `<span class="zpr-development-meta">${esc(meta)}</span>` : ""}
           </div>`;
         }).join("")}
-      </div>` : officialState === "loading"
-        ? `<div class="zpr-note">${spinnerHtml("small")} 공식 구역 데이터를 불러오고 있어요.</div>`
-        : "";
+      </div>` : "";
       const newsHtml = rows.length ? `<div class="zpr-development-list">
         ${rows.map(row => {
           const url = String(row?.url || "").trim();
@@ -15332,10 +16185,9 @@
         }).join("")}
       </div>` : "";
       return `<section class="zpr-section">
-        <span class="zpr-kicker">${hasComplexDevelopment ? "단지 개발" : "주변 개발"}</span>
+        <span class="zpr-kicker">단지 변화</span>
         <h5>${esc(heading)}</h5>
         <p class="zpr-insight">${lead}</p>
-        ${!isSelf && rows.length && oldAgeText ? `<p class="zpr-insight">${oldAgeText}</p>` : ""}
         ${officialHtml}
         ${newsHtml}
         ${note ? `<div class="zpr-note">${note}</div>` : ""}
@@ -15357,45 +16209,159 @@
     // `len(rows) >= 3` 조건이 있어, 190·114·101세대 세 곳만으로도 '생활권
     // 변화 확인'이 떠버린다. 합쳐야 405세대다. 점수·다른 화면을 건드리지
     // 않기 위해 리포트에서 다시 거른다.
-    const ZP_LIFESTYLE_MIN_HOUSEHOLDS = 300;    // 이 아래는 목록에서 뺀다
-    const ZP_LIFESTYLE_MIN_TOTAL = 1000;        // 남은 합계가 이 아래면 섹션을 접는다
+	    const ZP_LIFESTYLE_MIN_HOUSEHOLDS = 300;    // 이 아래는 목록에서 뺀다
+	    const ZP_LIFESTYLE_MIN_TOTAL = 1000;        // 남은 합계가 이 아래면 섹션을 접는다
+	    const ZP_LIFESTYLE_SMALL_AREA_MAX = 10000;
+	    const ZP_LIFESTYLE_SMALL_CLUSTER_COUNT = 3;
+	    const ZP_LIFESTYLE_SMALL_CLUSTER_DISTANCE = 700;
+	    const ZP_LIFESTYLE_SMALL_CLUSTER_AREA = 20000;
+	    const ZP_LIFESTYLE_SMALL_CLUSTER_ADVANCED = 2;
+
+	    function zippickDevelopmentZoneKey(zone) {
+	      return compactText(`${zone?.name || ""}|${zone?.projectType || ""}|${zone?.stage || ""}`);
+	    }
+
+	    function zippickDevelopmentAreaText(value) {
+	      const area = Number(value);
+	      if (!Number.isFinite(area) || area <= 0) return "";
+	      if (area >= 10000) return `약 ${(area / 10000).toFixed(area >= 100000 ? 0 : 1)}만㎡`;
+	      return `약 ${Math.round(area).toLocaleString("ko-KR")}㎡`;
+	    }
+
+	    function zippickDevelopmentIsSmallProject(zone) {
+	      const text = `${zone?.projectType || ""} ${zone?.name || ""}`;
+	      const area = Number(zone?.areaSqm || 0);
+	      return /소규모|가로주택/.test(text)
+	        || (/재건축/.test(text) && Number.isFinite(area) && area > 0 && area < ZP_LIFESTYLE_SMALL_AREA_MAX);
+	    }
+
+	    function zippickDevelopmentIsAdvancedStage(zone) {
+	      const stage = compactText(zone?.stage || "");
+	      return /건축심의|사업시행|관리처분|이주|철거|착공|준공|입주/.test(stage);
+	    }
+
+	    function zippickDevelopmentMajorReason(zone) {
+	      const text = `${zone?.projectType || ""} ${zone?.name || ""}`;
+	      const distance = Number(zone?.distanceMeters || 0);
+	      const area = Number(zone?.areaSqm || 0);
+	      if (/재정비촉진구역|모아타운|뉴타운/.test(text)) return "큰 계획구역";
+	      if (!Number.isFinite(area) || area <= 0) return "";
+	      if (distance <= 500 && area >= 20000) return "가까운 대형 정비사업";
+	      if (distance <= 800 && area >= 30000) return "생활권 안 대형 정비사업";
+	      if (distance <= 1200 && area >= 50000) return "넓은 정비사업";
+	      return "";
+	    }
+
+	    function zippickLifestyleDevelopmentAssessment(item) {
+	      const zones = zippickActiveOfficialDevelopmentZones(
+	        Array.isArray(item?.zippickDevelopmentInsight?.zones) ? item.zippickDevelopmentInsight.zones : [],
+	      ).filter(zone => {
+	        const text = `${zone?.projectType || ""} ${zone?.name || ""}`;
+	        return /재개발|재건축|재정비촉진구역|모아타운|뉴타운|가로주택|소규모/.test(text)
+	          && !zippickDevelopmentOfficialZoneSelfMatch(item, zone);
+	      });
+	      const seen = new Set();
+	      const unique = zones.filter(zone => {
+	        const key = zippickDevelopmentZoneKey(zone);
+	        if (!key || seen.has(key)) return false;
+	        seen.add(key);
+	        return true;
+	      });
+	      const major = unique
+	        .map(zone => ({ ...zone, lifestyleReason:zippickDevelopmentMajorReason(zone), lifestyleClass:"major" }))
+	        .filter(zone => zone.lifestyleReason);
+	      const smallPool = unique.filter(zone => zippickDevelopmentIsSmallProject(zone) && Number(zone?.distanceMeters || 0) <= ZP_LIFESTYLE_SMALL_CLUSTER_DISTANCE);
+	      const smallArea = smallPool.reduce((sum, zone) => sum + Math.max(0, Number(zone?.areaSqm || 0)), 0);
+	      const smallAdvanced = smallPool.filter(zippickDevelopmentIsAdvancedStage).length;
+	      const clusteredSmall = smallPool.length >= ZP_LIFESTYLE_SMALL_CLUSTER_COUNT
+	        && smallArea >= ZP_LIFESTYLE_SMALL_CLUSTER_AREA
+	        && smallAdvanced >= ZP_LIFESTYLE_SMALL_CLUSTER_ADVANCED;
+	      return {
+	        major,
+	        smallPool,
+	        smallArea,
+	        smallAdvanced,
+	        clusteredSmall,
+	        zones: clusteredSmall
+	          ? [...major, ...smallPool.map(zone => ({ ...zone, lifestyleClass:"clustered-small", lifestyleReason:"소규모 정비사업 묶음" }))].slice(0, 4)
+	          : major.slice(0, 4),
+	        referenceCount: Math.max(0, unique.length - major.length),
+	      };
+	    }
+
+	    function zippickLifestyleDevelopmentZones(item) {
+	      return zippickLifestyleDevelopmentAssessment(item).zones;
+	    }
 
     function zippickLifestyleChangeHtml(item) {
+	      const lifestyleAssessment = zippickLifestyleDevelopmentAssessment(item);
+	      const lifestyleZones = lifestyleAssessment.zones;
       const change = item?.lifestyleChange || {};
-      if (change.status !== "ok") return "";
-      const all = Array.isArray(change.complexes) ? change.complexes : [];
+      if (change.status !== "ok" && !lifestyleZones.length) return "";
+      const all = change.status === "ok" && Array.isArray(change.complexes) ? change.complexes : [];
       const complexes = all.filter(row => Number(row?.households) >= ZP_LIFESTYLE_MIN_HOUSEHOLDS);
-      if (!complexes.length) return "";
+      if (!complexes.length && !lifestyleZones.length) return "";
 
       // 합계·대단지 수는 거른 뒤 다시 센다. 백엔드 값을 그대로 쓰면
       // 목록에서 뺀 소규모 단지가 총량에 남아 숫자가 안 맞는다.
       const totalHouseholds = complexes.reduce((sum, row) => sum + Number(row.households || 0), 0);
-      if (totalHouseholds < ZP_LIFESTYLE_MIN_TOTAL) return "";
+      if (complexes.length && totalHouseholds < ZP_LIFESTYLE_MIN_TOTAL && !lifestyleZones.length) return "";
       const largeCount = complexes.filter(row => Number(row.households) >= 1000).length;
       const sameDongCount = complexes.filter(row => row.isSameDong).length;
       const dropped = all.length - complexes.length;
 
       const total = zippickLifestyleHouseholds(totalHouseholds);
       const place = String(change.lifestyleKey || change.region || "이 생활권").trim();
-      const heading = largeCount >= 2 || totalHouseholds >= 5000
+      const heading = lifestyleZones.length && complexes.length
+        ? "새 아파트와 정비사업이 생활권을 바꾸는 중입니다"
+        : lifestyleZones.length
+	          ? lifestyleAssessment.clusteredSmall
+	            ? "작은 정비사업이 여러 곳에서 같이 움직입니다"
+	            : "큰 정비사업이 생활권을 바꿀 수 있어요"
+        : largeCount >= 2 || totalHouseholds >= 5000
         ? "새 아파트가 이어지며 생활권이 바뀌는 중입니다"
         : "생활권 변화가 확인됩니다";
-      const lead = [
-        `<b>${esc(place)}</b> 안에서 ${total ? `<b>${esc(total)}</b> 규모의 ` : ""}새 아파트 입주 흐름이 확인됩니다.`,
-        "이런 변화는 상권, 학원, 도로, 생활 편의가 같이 좋아질 가능성을 만듭니다.",
-        largeCount >= 2
-          ? "대단지가 여러 곳이면 동네를 보는 수요층도 넓어질 수 있어요."
-          : sameDongCount > 0
-            ? "같은 동 안의 변화라 체감 가능성이 비교적 높습니다."
-            : "다만 단지 바로 옆 변화가 아니라 생활권 단위 변화로 보셔야 합니다.",
-      ].join(" ");
+      const leadParts = [];
+      if (complexes.length) {
+        leadParts.push(`<b>${esc(place)}</b> 안에서 ${total ? `<b>${esc(total)}</b> 규모의 ` : ""}새 아파트 입주 흐름이 확인됩니다.`);
+      }
+      if (lifestyleZones.length) {
+	        leadParts.push(lifestyleAssessment.clusteredSmall
+	          ? `<b>${esc(place)}</b> 주변에서 작은 정비사업이 여러 곳 묶여 확인됩니다. 한 곳만으로는 영향이 작지만, 여러 곳이 같이 움직이면 생활권 변화로 볼 수 있어요.`
+	          : `<b>${esc(place)}</b> 주변에서 규모가 있는 재개발·재정비촉진구역·재건축이 확인됩니다.`);
+      }
+      leadParts.push("이런 변화는 상권, 학원, 도로, 생활 편의가 같이 좋아질 가능성을 만듭니다.");
+      leadParts.push(largeCount >= 2
+        ? "대단지가 여러 곳이면 동네를 보는 수요층도 넓어질 수 있어요."
+        : sameDongCount > 0
+          ? "같은 동 안의 변화라 체감 가능성이 비교적 높습니다."
+          : "다만 단지 바로 옆 변화가 아니라 생활권 단위 변화로 보셔야 합니다.");
+      const lead = leadParts.join(" ");
       const note = [
         "입주가 몰리는 시기에는 전세와 매물 흐름이 흔들릴 수 있습니다. 그래서 개발 기대만 보지 말고, 입주 시점과 최근 실거래 흐름을 같이 보세요.",
+	        lifestyleZones.length
+	          ? "정비사업은 규모와 단계에 따라 영향이 달라집니다. 작은 정비사업 1곳은 생활권 변화로 보지 않고, 지도 참고 정보로만 봅니다. 주변 신축과의 가격 차이도 같이 확인하세요."
+	          : "",
         dropped > 0
           ? `${ZP_LIFESTYLE_MIN_HOUSEHOLDS}세대 미만 단지 ${dropped}곳은 생활권을 바꿀 규모로 보기 어려워 목록에서 뺐습니다.`
           : "",
       ].filter(Boolean).join(" ");
-      const rows = complexes.slice(0, 4).map(row => {
+      const zoneRows = lifestyleZones.map(zone => {
+	          const meta = [
+	            zippickDevelopmentDistanceText(zone.distanceMeters),
+	            zippickDevelopmentAreaText(zone.areaSqm),
+	            zone.stage,
+	            zone.source,
+        ].filter(Boolean).join(" · ");
+        return `<div class="zpr-development-item">
+          <span class="zpr-development-top">
+            <span class="zpr-development-badge">${esc(zippickDevelopmentOfficialType(zone.projectType))}</span>
+            <span class="zpr-development-title">${esc(zone.name || "정비구역")}</span>
+          </span>
+          ${meta ? `<span class="zpr-development-meta">${esc(meta)}</span>` : ""}
+        </div>`;
+      });
+      const complexRows = complexes.slice(0, Math.max(0, 4 - zoneRows.length)).map(row => {
         const badges = [];
         if (row.isTarget) badges.push("이 단지");
         else if (row.isSameDong) badges.push("같은 동");
@@ -15414,7 +16380,8 @@
           </span>
           ${meta ? `<span class="zpr-development-meta">${esc(meta)}</span>` : ""}
         </div>`;
-      }).join("");
+      });
+      const rows = [...zoneRows, ...complexRows].join("");
       return `<section class="zpr-section">
         <span class="zpr-kicker">생활권 변화</span>
         <h5>${esc(heading)}</h5>
@@ -15493,11 +16460,11 @@
     }
 
     function zippickOwnDevelopmentWord(item) {
-      const rows = zippickDevelopmentRows(item);
-      const officialZones = Array.isArray(item?.zippickDevelopmentInsight?.zones)
+      const rows = zippickConfirmedOwnDevelopmentRows(zippickDevelopmentRows(item));
+      const officialZones = zippickOwnDevelopmentZones(item, Array.isArray(item?.zippickDevelopmentInsight?.zones)
         ? item.zippickDevelopmentInsight.zones
-        : [];
-      return (rows.length || officialZones.length) && zippickDevelopmentSelfMatch(item, rows, officialZones)
+        : []);
+      return (rows.length || officialZones.length)
         ? zippickDevelopmentProjectWord(rows, officialZones)
         : "";
     }
@@ -16231,13 +17198,11 @@
         const age = zpNum(item?.buildingAge);
         const year = zpNum(item?.buildYear);
         if (Number.isFinite(age) && age > 0) {
-          const developmentRows = zippickDevelopmentRows(item);
-          const officialZones = Array.isArray(item?.zippickDevelopmentInsight?.zones)
+          const developmentRows = zippickConfirmedOwnDevelopmentRows(zippickDevelopmentRows(item));
+          const officialZones = zippickOwnDevelopmentZones(item, Array.isArray(item?.zippickDevelopmentInsight?.zones)
             ? item.zippickDevelopmentInsight.zones
-            : [];
-          const hasDevelopmentEvidence = developmentRows.length || officialZones.length;
-          const isOwnDevelopment = hasDevelopmentEvidence
-            && zippickDevelopmentSelfMatch(item, developmentRows, officialZones);
+            : []);
+          const isOwnDevelopment = developmentRows.length > 0 || officialZones.length > 0;
           const ageText = `준공 ${Number.isFinite(year) && year > 0 ? `${Math.round(year)}년 · ` : ""}${Math.round(age)}년차입니다.`;
           if (isOwnDevelopment) {
             const word = zippickDevelopmentProjectWord(developmentRows, officialZones);
@@ -16661,7 +17626,7 @@
     }
 
     function candidateZippickReportHtml(item) {
-      if (currentBudgetData?.candidateScoreDataReady === false) return candidateScorePendingHtml();
+      if (candidateShouldWaitForScores(item)) return candidateScorePendingHtml();
       const locationScore = Number(item?.locationScore?.score);
       const signalScore = Number(item?.signals?.score);
       const hasLocation = Number.isFinite(locationScore);
@@ -17397,7 +18362,6 @@
         <div class="comparison-verdict-copy">
           <p class="comparison-verdict-subtitle">${esc(recommendation.reason)}</p>
         </div>
-        <button class="comparison-result-edit" type="button" data-comparison-preference-edit>기준 다시 선택</button>
       </div>`;
       }
       return `<div class="comparison-verdict">
@@ -17406,7 +18370,6 @@
           ${comparisonPreferenceHighlightsHtml(recommendation.reasonParts)}
           ${comparisonRecommendationDetailHtml(rows, recommendation)}
         </div>
-        <button class="comparison-result-edit" type="button" data-comparison-preference-edit>기준 다시 선택</button>
       </div>`;
     }
 
@@ -17682,28 +18645,11 @@
     }
 
     function comparisonContentHtml(rows, loading = {}) {
-      if (comparisonStep === "questions") {
-        return comparisonPreferenceHtml();
-      }
       return `${comparisonScoreOverviewHtml(rows, loading.locationScore)}${comparisonTrendHtml(rows, loading.trend)}${comparisonTableHtml(rows)}`;
     }
 
     function updateComparisonHeader() {
-      const questionStep = comparisonStepper?.querySelector('[data-comparison-stepper-item="questions"]');
-      const resultStep = comparisonStepper?.querySelector('[data-comparison-stepper-item="results"]');
-      if (comparisonStep === "questions") {
-        comparisonTitle.textContent = "사전 질문";
-        comparisonSubtitle.textContent = "";
-        questionStep?.classList.add("is-active");
-        questionStep?.classList.remove("is-complete");
-        resultStep?.classList.remove("is-active", "is-complete");
-      } else {
-        comparisonTitle.textContent = "후보 비교";
-        comparisonSubtitle.textContent = "";
-        questionStep?.classList.remove("is-active");
-        questionStep?.classList.add("is-complete");
-        resultStep?.classList.add("is-active");
-      }
+      comparisonTitle.textContent = "후보 비교 결과";
     }
 
     function refreshOpenComparisonContent(loading = {}) {
@@ -17715,10 +18661,9 @@
       requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
     }
 
-    async function openComparison(options = {}) {
+    async function openComparison() {
       const rows = selectedCandidates();
       if (rows.length < 2) return;
-      const preserveStep = options?.preserveStep === true;
       trackDailyActiveUser();
       trackEvent("candidate_comparison_opened", {
         candidate_count:rows.length,
@@ -17726,25 +18671,14 @@
       });
       const needsTrendData = rows.some(row => !sparklineSeries(row));
       const needsLocationScoreData = rows.some(locationScoreNeedsRefresh);
-      if (!preserveStep) {
-        if (comparisonQuestionsCompleted && comparisonPreferenceComplete()) {
-          comparisonStep = "results";
-        } else {
-          comparisonStep = "questions";
-          comparisonPreferenceQuestionIndex = 0;
-        }
-      }
+      comparisonStep = "results";
       updateComparisonHeader();
       comparisonContent.innerHTML = comparisonContentHtml(rows, { trend:needsTrendData, locationScore:needsLocationScoreData });
       comparisonOverlay.classList.add("show");
       comparisonOverlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("comparison-open");
       requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
-      comparisonContent.querySelector(
-        comparisonStep === "results"
-          ? "[data-comparison-preference-edit], [data-candidate-view], [data-comparison-preference] input, [data-comparison-preference-next]"
-          : "[data-comparison-preference] input, [data-comparison-preference-next]"
-      )?.focus();
+      comparisonContent.querySelector("[data-candidate-view], .comparison-score-card")?.focus();
       if (!needsTrendData && !needsLocationScoreData) return;
       await Promise.allSettled([
         ...rows.map(row => loadMarketInsight(row)),
@@ -17753,7 +18687,6 @@
       if (!comparisonOverlay.classList.contains("show")) return;
       const currentRows = selectedCandidates();
       if (currentRows.length < 2) return;
-      if (comparisonStep === "questions") return;
       comparisonContent.innerHTML = comparisonContentHtml(currentRows);
       requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
     }
@@ -17972,11 +18905,9 @@
         budgetSort = "budget_near";
       }
       const allRows = (data.allCandidates || data.policyDefaultCandidates || data.candidates || [])
-        .filter(candidateHasVerifiedSelectedArea)
-        .filter(row => candidateWithinPurchaseCap(row, data.budgetEok));
+        .filter(candidateHasVerifiedSelectedArea);
       const excludedRows = (data.policyExcludedCandidates || [])
-        .filter(candidateHasVerifiedSelectedArea)
-        .filter(row => candidateWithinPurchaseCap(row, data.budgetEok));
+        .filter(candidateHasVerifiedSelectedArea);
       const viewingExcluded = showPolicyExcludedCandidates && excludedRows.length > 0;
       const possibleRows = data.allMatches
         ? allRows.filter(row => row.policyImpact?.status === "possible")
@@ -18018,6 +18949,7 @@
         policyDefaultCandidates: defaultRows,
         policyExcludedCandidates: excludedRows,
         candidates: allSortedRows,
+        shortlistCandidates: shortlistRows,
         visibleCandidates: rows,
       };
       setConditionStage("results", false);
@@ -18030,11 +18962,12 @@
       if (!rows.length) {
         candidateViewMode = "list";
         document.body.classList.remove("candidate-map-open");
+        const resultCount = allSortedRows.length;
         const filtersHideResults = filterSourceRows.length > 0 && filteredRows.length === 0;
         const emptyMessage = filtersHideResults
           ? "선택한 필터에 해당하는 단지가 없어요."
           : data.allMatches ? "현재 자금 범위에 해당하는 단지가 없어요." : data.message || "예산 기준 후보를 찾지 못했어요.";
-        budgetResultEl.innerHTML = `${budgetBackgroundStatusHtml(data)}<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false, "", scoreDataReady)}</div>${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
+        budgetResultEl.innerHTML = `${budgetBackgroundStatusHtml(data)}${candidateShortlistSummaryHtml(resultCount, shortlistRows.length, showingShortlist ? "shortlist" : "all")}${!showingShortlist ? `<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false, "", scoreDataReady)}</div>` : ""}${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
         return;
       }
       const excluded = Number(data.excludedCount || 0);
@@ -18048,12 +18981,12 @@
       const resultCount = allSortedRows.length;
       budgetResultEl.innerHTML = `
         ${budgetBackgroundStatusHtml(data)}
-        ${candidateShortlistSummaryHtml(resultCount, rows.length, showingShortlist ? "shortlist" : "all")}
+        ${candidateShortlistSummaryHtml(resultCount, shortlistRows.length, showingShortlist ? "shortlist" : "all")}
         ${profile.length ? `<div class="budget-profile result-condition-profile">${profile.map(item => `<span class="profile-pill">${esc(item)}</span>`).join("")}</div>` : ""}
-        <div class="candidate-options-bar">
+        ${!showingShortlist ? `<div class="candidate-options-bar">
           ${candidateFiltersHtml()}
           ${candidateSortHtml(budgetSort, false, "", scoreDataReady)}
-        </div>
+        </div>` : ""}
         ${candidateMapFloatingButtonHtml()}
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
           ${rows.map((item, candidateIndex) => `
@@ -18061,9 +18994,7 @@
               ${showingShortlist && scoreDataReady ? candidateShortlistReasonHtml(item, candidateIndex + 1) : ""}
               <div class="candidate-top has-map-action">
                 <div class="budget-main">
-                  <span class="candidate-name-row">
-                    <span class="budget-name">${esc(candidateDisplayName(item))}</span>
-                  </span>
+                  <span class="candidate-name-row">${candidateTitleHtml(item)}</span>
                   <span class="budget-meta">${candidateListMetaHtml(item)}</span>
 	                  ${scoreDataReady ? candidateTopScoreBadgesHtml(item) : ""}
                 </div>
@@ -18124,7 +19055,9 @@
       const targetIndex = (currentBudgetData.candidates || [])
         .findIndex(item => candidateIdentityKey(item) === targetKey);
       if (targetIndex < 0) return false;
-      if (candidateListMode !== "all" && targetIndex >= CANDIDATE_SHORTLIST_SIZE) {
+      const shortlistHasTarget = (currentBudgetData.shortlistCandidates || [])
+        .some(item => candidateIdentityKey(item) === targetKey);
+      if (candidateListMode !== "all" && !shortlistHasTarget) {
         candidateListMode = "all";
       }
 
@@ -18218,6 +19151,7 @@
         currentBudgetData.policyDefaultCandidates,
         currentBudgetData.policyExcludedCandidates,
         currentBudgetData.candidates,
+        currentBudgetData.shortlistCandidates,
         currentBudgetData.visibleCandidates,
       ].forEach(rows => (Array.isArray(rows) ? rows : []).forEach(item => {
         if (seen.has(item)) return;
@@ -18231,6 +19165,7 @@
         currentBudgetData.policyDefaultCandidates,
         currentBudgetData.policyExcludedCandidates,
         currentBudgetData.candidates,
+        currentBudgetData.shortlistCandidates,
         currentBudgetData.visibleCandidates,
       ].forEach(rows => (Array.isArray(rows) ? rows : []).forEach(item => {
         const key = candidateIdentityKey(item);
@@ -18510,13 +19445,40 @@
       savePurchasePowerForm();
       loadBudgetCandidates();
     });
-    powerCalculate.addEventListener("click", calculatePurchasePower);
+    powerApproximateCalculate.addEventListener("click", () => calculatePurchasePower(powerApproximateCalculate.dataset.purchasePowerMode || "approximate"));
+    powerCalculate.addEventListener("click", handlePowerDetailedAction);
+    purchasePowerReset.addEventListener("click", resetPurchasePowerInputs);
+    purchasePowerAdvanced.addEventListener("toggle", () => {
+      if (!purchasePowerAdvancedTrackingReady) {
+        syncPurchasePowerActionLabels();
+        return;
+      }
+      if (purchasePowerAdvanced.open && purchasePowerAdvancedOpenSource !== "secondary_action") {
+        purchasePowerAdvancedOpenSource = "summary";
+        trackEvent("purchase_power_advanced_opened", { source:purchasePowerAdvancedOpenSource });
+      }
+      if (!purchasePowerAdvanced.open) purchasePowerAdvancedOpenSource = "";
+      syncPurchasePowerActionLabels();
+    });
     conditionFlow.addEventListener("click", event => {
       const button = event.target.closest("[data-condition-stage]");
       if (!button || button.disabled) return;
       setConditionStage(button.dataset.conditionStage);
     });
     purchasePowerResult.addEventListener("click", event => {
+      if (event.target.closest("[data-flow-confirm-change]")) {
+        closePurchasePowerSheet();
+        conditionSummaryComplete?.focus({ preventScroll:true });
+        return;
+      }
+      if (event.target.closest("[data-flow-change-edit]")) {
+        closePurchasePowerSheet();
+        if (!conditionSummarySheet.hidden) {
+          const trigger = conditionSummaryContent.querySelector('[data-condition-item-edit="powerCalculate"]');
+          openConditionItemEdit("powerCalculate", "power", trigger);
+        }
+        return;
+      }
       if (event.target.closest("[data-flow-reselect]")) {
         closePurchasePowerSheet();
         setConditionStage("power", false);
@@ -18990,12 +19952,22 @@
         expandComparisonBar();
         return;
       }
+      const measureToggle = event.target.closest("[data-candidate-map-measure-toggle]");
+      if (measureToggle) {
+        setCandidateMapMeasurementEnabled(!candidateMapMeasurementEnabled);
+        return;
+      }
       const redevelopmentToggle = event.target.closest("[data-candidate-map-redevelopment-toggle]");
       if (redevelopmentToggle) {
         candidateMapRedevelopmentEnabled = Boolean(redevelopmentToggle.checked);
         candidateMapRedevelopmentLastBbox = "";
         if (!candidateMapRedevelopmentEnabled) clearCandidateMapRedevelopmentLayers();
         else if (candidateMapKakao) scheduleCandidateMapRedevelopmentZones(candidateMapKakao, 0);
+        return;
+      }
+      const fundingFilter = event.target.closest("[data-candidate-map-funding-filter]");
+      if (fundingFilter) {
+        setCandidateMapFundingFilter(fundingFilter.dataset.candidateMapFundingFilter, fundingFilter.checked);
         return;
       }
       const candidateViewButton = event.target.closest("[data-candidate-view]");
@@ -19388,7 +20360,6 @@
           comparisonPreferenceQuestionIndex += 1;
         } else if (comparisonPreferenceComplete()) {
           comparisonStep = "results";
-          comparisonQuestionsCompleted = true;
         }
         refreshOpenComparisonContent();
         trackEvent("candidate_comparison_preference_next", { step:comparisonPreferenceQuestionIndex + 1, complete:comparisonPreferenceComplete(), ...comparisonPreference });
@@ -19398,14 +20369,6 @@
         comparisonPreferenceQuestionIndex = Math.max(0, comparisonPreferenceQuestionIndex - 1);
         refreshOpenComparisonContent();
         trackEvent("candidate_comparison_preference_back", { step:comparisonPreferenceQuestionIndex + 1 });
-        return;
-      }
-      if (event.target.closest("[data-comparison-preference-edit]")) {
-        comparisonStep = "questions";
-        comparisonPreferenceQuestionIndex = 0;
-        comparisonQuestionsCompleted = false;
-        refreshOpenComparisonContent();
-        trackEvent("candidate_comparison_preference_edit", {});
         return;
       }
       const preferenceButton = event.target.closest("[data-comparison-preference]");
@@ -19781,8 +20744,8 @@
       aptSearchResults.innerHTML = items.map((item, index) => `<article class="apt-result-card budget-candidate" data-apt-card-index="${index}" data-candidate-name="${esc(item.name)}">
         <div class="candidate-top has-map-action">
           <div class="budget-main">
-            <span class="apartment-name-row"><span class="budget-name">${esc(item.name)}</span>${apartmentStatusBadgeHtml(item.status)}</span>
-            <span class="budget-meta" data-apt-result-meta>${esc([item.address, item.households ? `${Number(item.households).toLocaleString()}세대` : ""].filter(Boolean).join(" · "))}</span>
+            <span class="apartment-name-row" data-apt-result-name>${candidateTitleHtml(item, item.name, apartmentStatusBadgeHtml(item.status))}</span>
+            <span class="budget-meta" data-apt-result-meta>${candidateListMetaHtml(item)}</span>
             <span data-apt-score-badges>${candidateTopScoreBadgesHtml(item)}</span>
           </div>
           ${candidateMapInlineButtonHtml(item)}
@@ -20468,9 +21431,33 @@
       const canonicalSignals = canonical.signals && typeof canonical.signals === "object"
         ? canonical.signals
         : {};
+      const estimate = data?.estimate || {};
+      const latestTradePrice = Number(latestTrade.dealAmountEok || 0);
+      const latestTradeArea = Number(latestTrade.exclusiveArea || 0);
+      const estimateLow = Number(estimate.minPriceEok || 0);
+      const estimateMid = Number(estimate.midPriceEok || 0);
+      const estimateHigh = Number(estimate.maxPriceEok || 0);
+      const estimateCount = Number(estimate.sampleCount || 0);
+      const previousTrade = data?.previousTrade || {};
+      const comparisonTrade = data?.comparisonTrade || {};
+      const previousTradePrice = Number(previousTrade.dealAmountEok || 0);
+      const comparisonTradePrice = Number(comparisonTrade.dealAmountEok || 0);
       return {
         ...item,
         ...canonical,
+	        latestDealPriceEok:latestTradePrice || canonical.latestDealPriceEok || item.latestDealPriceEok || 0,
+	        latestDealDate:String(latestTrade.dealDate || canonical.latestDealDate || item.latestDealDate || ""),
+	        latestDealExclusiveArea:latestTradeArea || canonical.latestDealExclusiveArea || item.latestDealExclusiveArea || null,
+	        latestDealFloor:String(latestTrade.floor || canonical.latestDealFloor || item.latestDealFloor || ""),
+	        previousDealPriceEok:previousTradePrice,
+	        comparisonDealPriceEok:comparisonTradePrice,
+	        comparisonDealSkippedOutlierCount:Number(data?.comparisonSkippedOutlierCount || 0),
+	        recentAveragePriceEok:estimateMid || canonical.recentAveragePriceEok || item.recentAveragePriceEok || 0,
+	        averagePriceEok:estimateMid || canonical.averagePriceEok || item.averagePriceEok || 0,
+	        midPriceEok:estimateMid || canonical.midPriceEok || item.midPriceEok || 0,
+	        minPriceEok:estimateLow || canonical.minPriceEok || item.minPriceEok || 0,
+	        maxPriceEok:estimateHigh || canonical.maxPriceEok || item.maxPriceEok || 0,
+	        transactionCount:estimateCount || canonical.transactionCount || item.transactionCount || 0,
 	        displayName:canonical.displayName || item.name,
 	        displayRegion:canonical.displayRegion || item.address || item.region || "",
 	        households:Number(canonical.households || item.households || 0),
@@ -20479,7 +21466,7 @@
 	        locationScore:canonical.locationScore || report?.locationScore || item?.locationScore || null,
 	        marketInsightState:"ready",
         roneEstimate:{
-          estimate:data?.estimate || {},
+          estimate,
           latestTrade,
           adjustedTransactions:transactions,
           index:data?.market?.index || {},
@@ -20828,6 +21815,7 @@
       if (!card || String(card.dataset.aptAreaRequest || "0") !== String(requestToken)) return;
       const index = Number(card.dataset.aptCardIndex);
       const slot = card.querySelector("[data-apt-affordability]");
+      const nameEl = card.querySelector("[data-apt-result-name]");
       const meta = card.querySelector("[data-apt-result-meta]");
       const signalEl = card.querySelector("[data-apt-card-signal]");
       const scoreBadges = card.querySelector("[data-apt-score-badges]");
@@ -20850,6 +21838,7 @@
           changeButton.setAttribute("aria-label", `${buttonLabel} 전용면적 변경`);
         }
       }
+      if (nameEl) nameEl.innerHTML = candidateTitleHtml(candidate, candidateDisplayName(candidate), apartmentStatusBadgeHtml(candidate.status));
       if (meta) meta.innerHTML = candidateListMetaHtml(candidate);
 	      if (scoreBadges) scoreBadges.innerHTML = candidateTopScoreBadgesHtml(candidate);
       if (signalEl) {
@@ -21500,6 +22489,9 @@
 
     restorePurchasePowerForm();
     applyEstimatedMortgageRate();
+    purchasePowerAdvanced.open = purchasePowerHasCustomDetails();
+    syncPurchasePowerActionLabels();
+    purchasePowerAdvancedTrackingReady = true;
     syncMaritalFields();
     renderHomeOwnershipPicker();
     renderMaritalStatusPicker();

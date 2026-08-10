@@ -27,6 +27,13 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
 
     def test_budget_near_sort_key_prefers_prices_close_to_upper_budget(self):
+        slightly_over_budget = {
+            "name": "조금초과",
+            "midPriceEok": 20.1,
+            "budgetGapEok": -0.1,
+            "_fitRank": 0,
+            "_score": 100,
+        }
         cheap_high_score = {
             "name": "저가고점수",
             "midPriceEok": 11.0,
@@ -49,10 +56,24 @@ class BudgetCandidatesTest(unittest.TestCase):
             "_score": 95,
         }
 
-        rows = [cheap_high_score, middle_budget, near_budget]
+        rows = [cheap_high_score, slightly_over_budget, middle_budget, near_budget]
         rows.sort(key=budget_candidates._budget_near_sort_key)
 
-        self.assertEqual([row["name"] for row in rows], ["상한근접", "중간가격", "저가고점수"])
+        self.assertEqual(
+            [row["name"] for row in rows],
+            ["상한근접", "중간가격", "저가고점수", "조금초과"],
+        )
+
+    def test_budget_result_limit_keeps_a_five_percent_stretch_candidate(self):
+        rows = [
+            {"name": "예산안1", "midPriceEok": 9.9, "budgetGapEok": 0.1, "_fitRank": 0},
+            {"name": "예산안2", "midPriceEok": 9.0, "budgetGapEok": 1.0, "_fitRank": 1},
+            {"name": "상한근접초과", "midPriceEok": 10.4, "budgetGapEok": -0.4, "_fitRank": 2},
+        ]
+
+        selected = budget_candidates._limit_budget_near_rows(rows, 2, 10)
+
+        self.assertEqual([row["name"] for row in selected], ["예산안1", "상한근접초과"])
 
     def test_jeonse_ratio_uses_bundled_snapshot_when_live_rent_api_fails(self):
         row = {
