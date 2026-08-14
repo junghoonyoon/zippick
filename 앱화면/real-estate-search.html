@@ -2311,6 +2311,7 @@
     .location-score-fill { display:block; height:100%; border-radius:999px; background:#3182f6 }
     .location-score-note { margin:0; color:#8b95a1; font-size:12px; font-weight:650; line-height:1.55 }
     .verdict-card { display:grid; gap:14px; margin-bottom:18px; border:1px solid #e5e8eb; border-radius:18px; padding:18px }
+    .zippick-report .verdict-card { margin-bottom:0 }
     .verdict-card-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px }
     .verdict-card-name { color:#191f28; font-size:15px; font-weight:850; line-height:1.4 }
     .verdict-card-price { color:#4e5968; font-size:14px; font-weight:750; white-space:nowrap }
@@ -11454,6 +11455,17 @@
         </section>`;
     }
 
+    function zippickBreakevenHtml(item) {
+      const card = verdictCardHtml(item);
+      if (!card) return "";
+      return `<section class="zpr-section" aria-label="본전 상승률">
+        <span class="zpr-kicker" data-zpr-step></span>
+        <h5>빨리 팔면 얼마가 올라야 본전인지 봅니다</h5>
+        <p class="zpr-lead">세금과 중개비는 매수 판단에 바로 영향을 줍니다. 점수와 섞지 않고, 리포트에서 따로 확인해요.</p>
+        ${card}
+      </section>`;
+    }
+
     function locationScoreSheetHtml(item) {
       const score = item?.locationScore || {};
       const total = Number(score.score);
@@ -11470,8 +11482,7 @@
           <p class="location-score-section-copy">${esc(areaSummary)}</p>
           <div class="location-score-table">${areaParts.map(locationScorePartHtml).join("")}</div>`
         : "";
-      return `${verdictCardHtml(item)}
-        <section class="location-score-hero">
+      return `<section class="location-score-hero">
           <div class="location-score-total">${esc(Math.round(total))}<span>점 · ${esc(score.label || "종합")}</span></div>
           <p class="location-score-summary">${esc(score.summary || "실거래가, 전세 실거래, 입지, 단지 조건, 거래 흐름을 함께 본 점수예요.")}</p>
         </section>
@@ -13469,13 +13480,15 @@
     }
 
     function budgetCandidateMapRowsForOpen() {
+      const mapRows = currentBudgetData?.mapCandidates || [];
       const visibleRows = currentBudgetData?.visibleCandidates || [];
       const allRows = currentBudgetData?.candidates || [];
-      if (!candidateMapSelectedKey) return visibleRows.length ? visibleRows : allRows;
-      const hasSelectedVisible = visibleRows.some(item => candidateIdentityKey(item) === candidateMapSelectedKey);
-      if (hasSelectedVisible) return visibleRows.length ? visibleRows : allRows;
+      const fallbackRows = mapRows.length ? mapRows : (visibleRows.length ? visibleRows : allRows);
+      if (!candidateMapSelectedKey) return fallbackRows;
+      const hasSelectedVisible = fallbackRows.some(item => candidateIdentityKey(item) === candidateMapSelectedKey);
+      if (hasSelectedVisible) return fallbackRows;
       const selected = allRows.find(item => candidateIdentityKey(item) === candidateMapSelectedKey);
-      return selected ? [selected, ...visibleRows] : (visibleRows.length ? visibleRows : allRows);
+      return selected ? [selected, ...fallbackRows] : fallbackRows;
     }
 
     async function renderCandidateMap(rows) {
@@ -17682,6 +17695,7 @@
         </section>` : ""}
         ${zippickCommuteHtml(item)}
         ${zippickFundingHtml(item)}
+        ${zippickBreakevenHtml(item)}
         ${signalBars ? `<section class="zpr-section">
           <span class="zpr-kicker" data-zpr-step></span>
           <h5>${esc(zippickSignalHeading(item))}</h5>
@@ -18958,6 +18972,7 @@
         policyExcludedCandidates: excludedRows,
         candidates: allSortedRows,
         shortlistCandidates: shortlistRows,
+        mapCandidates: showingShortlist ? shortlistRows : allSortedRows,
         visibleCandidates: rows,
       };
       setConditionStage("results", false);
@@ -19160,6 +19175,7 @@
         currentBudgetData.policyExcludedCandidates,
         currentBudgetData.candidates,
         currentBudgetData.shortlistCandidates,
+        currentBudgetData.mapCandidates,
         currentBudgetData.visibleCandidates,
       ].forEach(rows => (Array.isArray(rows) ? rows : []).forEach(item => {
         if (seen.has(item)) return;
@@ -19174,6 +19190,7 @@
         currentBudgetData.policyExcludedCandidates,
         currentBudgetData.candidates,
         currentBudgetData.shortlistCandidates,
+        currentBudgetData.mapCandidates,
         currentBudgetData.visibleCandidates,
       ].forEach(rows => (Array.isArray(rows) ? rows : []).forEach(item => {
         const key = candidateIdentityKey(item);

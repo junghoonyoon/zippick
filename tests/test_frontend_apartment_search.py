@@ -2913,8 +2913,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn(".comparison-overlay {\n      display:none; position:fixed; z-index:180;", html)
         self.assertIn("width:52px; height:52px;", html)
         self.assertIn("function budgetCandidateMapRowsForOpen()", html)
-        self.assertIn("const visibleRows = currentBudgetData?.visibleCandidates || [];", html)
-        self.assertIn("if (!candidateMapSelectedKey) return visibleRows.length ? visibleRows : allRows;", html)
+        self.assertIn("const mapRows = currentBudgetData?.mapCandidates || [];", html)
+        self.assertIn("if (!candidateMapSelectedKey) return fallbackRows;", html)
         self.assertIn(": budgetCandidateMapRowsForOpen();", html)
         self.assertIn("const CANDIDATE_MAP_CLUSTER_LEVEL = 8", html)
         self.assertIn("const CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL = 5;", html)
@@ -3836,7 +3836,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertNotIn("position:static; display:grid; width:52px; height:52px", html)
 
-    def test_floating_candidate_map_opens_with_visible_shortlist_rows(self):
+    def test_floating_candidate_map_opens_with_current_tab_rows(self):
         html = APP_HTML.read_text(encoding="utf-8")
         rows_match = re.search(
             r"function budgetCandidateMapRowsForOpen\b(?P<body>.*?)"
@@ -3855,11 +3855,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(mode_match)
         rows_body = rows_match.group("body")
         mode_body = mode_match.group("body")
+        self.assertIn("const mapRows = currentBudgetData?.mapCandidates || [];", rows_body)
         self.assertIn("const visibleRows = currentBudgetData?.visibleCandidates || [];", rows_body)
         self.assertIn("const allRows = currentBudgetData?.candidates || [];", rows_body)
-        self.assertIn("if (!candidateMapSelectedKey) return visibleRows.length ? visibleRows : allRows;", rows_body)
+        self.assertIn("const fallbackRows = mapRows.length ? mapRows : (visibleRows.length ? visibleRows : allRows);", rows_body)
+        self.assertIn("if (!candidateMapSelectedKey) return fallbackRows;", rows_body)
         self.assertIn("const selected = allRows.find(item => candidateIdentityKey(item) === candidateMapSelectedKey);", rows_body)
-        self.assertIn("return selected ? [selected, ...visibleRows] : (visibleRows.length ? visibleRows : allRows);", rows_body)
+        self.assertIn("return selected ? [selected, ...fallbackRows] : fallbackRows;", rows_body)
         self.assertIn(": budgetCandidateMapRowsForOpen();", mode_body)
 
     def test_candidate_map_funding_filters_toggle_three_budget_states(self):

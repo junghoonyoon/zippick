@@ -24,12 +24,20 @@ class VerdictCardTest(unittest.TestCase):
     def setUpClass(cls):
         cls.html = HTML_PATH.read_text(encoding="utf-8")
 
-    def test_verdict_card_renders_above_the_score_table(self):
+    def test_verdict_card_is_not_rendered_in_the_score_table(self):
         body = _function_body(self.html, "locationScoreSheetHtml")
-        self.assertIn("${verdictCardHtml(item)}", body)
+        self.assertNotIn("verdictCardHtml(item)", body)
+        self.assertIn('class="location-score-hero"', body)
+
+    def test_verdict_card_renders_inside_the_zippick_report(self):
+        wrapper = _function_body(self.html, "zippickBreakevenHtml")
+        report = _function_body(self.html, "candidateZippickReportHtml")
+        self.assertIn("const card = verdictCardHtml(item);", wrapper)
+        self.assertIn('aria-label="본전 상승률"', wrapper)
+        self.assertIn("${zippickBreakevenHtml(item)}", report)
         self.assertLess(
-            body.index("${verdictCardHtml(item)}"),
-            body.index('class="location-score-hero"'),
+            report.index("${zippickFundingHtml(item)}"),
+            report.index("${zippickBreakevenHtml(item)}"),
         )
 
     def test_card_is_hidden_when_breakeven_is_missing(self):
