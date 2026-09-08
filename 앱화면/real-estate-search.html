@@ -11080,7 +11080,7 @@
 
     function candidateNaverPropertyUrl(item) {
       if (item.naverComplexNo) {
-        return `https://fin.land.naver.com/complexes/${encodeURIComponent(item.naverComplexNo)}?tab=article`;
+        return `https://fin.land.naver.com/complexes/${encodeURIComponent(item.naverComplexNo)}`;
       }
       const url = String(item.naverPropertyUrl || "");
       return /^https:\/\/fin\.land\.naver\.com\/complexes\/\d+/.test(url) ? url : "";

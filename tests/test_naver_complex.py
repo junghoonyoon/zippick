@@ -64,7 +64,7 @@ class NaverComplexTest(unittest.TestCase):
         self.assertEqual(resolved["complexNo"], "333")
         self.assertEqual(
             naver_complex.complex_url(resolved["complexNo"]),
-            "https://fin.land.naver.com/complexes/333?tab=article",
+            "https://fin.land.naver.com/complexes/333",
         )
 
     def test_resolves_by_legal_dong_code_when_autocomplete_is_limited(self):
@@ -181,7 +181,7 @@ class NaverComplexTest(unittest.TestCase):
 
         self.assertEqual(
             rows[0]["naverPropertyUrl"],
-            "https://fin.land.naver.com/complexes/12345?tab=article",
+            "https://fin.land.naver.com/complexes/12345",
         )
         self.assertEqual(rows[0]["naverLinkKind"], "complex")
         self.assertEqual(rows[0]["displayName"], "직링크단지")
@@ -219,6 +219,22 @@ class NaverComplexTest(unittest.TestCase):
         self.assertEqual(resolved["complexNo"], "12240")
         self.assertIn("주상복합", resolved["complexName"])
 
+    def test_renamed_sinnae_dongseong3_opens_the_verified_complex(self):
+        resolved = naver_complex.resolve(
+            "동성3",
+            legal_dong="신내동",
+            jibun="618",
+            region="중랑구",
+            cortar_no="1126010600",
+        )
+
+        self.assertEqual(resolved["complexNo"], "813")
+        self.assertEqual(resolved["complexName"], "동성3차")
+        self.assertEqual(
+            naver_complex.complex_url(resolved["complexNo"]),
+            "https://fin.land.naver.com/complexes/813",
+        )
+
     def test_verified_naver_name_resolves_public_data_aliases_to_one_complex(self):
         names = ("돈암2-1 삼부아파트", "삼부컨비니언")
         resolved = [
@@ -241,7 +257,7 @@ class NaverComplexTest(unittest.TestCase):
         self.assertEqual(resolved["complexNo"], "609")
         self.assertEqual(
             naver_complex.complex_url(resolved["complexNo"]),
-            "https://fin.land.naver.com/complexes/609?tab=article",
+            "https://fin.land.naver.com/complexes/609",
         )
 
     def test_static_override_resolves_when_naver_is_unreachable(self):

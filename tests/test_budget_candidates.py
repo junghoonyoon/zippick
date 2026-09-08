@@ -920,7 +920,9 @@ class BudgetCandidatesTest(unittest.TestCase):
         )
 
         candidate = result["candidates"][0]
-        self.assertNotIn("naverLinkKind", candidate)
+        # 번들 연결표에 있는 단지는 네트워크 보강을 기다리지 않고 바로 연다.
+        if candidate.get("naverLinkKind"):
+            self.assertEqual(candidate["naverLinkKind"], "complex")
         self.assertTrue(candidate.get("naverPropertyQuery"))
 
     def test_naver_link_uses_unique_name_without_internal_region_tokens(self):
@@ -931,6 +933,24 @@ class BudgetCandidatesTest(unittest.TestCase):
         )
 
         self.assertEqual(link["naverPropertyQuery"], "산성역 헤리스톤")
+
+    def test_naver_link_uses_bundled_complex_number_before_background_lookup(self):
+        link = budget_candidates._naver_property_link(
+            {"name": "동성3", "region": "중랑구"},
+            {
+                "name": "동성3",
+                "aliases": ["동성아파트"],
+                "legalDong": "신내동",
+                "jibun": "618",
+            },
+        )
+
+        self.assertEqual(link["naverComplexNo"], "813")
+        self.assertEqual(link["naverComplexName"], "동성3차")
+        self.assertEqual(
+            link["naverPropertyUrl"],
+            "https://fin.land.naver.com/complexes/813",
+        )
 
     def test_find_entity_accepts_city_district_spacing_variants(self):
         entity = budget_candidates._find_entity("산성역포레스티아", "성남시 수정구")

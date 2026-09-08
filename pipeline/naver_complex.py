@@ -52,6 +52,16 @@ _EXECUTOR = ThreadPoolExecutor(
 # 네이버 검색 API가 일시적으로 제한돼도 확실히 검증된 중복명 단지는
 # 잘못된 오피스텔/지번 검색으로 보내지 않도록 직링크를 우선한다.
 VERIFIED_COMPLEX_OVERRIDES = {
+    # 공공데이터의 별칭 '동성3'은 신내동 618의 800세대 단지를 뜻한다.
+    # 네이버에는 '동성3차'로 등록돼 있으므로 단지번호를 주소와 함께 고정한다.
+    ("동성3", "신내동", "618"): {
+        "complexNo": "813",
+        "complexName": "동성3차",
+    },
+    ("동성아파트", "신내동", "618"): {
+        "complexNo": "813",
+        "complexName": "동성3차",
+    },
     ("마포한화오벨리스크", "도화동", "555"): {
         "complexNo": "12240",
         "complexName": "마포한화오벨리스크(주상복합)",
@@ -151,6 +161,11 @@ def _verified_override(name, legal_dong="", jibun="", alternate_names=()):
         if override:
             return dict(override)
     return None
+
+
+def resolve_static(name, legal_dong="", jibun="", alternate_names=()):
+    """Return only a bundled, address-verified Naver mapping without I/O."""
+    return _verified_override(name, legal_dong, jibun, alternate_names)
 
 
 def _cache_key(name, legal_dong, jibun):
@@ -405,7 +420,7 @@ def resolve(
     name = str(name or "").strip()
     if not name:
         return None
-    override = _verified_override(
+    override = resolve_static(
         name,
         legal_dong,
         jibun,
@@ -459,8 +474,13 @@ def resolve(
 
 
 def complex_url(complex_no):
-    """네이버페이 부동산에서 해당 단지의 매물 지도를 바로 여는 URL."""
-    return f"https://fin.land.naver.com/complexes/{complex_no}?tab=article"
+    """네이버페이 부동산에서 해당 단지의 기본 시세 화면을 바로 연다.
+
+    네이버의 ``tab=article``은 매물 탭을 강제로 열기 때문에, 카드의
+    '시세보기' 동작과 맞지 않는다. 단지번호만 넘기면 네이버가 시세 탭을
+    기본으로 표시한다.
+    """
+    return f"https://fin.land.naver.com/complexes/{complex_no}"
 
 
 def search_url(query):

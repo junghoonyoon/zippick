@@ -231,11 +231,36 @@ def _candidate_identity(candidate):
     )
 
 
+def _entry_identity(entry):
+    """Static override rows use the same physical identity as live resolution."""
+    return (
+        _compact(entry.get("name")),
+        _compact(entry.get("legalDong")),
+        _compact(entry.get("jibun")),
+    )
+
+
+def _load_existing_entries(path):
+    """Keep previously verified links when a fresh Naver crawl is incomplete."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    entries = payload.get("entries") if isinstance(payload, dict) else []
+    return [
+        entry for entry in entries
+        if isinstance(entry, dict)
+        and str(entry.get("complexNo") or "").isdigit()
+        and str(entry.get("name") or "").strip()
+    ]
+
+
 def build_overrides(
     limit=0,
     sleep_seconds=0.08,
     include_master_cache=True,
     resolve_master_live=False,
+    existing_entries=(),
 ):
     candidates_by_key = {}
     for candidate in _price_candidate_entities():
@@ -246,7 +271,15 @@ def build_overrides(
     candidates = list(candidates_by_key.values())
     if limit:
         candidates = candidates[:limit]
-    entries_by_key = {}
+    # A current crawl is more authoritative, but it can be partial due to a
+    # transient Naver response. Replace identities resolved this time while
+    # preserving previously verified rows for the rest.
+    entries_by_key = {
+        _entry_identity(entry): dict(entry)
+        for entry in existing_entries
+        if _entry_identity(entry)[0]
+    }
+    retained_existing_entries = len(entries_by_key)
     stats = {
         "candidates": len(candidates),
         "resolved": 0,
@@ -284,13 +317,11 @@ def build_overrides(
             continue
         stats["resolved"] += 1
         for name in candidate["aliases"] or [candidate["name"]]:
-            key = (
-                _compact(name),
-                _compact(candidate["legalDong"]),
-                _compact(candidate["jibun"]),
-            )
-            if key in entries_by_key:
-                continue
+            key = _entry_identity({
+                "name": name,
+                "legalDong": candidate["legalDong"],
+                "jibun": candidate["jibun"],
+            })
             entries_by_key[key] = {
                 "name": name,
                 "legalDong": candidate["legalDong"],
@@ -312,6 +343,7 @@ def build_overrides(
         "stats": {
             **stats,
             "entries": len(entries_by_key),
+            "retainedExistingEntries": retained_existing_entries,
         },
         "entries": sorted(
             entries_by_key.values(),
@@ -346,14 +378,15 @@ def main(argv=None):
     # The generated file is an offline artifact, so prefer completeness over the
     # production request timeout.
     naver_complex.TIMEOUT_SECONDS = max(float(naver_complex.TIMEOUT_SECONDS), 8.0)
+    output_arg = Path(args.output)
+    output = output_arg if output_arg.is_absolute() else config.ROOT / output_arg
     payload = build_overrides(
         limit=args.limit,
         sleep_seconds=args.sleep,
         include_master_cache=not args.price_only,
         resolve_master_live=args.resolve_master_live,
+        existing_entries=_load_existing_entries(output),
     )
-    output_arg = Path(args.output)
-    output = output_arg if output_arg.is_absolute() else config.ROOT / output_arg
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",

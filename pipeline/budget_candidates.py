@@ -535,6 +535,27 @@ def _naver_property_link(row, entity):
         location = re.sub(r"^(성남|수원|용인|고양|안양|안산|부천)(?=.+구$)", "", location)
     query = f"{location} {search_name}".strip() if needs_location and location else search_name
     query = query or name
+    legal_dong = str(entity.get("legalDong") or row.get("legalDong") or "").strip()
+    jibun = _entity_jibun(entity) or str(row.get("jibun") or "").strip()
+    resolved = naver_complex.resolve_static(
+        name,
+        legal_dong=legal_dong,
+        jibun=jibun,
+        alternate_names=(
+            search_name,
+            str(entity.get("name") or "").strip(),
+            *(entity.get("aliases") or []),
+        ),
+    )
+    if resolved:
+        complex_name = str(resolved.get("complexName") or "").strip()
+        return {
+            "naverComplexNo": resolved["complexNo"],
+            "naverComplexName": complex_name,
+            "naverPropertyQuery": query,
+            "naverPropertyUrl": naver_complex.complex_url(resolved["complexNo"]),
+            "naverLinkKind": "complex",
+        }
     return {
         "naverPropertyQuery": query,
         "naverPropertyUrl": naver_complex.search_url(query),
@@ -2198,6 +2219,9 @@ def _finalize_candidate_rows(
         map_entity = entity
         row["resultSchemaVersion"] = CANDIDATE_RESULT_SCHEMA_VERSION
         row["displayName"] = _candidate_display_name(row, entity)
+        if row.get("naverComplexName"):
+            row["displayName"] = row["naverComplexName"]
+            row["displayNameSource"] = "naver_complex"
         row["displayRegion"] = _display_region(row, entity)
         row["mapAddress"] = _map_address(row, map_entity)
         row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
