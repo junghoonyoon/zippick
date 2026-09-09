@@ -85,3 +85,14 @@ Use this chart treatment for the expanded price-flow chart inside apartment resu
 - Do not overuse gradients, oversized hero text, or decorative cards.
 - Do not make every card blue; reserve blue for emphasis.
 - Do not copy either brand literally. Use the design md files as inspiration only.
+
+## Chart Analysis Copy
+
+- All apartment cards use the shared chart analysis renderer: a short bold trend title, then a regular-weight comparison line. Use a neutral chart icon.
+- Comparison format: `최근 2년 가격 변화율 · 노원구 평균보다 높음 · 상계동 대장보다 낮음`. Use the actual chart window, not a fixed two-year label.
+- Use `높음 / 비슷 / 낮음` with a shared ±1.5 percentage-point threshold. Compare values from the same month and the chart's common baseline.
+- Prefer the local leader; use the district leader when the local comparison is unavailable. Never choose a leader just because its growth rate is higher.
+- Show gap changes only inside the expanded chart, explicitly as `상승률 차이`. Sparse observations mean unknown, not unchanged.
+- Fewer than eight recorded transactions: `거래가 적어 흐름 판단 어려움`. Stale data takes priority: `최근 거래 뜸함`. Missing comparison data does not become a negative comparison.
+- High/low position is distinct from direction. Do not describe a price near its high as automatically rising.
+- Let comparison text wrap on mobile; never truncate the meaning with an ellipsis.
