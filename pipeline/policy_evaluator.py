@@ -81,7 +81,8 @@ def user_profile(
     combined_debt = borrower_debt + spouse_debt
     dsr_room = max(0, round(combined_income * 0.4 - combined_debt * 12)) if combined_income else None
     base_rate = max(0, _float(mortgage_rate))
-    term_years = max(10, min(50, int(_float(loan_term_years) or 30)))
+    requested_term_years = max(10, min(50, int(_float(loan_term_years) or 30)))
+    term_years = min(requested_term_years, load_policy_snapshot()["capitalRegionMaxLoanTermYears"])
     stress_rate = _float(load_policy_snapshot().get("stressRatePercent"))
     dsr_loan_limit = (
         _annuity_principal_eok(dsr_room, base_rate + stress_rate, term_years)
@@ -107,6 +108,8 @@ def user_profile(
         "dsrLoanLimitEok": dsr_loan_limit,
         "mortgageRatePercent": base_rate,
         "loanTermYears": term_years,
+        "requestedLoanTermYears": requested_term_years,
+        "stressRatePercent": stress_rate,
         "purchaseCostRatePercent": max(0, min(15, _float(purchase_cost_rate))),
     }
 
@@ -130,9 +133,11 @@ def _region_context(candidate, entity=None):
     gyeonggi_markers = (
         "경기", "과천", "광명", "의왕", "하남", "구리", "성남", "수원", "안양", "용인", "화성",
         "고양", "남양주", "부천", "김포", "파주", "의정부", "군포", "안산", "시흥", "평택",
+        "양주시", "동두천", "포천", "연천", "가평", "양평", "여주", "이천", "안성", "오산", "광주시",
     )
     is_gyeonggi = any(marker in compact for marker in gyeonggi_markers)
-    is_capital = is_seoul or is_gyeonggi
+    is_incheon = "인천" in compact
+    is_capital = is_seoul or is_gyeonggi or is_incheon
 
     display = row_region or district or city or "지역 확인 필요"
     if city and district and _compact(city) not in _compact(district):
@@ -142,6 +147,7 @@ def _region_context(candidate, entity=None):
         "compact": compact,
         "isSeoul": is_seoul,
         "isGyeonggi": is_gyeonggi,
+        "isIncheon": is_incheon,
         "isCapitalRegion": is_capital,
     }
 
@@ -152,7 +158,7 @@ def _is_regulated(region, snapshot):
     compact = region["compact"]
     for name in snapshot["regulatedRegions"].get("gyeonggi", []):
         key = _compact(name)
-        if key in compact or compact in key:
+        if compact and (key in compact or compact in key):
             return True
         # 데이터가 '성남분당구'처럼 시·구를 붙여 보관하는 경우를 지원한다.
         parts = [_compact(part) for part in name.split()]
@@ -169,13 +175,24 @@ def _price_cap(price_eok, snapshot):
     return 0.0
 
 
+def _mortgage_cap(price_eok, profile, region, regulated, snapshot):
+    caps = []
+    if region["isCapitalRegion"] or regulated:
+        caps.append(_price_cap(price_eok, snapshot))
+    if profile["firstTimeBuyer"]:
+        caps.append(snapshot["firstTimeMaxLoanEok"])
+    return min(caps) if caps else None
+
+
 def _ltv(profile, region, regulated, snapshot):
     ownership = profile["homeOwnership"]
     rates = snapshot["ltv"]
     if region["isCapitalRegion"] and ownership in {"one_home_keep", "multi_home"}:
         return float(rates["additionalHomeInCapital"]), "수도권 추가 주택 구입"
-    if profile["firstTimeBuyer"] and region["isCapitalRegion"]:
-        return float(rates["capitalFirstTime"]), "생애최초 수도권 기준"
+    if profile["firstTimeBuyer"]:
+        if region["isCapitalRegion"] or regulated:
+            return float(rates["capitalFirstTime"]), "생애최초 수도권 기준"
+        return float(rates["nonCapitalFirstTime"]), "생애최초 비수도권 기준"
     if regulated:
         return float(rates["regulatedGeneral"]), "규제지역 일반 기준"
     if region["isCapitalRegion"]:
@@ -199,11 +216,34 @@ def _first_time_acquisition_tax_relief(profile, price_eok, gross_cost_eok, snaps
     return max(0, round(min(gross_cost_eok, max_relief_eok), 2))
 
 
+def _regional_financing_profile(profile, region, regulated, snapshot):
+    """Resolve variable-rate mortgage terms per home without mutating shared inputs."""
+    result = dict(profile)
+    years = profile.get("requestedLoanTermYears", profile.get("loanTermYears", 30))
+    if region["isCapitalRegion"] or regulated:
+        years = min(years, snapshot["capitalRegionMaxLoanTermYears"])
+        stress_rate = snapshot["stressRatePercent"]
+    else:
+        stress_rate = snapshot["nonCapitalStressRatePercent"]
+    room = profile.get("dsrAnnualRoomManwon")
+    rate = profile.get("mortgageRatePercent", 0)
+    result.update(
+        loanTermYears=years,
+        stressRatePercent=stress_rate,
+        dsrLoanLimitEok=(
+            _annuity_principal_eok(room, rate + stress_rate, years)
+            if room is not None and rate else None
+        ),
+    )
+    return result
+
+
 def evaluate_candidate(candidate, entity=None, profile=None):
     snapshot = load_policy_snapshot()
     profile = profile or user_profile()
     region = _region_context(candidate, entity)
     regulated = _is_regulated(region, snapshot)
+    profile = _regional_financing_profile(profile, region, regulated, snapshot)
     min_price = _float(candidate.get("minPriceEok"))
     max_price = _float(candidate.get("maxPriceEok"))
     latest_deal_price = _float(candidate.get("latestDealPriceEok"))
@@ -214,7 +254,7 @@ def evaluate_candidate(candidate, entity=None, profile=None):
     price = _float(latest_deal_price or recent3_average_price or candidate.get("midPriceEok") or max_price or min_price)
     ltv_rate, ltv_basis = _ltv(profile, region, regulated, snapshot)
     ltv_limit = round(price * ltv_rate, 2)
-    price_cap = _price_cap(price, snapshot) if region["isCapitalRegion"] else None
+    price_cap = _mortgage_cap(price, profile, region, regulated, snapshot)
     loan_limits = [ltv_limit]
     if price_cap is not None:
         loan_limits.append(price_cap)
@@ -238,7 +278,7 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         if range_price <= 0:
             return None
         range_limits = [round(range_price * ltv_rate, 2)]
-        range_cap = _price_cap(range_price, snapshot) if region["isCapitalRegion"] else None
+        range_cap = _mortgage_cap(range_price, profile, region, regulated, snapshot)
         if range_cap is not None:
             range_limits.append(range_cap)
         if profile.get("dsrLoanLimitEok") is not None:
@@ -367,7 +407,8 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         "cashScenarios": cash_scenarios,
         "cashGapEok": cash_gap,
         "dsrAnnualRoomManwon": dsr_room,
-        "stressRatePercent": snapshot.get("stressRatePercent"),
+        "stressRatePercent": profile.get("stressRatePercent"),
+        "loanTermYears": profile.get("loanTermYears"),
         "status": status,
         "statusLabel": status_label,
         "warnings": warnings[:3],
@@ -427,6 +468,15 @@ def estimated_purchase_ceiling(profile, regions=None, max_price_eok=None):
 def summarize(impacts, profile):
     snapshot = load_policy_snapshot()
     first_time_rule = snapshot.get("firstTimeAcquisitionTaxRelief") or {}
+    financing = {
+        "dsrLoanLimitEok": profile.get("dsrLoanLimitEok"),
+        "loanTermYears": profile.get("loanTermYears", 30),
+        "stressRatePercent": profile.get("stressRatePercent", snapshot["stressRatePercent"]),
+    }
+    if impacts:
+        for key in financing:
+            values = {impact.get(key) for impact in impacts}
+            financing[key] = values.pop() if len(values) == 1 else None
     counts = {"possible": 0, "short": 0, "restricted": 0, "needs_input": 0}
     for impact in impacts:
         status = impact.get("status")
@@ -458,9 +508,8 @@ def summarize(impacts, profile):
         "coBorrower": profile.get("coBorrower", False),
         "spouseAnnualIncomeManwon": profile.get("spouseAnnualIncomeManwon", 0),
         "spouseMonthlyDebtPaymentManwon": profile.get("spouseMonthlyDebtPaymentManwon", 0),
-        "dsrLoanLimitEok": profile.get("dsrLoanLimitEok"),
+        **financing,
         "mortgageRatePercent": profile.get("mortgageRatePercent", 0),
-        "loanTermYears": profile.get("loanTermYears", 30),
         "purchaseCostRatePercent": profile.get("purchaseCostRatePercent", 0),
         "counts": counts,
         "sources": snapshot.get("sources", []),

@@ -10,6 +10,97 @@ import policy_evaluator  # noqa: E402
 
 
 class PolicyEvaluatorTest(unittest.TestCase):
+    def test_capital_term_limit_cannot_be_bypassed_by_long_input(self):
+        for years in (30, 40, 50):
+            with self.subTest(years=years):
+                profile = policy_evaluator.user_profile(
+                    home_ownership="no_home", first_time=True, cash_eok=5,
+                    annual_income=8000, mortgage_rate=4, loan_term_years=years,
+                    purchase_cost_rate=3,
+                )
+                impact = policy_evaluator.evaluate_candidate(
+                    {"region": "서울특별시", "midPriceEok": 9}, profile=profile,
+                )
+                self.assertEqual(impact["loanTermYears"], 30)
+                self.assertEqual(impact["dsrLoanLimitEok"], 4.01)
+                self.assertEqual(impact["requiredCashEok"], 5.24)
+                self.assertEqual(policy_evaluator.estimated_purchase_ceiling(profile, ["서울특별시"]), 8.7)
+
+    def test_incheon_price_caps_and_additional_home_restriction(self):
+        for price, cap in ((15, 6), (15.01, 4), (25, 4), (25.01, 2)):
+            profile = policy_evaluator.user_profile(
+                home_ownership="no_home", annual_income=30000, mortgage_rate=4,
+            )
+            impact = policy_evaluator.evaluate_candidate(
+                {"region": "인천광역시 연수구", "midPriceEok": price}, profile=profile,
+            )
+            self.assertTrue(impact["isCapitalRegion"])
+            self.assertEqual(impact["estimatedLoanLimitEok"], cap)
+        for ownership in ("one_home_keep", "multi_home"):
+            impact = policy_evaluator.evaluate_candidate(
+                {"midPriceEok": 16}, entity={"city": "인천광역시", "district": "연수구"},
+                profile=policy_evaluator.user_profile(home_ownership=ownership),
+            )
+            self.assertEqual(impact["estimatedLoanLimitEok"], 0)
+
+    def test_regional_dsr_uses_local_rate_without_mutating_profile(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", annual_income=8000, mortgage_rate=4,
+            loan_term_years=40,
+        )
+        original = dict(profile)
+        for region, rate, years in (("부산광역시 해운대구", .75, 40), ("서울특별시", 3, 30), ("인천광역시", 3, 30)):
+            impact = policy_evaluator.evaluate_candidate(
+                {"region": region, "midPriceEok": 12}, profile=profile,
+            )
+            self.assertEqual(impact["stressRatePercent"], rate)
+            self.assertEqual(impact["loanTermYears"], years)
+        self.assertEqual(profile, original)
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", annual_income=8000, mortgage_rate=4,
+        )
+        impact = policy_evaluator.evaluate_candidate(
+            {"region": "부산광역시 해운대구", "midPriceEok": 10}, profile=profile,
+        )
+        self.assertEqual(impact["dsrLoanLimitEok"], 5.11)
+        self.assertEqual(impact["estimatedLoanLimitEok"], 5.11)
+
+    def test_local_first_time_ltv_is_eighty_percent(self):
+        for first_time, expected in ((True, 80), (False, 70)):
+            impact = policy_evaluator.evaluate_candidate(
+                {"region": "부산광역시 해운대구", "midPriceEok": 5},
+                profile=policy_evaluator.user_profile(home_ownership="no_home", first_time=first_time),
+            )
+            self.assertEqual(impact["ltvRate"], expected)
+            self.assertEqual(impact["estimatedLoanLimitEok"], 5 * expected / 100)
+
+    def test_local_first_time_cap_applies_to_all_price_scenarios(self):
+        impact = policy_evaluator.evaluate_candidate(
+            {"region": "부산광역시 해운대구", "minPriceEok": 8,
+             "midPriceEok": 10, "maxPriceEok": 12},
+            profile=policy_evaluator.user_profile(
+                home_ownership="no_home", first_time=True,
+                annual_income=30000, mortgage_rate=4,
+            ),
+        )
+        self.assertEqual(impact["ltvRate"], 80)
+        self.assertEqual(impact["estimatedLoanLimitEok"], 6)
+        self.assertEqual(impact["minPriceLoanLimitEok"], 6)
+        self.assertEqual(impact["maxPriceLoanLimitEok"], 6)
+
+    def test_summary_uses_candidate_region_and_does_not_mix_dsr_values(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", annual_income=8000, mortgage_rate=4,
+        )
+        local = policy_evaluator.evaluate_candidate({"region": "부산광역시", "midPriceEok": 10}, profile=profile)
+        capital = policy_evaluator.evaluate_candidate({"region": "인천광역시", "midPriceEok": 10}, profile=profile)
+        summary = policy_evaluator.summarize([local], profile)
+        self.assertEqual(summary["stressRatePercent"], .75)
+        self.assertEqual(summary["dsrLoanLimitEok"], 5.11)
+        summary = policy_evaluator.summarize([local, capital], profile)
+        self.assertIsNone(summary["dsrLoanLimitEok"])
+        self.assertIsNone(summary["stressRatePercent"])
+
     def test_small_eok_amount_is_displayed_in_manwon(self):
         self.assertEqual(policy_evaluator._money(0.01), "100만원")
         self.assertEqual(policy_evaluator._money(0.34), "3,400만원")

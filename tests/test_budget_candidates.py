@@ -843,7 +843,7 @@ class BudgetCandidatesTest(unittest.TestCase):
 
         candidate = result["candidates"][0]
         self.assertTrue(candidate["policyImpact"]["isRegulated"])
-        self.assertEqual(candidate["policyImpact"]["asOf"], "2026-07-12")
+        self.assertEqual(candidate["policyImpact"]["asOf"], budget_candidates.policy_evaluator.load_policy_snapshot()["asOf"])
         self.assertEqual(result["policySnapshot"]["cashEok"], 8)
 
     def test_multiple_purposes_priorities_and_commutes_are_combined(self):

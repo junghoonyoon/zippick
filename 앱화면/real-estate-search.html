@@ -14191,7 +14191,7 @@
       const dsrAnnualRoom = Math.max(0, Math.round(combinedIncome * 0.4 - monthlyDebt * 12));
       const monthlyRoom = Math.max(0, Math.round(dsrAnnualRoom / 12));
       const rateText = Number.isFinite(inputMortgageRate)
-        ? `변동형 DSR ${dsrMortgageRate.toFixed(1)}% = 입력 ${inputMortgageRate.toFixed(1)}% + 스트레스 ${mortgageStressRatePercent.toFixed(1)}%p · ${snapshot.loanTermYears}년${policyCapMeta}`
+        ? `변동형 DSR ${dsrMortgageRate.toFixed(2)}% = 입력 ${inputMortgageRate.toFixed(2)}% + 스트레스 ${Number(snapshot.stressRatePercent ?? mortgageStressRatePercent).toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}%p · ${snapshot.loanTermYears}년${policyCapMeta}`
         : `${snapshot.loanTermYears}년 상환 기준`;
       const debtText = monthlyDebt > 0
         ? `기존 월상환 ${readableManwon(monthlyDebt)} 차감 → 월 ${readableManwon(monthlyRoom)} 기준`
@@ -14242,9 +14242,9 @@
         ? { ...options.changeContext, nextBudgetEok:data.budgetEok }
         : null;
       const inputMortgageRate = Number(snapshot.mortgageRatePercent);
-      const dsrMortgageRate = inputMortgageRate + mortgageStressRatePercent;
+      const dsrMortgageRate = inputMortgageRate + Number(snapshot.stressRatePercent ?? mortgageStressRatePercent);
       const purchaseCostRate = Number(snapshot.purchaseCostRatePercent || 0);
-      const purchaseCost = Number(data.budgetEok || 0) * purchaseCostRate / 100;
+      const purchaseCost = Number(snapshot.purchaseCostEok ?? (Number(data.budgetEok || 0) * purchaseCostRate / 100));
       const hasPurchaseCostAllowance = purchaseCostRate > 0;
       const purchaseCeilingLabel = "매매가 상한";
       const effectiveLoanLimit = snapshot.estimatedLoanLimitEok == null

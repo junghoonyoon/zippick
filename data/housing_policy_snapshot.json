@@ -1,17 +1,27 @@
 {
-  "asOf": "2026-07-12",
-  "version": "2026.07.12-1",
+  "asOf": "2026-09-08",
+  "version": "2026.09.08-1",
   "status": "effective",
   "capitalRegionMortgageCaps": [
-    {"maxHomePriceEok": 15, "maxLoanEok": 6},
-    {"maxHomePriceEok": 25, "maxLoanEok": 4},
-    {"maxHomePriceEok": null, "maxLoanEok": 2}
+    {
+      "maxHomePriceEok": 15,
+      "maxLoanEok": 6
+    },
+    {
+      "maxHomePriceEok": 25,
+      "maxLoanEok": 4
+    },
+    {
+      "maxHomePriceEok": null,
+      "maxLoanEok": 2
+    }
   ],
   "ltv": {
     "regulatedGeneral": 0.4,
     "capitalGeneral": 0.7,
     "capitalFirstTime": 0.7,
-    "additionalHomeInCapital": 0.0
+    "additionalHomeInCapital": 0.0,
+    "nonCapitalFirstTime": 0.8
   },
   "firstTimeAcquisitionTaxRelief": {
     "maxHomePriceEok": 12,
@@ -75,6 +85,34 @@
       "title": "생애최초 주택 구입 취득세 감면 운영기준",
       "publishedAt": "2026-01-13",
       "url": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000016&nttId=123270"
+    },
+    {
+      "id": "fsc-mortgage-20250627",
+      "agency": "금융위원회",
+      "title": "가계부채 관리 강화 방안: 만기 30년 및 생애최초 LTV",
+      "publishedAt": "2025-06-27",
+      "url": "https://fsc.go.kr/no010101/84824"
+    },
+    {
+      "id": "fsc-stress-20260618",
+      "agency": "금융위원회",
+      "title": "3단계 스트레스 DSR 변경시행 예고: 지방 2단계 연말 연장",
+      "publishedAt": "2026-06-18",
+      "url": "https://better.fsc.go.kr/fsc_new/status/adminMap/PrvntcDetail.do?postNo=5349&muNo=144&stNo=11"
+    },
+    {
+      "id": "fsc-first-time-20220720",
+      "agency": "금융위원회",
+      "title": "생애최초 LTV 80% 및 최대 대출한도 6억원",
+      "publishedAt": "2022-07-20",
+      "url": "https://www.fsc.go.kr/no010101/78134"
     }
-  ]
+  ],
+  "capitalRegionMaxLoanTermYears": 30,
+  "nonCapitalStressRatePercent": 0.75,
+  "nonCapitalStressRatePeriod": {
+    "effectiveFrom": "2026-07-01",
+    "effectiveUntil": "2026-12-31"
+  },
+  "firstTimeMaxLoanEok": 6
 }

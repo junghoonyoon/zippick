@@ -3303,6 +3303,8 @@ class Handler(BaseHTTPRequestHandler):
                 ceiling_impacts,
                 key=lambda impact: float(impact.get("estimatedLoanLimitEok") or 0),
             )
+            for key in ("dsrLoanLimitEok", "loanTermYears", "stressRatePercent"):
+                snapshot[key] = best_impact.get(key)
             snapshot["estimatedLoanLimitEok"] = best_impact.get("estimatedLoanLimitEok")
             snapshot["priceCapEok"] = best_impact.get("priceCapEok")
             snapshot["grossPurchaseCostEok"] = best_impact.get("grossPurchaseCostEok")
