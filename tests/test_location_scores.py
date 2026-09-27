@@ -201,6 +201,20 @@ class LocationScoresTest(unittest.TestCase):
         self.assertEqual(details["입지·실수요"]["직장권 접근성"]["score"], 50)
         self.assertIn("권역 기준", details["입지·실수요"]["직장권 접근성"]["reason"])
 
+    def test_requested_commute_score_still_attaches_actual_travel_times(self):
+        row = {
+            "commuteAccessRequested": True,
+            "commuteAccessScore": 50,
+            "commuteAccessReason": "입력한 직장권과 권역 기준 1차 일치",
+        }
+        profile = {"station": "둔촌동", "hubs": {"강남": {"totalMinutes": 39}}}
+        with mock.patch.object(location_scores, "commute_profile_for", return_value=profile):
+            score, reason = location_scores._commute_access_score(row, self.entity)
+
+        self.assertEqual(score, 50)
+        self.assertEqual(reason, "입력한 직장권과 권역 기준 1차 일치")
+        self.assertEqual(row["commuteProfile"], profile)
+
     def test_purchase_score_hides_commute_metric_when_user_did_not_enter_commute(self):
         row = {
             "name": "직장권없음아파트",

@@ -5462,7 +5462,10 @@
           ...(currentBudgetData?.allCandidates || []),
           ...(currentBudgetData?.policyExcludedCandidates || []),
         ].find(row => candidateIdentityKey(row) === key);
-        if (item) ensureZippickDevelopmentInsight(item);
+        if (item) {
+          ensureZippickDevelopmentInsight(item);
+          void ensureCandidateCommuteProfile(item);
+        }
       }
       if (!open) setSignalDefinitionOpen(sheet.querySelector(".signal-report"), false);
       syncCandidateDetailScrollLock();
@@ -13073,7 +13076,10 @@
         const content = sheet.querySelector(".candidate-detail-sheet-content");
         if (content) content.scrollTop = 0;
         const item = candidateMapLocatedEntries.find(entry => candidateIdentityKey(entry.item) === candidateMapSelectedKey)?.item;
-        if (item) ensureZippickDevelopmentInsight(item);
+        if (item) {
+          ensureZippickDevelopmentInsight(item);
+          void ensureCandidateCommuteProfile(item);
+        }
         requestAnimationFrame(() => {
           sheet.querySelector("[data-candidate-map-detail-close]")?.focus();
           syncSparkAxisLabelSizes(sheet);
@@ -16488,11 +16494,21 @@
       </section>`;
     }
 
-    // 업무지구 접근성. 데이터가 없는 단지는 섹션을 통째로 생략한다.
+    // 매수 후보는 열 때 이동시간을 보강한다. 조회 중이거나 확인이 안 된
+    // 경우도 이유를 보여줘, 항목이 갑자기 사라진 것처럼 보이지 않게 한다.
     function zippickCommuteHtml(item) {
       const profile = item?.commuteProfile;
       const hubs = profile?.hubs;
-      if (!hubs || typeof hubs !== "object") return "";
+      if (!hubs || typeof hubs !== "object") {
+        const message = item?.commuteProfileState === "loading"
+          ? "주요 업무지구까지 이동시간을 확인하고 있어요…"
+          : item?.commuteProfileState === "unavailable"
+            ? "가까운 지하철역 자료가 없어 이동시간을 계산하지 못했어요. 지도에서 출근 경로를 확인해 주세요."
+            : item?.commuteProfileState === "error"
+              ? "이동시간을 불러오지 못했어요. 리포트를 다시 열어 주세요."
+              : "";
+        return message ? `<section class="zpr-section"><span class="zpr-kicker" data-zpr-step></span><h5>업무지구 이동시간</h5><p class="zpr-lead">${esc(message)}</p></section>` : "";
+      }
       const rows = Object.entries(hubs)
         .map(([name, value]) => ({ name, ...value }))
         .filter(row => Number.isFinite(Number(row.totalMinutes)))
@@ -21201,6 +21217,28 @@
         aptReportCache.delete(cacheKey);
         throw error;
       }
+    }
+
+    async function ensureCandidateCommuteProfile(item) {
+      if (!item?.name || item.commuteProfile?.hubs ||
+          ["loading", "unavailable"].includes(item.commuteProfileState)) return;
+      item.commuteProfileState = "loading";
+      refreshMarketInsight(item);
+      try {
+        // 직접 검색 리포트와 같은 단지 식별값을 보내 이동시간만 가져온다.
+        // 기존 매수 후보의 예산·점수·비교군은 덮어쓰지 않는다.
+        const payload = await fetchAptReport(item.name, item.region || "", item);
+        const profile = payload?.report?.commuteProfile;
+        if (profile?.hubs && Object.keys(profile.hubs).length) {
+          item.commuteProfile = profile;
+          item.commuteProfileState = "ready";
+        } else {
+          item.commuteProfileState = "unavailable";
+        }
+      } catch (_) {
+        item.commuteProfileState = "error";
+      }
+      refreshMarketInsight(item);
     }
 
     function aptCardSignalState(report, latestTradeDate = "") {

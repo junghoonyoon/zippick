@@ -647,6 +647,11 @@ def _commute_access_score(row, entity=None):
     구 단위 하드코딩 표에 없는 지역이 전부 0점이 되어, 1호선·7호선으로
     도심이 연결되는 단지가 '접근성 없음'으로 표시되는 문제가 있었다.
     """
+    # 직장권 조건 점수가 이미 있어도 리포트에 쓸 실제 이동시간은 따로 붙인다.
+    profile = commute_profile_for(entity)
+    if profile:
+        row["commuteProfile"] = profile
+
     score = _float_or_none(row.get("commuteAccessScore"))
     reason = str(row.get("commuteAccessReason") or "").strip()
     if score is not None:
@@ -654,9 +659,7 @@ def _commute_access_score(row, entity=None):
     if row.get("commuteMatched"):
         return 75.0, "입력한 직장권과 권역 기준 1차 일치"
 
-    profile = commute_profile_for(entity)
     if profile:
-        row["commuteProfile"] = profile
         return commute_times.commute_access_score(profile)
     return None, "직장권 실제 이동시간 데이터 없음"
 
