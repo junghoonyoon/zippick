@@ -547,6 +547,36 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("navigator.share", html)
         self.assertIn('event.target.closest("[data-apt-report-share]")', html)
 
+    def test_zippick_report_can_download_a_pdf_when_ready(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('id="aptReportDownload" type="button" data-apt-report-download disabled>PDF 다운로드</button>', html)
+        self.assertIn('<button type="button" data-apt-report-download>PDF 다운로드</button>', html)
+        self.assertIn("function setAptReportDownloadReady(ready)", html)
+        self.assertIn("function downloadAptReportPdf(trigger = null)", html)
+        self.assertIn("aptReportDownload.disabled = !ready;", html)
+        self.assertIn('printReportSheet("printing-listing-review");', html)
+        self.assertIn('event.target.closest("[data-apt-report-download]")', html)
+        self.assertIn('script src="assets/html2pdf.bundle.min.js"', html)
+        self.assertIn("async function downloadReportPdf(sheet, trigger = null)", html)
+        self.assertIn("globalThis.html2pdf()", html)
+        self.assertIn("filename:reportPdfFilename(sheet)", html)
+        self.assertIn(".pdf-export-root", html)
+        self.assertIn("body.pdf-exporting > *:not(.pdf-export-root):not(.html2pdf__overlay)", html)
+        self.assertIn('pagebreak:{ mode:["css"] }', html)
+        self.assertIn("const button = trigger || aptReportDownload;", html)
+        self.assertIn("PDF를 저장했습니다", html)
+        self.assertNotIn('function downloadAptReportPdf() {\n      if (aptReportDownload.disabled) return;\n      printReportSheet', html)
+
+    def test_budget_candidate_reports_can_download_a_pdf(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertGreaterEqual(html.count('data-candidate-detail-download>PDF 다운로드'), 2)
+        self.assertIn('function downloadCandidateDetailPdf(button = null)', html)
+        self.assertIn('"[data-candidate-detail-download], .candidate-detail-sheet [data-apt-report-download]"', html)
+        self.assertIn('.candidate-detail-sheet [data-apt-report-download]', html)
+        self.assertIn('void downloadReportPdf(sheet, button);', html)
+
     def test_purchase_power_required_fields_show_visible_message(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
