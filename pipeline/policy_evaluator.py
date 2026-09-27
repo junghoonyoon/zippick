@@ -200,7 +200,37 @@ def _ltv(profile, region, regulated, snapshot):
     return 0.7, "비수도권 일반 기준"
 
 
-def _first_time_acquisition_tax_relief(profile, price_eok, gross_cost_eok, snapshot):
+def _is_population_decline_region(region, snapshot):
+    compact = region.get("compact", "")
+    if not compact:
+        return False
+    groups = snapshot.get("populationDeclineRegions") or {}
+    all_province_keys = {
+        "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+        "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+    }
+    province_keys = {_compact(province) for province in groups}
+    named_provinces = {province for province in province_keys if province in compact}
+    named_any_province = {province for province in all_province_keys if province in compact}
+    if named_any_province and not named_provinces:
+        return False
+    if named_any_province:
+        for province, districts in groups.items():
+            if _compact(province) not in named_provinces:
+                continue
+            if any(_compact(district) in compact for district in districts):
+                return True
+        return False
+
+    district_counts = {}
+    for districts in groups.values():
+        for district in districts:
+            key = _compact(district)
+            district_counts[key] = district_counts.get(key, 0) + 1
+    return any(compact == key and count == 1 and len(key) > 2 for key, count in district_counts.items())
+
+
+def _first_time_acquisition_tax_relief(profile, price_eok, gross_cost_eok, region, snapshot):
     """생애최초 아파트 취득세 예상 감면액을 억원 단위로 반환한다.
 
     사용자가 입력한 부대비용 안에서만 빼서, 비용을 0%ub85c 선택한
@@ -212,7 +242,13 @@ def _first_time_acquisition_tax_relief(profile, price_eok, gross_cost_eok, snaps
         return 0.0
     if price_eok > _float(rule.get("maxHomePriceEok")):
         return 0.0
-    max_relief_eok = _float(rule.get("maxReliefManwonApartment")) / 10000
+    max_relief_manwon = _float(rule.get("maxReliefManwonApartment"))
+    if _is_population_decline_region(region, snapshot):
+        max_relief_manwon = _float(
+            rule.get("populationDeclineRegionMaxReliefManwonApartment")
+            or max_relief_manwon
+        )
+    max_relief_eok = max_relief_manwon / 10000
     return max(0, round(min(gross_cost_eok, max_relief_eok), 2))
 
 
@@ -267,6 +303,7 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         profile,
         price,
         gross_purchase_cost,
+        region,
         snapshot,
     )
     purchase_cost = max(0, round(gross_purchase_cost - first_time_tax_relief, 2))
@@ -289,6 +326,7 @@ def evaluate_candidate(candidate, entity=None, profile=None):
             profile,
             range_price,
             range_gross_cost,
+            region,
             snapshot,
         )
         range_cost = max(0, round(range_gross_cost - range_tax_relief, 2))

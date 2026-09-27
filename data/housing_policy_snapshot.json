@@ -1,6 +1,6 @@
 {
-  "asOf": "2026-09-08",
-  "version": "2026.09.08-1",
+  "asOf": "2026-09-27",
+  "version": "2026.09.27-1",
   "status": "effective",
   "capitalRegionMortgageCaps": [
     {
@@ -26,7 +26,21 @@
   "firstTimeAcquisitionTaxRelief": {
     "maxHomePriceEok": 12,
     "maxReliefManwonApartment": 200,
+    "populationDeclineRegionMaxReliefManwonApartment": 300,
     "effectiveUntil": "2028-12-31"
+  },
+  "populationDeclineRegions": {
+    "부산": ["동구", "서구", "영도구"],
+    "대구": ["남구", "서구", "군위군"],
+    "인천": ["강화군", "옹진군"],
+    "경기": ["가평군", "연천군"],
+    "강원": ["고성군", "삼척시", "양구군", "양양군", "영월군", "정선군", "철원군", "태백시", "평창군", "홍천군", "화천군", "횡성군"],
+    "충북": ["괴산군", "단양군", "보은군", "영동군", "옥천군", "제천시"],
+    "충남": ["공주시", "금산군", "논산시", "보령시", "부여군", "서천군", "예산군", "청양군", "태안군"],
+    "전북": ["고창군", "김제시", "남원시", "무주군", "부안군", "순창군", "임실군", "장수군", "정읍시", "진안군"],
+    "전남": ["강진군", "고흥군", "곡성군", "구례군", "담양군", "보성군", "신안군", "영광군", "영암군", "완도군", "장성군", "장흥군", "진도군", "함평군", "해남군", "화순군"],
+    "경북": ["고령군", "문경시", "봉화군", "상주시", "성주군", "안동시", "영덕군", "영양군", "영주시", "영천시", "울릉군", "울진군", "의성군", "청도군", "청송군"],
+    "경남": ["거창군", "고성군", "남해군", "밀양시", "산청군", "의령군", "창녕군", "하동군", "함안군", "함양군", "합천군"]
   },
   "stressRatePercent": 3.0,
   "moveInMonths": 6,
@@ -85,6 +99,20 @@
       "title": "생애최초 주택 구입 취득세 감면 운영기준",
       "publishedAt": "2026-01-13",
       "url": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000016&nttId=123270"
+    },
+    {
+      "id": "mois-population-decline-regions-202110",
+      "agency": "행정안전부",
+      "title": "인구감소지역 89곳 지정",
+      "publishedAt": "2021-10-18",
+      "url": "https://www.mois.go.kr/frt/sub/a06/b06/populationDecline/screen.do"
+    },
+    {
+      "id": "law-first-home-tax-population-decline-202601",
+      "agency": "국가법령정보센터",
+      "title": "지방세특례제한법 제36조의3 생애최초 주택 구입 취득세 감면",
+      "publishedAt": "2025-12-31",
+      "url": "https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026461955"
     },
     {
       "id": "fsc-mortgage-20250627",

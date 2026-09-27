@@ -255,6 +255,26 @@ class PolicyEvaluatorTest(unittest.TestCase):
         self.assertEqual(eligible["purchaseCostEok"], 0.28)
         self.assertEqual(over_price_limit["firstTimeAcquisitionTaxReliefEok"], 0)
 
+    def test_first_time_tax_relief_uses_population_decline_region_limit(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home",
+            first_time=True,
+            cash_eok="6",
+            purchase_cost_rate="3",
+        )
+        population_decline = policy_evaluator.evaluate_candidate(
+            {"region": "전북특별자치도 정읍시", "midPriceEok": 5},
+            profile=profile,
+        )
+        ambiguous_non_target = policy_evaluator.evaluate_candidate(
+            {"region": "대전광역시 동구", "midPriceEok": 5},
+            profile=profile,
+        )
+
+        self.assertEqual(population_decline["firstTimeAcquisitionTaxReliefEok"], 0.03)
+        self.assertEqual(population_decline["purchaseCostEok"], 0.12)
+        self.assertEqual(ambiguous_non_target["firstTimeAcquisitionTaxReliefEok"], 0.02)
+
     def test_first_time_policy_summary_exposes_policy_difference(self):
         profile = policy_evaluator.user_profile(
             home_ownership="no_home",
