@@ -4481,6 +4481,31 @@
     .candidate-primary-actions > .compare-toggle {
       flex:0 0 auto; width:fit-content; min-width:max-content; max-width:100%; justify-self:start;
     }
+    /* 브라우저 인쇄창 없이 PDF를 만들 때 쓰는 임시 리포트 캔버스입니다. */
+    .pdf-export-root {
+      position:static !important; z-index:auto !important;
+      display:block !important; width:794px !important; max-width:none !important; min-height:1123px !important;
+      height:auto !important; max-height:none !important; overflow:visible !important;
+      margin:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important;
+      background:#fff !important; transform:none !important; opacity:1 !important; pointer-events:none !important;
+    }
+    body.pdf-exporting > *:not(.pdf-export-root):not(.html2pdf__overlay) { visibility:hidden !important }
+    .pdf-export-root .result-info-backdrop,
+    .pdf-export-root .apt-report-head-actions,
+    .pdf-export-root .zpr-share,
+    .pdf-export-root .result-info-grabber { display:none !important }
+    .pdf-export-root .result-info-panel {
+      position:static !important; inset:auto !important; display:block !important; width:100% !important;
+      min-width:0 !important; height:auto !important; max-height:none !important; overflow:visible !important;
+      border-radius:0 !important; box-shadow:none !important; transform:none !important;
+    }
+    .pdf-export-root .candidate-detail-sheet-content,
+    .pdf-export-root .listing-review-content {
+      height:auto !important; max-height:none !important; overflow:visible !important;
+      padding:28px 48px 48px !important;
+    }
+    .pdf-export-root .zpr-section,
+    .pdf-export-root .zpr-warn { break-inside:auto; page-break-inside:auto }
     @media print {
       body * { visibility:hidden !important }
       body.printing-apt-report .apt-report-sheet,
@@ -5121,6 +5146,7 @@
     </section>
   </div>
 
+  <script src="assets/html2pdf.bundle.min.js"></script>
   <script>
     const $ = id => document.getElementById(id);
     const result = $("result");
@@ -21259,16 +21285,101 @@
       window.print();
     }
 
-    function downloadAptReportPdf() {
-      if (aptReportDownload.disabled) return;
-      printReportSheet("printing-apt-report");
+    let pdfExportInProgress = false;
+
+    function pdfFilenamePart(value) {
+      return String(value || "집픽 분석리포트")
+        .replace(/[\\/:*?"<>|\u0000-\u001f]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80) || "집픽 분석리포트";
+    }
+
+    function reportPdfFilename(sheet) {
+      const title = sheet?.querySelector(".result-info-sheet-title")?.textContent
+        || aptReportTitle?.textContent
+        || "집픽 분석리포트";
+      return `${pdfFilenamePart(title)}_집픽_분석리포트.pdf`;
+    }
+
+    function preparePdfExportRoot(sheet) {
+      const root = document.createElement("div");
+      root.className = "pdf-export-root";
+      const heading = sheet.querySelector(".result-info-sheet-head")?.cloneNode(true);
+      const content = sheet.querySelector(".candidate-detail-sheet-content, .listing-review-content")?.cloneNode(true);
+      heading?.querySelectorAll(".apt-report-head-actions, .result-info-sheet-close, .result-info-grabber")
+        .forEach(element => element.remove());
+      content?.querySelectorAll(".zpr-share, .result-info-backdrop, .apt-report-head-actions")
+        .forEach(element => element.remove());
+      if (heading) root.appendChild(heading);
+      if (content) root.appendChild(content);
+      document.body.appendChild(root);
+      return root;
+    }
+
+    function setPdfButtonBusy(button, busy) {
+      if (!button) return;
+      if (busy) {
+        button.dataset.pdfOriginalText = button.textContent;
+        button.disabled = true;
+        button.textContent = "PDF 만드는 중…";
+      } else {
+        button.disabled = false;
+        if (button.dataset.pdfOriginalText) {
+          button.textContent = button.dataset.pdfOriginalText;
+          delete button.dataset.pdfOriginalText;
+        }
+      }
+    }
+
+    async function downloadReportPdf(sheet, trigger = null) {
+      if (!sheet || sheet.hidden || pdfExportInProgress) return;
+      if (typeof globalThis.html2pdf !== "function") {
+        showAppToast("PDF 기능을 준비하지 못했어요. 잠시 후 다시 눌러 주세요.");
+        return;
+      }
+      pdfExportInProgress = true;
+      setPdfButtonBusy(trigger, true);
+      const root = preparePdfExportRoot(sheet);
+      document.body.classList.add("pdf-exporting");
+      try {
+        await globalThis.html2pdf()
+          .set({
+            margin:[8, 8, 8, 8],
+            filename:reportPdfFilename(sheet),
+            image:{ type:"jpeg", quality:0.97 },
+            html2canvas:{
+              scale:2, backgroundColor:"#fff", useCORS:true, logging:false,
+              scrollX:0, scrollY:0,
+            },
+            jsPDF:{ unit:"mm", format:"a4", orientation:"portrait", compress:true },
+            pagebreak:{ mode:["css"] },
+          })
+          .from(root)
+          .save();
+        showAppToast("PDF를 저장했습니다");
+      } catch (error) {
+        console.error("PDF 다운로드 실패", error);
+        showAppToast("PDF를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+      } finally {
+        root.remove();
+        document.body.classList.remove("pdf-exporting");
+        setPdfButtonBusy(trigger, false);
+        pdfExportInProgress = false;
+      }
+    }
+
+    function downloadAptReportPdf(trigger = null) {
+      const button = trigger || aptReportDownload;
+      if (button.disabled) return;
+      void downloadReportPdf(aptReportSheet, button);
     }
 
     function downloadCandidateDetailPdf(button = null) {
       const sheet = button?.closest(".candidate-detail-sheet")
         || document.querySelector(".candidate-detail-sheet:not([hidden])");
       if (!sheet || sheet.hidden) return;
-      printReportSheet("printing-candidate-detail");
+      void downloadReportPdf(sheet, button);
     }
 
     window.addEventListener("afterprint", () => {
@@ -22559,7 +22670,7 @@
         return;
       }
       if (event.target.closest("[data-apt-report-download]")) {
-        downloadAptReportPdf();
+        downloadAptReportPdf(event.target.closest("[data-apt-report-download]"));
         return;
       }
       const shareButton = event.target.closest("[data-apt-report-share]");
