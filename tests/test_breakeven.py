@@ -65,6 +65,12 @@ class CalculateTest(unittest.TestCase):
         result = breakeven.calculate(25 * EOK, years=3, area_sqm=84.9)
         self.assertIn("양도세", result["uncertainItems"])
 
+    def test_lower_price_does_not_promise_zero_capital_gains_tax(self):
+        result = breakeven.calculate(8 * EOK, years=3, area_sqm=59.8)
+        self.assertIn("양도세", result["uncertainItems"])
+        self.assertNotIn("손익분기점", result["headline"])
+        self.assertFalse(any(item["key"] == "capital_gains" for item in result["items"]))
+
     def test_loan_interest_is_never_included(self):
         result = breakeven.calculate(1040000000, years=3, area_sqm=59.84)
         self.assertIn("대출 이자", result["excludes"])

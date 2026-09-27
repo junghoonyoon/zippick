@@ -1038,17 +1038,18 @@ def _apartment_leader_context(name, region, legal_dong="", jibun=""):
         return json.loads(json.dumps(payload, ensure_ascii=False)), 200
 
 
-def _apartment_report(name, region, target_households=0, target_price_eok=0, area_label=""):
+def _apartment_report(name, region, target_households=0, target_price_eok=0, area_label="", legal_dong="", jibun="", entity_override=None):
     """예산 흐름 없이 단지 하나의 상승 흐름 리포트를 만든다.
 
     후보 카드와 같은 데이터 구조(row + signals)를 반환해 프론트의
     바텀싯 리포트 렌더러를 그대로 재사용한다.
     """
-    entity = None
-    try:
-        entity = budget_candidates._find_entity(name, region)
-    except Exception:
-        entity = None
+    entity = entity_override
+    if entity is None:
+        try:
+            entity = budget_candidates._find_entity(name, region, legal_dong, jibun)
+        except Exception:
+            entity = None
     entity = entity or {}
     entity_name = str(entity.get("name") or name).strip()
     aliases = []
@@ -1081,6 +1082,9 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         "district": str(entity.get("district") or "").strip(),
         "legalDong": str(entity.get("legalDong") or "").strip(),
         "jibun": str(entity.get("jibun") or "").strip(),
+        "apartmentId": str(entity.get("apartmentId") or "").strip(),
+        "kaptCode": str(entity.get("kaptCode") or "").strip(),
+        "complexNo": str(entity.get("complexNo") or "").strip(),
         "address": str(entity.get("address") or "").strip(),
         "aliases": aliases,
         "households": int(entity.get("households") or 0),
@@ -1089,6 +1093,8 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         "buildingAge": building.get("buildingAge") or 0,
         "peers": [],
     }
+    if area_label:
+        row["displayAreaLabel"] = area_label
     if entity:
         try:
             row["educationEnvironment"] = education_environment.education_environment_for_entity(entity)
@@ -1119,15 +1125,31 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         except Exception:
             pass
         try:
+            price_band = molit_transactions.price_band_for_apartment(
+                row["name"], region=row["region"], area_label=area_label, entity=row,
+            )
+            if price_band:
+                for key in (
+                    "statsThrough", "recent3AveragePriceEok", "recent3TradeCount",
+                    "recent3AdjustedAveragePriceEok", "recent3AdjustedTradeCount",
+                ):
+                    row[key] = price_band.get(key)
+                row["latestDealPriceEok"] = price_band.get("latestDealPriceEok")
+                row["latestDealDate"] = price_band.get("latestDealDate")
+        except Exception:
+            pass
+        try:
             last_deal = molit_transactions.latest_transaction_for_apartment(
                 row["name"], region=row["region"], area_label=area_label, skip_months=0, entity=row,
             )
             if last_deal:
-                row["latestDealPriceEok"] = last_deal.get("latestDealPriceEok")
-                row["latestDealDate"] = last_deal.get("latestDealDate")
-                area = last_deal.get("latestDealExclusiveArea")
-                if area:
-                    row["displayAreaLabel"] = f"{area}㎡"
+                last_date = str(last_deal.get("latestDealDate") or "")
+                if last_date >= str(row.get("latestDealDate") or ""):
+                    row["latestDealPriceEok"] = last_deal.get("latestDealPriceEok")
+                    row["latestDealDate"] = last_date
+                    area = last_deal.get("latestDealExclusiveArea")
+                    if area and not area_label:
+                        row["displayAreaLabel"] = f"{area}㎡"
         except Exception:
             pass
         try:
@@ -1141,6 +1163,14 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             )
         except Exception:
             row["peers"] = []
+        # 직접 연 리포트도 후보 카드와 같은 출퇴근 자료를 사용한다.
+        # 역 캐시가 비어 있으면 점수 계산 전에 단지 한 곳만 채운다.
+        if entity:
+            try:
+                if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
+                    kakao_station_distances.enrich_entities([entity], retry_unavailable=True, limit=1)
+            except Exception:
+                _record_operation("externalDataFallbacks")
         try:
             score_rows = [row]
             peer_score_rows = []
@@ -3405,13 +3435,36 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/apartment-report":
             name = params.get("name", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
+            legal_dong = params.get("legal_dong", [""])[0].strip()
+            jibun = params.get("jibun", [""])[0].strip()
+            apartment_id = params.get("apartment_id", [""])[0].strip()
             target_households = policy_evaluator._float(params.get("households", ["0"])[0])
             target_price_eok = policy_evaluator._float(params.get("price_eok", ["0"])[0])
             area_label = params.get("area_label", [""])[0].strip()
             if len(name) < 2:
                 self._json({"error": "단지명을 확인해 주세요."}, 400)
                 return
-            self._json(_apartment_report(name, region, target_households, target_price_eok, area_label))
+            matched = None
+            if apartment_id:
+                matches = budget_candidates._find_entities(name, region, legal_dong, jibun)
+                matched = next(
+                    (entity for entity in matches if str(entity.get("apartmentId") or "").strip() == apartment_id),
+                    None,
+                )
+                # 단지 대장에는 고유번호가 없는 행도 있다. 그때는 법정동과
+                # 지번을 둘 다 확인할 수 있을 때에만 물리적 위치로 고정한다.
+                if not matched and legal_dong and jibun:
+                    matched = next(
+                        (entity for entity in matches if not entity.get("apartmentId")),
+                        None,
+                    )
+            elif legal_dong or jibun:
+                matched = budget_candidates._find_entity(name, region, legal_dong, jibun)
+            if apartment_id or legal_dong or jibun:
+                if not matched:
+                    self._json({"error": "공유한 단지를 정확히 찾지 못했어요."}, 404)
+                    return
+            self._json(_apartment_report(name, region, target_households, target_price_eok, area_label, legal_dong, jibun, matched))
             return
         if parsed.path == "/api/apartment-last-deal":
             name = params.get("name", [""])[0].strip()

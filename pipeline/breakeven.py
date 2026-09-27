@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""집을 사고 되팔 때 드는 돈으로 '본전 상승률'을 계산한다.
+"""집을 사고 되팔 때 확인 가능한 일부 비용을 계산한다.
 
 집픽은 실거래만 가지고 있어서 미래 가격을 예측하지 않는다.
-대신 "얼마나 올라야 손해를 안 보는지"를 계산해서 보여준다.
-이 값은 예측이 아니라 세금 규칙으로 정해지는 계산값이다.
+대출 이자와 매도 시점의 세금 등을 모르는 상태에서 손익분기점으로
+오해하지 않도록, 포함한 비용의 매수가 대비 비율만 보여준다.
 """
 
 MANWON = 10000  # 1만원. 이 파일의 모든 금액 단위는 '원'이다.
@@ -11,10 +11,6 @@ EOK = 100000000
 
 # 국민주택 규모. 이보다 크면 농어촌특별세가 붙는다.
 NATIONAL_HOUSING_SQM = 85.0
-
-# 1세대 1주택 양도세 비과세 기준 금액과 보유 기간.
-CGT_EXEMPT_PRICE = 12 * EOK
-CGT_EXEMPT_YEARS = 2
 
 # 공시가격은 시세보다 낮게 잡힌다. 보유세를 어림잡을 때만 쓰는 값이다.
 PUBLIC_PRICE_RATIO = 0.69
@@ -113,25 +109,19 @@ def property_tax_estimate(price, years):
 
 
 def capital_gains_note(price, years, owned_houses=1):
-    """양도세를 낼지 안 낼지만 판단한다. 세액은 계산하지 않는다."""
-    if owned_houses and owned_houses > 1:
-        return {"amount": None, "note": "집이 여러 채면 조건에 따라 달라져요"}
-    if years is not None and years < CGT_EXEMPT_YEARS:
-        return {"amount": None, "note": f"{CGT_EXEMPT_YEARS}년을 채우기 전에 팔면 세금이 붙어요"}
-    if price and price > CGT_EXEMPT_PRICE:
-        return {"amount": None, "note": "12억이 넘는 부분에는 세금이 붙어요"}
-    return {"amount": 0, "note": "1주택으로 2년을 채우면 안 내요"}
+    """매도가·취득 당시 지역·거주 이력이 없으면 비과세를 확정하지 않는다."""
+    return {"amount": None, "note": "매도가와 보유·거주 기간, 주택 수에 따라 달라져요"}
 
 
 def calculate(price, years=3, area_sqm=None, owned_houses=1):
-    """본전 상승률을 계산한다.
+    """현재 입력으로 계산 가능한 비용의 매수가 대비 비율을 계산한다.
 
     price: 살 때 가격(원)
     years: 몇 년 뒤에 팔 것인가
     area_sqm: 전용면적. 농어촌특별세 판단에 쓴다.
     owned_houses: 이 집을 포함한 보유 주택 수
 
-    돌려주는 값의 rate는 '이만큼 올라야 본전'이라는 비율이다.
+    돌려주는 값의 rate는 완전한 손익분기율이 아니다.
     """
     if not price or price <= 0:
         return None
@@ -164,10 +154,7 @@ def calculate(price, years=3, area_sqm=None, owned_houses=1):
         })
 
     gains = capital_gains_note(price, years, owned_houses)
-    if gains["amount"] == 0:
-        items.append({"key": "capital_gains", "label": "양도세", "amount": 0, "note": gains["note"]})
-    else:
-        uncertain.append("양도세")
+    uncertain.append("양도세")
 
     total = sum(item["amount"] for item in items)
     rate = total / price
@@ -185,5 +172,5 @@ def calculate(price, years=3, area_sqm=None, owned_houses=1):
         # 대출 이자는 넣지 않았다. 전세로 살 때도 돈이 들기 때문에
         # 이자를 그대로 더하면 본전선이 실제보다 높아진다.
         "excludes": ["대출 이자", "이사비", "수리비"],
-        "headline": f"{years}년 안에 {round(rate * 100, 1)}%는 올라야 손해를 안 봐요",
+        "headline": f"{years}년 동안 계산에 넣은 비용은 매수가의 {round(rate * 100, 1)}%예요",
     }

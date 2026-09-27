@@ -230,6 +230,22 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             search_server.molit_transactions,
             "prefetch_months",
         ), mock.patch.object(
+            search_server.molit_transactions,
+            "price_band_for_apartment",
+            return_value={"statsThrough": "2026-07-01", "recent3AveragePriceEok": 12.1, "recent3TradeCount": 5,
+                          "latestDealDate": "2026-07-01", "latestDealPriceEok": 12.1},
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "cached_station",
+            return_value=None,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "enrich_entities",
+        ) as enrich_station, mock.patch.object(
             search_server.education_environment,
             "education_environment_for_entity",
             return_value={"score": 80},
@@ -270,16 +286,22 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         ) as district_peer_reports, mock.patch.object(
             search_server.molit_transactions,
             "latest_transaction_for_apartment",
-            return_value=None,
+            return_value={"latestDealPriceEok": 12.3, "latestDealDate": "2025-10-19", "latestDealExclusiveArea": 84.2},
         ) as latest_transaction:
             payload = search_server._apartment_report(
                 "한솔마을 4단지 주공",
                 "성남분당구",
+                area_label="전용 84㎡",
             )
 
         report = payload["report"]
         self.assertEqual(report["legalDong"], "정자동")
         self.assertEqual(report["jibun"], "101")
+        self.assertEqual(report["displayAreaLabel"], "전용 84㎡")
+        self.assertEqual(report["recent3TradeCount"], 5)
+        self.assertEqual(report["latestDealDate"], "2026-07-01")
+        self.assertEqual(report["latestDealPriceEok"], 12.1)
+        enrich_station.assert_called_once_with([entity], retry_unavailable=True, limit=1)
         self.assertEqual(report["displayName"], entity["name"])
         self.assertIn(entity["name"], report["aliases"])
         self.assertEqual(
@@ -330,6 +352,10 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         ), mock.patch.object(
             search_server.molit_transactions,
             "prefetch_months",
+        ), mock.patch.object(
+            search_server.molit_transactions,
+            "price_band_for_apartment",
+            return_value=None,
         ), mock.patch.object(
             search_server.education_environment,
             "education_environment_for_entity",
