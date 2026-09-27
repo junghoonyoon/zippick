@@ -546,6 +546,33 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("navigator.share", html)
         self.assertIn('event.target.closest("[data-apt-report-share]")', html)
 
+    def test_zippick_report_can_download_a_pdf_when_ready(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn('id="aptReportDownload" type="button" data-apt-report-download disabled>PDF 다운로드</button>', html)
+        self.assertIn('<button type="button" data-apt-report-download>PDF 다운로드</button>', html)
+        self.assertIn("function setAptReportDownloadReady(ready)", html)
+        self.assertIn("function downloadAptReportPdf()", html)
+        self.assertIn("aptReportDownload.disabled = !ready;", html)
+        self.assertIn('printReportSheet("printing-apt-report");', html)
+        self.assertIn('printReportSheet("printing-listing-review");', html)
+        self.assertIn('event.target.closest("[data-apt-report-download]")', html)
+        self.assertIn("body.printing-apt-report .apt-report-sheet", html)
+        self.assertIn("body.printing-apt-report .apt-report-sheet .apt-report-head-actions", html)
+        self.assertIn("body.printing-apt-report .apt-report-sheet .zpr-share", html)
+
+    def test_budget_candidate_reports_can_download_a_pdf(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertGreaterEqual(html.count('data-candidate-detail-download>PDF 다운로드'), 2)
+        self.assertIn('body.printing-candidate-detail .candidate-detail-sheet:not([hidden])', html)
+        self.assertIn('body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .apt-report-head-actions', html)
+        self.assertIn('function downloadCandidateDetailPdf(button = null)', html)
+        self.assertIn('printReportSheet("printing-candidate-detail");', html)
+        self.assertIn('"[data-candidate-detail-download], .candidate-detail-sheet [data-apt-report-download]"', html)
+        self.assertIn('.candidate-detail-sheet [data-apt-report-download]', html)
+        self.assertIn('document.body.classList.remove("printing-apt-report", "printing-candidate-detail", "printing-listing-review")', html)
+
     def test_purchase_power_required_fields_show_visible_message(self):
         html = APP_HTML.read_text(encoding="utf-8")
 

@@ -329,13 +329,16 @@
     .apt-result-empty { border-radius:14px; padding:18px; background:#f5f7fa; color:#596273; font-size:15px; font-weight:650; line-height:1.6 }
     .apt-report-heading { min-width:0 }
     .apt-report-head-actions { display:flex; align-items:center; gap:8px; flex:0 0 auto }
-    .apt-report-share {
+    .apt-report-share,
+    .apt-report-download {
       display:inline-flex; align-items:center; justify-content:center; min-height:32px;
       border:1px solid #d8dee8; border-radius:999px; padding:0 12px; background:#fff;
       color:#4e5968; font-family:inherit; font-size:13px; font-weight:850; cursor:pointer;
     }
-    .apt-report-share:hover { border-color:#b0b8c1; background:#f8fafc; color:#191f28 }
-    .apt-report-share:disabled { opacity:.65; cursor:default }
+    .apt-report-share:hover,
+    .apt-report-download:hover { border-color:#b0b8c1; background:#f8fafc; color:#191f28 }
+    .apt-report-share:disabled,
+    .apt-report-download:disabled { opacity:.65; cursor:default }
     .apt-report-sheet .result-info-sheet-title { font-size:17px; line-height:1.35 }
     .apt-report-meta { margin:5px 0 0; color:#667085; font-size:14px; font-weight:650; line-height:1.5; word-break:keep-all }
     .apt-report-sheet .signal-report { gap:34px }
@@ -1381,6 +1384,7 @@
     }
     .zpr-share-copy { display:grid; gap:3px; min-width:0; color:#4e5968; font-size:13px; font-weight:700; line-height:1.55 }
     .zpr-share-copy b { color:#191f28; font-size:14px; font-weight:900 }
+    .zpr-share-actions { display:flex; flex-wrap:wrap; gap:8px }
     .zpr-share button {
       display:inline-flex; align-items:center; justify-content:center; min-height:42px;
       border:0; border-radius:12px; padding:0 16px; background:#3182f6; color:#fff;
@@ -1388,6 +1392,8 @@
     }
     .zpr-share button:hover { background:#1b64da }
     .zpr-share button:disabled { background:#d8dee8; color:#8b95a1; cursor:default }
+    .zpr-share [data-apt-report-download] { background:#f2f4f6; color:#4e5968 }
+    .zpr-share [data-apt-report-download]:hover { background:#e8f3ff; color:#1b64da }
 
     /* 자금 조건. 점수 막대와 같은 자리에 두면 '깎인 항목'으로 읽힌다.
        통과·미통과를 가르는 조건이라 별도 카드로 뺀다. */
@@ -3448,14 +3454,14 @@
       display:block; flex:0 0 auto; margin:0; padding:16px 28px calc(18px + env(safe-area-inset-bottom));
       border-top:1px solid #eef1f4;
     }
-    .budget-form .purchase-power-result.is-sheet .power-result-actions button {
+    .purchase-power-result.is-sheet .power-result-actions button {
       min-height:58px; width:100%; border:0; border-radius:18px; padding:0 18px;
       background:#2f82f6; color:#fff; font-size:18px; font-weight:800; box-shadow:none;
     }
-    .budget-form .purchase-power-result.is-sheet .power-result-actions .power-result-reselect {
+    .purchase-power-result.is-sheet .power-result-actions .power-result-reselect {
       min-height:44px; margin-top:10px; background:transparent; color:#596273; font-size:15px; font-weight:800;
     }
-    .budget-form .purchase-power-result.is-sheet .power-result-actions .power-result-reselect:hover {
+    .purchase-power-result.is-sheet .power-result-actions .power-result-reselect:hover {
       background:#f2f4f6; color:#191f28; transform:none;
     }
 
@@ -4477,19 +4483,39 @@
     }
     @media print {
       body * { visibility:hidden !important }
-      .listing-review-sheet,.listing-review-sheet * { visibility:visible !important }
-      .listing-review-sheet {
+      body.printing-apt-report .apt-report-sheet,
+      body.printing-apt-report .apt-report-sheet *,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]),
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) *,
+      body.printing-listing-review .listing-review-sheet,
+      body.printing-listing-review .listing-review-sheet * { visibility:visible !important }
+      body.printing-apt-report .apt-report-sheet,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]),
+      body.printing-listing-review .listing-review-sheet {
         position:static !important; display:block !important; overflow:visible !important;
         background:#fff !important;
       }
-      .listing-review-sheet .result-info-backdrop,
-      .listing-review-sheet .result-info-sheet-close,
-      .listing-report-actions { display:none !important }
-      .listing-review-sheet .result-info-panel {
+      body.printing-apt-report .apt-report-sheet .result-info-backdrop,
+      body.printing-apt-report .apt-report-sheet .apt-report-head-actions,
+      body.printing-apt-report .apt-report-sheet .zpr-share,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .result-info-backdrop,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .apt-report-head-actions,
+      body.printing-listing-review .listing-review-sheet .result-info-backdrop,
+      body.printing-listing-review .listing-review-sheet .result-info-sheet-close,
+      body.printing-listing-review .listing-report-actions { display:none !important }
+      body.printing-apt-report .apt-report-sheet .result-info-panel,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .result-info-panel,
+      body.printing-listing-review .listing-review-sheet .result-info-panel {
         position:static !important; width:100% !important; max-height:none !important;
         transform:none !important; border-radius:0 !important; box-shadow:none !important;
       }
-      .listing-review-content { overflow:visible !important }
+      body.printing-apt-report .apt-report-sheet .candidate-detail-sheet-content,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .candidate-detail-sheet-content,
+      body.printing-listing-review .listing-review-content { overflow:visible !important }
+      body.printing-apt-report .apt-report-sheet .zpr-section,
+      body.printing-apt-report .apt-report-sheet .zpr-warn,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .zpr-section,
+      body.printing-candidate-detail .candidate-detail-sheet:not([hidden]) .zpr-warn { break-inside:avoid }
     }
   </style>
 </head>
@@ -4563,6 +4589,7 @@
             <p class="apt-report-meta" id="aptReportMeta" hidden></p>
           </div>
           <div class="apt-report-head-actions">
+            <button class="apt-report-download" id="aptReportDownload" type="button" data-apt-report-download disabled>PDF 다운로드</button>
             <button class="apt-report-share" id="aptReportShare" type="button" data-apt-report-share>공유</button>
             <button class="result-info-sheet-close" type="button" data-apt-report-close aria-label="단지 리포트 닫기"></button>
           </div>
@@ -5193,6 +5220,8 @@
     const powerCalculate = $("powerCalculate");
     const purchasePowerReset = $("purchasePowerReset");
     const purchasePowerResult = $("purchasePowerResult");
+    const purchasePowerResultPlaceholder = document.createComment("purchase-power-result");
+    purchasePowerResult.parentNode.insertBefore(purchasePowerResultPlaceholder, purchasePowerResult);
     const preferenceStep = $("preferenceStep");
     const preferenceFields = $("preferenceFields");
     const preferenceStatus = $("preferenceStatus");
@@ -7138,6 +7167,7 @@
       if (stage !== "power") {
         purchasePowerResult.classList.remove("show", "is-sheet");
         document.body.classList.remove("purchase-power-sheet-open");
+        restorePurchasePowerResult();
       }
       document.body.classList.remove("condition-stage-power", "condition-stage-preference", "condition-stage-results");
       document.body.classList.add(`condition-stage-${stage}`);
@@ -13043,7 +13073,10 @@
               <h4 class="result-info-sheet-title" id="candidateMapDetailTitle">${candidateDetailTitleHtml(item)}</h4>
               <p class="candidate-detail-sheet-meta">${candidateListMetaHtml(item)}</p>
             </div>
-            <button class="result-info-sheet-close" type="button" data-candidate-map-detail-close aria-label="검토 리포트 닫기"></button>
+            <div class="apt-report-head-actions">
+              <button class="apt-report-download" type="button" data-candidate-detail-download>PDF 다운로드</button>
+              <button class="result-info-sheet-close" type="button" data-candidate-map-detail-close aria-label="검토 리포트 닫기"></button>
+            </div>
           </div>
           <div class="candidate-detail-sheet-content">
             <div data-signal-report>${candidateZippickReportHtml(item)}</div>
@@ -14152,6 +14185,16 @@
     function closePurchasePowerSheet() {
       purchasePowerResult.classList.remove("show", "is-sheet");
       document.body.classList.remove("purchase-power-sheet-open");
+      restorePurchasePowerResult();
+    }
+
+    function mountPurchasePowerResultSheet() {
+      if (purchasePowerResult.parentElement !== document.body) document.body.append(purchasePowerResult);
+    }
+
+    function restorePurchasePowerResult() {
+      if (purchasePowerResult.parentElement === purchasePowerResultPlaceholder.parentElement) return;
+      purchasePowerResultPlaceholder.parentNode?.insertBefore(purchasePowerResult, purchasePowerResultPlaceholder.nextSibling);
     }
 
     function syncPurchasePowerSummary() {
@@ -14203,20 +14246,23 @@
       ].map(text => `<span>${text}</span>`).join("");
     }
 
-    function powerCoreInputSnapshot() {
-      return {
-        cash:String(policyCash.value || "").trim(),
-        annualIncome:String(policyAnnualIncome.value || "").trim(),
-        monthlyDebt:String(policyMonthlyDebt.value || "").trim(),
-      };
-    }
-
-    function powerCoreChangeLabels(before, after) {
-      return [
+    function purchasePowerChangeLabels(before, after) {
+      const fields = [
+        ["homeOwnership", "보유 주택"],
+        ["firstTime", "생애최초 여부"],
         ["cash", "자기자금"],
         ["annualIncome", "연소득"],
         ["monthlyDebt", "월 대출 상환액"],
-      ].filter(([key]) => String(before?.[key] || "") !== String(after?.[key] || ""))
+        ["maritalStatus", "혼인 상태"],
+        ["coBorrower", "배우자 소득 합산"],
+        ["spouseIncome", "배우자 연소득"],
+        ["spouseDebt", "배우자 월 대출 상환액"],
+        ["creditScore", "신용점수"],
+        ["mortgageRate", "예상 주담대 금리"],
+        ["loanTerm", "대출 기간"],
+        ["purchaseCostRate", "부대비용 여유"],
+      ];
+      return fields.filter(([key]) => String(before?.[key] ?? "") !== String(after?.[key] ?? ""))
         .map(([, label]) => label);
     }
 
@@ -14304,6 +14350,7 @@
       </div>`;
       purchasePowerResult.classList.add("show", "is-sheet");
       document.body.classList.add("purchase-power-sheet-open");
+      mountPurchasePowerResultSheet();
       syncPurchasePowerSummary();
       if (!options.preserveConditionStage) setConditionStage("power", false);
     }
@@ -14319,6 +14366,7 @@
     let conditionSummaryInitialState = null;
     let conditionSummaryReturnFocus = null;
     let conditionSummarySource = "";
+    let purchasePowerSheetAfterConfirm = null;
     let activeConditionEditRegionTab = "seoul";
     let conditionEditRegionSearchQuery = "";
     let conditionEditRegionDraftValues = new Set();
@@ -14617,37 +14665,19 @@
     async function submitConditionItemEdit() {
       const config = conditionEditConfig(activeConditionEditTarget);
       if (!config || !conditionItemEditForm.reportValidity()) return;
-      const previousPower = currentPurchasePower ? { ...currentPurchasePower } : null;
-      const beforePowerCore = powerCoreInputSnapshot();
-      const powerChangeTargets = new Set(["powerCalculate", "policyCash", "policyAnnualIncome", "policyMonthlyDebt"]);
-      const shouldShowPowerChange = config.stage === "power" && powerChangeTargets.has(activeConditionEditTarget);
       conditionItemEditApply.disabled = true;
       conditionItemEditError.hidden = true;
       try {
-        let powerChangeContext = null;
         applyConditionEditValues(config);
-        const changedPowerLabels = powerCoreChangeLabels(beforePowerCore, powerCoreInputSnapshot());
         if (config.stage === "power") {
           const data = await getJson(`/api/purchase-power?${purchasePowerParams().toString()}`);
           currentPurchasePower = data;
           syncPurchasePowerSummary();
-          if (shouldShowPowerChange && changedPowerLabels.length) {
-            powerChangeContext = {
-              changedLabels:changedPowerLabels,
-              previousBudgetEok:previousPower?.budgetEok,
-            };
-          }
         }
         closeConditionItemEdit(false);
         renderConditionSummary();
         setConditionSummaryTab(config.stage);
         syncConditionSummaryCta();
-        if (powerChangeContext && currentPurchasePower) {
-          renderPurchasePower(currentPurchasePower, {
-            changeContext:powerChangeContext,
-            preserveConditionStage:true,
-          });
-        }
       } catch (error) {
         conditionItemEditError.textContent = error.error || "조건을 적용하지 못했어요. 입력값을 확인해 주세요.";
         conditionItemEditError.hidden = false;
@@ -17770,8 +17800,11 @@
           이 리포트의 가격은 <b>기준선</b>이지 <b>살 수 있는 가격이 아닙니다.</b>
         </div>
         <div class="zpr-share">
-          <span class="zpr-share-copy"><b>리포트 URL 공유</b>이 화면 주소를 복사해 함께 볼 수 있어요.</span>
-          <button type="button" data-apt-report-share>URL 공유하기</button>
+          <span class="zpr-share-copy"><b>리포트 저장·공유</b>PDF로 저장하거나 이 화면 주소를 함께 보낼 수 있어요.</span>
+          <span class="zpr-share-actions">
+            <button type="button" data-apt-report-download>PDF 다운로드</button>
+            <button type="button" data-apt-report-share>URL 공유하기</button>
+          </span>
         </div>
       </article>`);
     }
@@ -19091,7 +19124,10 @@
                       <h4 class="result-info-sheet-title" id="candidateDetailTitle${candidateIndex}">${candidateDetailTitleHtml(item)}</h4>
                       <p class="candidate-detail-sheet-meta">${candidateListMetaHtml(item)}</p>
                     </div>
-                    <button class="result-info-sheet-close" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
+                    <div class="apt-report-head-actions">
+                      <button class="apt-report-download" type="button" data-candidate-detail-download>PDF 다운로드</button>
+                      <button class="result-info-sheet-close" type="button" data-candidate-detail-close aria-label="검토 리포트 닫기"></button>
+                    </div>
                   </div>
                   <div class="candidate-detail-sheet-content">
                     <div data-signal-report>${scoreDataReady ? candidateZippickReportHtml(item) : candidateScorePendingHtml()}</div>
@@ -19543,16 +19579,18 @@
     });
     purchasePowerResult.addEventListener("click", event => {
       if (event.target.closest("[data-flow-confirm-change]")) {
+        const afterConfirm = purchasePowerSheetAfterConfirm;
+        purchasePowerSheetAfterConfirm = null;
         closePurchasePowerSheet();
-        conditionSummaryComplete?.focus({ preventScroll:true });
+        afterConfirm?.();
         return;
       }
       if (event.target.closest("[data-flow-change-edit]")) {
+        purchasePowerSheetAfterConfirm = null;
         closePurchasePowerSheet();
-        if (!conditionSummarySheet.hidden) {
-          const trigger = conditionSummaryContent.querySelector('[data-condition-item-edit="powerCalculate"]');
-          openConditionItemEdit("powerCalculate", "power", trigger);
-        }
+        if (conditionSummarySheet.hidden) openConditionSummary("power");
+        const trigger = conditionSummaryContent.querySelector('[data-condition-item-edit="powerCalculate"]');
+        openConditionItemEdit("powerCalculate", "power", trigger);
         return;
       }
       if (event.target.closest("[data-flow-reselect]")) {
@@ -19672,15 +19710,33 @@
     conditionSummaryComplete.addEventListener("click", () => {
       if (conditionSummaryComplete.disabled) return;
       const shouldRefreshAptSearch = conditionSummarySource === "aptSearch";
+      const initialState = conditionSummaryInitialState;
+      const changedPowerLabels = purchasePowerChangeLabels(
+        initialState?.form,
+        purchasePowerFormValues(),
+      );
+      const changeContext = currentPurchasePower && changedPowerLabels.length
+        ? {
+            changedLabels:changedPowerLabels,
+            previousBudgetEok:initialState?.purchasePower?.budgetEok,
+          }
+        : null;
       conditionSummaryInitialValues = conditionSummaryValues();
       savePurchasePowerForm();
       renderPersistentRegion();
-      if (currentPurchasePower) {
-        renderPurchasePower(currentPurchasePower);
-        closePurchasePowerSheet();
-        setConditionStage("results");
-      }
       closeConditionSummary(true, true);
+      if (changeContext) {
+        purchasePowerSheetAfterConfirm = () => {
+          if (shouldRefreshAptSearch) refreshAptSearchProfileResults();
+          else loadBudgetCandidates();
+        };
+        renderPurchasePower(currentPurchasePower, {
+          changeContext,
+          preserveConditionStage:true,
+        });
+        requestAnimationFrame(() => purchasePowerResult.querySelector("[data-flow-confirm-change]")?.focus());
+        return;
+      }
       if (shouldRefreshAptSearch) {
         refreshAptSearchProfileResults();
       } else {
@@ -19842,7 +19898,10 @@
         const resultCard = purchasePowerResult.querySelector(".power-result-card");
         if (resultCard?.contains(event.target)) return;
         event.preventDefault();
+        const afterConfirm = purchasePowerSheetAfterConfirm;
+        purchasePowerSheetAfterConfirm = null;
         closePurchasePowerSheet();
+        afterConfirm?.();
         return;
       }
       const picker = $("budgetRegionPicker");
@@ -20239,6 +20298,13 @@
         setCandidateMapDetailOpen(false);
         return;
       }
+      const candidateDetailDownload = event.target.closest(
+        "[data-candidate-detail-download], .candidate-detail-sheet [data-apt-report-download]",
+      );
+      if (candidateDetailDownload) {
+        downloadCandidateDetailPdf(candidateDetailDownload);
+        return;
+      }
       const signalPeer = event.target.closest("[data-signal-peer-key]");
       if (signalPeer) {
         focusBudgetCandidateResult(signalPeer.dataset.signalPeerKey);
@@ -20571,7 +20637,13 @@
         closeConditionSummary();
         return;
       }
-      if (purchasePowerResult.classList.contains("is-sheet")) closePurchasePowerSheet();
+      if (purchasePowerResult.classList.contains("is-sheet")) {
+        const afterConfirm = purchasePowerSheetAfterConfirm;
+        purchasePowerSheetAfterConfirm = null;
+        closePurchasePowerSheet();
+        afterConfirm?.();
+        return;
+      }
       if (!purchaseCostInfo.hidden) {
         setPurchaseCostInfoOpen(false);
         purchaseCostInfoButton.focus();
@@ -20646,6 +20718,7 @@
     const aptReportTitle = $("aptReportTitle");
     const aptReportMeta = $("aptReportMeta");
     const aptReportContent = $("aptReportContent");
+    const aptReportDownload = $("aptReportDownload");
     let aptSuggestTimer = null;
     let aptAreaSheetCardIndex = -1;
     let aptAreaSheetDraft = "";
@@ -21175,6 +21248,32 @@
         if (button) button.disabled = false;
       }
     }
+
+    function setAptReportDownloadReady(ready) {
+      aptReportDownload.disabled = !ready;
+    }
+
+    function printReportSheet(mode) {
+      document.body.classList.remove("printing-apt-report", "printing-candidate-detail", "printing-listing-review");
+      document.body.classList.add(mode);
+      window.print();
+    }
+
+    function downloadAptReportPdf() {
+      if (aptReportDownload.disabled) return;
+      printReportSheet("printing-apt-report");
+    }
+
+    function downloadCandidateDetailPdf(button = null) {
+      const sheet = button?.closest(".candidate-detail-sheet")
+        || document.querySelector(".candidate-detail-sheet:not([hidden])");
+      if (!sheet || sheet.hidden) return;
+      printReportSheet("printing-candidate-detail");
+    }
+
+    window.addEventListener("afterprint", () => {
+      document.body.classList.remove("printing-apt-report", "printing-candidate-detail", "printing-listing-review");
+    });
 
     async function copyListingReviewShareLink(button) {
       const shareUrl = listingReviewShareUrl();
@@ -22089,6 +22188,7 @@
       aptReportSheet.hidden = false;
       aptReportSheet.setAttribute("aria-hidden", "false");
       syncCandidateDetailScrollLock();
+      setAptReportDownloadReady(false);
       aptReportTitle.innerHTML = candidateDetailTitleHtml(candidate, name);
       aptReportMeta.textContent = "";
       aptReportMeta.hidden = true;
@@ -22104,6 +22204,7 @@
         aptReportMeta.textContent = metaParts.join(" · ");
         aptReportMeta.hidden = !metaParts.length;
         aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
+        setAptReportDownloadReady(true);
         const rerender = () => {
           if (!aptReportSheet.hidden) {
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
@@ -22133,6 +22234,7 @@
         aptReportMeta.textContent = metaParts.join(" · ");
         aptReportMeta.hidden = !metaParts.length;
         aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
+        setAptReportDownloadReady(true);
         const rerender = () => {
           if (!aptReportSheet.hidden) {
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
@@ -22146,6 +22248,7 @@
         aptReportMeta.textContent = "";
         aptReportMeta.hidden = true;
         aptReportContent.innerHTML = `<div class="apt-result-empty">${esc(error.error || "리포트를 불러오지 못했어요.")}</div>`;
+        setAptReportDownloadReady(false);
       }
     }
 
@@ -22455,6 +22558,10 @@
         closeAptReport();
         return;
       }
+      if (event.target.closest("[data-apt-report-download]")) {
+        downloadAptReportPdf();
+        return;
+      }
       const shareButton = event.target.closest("[data-apt-report-share]");
       if (shareButton) {
         void shareAptReportUrl(shareButton);
@@ -22519,7 +22626,7 @@
         return;
       }
       if (event.target.closest("[data-listing-review-print]")) {
-        window.print();
+        printReportSheet("printing-listing-review");
         return;
       }
       const shareButton = event.target.closest("[data-listing-review-share]");
