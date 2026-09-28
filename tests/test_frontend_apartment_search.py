@@ -404,17 +404,17 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("이 교환을 받아들일 수 있느냐가 판단의 전부", html)
 
     def test_zippick_report_numbers_only_the_sections_it_renders(self):
-        """섹션 번호를 문자열로 박아두면 데이터가 없을 때 번호가 튄다.
-
-        통근 데이터가 없으면 '첫 번째' 다음에 '세 번째'가 나왔다.
-        """
+        """빠진 섹션이 있어도 번호가 이어지고, 번호만 보고 주제를 알 수 있다."""
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertIn("function zippickNumberSteps(html)", html)
         self.assertIn("return zippickNumberSteps(`<article class=\"zippick-report\"", html)
-        self.assertIn('<span class="zpr-kicker" data-zpr-step></span>', html)
+        for label in ("생활권 변화", "단지 조건", "업무지구 이동시간", "자금 조건", "다음 확인"):
+            self.assertIn(f'data-zpr-step="{label}"', html)
+        self.assertIn('${step}. ${esc(label)}', html)
+        self.assertNotIn('<span class="zpr-kicker" data-zpr-step></span>', html)
 
-        # 고정 번호가 남아 있으면 안 된다
+        # 순서 표현만으로는 무슨 내용인지 알 수 없다.
         for fixed in ("첫 번째", "두 번째", "세 번째", "네 번째"):
             self.assertNotIn(f'<span class="zpr-kicker">{fixed}</span>', html)
 

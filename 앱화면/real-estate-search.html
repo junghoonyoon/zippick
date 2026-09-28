@@ -1323,7 +1323,7 @@
     .zpr-section h5 { margin:0; font-size:20px; font-weight:900; letter-spacing:-.5px; line-height:1.42 }
     .zpr-lead { margin:0; font-size:14px; font-weight:750; color:#4e5968; line-height:1.6 }
     .zpr-insight.is-lead { font-size:15.5px; font-weight:800; color:#191f28 }
-    .zpr-kicker { font-size:11.5px; font-weight:900; color:#3182f6; letter-spacing:.4px }
+    .zpr-kicker { font-size:13px; font-weight:800; color:#3182f6; letter-spacing:.2px }
     .zpr-act { counter-reset:zpa; margin:2px 0 0; padding:0; list-style:none; display:grid; gap:16px }
     .zpr-act li { position:relative; padding:0 0 0 32px; font-size:15px; font-weight:650; line-height:1.72; color:#2b3440 }
     .zpr-act li::before {
@@ -11577,7 +11577,7 @@
       const card = verdictCardHtml(item);
       if (!card) return "";
       return `<section class="zpr-section" aria-label="매수와 보유 비용">
-        <span class="zpr-kicker" data-zpr-step></span>
+        <span class="zpr-kicker" data-zpr-step="매수·보유 비용"></span>
         <h5>매수와 보유에 드는 비용부터 봅니다</h5>
         <p class="zpr-lead">아래 금액은 일부 비용입니다. 내 대출 이자와 수리비를 더해 다시 계산해야 해요.</p>
         ${card}
@@ -16335,7 +16335,7 @@
         }).join("")}
       </div>` : "";
       return `<section class="zpr-section">
-        <span class="zpr-kicker">단지 변화</span>
+        <span class="zpr-kicker" data-zpr-step="단지 변화"></span>
         <h5>${esc(heading)}</h5>
         <p class="zpr-insight">${lead}</p>
         ${officialHtml}
@@ -16542,7 +16542,7 @@
       });
       const rows = [...zoneRows, ...complexRows].join("");
       return `<section class="zpr-section">
-        <span class="zpr-kicker">생활권 변화</span>
+        <span class="zpr-kicker" data-zpr-step="생활권 변화"></span>
         <h5>${esc(heading)}</h5>
         <p class="zpr-insight">${lead}</p>
         <div class="zpr-development-list">${rows}</div>
@@ -16563,7 +16563,7 @@
             : item?.commuteProfileState === "error"
               ? "이동시간을 불러오지 못했어요. 리포트를 다시 열어 주세요."
               : "";
-        return message ? `<section class="zpr-section"><span class="zpr-kicker" data-zpr-step></span><h5>업무지구 이동시간</h5><p class="zpr-lead">${esc(message)}</p></section>` : "";
+        return message ? `<section class="zpr-section"><span class="zpr-kicker" data-zpr-step="업무지구 이동시간"></span><h5>업무지구 이동시간</h5><p class="zpr-lead">${esc(message)}</p></section>` : "";
       }
       const rows = Object.entries(hubs)
         .map(([name, value]) => ({ name, ...value }))
@@ -16573,7 +16573,7 @@
       const slowest = rows[rows.length - 1].totalMinutes || 1;
       const walk = Number(profile.walkMinutes);
       return `<section class="zpr-section">
-        <span class="zpr-kicker" data-zpr-step></span>
+        <span class="zpr-kicker" data-zpr-step="업무지구 이동시간"></span>
         <h5>${esc(zippickCommuteHeading(item))}</h5>
         <p class="zpr-lead">${esc(profile.station || "가까운")}역${profile.line ? ` ${esc(profile.line)}` : ""}${Number.isFinite(walk) ? ` · 도보 ${esc(walk)}분` : ""}</p>
         <div class="zpr-commute">
@@ -16759,7 +16759,7 @@
       // 해석은 표 안에 가두지 않는다. 다른 섹션과 똑같이 표 아래 본문으로
       // 흘러야 읽는 흐름이 끊기지 않는다.
       return `<section class="zpr-section" aria-label="자금 조건">
-        <span class="zpr-kicker" data-zpr-step></span>
+        <span class="zpr-kicker" data-zpr-step="자금 조건"></span>
         <h5>${esc(heading)}</h5>
         <div class="zpr-fund">
           <div class="zpr-fund-grid" style="grid-template-columns:repeat(${cells.length},1fr)">
@@ -16881,7 +16881,7 @@
 
       if (stat.band === "illiquid") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
-          <span class="zpr-kicker" data-zpr-step></span>
+          <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
           <h5>거래 자체가 드문 단지입니다</h5>
           <p class="zpr-insight">${esc(span)} 중 <b>${esc(stat.silentTotal)}개월</b>은 거래가 <b>한 건도 없었습니다.</b> 값이 오르고 내리고를 따지기 전에, <b>팔고 싶을 때 살 사람을 찾기 어렵다</b>는 뜻이에요.</p>
           <p class="zpr-insight">시세라고 부를 만한 값도 만들어지지 않습니다. <b>이 리포트의 가격은 참고선으로만 보셔야 합니다.</b></p>
@@ -16890,7 +16890,7 @@
 
       if (stat.band === "no_downturn") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
-          <span class="zpr-kicker" data-zpr-step></span>
+          <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
           <h5>값이 빠지는 구간이 거의 없었습니다</h5>
           <p class="zpr-insight">${esc(span)} 동안 값이 뚜렷하게 내린 달이 <b>${esc(stat.downMonths)}개월</b>뿐이라, <b>내릴 때도 팔리는 단지인지</b>는 아직 시험대에 오른 적이 없습니다. 다음 조정장이 와야 알 수 있는 부분이에요.</p>
         </section>`;
@@ -16926,7 +16926,7 @@
       }
 
       return `<section class="zpr-section" aria-label="하락장 환금성">
-        <span class="zpr-kicker" data-zpr-step></span>
+        <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
         <h5>${esc(heading)}</h5>
         <p class="zpr-lead">오를 때 잘 팔리는 건 어느 단지나 마찬가지입니다. <b>값이 빠질 때도 거래가 붙었는지</b>가 진짜 시험대예요.</p>
         <div class="zpr-stat">
@@ -16943,15 +16943,13 @@
     }
 
     // ── 섹션 번호 ───────────────────────────────────────────────────────
-    // 번호를 문자열로 박아두면, 데이터가 없어 섹션 하나가 통째로 빠졌을 때
-    // '첫 번째' 다음에 '세 번째'가 나온다. 자리표시자를 두고 실제로 그려진
-    // 순서대로 채운다.
-    const ZP_STEP_WORDS = ["첫 번째", "두 번째", "세 번째", "네 번째", "다섯 번째", "여섯 번째", "일곱 번째"];
+    // 섹션이 빠져도 실제로 보이는 순서대로 번호를 매긴다.
+    // 번호 옆에 내용을 적어 리포트를 훑을 때 주제를 바로 알 수 있게 한다.
     function zippickNumberSteps(html) {
       let step = 0;
-      return String(html).replace(/<span class="zpr-kicker" data-zpr-step><\/span>/g, () => {
+      return String(html).replace(/<span class="zpr-kicker" data-zpr-step="([^"]+)"><\/span>/g, (_, label) => {
         step += 1;
-        return `<span class="zpr-kicker">${ZP_STEP_WORDS[step - 1] || `${step}번째`}</span>`;
+        return `<span class="zpr-kicker">${step}. ${esc(label)}</span>`;
       });
     }
 
@@ -17882,7 +17880,7 @@
       const entered = zippickEnteredPrices.get(key) || "";
       const basis = zippickPriceCheckBasis(item);
       return `<section class="zpr-section" aria-label="내가 본 매물 가격 비교">
-        <span class="zpr-kicker" data-zpr-step></span>
+        <span class="zpr-kicker" data-zpr-step="매물 가격 비교"></span>
         <h5>내가 본 매물 가격을 대조해 보세요</h5>
         <div class="zpr-price-check" data-zpr-price-check="${esc(key)}" data-zpr-base-price="${basis ? esc(basis.price) : ""}" data-zpr-base-label="${basis ? esc(basis.label) : ""}">
           <label>매물 가격 · 억원
@@ -17936,7 +17934,7 @@
         ${zippickDevelopmentHtml(item)}
         ${zippickLifestyleChangeHtml(item)}
         ${locationBars ? `<section class="zpr-section">
-          <span class="zpr-kicker" data-zpr-step></span>
+          <span class="zpr-kicker" data-zpr-step="단지 조건"></span>
           <h5>${esc(zippickLocationHeading(item))}</h5>
           ${(t => t ? `<p class="zpr-insight is-lead">${t}</p>` : "")(zippickTradeoffLine(item))}
           ${(t => t ? `<p class="zpr-insight">${t}</p>` : "")(zippickStrengthInsight(item))}
@@ -17947,7 +17945,7 @@
         ${zippickFundingHtml(item)}
         ${zippickBreakevenHtml(item)}
         ${signalBars ? `<section class="zpr-section">
-          <span class="zpr-kicker" data-zpr-step></span>
+          <span class="zpr-kicker" data-zpr-step="최근 시장 흐름"></span>
           <h5>${esc(zippickSignalHeading(item))}</h5>
           ${(text => text ? `<p class="zpr-insight">${text}</p>` : "")(zippickSignalInsight(item))}
           ${signalBars}
@@ -17957,7 +17955,7 @@
         ${zippickLiquidityHtml(item)}
         ${zippickPriceCheckHtml(item)}
         <section class="zpr-section">
-          <span class="zpr-kicker">그래서</span>
+          <span class="zpr-kicker" data-zpr-step="다음 확인"></span>
           <h5>저라면 이렇게 하겠습니다</h5>
           ${(rows => rows.length
             ? `<ol class="zpr-act">${rows.map(row => `<li><span class="zpr-act-t">${row.title}</span>${row.body}</li>`).join("")}</ol>`
