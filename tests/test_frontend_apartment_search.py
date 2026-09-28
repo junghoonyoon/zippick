@@ -83,7 +83,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout), {"matched": ["상한", "하한"], "empty": 0})
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for the shortlist behavior check")
-    def test_extra_cash_section_appears_only_with_one_or_two_near_budget_candidates(self):
+    def test_extra_cash_section_appears_with_up_to_five_near_budget_candidates(self):
         html = APP_HTML.read_text(encoding="utf-8")
         function = html.split("    function shortlistExtensionRows(rows, budgetEok, shortlistCount) {", 1)[1].split(
             "    function candidateShortlistExtensionFundingHtml(row) {", 1,
@@ -102,6 +102,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             {{name:'기본 범위', price:10.5, gap:-0.5, score:99, policyImpact:{{status:'short'}}}},
             {{name:'추가 1', price:10.6, gap:-0.3, score:80, policyImpact:{{status:'short'}}}},
             {{name:'추가 2', price:11.0, gap:-0.5, score:70, policyImpact:{{status:'short'}}}},
+            {{name:'추가 3', price:10.8, gap:-0.4, score:60, policyImpact:{{status:'short'}}}},
+            {{name:'추가 4', price:10.7, gap:-0.2, score:50, policyImpact:{{status:'short'}}}},
             {{name:'돈 부족 없음', price:10.8, gap:0.2, score:100, policyImpact:{{status:'possible'}}}},
             {{name:'정책상 제외', price:10.9, gap:-0.4, score:100, policyImpact:{{status:'restricted'}}}},
             {{name:'상한 초과', price:11.01, gap:-0.6, score:100, policyImpact:{{status:'short'}}}},
@@ -110,13 +112,17 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             zero:shortlistExtensionRows(rows, 10, 0).length,
             one:shortlistExtensionRows(rows, 10, 1).map(row => row.name),
             two:shortlistExtensionRows(rows, 10, 2).map(row => row.name),
-            three:shortlistExtensionRows(rows, 10, 3).length,
+            three:shortlistExtensionRows(rows, 10, 3).map(row => row.name),
+            five:shortlistExtensionRows(rows, 10, 5).map(row => row.name),
           }}));
         """
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
         self.assertEqual(json.loads(result.stdout), {
-            "zero": 0, "one": ["추가 1", "추가 2"],
-            "two": ["추가 1", "추가 2"], "three": 0,
+            "zero": 0,
+            "one": ["추가 1", "추가 2", "추가 3"],
+            "two": ["추가 1", "추가 2", "추가 3"],
+            "three": ["추가 1", "추가 2", "추가 3"],
+            "five": ["추가 1", "추가 2", "추가 3"],
         })
         self.assertIn('aria-label="추가 자기자금 후보"', html)
         self.assertIn('추가 자기자금 <strong>약 ${esc(readableGapMoney(shortage))} 필요</strong>', html)

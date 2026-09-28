@@ -11964,7 +11964,7 @@
     }
 
     function shortlistExtensionRows(rows, budgetEok, shortlistCount) {
-      if (shortlistCount < 1 || shortlistCount > 2) return [];
+      if (shortlistCount < 1) return [];
       return rows.filter(row => {
         const ratio = candidateBudgetUsageRatio(row, budgetEok);
         return ratio !== null
@@ -12046,7 +12046,7 @@
             <div class="candidate-shortlist-info-popover" data-candidate-shortlist-info-popover hidden>
               <button class="candidate-shortlist-info-close" type="button" data-candidate-shortlist-info-close aria-label="검토 기준선 주변 후보 기준 닫기">×</button>
               <strong class="candidate-shortlist-info-title" id="candidate-shortlist-info-title">검토 기준선 주변 후보 기준</strong>
-              <p class="candidate-shortlist-info-copy">검토 기준선의 98~105%에서 후보를 먼저 보여드려요. 1~2곳뿐이면 105% 초과~110% 구간에서도 추가 자기자금이 필요한 후보를 확인해요. 실거래가와 현재 매물 호가는 다를 수 있어요.</p>
+              <p class="candidate-shortlist-info-copy">검토 기준선의 98~105%에서 후보를 먼저 보여드려요. 후보가 있으면 105% 초과~110% 구간에서 추가 자기자금이 필요한 곳도 따로 보여드려요. 실거래가와 현재 매물 호가는 다를 수 있어요.</p>
             </div>
           </div>
         </div>
@@ -13989,7 +13989,7 @@
         ["trade_1m", "1개월 이내 거래", "마지막 같은 면적 거래가 1개월 안에 있는 단지만 봐요", candidateTradeAgeFilter === "1m", candidateTradeAgeFilter === "1m"],
         ["trade_3m", "3개월 이내 거래", "마지막 같은 면적 거래가 3개월 안에 있는 단지만 봐요", candidateTradeAgeFilter === "3m", candidateTradeAgeFilter === "3m"],
         ["confidence", "거래자료 충분", "거래 표본이 어느 정도 있는 단지만 남겨요", candidateConfidenceFilter, candidateConfidenceFilter],
-        ["funding_5", "추가 자기자금 필요 후보", "검토 기준선의 105%까지 포함해요. 가까운 후보가 1~2곳이면 110%까지 따로 보여줘요", includeAdditionalFundingCandidates, !includeAdditionalFundingCandidates],
+        ["funding_5", "추가 자기자금 필요 후보", "검토 기준선의 105%까지 포함해요. 가까운 후보가 있으면 110%까지 따로 보여줘요", includeAdditionalFundingCandidates, !includeAdditionalFundingCandidates],
       ];
       const activeCount = filters.filter(([, , , , countActive]) => countActive).length;
       const triggerLabel = "필터";
@@ -14415,7 +14415,7 @@
           <h2 class="power-result-value">대출 포함 최대 ${esc(ceiling)}까지 검토할 수 있어요</h2>
           <p class="power-result-assumption">수도권·규제지역, 무주택 기준으로 계산했어요.</p>
           ${purchasePowerChangeHtml(changeContext)}
-          <div class="power-review-tabs" style="--power-review-tab-count:${Math.max(1, review.bands?.length || 0)}" role="tablist" aria-label="주택 가격 구간">${bandTabs}</div>
+          ${(review.bands?.length || 0) > 1 ? `<div class="power-review-tabs" style="--power-review-tab-count:${review.bands.length}" role="tablist" aria-label="주택 가격 구간">${bandTabs}</div>` : ""}
           <div class="power-result-breakdown" id="powerReviewBreakdown" aria-label="검토 가능 금액 계산 내역">
             <div class="power-result-row">
               <span class="power-result-row-no">1</span>
