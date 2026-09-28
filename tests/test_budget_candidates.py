@@ -75,6 +75,53 @@ class BudgetCandidatesTest(unittest.TestCase):
 
         self.assertEqual([row["name"] for row in selected], ["예산안1", "상한근접초과"])
 
+    def test_extra_cash_candidates_stay_separate_and_stop_at_ten_percent(self):
+        prices = [
+            ("상한근처1", 9.9), ("상한근처2", 10.1),
+            ("추가자금1", 10.6), ("추가자금2", 11.0),
+            ("확대범위밖", 11.1), ("저가후보", 5.0),
+        ]
+        price_rows = [
+            {
+                "name": name,
+                "region": "강남구",
+                "legalDong": "역삼동",
+                "jibun": str(index + 1),
+                "areaLabel": "전용 59㎡",
+                "midPriceEok": price,
+                "averagePriceEok": price,
+                "minPriceEok": price,
+                "maxPriceEok": price,
+                "latestDealDate": "2026-09-14",
+                "priceSource": "molit_csv",
+                "transactionCount": 3,
+            }
+            for index, (name, price) in enumerate(prices)
+        ]
+
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=price_rows), \
+             mock.patch.object(budget_candidates, "_find_entities", return_value=[]), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", []), \
+             mock.patch.object(budget_candidates, "_finalize_candidate_rows"):
+            result = budget_candidates.budget_candidates(
+                "10억", all_matches=True, home_ownership="no_home", first_time="true",
+                cash_eok=5, annual_income=9000, mortgage_rate=4.3, purchase_cost_rate=3,
+            )
+
+        self.assertEqual(
+            {row["name"] for row in result["shortlistExtensionCandidates"]},
+            {"추가자금1", "추가자금2"},
+        )
+        self.assertFalse(
+            {"추가자금1", "추가자금2", "확대범위밖"}
+            & {row["name"] for row in result["candidates"]}
+        )
+        self.assertTrue(all(row["policyImpact"]["cashGapEok"] < 0 for row in result["shortlistExtensionCandidates"]))
+        self.assertTrue(all(
+            abs(row["policyImpact"]["cashGapEok"]) > row["midPriceEok"] - 10
+            for row in result["shortlistExtensionCandidates"]
+        ))
+
     def test_jeonse_ratio_uses_bundled_snapshot_when_live_rent_api_fails(self):
         row = {
             "name": "전세후보아파트",

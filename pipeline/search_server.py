@@ -484,7 +484,7 @@ def _write_budget_cache(cache_key, payload):
 def _budget_payload_rows(payload):
     rows = []
     seen = set()
-    for key in ("allCandidates", "policyDefaultCandidates", "candidates", "policyExcludedCandidates"):
+    for key in ("allCandidates", "policyDefaultCandidates", "candidates", "policyExcludedCandidates", "shortlistExtensionCandidates"):
         for row in payload.get(key) or []:
             marker = id(row)
             if marker in seen:

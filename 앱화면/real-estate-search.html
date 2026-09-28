@@ -882,6 +882,14 @@
     }
     .candidate-shortlist-reason-label { flex:0 0 auto; color:#1767c5; font-weight:900 }
     .candidate-shortlist-reason-copy { min-width:0 }
+    .candidate-shortlist-group { display:grid; gap:12px; min-width:0 }
+    .candidate-shortlist-group.is-extension { margin-top:10px; padding-top:20px; border-top:1px solid #e5e9ef }
+    .candidate-shortlist-group-head { margin:0 2px 2px; word-break:keep-all }
+    .candidate-shortlist-group-head h3 { margin:0; color:#191f28; font-size:18px; font-weight:850; line-height:1.4 }
+    .candidate-shortlist-group-head p { margin:3px 0 0; color:#6b7684; font-size:14px; line-height:1.5 }
+    .candidate-shortlist-extension-funding { margin:0 0 12px; color:#73551b; font-size:14px; font-weight:650; line-height:1.5; word-break:keep-all }
+    .candidate-shortlist-extension-funding strong { color:#684610; font-weight:850 }
+    .candidate-shortlist-extension-funding span { display:block; margin-top:2px; color:#6b7684; font-size:13px; font-weight:500 }
     .candidate-shortlist-info-close {
       position:absolute; top:8px; right:8px; width:26px; height:26px; border:0; border-radius:50%; background:transparent; color:#8b95a1;
       font-size:18px; font-weight:800; cursor:pointer;
@@ -5347,7 +5355,7 @@
     // v12부터 지도 지오코딩에 쓰는 원주소(mapAddress)를 포함한다.
     // v16부터 광역 지역도 분산 선별한 실거래 후보를 포함한다.
     // v19부터 화면에 보이는 모든 구매 시나리오에 +5% 상한을 적용한다.
-    const CANDIDATE_RESULT_SCHEMA_VERSION = 5;
+    const CANDIDATE_RESULT_SCHEMA_VERSION = 8;
     const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v4";
     const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v23.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
@@ -5757,6 +5765,7 @@
         ...(data.policyDefaultCandidates || []),
         ...(data.candidates || []),
         ...(data.policyExcludedCandidates || []),
+        ...(data.shortlistExtensionCandidates || []),
       ];
       return rows.every(row => Number(row?.signals?.scoreFormulaVersion) === SIGNAL_FORMULA_VERSION);
     }
@@ -5773,6 +5782,7 @@
       const rows = [
         ...(Array.isArray(data?.allCandidates) ? data.allCandidates : []),
         ...(Array.isArray(data?.candidates) ? data.candidates : []),
+        ...(Array.isArray(data?.shortlistExtensionCandidates) ? data.shortlistExtensionCandidates : []),
       ];
       return !rows.some(row => row?.locationScore?.scoreFormulaVersion !== LOCATION_SCORE_FORMULA_VERSION);
     }
@@ -6052,6 +6062,8 @@
     const CANDIDATE_PAGE_SIZE = 10;
     const CANDIDATE_SHORTLIST_MIN_PRICE_RATIO = 0.98;
     const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = 1.05;
+    const CANDIDATE_SHORTLIST_EXTENSION_MAX_PRICE_RATIO = 1.10;
+    const CANDIDATE_SHORTLIST_EXTENSION_SIZE = 3;
     const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.9;
     const CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE = 0.95;
     const CANDIDATE_SHORTLIST_CRITERIA = [
@@ -10768,6 +10780,12 @@
       return candidatePurchaseCapPrices(item).every(price => price <= cap + 1e-9);
     }
 
+    function candidateWithinShortlistExtensionCap(item, budgetEok = currentBudgetData?.budgetEok) {
+      const budget = Number(budgetEok || 0);
+      if (!budget) return false;
+      return candidatePurchaseCapPrices(item).every(price => price <= budget * CANDIDATE_SHORTLIST_EXTENSION_MAX_PRICE_RATIO + 1e-9);
+    }
+
     function candidateHasVerifiedSelectedArea(item) {
       return item?.marketDataStatus !== "no_selected_area_trade";
     }
@@ -10780,7 +10798,7 @@
 
     function removeOverCapCandidate(item) {
       const key = candidateIdentityKey(item);
-      ["allCandidates", "policyDefaultCandidates", "candidates", "policyExcludedCandidates"].forEach(field => {
+      ["allCandidates", "policyDefaultCandidates", "candidates", "policyExcludedCandidates", "shortlistExtensionCandidates"].forEach(field => {
         if (Array.isArray(currentBudgetData?.[field])) {
           currentBudgetData[field] = currentBudgetData[field].filter(row => candidateIdentityKey(row) !== key);
         }
@@ -10789,7 +10807,9 @@
     }
 
     function refreshMarketInsight(item) {
-      if (item.marketInsightState === "ready" && candidateListMode !== "all" && unverifiedCandidateOverCap(item)) {
+      const isShortlistExtension = (currentBudgetData?.shortlistExtensionCandidates || []).includes(item);
+      if (item.marketInsightState === "ready" && candidateListMode !== "all" && unverifiedCandidateOverCap(item)
+        && !(isShortlistExtension && candidateWithinShortlistExtensionCap(item))) {
         renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
         return;
       }
@@ -11927,6 +11947,36 @@
       ));
     }
 
+    function candidateShortlistExtensionShortage(row) {
+      const rawGap = row?.policyImpact?.cashGapEok;
+      if (rawGap === null || rawGap === undefined || rawGap === "") return null;
+      const gap = Number(rawGap);
+      return Number.isFinite(gap) && gap < 0 ? Math.abs(gap) : null;
+    }
+
+    function shortlistExtensionRows(rows, budgetEok, shortlistCount) {
+      if (shortlistCount < 1 || shortlistCount > 2) return [];
+      return rows.filter(row => {
+        const ratio = candidateBudgetUsageRatio(row, budgetEok);
+        return ratio !== null
+          && ratio > CANDIDATE_SHORTLIST_MAX_PRICE_RATIO + 1e-9
+          && ratio <= CANDIDATE_SHORTLIST_EXTENSION_MAX_PRICE_RATIO + 1e-9
+          && row?.policyImpact?.status === "short"
+          && candidateShortlistExtensionShortage(row) !== null
+          && candidateWithinShortlistExtensionCap(row, budgetEok);
+      }).sort((left, right) => (
+        candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)
+        || candidateShortlistExtensionShortage(left) - candidateShortlistExtensionShortage(right)
+        || candidateShortlistComparablePrice(left) - candidateShortlistComparablePrice(right)
+      )).slice(0, CANDIDATE_SHORTLIST_EXTENSION_SIZE);
+    }
+
+    function candidateShortlistExtensionFundingHtml(row) {
+      const shortage = candidateShortlistExtensionShortage(row);
+      if (shortage === null) return "";
+      return `<p class="candidate-shortlist-extension-funding">추가 자기자금 <strong>약 ${esc(readableGapMoney(shortage))} 필요</strong><span>확인된 거래 가격과 부대비용을 기준으로 계산했어요. 실제 대출 가능액은 금융회사에서 확인해 주세요.</span></p>`;
+    }
+
     function candidateShortlistReasonHtml(row, rank) {
       const overall = candidateLocationScoreNumber(row);
       const market = candidateSignalNumber(row, "score");
@@ -11987,7 +12037,7 @@
             <div class="candidate-shortlist-info-popover" data-candidate-shortlist-info-popover hidden>
               <button class="candidate-shortlist-info-close" type="button" data-candidate-shortlist-info-close aria-label="상한 근처 후보 기준 닫기">×</button>
               <strong class="candidate-shortlist-info-title" id="candidate-shortlist-info-title">상한 근처 후보 기준</strong>
-              <p class="candidate-shortlist-info-copy">매매가 상한의 98~105%에 드는 단지만 고릅니다. 그 안에서 단지 조건과 최근 거래 흐름을 비교해 최대 5곳을 보여드려요. 상한을 넘는 집은 추가 자금이 필요할 수 있어요.</p>
+              <p class="candidate-shortlist-info-copy">먼저 매매가 상한의 98~105%에서 최대 5곳을 골라요. 1~2곳뿐이면 상한의 105% 초과~110%에서 추가 자기자금이 필요한 곳을 따로 보여드려요.</p>
             </div>
           </div>
         </div>
@@ -13890,7 +13940,7 @@
       return `<label class="additional-funding-toggle">
         <input type="checkbox" data-additional-funding-toggle${checked ? " checked" : ""}>
         <span class="additional-funding-copy">
-          추가자금 필요 포함 <span class="additional-funding-note">(+5%까지)</span>
+          추가 자기자금 필요 후보 포함
         </span>
       </label>`;
     }
@@ -13930,7 +13980,7 @@
         ["trade_1m", "1개월 이내 거래", "마지막 같은 면적 거래가 1개월 안에 있는 단지만 봐요", candidateTradeAgeFilter === "1m", candidateTradeAgeFilter === "1m"],
         ["trade_3m", "3개월 이내 거래", "마지막 같은 면적 거래가 3개월 안에 있는 단지만 봐요", candidateTradeAgeFilter === "3m", candidateTradeAgeFilter === "3m"],
         ["confidence", "거래자료 충분", "거래 표본이 어느 정도 있는 단지만 남겨요", candidateConfidenceFilter, candidateConfidenceFilter],
-        ["funding_5", "추가 자금 +5%까지", "예산보다 조금 더 필요한 후보도 함께 봐요", includeAdditionalFundingCandidates, !includeAdditionalFundingCandidates],
+        ["funding_5", "추가 자기자금 필요 후보", "상한의 105%까지 포함해요. 가까운 후보가 1~2곳이면 110%까지 따로 보여줘요", includeAdditionalFundingCandidates, !includeAdditionalFundingCandidates],
       ];
       const activeCount = filters.filter(([, , , , countActive]) => countActive).length;
       const triggerLabel = "필터";
@@ -19206,12 +19256,20 @@
       const allSortedRows = sortCandidateRows(filteredRows, budgetSort, data.budgetEok);
       const shortlistSortedRows = shortlistCandidateRows(allSortedRows, data.budgetEok);
       const shortlistRows = shortlistSortedRows.slice(0, Math.min(CANDIDATE_SHORTLIST_SIZE, shortlistSortedRows.length));
+      const extensionSourceRows = (data.shortlistExtensionCandidates || [])
+        .filter(candidateHasVerifiedSelectedArea)
+        .filter(candidateMatchesActiveFilters);
+      const extensionRows = !viewingExcluded && includeAdditionalFundingCandidates
+        ? shortlistExtensionRows(extensionSourceRows, data.budgetEok, shortlistRows.length)
+        : [];
       const showingShortlist = candidateListMode !== "all";
       candidateVisibleCount = Math.min(
         Math.max(CANDIDATE_PAGE_SIZE, candidateVisibleCount),
         allSortedRows.length,
       );
-      const rows = showingShortlist ? shortlistRows : allSortedRows.slice(0, candidateVisibleCount);
+      const rows = showingShortlist
+        ? [...shortlistRows, ...extensionRows]
+        : allSortedRows.slice(0, candidateVisibleCount);
       const policyExcludedCount = excludedRows.length
         ? Number(data.policyExcludedCount || excludedRows.length)
         : 0;
@@ -19231,9 +19289,10 @@
         allCandidates: allRows,
         policyDefaultCandidates: defaultRows,
         policyExcludedCandidates: excludedRows,
-        candidates: allSortedRows,
-        shortlistCandidates: shortlistRows,
-        mapCandidates: showingShortlist ? shortlistRows : allSortedRows,
+        shortlistExtensionCandidates: extensionSourceRows,
+        candidates: [...allSortedRows, ...extensionRows],
+        shortlistCandidates: [...shortlistRows, ...extensionRows],
+        mapCandidates: showingShortlist ? rows : allSortedRows,
         visibleCandidates: rows,
       };
       setConditionStage("results", false);
@@ -19277,8 +19336,13 @@
         </div>` : ""}
         ${candidateMapFloatingButtonHtml()}
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
+          ${showingShortlist && extensionRows.length ? `<section class="candidate-shortlist-group" aria-label="상한 근처 후보">
+            <div class="candidate-shortlist-group-head"><h3>상한 근처 ${esc(shortlistRows.length)}곳</h3><p>매매가 상한의 98~105%</p></div>` : ""}
           ${rows.map((item, candidateIndex) => `
-            <article class="budget-candidate" tabindex="-1" data-candidate-name="${esc(item.name)}" data-candidate-key="${esc(candidateIdentityKey(item))}">
+            ${showingShortlist && extensionRows.length && candidateIndex === shortlistRows.length ? `</section><section class="candidate-shortlist-group is-extension" aria-label="추가 자기자금 후보">
+              <div class="candidate-shortlist-group-head"><h3>추가 자기자금이 있으면 볼 ${esc(extensionRows.length)}곳</h3><p>상한의 105% 초과~110% · 지금 자금만으로는 살 수 없어요.</p></div>` : ""}
+            <article class="budget-candidate${showingShortlist && candidateIndex >= shortlistRows.length ? " is-shortlist-extension" : ""}" tabindex="-1" data-candidate-name="${esc(item.name)}" data-candidate-key="${esc(candidateIdentityKey(item))}">
+              ${showingShortlist && candidateIndex >= shortlistRows.length ? candidateShortlistExtensionFundingHtml(item) : ""}
               ${showingShortlist && scoreDataReady ? candidateShortlistReasonHtml(item, candidateIndex + 1) : ""}
               <div class="candidate-top has-map-action">
                 <div class="budget-main">
@@ -19316,6 +19380,7 @@
                 </div>
               </div>
             </article>`).join("")}
+          ${showingShortlist && extensionRows.length ? "</section>" : ""}
         </div>
         ${showingShortlist ? "" : candidateLoadMoreHtml(rows.length, allSortedRows.length)}
         ${candidateMapViewHtml(rows, (includeAdditionalFundingCandidates && shortCount > 0) || viewingExcluded)}
@@ -19348,7 +19413,11 @@
       if (targetIndex < 0) return false;
       const shortlistHasTarget = (currentBudgetData.shortlistCandidates || [])
         .some(item => candidateIdentityKey(item) === targetKey);
-      if (candidateListMode !== "all" && !shortlistHasTarget) {
+      const extensionHasTarget = (currentBudgetData.shortlistExtensionCandidates || [])
+        .some(item => candidateIdentityKey(item) === targetKey);
+      if (candidateListMode === "all" && extensionHasTarget && shortlistHasTarget) {
+        candidateListMode = "shortlist";
+      } else if (candidateListMode !== "all" && !shortlistHasTarget) {
         candidateListMode = "all";
       }
 
@@ -19441,6 +19510,7 @@
         currentBudgetData.allCandidates,
         currentBudgetData.policyDefaultCandidates,
         currentBudgetData.policyExcludedCandidates,
+        currentBudgetData.shortlistExtensionCandidates,
         currentBudgetData.candidates,
         currentBudgetData.shortlistCandidates,
         currentBudgetData.mapCandidates,
@@ -19456,6 +19526,7 @@
         currentBudgetData.allCandidates,
         currentBudgetData.policyDefaultCandidates,
         currentBudgetData.policyExcludedCandidates,
+        currentBudgetData.shortlistExtensionCandidates,
         currentBudgetData.candidates,
         currentBudgetData.shortlistCandidates,
         currentBudgetData.mapCandidates,

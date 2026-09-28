@@ -43,6 +43,45 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
         self.assertEqual(json.loads(result.stdout), {"matched": ["상한", "하한"], "empty": 0})
 
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for the shortlist behavior check")
+    def test_extra_cash_section_appears_only_with_one_or_two_near_budget_candidates(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        function = html.split("    function shortlistExtensionRows(rows, budgetEok, shortlistCount) {", 1)[1].split(
+            "    function candidateShortlistExtensionFundingHtml(row) {", 1,
+        )[0]
+        script = f"""
+          const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = 1.05;
+          const CANDIDATE_SHORTLIST_EXTENSION_MAX_PRICE_RATIO = 1.10;
+          const CANDIDATE_SHORTLIST_EXTENSION_SIZE = 3;
+          function candidateBudgetUsageRatio(row, budget) {{ return row.price / budget; }}
+          function candidateShortlistExtensionShortage(row) {{ return row.gap < 0 ? -row.gap : null; }}
+          function candidateWithinShortlistExtensionCap(row) {{ return row.safe !== false; }}
+          function candidateShortlistScore(row) {{ return row.score; }}
+          function candidateShortlistComparablePrice(row) {{ return row.price; }}
+          function shortlistExtensionRows(rows, budgetEok, shortlistCount) {{{function}
+          const rows = [
+            {{name:'기본 범위', price:10.5, gap:-0.5, score:99, policyImpact:{{status:'short'}}}},
+            {{name:'추가 1', price:10.6, gap:-0.3, score:80, policyImpact:{{status:'short'}}}},
+            {{name:'추가 2', price:11.0, gap:-0.5, score:70, policyImpact:{{status:'short'}}}},
+            {{name:'돈 부족 없음', price:10.8, gap:0.2, score:100, policyImpact:{{status:'possible'}}}},
+            {{name:'정책상 제외', price:10.9, gap:-0.4, score:100, policyImpact:{{status:'restricted'}}}},
+            {{name:'상한 초과', price:11.01, gap:-0.6, score:100, policyImpact:{{status:'short'}}}},
+          ];
+          console.log(JSON.stringify({{
+            zero:shortlistExtensionRows(rows, 10, 0).length,
+            one:shortlistExtensionRows(rows, 10, 1).map(row => row.name),
+            two:shortlistExtensionRows(rows, 10, 2).map(row => row.name),
+            three:shortlistExtensionRows(rows, 10, 3).length,
+          }}));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        self.assertEqual(json.loads(result.stdout), {
+            "zero": 0, "one": ["추가 1", "추가 2"],
+            "two": ["추가 1", "추가 2"], "three": 0,
+        })
+        self.assertIn('aria-label="추가 자기자금 후보"', html)
+        self.assertIn('추가 자기자금 <strong>약 ${esc(readableGapMoney(shortage))} 필요</strong>', html)
+
     def test_zippick_active_review_copy_does_not_sound_like_hold(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
@@ -3152,7 +3191,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-candidate-shortlist-info-close", html)
         self.assertIn("popover.hidden = !open", html)
         self.assertIn(".candidate-shortlist-first .candidate-shortlist-tab { flex:0 0 auto; width:auto;", html)
-        self.assertIn("매매가 상한의 98~105%에 드는 단지만 고릅니다.", html)
+        self.assertIn("먼저 매매가 상한의 98~105%에서 최대 5곳을 골라요.", html)
         self.assertIn("매매가 상한에 가까운 후보가 없어요.", render_body)
         self.assertIn('data-candidate-list-mode=\"all\">전체 ${esc(resultCount)}곳 보기', render_body)
         self.assertNotIn("가격대를 먼저 자르지 않아요.", html)

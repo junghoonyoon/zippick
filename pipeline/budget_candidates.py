@@ -22,7 +22,9 @@ MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_band
 PRICE_BAND_CSV_PATHS = [PRICE_BANDS_CSV, MOLIT_PRICE_BANDS_CSV]
 VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
-CANDIDATE_RESULT_SCHEMA_VERSION = 7
+SHORTLIST_EXTENSION_MAX_RATIO = 1.10
+SHORTLIST_EXTENSION_LIMIT = 3
+CANDIDATE_RESULT_SCHEMA_VERSION = 8
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -205,6 +207,28 @@ def _candidate_over_purchase_cap(row, budget_eok):
         cap_price
         and _fit_status(cap_price, budget_eok)[0] == "제외"
     )
+
+
+def _candidate_display_price(row):
+    for key in (
+        "latestDealPriceEok", "lastObservedDealPriceEok", "estimatedMidPriceEok",
+        "midPriceEok", "maxPriceEok", "minPriceEok",
+    ):
+        price = _float_value(row.get(key))
+        if price > 0:
+            return price
+    return 0.0
+
+
+def _candidate_within_extension_cap(row, budget_eok):
+    price = _candidate_purchase_cap_price(row)
+    return bool(budget_eok > 0 and price > 0 and price <= budget_eok * SHORTLIST_EXTENSION_MAX_RATIO + 1e-9)
+
+
+def _shortlist_extension_cash_gap(row):
+    impact = row.get("policyImpact") or {}
+    value = impact.get("cashGapEok")
+    return _float_value(value) if value is not None else None
 
 
 def _budget_eok(value):
@@ -1278,6 +1302,7 @@ def _broad_region_live_seed_rows(
     commute,
     price_strategy,
     fast_mode=False,
+    include_shortlist_extension=False,
 ):
     """Use cached prices first, then keep a bounded, region-balanced lookup set."""
     seed_limit = max(1, config.BUDGET_BROAD_REGION_LIVE_SEED_LIMIT)
@@ -1307,7 +1332,9 @@ def _broad_region_live_seed_rows(
             continue
         _apply_live_band(row, live)
         _apply_fit(row, budget_eok)
-        if _candidate_over_purchase_cap(row, budget_eok):
+        if _candidate_over_purchase_cap(row, budget_eok) and not (
+            include_shortlist_extension and _candidate_within_extension_cap(row, budget_eok)
+        ):
             continue
         row["_score"] = _candidate_score(row, entity, purpose, priority, commute, price_strategy)
         row.pop("_liveLookup", None)
@@ -1328,8 +1355,11 @@ def _broad_region_live_seed_rows(
     # 캐시 후보는 이미 가격 검증이 끝났으므로 결과 상한만큼 유지한다.
     # 미확인 후보만 별도 상한으로 제한해 실제 국토부 조회량을 통제한다.
     cached_limit = max(1, config.BUDGET_ALL_MATCHES_RESULT_LIMIT)
+    cached_main = [row for row in cached_rows if not _candidate_over_purchase_cap(row, budget_eok)]
+    cached_extension = [row for row in cached_rows if _candidate_over_purchase_cap(row, budget_eok)]
     return [
-        *cached_rows[:cached_limit],
+        *cached_main[:cached_limit],
+        *cached_extension[:SHORTLIST_EXTENSION_LIMIT * 4],
         *(row for row, _entity in balanced_lookup),
     ]
 
@@ -2674,6 +2704,7 @@ def budget_candidates(
             _candidate_over_purchase_cap(candidate, budget_eok)
             and _has_verified_price(candidate)
             and not (molit_transactions.enabled() and min_area)
+            and not (all_matches and not fast_mode and _candidate_within_extension_cap(candidate, budget_eok))
         ):
             filtered["price"] += 1
             continue
@@ -2761,6 +2792,7 @@ def budget_candidates(
                 commute,
                 price_strategy,
                 fast_mode=fast_mode,
+                include_shortlist_extension=all_matches and not fast_mode,
             )
         elif fast_mode:
             # 1차 응답에서도 캐시로 가격을 붙여 상한(+5%) 초과 단지를 걸러낸다.
@@ -2925,6 +2957,7 @@ def budget_candidates(
                 continue
 
     verified_rows = []
+    extension_rows = []
     unverified_price_count = 0
     last_deal_over_budget_count = 0
     no_last_deal_count = 0
@@ -2935,6 +2968,12 @@ def budget_candidates(
             filtered["price"] += 1
             if last_observed_price and _fit_status(last_observed_price, budget_eok)[0] == "제외":
                 last_deal_over_budget_count += 1
+            if (
+                all_matches and not fast_mode
+                and _has_verified_price(row)
+                and _candidate_within_extension_cap(row, budget_eok)
+            ):
+                extension_rows.append(row)
             continue
         if not _has_verified_price(row):
             if not _float_value(row.get("lastObservedDealPriceEok")):
@@ -2961,6 +3000,28 @@ def budget_candidates(
     result_limit = max(1, config.BUDGET_ALL_MATCHES_RESULT_LIMIT)
     if all_matches and len(unique_rows) > result_limit:
         unique_rows = _limit_budget_near_rows(unique_rows, result_limit, budget_eok)
+
+    extension_candidates = []
+    if all_matches and not fast_mode and budget_eok > 0:
+        extension_rows.sort(key=_budget_near_sort_key)
+        possible_extension = [
+            row for row in _dedupe_candidate_rows(extension_rows)
+            if MAX_PURCHASE_POWER_RATIO + 1e-9
+            < _candidate_display_price(row) / budget_eok
+            <= SHORTLIST_EXTENSION_MAX_RATIO + 1e-9
+        ]
+        possible_extension.sort(key=lambda row: (
+            _candidate_display_price(row),
+            -_float_value(row.get("_score")),
+            row.get("name", ""),
+        ))
+        possible_extension = possible_extension[:SHORTLIST_EXTENSION_LIMIT * 8]
+        _attach_policy_impacts(possible_extension, policy_profile)
+        extension_candidates = [
+            row for row in possible_extension
+            if (row.get("policyImpact") or {}).get("status") == "short"
+            and (_shortlist_extension_cash_gap(row) or 0) < 0
+        ][:SHORTLIST_EXTENSION_LIMIT]
 
     progress("policy_check", processed=0, total=len(unique_rows))
     _attach_policy_impacts(unique_rows, policy_profile)
@@ -2989,7 +3050,7 @@ def budget_candidates(
 
     candidates = policy_allowed_rows if all_matches else policy_allowed_rows[:limit]
     policy_excluded_candidates = [] if all_matches else policy_excluded_rows[:limit]
-    display_rows = [*candidates, *policy_excluded_candidates]
+    display_rows = [*candidates, *policy_excluded_candidates, *extension_candidates]
     # 프론트가 실제로 표시하는 후보가 비어 있으면 인접 지역 추천을 계산한다.
     # all_matches 응답은 정책상 needs_input/restricted 후보도 candidates에 담지만,
     # 화면에서는 possible/short 및 가격 확인 후보만 노출한다.
@@ -3026,6 +3087,7 @@ def budget_candidates(
     def result_payload(score_data_ready):
         public_candidates = candidates
         public_excluded = policy_excluded_candidates
+        public_extension = extension_candidates
         if not score_data_ready:
             public_candidates = [
                 {key: value for key, value in row.items() if not key.startswith("_")}
@@ -3034,6 +3096,10 @@ def budget_candidates(
             public_excluded = [
                 {key: value for key, value in row.items() if not key.startswith("_")}
                 for row in policy_excluded_candidates
+            ]
+            public_extension = [
+                {key: value for key, value in row.items() if not key.startswith("_")}
+                for row in extension_candidates
             ]
         return {
             "candidateResultSchemaVersion": CANDIDATE_RESULT_SCHEMA_VERSION,
@@ -3051,6 +3117,7 @@ def budget_candidates(
             "moveTimingLabel": MOVE_TIMING_LABELS.get(move_timing, ""),
             "candidates": public_candidates,
             "policyExcludedCandidates": public_excluded,
+            "shortlistExtensionCandidates": public_extension,
             "policyExcludedCount": 0 if all_matches else len(policy_excluded_rows),
             "policyEligibleCount": len(policy_allowed_rows),
             "allMatches": bool(all_matches),
