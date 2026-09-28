@@ -20541,7 +20541,6 @@
         } else if (filter === "funding_5") {
           includeAdditionalFundingCandidates = !includeAdditionalFundingCandidates;
         }
-        candidateListMode = "shortlist";
         candidateVisibleCount = CANDIDATE_PAGE_SIZE;
         renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
         if (reopenFilterSheet) requestAnimationFrame(() => setCandidateFilterOpen(true));
