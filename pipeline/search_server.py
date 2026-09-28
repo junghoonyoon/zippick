@@ -3276,7 +3276,7 @@ class Handler(BaseHTTPRequestHandler):
                 "apartments": real_estate_search.region_apartments(region),
             })
             return
-        if parsed.path in {"/api/purchase-power", "/api/purchase-power-check"}:
+        if parsed.path == "/api/purchase-power":
             first_time = params.get("first_time", [""])[0].strip()
             profile = policy_evaluator.user_profile(
                 home_ownership=params.get("home_ownership", ["unknown"])[0].strip(),
@@ -3297,15 +3297,6 @@ class Handler(BaseHTTPRequestHandler):
             if profile["homeOwnership"] == "unknown" or first_time not in {"true", "false"} or not profile["cashEok"] or not profile["annualIncomeManwon"] or not profile["mortgageRatePercent"]:
                 self._json({"error": "보유 주택, 생애최초 여부, 자기자금, 연소득과 예상 금리를 입력해 주세요."}, 400)
                 return
-            if parsed.path == "/api/purchase-power-check":
-                price = params.get("price_eok", [""])[0].strip()
-                quote = policy_evaluator.purchase_power_price_check(profile, price)
-                if quote is None:
-                    self._json({"error": "매물 가격을 확인해 주세요."}, 400)
-                    return
-                self._json(quote)
-                return
-
             review = policy_evaluator.purchase_power_review(profile)
             ceiling = review["budgetEok"]
             selected_band = next(

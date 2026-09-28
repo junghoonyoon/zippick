@@ -666,18 +666,6 @@
     .power-review-tab { min-width:0; min-height:46px; border:0; border-radius:11px; padding:7px 5px; background:transparent; color:#626b77; font-size:14px; font-weight:750; line-height:1.25; cursor:pointer }
     .power-review-tab[aria-selected="true"] { background:#fff; color:#1267d8; box-shadow:0 1px 4px rgba(16,24,40,.12) }
     .power-review-tab:focus-visible { outline:3px solid #79aff0; outline-offset:2px }
-    .power-review-price-box { margin-top:20px; border:1px solid #e4e8ee; border-radius:16px; padding:15px; background:#fafbfd }
-    .power-review-price-box > label { display:block; margin-bottom:9px; color:#303846; font-size:15px; font-weight:800 }
-    .power-review-price-input { display:flex; align-items:center; gap:10px; min-height:56px; border:1px solid #cbd3dd; border-radius:12px; padding:0 14px; background:#fff; color:#667085; font-size:16px; font-weight:700 }
-    .power-review-price-input:focus-within { border-color:#3182f6; box-shadow:0 0 0 3px rgba(49,130,246,.16) }
-    .power-review-price-input input { width:100%; min-width:0; min-height:52px; border:0; outline:0; background:transparent; color:#191f28; font-size:18px; font-weight:750 }
-    .power-review-price-input input:focus-visible { outline:2px solid #3182f6; outline-offset:2px; border-radius:4px }
-    .power-review-price-help { margin:7px 0 0; color:#697384; font-size:13px; line-height:1.45 }
-    .power-review-price-result { display:grid; gap:4px; margin-top:11px; color:#596273; font-size:14px; line-height:1.5 }
-    .power-review-price-result .spinner { display:inline-block; margin-right:5px; vertical-align:-2px }
-    .power-review-price-status { font-size:16px; font-weight:850 }
-    .power-review-price-status.is-possible { color:#087443 }
-    .power-review-price-status.is-short { color:#b54708 }
     .power-result-policy-date { margin:7px 0 0; color:#8b95a1; font-size:13px; line-height:1.4 }
     .preference-step { transition:opacity .15s ease,background .15s ease }
     .preference-step.is-locked { background:#f6f7f9; opacity:.64 }
@@ -3503,7 +3491,6 @@
       .purchase-power-result.is-sheet .power-result-content { padding:26px 20px 16px }
       .purchase-power-result.is-sheet .power-result-value { font-size:25px; line-height:1.32 }
       .power-review-tab { font-size:13px }
-      .power-review-price-box { padding:12px }
       .purchase-power-result.is-sheet .power-result-actions { padding-right:20px; padding-left:20px }
     }
 
@@ -14307,8 +14294,6 @@
       purchasePowerResult.classList.remove("show", "is-sheet");
       document.body.classList.remove("purchase-power-sheet-open");
       purchasePowerSheetChangeContext = null;
-      purchasePowerPriceCheckRequest += 1;
-      clearTimeout(purchasePowerPriceCheckTimer);
       restorePurchasePowerResult();
     }
 
@@ -14351,8 +14336,6 @@
     }
 
     let purchasePowerSheetChangeContext = null;
-    let purchasePowerPriceCheckTimer = null;
-    let purchasePowerPriceCheckRequest = 0;
 
     function purchasePowerLoanBasisMeta(review, band) {
       const policy = review.policy || {};
@@ -14420,7 +14403,6 @@
       const policyDateLabel = policyDateParts.length === 3 && policyDateParts.every(Number.isFinite)
         ? `${policyDateParts[0]}년 ${policyDateParts[1]}월 ${policyDateParts[2]}일 기준 정책 반영`
         : "";
-      const preservedPrice = options.preservedPrice ?? purchasePowerResult.querySelector("[data-power-review-price]")?.value ?? "";
       const bandTabs = (review.bands || []).map(band => {
         const isSelected = band.id === review.selectedBandId;
         return `<button type="button" class="power-review-tab" role="tab" data-power-review-band="${esc(band.id)}" aria-selected="${isSelected}" tabindex="${isSelected ? "0" : "-1"}">${esc(band.tabLabel || band.label)}</button>`;
@@ -14456,12 +14438,6 @@
               <strong class="power-result-row-value">${esc(ceiling)}</strong>
             </div>
           </div>
-          <section class="power-review-price-box" aria-labelledby="powerReviewPriceTitle">
-            <label id="powerReviewPriceTitle" for="powerReviewPrice">매물 가격으로 확인하기</label>
-            <div class="power-review-price-input"><input id="powerReviewPrice" data-power-review-price type="number" min="0.01" step="0.01" inputmode="decimal" value="${esc(preservedPrice)}" placeholder="예: 15.5" aria-describedby="powerReviewPriceHelp powerReviewPriceResult"><span aria-hidden="true">억</span></div>
-            <p class="power-review-price-help" id="powerReviewPriceHelp">가격을 입력하면 필요한 대출과 참고 한도를 바로 비교해요.</p>
-            <div class="power-review-price-result" id="powerReviewPriceResult" aria-live="polite" aria-atomic="true">매물 가격을 입력하면 결과를 보여드려요.</div>
-          </section>
           <p class="power-result-note">집픽은 실거래가만 반영해요. 매물 호가가 이 금액과 얼마나 차이 나는지 꼭 확인하세요. 실제 한도는 은행 사전심사로 확정돼요.</p>
           ${policyDateLabel ? `<p class="power-result-policy-date">${esc(policyDateLabel)}</p>` : ""}
         </div>
@@ -14474,36 +14450,6 @@
       mountPurchasePowerResultSheet();
       syncPurchasePowerSummary();
       if (!options.preserveConditionStage) setConditionStage("power", false);
-      const priceField = purchasePowerResult.querySelector("[data-power-review-price]");
-      if (priceField?.value) updatePurchasePowerPriceCheck(priceField);
-    }
-
-    function updatePurchasePowerPriceCheck(priceField) {
-      const result = purchasePowerResult.querySelector("#powerReviewPriceResult");
-      if (!priceField || !result) return;
-      const requestId = ++purchasePowerPriceCheckRequest;
-      clearTimeout(purchasePowerPriceCheckTimer);
-      const price = Number(priceField.value);
-      if (!Number.isFinite(price) || price <= 0) {
-        result.textContent = "매물 가격을 입력하면 결과를 보여드려요.";
-        return;
-      }
-      result.innerHTML = `${spinnerHtml("small")} 계산하고 있어요.`;
-      const priceValue = priceField.value;
-      purchasePowerPriceCheckTimer = setTimeout(async () => {
-        const params = purchasePowerParams("exact");
-        params.set("price_eok", String(price));
-        try {
-          const check = await getJson(`/api/purchase-power-check?${params.toString()}`);
-          if (requestId !== purchasePowerPriceCheckRequest || !priceField.isConnected || priceField.value !== priceValue) return;
-          const status = check.isPossible ? "살 수 있어요" : `${policyMoney(check.shortageEok)} 부족해요`;
-          const stateClass = check.isPossible ? "is-possible" : "is-short";
-          result.innerHTML = `<strong class="power-review-price-status ${stateClass}">${esc(status)}</strong><span>${esc(check.bandLabel)} 기준 · 필요 대출 ${esc(policyMoney(check.requiredLoanEok))} · 계산상 한도 ${esc(policyMoney(check.loanLimitEok))}</span>`;
-        } catch (error) {
-          if (requestId !== purchasePowerPriceCheckRequest || !priceField.isConnected) return;
-          result.textContent = error.error || "매물 가격을 다시 확인해 주세요.";
-        }
-      }, 180);
     }
 
     function selectedOptionText(select) {
@@ -19887,7 +19833,6 @@
         const bandId = priceBandTab.dataset.powerReviewBand;
         const band = currentPurchasePower?.review?.bands?.find(item => item.id === bandId);
         if (!band || bandId === currentPurchasePower.review.selectedBandId) return;
-        const preservedPrice = purchasePowerResult.querySelector("[data-power-review-price]")?.value || "";
         const snapshot = {
           ...(currentPurchasePower.snapshot || {}),
           estimatedPurchaseCeilingEok:band.reviewAmountEok,
@@ -19905,7 +19850,6 @@
         renderPurchasePower(currentPurchasePower, {
           changeContext:purchasePowerSheetChangeContext,
           preserveConditionStage:true,
-          preservedPrice,
         });
         purchasePowerResult.querySelector(`[data-power-review-band="${CSS.escape(bandId)}"]`)?.focus();
         return;
@@ -19935,10 +19879,6 @@
         closePurchasePowerSheet();
         setConditionStage("preference");
       }
-    });
-    purchasePowerResult.addEventListener("input", event => {
-      const priceField = event.target.closest("[data-power-review-price]");
-      if (priceField) updatePurchasePowerPriceCheck(priceField);
     });
     purchasePowerResult.addEventListener("keydown", event => {
       const tab = event.target.closest("[data-power-review-band]");

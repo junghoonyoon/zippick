@@ -159,41 +159,6 @@ def purchase_power_review(profile):
     }
 
 
-def purchase_power_price_check(profile, price_eok):
-    """Compare one entered asking price with the same review baseline."""
-    price = _float(price_eok)
-    if price <= 0:
-        return None
-    review = purchase_power_review(profile)
-    policy = review["policy"]
-    band = next((
-        item for item in policy["priceBands"]
-        if (
-            price >= item["minPriceEok"]
-            if item["minInclusive"]
-            else price > item["minPriceEok"]
-        ) and (item["maxPriceEok"] is None or price <= item["maxPriceEok"])
-    ), None)
-    if band is None:
-        return None
-    limit = min(
-        band["loanCapEok"],
-        review["dsrLoanLimitEok"],
-        price * policy["regulatedLtvRate"],
-    )
-    required = max(0, price * (1 + policy["purchaseCostRate"]) - review["cashEok"])
-    shortage = max(0, required - limit)
-    return {
-        "priceEok": price,
-        "bandId": band["id"],
-        "bandLabel": band["label"],
-        "loanLimitEok": round(limit, 2),
-        "requiredLoanEok": round(required, 2),
-        "shortageEok": round(shortage, 2),
-        "isPossible": required <= limit,
-    }
-
-
 def user_profile(
     home_ownership="unknown",
     first_time=False,
