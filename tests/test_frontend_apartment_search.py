@@ -1,5 +1,7 @@
 import json
 import re
+import shutil
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -10,6 +12,37 @@ REDEVELOPMENT_ZONES = ROOT / "data" / "redevelopment_zones.geojson"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for the shortlist behavior check")
+    def test_shortlist_keeps_only_prices_within_purchase_ceiling_band(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        function = html.split("    function shortlistCandidateRows(rows, budgetEok) {", 1)[1].split(
+            "    function candidateShortlistReasonHtml(row, rank) {", 1,
+        )[0]
+        minimum = re.search(r"const CANDIDATE_SHORTLIST_MIN_PRICE_RATIO = ([0-9.]+);", html).group(1)
+        maximum = re.search(r"const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = ([0-9.]+);", html).group(1)
+        script = f"""
+          const CANDIDATE_SHORTLIST_MIN_PRICE_RATIO = {minimum};
+          const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = {maximum};
+          function candidateBudgetUsageRatio(row, budget) {{ return row.price / budget; }}
+          function candidateShortlistScore(row) {{ return row.score; }}
+          function candidateShortlistBudgetScore() {{ return 0; }}
+          function candidateShortlistBudgetBand() {{ return 0; }}
+          function candidateShortlistMetric() {{ return 0; }}
+          function shortlistCandidateRows(rows, budgetEok) {{{function}
+          const rows = [
+            {{name:'싼 고점수', price:10.7, score:100}},
+            {{name:'하한', price:22.834, score:30}},
+            {{name:'상한', price:24.465, score:40}},
+            {{name:'상한 초과', price:24.466, score:120}},
+          ];
+          console.log(JSON.stringify({{
+            matched:shortlistCandidateRows(rows, 23.3).map(row => row.name),
+            empty:shortlistCandidateRows(rows.slice(0, 1), 23.3).length,
+          }}));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        self.assertEqual(json.loads(result.stdout), {"matched": ["상한", "하한"], "empty": 0})
+
     def test_zippick_active_review_copy_does_not_sound_like_hold(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
@@ -3070,11 +3103,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("function candidateShortlistReviewScore(row)", html)
         self.assertNotIn("function candidateShortlistReviewReason(row)", html)
         self.assertNotIn("분석 결과는 급매만 검토예요", html)
-        self.assertNotIn("const nearBudgetRows = rows.filter(row => {", html)
-        self.assertNotIn("ratio <= CANDIDATE_SHORTLIST_MAX_BUDGET_USAGE", html)
-        self.assertNotIn("&& candidateWithinPurchaseCap(row, budgetEok);", html)
+        self.assertIn("const CANDIDATE_SHORTLIST_MIN_PRICE_RATIO = 0.98;", html)
+        self.assertIn("const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = 1.05;", html)
+        self.assertIn("const nearBudgetRows = rows.filter(row => {", html)
+        self.assertIn("ratio >= CANDIDATE_SHORTLIST_MIN_PRICE_RATIO", html)
+        self.assertIn("ratio <= CANDIDATE_SHORTLIST_MAX_PRICE_RATIO", html)
         self.assertNotIn("const sourceRows = nearBudgetRows.length >= shortlistLimit ? nearBudgetRows : rows;", html)
-        self.assertIn("return [...rows].sort((left, right) => (", html)
+        self.assertIn("return nearBudgetRows.sort((left, right) => (", html)
         self.assertLess(
             html.index("candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)"),
             html.index("Math.abs((candidateBudgetUsageRatio(left, budgetEok) ?? 999) - 1)"),
@@ -3117,11 +3152,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-candidate-shortlist-info-close", html)
         self.assertIn("popover.hidden = !open", html)
         self.assertIn(".candidate-shortlist-first .candidate-shortlist-tab { flex:0 0 auto; width:auto;", html)
-        self.assertIn("가격대를 먼저 자르지 않아요.", html)
-        self.assertIn("전체 후보에서 종합점수, 최근 가격·거래 흐름, 예산 활용도를 함께 보고 고릅니다.", html)
-        self.assertIn("가격대를 먼저 자르지 않고, 종합점수와 최근 가격·거래 흐름이 좋은", html)
+        self.assertIn("매매가 상한의 98~105%에 드는 단지만 고릅니다.", html)
+        self.assertIn("매매가 상한에 가까운 후보가 없어요.", render_body)
+        self.assertIn('data-candidate-list-mode=\"all\">전체 ${esc(resultCount)}곳 보기', render_body)
+        self.assertNotIn("가격대를 먼저 자르지 않아요.", html)
         self.assertNotIn("같은 상승률이라도 집값이 높을수록 자산 증가액이 커집니다.", html)
-        self.assertNotIn("매수 상한에 가까우면서 종합점수와 최근 가격·거래 흐름이 좋은", html)
         self.assertNotIn("매수 상한의 90%~105% 후보가 없어요", html)
         self.assertNotIn("추천 기준</strong> 예산 안 후보 · 예산 상한에 가까운 가격대", html)
         self.assertNotIn("상한보다 많이 낮아 조건 확인용이에요", html)

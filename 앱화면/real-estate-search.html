@@ -6050,6 +6050,8 @@
     const leaderComparisonRetryInFlight = new Set();
     const CANDIDATE_SHORTLIST_SIZE = 5;
     const CANDIDATE_PAGE_SIZE = 10;
+    const CANDIDATE_SHORTLIST_MIN_PRICE_RATIO = 0.98;
+    const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = 1.05;
     const CANDIDATE_SHORTLIST_MIN_BUDGET_USAGE = 0.9;
     const CANDIDATE_SHORTLIST_TARGET_BUDGET_USAGE = 0.95;
     const CANDIDATE_SHORTLIST_CRITERIA = [
@@ -11907,7 +11909,13 @@
     }
 
     function shortlistCandidateRows(rows, budgetEok) {
-      return [...rows].sort((left, right) => (
+      const nearBudgetRows = rows.filter(row => {
+        const ratio = candidateBudgetUsageRatio(row, budgetEok);
+        return ratio !== null
+          && ratio >= CANDIDATE_SHORTLIST_MIN_PRICE_RATIO - 1e-9
+          && ratio <= CANDIDATE_SHORTLIST_MAX_PRICE_RATIO + 1e-9;
+      });
+      return nearBudgetRows.sort((left, right) => (
         candidateShortlistScore(right, budgetEok) - candidateShortlistScore(left, budgetEok)
         || candidateShortlistBudgetScore(right, budgetEok) - candidateShortlistBudgetScore(left, budgetEok)
         || candidateShortlistBudgetBand(left, budgetEok) - candidateShortlistBudgetBand(right, budgetEok)
@@ -11967,18 +11975,19 @@
     function candidateShortlistSummaryHtml(totalCount, shortlistCount, mode) {
       const firstCount = Math.min(CANDIDATE_SHORTLIST_SIZE, shortlistCount);
       const isShortlist = mode !== "all";
+      const shortlistLabel = firstCount ? `먼저 볼 ${firstCount}곳` : "상한 근처 후보 없음";
       return `<section class="candidate-shortlist-first" aria-label="후보 보기 방식">
         <div class="candidate-shortlist-head">
           <div class="candidate-shortlist-tabs" role="tablist" aria-label="후보 보기 방식">
-            <button class="candidate-shortlist-tab" type="button" role="tab" data-candidate-list-mode="shortlist" aria-selected="${isShortlist}">먼저 볼 ${esc(firstCount)}곳</button>
+            <button class="candidate-shortlist-tab" type="button" role="tab" data-candidate-list-mode="shortlist" aria-selected="${isShortlist}">${esc(shortlistLabel)}</button>
             <button class="candidate-shortlist-tab" type="button" role="tab" data-candidate-list-mode="all" aria-selected="${!isShortlist}">전체 ${esc(totalCount)}곳</button>
           </div>
           <div class="candidate-shortlist-info">
-            <button class="candidate-shortlist-info-button" type="button" data-candidate-shortlist-info aria-expanded="false" aria-label="먼저 볼 5곳 기준 보기">?</button>
+            <button class="candidate-shortlist-info-button" type="button" data-candidate-shortlist-info aria-expanded="false" aria-label="상한 근처 후보 기준 보기">?</button>
             <div class="candidate-shortlist-info-popover" data-candidate-shortlist-info-popover hidden>
-              <button class="candidate-shortlist-info-close" type="button" data-candidate-shortlist-info-close aria-label="먼저 볼 5곳 기준 닫기">×</button>
-              <strong class="candidate-shortlist-info-title" id="candidate-shortlist-info-title">먼저 볼 5곳 기준</strong>
-              <p class="candidate-shortlist-info-copy">가격대를 먼저 자르지 않아요. 전체 후보에서 종합점수, 최근 가격·거래 흐름, 예산 활용도를 함께 보고 고릅니다.</p>
+              <button class="candidate-shortlist-info-close" type="button" data-candidate-shortlist-info-close aria-label="상한 근처 후보 기준 닫기">×</button>
+              <strong class="candidate-shortlist-info-title" id="candidate-shortlist-info-title">상한 근처 후보 기준</strong>
+              <p class="candidate-shortlist-info-copy">매매가 상한의 98~105%에 드는 단지만 고릅니다. 그 안에서 단지 조건과 최근 거래 흐름을 비교해 최대 5곳을 보여드려요. 상한을 넘는 집은 추가 자금이 필요할 수 있어요.</p>
             </div>
           </div>
         </div>
@@ -19239,10 +19248,14 @@
         document.body.classList.remove("candidate-map-open");
         const resultCount = allSortedRows.length;
         const filtersHideResults = filterSourceRows.length > 0 && filteredRows.length === 0;
+        const noNearBudgetCandidates = showingShortlist && resultCount > 0 && !shortlistRows.length;
         const emptyMessage = filtersHideResults
           ? "선택한 필터에 해당하는 단지가 없어요."
           : data.allMatches ? "현재 자금 범위에 해당하는 단지가 없어요." : data.message || "예산 기준 후보를 찾지 못했어요.";
-        budgetResultEl.innerHTML = `${budgetBackgroundStatusHtml(data)}${candidateShortlistSummaryHtml(resultCount, shortlistRows.length, showingShortlist ? "shortlist" : "all")}${!showingShortlist ? `<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false, "", scoreDataReady)}</div>` : ""}${budgetEmptyStateHtml(emptyMessage, data.nearbyRegions)}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
+        const emptyHtml = noNearBudgetCandidates
+          ? `<div class="empty empty-with-action"><p class="empty-title">매매가 상한에 가까운 후보가 없어요.</p><p class="empty-copy">현재 조건에서 상한의 98~105%에 드는 단지는 확인되지 않았어요. 더 낮은 가격대는 전체 후보에서 볼 수 있어요.</p><button class="empty-action" type="button" data-candidate-list-mode="all">전체 ${esc(resultCount)}곳 보기</button></div>`
+          : budgetEmptyStateHtml(emptyMessage, data.nearbyRegions);
+        budgetResultEl.innerHTML = `${budgetBackgroundStatusHtml(data)}${candidateShortlistSummaryHtml(resultCount, shortlistRows.length, showingShortlist ? "shortlist" : "all")}${!showingShortlist ? `<div class="candidate-options-bar">${candidateFiltersHtml()}${candidateSortHtml(budgetSort, false, "", scoreDataReady)}</div>` : ""}${emptyHtml}${policyExcludedCount ? `<div class="policy-excluded-actions"><button class="policy-excluded-toggle" type="button" data-policy-excluded-toggle>추가 자금 필요 후보 ${esc(policyExcludedCount)}개 중 상위 ${esc(excludedRows.length)}개 보기</button></div>` : ""}`;
         return;
       }
       const excluded = Number(data.excludedCount || 0);
