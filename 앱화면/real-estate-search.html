@@ -20553,9 +20553,8 @@
           budgetSort = candidateSortOption.dataset.candidateSortOption;
           trackDailyActiveUser();
           trackEvent("candidate_sort_selected", { sort:budgetSort });
-          candidateListMode = "shortlist";
           candidateVisibleCount = CANDIDATE_PAGE_SIZE;
-          renderBudgetCandidates(currentBudgetData);
+          renderBudgetCandidates(currentBudgetData, { preserveSelection:true });
         } else {
           const trigger = candidateSortOption.closest(".candidate-sort-group")?.querySelector("[data-candidate-sort-open]");
           setCandidateSortOpen(false, trigger);
