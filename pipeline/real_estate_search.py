@@ -1,5 +1,6 @@
 """부동산 유튜브 검색 인덱스와 주문형 의견 분석."""
 import csv
+import functools
 import datetime
 import hashlib
 import json
@@ -172,8 +173,18 @@ APARTMENT_CSV_PATHS = [
 ]
 
 
+_COMPACT_RE = re.compile(r"[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]")
+
+
+@functools.lru_cache(maxsize=65536)
+def _compact_cached(text):
+    return _COMPACT_RE.sub("", text).lower()
+
+
 def compact(text):
-    return re.sub(r"[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]", "", str(text)).lower()
+    # 같은 단지명·지역명을 수백만 번 반복 변환하는 비용을 줄인다.
+    # lru_cache는 크기가 고정되어 오래 돌아도 메모리가 쌍이지 않는다.
+    return _compact_cached(str(text))
 
 
 def apartment_brand_variants(value):

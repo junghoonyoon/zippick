@@ -24,6 +24,8 @@
 전용 84.x㎡ 실제 거래 중위가로 동·구 대장을 정하며 다른 면적은 환산하지
 않는다. 해당 면적 거래가 2건 미만인 단지는 제외한다.
 """
+import functools
+import threading
 import datetime
 import re
 import statistics
@@ -137,14 +139,20 @@ def _month_key(deal_date):
     return str(deal_date or "")[:7]
 
 
-def _month_ordinal(deal_date):
+@functools.lru_cache(maxsize=4096)
+def _month_ordinal_cached(month_key):
     try:
-        year, month = map(int, str(deal_date or "")[:7].split("-"))
+        year, month = map(int, month_key.split("-"))
     except (TypeError, ValueError):
         return None
     if month < 1 or month > 12:
         return None
     return year * 12 + month
+
+
+def _month_ordinal(deal_date):
+    # 거래 숫자만큼 반복 호출되므로 월 단위 결과를 재사용한다.
+    return _month_ordinal_cached(str(deal_date or "")[:7])
 
 
 def _months_ago(months):
@@ -1065,13 +1073,49 @@ def _leader_score_details(entity, signals, lower_price_count, price_count):
     }
 
 
+_ABSOLUTE_LEADER_CACHE = {}
+_ABSOLUTE_LEADER_CACHE_LOCK = threading.Lock()
+_ABSOLUTE_LEADER_CACHE_MAX = 256
+
+
 def _absolute_leader(
     region,
     candidates,
     legal_dong="",
 ):
-    """전용 84.x㎡ 실제 거래 중위가로 지역 또는 법정동 1위를 반환한다."""
+    """전용 84.x㎡ 실제 거래 중위가로 지역 또는 법정동 1위를 반환한다.
+
+    대장 단지는 하루 안에 바뀌지 않으므로 같은 날 같은 범위는 메모리에서
+    재사용한다. 크기를 제한한 메모리 캐시라 디스크에 쌍이지 않는다.
+    """
     del candidates  # 검색 결과에 따라 대장이 바뀌지 않도록 의도적으로 사용하지 않는다.
+    cache_key = (
+        real_estate_search.compact(region),
+        real_estate_search.compact(legal_dong),
+        datetime.date.today().isoformat(),
+        # 단지 마스터가 교체되면(재적재·테스트) 캐시도 새 항목을 쓴다.
+        id(real_estate_search.APARTMENT_MASTER),
+    )
+    with _ABSOLUTE_LEADER_CACHE_LOCK:
+        if cache_key in _ABSOLUTE_LEADER_CACHE:
+            return _ABSOLUTE_LEADER_CACHE[cache_key]
+    result = _absolute_leader_uncached(region, legal_dong)
+    with _ABSOLUTE_LEADER_CACHE_LOCK:
+        if len(_ABSOLUTE_LEADER_CACHE) >= _ABSOLUTE_LEADER_CACHE_MAX:
+            # 오늘 날짜가 아닌 항목부터 비운다. 크기 상한을 넘지 않게 유지한다.
+            today = cache_key[2]
+            for stale in [k for k in _ABSOLUTE_LEADER_CACHE if k[2] != today]:
+                _ABSOLUTE_LEADER_CACHE.pop(stale, None)
+            while len(_ABSOLUTE_LEADER_CACHE) >= _ABSOLUTE_LEADER_CACHE_MAX:
+                _ABSOLUTE_LEADER_CACHE.pop(next(iter(_ABSOLUTE_LEADER_CACHE)), None)
+        _ABSOLUTE_LEADER_CACHE[cache_key] = result
+    return result
+
+
+def _absolute_leader_uncached(
+    region,
+    legal_dong="",
+):
     region_key = real_estate_search.compact(region)
     legal_dong_key = real_estate_search.compact(legal_dong)
     entities = []
