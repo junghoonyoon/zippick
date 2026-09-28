@@ -2490,11 +2490,12 @@ def _run_budget_enrichment(job_id, cache_key, candidate_arguments):
                 "error": "후보 가격과 순서는 확인했지만 종합 점수를 끝까지 계산하지 못했어요. 잠시 후 다시 검색해 주세요.",
             })
         else:
+            print(f"[부동산 서버] 예산 후보 작업 오류: {exc!r}")
             payload = {
                 "done": True,
                 "enrichmentPending": False,
                 "enrichmentStage": "error",
-                "error": str(exc),
+                "error": "후보를 계산하지 못했어요. 잠시 후 다시 검색해 주세요.",
             }
     with BUDGET_JOBS_LOCK:
         job = BUDGET_JOBS.get(job_id)
@@ -2797,9 +2798,10 @@ def _run_search_job(job_id, query, videos):
                 real_estate_search.add_opinion(result, opinion)
                 result["processedVideos"] += 1
         except Exception as exc:
+            print(f"[부동산 서버] 영상 분석 오류({video.get('channel', '')}): {exc!r}")
             with JOBS_LOCK:
                 result = JOBS[job_id]["result"]
-                result["errors"].append(f"{video.get('channel', '')}: {str(exc)[:120]}")
+                result["errors"].append(f"{video.get('channel', '')}: 분석을 마치지 못했어요.")
                 result["processedVideos"] += 1
 
     with JOBS_LOCK:
