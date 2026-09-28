@@ -10,6 +10,65 @@ import policy_evaluator  # noqa: E402
 
 
 class PolicyEvaluatorTest(unittest.TestCase):
+    def test_budget_sheet_policy_and_reference_example(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home",
+            cash_eok=20,
+            annual_income=13000,
+            mortgage_rate=4.3,
+            loan_term_years=30,
+            purchase_cost_rate=4,
+        )
+
+        review = policy_evaluator.purchase_power_review(profile)
+
+        self.assertEqual(policy_evaluator.POLICY["effectiveDate"], "2026-09-27")
+        self.assertEqual(policy_evaluator.POLICY["regulatedLtvRate"], 0.4)
+        self.assertEqual(policy_evaluator.POLICY["bankDsrRate"], 0.4)
+        self.assertEqual(policy_evaluator.POLICY["stressRatePercent"], 3.0)
+        self.assertEqual(policy_evaluator.POLICY["purchaseCostRate"], 0.04)
+        self.assertEqual(review["dsrLoanLimitEok"], 6.32)
+        self.assertEqual(
+            [(band["id"], band["reviewAmountEok"]) for band in review["bands"]],
+            [("up_to_15", 15.0), ("15_to_25", 23.1)],
+        )
+        self.assertEqual(review["selectedBandId"], "15_to_25")
+        self.assertEqual(review["budgetEok"], 23.1)
+
+    def test_budget_sheet_price_band_boundaries(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", cash_eok=20, annual_income=13000,
+            mortgage_rate=4.3, loan_term_years=30, purchase_cost_rate=4,
+        )
+
+        expected = ((15, "up_to_15"), (15.01, "15_to_25"), (25, "15_to_25"), (25.01, "over_25"))
+        for price, band_id in expected:
+            with self.subTest(price=price):
+                result = policy_evaluator.purchase_power_price_check(profile, price)
+                self.assertEqual(result["bandId"], band_id)
+
+    def test_budget_sheet_price_check_includes_ltv_dsr_costs_and_cash(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", cash_eok=20, annual_income=13000,
+            mortgage_rate=4.3, loan_term_years=30, purchase_cost_rate=4,
+        )
+
+        result = policy_evaluator.purchase_power_price_check(profile, 15)
+
+        self.assertEqual(result["loanLimitEok"], 6)
+        self.assertEqual(result["requiredLoanEok"], 0)
+        self.assertTrue(result["isPossible"])
+
+        limited_cash = policy_evaluator.user_profile(
+            home_ownership="no_home", cash_eok=5, annual_income=30000,
+            mortgage_rate=4.3, loan_term_years=30, purchase_cost_rate=4,
+        )
+        result = policy_evaluator.purchase_power_price_check(limited_cash, 10)
+        self.assertEqual(result["loanLimitEok"], 4)
+        self.assertEqual(result["requiredLoanEok"], 5.4)
+        self.assertEqual(result["shortageEok"], 1.4)
+        self.assertFalse(result["isPossible"])
+
     def test_capital_term_limit_cannot_be_bypassed_by_long_input(self):
         for years in (30, 40, 50):
             with self.subTest(years=years):

@@ -3276,7 +3276,7 @@ class Handler(BaseHTTPRequestHandler):
                 "apartments": real_estate_search.region_apartments(region),
             })
             return
-        if parsed.path == "/api/purchase-power":
+        if parsed.path in {"/api/purchase-power", "/api/purchase-power-check"}:
             first_time = params.get("first_time", [""])[0].strip()
             profile = policy_evaluator.user_profile(
                 home_ownership=params.get("home_ownership", ["unknown"])[0].strip(),
@@ -3297,50 +3297,39 @@ class Handler(BaseHTTPRequestHandler):
             if profile["homeOwnership"] == "unknown" or first_time not in {"true", "false"} or not profile["cashEok"] or not profile["annualIncomeManwon"] or not profile["mortgageRatePercent"]:
                 self._json({"error": "보유 주택, 생애최초 여부, 자기자금, 연소득과 예상 금리를 입력해 주세요."}, 400)
                 return
-            ceiling = policy_evaluator.estimated_purchase_ceiling(profile, ["서울시", "경기도"])
-            if ceiling <= 0:
-                self._json({"error": "입력한 소득·부채·자기자금 기준으로 계산 가능한 매수 상한이 없어요."}, 400)
+            if parsed.path == "/api/purchase-power-check":
+                price = params.get("price_eok", [""])[0].strip()
+                quote = policy_evaluator.purchase_power_price_check(profile, price)
+                if quote is None:
+                    self._json({"error": "매물 가격을 확인해 주세요."}, 400)
+                    return
+                self._json(quote)
+                return
+
+            review = policy_evaluator.purchase_power_review(profile)
+            ceiling = review["budgetEok"]
+            selected_band = next(
+                (band for band in review["bands"] if band["id"] == review["selectedBandId"]),
+                None,
+            )
+            if not selected_band:
+                self._json({"error": "입력한 조건으로 검토 가능 금액을 계산하지 못했어요."}, 400)
                 return
             snapshot = policy_evaluator.summarize([], profile)
             snapshot["estimatedPurchaseCeilingEok"] = ceiling
-            if profile["homeOwnership"] == "no_home":
-                general_profile = dict(profile, firstTimeBuyer=False)
-                first_time_profile = dict(profile, firstTimeBuyer=True)
-                general_regulated_ceiling = policy_evaluator.estimated_purchase_ceiling(
-                    general_profile,
-                    ["서울시"],
-                )
-                first_time_regulated_ceiling = policy_evaluator.estimated_purchase_ceiling(
-                    first_time_profile,
-                    ["서울시"],
-                )
-                snapshot["firstTimePolicy"].update({
-                    "generalRegulatedCeilingEok": general_regulated_ceiling,
-                    "firstTimeRegulatedCeilingEok": first_time_regulated_ceiling,
-                    "regulatedCeilingDifferenceEok": round(
-                        max(0, first_time_regulated_ceiling - general_regulated_ceiling),
-                        1,
-                    ),
-                })
-            ceiling_impacts = [
-                policy_evaluator.evaluate_candidate(
-                    {"region": region, "midPriceEok": ceiling},
-                    profile=profile,
-                )
-                for region in ("서울시", "경기도")
-            ]
-            best_impact = max(
-                ceiling_impacts,
-                key=lambda impact: float(impact.get("estimatedLoanLimitEok") or 0),
-            )
-            for key in ("dsrLoanLimitEok", "loanTermYears", "stressRatePercent"):
-                snapshot[key] = best_impact.get(key)
-            snapshot["estimatedLoanLimitEok"] = best_impact.get("estimatedLoanLimitEok")
-            snapshot["priceCapEok"] = best_impact.get("priceCapEok")
-            snapshot["grossPurchaseCostEok"] = best_impact.get("grossPurchaseCostEok")
-            snapshot["firstTimeAcquisitionTaxReliefEok"] = best_impact.get("firstTimeAcquisitionTaxReliefEok")
-            snapshot["purchaseCostEok"] = best_impact.get("purchaseCostEok")
-            self._json({"budgetEok": ceiling, "snapshot": snapshot})
+            snapshot.update({
+                "asOf": review["policy"]["effectiveDate"],
+                "dsrLoanLimitEok": review["dsrLoanLimitEok"],
+                "loanTermYears": review["loanTermYears"],
+                "stressRatePercent": review["policy"]["stressRatePercent"],
+                "estimatedLoanLimitEok": selected_band["loanLimitEok"],
+                "priceCapEok": selected_band["loanCapEok"],
+                "purchaseCostRatePercent": review["policy"]["purchaseCostRate"] * 100,
+                "grossPurchaseCostEok": round(ceiling * review["policy"]["purchaseCostRate"], 2),
+                "purchaseCostEok": selected_band["purchaseCostEok"],
+                "firstTimeAcquisitionTaxReliefEok": 0,
+            })
+            self._json({"budgetEok": ceiling, "snapshot": snapshot, "review": review})
             return
         if parsed.path == "/api/apartment-suggest":
             query = params.get("q", [""])[0].strip()

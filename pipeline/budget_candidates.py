@@ -1272,7 +1272,7 @@ def _balanced_live_seed_rows(entries, limit):
 def _fast_cached_seed_rows(entries, min_area, budget_eok, purpose, priority, commute, price_strategy, filtered=None):
     """1차(빠른) 응답용: 네트워크 없이 로컬 캐시로만 시드 가격을 붙인다.
 
-    가격이 확인된 시드는 즉시 매수 가능 상한(+5%) 필터를 적용해 초과 단지가
+    가격이 확인된 시드는 즉시 검토 기준선(+5%) 필터를 적용해 초과 단지가
     '확인 중' 상태로 노출되는 것을 막고, 캐시에 없는 시드는 가격 미확인
     상태로 유지해 2차 보강이 채우게 한다.
     """
@@ -1655,8 +1655,8 @@ def _purpose_score(row, purpose):
 
     예전에는 여기서 `실거주면 예산의 90% 이하일 때 +3점`처럼 싼 집에 가점을
     줬는데, 그러면 사용자가 `예산 최대 활용(stretch)`을 골라도 목적 가점이
-    이를 되돌려 버린다. 실제로 상한 6.2억인 사용자에게 5.2억짜리가 1순위로
-    올라왔다. README의 `구매 가능 상한에 가까운 순으로 우선 비교한다`는
+    이를 되돌려 버린다. 실제로 검토 기준선 6.2억인 사용자에게 5.2억짜리가
+    1순위로 올라왔다. README의 `검토 기준선에 가까운 순으로 우선 비교한다`는
     기준과도 어긋난다. 두 축은 독립이어야 한다.
     """
     purposes = _multi_values(purpose)
@@ -1744,7 +1744,7 @@ def _decision_support(row, entity, purpose, priority, commute, move_timing, pric
 
     if mid_price:
         price_score = _price_score(row, price_strategy)
-        reasons.append(f"기준 가격 {mid_price:.1f}억 · 추정 매수 가능 상한 {budget:.1f}억 대비 {round((1 - ratio) * 100)}% 여유")
+        reasons.append(f"기준 가격 {mid_price:.1f}억 · 검토 기준선 {budget:.1f}억 대비 {round((1 - ratio) * 100)}% 여유")
         breakdown.append({"label": "예산", "score": price_score, "outOf": 35, "detail": f"{PRICE_STRATEGY_LABELS.get(price_strategy, '예산 균형')} 기준", "kind": "fit"})
         if ratio <= 0.75 and price_strategy != "buffer":
             risks.append("예산을 크게 남기는 후보예요. 입지·연식·면적의 교환 조건을 직접 비교해야 해요.")
@@ -1990,7 +1990,7 @@ def _collect_nearby_candidate(bucket, nearby_keys, row, entity, min_area, min_ho
 def _nearby_region_suggestions(bucket, nearby_scope, policy_profile, can_estimate_budget, fallback_budget_eok):
     """인접 지역별 '예산 안 후보' 수를 계산해 추천 목록으로 정리한다.
 
-    지역별 대출 규제(LTV 등)가 달라 매수 상한이 지역마다 다르므로,
+    지역별 대출 규제(LTV 등)가 달라 검토 기준선이 지역마다 다르므로,
     프로필 계산이 가능하면 지역별 상한을 다시 계산해 적합 여부를 판정한다.
     """
     suggestions = []
@@ -2203,7 +2203,7 @@ def _candidate_policy_context(
         budget_source = "calculated"
         if budget_eok <= 0:
             return {
-                "error": "입력한 소득·부채·자기자금 기준으로 계산 가능한 매수 상한이 없어요.",
+                "error": "입력한 소득·부채·자기자금 기준으로 검토 가능 금액을 계산하지 못했어요.",
                 "status": 400,
             }
     return {
@@ -3149,7 +3149,7 @@ def budget_candidates(
                 "budgetSource": budget_source,
             },
             "rankingNote": (
-                "지역·최소면적·세대수·연식 조건을 통과하고, 최근 또는 마지막 국토부 실거래가가 확인된 단지입니다. 마지막 확인 실거래가가 매수 가능 상한을 넘는 단지와 실거래 이력 미확인 단지는 제외했습니다."
+                "지역·최소면적·세대수·연식 조건을 통과하고, 최근 또는 마지막 국토부 실거래가가 확인된 단지입니다. 마지막 확인 실거래가가 검토 기준선을 넘는 단지와 실거래 이력 미확인 단지는 제외했습니다."
                 if all_matches
                 else "최신 실거래 근거가 확인된 후보만 표시합니다. 수동 가격과 주차·학군·매물 상태는 후보 판정에 사용하지 않습니다."
             ),

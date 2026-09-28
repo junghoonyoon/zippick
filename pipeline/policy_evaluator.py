@@ -1,12 +1,56 @@
 """현재 시행 중인 주택 정책을 후보와 사용자 조건에 맞춰 설명한다."""
 import json
+import math
 import re
+from copy import deepcopy
 from functools import lru_cache
 
 import config
 
 
 POLICY_SNAPSHOT_PATH = config.ROOT / "data" / "housing_policy_snapshot.json"
+
+# 구매력 바텀시트의 비교 기준. 후보별 실제 정책 판정은 아래 최신 스냅샷과
+# 지역 정보를 계속 사용하고, 이 고정 기준은 사용자가 가격대를 비교할 때만 쓴다.
+POLICY = {
+    "effectiveDate": "2026-09-27",
+    "priceBands": [
+        {
+            "id": "up_to_15",
+            "label": "15억 이하",
+            "loanLabel": "15억 이하",
+            "minPriceEok": 0,
+            "minInclusive": True,
+            "maxPriceEok": 15,
+            "loanCapEok": 6,
+        },
+        {
+            "id": "15_to_25",
+            "label": "15억 초과~25억 이하",
+            "tabLabel": "15~25억",
+            "minPriceEok": 15,
+            "minInclusive": False,
+            "maxPriceEok": 25,
+            "loanCapEok": 4,
+        },
+        {
+            "id": "over_25",
+            "label": "25억 초과",
+            "minPriceEok": 25,
+            "minInclusive": False,
+            "maxPriceEok": None,
+            "loanCapEok": 2,
+        },
+    ],
+    "regulatedLtvRate": 0.40,
+    "bankDsrRate": 0.40,
+    "stressRatePercent": 3.0,
+    "purchaseCostRate": 0.04,
+    "purchaseCostBreakdown": {
+        "taxRate": 0.033,
+        "brokerageRate": 0.007,
+    },
+}
 
 HOME_OWNERSHIP_LABELS = {
     "unknown": "보유 주택 미입력",
@@ -54,6 +98,100 @@ def _annuity_principal_eok(annual_payment_manwon, annual_rate_percent, years):
     else:
         principal_manwon = monthly_payment * (1 - (1 + monthly_rate) ** -months) / monthly_rate
     return round(principal_manwon / 10000, 2)
+
+
+def purchase_power_review(profile):
+    """Return viable price bands for the regulated, no-home review baseline."""
+    policy = deepcopy(POLICY)
+    cash = max(0, _float(profile.get("cashEok")))
+    income = max(0, _float(profile.get("combinedIncomeManwon")))
+    monthly_debt = max(0, _float(profile.get("combinedMonthlyDebtPaymentManwon")))
+    dsr_rate = policy["bankDsrRate"]
+    monthly_capacity = max(0, income * dsr_rate / 12 - monthly_debt)
+    annual_capacity = monthly_capacity * 12
+    mortgage_rate = max(0, _float(profile.get("mortgageRatePercent")))
+    years = min(
+        int(_float(profile.get("loanTermYears")) or 30),
+        int(load_policy_snapshot()["capitalRegionMaxLoanTermYears"]),
+    )
+    applied_rate = mortgage_rate + policy["stressRatePercent"]
+    dsr_limit = _annuity_principal_eok(annual_capacity, applied_rate, years)
+
+    bands = []
+    for band in policy["priceBands"]:
+        loan_limit = round(min(band["loanCapEok"], dsr_limit), 2)
+        cost_rate = policy["purchaseCostRate"]
+        ltv_rate = policy["regulatedLtvRate"]
+        amount = min(
+            (cash + loan_limit) / (1 + cost_rate),
+            cash / (1 + cost_rate - ltv_rate),
+        )
+        if band["maxPriceEok"] is not None:
+            amount = min(amount, band["maxPriceEok"])
+        if amount <= band["minPriceEok"]:
+            continue
+        review_amount = round(amount + 1e-9, 1)
+        if not band["minInclusive"] and review_amount <= band["minPriceEok"]:
+            review_amount = math.ceil(amount * 10 - 1e-9) / 10
+        bands.append({
+            **band,
+            "loanLimitEok": loan_limit,
+            "dsrLoanLimitEok": dsr_limit,
+            "reviewAmountEok": review_amount,
+            "purchaseCostEok": round(review_amount * policy["purchaseCostRate"], 2),
+        })
+
+    selected = max(bands, key=lambda item: item["reviewAmountEok"]) if bands else None
+    return {
+        "policy": policy,
+        "cashEok": cash,
+        "annualIncomeManwon": income,
+        "monthlyDebtPaymentManwon": monthly_debt,
+        "monthlyPaymentCapacityManwon": round(monthly_capacity, 2),
+        "annualPaymentCapacityManwon": round(annual_capacity, 2),
+        "mortgageRatePercent": mortgage_rate,
+        "appliedRatePercent": applied_rate,
+        "loanTermYears": years,
+        "dsrLoanLimitEok": dsr_limit,
+        "bands": bands,
+        "selectedBandId": selected["id"] if selected else None,
+        "budgetEok": selected["reviewAmountEok"] if selected else 0,
+    }
+
+
+def purchase_power_price_check(profile, price_eok):
+    """Compare one entered asking price with the same review baseline."""
+    price = _float(price_eok)
+    if price <= 0:
+        return None
+    review = purchase_power_review(profile)
+    policy = review["policy"]
+    band = next((
+        item for item in policy["priceBands"]
+        if (
+            price >= item["minPriceEok"]
+            if item["minInclusive"]
+            else price > item["minPriceEok"]
+        ) and (item["maxPriceEok"] is None or price <= item["maxPriceEok"])
+    ), None)
+    if band is None:
+        return None
+    limit = min(
+        band["loanCapEok"],
+        review["dsrLoanLimitEok"],
+        price * policy["regulatedLtvRate"],
+    )
+    required = max(0, price * (1 + policy["purchaseCostRate"]) - review["cashEok"])
+    shortage = max(0, required - limit)
+    return {
+        "priceEok": price,
+        "bandId": band["id"],
+        "bandLabel": band["label"],
+        "loanLimitEok": round(limit, 2),
+        "requiredLoanEok": round(required, 2),
+        "shortageEok": round(shortage, 2),
+        "isPossible": required <= limit,
+    }
 
 
 def user_profile(

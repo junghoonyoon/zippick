@@ -12,6 +12,46 @@ REDEVELOPMENT_ZONES = ROOT / "data" / "redevelopment_zones.geojson"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for the change notice behavior check")
+    def test_purchase_power_change_notice_hides_same_or_small_price_changes(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        match = re.search(
+            r"function purchasePowerChangeHtml\(context\) \{(?P<body>.*?)\n    \}",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        script = f"""
+          function esc(value) {{ return String(value); }}
+          function policyMoney(value) {{ return Number(value).toFixed(1) + '억'; }}
+          function purchasePowerChangeHtml(context) {{{match.group('body')}
+          }}
+          const same = purchasePowerChangeHtml({{ changedLabels:['자기자금'], previousBudgetEok:23.3, nextBudgetEok:23.3 }});
+          const small = purchasePowerChangeHtml({{ changedLabels:['자기자금'], previousBudgetEok:23.3, nextBudgetEok:23.39 }});
+          const changed = purchasePowerChangeHtml({{ changedLabels:['자기자금'], previousBudgetEok:23.3, nextBudgetEok:23.4 }});
+          console.log(JSON.stringify([same, small, changed]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        same, small, changed = json.loads(result.stdout)
+        self.assertEqual(same, "")
+        self.assertEqual(small, "")
+        self.assertIn("<strong>자기자금 변경으로</strong> 23.3억 → 23.4억으로 바뀌었어요.", changed)
+
+    def test_budget_review_sheet_uses_reference_language_and_mobile_focus_states(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertIn("대출 포함 최대 ${esc(ceiling)}까지 검토할 수 있어요", html)
+        self.assertIn("수도권·규제지역, 무주택 기준으로 계산했어요.", html)
+        self.assertIn("role=\"tablist\" aria-label=\"주택 가격 구간\"", html)
+        self.assertIn("매물 가격으로 확인하기", html)
+        self.assertIn("aria-live=\"polite\" aria-atomic=\"true\"", html)
+        self.assertIn("확인했어요", html)
+        self.assertIn("다시 수정하기", html)
+        self.assertIn(".power-review-tab:focus-visible", html)
+        self.assertIn("@media (max-width:400px)", html)
+        self.assertNotIn("매수 가능 상한", html)
+        self.assertNotIn("매매가 상한", html)
+
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for the shortlist behavior check")
     def test_shortlist_keeps_only_prices_within_purchase_ceiling_band(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -653,7 +693,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertIn("필수 조건을 먼저 입력해 주세요.", html)
-        self.assertIn("표시된 항목을 채우면 매수 가능 상한을 계산할 수 있어요.", html)
+        self.assertIn("표시된 항목을 채우면 검토 가능 금액을 계산할 수 있어요.", html)
         self.assertIn('trackEvent("purchase_power_required_missing"', html)
         self.assertIn('field:firstInvalid.id || firstInvalid.name || "unknown"', html)
 
@@ -763,17 +803,22 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('mode === "approximate"', html)
         self.assertIn('mortgage_rate: useSimpleDefaults ? mortgageRateMarketAveragePercent.toFixed(1)', html)
         self.assertIn('loan_term_years: useSimpleDefaults ? "30"', html)
-        self.assertIn('purchase_cost_rate: useSimpleDefaults ? "3"', html)
+        self.assertIn('purchase_cost_rate: useSimpleDefaults ? "4"', html)
         self.assertIn("function readableManwon", html)
         self.assertIn("function purchasePowerLoanBasisMeta", html)
         self.assertIn('"annualIncomeManwon": profile.get("annualIncomeManwon", 0)', (ROOT / "pipeline" / "policy_evaluator.py").read_text(encoding="utf-8"))
         self.assertIn('"combinedMonthlyDebtPaymentManwon": profile.get("combinedMonthlyDebtPaymentManwon", 0)', (ROOT / "pipeline" / "policy_evaluator.py").read_text(encoding="utf-8"))
         self.assertIn('"dsrAnnualRoomManwon": profile.get("dsrAnnualRoomManwon")', (ROOT / "pipeline" / "policy_evaluator.py").read_text(encoding="utf-8"))
-        self.assertIn("const fallbackIncome = Number(policyAnnualIncome?.value || 0)", html)
-        self.assertIn("Math.max(0, Math.round(combinedIncome * 0.4 - monthlyDebt * 12))", html)
-        self.assertIn("연소득 ${readableManwon(combinedIncome)} × DSR 40% = 연 ${readableManwon(dsrAnnualLimit)}", html)
-        self.assertIn("기존 월상환 ${readableManwon(monthlyDebt)} 차감 → 월 ${readableManwon(monthlyRoom)} 기준", html)
-        self.assertIn("월 ${readableManwon(monthlyRoom)} 상환 기준", html)
+        self.assertIn("${band.loanLabel || band.tabLabel || band.label} 주택 한도 ${policyMoney(band.loanCapEok)} · DSR 한도 ${policyMoney(dsrLimit)} 중 작은 값", html)
+        self.assertIn("연소득 ${readableManwon(income)} × DSR ${dsrPercent}% ÷ 12", html)
+        self.assertIn("기존 월 상환액 ${readableManwon(monthlyDebt)}", html)
+        self.assertIn('getJson(`/api/purchase-power-check?${params.toString()}`)', html)
+        self.assertIn('data-power-review-price type="number"', html)
+        self.assertIn('data-power-review-band="${esc(band.id)}"', html)
+        self.assertIn("수도권·규제지역, 무주택 기준으로 계산했어요.", html)
+        self.assertIn("취득세·지방교육세 3.3% + 중개보수 약 0.7%", html)
+        self.assertIn("집픽은 실거래가만 반영해요. 매물 호가가 이 금액과 얼마나 차이 나는지 꼭 확인하세요. 실제 한도는 은행 사전심사로 확정돼요.", html)
+        self.assertIn("2026-09-27", (ROOT / "pipeline" / "policy_evaluator.py").read_text(encoding="utf-8"))
         self.assertIn(".power-result-row.has-stacked-meta", html)
         self.assertIn(".power-result-row.has-stacked-meta { align-items:start; row-gap:2px }", html)
         self.assertIn(".purchase-power-result.is-sheet .power-result-row { grid-template-columns:28px minmax(0,1fr) auto; column-gap:12px; row-gap:0; padding:15px 0 }", html)
@@ -781,8 +826,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('class="power-result-row has-stacked-meta"', html)
         self.assertIn('class="power-result-row has-stacked-meta total"', html)
         self.assertIn('<span class="power-result-row-meta">${loanRateMeta}</span>', html)
-        self.assertIn('<span class="power-result-row-meta">${esc(purchaseCostMeta)}</span>', html)
-        self.assertIn('<span class="power-result-row-meta">${esc(ceilingMeta)}</span>', html)
+        self.assertIn("검토 가능 금액</span>", html)
         self.assertIn("${loanRateMeta}</span>", html)
         self.assertLess(
             html.index('id="policyAnnualIncome"'),
@@ -1927,10 +1971,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("text-overflow:ellipsis; white-space:nowrap", html)
         self.assertIn('data-condition-summary-open="power"] { flex:0 0 auto; padding-right:6px }', html)
         self.assertIn("flex:1 1 0; min-width:0; overflow:hidden", html)
-        self.assertIn('<span class="power-persistent-label">매수 가능 상한</span>', html)
+        self.assertIn('<span class="power-persistent-label">검토 가능 금액</span>', html)
         self.assertIn('<span class="power-persistent-label">지역</span>', html)
         self.assertIn('>변경</button>', html)
-        self.assertIn('{ label:"매수 가능 상한", value:budgetLabel', html)
+        self.assertIn('{ label:"검토 기준선", value:budgetLabel', html)
         self.assertIn('{ label:"지역", value:regionLabel', html)
 
     def test_candidate_map_header_shows_full_selected_conditions(self):
@@ -3191,8 +3235,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-candidate-shortlist-info-close", html)
         self.assertIn("popover.hidden = !open", html)
         self.assertIn(".candidate-shortlist-first .candidate-shortlist-tab { flex:0 0 auto; width:auto;", html)
-        self.assertIn("먼저 매매가 상한의 98~105%에서 최대 5곳을 골라요.", html)
-        self.assertIn("매매가 상한에 가까운 후보가 없어요.", render_body)
+        self.assertIn("검토 기준선의 98~105%에서 후보를 먼저 보여드려요.", html)
+        self.assertIn("검토 기준선 주변에 후보가 없어요.", render_body)
         self.assertIn('data-candidate-list-mode=\"all\">전체 ${esc(resultCount)}곳 보기', render_body)
         self.assertNotIn("가격대를 먼저 자르지 않아요.", html)
         self.assertNotIn("같은 상승률이라도 집값이 높을수록 자산 증가액이 커집니다.", html)
@@ -3342,7 +3386,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("3~5년 정도 보고 싶어요", html)
         self.assertIn("1~3년 안의 흐름도 중요해요", html)
         self.assertIn("가격", html)
-        self.assertIn("매수 상한 안에서 더 싸게 살 수 있는 곳", html)
+        self.assertIn("검토 기준선 안에서 더 낮은 가격인 곳", html)
         self.assertNotIn("가격이 적당한지가 중요해요", html)
         self.assertIn("교통", html)
         self.assertIn("가까운 역 접근성이 중요해요", html)
@@ -4545,7 +4589,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-listing-review-share", html)
         self.assertIn("data-listing-review-print", html)
         self.assertIn("window.print();", html)
-        self.assertIn('<option value="3" selected>매매가의 3%</option>', html)
+        self.assertIn('<option value="4" selected>매매가의 4%</option>', html)
         self.assertIn("let includeAdditionalFundingCandidates = true;", html)
         self.assertIn("includeAdditionalFundingCandidates = true;", html)
         self.assertIn(
