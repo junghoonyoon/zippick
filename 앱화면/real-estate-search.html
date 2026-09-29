@@ -17694,13 +17694,13 @@
       const falling = Number.isFinite(momentum) && momentum < -0.05;
       const recentUp = Number.isFinite(recent3) && recent3 > 0.05;
       const recentDown = Number.isFinite(recent3) && recent3 < -0.05;
-      if (rising && recentUp) return "완료된 비교 기간에는 가격이 올랐습니다";
-      if (rising && recentDown) return "오르다 최근 다시 내렸습니다";
-      if (rising) return "오르다 최근 멈췄습니다";
-      if (falling && recentUp) return "내리다 최근 반등했습니다";
-      if (falling) return "값이 내리는 중입니다";
-      if (recentUp) return "최근 들어 움직이기 시작했습니다";
-      return "값이 멈춰 있습니다";
+      if (rising && recentUp) return "최근 6개월 거래 가격이 올랐어요";
+      if (rising && recentDown) return "최근 6개월은 올랐지만, 최근 3개월은 내렸어요";
+      if (rising) return "최근 6개월 거래 가격이 올랐어요";
+      if (falling && recentUp) return "최근 6개월은 내렸지만, 최근 3개월은 올랐어요";
+      if (falling) return "최근 6개월 거래 가격이 내렸어요";
+      if (recentUp) return "최근 3개월 거래 가격이 올랐어요";
+      return "최근 3개월 거래 가격은 거의 그대로예요";
     }
 
     function zippickStrengthBenefit(item, part) {
