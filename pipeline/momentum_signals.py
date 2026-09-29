@@ -39,7 +39,8 @@ MIN_WINDOW_DEALS = config.SIGNAL_MIN_WINDOW_DEALS
 MIN_TOTAL_DEALS = config.SIGNAL_MIN_TOTAL_DEALS
 # v20은 예산 후보의 구 대장 비교 이름을 차트 정보와 분리해 추가 요청을 막는다.
 # 대장 산정식 자체는 별도 버전으로 관리한다.
-SCORE_FORMULA_VERSION = 20
+# v21은 리포트에 실제 비교 기간을 제공한다. 점수 가중치는 v20과 같다.
+SCORE_FORMULA_VERSION = 21
 
 # 결측 항목의 중립값. '정보 없음'을 0점(최악)으로 처리하면 비교군이 없는
 # 구의 단지가 구조적으로 불리해지므로, 모르는 항목은 평균 수준으로 간주한다.
@@ -364,6 +365,18 @@ def raw_signals(
     result = {
         "dealCount": len(deals),
         "outlierExcludedCount": outlier_excluded,
+        "comparisonBasis": {
+            "asOf": datetime.date.today().isoformat(),
+            "recent3Start": _months_ago(3),
+            "recent3End": _months_ago(1),
+            "prior3Start": _months_ago(6),
+            "prior3End": _months_ago(4),
+            "recent6Start": _months_ago(6),
+            "recent6End": _months_ago(1),
+            "prior6Start": _months_ago(12),
+            "prior6End": _months_ago(7),
+            "method": "이상 거래 제외 후 면적대별 ㎡당 가격 비교",
+        },
         "status": "ok",
         "momentumPct": None,
         "momentumBandMatched": False,

@@ -45,7 +45,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 23
+BUDGET_CACHE_SCHEMA_VERSION = 24
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -1730,6 +1730,7 @@ def _molit_affordability_estimate(name, region, area, months, entity=None):
             "originalPriceEok": row.get("dealAmountEok"),
             "adjustedPriceEok": row.get("dealAmountEok"),
             "exclusiveArea": row.get("exclusiveArea"),
+            "floor": row.get("floor"),
             "basePeriod": str(row.get("dealDate") or "")[:7].replace("-", ""),
             "baseIndex": None,
             "factor": 1.0,

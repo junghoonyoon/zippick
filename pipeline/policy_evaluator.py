@@ -100,6 +100,28 @@ def _annuity_principal_eok(annual_payment_manwon, annual_rate_percent, years):
     return round(principal_manwon / 10000, 2)
 
 
+def report_loan_repayment(principal_eok, annual_rate_percent, years):
+    """원리금균등상환의 월 납입액과 첫 3년 이자. 심사용 스트레스 금리는 제외."""
+    if annual_rate_percent is None or years is None:
+        return None
+    principal = max(0, float(principal_eok)) * 10000
+    rate = max(0, float(annual_rate_percent)) / 1200
+    months = max(1, int(years) * 12)
+    payment = principal / months if rate == 0 else principal * rate / (1 - (1 + rate) ** -months)
+    balance, interest = principal, 0.0
+    for _ in range(min(36, months)):
+        monthly_interest = balance * rate
+        interest += monthly_interest
+        balance = max(0, balance - (payment - monthly_interest))
+    return {
+        "monthlyPaymentManwon": round(payment, 2),
+        "first3YearsInterestEok": round(interest / 10000, 4),
+        "ratePercent": annual_rate_percent,
+        "termYears": years,
+        "method": "원리금균등상환",
+    }
+
+
 def purchase_power_review(profile):
     """Return viable price bands for the regulated, no-home review baseline."""
     policy = deepcopy(POLICY)
@@ -440,6 +462,9 @@ def evaluate_candidate(candidate, entity=None, profile=None):
             "firstTimeAcquisitionTaxReliefEok": range_tax_relief,
             "purchaseCostEok": range_cost,
             "requiredCashEok": max(0, round(range_price + range_cost - range_loan, 2)),
+            "repayment": report_loan_repayment(
+                range_loan, profile.get("mortgageRatePercent"), profile.get("loanTermYears")
+            ) if range_loan == 0 or profile.get("mortgageRatePercent", 0) > 0 else None,
         }
 
     low_financing = financing_at(min_price)
@@ -527,6 +552,12 @@ def evaluate_candidate(candidate, entity=None, profile=None):
         "asOf": snapshot["asOf"],
         "version": snapshot["version"],
         "regionLabel": region["display"],
+        "reportProfile": {
+            "cashEok": profile.get("cashEok"),
+            "mortgageRatePercent": profile.get("mortgageRatePercent"),
+            "monthlyDebtPaymentManwon": profile.get("combinedMonthlyDebtPaymentManwon"),
+            "annualIncomeManwon": profile.get("combinedIncomeManwon"),
+        },
         "isCapitalRegion": region["isCapitalRegion"],
         "isRegulated": regulated,
         "regulationLabel": "규제지역" if regulated else "비규제지역",

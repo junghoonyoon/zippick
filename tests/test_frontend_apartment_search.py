@@ -133,8 +133,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("적극 검토", html)
         self.assertIn("function zippickVerdictReasonBody(item, verdict = null)", html)
         self.assertIn("function zippickVerdictTitle(item, verdict = null)", html)
-        self.assertIn("const verdictTitle = zippickVerdictTitle(item, verdict);", html)
-        self.assertIn('<h3 class="zpr-title">${esc(verdictTitle)}</h3>', html)
+        self.assertIn("${zippickDecisionHtml(item, verdict)}", html)
         # 항목 이름이 '유동성'처럼 받침으로 끝나면 "유동성가"가 된다.
         # 조사는 반드시 zpJosa를 거쳐야 한다.
         self.assertIn('${zpJosa(pair, "이", "가")} 받쳐주는 단지입니다.', html)
@@ -158,7 +157,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("예전 고점만으로 지금 가격이 싼지는 알 수 없어요.", html)
         self.assertNotIn("<b>무리해서 따라붙지는 마세요.</b>", html)
         self.assertNotIn("<b>지금 가격대는 좋게 볼 수 있습니다.</b>", html)
-        self.assertIn("${zippickSubtitleHtml(item, verdict)}", html)
+        self.assertIn("${zippickPersonalFundingHtml(item)}", html)
         self.assertNotIn("살 수 있는 가장 비싼 시점입니다", html)
         self.assertNotIn("조정이 오면 바로 손실 구간", html)
 
@@ -208,7 +207,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         # 리포트 조립부가 실제로 보정을 거치는지
         self.assertIn("const verdict = zippickGuardVerdict(", html)
-        self.assertIn("${zippickGuardWarnHtml(verdict)}", html)
+        self.assertIn("실거래보다 싸다는 이유만으로 급매로 판단하지 않아요.", html)
         self.assertIn("${zippickMatrixTableHtml(item, verdict)}", html)
 
         # 점수 산식 자체는 건드리지 않는다(카드·정렬·비교 화면과 어긋나면 안 된다)
@@ -228,7 +227,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             self.assertNotIn(internal, warn_body)
 
         # 표가 짚는 칸과 배지가 달라지는 이유는 표 안에서 설명한다
-        self.assertIn("표의 <b>'적극 검토'</b> 대신 <b>'급매만 검토'</b>로 봤습니다.", html)
+        self.assertIn("표의 <b>'적극 검토'</b> 대신 <b>'가격 확인'</b>으로 봤습니다.", html)
 
     def test_zippick_report_separates_funding_from_the_score_bars(self):
         """전세가율은 '단지가 좋은가'가 아니라 '내 돈이 되는가'를 잰다.
@@ -282,7 +281,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const ZP_FUNDING_PEER_MIN = 5;", html)
         self.assertIn("const ZP_JEONSE_PEER_GAP_PT = 3;", html)
         self.assertIn("같은 조건으로 찾은 후보", html)
-        self.assertIn("주변 후보 중간값", html)
+        self.assertIn("검색 후보 중간값", html)
         self.assertIn("매매가와 전세금 사이에 <b>${transactionMoney(gap)}</b>이 비어 있습니다.", html)
         self.assertIn("전세가율이 낮은 이유가 이 사업 때문인지는 알 수 없어요.", html)
         self.assertIn("전세금과 매매가의 차이가 큽니다", html)
@@ -292,9 +291,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("실사용 가치보다 매매가가 앞서 있어", html)
 
         # 세 갈래 해석이 모두 있어야 한다 (높다 / 비슷하다 / 낮다)
-        self.assertIn("주변보다 전세가율이 높습니다", html)
-        self.assertIn("전세가율은 주변과 비슷합니다", html)
-        self.assertIn("주변보다 전세가율이 낮습니다", html)
+        self.assertIn("검색 후보보다 전세가율이 높습니다", html)
+        self.assertIn("전세가율은 검색 후보와 비슷합니다", html)
+        self.assertIn("검색 후보보다 전세가율이 낮습니다", html)
 
         # 당연한 말이나 근거 없는 기준은 쓰지 않는다
         for lazy in (
@@ -482,8 +481,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         # 네 갈래 판정 문구
         for heading in (
             "값이 빠질 때도 거래가 이어졌습니다",
-            "값이 빠지면 거래가 줄어듭니다",
-            "값이 빠지면 거래가 크게 줄어듭니다",
+            "값이 내린 기간에 거래가 줄었습니다",
+            "값이 내린 기간에 거래가 크게 줄었습니다",
             "거래 자체가 드문 단지입니다",
             "값이 빠지는 구간이 거의 없었습니다",
         ):
@@ -526,7 +525,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIn("function zippickNumberSteps(html)", html)
         self.assertIn("return zippickNumberSteps(`<article class=\"zippick-report\"", html)
-        for label in ("생활권 변화", "단지 조건", "업무지구 이동시간", "자금 조건", "다음 확인"):
+        for label in ("생활권 변화", "단지 조건", "업무지구 이동시간", "자금 조건", "현장 확인"):
             self.assertIn(f'data-zpr-step="{label}"', html)
         self.assertIn('${step}. ${esc(label)}', html)
         self.assertNotIn('<span class="zpr-kicker" data-zpr-step></span>', html)
@@ -2661,7 +2660,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             2,
         )
         self.assertIn("policyExcludedCandidates: excludedRows", body)
-        self.assertIn("realEstateSearch.budgetCandidates.v23", html)
+        self.assertIn("realEstateSearch.budgetCandidates.v24", html)
         self.assertIn("budgetPayloadUsesCurrentLocationScoreFormula(data)", html)
 
     def test_completed_no_trade_state_is_not_rendered_as_still_checking(self):
