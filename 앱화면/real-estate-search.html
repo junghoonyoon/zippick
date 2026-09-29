@@ -15967,13 +15967,31 @@
 
     // 자금 관련 항목(전세가율·투자금)은 이 막대에 오지 않는다.
     // zippickFundingHtml의 '자금 조건' 카드에서 따로 다룬다.
+    function zippickDetailReasons(part, keys, limit = 2) {
+      const details = Array.isArray(part?.details) ? part.details : [];
+      return keys.map(key => details.find(detail => detail?.key === key))
+        .map(detail => String(detail?.reason || "").trim())
+        .filter(Boolean)
+        .slice(0, limit);
+    }
+
     function zippickBarReason(item, part) {
       if (part?.key === "market") {
         const market = zippickMarketVerdict(item);
         return market.barReason || market.summary;
       }
       if (part?.key === "price") {
-        return "지역 가격과 최근 실거래를 비교한 점수예요. 지금 나온 매물 가격은 포함되지 않았어요.";
+        const basis = zippickPriceCheckBasis(item);
+        if (basis?.price > 0) {
+          return `최근 3개월 비슷한 면적 거래 ${basis.count}건 평균 ${transactionMoney(basis.price)}을 지역 가격대와 대장 단지 가격에 함께 비교했어요. 지금 본 매물은 ${transactionMoney(basis.price)} 이하인지 따로 확인하세요.`;
+        }
+        return "지역 가격대와 대장 단지 가격을 비교했지만 최근 거래가 부족해요. 실제 매물은 같은 면적의 최근 실거래와 따로 비교하세요.";
+      }
+      if (part?.key === "demand") {
+        const reasons = zippickDetailReasons(part, ["station", "education", "representation", "redevelopment_influence", "commute"]);
+        return reasons.length
+          ? `${reasons.join(" · ")}. 출퇴근·통학 시간은 실제 동과 출입구 기준으로 다시 확인하세요.`
+          : "역·학교·생활권 자료가 점수에 반영됐어요. 출퇴근과 통학 동선은 실제 동과 출입구 기준으로 확인하세요.";
       }
       if (part?.key === "product") {
         const households = zpNum(item?.households);
@@ -15982,7 +16000,7 @@
           ? `${Math.round(households).toLocaleString("ko-KR")}세대${households >= 1000 ? "인 큰 단지" : "인 단지"}` : "";
         const ageText = Number.isFinite(age) && age > 0
           ? `${Math.round(age)}년차 건물` : "";
-        const ageMeaning = age <= 10 ? "비교적 새 건물이에요." : age >= 25 ? "오래된 건물이라 수리 상태를 꼭 확인하세요." : "관리 상태를 확인하세요.";
+        const ageMeaning = age <= 10 ? "비교적 새 건물이에요." : age >= 25 ? "배관·승강기·주차 시설의 교체 이력과 예상 수리비를 현장에서 확인하세요." : "관리비와 공용 시설의 관리 상태를 확인하세요.";
         if (sizeText && ageText && age <= 10) return `${sizeText}이고 ${Math.round(age)}년차로 비교적 새 건물이에요.`;
         if (sizeText && ageText) return `${sizeText}이고 ${ageText}이에요. ${ageMeaning}`;
         if (sizeText) return `${sizeText}예요. 관리 상태를 확인하세요.`;
@@ -17064,9 +17082,11 @@
       }
 
       const round1 = value => Number.isFinite(value) ? (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, "") : "-";
-      const heading = stat.band === "strong" ? "하락기에도 팔기 쉬운 편이에요"
-        : stat.band === "fair" ? "하락기에는 거래가 줄어 가격을 낮춰야 팔릴 수 있어요"
-        : "하락기에는 거래가 줄어 팔기 어려울 수 있어요";
+      const heading = stat.band === "strong"
+        ? "하락기 거래는 좋아요. 값이 내려도 거래가 유지됐어요"
+        : stat.band === "fair"
+          ? "하락기 거래는 아쉬워요. 값을 낮춰야 팔릴 수 있어요"
+          : "하락기 거래는 아쉬워요. 값이 내려가면 팔기 어려울 수 있어요";
 
       const cells = [
         { lb:"값이 내린 달", vl:`${stat.downMonths}개월`, nt:`${span} 중` },
@@ -17841,6 +17861,7 @@
       };
       if (price === "up") return {
         summary:"가격은 올랐고 거래는 비슷해요",
+        barReason:`최근 6개월 가격은 ${zpPct(momentum)} 올랐고 거래 건수는 ${turnover >= 1 ? `${Math.round((turnover - 1) * 100)}% 늘었어요` : `${Math.round((1 - turnover) * 100)}% 줄었어요`}. 거래가 크게 늘지는 않아 최근 시장 흐름은 보통이에요. 최근 실거래 평균보다 비싼 매물은 이유를 확인하세요.`,
         heading:"최근 시장 흐름은 보통이에요. 가격은 올랐지만 거래는 비슷해요",
         action:"최근 실거래보다 비싼 이유가 있는지 확인하세요",
       };
@@ -18306,19 +18327,21 @@
           ? ["신중 매수", `2년 고점권이지만 단지와 거래 흐름은 좋아요. ${peakPriceGuide}`]
           : ["신중 매수", `가격이 급등했지만 단지와 거래 흐름은 좋아요. ${peakPriceGuide}`]
         : decisions[verdict.tone] || decisions.missing;
-      const locationMeaning = !Number.isFinite(location) ? "자료가 더 필요해요"
-        : location >= 80 ? "강점이 뚜렷해요"
-        : location >= 65 ? "전반적으로 괜찮아요"
-        : location >= 50 ? "강점과 약점이 갈려요"
-        : "약점이 많아 신중해야 해요";
+      const locationParts = zpScoredParts(item);
+      const strongCount = locationParts.filter(part => zpPartRatio(part) >= .65).length;
+      const weakCount = locationParts.filter(part => zpPartRatio(part) < .55).length;
+      const locationMeaning = !Number.isFinite(location) ? "단지 조건은 판단할 수 없어요"
+        : location >= 80 ? "단지 조건은 좋아요. 강점이 뚜렷해요"
+        : location >= 65 ? "단지 조건은 좋아요. 강점이 더 많아요"
+        : location >= 50 ? strongCount > weakCount
+          ? "단지 조건은 보통이에요. 강점이 약점보다 많아요"
+          : strongCount < weakCount
+            ? "단지 조건은 아쉬워요. 약점이 강점보다 많아요"
+            : "단지 조건은 보통이에요. 강점과 약점이 비슷해요"
+        : "단지 조건은 아쉬워요. 약점이 많아요";
       const locationEvidence = zippickLocationEvidenceText(item, verdict);
       const market = zippickMarketVerdict(item);
-      const signalMeaning = market.summary;
-      const next = verdict.peakGuard
-        ? "같은 면적·비슷한 층의 매물이 위 가격 기준에 맞는지 확인하세요."
-        : verdict.tone === "missing" ? "최근 거래와 단지 자료를 더 확인한 뒤 다시 판단하세요."
-        : ["risk", "hold"].includes(verdict.tone) ? "비슷한 가격의 다른 단지를 먼저 비교해 보세요."
-        : "마음에 드는 매물이 있다면 아래 거래 가격과 먼저 비교해 보세요.";
+      const signalMeaning = market.heading;
       return `<header class="zpr-head">
         <span class="zpr-verdict is-${esc(verdict.tone || "missing")}"><i></i>${esc(label)}</span>
         <h3 class="zpr-title">${esc(title)}</h3>
@@ -18327,7 +18350,6 @@
           <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
           <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
         </div>
-        <p class="zpr-insight"><b>다음에 볼 것</b> · ${esc(next)}</p>
       </header>`;
     }
 
