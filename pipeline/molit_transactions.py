@@ -1,4 +1,5 @@
 """MOLIT apartment transaction price lookup."""
+import functools
 import csv
 import datetime
 import hashlib
@@ -144,10 +145,9 @@ def _float_value(value):
         return 0.0
 
 
-def _deal_months(months=RECENT_LOOKBACK_MONTHS):
-    today = datetime.date.today()
-    year = today.year
-    month = today.month
+@functools.lru_cache(maxsize=64)
+def _deal_months_for_day(months, today_iso):
+    year, month = int(today_iso[:4]), int(today_iso[5:7])
     values = []
     for _ in range(months):
         values.append(f"{year}{month:02d}")
@@ -156,6 +156,11 @@ def _deal_months(months=RECENT_LOOKBACK_MONTHS):
             year -= 1
             month = 12
     return values
+
+
+def _deal_months(months=RECENT_LOOKBACK_MONTHS):
+    # 내부 루프에서 수십만 번 불리므로 날짜별로 결과를 재사용한다.
+    return list(_deal_months_for_day(months, datetime.date.today().isoformat()))
 
 
 def _cache_path(lawd_cd, deal_ymd, transaction_kind=TRANSACTION_KIND_APARTMENT):
@@ -551,12 +556,19 @@ def prefetch_months(
     """
     pending = []
     seen = set()
-    for lawd_cd, deal_ymd in pairs:
-        key = (str(lawd_cd), str(deal_ymd))
-        if not key[0] or not key[1] or key in seen:
-            continue
-        seen.add(key)
-        pending.append(key)
+    now = time.time()
+    with _MONTH_MEMORY_CACHE_LOCK:
+        for lawd_cd, deal_ymd in pairs:
+            key = (str(lawd_cd), str(deal_ymd))
+            if not key[0] or not key[1] or key in seen:
+                continue
+            seen.add(key)
+            # 이미 메모리에 신선한 월 데이터가 있으면 스레드 풀을 거치지 않는다.
+            # 반복 검색에서 풀 생성·종료 비용이 계산 시간의 큰 몸을 차지했다.
+            memory_cached = _MONTH_MEMORY_CACHE.get((transaction_kind, key[0], key[1]))
+            if memory_cached and now - memory_cached[0] <= _month_cache_ttl(key[1]):
+                continue
+            pending.append(key)
     if not pending or not enabled(transaction_kind):
         return 0
     workers = max(1, min(max_workers or config.MOLIT_PREFETCH_MAX_WORKERS, len(pending)))
