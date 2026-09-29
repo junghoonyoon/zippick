@@ -122,6 +122,16 @@ class PriceValuationTest(unittest.TestCase):
         self.assertIn("기준금리 2.75%", result["macro"]["message"])
         self.assertIn("0.5%p 낮아요", result["macro"]["message"])
 
+    def test_explains_when_korean_bank_rate_connection_is_not_configured(self):
+        result = price_valuation.valuation_for_candidate({
+            **self.row,
+            "marketIndicators": {"status": "unavailable", "reason": "ECOS API 키가 설정되지 않았어요."},
+        }, today=self.today)
+
+        self.assertEqual(result["macro"]["status"], "unavailable")
+        self.assertIn("연결 설정", result["macro"]["message"])
+        self.assertIn("실거래와 주변 시세", result["macro"]["message"])
+
 
 if __name__ == "__main__":
     unittest.main()

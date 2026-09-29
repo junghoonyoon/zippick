@@ -48,7 +48,8 @@ class ReportPriceCheckTest(unittest.TestCase):
           item.valuation = {
             status: 'ready', modelVersion: 'zippick-current-value-v1', asOf: fresh,
             fairPrice: {lowEok: 9.4, centerEok: 10.1, highEok: 10.8, method: 'test'},
-            dataQuality: {sampleCount: 8, level: 'medium'},
+            dataQuality: {sampleCount: 8, level: 'medium', latestTradeAgeDays: 19},
+            market: {status: 'available'},
           };
           const modelBasis = zippickPriceCheckBasis(item);
           if (modelBasis.low !== 9.4 || modelBasis.price !== 10.1 || modelBasis.high !== 10.8) process.exit(4);
@@ -70,6 +71,9 @@ class ReportPriceCheckTest(unittest.TestCase):
           if (!modelBand.includes('매수 판단 밴드') || modelBand.includes('집픽 현재 적정가격')) process.exit(10);
           if (!modelBand.includes('적정가격보다 비싸요') || !modelBand.includes('<em>비쌈</em>')) process.exit(11);
           if (!modelBand.includes('이 가격은 어떻게 계산했나요?') || !modelBand.includes('주변 시장 흐름을 +1.2% 반영했어요.')) process.exit(12);
+          item.valuation.marketAdjustmentPct = 0;
+          const recentTradeBand = zippickBuyBandHtml(item, {});
+          if (!recentTradeBand.includes('최근 거래가 30일 이내라 지역 시세 변화는 따로 더하지 않았어요.')) process.exit(15);
           delete item.valuation;
           item.statsThrough = '2020-01-01';
           if (zippickPriceCheckBasis(item).price !== 12) process.exit(2);

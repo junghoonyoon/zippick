@@ -84,16 +84,23 @@ def _macro_context(row):
     if not isinstance(indicators, dict):
         return {
             "status": "unavailable",
-            "message": "공식 금리 자료가 연결되지 않아 이번 가격 범위에는 반영하지 않았어요.",
+            "message": "한국은행 기준금리 자료를 아직 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요.",
         }
     base_rate = _number(indicators.get("baseRatePct"))
     mortgage_rate = _number(indicators.get("mortgageRatePct"))
     rate_change = _number(indicators.get("mortgageRateChangePp12m"))
     base_rate_change = _number(indicators.get("baseRateChangePp12m"))
     if base_rate is None and mortgage_rate is None:
+        reason = str(indicators.get("reason") or "")
+        message = (
+            "한국은행 기준금리 연결 설정이 아직 없어 금리 상황을 함께 보여드리지 못해요. "
+            "가격 범위는 실거래와 주변 시세로 계산했어요."
+            if "API 키" in reason
+            else "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+        )
         return {
             "status": "unavailable",
-            "message": "공식 금리 자료가 연결되지 않아 이번 가격 범위에는 반영하지 않았어요.",
+            "message": message,
         }
     changes = []
     if base_rate is not None:

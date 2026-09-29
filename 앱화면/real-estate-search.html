@@ -18322,9 +18322,15 @@
       const limitations = Array.isArray(valuation.limitations) ? valuation.limitations.slice(0, 2) : [];
       const sampleCount = Math.round(zpNum(valuation?.dataQuality?.sampleCount) || basis.count || 0);
       const adjustment = zpNum(valuation.marketAdjustmentPct);
+      const latestTradeAgeDays = zpNum(valuation?.dataQuality?.latestTradeAgeDays);
+      const marketAvailable = valuation?.market?.status === "available";
       const adjustmentText = Number.isFinite(adjustment) && Math.abs(adjustment) >= .05
         ? `주변 시장 흐름을 ${adjustment > 0 ? "+" : ""}${adjustment.toFixed(1)}% 반영했어요.`
-        : "최근 거래 뒤 별도의 시장 가격 보정은 없어요.";
+        : marketAvailable && Number.isFinite(latestTradeAgeDays) && latestTradeAgeDays <= 30
+          ? "최근 거래가 30일 이내라 지역 시세 변화는 따로 더하지 않았어요."
+          : marketAvailable
+            ? "최근 거래 뒤 시장 변화가 거의 없어 가격을 따로 바꾸지 않았어요."
+            : "주변 시세 흐름 자료가 부족해 최근 실거래 가격을 그대로 사용했어요.";
       return `<div class="zpr-buy-band" data-zpr-buy-band data-zpr-key="${esc(key)}" data-zpr-low-price="${esc(basis.low)}" data-zpr-base-price="${esc(basis.price)}" data-zpr-high-price="${esc(basis.high)}" data-zpr-latest-price="${Number.isFinite(latestPrice) ? esc(latestPrice) : ""}" data-zpr-show-latest="${showLatest ? "1" : "0"}">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">매수 판단 밴드</span><h4>${esc(headline)}${latestTier >= 0 ? ` <em>${esc(latestJudgment)}</em>` : ""}</h4></div><span class="zpr-buy-band-quality">${esc(qualityLabel)}</span></div>
         <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.low, basis.price, basis.high, latestPrice, showLatest, entered)}</div>
