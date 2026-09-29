@@ -19866,8 +19866,7 @@
         </div>` : ""}
         ${candidateMapFloatingButtonHtml()}
         <div class="decision-list" data-candidate-list${candidateViewMode === "map" ? " hidden" : ""}>
-          ${showingShortlist && extensionRows.length ? `<section class="candidate-shortlist-group" aria-label="검토 기준선 주변 후보">
-            <div class="candidate-shortlist-group-head"><h3>검토 기준선 주변 ${esc(shortlistRows.length)}곳</h3><p>검토 기준선의 98~105%</p></div>` : ""}
+          ${showingShortlist && extensionRows.length ? `<section class="candidate-shortlist-group" aria-label="검토 기준선 주변 후보">` : ""}
           ${rows.map((item, candidateIndex) => `
             ${showingShortlist && extensionRows.length && candidateIndex === shortlistRows.length ? `</section><section class="candidate-shortlist-group is-extension" aria-label="추가 자기자금 후보">
               <div class="candidate-shortlist-group-head"><h3>추가 자기자금이 있으면 볼 ${esc(extensionRows.length)}곳</h3><p>검토 기준선의 105% 초과~110% · 지금 자금만으로는 살 수 없어요.</p></div>` : ""}
