@@ -18539,7 +18539,7 @@
       );
       const locationBars = zippickLocationBarsHtml(item);
       const signalBars = zippickSignalBarsHtml(item);
-      // 매수 판단 → 가격 → 단지 조건 → 이동·시장·자금 → 비교 후보 → 매물 가격·현장 확인.
+      // 매수 판단 → 가격 → 단지 조건 → 이동·시장·자금 → 단지 변화 → 대안 비교 → 매물 가격·현장 확인.
       return zippickNumberSteps(`<article class="zippick-report" aria-label="${esc(candidateDisplayName(item))} 집픽 분석">
         ${zippickDecisionHtml(item, verdict)}
         ${zippickPriceEvidenceHtml(item)}
@@ -18563,9 +18563,9 @@
         </section>` : ""}
         ${zippickLiquidityHtml(item)}
         ${zippickFundingHtml(item)}
-        ${zippickAlternativesHtml(item)}
         ${zippickDevelopmentHtml(item)}
         ${zippickLifestyleChangeHtml(item)}
+        ${zippickAlternativesHtml(item)}
         <details class="zpr-details"><summary>왜 이런 매수 판단이 나왔는지 자세히 보기</summary>
         <div class="zpr-scores">
           <div class="zpr-score">
