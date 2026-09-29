@@ -18219,10 +18219,10 @@
         : askTier === 2 ? "이 매물은 최근 거래 평균보다 높습니다. 가격을 낮춰 달라고 협상하세요."
         : askTier === 3 ? "이 매물은 최근 거래 평균보다 5% 넘게 높아 비싼 구간입니다. 가격을 낮춰야 합니다."
         : latestTier >= 0 && peakGuard && latestTier <= 1
-          ? `가장 최근 실거래가 ${transactionMoney(latestPrice)}은 최근 거래 평균 이하예요. 같은 면적·비슷한 상태의 매물도 이 가격이면 매수할 만해요.`
+          ? `가장 최근 실거래 ${transactionMoney(latestPrice)}은 최근 거래 평균보다 낮게 거래된 사례예요. 지금 나온 매물 가격을 평가한 것은 아니에요. 2년 고점권이므로 같은 면적·층·상태에서 이 가격 이하 매물만 검토하세요.`
         : latestTier >= 0 && peakGuard
-          ? `가장 최근 실거래가 ${transactionMoney(latestPrice)}은 최근 거래 평균보다 높아요. 평균 이하 매물만 매수할 만해요.`
-        : latestTier >= 0 ? `가장 최근 실거래가는 ${latestTierText[latestTier]}에 있어요. 지금 나온 매물의 가격은 아니에요.`
+          ? `가장 최근 실거래 ${transactionMoney(latestPrice)}은 최근 거래 평균보다 높게 거래된 사례예요. 지금 나온 매물 가격을 평가한 것은 아니에요. 최근 거래 평균 이하 매물만 검토하세요.`
+        : latestTier >= 0 ? `가장 최근 실거래 ${transactionMoney(latestPrice)}은 ${latestTierText[latestTier]}에 있었던 과거 거래예요. 지금 나온 매물의 가격을 평가한 것은 아니에요.`
         : "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
       return `<div class="zpr-buy-band-grid" aria-label="매수 판단 가격 구간">${cells.map(([label, range], index) =>
         `<div class="zpr-buy-band-cell${askTier === index ? " is-selected" : ""}">
@@ -18249,10 +18249,10 @@
         && (!Number.isFinite(shownArea) || Math.abs(latestArea - shownArea) <= 5);
       return `<div class="zpr-buy-band" data-zpr-buy-band data-zpr-key="${esc(key)}" data-zpr-base-price="${esc(basis.price)}" data-zpr-latest-price="${Number.isFinite(latestPrice) ? esc(latestPrice) : ""}" data-zpr-show-latest="${showLatest ? "1" : "0"}" data-zpr-peak-guard="${verdict?.peakGuard ? "1" : "0"}">
         <h4>매수 판단 밴드</h4>
-        <p>비슷한 면적의 최근 3개월 거래 ${esc(basis.count)}건 평균 <b>${esc(transactionMoney(basis.price))}</b>을 기준으로 봐요.</p>
+        <p>새로 나온 매물은 비슷한 면적의 최근 3개월 거래 ${esc(basis.count)}건 평균 <b>${esc(transactionMoney(basis.price))}</b>과 비교해요.</p>
         <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.price, latestPrice, showLatest, entered, Boolean(verdict?.peakGuard))}</div>
         <p class="zpr-buy-band-meta">${showLatest ? `최근 실거래 정보 · ${esc(latestMeta || "거래 날짜·면적 확인 중")} · 국토교통부 신고 거래` : `가장 최근 실거래 ${latestDetail}`}</p>
-        <p>평균보다 5% 낮으면 ‘가격 좋음’, 5% 넘게 높으면 ‘비쌈’으로 나눠요. 층·향·수리 상태는 별도로 확인해야 해요.</p>
+        <p>새 매물이 평균보다 5% 낮으면 ‘가격 좋음’, 5% 넘게 높으면 ‘비쌈’이에요. 최근 실거래 표시는 과거 거래 한 건이에요.</p>
         ${showLatest ? "" : "<p>가장 최근 거래는 이 밴드의 면적과 달라 위치를 표시하지 않았어요.</p>"}
       </div>`;
     }
@@ -18315,9 +18315,12 @@
         : priceBasis?.price > 0
           ? `최근 실거래가 ${transactionMoney(priceBasis.price)} 수준이라면 매수할 만해요`
           : "실제 매물 가격을 확인한 뒤 매수를 결정하세요";
+      const conditionalPriceGuide = priceBasis?.price > 0
+        ? `단지는 좋지만, 최근 거래 평균 ${transactionMoney(priceBasis.price)} 이하 매물만 검토하세요`
+        : "단지는 좋지만, 같은 면적의 최근 실거래와 비교한 매물만 검토하세요";
       const decisions = {
         yes: ["매수 검토", "지금 매수 후보로 검토할 만한 단지입니다"],
-        conditional: ["조건부 매수 검토", location >= 65 ? "단지는 좋지만, 지금은 가격을 따져서 살 때입니다" : "시장 흐름은 좋지만, 단지의 약점을 따져봐야 합니다"],
+        conditional: ["조건부 매수 검토", location >= 65 ? conditionalPriceGuide : "시장 흐름은 좋지만, 단지 약점을 감수할 수 있을 때만 검토하세요"],
         hold: ["지금은 관망", "지금은 매수를 서두르지 않는 편이 좋습니다"],
         risk: ["다른 단지 우선", "지금은 다른 단지를 먼저 검토하는 편이 좋습니다"],
         missing: ["판단 보류", "자료가 부족해 판단을 보류합니다"]
