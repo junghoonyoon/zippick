@@ -1336,6 +1336,10 @@
     }
     .zpr-section { display:grid; gap:16px }
     .zippick-report > .zpr-section { padding-top:28px; border-top:1px solid #e5e8eb }
+    .zpr-section-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:7px 12px }
+    .zpr-section-rating { display:inline-flex; align-items:center; gap:7px; color:#6b7684; font-size:11.5px; font-weight:750; line-height:1.3 }
+    .zpr-section-stars { position:relative; display:inline-block; color:#e1e5ea; font-size:15px; letter-spacing:1px; line-height:1; white-space:nowrap }
+    .zpr-section-stars::before { position:absolute; inset:0 auto 0 0; width:var(--zpr-rating-fill); overflow:hidden; color:#f0a51b; content:"★★★★★"; white-space:nowrap }
     .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
     .zippick-report .zpr-section[aria-label="다른 후보와 비교"] {
       gap:18px; padding-top:28px;
@@ -1454,6 +1458,7 @@
     @media (max-width:520px) {
       .zippick-report { gap:38px }
       .zippick-report > .zpr-section { padding-top:20px }
+      .zpr-section-top { align-items:flex-start }
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
       .zippick-report .zpr-section[aria-label="다른 후보와 비교"] { gap:16px; padding-top:20px }
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:15px }
@@ -17069,11 +17074,39 @@
     // ── 섹션 번호 ───────────────────────────────────────────────────────
     // 섹션이 빠져도 실제로 보이는 순서대로 번호를 매긴다.
     // 번호 옆에 내용을 적어 리포트를 훑을 때 주제를 바로 알 수 있게 한다.
-    function zippickNumberSteps(html) {
+    function zippickSectionRatingHtml(item, label) {
+      let title = "", points = NaN, maxPoints = NaN;
+      if (label === "가격 비교") {
+        const pricePart = zpScoredParts(item).find(part => part.key === "price");
+        if (pricePart) {
+          title = "가격 점수";
+          points = zpNum(pricePart.points);
+          maxPoints = zpNum(pricePart.maxPoints);
+        }
+      } else if (label === "단지 조건") {
+        title = "단지·입지 점수";
+        points = zpNum(item?.locationScore?.score);
+        maxPoints = 100;
+      } else if (label === "최근 시장 흐름") {
+        title = "시장 신호 점수";
+        points = zpNum(item?.signals?.score);
+        maxPoints = 100;
+      }
+      if (!title || !Number.isFinite(points) || !Number.isFinite(maxPoints) || maxPoints <= 0) return "";
+      const ratio = Math.max(0, Math.min(1, points / maxPoints));
+      const stars = (ratio * 5).toFixed(1);
+      const shown = Math.round(points * 10) / 10;
+      return `<span class="zpr-section-rating" aria-label="${esc(`${title} ${stars}점, ${shown}/${maxPoints}점`)}">
+        <span class="zpr-section-stars" aria-hidden="true" style="--zpr-rating-fill:${Math.round(ratio * 100)}%">★★★★★</span>
+        <span>${esc(title)} ${esc(stars)}/5 · ${esc(shown)}/${esc(maxPoints)}점</span>
+      </span>`;
+    }
+
+    function zippickNumberSteps(html, item) {
       let step = 0;
       return String(html).replace(/<span class="zpr-kicker" data-zpr-step="([^"]+)"><\/span>/g, (_, label) => {
         step += 1;
-        return `<span class="zpr-kicker">${step}. ${esc(label)}</span>`;
+        return `<div class="zpr-section-top"><span class="zpr-kicker">${step}. ${esc(label)}</span>${zippickSectionRatingHtml(item, label)}</div>`;
       });
     }
 
@@ -17685,7 +17718,7 @@
     // 이 단지가 무엇을 주고 무엇을 뺏는지 한 줄로 못 박는다.
     // 항목 이름을 나열하면 결론이 안 난다. 얻는 것과 감수할 것으로 번역한다.
     const ZP_TRADEOFF = {
-      price:   { gain:"가격 점수",                 give:"가격 부담" },
+      price:   { gain:"가격 적정성",               give:"실제 매물 가격" },
       jeonse:  { gain:"전세가 받쳐주는 가격",       give:"전세보다 앞서간 매매가" },
       demand:  { gain:"확인된 입지 조건",           give:"입지에서 더 확인할 점" },
       product: { gain:"큰 단지 규모와 연식",         give:"낡은 건물" },
@@ -17699,7 +17732,7 @@
       const best = ZP_TRADEOFF[String(sorted[0].key || "")];
       const worst = ZP_TRADEOFF[String(sorted[sorted.length - 1].key || "")];
       if (!best || !worst) return "";
-      return `<b>${esc(best.gain)}</b> 점수가 상대적으로 높고, <b>${esc(worst.give)}</b>은 더 확인해야 합니다.`;
+      return `<b>${esc(zpJosa(best.gain, "이", "가"))}</b> 상대적인 강점이고, <b>${esc(zpJosa(worst.give, "은", "는"))}</b> 확인이 필요해요.`;
     }
 
     // 섹션 제목은 결론이어야 한다. "이렇습니다"는 아무것도 말해주지 않는다.
@@ -17749,7 +17782,7 @@
       };
       if (price === "up" && volume === "down") return {
         summary:"거래는 줄고 가격만 올라 지금 사기엔 불리해요",
-        barReason:"가격 상승으로 점수는 높지만 거래는 줄었어요. 지금 사기엔 불리해요",
+        barReason:`최근 6개월 가격은 ${zpPct(momentum)} 올랐지만 거래 건수는 ${Math.round((1 - turnover) * 100)}% 줄었어요(${turnover.toFixed(1)}배). 가격 상승만으로 매수에 유리하다고 볼 수 없으니 최근 실거래보다 비싼 매물은 피하세요.`,
         shortlistReason:"단지 조건은 볼 만하지만 거래가 줄어 높은 가격은 피해야 해요",
         heading:"가격은 올랐지만 거래가 줄어 비싼 매물은 피하세요",
         action:"가격 상승을 거래량이 뒷받침하지 못해요. 최근 실거래보다 비싼 이유를 확인하세요",
@@ -17809,6 +17842,17 @@
         return `${bits.join(" · ")}입니다. 규모와 연식은 확인됐어요. 관리비·시설 상태와 실제 거래량은 따로 확인해야 합니다.`;
       }
       if (key === "price") {
+        const basis = zippickPriceCheckBasis(item);
+        const estimate = zpNum(item?.currentEstimateMidPriceEok || item?.midPriceEok || item?.latestDealPriceEok);
+        const differencePct = basis && estimate > 0 ? (estimate / basis.price - 1) * 100 : NaN;
+        if (basis && estimate > 0 && Number.isFinite(differencePct)) {
+          const basisText = basis.count > 1
+            ? `최근 3개월 ${basis.count}건 평균 ${transactionMoney(basis.price)}`
+            : `가장 최근 거래 ${transactionMoney(basis.price)}`;
+          const direction = Math.abs(differencePct) < 0.05 ? "거의 같아요"
+            : `평균보다 ${zpPct(differencePct)} ${differencePct > 0 ? "높아요" : "낮아요"}`;
+          return `${basisText}이고 예상 가격 ${transactionMoney(estimate)}은 ${direction}. 실제 매물 가격은 이 점수에 포함되지 않으니 같은 면적·층의 거래와 비교하세요.`;
+        }
         return `${esc(String(part?.reason || "가격 점수가 상대적으로 높습니다.").trim())} <b>매물의 적정 가격</b>은 같은 면적·층의 최근 거래로 다시 확인해야 해요.`;
       }
       if (key === "market") {
@@ -17850,7 +17894,7 @@
       if (!parts.length) return "";
       const top = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a))[0];
       const benefit = zippickStrengthBenefit(item, top);
-      return benefit ? `<b>${esc(top.label)}</b>에서 가장 높은 점수가 나왔습니다. ${benefit}` : "";
+      return benefit ? `<b>${esc(zpJosa(top.label, "이", "가"))}</b> 가장 높은 점수를 받았어요. ${benefit}` : "";
     }
 
     // 행동 가이드. 데이터가 뒷받침하는 항목만 넣는다.
@@ -18097,9 +18141,11 @@
         ? ["가격 주의", "단지는 매력적이지만, 지금 가격은 신중하게 봐야 합니다"]
         : decisions[verdict.tone] || decisions.missing;
       const locationMeaning = !Number.isFinite(location) ? "자료가 더 필요해요"
-        : location >= 65 ? "좋아요"
-        : location >= 50 ? "보통이에요"
-        : "아쉬워요";
+        : location >= 80 ? "강점이 뚜렷해요"
+        : location >= 65 ? "전반적으로 괜찮아요"
+        : location >= 50 ? "강점과 약점이 갈려요"
+        : "약점이 많아 신중해야 해요";
+      const locationEvidence = zippickLocationEvidenceText(item);
       const market = zippickMarketVerdict(item);
       const signalMeaning = market.summary;
       const next = verdict.peakGuard ? market.action
@@ -18110,11 +18156,26 @@
         <span class="zpr-verdict is-${esc(verdict.tone || "missing")}"><i></i>${esc(label)}</span>
         <h3 class="zpr-title">${esc(title)}</h3>
         <div class="zpr-summary is-verdict">
-          <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"} · 가격과 주변 환경 등을 함께 봤어요.</small></div>
+          <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
           <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
         </div>
         <p class="zpr-insight"><b>다음에 볼 것</b> · ${esc(next)}</p>
       </header>`;
+    }
+
+    function zippickLocationEvidenceText(item) {
+      const score = zpNum(item?.locationScore?.score);
+      const parts = zpScoredParts(item);
+      if (!Number.isFinite(score) || !parts.length) return "";
+      const sorted = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
+      const strongest = sorted[0], weakest = sorted[sorted.length - 1];
+      const pointsText = part => `${Math.round(zpNum(part.points) * 10) / 10}/${Math.round(zpNum(part.maxPoints) * 10) / 10}점`;
+      let text = `단지·입지 ${Math.round(score)}점/100점. ${strongest.label} ${pointsText(strongest)}으로 가장 높고 ${weakest.label} ${pointsText(weakest)}으로 가장 낮아요.`;
+      const age = zpNum(item?.buildingAge);
+      if (weakest.key === "product" && Number.isFinite(age) && age > 0) {
+        text += ` ${Math.round(age)}년차라 관리 상태와 수리비도 확인하세요.`;
+      }
+      return text;
     }
 
     function zippickReportTable(headers, rows) {
@@ -18138,7 +18199,7 @@
         <span class="zpr-kicker" data-zpr-step="가격 비교"></span>
         <h5>${basis ? `같은 조건이면 ${esc(transactionMoney(basis.price))}보다 낮은 매물을 먼저 보세요` : "최근 거래를 더 확인한 뒤 가격을 정하세요"}</h5>
         <p class="zpr-lead">${basis ? `${basisMeaning} 매물이 더 비싸다면 층·향·수리 상태 때문에 차이가 나는지 확인하세요. 더 싸더라도 상태를 살펴봐야 해요.` : "비슷한 크기의 최근 거래 자료가 부족해요. 실제 매물 가격을 판단하기 전에 최근 거래를 더 확인하세요."}</p>
-        <details class="zpr-details"><summary>이 가격과 비교하는 이유 보기</summary>
+        <details class="zpr-details" open><summary>비교 기준과 실제 거래</summary>
           <p>${basisExplanation}</p>
           <p>아래는 실제로 팔린 거래예요. 매물 가격이 기준보다 낮아도 집 상태와 층을 함께 확인하세요.</p>
           ${transactions.length ? zippickReportTable(["계약일", "전용면적", "층", "신고 가격"], transactions.map(row => [esc(row.dealDate), esc(row.exclusiveArea ? `${row.exclusiveArea}㎡` : "미확인"), esc(row.floor === undefined || row.floor === null || row.floor === "" ? "미확인" : `${row.floor}층`), esc(transactionMoney(row.originalPriceEok))])) : "<p>개별 거래 자료가 아직 없습니다. 거래 내역을 확인한 뒤 매물 가격을 비교하세요.</p>"}
@@ -18333,7 +18394,7 @@
             <button type="button" data-apt-report-share>URL 공유하기</button>
           </span>
         </div>
-      </article>`);
+      </article>`, item);
     }
 
     function candidateDisplayName(item) {
