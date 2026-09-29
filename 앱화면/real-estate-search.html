@@ -1461,15 +1461,12 @@
     .zpr-fund-vl { font-size:19px; font-weight:900; letter-spacing:-.5px; line-height:1.3 }
     .zpr-fund-nt { font-size:11.5px; font-weight:750; color:#8b95a1; line-height:1.5 }
 
-    .zpr-summary { width:100%; box-sizing:border-box; display:grid; grid-template-columns:1fr; gap:16px; padding:18px; margin:18px 0; background:#f7f9fc; border-radius:14px }
+    .zpr-summary { width:100%; box-sizing:border-box; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:18px; margin:18px 0; background:#f7f9fc; border-radius:14px }
     .zpr-summary > div { display:grid; gap:6px; min-width:0 }
     .zpr-summary span, .zpr-summary small { color:#6b7684; font-size:13px; line-height:1.6 }
     .zpr-summary strong { color:#191f28; font-size:23px; line-height:1.4; overflow-wrap:anywhere }
     .zpr-summary.is-verdict strong { font-size:19px }
     .zpr-summary.is-verdict small { color:#4e5968 }
-    .zpr-summary-verdict { display:flex; align-items:flex-start; flex-wrap:nowrap; gap:8px }
-    .zpr-summary-verdict strong { flex:1; min-width:0 }
-    .zpr-summary-verdict .location-score-badge, .zpr-summary-verdict .flow-score-badge { margin-top:1px }
     .zpr-details { border:1px solid #e5e8eb; border-radius:12px; padding:14px; font-size:14px; line-height:1.7 }
     .zpr-details summary { cursor:pointer; color:#333d4b; font-weight:600; min-height:32px }
     .zpr-details > p { font-size:14px; font-weight:400; color:#4e5968 }
@@ -18343,15 +18340,14 @@
       const locationEvidence = zippickLocationEvidenceText(item, verdict);
       const market = zippickMarketVerdict(item);
       const signalMeaning = market.heading;
-      const locationBadge = candidateLocationScoreBadgeHtml(item);
-      const flowBadge = candidateFlowScoreBadgeHtml(item);
       return `<header class="zpr-head">
         <span class="zpr-verdict is-${esc(verdict.tone || "missing")}"><i></i>${esc(label)}</span>
-        <div class="zpr-summary is-verdict">
-          <div><span>이 단지는 어떤가요?</span><div class="zpr-summary-verdict"><strong>${esc(locationMeaning)}</strong>${locationBadge}</div><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
-          <div><span>지금 거래 흐름은 어떤가요?</span><div class="zpr-summary-verdict"><strong>${esc(signalMeaning)}</strong>${flowBadge}</div><small>${esc(zippickMarketEvidenceText(item))}</small></div>
-        </div>
         <h3 class="zpr-title">${esc(title)}</h3>
+        ${candidateTopScoreBadgesHtml(item)}
+        <div class="zpr-summary is-verdict">
+          <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
+          <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
+        </div>
         ${zippickBuyBandHtml(item, verdict)}
       </header>`;
     }
