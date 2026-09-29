@@ -1279,7 +1279,7 @@
       border-radius:30px 30px 0 0;
     }
 /* ── 집픽 분석 리포트 ─────────────────────────────── */
-    .zippick-report { display:grid; gap:34px; color:#191f28; word-break:keep-all }
+    .zippick-report { display:grid; gap:50px; color:#191f28; word-break:keep-all }
     .zpr-head { display:grid; gap:11px; justify-items:start }
     .zpr-verdict {
       display:inline-flex; align-items:center; gap:7px; border-radius:999px;
@@ -1335,9 +1335,10 @@
       font-size:8.5px; font-weight:900; padding:2px 5px; border-radius:0 0 0 7px; letter-spacing:-.2px;
     }
     .zpr-section { display:grid; gap:16px }
+    .zippick-report > .zpr-section { padding-top:28px; border-top:1px solid #e5e8eb }
     .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
     .zippick-report .zpr-section[aria-label="다른 후보와 비교"] {
-      gap:18px; padding-top:24px; border-top:1px solid #e5e8eb;
+      gap:18px; padding-top:28px;
     }
     .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:18px }
     .zippick-report .zpr-section[aria-label="다른 후보와 비교"] .zpr-table th,
@@ -1451,6 +1452,8 @@
     .zpr-table small { display:block; font-size:13px; color:#6b7684; font-weight:400; margin-top:4px }
     .zippick-report .zpr-sub, .zippick-report .zpr-insight { font-weight:400 }
     @media (max-width:520px) {
+      .zippick-report { gap:38px }
+      .zippick-report > .zpr-section { padding-top:20px }
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
       .zippick-report .zpr-section[aria-label="다른 후보와 비교"] { gap:16px; padding-top:20px }
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:15px }
@@ -18120,26 +18123,11 @@
 
     function zippickPriceEvidenceHtml(item) {
       const basis = zippickPriceCheckBasis(item);
-      const basisMeaning = basis?.label.startsWith("마지막 실거래")
-        ? "마지막으로 신고된 거래 한 건의 가격이에요. 거래 날짜도 확인하세요."
-        : "비슷한 크기의 집이 최근 3개월 동안 팔린 가격을 평균냈어요.";
-      const stats = recentQuarterStats(item);
-      const end = marketPeriod(stats?.statsThrough);
-      const monthText = value => `${value.slice(0, 4)}.${value.slice(4, 6)}`;
-      const period = end ? `${monthText(shiftMarketPeriod(end, -2))}~${monthText(end)}` : "집계 기간 확인 필요";
-      const rows = [];
-      const add = (label, price, note) => { if (zpNum(price) > 0) rows.push([esc(label), esc(transactionMoney(price)), esc(note)]); };
-      if (basis) add("매물과 비교할 가격", basis.price, `${basis.label} · 집계 기준일 ${basis.statsThrough || item.statsThrough || item.latestDealDate || "확인 필요"}`);
-      add("가장 최근에 팔린 가격", item.latestDealPriceEok, `${item.latestDealDate || "날짜 미확인"} · ${item.latestDealFloor || "층 미확인"}${item.latestDealFloor ? "층" : ""}`);
-      if (stats && !stats.stale) add("최근 3개월 거래 평균", stats.currentAverage, `${period} · ${stats.currentCount}건 · 유난히 높거나 낮은 거래 포함`);
-      add("전세 가격과 비교할 때 쓴 가격", item.jeonseSalePriceBasisEok, "전세 가격과 매매 가격의 비율을 계산할 때만 사용");
-      const signals = item.signals || {};
-      const windows = signals.comparisonBasis;
-      const rate = stats && !stats.stale && stats.currentCount >= 2 && stats.previousCount >= 2 && stats.previousAverage > 0
-        ? (stats.currentAverage / stats.previousAverage - 1) * 100 : null;
-      const changes = [];
-      if (rate !== null) changes.push(`카드 평균 변화 ${marketRateText(rate)}: ${period}와 직전 3개월의 매매가 단순 평균 비교.`);
-      if (Number.isFinite(zpNum(signals.recent3Pct))) changes.push(`시장 신호 변화 ${marketRateText(signals.recent3Pct)}: ${windows ? `${windows.recent3Start}~${windows.recent3End}와 ${windows.prior3Start}~${windows.prior3End}` : "직전 완료 월까지의 3개월과 그 전 3개월"} 비교. 이상 거래 제외 후 ${signals.recent3BandMatched ? "같은 10㎡ 면적대별 ㎡당 중앙값을 거래 수로 가중 평균" : "㎡당 가격 중앙값 비교(면적대 일치 표본 부족)"}.`);
+      const basisExplanation = basis?.label.startsWith("마지막 실거래")
+        ? `최근 거래가 적어 마지막 거래 1건(${basis.statsThrough || item.latestDealDate || "날짜 미확인"})의 ${esc(transactionMoney(basis.price))}을 비교 기준으로 삼았어요. 한 건만으로 시세를 단정하기 어려우니 아래 거래도 함께 살펴보세요.`
+        : basis
+          ? `최근 3개월 동안 비슷한 면적의 집 ${basis.count}건이 팔린 평균 가격이에요. ${basis.outliersExcluded ? "유난히 높거나 낮은 거래는 뺐어요." : "높거나 낮은 거래도 포함했어요."}`
+          : "비교할 만한 최근 거래가 없어 기준 가격을 정하지 못했어요.";
       const transactions = (item.roneEstimate?.adjustedTransactions || []).slice()
         .filter(row => zpNum(row.originalPriceEok) > 0 && row.dealDate)
         .sort((a, b) => String(b.dealDate).localeCompare(String(a.dealDate))).slice(0, 8);
@@ -18147,16 +18135,11 @@
         <span class="zpr-kicker" data-zpr-step="가격 비교"></span>
         <h5>${basis ? `같은 조건이면 ${esc(transactionMoney(basis.price))}보다 낮은 매물을 먼저 보세요` : "최근 거래를 더 확인한 뒤 가격을 정하세요"}</h5>
         <p class="zpr-lead">${basis ? `${basisMeaning} 매물이 더 비싸다면 층·향·수리 상태 때문에 차이가 나는지 확인하세요. 더 싸더라도 상태를 살펴봐야 해요.` : "비슷한 크기의 최근 거래 자료가 부족해요. 실제 매물 가격을 판단하기 전에 최근 거래를 더 확인하세요."}</p>
-        <details class="zpr-details"><summary>비교 가격을 정한 방법과 실제 거래 보기</summary>
-          <p>아래 가격은 쓰는 곳이 달라요. <b>매물과 비교할 가격</b>만 먼저 보세요.</p>
-          ${zippickReportTable(["이 가격은?", "금액", "어떻게 구했나요?"], rows)}
-          <p>실거래보다 싸다는 이유만으로 좋은 매물이라고 판단하지 않아요.</p>
-          <details class="zpr-details"><summary>화면마다 상승률이 다른 이유 보기</summary>
-          ${changes.map(line => `<p>${esc(line)}</p>`).join("")}
-          <p>기간·면적·이상 거래 처리 방식이 달라 두 상승률이 다를 수 있어요. 시장 신호에는 진행 중인 달을 넣지 않습니다.</p>
-          </details>
+        <details class="zpr-details"><summary>이 가격과 비교하는 이유 보기</summary>
+          <p>${basisExplanation}</p>
+          <p>아래는 실제로 팔린 거래예요. 매물 가격이 기준보다 낮아도 집 상태와 층을 함께 확인하세요.</p>
           ${transactions.length ? zippickReportTable(["계약일", "전용면적", "층", "신고 가격"], transactions.map(row => [esc(row.dealDate), esc(row.exclusiveArea ? `${row.exclusiveArea}㎡` : "미확인"), esc(row.floor === undefined || row.floor === null || row.floor === "" ? "미확인" : `${row.floor}층`), esc(transactionMoney(row.originalPriceEok))])) : "<p>개별 거래 자료가 아직 없습니다. 거래 내역을 확인한 뒤 매물 가격을 비교하세요.</p>"}
-          <p>조회된 최근 거래 최대 8건입니다. 위 평균의 전체 표본과는 다를 수 있으며, 이상 거래 제외 여부가 없는 행은 포함 여부를 단정하지 않아요. 출처: 국토교통부 신고 실거래.</p>
+          <p>최근 계약한 거래 최대 8건을 보여드려요. 출처: 국토교통부 실거래 자료.</p>
         </details>
       </section>`;
     }
