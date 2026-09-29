@@ -1279,7 +1279,7 @@
       border-radius:30px 30px 0 0;
     }
 /* ── 집픽 분석 리포트 ─────────────────────────────── */
-    .zippick-report { display:grid; gap:26px; color:#191f28; word-break:keep-all }
+    .zippick-report { display:grid; gap:34px; color:#191f28; word-break:keep-all }
     .zpr-head { display:grid; gap:11px; justify-items:start }
     .zpr-verdict {
       display:inline-flex; align-items:center; gap:7px; border-radius:999px;
@@ -1334,7 +1334,14 @@
       content:"이 단지"; position:absolute; top:0; right:0; background:#4e5968; color:#fff;
       font-size:8.5px; font-weight:900; padding:2px 5px; border-radius:0 0 0 7px; letter-spacing:-.2px;
     }
-    .zpr-section { display:grid; gap:12px }
+    .zpr-section { display:grid; gap:16px }
+    .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
+    .zippick-report .zpr-section[aria-label="다른 후보와 비교"] {
+      gap:18px; padding-top:24px; border-top:1px solid #e5e8eb;
+    }
+    .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:18px }
+    .zippick-report .zpr-section[aria-label="다른 후보와 비교"] .zpr-table th,
+    .zippick-report .zpr-section[aria-label="다른 후보와 비교"] .zpr-table td { padding-top:15px; padding-bottom:15px }
     .zpr-section h5 { margin:0; font-size:20px; font-weight:900; letter-spacing:-.5px; line-height:1.42 }
     .zpr-lead { margin:0; font-size:14px; font-weight:750; color:#4e5968; line-height:1.6 }
     .zpr-insight.is-lead { font-size:15.5px; font-weight:800; color:#191f28 }
@@ -1444,6 +1451,9 @@
     .zpr-table small { display:block; font-size:13px; color:#6b7684; font-weight:400; margin-top:4px }
     .zippick-report .zpr-sub, .zippick-report .zpr-insight { font-weight:400 }
     @media (max-width:520px) {
+      .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
+      .zippick-report .zpr-section[aria-label="다른 후보와 비교"] { gap:16px; padding-top:20px }
+      .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:15px }
       .zpr-summary { grid-template-columns:1fr }
       .zpr-summary strong { font-size:21px }
       .zpr-table { font-size:13px }
