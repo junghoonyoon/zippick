@@ -15954,6 +15954,9 @@
         const market = zippickMarketVerdict(item);
         return market.barReason || market.summary;
       }
+      if (part?.key === "price") {
+        return "지역 가격과 최근 실거래를 비교한 점수예요. 지금 나온 매물 가격은 포함되지 않았어요.";
+      }
       if (part?.key === "product") {
         const households = zpNum(item?.households);
         const age = zpNum(item?.buildingAge);
@@ -15977,7 +15980,8 @@
         .sort((a, b) => (Number(b.points) / Number(b.maxPoints)) - (Number(a.points) / Number(a.maxPoints)));
       if (!rows.length) return "";
       return `<div class="zpr-bars">${rows.map(part =>
-        zippickBarHtml(part.label, part.points, part.maxPoints, zippickBarReason(item, part))).join("")}</div>`;
+        zippickBarHtml(part.key === "price" ? "단지 가격 비교" : part.label,
+          part.points, part.maxPoints, zippickBarReason(item, part))).join("")}</div>`;
     }
 
     function zippickSignalBarsHtml(item) {
@@ -17090,7 +17094,7 @@
       if (label === "가격 비교") {
         const pricePart = zpScoredParts(item).find(part => part.key === "price");
         if (pricePart) {
-          title = "가격 점수";
+          title = "단지 가격 비교 점수";
           points = zpNum(pricePart.points);
           maxPoints = zpNum(pricePart.maxPoints);
         }
@@ -17581,12 +17585,13 @@
       const parts = zpScoredParts(item);
       const weakest = zippickWeakestPart(item);
       if (!weakest) return "";
+      const label = weakest.key === "price" ? "단지 가격 비교" : weakest.label;
       const shown = Math.round(zpNum(weakest.points) * 10) / 10;
       // 항목 수는 세지 말고 그대로 쓴다. 자금 조건을 뺀 뒤로 개수가 달라졌고,
       // 데이터가 없는 항목이 빠지면 단지마다 또 달라진다.
       const scope = parts.length > 1 ? `${["", "", "두", "세", "네", "다섯", "여섯"][parts.length] || parts.length} 항목 중 ` : "";
       // "입지·실수요이" 같은 문장이 나가지 않게 조사는 zpJosa로 고른다.
-      return `${scope}<b>${esc(weakest.label)}</b>${zpHasFinal(weakest.label) ? "이" : "가"} 가장 낮습니다. ${esc(shown)} / ${esc(weakest.maxPoints)}점.<br>${zippickWeakestBody(item, weakest)}`;
+      return `${scope}<b>${esc(label)}</b>${zpHasFinal(label) ? "이" : "가"} 가장 낮습니다. ${esc(shown)} / ${esc(weakest.maxPoints)}점.<br>${zippickWeakestBody(item, weakest)}`;
     }
 
     // 출퇴근 해석. 분 단위를 나열하는 건 의미가 없다. 통근시간이 실제로
@@ -17734,13 +17739,16 @@
     // 이 단지가 무엇을 주고 무엇을 뺏는지 한 줄로 못 박는다.
     // 항목 이름을 나열하면 결론이 안 난다. 얻는 것과 감수할 것으로 번역한다.
     const ZP_TRADEOFF = {
-      price:   { gain:"가격 적정성",               give:"실제 매물 가격" },
+      price:   { gain:"단지 가격 비교",             give:"실제 매물 가격" },
       jeonse:  { gain:"전세가 받쳐주는 가격",       give:"전세보다 앞서간 매매가" },
       demand:  { gain:"확인된 입지 조건",           give:"입지에서 더 확인할 점" },
       product: { gain:"큰 단지 규모와 연식",         give:"낡은 건물" },
       market:  { gain:"확인된 거래 흐름",           give:"거래 흐름의 불확실성" },
     };
-    function zippickTradeoffLine(item) {
+    function zippickTradeoffLine(item, verdict) {
+      // 고점권 경고가 나온 리포트에서 가격 점수를 '가격 적정성'이라는
+      // 강점으로 다시 소개하면 같은 가격에 상반된 판정을 내린 것처럼 보인다.
+      if (verdict?.peakGuard) return "";
       const parts = zpScoredParts(item);
       if (parts.length < 2) return "";
       const sorted = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
@@ -17752,9 +17760,14 @@
     }
 
     // 섹션 제목은 결론이어야 한다. "이렇습니다"는 아무것도 말해주지 않는다.
-    function zippickLocationHeading(item) {
+    function zippickLocationHeading(item, verdict) {
       const score = zpNum(item?.locationScore?.score);
       if (!Number.isFinite(score)) return "단지 조건은 판단하기 어렵습니다";
+      if (score >= 65 && verdict?.peakGuard) {
+        return verdict.peakGuard.atPeak
+          ? "단지 조건은 좋지만 최근 거래 가격은 고점권입니다"
+          : "단지 조건은 좋지만 최근 거래 가격이 급등했습니다";
+      }
       if (score >= 80) return "단지 조건은 아주 좋습니다";
       if (score >= 65) return "단지 조건이 좋습니다";
       if (score >= 50) return "단지 조건은 보통입니다";
@@ -17825,8 +17838,14 @@
       };
     }
 
-    function zippickSignalHeading(item) {
-      return zippickMarketVerdict(item).heading;
+    function zippickSignalHeading(item, verdict) {
+      const market = zippickMarketVerdict(item);
+      if (verdict?.peakGuard && market.summary === "가격과 거래가 함께 늘었어요") {
+        return verdict.peakGuard.atPeak
+          ? "가격과 거래는 늘었지만 고점권이라 매물 가격을 신중하게 보세요"
+          : "가격과 거래는 늘었지만 최근 급등해 매물 가격을 신중하게 보세요";
+      }
+      return market.heading;
     }
 
     function zippickMarketEvidenceText(item) {
@@ -17859,17 +17878,8 @@
       }
       if (key === "price") {
         const basis = zippickPriceCheckBasis(item);
-        const estimate = zpNum(item?.currentEstimateMidPriceEok || item?.midPriceEok || item?.latestDealPriceEok);
-        const differencePct = basis && estimate > 0 ? (estimate / basis.price - 1) * 100 : NaN;
-        if (basis && estimate > 0 && Number.isFinite(differencePct)) {
-          const basisText = basis.count > 1
-            ? `최근 3개월 ${basis.count}건 평균 ${transactionMoney(basis.price)}`
-            : `가장 최근 거래 ${transactionMoney(basis.price)}`;
-          const direction = Math.abs(differencePct) < 0.05 ? "거의 같아요"
-            : `평균보다 ${zpPct(differencePct)} ${differencePct > 0 ? "높아요" : "낮아요"}`;
-          return `${basisText}이고 예상 가격 ${transactionMoney(estimate)}은 ${direction}. 실제 매물 가격은 이 점수에 포함되지 않으니 같은 면적·층의 거래와 비교하세요.`;
-        }
-        return `${esc(String(part?.reason || "가격 점수가 상대적으로 높습니다.").trim())} <b>매물의 적정 가격</b>은 같은 면적·층의 최근 거래로 다시 확인해야 해요.`;
+        const basisText = basis ? `비슷한 면적의 최근 거래 기준은 <b>${esc(transactionMoney(basis.price))}</b>입니다. ` : "";
+        return `${basisText}이 점수는 단지의 지역 가격 위치와 실거래 자료를 비교한 결과예요. <b>지금 나온 매물이 싼지는 평가하지 않았어요.</b>`;
       }
       if (key === "market") {
         const count = zpNum(item?.signals?.recentDealCount ?? item?.transactionCount);
@@ -17910,6 +17920,7 @@
       if (!parts.length) return "";
       const top = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a))[0];
       const benefit = zippickStrengthBenefit(item, top);
+      if (top.key === "price") return benefit;
       return benefit ? `<b>${esc(zpJosa(top.label, "이", "가"))}</b> 가장 높은 점수를 받았어요. ${benefit}` : "";
     }
 
@@ -18154,20 +18165,23 @@
         missing: ["판단 보류", "자료가 부족해 판단을 보류합니다"]
       };
       const [label, title] = verdict.peakGuard
-        ? ["가격 주의", "단지는 매력적이지만, 지금 가격은 신중하게 봐야 합니다"]
+        ? verdict.peakGuard.atPeak
+          ? ["고점권 주의", "단지는 볼 만하지만 최근 거래가 2년 고점권입니다"]
+          : ["급등 주의", "단지는 볼 만하지만 최근 거래 가격이 빠르게 올랐습니다"]
         : decisions[verdict.tone] || decisions.missing;
       const locationMeaning = !Number.isFinite(location) ? "자료가 더 필요해요"
         : location >= 80 ? "강점이 뚜렷해요"
         : location >= 65 ? "전반적으로 괜찮아요"
         : location >= 50 ? "강점과 약점이 갈려요"
         : "약점이 많아 신중해야 해요";
-      const locationEvidence = zippickLocationEvidenceText(item);
+      const locationEvidence = zippickLocationEvidenceText(item, verdict);
       const market = zippickMarketVerdict(item);
       const signalMeaning = market.summary;
       const latestPrice = zpNum(item?.latestDealPriceEok);
       const latestArea = zpNum(item?.latestDealExclusiveArea);
       const latestMeta = [item?.latestDealDate, Number.isFinite(latestArea) && latestArea > 0 ? `전용 ${latestArea}㎡` : "", item?.latestDealFloor ? `${item.latestDealFloor}층` : ""].filter(Boolean).join(" · ");
-      const next = verdict.peakGuard ? market.action
+      const next = verdict.peakGuard
+        ? "같은 면적·비슷한 층의 최근 거래보다 비싼 매물은 가격 차이의 이유를 확인하세요."
         : verdict.tone === "missing" ? "최근 거래와 단지 자료를 더 확인한 뒤 다시 판단하세요."
         : ["risk", "hold"].includes(verdict.tone) ? "비슷한 가격의 다른 단지를 먼저 비교해 보세요."
         : "마음에 드는 매물이 있다면 아래 거래 가격과 먼저 비교해 보세요.";
@@ -18187,14 +18201,19 @@
       </header>`;
     }
 
-    function zippickLocationEvidenceText(item) {
+    function zippickLocationEvidenceText(item, verdict) {
       const score = zpNum(item?.locationScore?.score);
       const parts = zpScoredParts(item);
       if (!Number.isFinite(score) || !parts.length) return "";
+      if (verdict?.peakGuard) {
+        const riskText = verdict.peakGuard.atPeak ? "최근 거래는 2년 고점권이에요." : "최근 거래 가격이 짧게 많이 올랐어요.";
+        return `단지·입지 ${Math.round(score)}점/100점. 이 점수에는 단지 가격 비교도 들어가지만, 지금 나온 매물 가격은 반영되지 않았어요. ${riskText}`;
+      }
       const sorted = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
       const strongest = sorted[0], weakest = sorted[sorted.length - 1];
       const pointsText = part => `${Math.round(zpNum(part.points) * 10) / 10}/${Math.round(zpNum(part.maxPoints) * 10) / 10}점`;
-      let text = `단지·입지 ${Math.round(score)}점/100점. ${strongest.label} ${pointsText(strongest)}으로 가장 높고 ${weakest.label} ${pointsText(weakest)}으로 가장 낮아요.`;
+      const label = part => part.key === "price" ? "단지 가격 비교" : part.label;
+      let text = `단지·입지 ${Math.round(score)}점/100점. ${label(strongest)} ${pointsText(strongest)}으로 가장 높고 ${label(weakest)} ${pointsText(weakest)}으로 가장 낮아요.`;
       const age = zpNum(item?.buildingAge);
       if (weakest.key === "product" && Number.isFinite(age) && age > 0) {
         text += ` ${Math.round(age)}년차라 관리 상태와 수리비도 확인하세요.`;
@@ -18384,8 +18403,8 @@
         ${zippickLifestyleChangeHtml(item)}
         ${locationBars ? `<section class="zpr-section">
           <span class="zpr-kicker" data-zpr-step="단지 조건"></span>
-          <h5>${esc(zippickLocationHeading(item))}</h5>
-          ${(t => t ? `<p class="zpr-insight is-lead">${t}</p>` : "")(zippickTradeoffLine(item))}
+          <h5>${esc(zippickLocationHeading(item, verdict))}</h5>
+          ${(t => t ? `<p class="zpr-insight is-lead">${t}</p>` : "")(zippickTradeoffLine(item, verdict))}
           ${(t => t ? `<p class="zpr-insight">${t}</p>` : "")(zippickStrengthInsight(item))}
           ${locationBars}
           ${(t => t ? `<p class="zpr-insight">${t}</p>` : "")(zippickWeakestInsight(item))}
@@ -18393,7 +18412,7 @@
         ${zippickCommuteHtml(item)}
         ${signalBars ? `<section class="zpr-section">
           <span class="zpr-kicker" data-zpr-step="최근 시장 흐름"></span>
-          <h5>${esc(zippickSignalHeading(item))}</h5>
+          <h5>${esc(zippickSignalHeading(item, verdict))}</h5>
           ${(text => text ? `<p class="zpr-insight">${text}</p>` : "")(zippickSignalInsight(item))}
           <details class="zpr-basis-note"><summary>ⓘ 시장 흐름의 거래 기준</summary><p>${esc(zippickNumberBasis(item).market)}</p></details>
           ${signalBars}
