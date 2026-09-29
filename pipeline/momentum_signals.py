@@ -880,8 +880,6 @@ def district_peer_reports(
             details = _score_details(signals)
             collected.append({
                 "name": entity.get("name", ""),
-                "apartmentId": entity.get("apartmentId") or "",
-                "kaptCode": entity.get("kaptCode") or "",
                 "region": region,
                 "legalDong": entity.get("legalDong") or "",
                 "jibun": entity.get("jibun") or "",

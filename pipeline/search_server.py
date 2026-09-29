@@ -1191,13 +1191,6 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                         "recent3Pct": peer.get("recent3Pct"),
                     },
                 }
-                peer_entity = budget_candidates._find_entity(
-                    peer_score_row["name"], peer_score_row["region"],
-                    peer_score_row["legalDong"], peer_score_row["jibun"],
-                )
-                peer_building = budget_candidates._building_profile(peer_entity or {})
-                peer.update(peer_building)
-                peer_score_row.update(peer_building)
                 peer_score_rows.append((peer, peer_score_row))
                 score_rows.append(peer_score_row)
             location_scores.attach_scores(score_rows, budget_candidates._price_lookup_entity)
