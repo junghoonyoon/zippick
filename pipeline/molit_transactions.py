@@ -2095,12 +2095,20 @@ def _scan_months_for_latest(
 
 
 def _price_band_payload(name, region, area_label, lookback_months, transactions):
-    prices = sorted(float(row.get("dealAmountEok") or 0) for row in transactions if row.get("dealAmountEok"))
+    priced_transactions = sorted(
+        (row for row in transactions if row.get("dealAmountEok")),
+        key=lambda row: str(row.get("dealDate") or ""),
+        reverse=True,
+    )
+    prices = sorted(float(row.get("dealAmountEok") or 0) for row in priced_transactions)
     if not prices:
         return None
-    latest = next((row for row in transactions if row.get("dealAmountEok")), {})
-    previous = next((row for row in transactions[1:] if row.get("dealAmountEok")), {})
-    estimate = _current_price_estimate(transactions)
+    latest = priced_transactions[0]
+    previous = priced_transactions[1] if len(priced_transactions) > 1 else {}
+    estimate = _current_price_estimate(priced_transactions)
+    # 가장 최근 거래의 가격 위치를 평가할 때 자기 가격이 적정 범위를
+    # 끌어당기지 않도록 최신 거래를 뺀 별도 범위를 함께 만든다.
+    latest_excluded_estimate = _current_price_estimate(priced_transactions[1:])
     return {
         "name": name,
         "region": region,
@@ -2124,9 +2132,17 @@ def _price_band_payload(name, region, area_label, lookback_months, transactions)
         "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
         "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
         "currentEstimateMethod": (estimate or {}).get("method", ""),
-        **_previous_trade_comparison(transactions),
-        **_quarter_trade_stats(transactions),
-        **_half_year_trade_stats(transactions),
+        "valuationEstimateMinPriceEok": (latest_excluded_estimate or {}).get("minPriceEok"),
+        "valuationEstimateMidPriceEok": (latest_excluded_estimate or {}).get("midPriceEok"),
+        "valuationEstimateMaxPriceEok": (latest_excluded_estimate or {}).get("maxPriceEok"),
+        "valuationEstimateSampleCount": (latest_excluded_estimate or {}).get("sampleCount", 0),
+        "valuationEstimateMethod": (
+            "가장 최근 거래를 제외한 " + (latest_excluded_estimate or {}).get("method", "")
+            if latest_excluded_estimate else ""
+        ),
+        **_previous_trade_comparison(priced_transactions),
+        **_quarter_trade_stats(priced_transactions),
+        **_half_year_trade_stats(priced_transactions),
     }
 
 

@@ -252,6 +252,27 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(estimate["maxPriceEok"], 9.6)
         self.assertEqual(estimate["trimmedCount"], 2)
 
+    def test_price_band_builds_latest_trade_excluded_valuation_estimate(self):
+        transactions = [
+            {"dealDate": "2026-08-10", "dealAmountEok": 9.0},
+            {"dealDate": "2026-09-10", "dealAmountEok": 15.0},
+            {"dealDate": "2026-07-10", "dealAmountEok": 9.2},
+            {"dealDate": "2026-06-10", "dealAmountEok": 9.4},
+        ]
+
+        band = molit_transactions._price_band_payload(
+            "테스트아파트",
+            "서울 강남구",
+            "전용 84㎡",
+            12,
+            transactions,
+        )
+
+        self.assertEqual(band["latestDealPriceEok"], 15.0)
+        self.assertEqual(band["valuationEstimateSampleCount"], 3)
+        self.assertEqual(band["valuationEstimateMidPriceEok"], 9.2)
+        self.assertIn("가장 최근 거래를 제외한", band["valuationEstimateMethod"])
+
     def test_rent_feed_parses_jeonse_and_monthly_contracts(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
         <response><header><resultCode>00</resultCode></header><body><items>
