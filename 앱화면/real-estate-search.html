@@ -1326,9 +1326,6 @@
     .zpr-buy-band-cell small { color:#6b7684; font-size:13px; line-height:1.4 }
     .zpr-buy-band-mark { display:block; width:fit-content; max-width:100%; padding:3px 6px; border-radius:6px; background:#e8f3ff; color:#1b64da; font-size:13px; font-weight:800; line-height:1.35; overflow-wrap:anywhere }
     .zpr-buy-band-mark.is-asking { background:#191f28; color:#fff }
-    .zpr-buy-band label { display:grid; gap:7px; color:#191f28; font-size:14px; font-weight:850 }
-    .zpr-buy-band input { width:100%; min-height:54px; box-sizing:border-box; padding:0 13px; border:1px solid #cfd7e2; border-radius:10px; color:#191f28; background:#fff; font:inherit; font-size:16px }
-    .zpr-buy-band input:focus-visible { outline:2px solid #3182f6; outline-offset:2px }
     .zpr-buy-band-conclusion { padding:12px 14px; border-radius:10px; background:#f2f4f6; color:#333d4b; font-size:15px; font-weight:800; line-height:1.6 }
     .zpr-buy-band-conclusion.is-expensive { background:#fff0ed; color:#a72b1d }
     .zpr-buy-band-conclusion.is-negotiate { background:#fff5df; color:#80530d }
@@ -18158,7 +18155,8 @@
         : askTier === 1 ? "이 매물은 최근 거래 평균 이하입니다. 같은 층과 상태의 거래를 확인하고 검토하세요."
         : askTier === 2 ? "이 매물은 최근 거래 평균보다 높습니다. 가격을 낮춰 달라고 협상하세요."
         : askTier === 3 ? "이 매물은 최근 거래 평균보다 5% 넘게 높아 비싼 구간입니다. 가격을 낮춰야 합니다."
-        : "매물 가격을 입력하면 어느 구간인지 바로 알려드려요.";
+        : latestTier >= 0 ? `가장 최근 실거래는 ‘${cells[latestTier][0]}’ 구간입니다. 지금 나온 매물 가격을 뜻하지는 않아요.`
+        : "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
       return `<div class="zpr-buy-band-grid" aria-label="매수 판단 가격 구간">${cells.map(([label, range, tone], index) =>
         `<div class="zpr-buy-band-cell ${tone}${askTier === index ? " is-selected" : ""}">
           <strong>${label}</strong><small>${esc(range)}</small>
@@ -18182,7 +18180,6 @@
         <h4>매수 판단 밴드</h4>
         <p>비슷한 면적의 최근 3개월 거래 ${esc(basis.count)}건 평균 <b>${esc(transactionMoney(basis.price))}</b>을 기준으로 봐요.</p>
         <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.price, latestPrice, showLatest, entered)}</div>
-        <label>내가 본 매물 가격 · 억원<input type="number" min="0.1" max="1000" step="0.01" inputmode="decimal" placeholder="예: 8.9" value="${esc(entered)}" data-zpr-asking-price></label>
         <p>평균보다 5% 낮으면 ‘가격 좋음’, 5% 넘게 높으면 ‘비쌈’으로 나눠요. 층·향·수리 상태는 별도로 확인해야 해요.</p>
         ${verdict?.peakGuard ? `<p>최근 거래가 ${verdict.peakGuard.atPeak ? "고점권이어도" : "급등했어도"} 이 밴드는 최근 거래 평균과의 가격 차이만 보여줘요.</p>` : ""}
         ${showLatest ? "" : "<p>가장 최근 거래는 이 밴드의 면적과 달라 위치를 표시하지 않았어요.</p>"}
