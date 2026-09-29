@@ -1308,25 +1308,21 @@
     .zpr-score-note { margin:-4px 0 0; color:#4e5968; font-size:13px; line-height:1.6 }
     .zpr-evidence { display:grid; gap:7px; padding:13px 15px; border:1px solid #e5e8eb; border-radius:12px; color:#4e5968; font-size:13px; line-height:1.55 }
     .zpr-evidence strong { color:#191f28; font-size:14px }
-    .zpr-buy-band { display:grid; min-width:0; gap:13px; width:100%; box-sizing:border-box; padding:17px; border:1px solid #e5e8eb; border-radius:14px; background:#fff }
+    .zpr-buy-band { display:grid; min-width:0; gap:13px; width:100%; box-sizing:border-box }
     .zpr-buy-band h4 { margin:0; font-size:17px; font-weight:900; line-height:1.45 }
     .zpr-buy-band p { margin:0; color:#4e5968; font-size:13px; line-height:1.6 }
     .zpr-buy-band .zpr-buy-band-meta { color:#6b7684 }
-    .zpr-buy-band-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px }
-    .zpr-buy-band-cell { display:grid; min-width:0; align-content:start; gap:5px; min-height:92px; padding:11px 9px; border:1px solid #e5e8eb; border-radius:10px; background:#fafbfc }
-    .zpr-buy-band-cell.is-good { border-color:#c9e5d5; background:#f4fbf6 }
-    .zpr-buy-band-cell.is-negotiate { border-color:#f2dfb6; background:#fffbf2 }
-    .zpr-buy-band-cell.is-expensive { border-color:#f1d5d1; background:#fff7f6 }
-    .zpr-buy-band-cell.is-selected { outline:2px solid #3182f6; outline-offset:-2px }
+    .zpr-buy-band-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid #e5e8eb; border-bottom:1px solid #e5e8eb }
+    .zpr-buy-band-cell { display:grid; min-width:0; align-content:start; gap:5px; padding:14px 12px }
+    .zpr-buy-band-cell + .zpr-buy-band-cell { border-left:1px solid #e5e8eb }
+    .zpr-buy-band-cell.is-selected { box-shadow:inset 0 3px #3182f6 }
     .zpr-buy-band [data-zpr-band-result] { display:grid; gap:12px }
     .zpr-buy-band-cell strong { color:#191f28; font-size:14px; line-height:1.35 }
     .zpr-buy-band-cell small { color:#6b7684; font-size:13px; line-height:1.4 }
-    .zpr-buy-band-mark { display:block; width:fit-content; max-width:100%; padding:3px 6px; border-radius:6px; background:#e8f3ff; color:#1b64da; font-size:13px; font-weight:800; line-height:1.35; overflow-wrap:anywhere }
-    .zpr-buy-band-mark.is-asking { background:#191f28; color:#fff }
-    .zpr-buy-band-conclusion { padding:12px 14px; border-radius:10px; background:#f2f4f6; color:#333d4b; font-size:15px; font-weight:800; line-height:1.6 }
-    .zpr-buy-band-conclusion.is-expensive { background:#fff0ed; color:#a72b1d }
-    .zpr-buy-band-conclusion.is-negotiate { background:#fff5df; color:#80530d }
-    .zpr-buy-band-conclusion.is-good { background:#e9f7f0; color:#0b7041 }
+    .zpr-buy-band-mark { display:block; max-width:100%; color:#1b64da; font-size:13px; font-weight:800; line-height:1.4; overflow-wrap:anywhere }
+    .zpr-buy-band-mark::before { content:"●"; margin-right:5px; font-size:8px; vertical-align:middle }
+    .zpr-buy-band-mark.is-asking { color:#191f28 }
+    .zpr-buy-band-conclusion { padding:2px 0 2px 11px; border-left:3px solid #3182f6; color:#191f28; font-size:15px; font-weight:800; line-height:1.6 }
     .zpr-basis-note { color:#4e5968; font-size:13px; line-height:1.6 }
     .zpr-basis-note summary { width:max-content; max-width:100%; color:#1b64da; font-weight:800; cursor:pointer }
     .zpr-basis-note p { margin:8px 0 0 }
@@ -1483,8 +1479,9 @@
     .zippick-report .zpr-sub, .zippick-report .zpr-insight { font-weight:400 }
     @media (max-width:520px) {
       .zippick-report { gap:38px }
-      .zpr-buy-band { padding:14px }
       .zpr-buy-band-grid { grid-template-columns:repeat(2,minmax(0,1fr)) }
+      .zpr-buy-band-cell:nth-child(3) { border-left:0 }
+      .zpr-buy-band-cell:nth-child(n+3) { border-top:1px solid #e5e8eb }
       .zippick-report > .zpr-section { padding-top:20px }
       .zpr-section-top { align-items:flex-start }
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
@@ -18139,10 +18136,10 @@
       const askTier = valid ? zippickBuyBandTier(entered, basisPrice) : -1;
       const latestTier = showLatest ? zippickBuyBandTier(latestPrice, basisPrice) : -1;
       const cells = [
-        ["가격 좋음", `${transactionMoney(low)} 이하`, "is-good"],
-        ["검토 가능", `${transactionMoney(low)} 초과 ~ ${transactionMoney(basisPrice)} 이하`, ""],
-        ["협상 필요", `${transactionMoney(basisPrice)} 초과 ~ ${transactionMoney(high)} 이하`, "is-negotiate"],
-        ["비쌈", `${transactionMoney(high)} 초과`, "is-expensive"],
+        ["가격 좋음", `${transactionMoney(low)} 이하`],
+        ["검토 가능", `${transactionMoney(low)} 초과 ~ ${transactionMoney(basisPrice)} 이하`],
+        ["협상 필요", `${transactionMoney(basisPrice)} 초과 ~ ${transactionMoney(high)} 이하`],
+        ["비쌈", `${transactionMoney(high)} 초과`],
       ];
       const latestTierText = ["가격이 좋은 구간", "검토 가능한 구간", "협상이 필요한 구간", "비싼 구간"];
       const conclusion = enteredPrice !== "" && !valid
@@ -18153,13 +18150,13 @@
         : askTier === 3 ? "이 매물은 최근 거래 평균보다 5% 넘게 높아 비싼 구간입니다. 가격을 낮춰야 합니다."
         : latestTier >= 0 ? `가장 최근 실거래가는 ${latestTierText[latestTier]}에 있어요. 지금 나온 매물의 가격은 아니에요.`
         : "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
-      return `<div class="zpr-buy-band-grid" aria-label="매수 판단 가격 구간">${cells.map(([label, range, tone], index) =>
-        `<div class="zpr-buy-band-cell ${tone}${askTier === index ? " is-selected" : ""}">
+      return `<div class="zpr-buy-band-grid" aria-label="매수 판단 가격 구간">${cells.map(([label, range], index) =>
+        `<div class="zpr-buy-band-cell${askTier === index ? " is-selected" : ""}">
           <strong>${label}</strong><small>${esc(range)}</small>
           ${latestTier === index ? `<span class="zpr-buy-band-mark">최근 실거래 ${esc(transactionMoney(latestPrice))}</span>` : ""}
           ${askTier === index ? `<span class="zpr-buy-band-mark is-asking">입력한 매물 ${esc(transactionMoney(entered))}</span>` : ""}
         </div>`).join("")}</div>
-        <div class="zpr-buy-band-conclusion${askTier === 0 ? " is-good" : askTier === 2 ? " is-negotiate" : askTier === 3 ? " is-expensive" : ""}" role="status">${esc(conclusion)}</div>`;
+        <div class="zpr-buy-band-conclusion" role="status">${esc(conclusion)}</div>`;
     }
 
     function zippickBuyBandHtml(item, verdict) {
