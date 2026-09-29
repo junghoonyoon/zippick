@@ -16,6 +16,9 @@ class ReportPriceCheckTest(unittest.TestCase):
         script = """
           function zpNum(value) { return value == null || value === '' ? NaN : Number(value); }
           function transactionMoney(value) { return `${value}억`; }
+          function esc(value) { return String(value); }
+          function candidateIdentityKey() { return 'sample'; }
+          const zippickEnteredPrices = new Map();
         """ + functions + """
           const fresh = new Date().toISOString().slice(0, 10);
           const item = {
@@ -29,6 +32,30 @@ class ReportPriceCheckTest(unittest.TestCase):
           };
           const basis = zippickPriceCheckBasis(item);
           if (basis.price !== 10 || !zippickPriceCheckText(basis, '12').includes('2억 높습니다')) process.exit(1);
+          item.valuation = {
+            status: 'ready', modelVersion: 'zippick-current-value-v1', asOf: fresh,
+            fairPrice: {lowEok: 9.4, centerEok: 10.1, highEok: 10.8, method: 'test'},
+            dataQuality: {sampleCount: 8, level: 'medium'},
+          };
+          const modelBasis = zippickPriceCheckBasis(item);
+          if (modelBasis.low !== 9.4 || modelBasis.price !== 10.1 || modelBasis.high !== 10.8) process.exit(4);
+          if (!zippickPriceCheckText(modelBasis, '9').includes('싼 구간')) process.exit(5);
+          if (!zippickPriceCheckText(modelBasis, '10').includes('적정 구간')) process.exit(6);
+          if (!zippickPriceCheckText(modelBasis, '11').includes('비싼 구간')) process.exit(7);
+          const band = zippickBuyBandResultHtml(9.4, 10.1, 10.8, 10, true, '11');
+          if (!band.includes('<strong>쌈</strong>') || !band.includes('<strong>적정</strong>') || !band.includes('<strong>비쌈</strong>')) process.exit(8);
+          if (band.includes('가격 좋음') || band.includes('협상 필요')) process.exit(9);
+          item.latestDealExclusiveArea = 84;
+          item.displayAreaLabel = '전용 84㎡';
+          item.valuation.reasons = ['이전 실거래 8건을 사용했어요.', '평가할 최근 거래는 기준가격에서 뺐어요.'];
+          item.valuation.limitations = ['층·향·수리 상태는 반영하지 못했어요.'];
+          item.valuation.marketAdjustmentPct = 1.2;
+          item.valuation.macro = {message:'기준금리는 향후 시장 위험으로 확인해요.'};
+          const modelBand = zippickBuyBandHtml(item, {});
+          if (!modelBand.includes('매수 판단 밴드') || !modelBand.includes('집픽 현재 적정가격')) process.exit(10);
+          if (!modelBand.includes('적정가격보다 비싸요') || !modelBand.includes('<em>비쌈</em>')) process.exit(11);
+          if (!modelBand.includes('이 가격은 어떻게 계산했나요?') || !modelBand.includes('주변 시장 흐름을 +1.2% 반영했어요.')) process.exit(12);
+          delete item.valuation;
           item.statsThrough = '2020-01-01';
           if (zippickPriceCheckBasis(item).price !== 12) process.exit(2);
           item.latestDealPriceEok = 0;

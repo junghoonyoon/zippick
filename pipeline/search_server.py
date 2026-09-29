@@ -22,12 +22,14 @@ import education_environment
 import location_scores
 import kakao_station_distances
 import listing_review
+import market_indicators
 import molit_transactions
 import momentum_signals
 import naver_complex
 import news_catalysts
 import paid_access
 import policy_evaluator
+import price_valuation
 import real_estate_search
 import report_store
 import rone_estimates
@@ -45,7 +47,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 24
+BUDGET_CACHE_SCHEMA_VERSION = 25
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -290,6 +292,11 @@ MARKET_SNAPSHOT_FIELDS = (
     "currentEstimateSampleCount",
     "currentEstimateTrimmedCount",
     "currentEstimateMethod",
+    "valuationEstimateMinPriceEok",
+    "valuationEstimateMidPriceEok",
+    "valuationEstimateMaxPriceEok",
+    "valuationEstimateSampleCount",
+    "valuationEstimateMethod",
     "latestDealPriceEok",
     "latestDealExclusiveArea",
     "latestDealFloor",
@@ -333,6 +340,8 @@ MARKET_SNAPSHOT_FIELDS = (
     "sourceNote",
     "priceSource",
     "priceIdentityVerified",
+    "valuation",
+    "marketIndicators",
 )
 
 
@@ -412,6 +421,8 @@ def _budget_cache_key(arguments):
         config.ROOT / "pipeline" / "region_adjacency.py",
         config.ROOT / "pipeline" / "molit_transactions.py",
         config.ROOT / "pipeline" / "momentum_signals.py",
+        config.ROOT / "pipeline" / "price_valuation.py",
+        config.ROOT / "pipeline" / "market_indicators.py",
         config.ROOT / "pipeline" / "naver_complex.py",
         config.ROOT / "pipeline" / "verdicts.py",
         policy_evaluator.__file__,
@@ -766,6 +777,7 @@ def _attach_market_snapshots(payload):
     # 점수를 계산한다. 외부 API는 이 응답 경로에서 호출하지 않는다.
     _attach_cached_market_bands(rows)
     momentum_signals.attach_cached_signals(rows, only_missing=True)
+    price_valuation.attach_valuations(rows)
     pending_count = sum(
         1
         for row in rows
@@ -898,6 +910,7 @@ def _repair_budget_signals(payload):
         return
     if any(_signal_unavailable(row) for row in rows):
         momentum_signals.attach_signals(rows, include_leader_context=False)
+    price_valuation.attach_valuations(rows)
 
 
 def _budget_key_lock(cache_key):
@@ -1132,10 +1145,22 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                 for key in (
                     "statsThrough", "recent3AveragePriceEok", "recent3TradeCount",
                     "recent3AdjustedAveragePriceEok", "recent3AdjustedTradeCount",
+                    "currentEstimateMinPriceEok", "currentEstimateMidPriceEok",
+                    "currentEstimateMaxPriceEok", "currentEstimateSampleCount",
+                    "currentEstimateTrimmedCount", "currentEstimateMethod",
+                    "valuationEstimateMinPriceEok", "valuationEstimateMidPriceEok",
+                    "valuationEstimateMaxPriceEok", "valuationEstimateSampleCount",
+                    "valuationEstimateMethod",
+                    "transactionCount", "sourceNote",
                 ):
                     row[key] = price_band.get(key)
                 row["latestDealPriceEok"] = price_band.get("latestDealPriceEok")
                 row["latestDealDate"] = price_band.get("latestDealDate")
+                row["latestDealExclusiveArea"] = price_band.get("latestDealExclusiveArea")
+                row["latestDealFloor"] = price_band.get("latestDealFloor")
+                row["priceIdentityVerified"] = True
+                row["priceSource"] = "molit"
+                budget_candidates._apply_recent_trade_estimate(row)
         except Exception:
             pass
         try:
@@ -1198,6 +1223,18 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                 peer["locationScore"] = score_row.get("locationScore")
         except Exception:
             pass
+    try:
+        market_indicators.attach([row])
+    except Exception:
+        pass
+    try:
+        price_valuation.attach_valuations([row])
+    except Exception:
+        row["valuation"] = {
+            "status": "unavailable",
+            "reason": "가격 판단을 계산하지 못했어요.",
+            "modelVersion": price_valuation.MODEL_VERSION,
+        }
     return {"report": row, "signalNote": momentum_signals.SIGNAL_NOTE}
 
 

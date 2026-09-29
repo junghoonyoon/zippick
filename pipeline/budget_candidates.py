@@ -8,11 +8,13 @@ import threading
 import config
 import education_environment
 import location_scores
+import market_indicators
 import molit_transactions
 import momentum_signals
 import naver_complex
 import verdicts
 import policy_evaluator
+import price_valuation
 import real_estate_search
 import region_adjacency
 import supply_forecast
@@ -24,7 +26,7 @@ VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
 SHORTLIST_EXTENSION_MAX_RATIO = 1.10
 SHORTLIST_EXTENSION_LIMIT = 3
-CANDIDATE_RESULT_SCHEMA_VERSION = 9
+CANDIDATE_RESULT_SCHEMA_VERSION = 10
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -771,6 +773,8 @@ def _invalidate_unverified_price(row):
         "recentMinPriceEok", "recentMedianPriceEok", "recentAveragePriceEok",
         "recentMaxPriceEok", "currentEstimateMinPriceEok",
         "currentEstimateMidPriceEok", "currentEstimateMaxPriceEok",
+        "valuationEstimateMinPriceEok", "valuationEstimateMidPriceEok",
+        "valuationEstimateMaxPriceEok",
         "latestDealPriceEok", "latestDealDate", "latestDealExclusiveArea",
         "latestDealFloor", "previousDealPriceEok", "previousDealDate",
         "comparisonDealPriceEok", "comparisonDealDate",
@@ -862,6 +866,11 @@ def _apply_live_band(row, live, comparison=None):
         "currentEstimateSampleCount": live.get("currentEstimateSampleCount", 0),
         "currentEstimateTrimmedCount": live.get("currentEstimateTrimmedCount", 0),
         "currentEstimateMethod": live.get("currentEstimateMethod", ""),
+        "valuationEstimateMinPriceEok": live.get("valuationEstimateMinPriceEok"),
+        "valuationEstimateMidPriceEok": live.get("valuationEstimateMidPriceEok"),
+        "valuationEstimateMaxPriceEok": live.get("valuationEstimateMaxPriceEok"),
+        "valuationEstimateSampleCount": live.get("valuationEstimateSampleCount", 0),
+        "valuationEstimateMethod": live.get("valuationEstimateMethod", ""),
         "minPriceEok": live.get("minPriceEok"),
         "midPriceEok": live.get("midPriceEok"),
         "maxPriceEok": live.get("maxPriceEok"),
@@ -2318,6 +2327,15 @@ def _finalize_candidate_rows(
                 naver_complex.attach_links(rows)
             except Exception:
                 pass
+        if not fast_mode:
+            try:
+                market_indicators.attach(rows)
+            except Exception:
+                pass
+        try:
+            price_valuation.attach_valuations(rows)
+        except Exception:
+            pass
         try:
             if progress_callback:
                 progress_callback("final_rank", processed=len(rows), total=len(rows))
