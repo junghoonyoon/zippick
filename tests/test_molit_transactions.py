@@ -911,6 +911,23 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(band["latestDealPriceEok"], 22.0)
         self.assertEqual(band["transactionCount"], 1)
 
+    def test_minimum_area_band_excludes_latest_trade_for_valuation(self):
+        transactions = [
+            {"dealAmountEok": 15.0, "exclusiveArea": 84.65, "dealDate": "2026-09-10"},
+            {"dealAmountEok": 9.0, "exclusiveArea": 84.65, "dealDate": "2026-08-10"},
+            {"dealAmountEok": 9.2, "exclusiveArea": 84.65, "dealDate": "2026-07-10"},
+            {"dealAmountEok": 9.4, "exclusiveArea": 84.65, "dealDate": "2026-06-10"},
+        ]
+
+        band = molit_transactions._minimum_area_price_band_payload(
+            "테스트아파트", "서울 강남구", 84, 12, transactions,
+        )
+
+        self.assertEqual(band["latestDealPriceEok"], 15.0)
+        self.assertEqual(band["valuationEstimateSampleCount"], 3)
+        self.assertEqual(band["valuationEstimateMidPriceEok"], 9.2)
+        self.assertIn("가장 최근 거래를 제외한", band["valuationEstimateMethod"])
+
     def test_latest_transaction_skips_recent_months_and_returns_first_old_match(self):
         source_row = {
             "대표단지명": "오래된거래아파트",

@@ -33,7 +33,7 @@ MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 11
+PRICE_BAND_CACHE_SCHEMA_VERSION = 12
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 # 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
 # 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
@@ -2240,6 +2240,9 @@ def _minimum_area_price_band_payload(name, region, minimum, lookback_months, tra
     latest = transactions[0]
     previous = next((row for row in transactions[1:] if row.get("dealAmountEok")), {})
     estimate = _current_price_estimate(transactions)
+    # 최소 면적 조건으로 고른 평형도 일반 평형 조회와 같은 기준을 쓴다.
+    # 가장 최근 거래를 제외해야 그 거래가 적정 범위를 스스로 끌어당기지 않는다.
+    latest_excluded_estimate = _current_price_estimate(transactions[1:])
     display_area = max(int(minimum), int(float(latest.get("exclusiveArea") or 0)))
     return {
         "name": name,
@@ -2264,6 +2267,14 @@ def _minimum_area_price_band_payload(name, region, minimum, lookback_months, tra
         "currentEstimateSampleCount": (estimate or {}).get("sampleCount", 0),
         "currentEstimateTrimmedCount": (estimate or {}).get("trimmedCount", 0),
         "currentEstimateMethod": (estimate or {}).get("method", ""),
+        "valuationEstimateMinPriceEok": (latest_excluded_estimate or {}).get("minPriceEok"),
+        "valuationEstimateMidPriceEok": (latest_excluded_estimate or {}).get("midPriceEok"),
+        "valuationEstimateMaxPriceEok": (latest_excluded_estimate or {}).get("maxPriceEok"),
+        "valuationEstimateSampleCount": (latest_excluded_estimate or {}).get("sampleCount", 0),
+        "valuationEstimateMethod": (
+            "가장 최근 거래를 제외한 " + (latest_excluded_estimate or {}).get("method", "")
+            if latest_excluded_estimate else ""
+        ),
         **_previous_trade_comparison(transactions),
         **_quarter_trade_stats(transactions),
         **_half_year_trade_stats(transactions),

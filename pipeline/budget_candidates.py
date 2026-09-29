@@ -26,7 +26,8 @@ VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
 SHORTLIST_EXTENSION_MAX_RATIO = 1.10
 SHORTLIST_EXTENSION_LIMIT = 3
-CANDIDATE_RESULT_SCHEMA_VERSION = 10
+# v11: 최근 거래를 제외한 매수 판단 밴드 가격대가 모든 후보 응답에 포함된다.
+CANDIDATE_RESULT_SCHEMA_VERSION = 11
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",

@@ -8,6 +8,19 @@ APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
 
 
 class ReportPriceCheckTest(unittest.TestCase):
+    def test_report_summary_appears_before_buy_band(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        start = html.index("    function zippickDecisionHtml(item, verdict) {")
+        end = html.index("    function zippickLocationEvidenceText", start)
+        decision = html[start:end]
+
+        self.assertLess(
+            decision.index('<div class="zpr-summary is-verdict">'),
+            decision.index("${zippickBuyBandHtml(item, verdict)}"),
+        )
+        self.assertNotIn("다음에 볼 것", decision)
+        self.assertNotIn("같은 면적·비슷한 층의 매물이 위 가격 기준에 맞는지 확인하세요", decision)
+
     def test_asking_price_uses_fresh_same_area_trade_basis(self):
         html = APP_HTML.read_text(encoding="utf-8")
         start = html.index("    function zippickPriceCheckBasis(item) {")
@@ -45,6 +58,8 @@ class ReportPriceCheckTest(unittest.TestCase):
           const band = zippickBuyBandResultHtml(9.4, 10.1, 10.8, 10, true, '11');
           if (!band.includes('<strong>쌈</strong>') || !band.includes('<strong>적정</strong>') || !band.includes('<strong>비쌈</strong>')) process.exit(8);
           if (band.includes('가격 좋음') || band.includes('협상 필요')) process.exit(9);
+          if (!band.includes('zpr-buy-band-chart has-asking') || !band.includes('--zpr-band-position:')) process.exit(13);
+          if (!band.includes('최근 실거래 10억') || !band.includes('입력한 매물 11억')) process.exit(14);
           item.latestDealExclusiveArea = 84;
           item.displayAreaLabel = '전용 84㎡';
           item.valuation.reasons = ['이전 실거래 8건을 사용했어요.', '평가할 최근 거래는 기준가격에서 뺐어요.'];
@@ -52,7 +67,7 @@ class ReportPriceCheckTest(unittest.TestCase):
           item.valuation.marketAdjustmentPct = 1.2;
           item.valuation.macro = {message:'기준금리는 향후 시장 위험으로 확인해요.'};
           const modelBand = zippickBuyBandHtml(item, {});
-          if (!modelBand.includes('매수 판단 밴드') || !modelBand.includes('집픽 현재 적정가격')) process.exit(10);
+          if (!modelBand.includes('매수 판단 밴드') || modelBand.includes('집픽 현재 적정가격')) process.exit(10);
           if (!modelBand.includes('적정가격보다 비싸요') || !modelBand.includes('<em>비쌈</em>')) process.exit(11);
           if (!modelBand.includes('이 가격은 어떻게 계산했나요?') || !modelBand.includes('주변 시장 흐름을 +1.2% 반영했어요.')) process.exit(12);
           delete item.valuation;
