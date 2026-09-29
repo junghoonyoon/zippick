@@ -54,6 +54,21 @@ Use a Korean financial-service visual language inspired by the clarity and comfo
 - Summary area: calm financial insight panel with large decision text and readable evidence.
 - Loading and progress states: restrained, direct, and status-oriented.
 
+## 리포트 판단 문구
+
+리포트의 각 섹션 제목은 숫자나 현상보다 **판단을 먼저** 보여준다. 사용자가
+제목만 읽어도 이 항목이 매수에 유리한지 알 수 있어야 한다.
+
+- 근거가 매수에 유리하면 `좋아요`로 시작한다.
+- 강점과 주의점이 함께 있으면 `보통이에요`로 시작한다.
+- 현재 조건이 매수에 불리하면 `아쉬워요`로 시작한다.
+- 판단할 자료가 없으면 `판단할 수 없어요`라고 쓴다. 자료가 없다는 이유로
+  `아쉬워요`라고 쓰지 않는다.
+
+판단 뒤에는 바로 근거와 행동을 붙인다. 예를 들어 `최근 시장 흐름은 좋아요.
+가격과 거래가 함께 늘었어요`처럼 쓴다. `전세가율이 낮습니다`, `출퇴근 시간이
+보통입니다`, `가격이 올랐습니다`처럼 상태만 말하고 결론을 생략하지 않는다.
+
 ## Loading Spinner Convention
 
 Use a spinner for every state where the user is waiting for data, calculation, or map/chart rendering.
