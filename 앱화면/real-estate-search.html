@@ -1308,11 +1308,22 @@
     .zpr-score-note { margin:-4px 0 0; color:#4e5968; font-size:13px; line-height:1.6 }
     .zpr-evidence { display:grid; gap:7px; padding:13px 15px; border:1px solid #e5e8eb; border-radius:12px; color:#4e5968; font-size:13px; line-height:1.55 }
     .zpr-evidence strong { color:#191f28; font-size:14px }
+    .zpr-latest-deal { display:grid; gap:4px; width:100%; box-sizing:border-box; padding:16px 18px; border:1px solid #d9e8ff; border-radius:14px; background:#f5f9ff }
+    .zpr-latest-deal span { color:#4e5968; font-size:13px; font-weight:750 }
+    .zpr-latest-deal strong { color:#1b64da; font-size:25px; font-weight:900; line-height:1.3 }
+    .zpr-latest-deal small { color:#4e5968; font-size:13px; line-height:1.5 }
+    .zpr-basis-note { color:#4e5968; font-size:13px; line-height:1.6 }
+    .zpr-basis-note summary { width:max-content; max-width:100%; color:#1b64da; font-weight:800; cursor:pointer }
+    .zpr-basis-note p { margin:8px 0 0 }
     .zpr-price-check { display:grid; gap:11px; padding:16px; border:1px solid #e5e8eb; border-radius:14px }
     .zpr-price-check label { display:grid; gap:8px; color:#191f28; font-size:14px; font-weight:850 }
     .zpr-price-check input { width:100%; min-height:54px; box-sizing:border-box; border:1px solid #cfd7e2; border-radius:10px; padding:0 13px; background:#fff; color:#191f28; font:inherit; font-size:16px }
     .zpr-price-check input:focus-visible { outline:2px solid #3182f6; outline-offset:2px }
     .zpr-price-check output { display:block; color:#4e5968; font-size:14px; line-height:1.6 }
+    .zpr-price-check.is-active { border-color:#9fc6ff; background:#f5f9ff }
+    .zpr-price-check.is-active output { display:grid; gap:5px; padding:12px 14px; border-radius:10px; background:#e8f3ff; color:#124b9b; line-height:1.6 }
+    .zpr-price-check.is-active output strong { font-size:17px; font-weight:900 }
+    .zpr-price-check.is-active output small { color:#4e5968; font-size:13px; font-weight:650 }
     .zpr-matrix-note { margin:-14px 0 0; font-size:12.5px; font-weight:700; color:#8b95a1; line-height:1.6 }
     .zpr-matrix-note b { color:#4e5968; font-weight:900 }
 
@@ -1336,7 +1347,7 @@
     }
     .zpr-section { display:grid; gap:16px }
     .zippick-report > .zpr-section { padding-top:28px; border-top:1px solid #e5e8eb }
-    .zpr-section-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:7px 12px }
+    .zpr-section-top { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:7px 10px }
     .zpr-section-rating { display:inline-flex; align-items:center; gap:7px; color:#6b7684; font-size:11.5px; font-weight:750; line-height:1.3 }
     .zpr-section-stars { position:relative; display:inline-block; color:#e1e5ea; font-size:15px; letter-spacing:1px; line-height:1; white-space:nowrap }
     .zpr-section-stars::before { position:absolute; inset:0 auto 0 0; width:var(--zpr-rating-fill); overflow:hidden; color:#f0a51b; content:"★★★★★"; white-space:nowrap }
@@ -17010,7 +17021,7 @@
 
       if (stat.band === "illiquid") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
-          <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
+          <span class="zpr-kicker" data-zpr-step="하락기 거래"></span>
           <h5>나중에 팔기 어려울 수 있어 신중하게 보세요</h5>
           <p class="zpr-insight">${esc(span)} 중 <b>${esc(stat.silentTotal)}개월</b>은 거래가 <b>한 건도 없었습니다.</b> 값이 오르고 내리고를 따지기 전에, <b>팔고 싶을 때 살 사람을 찾기 어렵다</b>는 뜻이에요.</p>
           <p class="zpr-insight">시세라고 부를 만한 값도 만들어지지 않습니다. <b>이 리포트의 가격은 참고선으로만 보셔야 합니다.</b></p>
@@ -17019,16 +17030,16 @@
 
       if (stat.band === "no_downturn") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
-          <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
-          <h5>값이 내릴 때도 잘 팔리는지는 아직 알 수 없어요</h5>
+          <span class="zpr-kicker" data-zpr-step="하락기 거래"></span>
+          <h5>하락기에도 잘 팔리는지는 아직 알 수 없어요</h5>
           <p class="zpr-insight">${esc(span)} 동안 값이 뚜렷하게 내린 달이 <b>${esc(stat.downMonths)}개월</b>뿐이라, <b>내릴 때도 팔리는 단지인지</b>는 아직 시험대에 오른 적이 없습니다. 다음 조정장이 와야 알 수 있는 부분이에요.</p>
         </section>`;
       }
 
       const round1 = value => Number.isFinite(value) ? (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, "") : "-";
-      const heading = stat.band === "strong" ? "값이 내려도 팔기 쉬운 편이에요"
-        : stat.band === "fair" ? "값이 내리면 거래가 줄어 가격을 낮춰야 팔릴 수 있어요"
-        : "값이 내리면 거래가 줄어 팔기 어려울 수 있어요";
+      const heading = stat.band === "strong" ? "하락기에도 팔기 쉬운 편이에요"
+        : stat.band === "fair" ? "하락기에는 거래가 줄어 가격을 낮춰야 팔릴 수 있어요"
+        : "하락기에는 거래가 줄어 팔기 어려울 수 있어요";
 
       const cells = [
         { lb:"값이 내린 달", vl:`${stat.downMonths}개월`, nt:`${span} 중` },
@@ -17055,7 +17066,7 @@
       }
 
       return `<section class="zpr-section" aria-label="하락장 환금성">
-        <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
+        <span class="zpr-kicker" data-zpr-step="하락기 거래"></span>
         <h5>${esc(heading)}</h5>
         <p class="zpr-lead">오를 때 잘 팔리는 건 어느 단지나 마찬가지입니다. <b>값이 빠질 때도 거래가 붙었는지</b>가 진짜 시험대예요.</p>
         <div class="zpr-stat">
@@ -17108,6 +17119,11 @@
         step += 1;
         return `<div class="zpr-section-top"><span class="zpr-kicker">${step}. ${esc(label)}</span>${zippickSectionRatingHtml(item, label)}</div>`;
       });
+    }
+
+    function zippickOptionalSectionHtml(html) {
+      return String(html).replace(/<span class="zpr-kicker" data-zpr-step="([^"]+)"><\/span>/g,
+        (_, label) => `<span class="zpr-kicker">${esc(label)}</span>`);
     }
 
     // 가장 낮은 항목 하나는 반드시 보여준다. 좋은 얘기만 하면 광고로 읽힌다.
@@ -18013,7 +18029,7 @@
       </div>`;
     }
 
-    function zippickNumberBasisHtml(item) {
+    function zippickNumberBasis(item) {
       const price = zippickPriceCheckBasis(item);
       const rawPriceArea = String(item?.displayAreaLabel || item?.areaLabel || "").trim();
       const priceArea = price?.areaBasis || (rawPriceArea && rawPriceArea !== "상관없음"
@@ -18041,14 +18057,10 @@
       const marketText = Number.isFinite(marketCount)
         ? `${marketPeriodText}에 팔린 ${Math.round(marketCount)}건을 그 전 6개월과 비교해요.`
         : "최근 6개월 거래 자료가 부족해요.";
-      const scopeText = priceArea !== marketScope ? `가격 비교는 ${priceArea}, 시장 흐름은 ${marketScope}을 봤어요.` : "";
-      return `<div class="zpr-evidence" aria-label="리포트 숫자 기준">
-        <strong>가격과 거래 건수가 다른 이유</strong>
-        <span><b>가격 비교:</b> ${esc(priceText)}</span>
-        <span><b>시장 흐름:</b> ${esc(marketText)}</span>
-        ${scopeText ? `<span>${esc(scopeText)}</span>` : ""}
-        <span>보는 기간이 달라 거래 건수도 달라요.</span>
-      </div>`;
+      return {
+        price:`${priceArea} 기준. ${priceText}`,
+        market:`${marketScope} 기준. ${marketText}`,
+      };
     }
 
     const zippickEnteredPrices = new Map();
@@ -18094,22 +18106,26 @@
       return `입력한 매물가는 ${basis.label}보다 ${position}. 층·향·수리 상태가 달라 가격도 달라질 수 있어요.`;
     }
 
-    function zippickPriceCheckResult(item, enteredPrice) {
-      return zippickPriceCheckText(zippickPriceCheckBasis(item), enteredPrice);
+    function zippickPriceCheckMarkup(basis, enteredPrice) {
+      const result = zippickPriceCheckText(basis, enteredPrice);
+      const noteStart = result.indexOf(" 층·향·수리 상태가");
+      if (noteStart < 0) return esc(result);
+      return `<strong>${esc(result.slice(0, noteStart))}</strong><small>${esc(result.slice(noteStart + 1))}</small>`;
     }
 
     function zippickPriceCheckHtml(item) {
       const key = candidateIdentityKey(item);
       const entered = zippickEnteredPrices.get(key) || "";
       const basis = zippickPriceCheckBasis(item);
+      const hasEnteredPrice = Number.isFinite(zpNum(entered)) && zpNum(entered) >= 0.1 && zpNum(entered) <= 1000;
       return `<section class="zpr-section" aria-label="내가 본 매물 가격 비교">
         <span class="zpr-kicker" data-zpr-step="매물 가격 비교"></span>
-        <h5>내가 본 매물 가격을 대조해 보세요</h5>
-        <div class="zpr-price-check" data-zpr-price-check="${esc(key)}" data-zpr-base-price="${basis ? esc(basis.price) : ""}" data-zpr-base-label="${basis ? esc(basis.label) : ""}">
+        <h5>매물 가격을 넣고 최근 거래와 비교해 보세요</h5>
+        <div class="zpr-price-check${hasEnteredPrice && basis ? " is-active" : ""}" data-zpr-price-check="${esc(key)}" data-zpr-base-price="${basis ? esc(basis.price) : ""}" data-zpr-base-label="${basis ? esc(basis.label) : ""}">
           <label>매물 가격 · 억원
             <input type="number" min="0.1" max="1000" step="0.01" inputmode="decimal" placeholder="예: 12.5" value="${esc(entered)}" data-zpr-asking-price>
           </label>
-          <output aria-live="polite">${esc(zippickPriceCheckResult(item, entered))}</output>
+          <output aria-live="polite">${zippickPriceCheckMarkup(basis, entered)}</output>
         </div>
         <p class="zpr-lead">실거래와의 차이만 보여줘요. 이 숫자만으로 적정 매수가를 정할 수는 없습니다.</p>
       </section>`;
@@ -18148,6 +18164,9 @@
       const locationEvidence = zippickLocationEvidenceText(item);
       const market = zippickMarketVerdict(item);
       const signalMeaning = market.summary;
+      const latestPrice = zpNum(item?.latestDealPriceEok);
+      const latestArea = zpNum(item?.latestDealExclusiveArea);
+      const latestMeta = [item?.latestDealDate, Number.isFinite(latestArea) && latestArea > 0 ? `전용 ${latestArea}㎡` : "", item?.latestDealFloor ? `${item.latestDealFloor}층` : ""].filter(Boolean).join(" · ");
       const next = verdict.peakGuard ? market.action
         : verdict.tone === "missing" ? "최근 거래와 단지 자료를 더 확인한 뒤 다시 판단하세요."
         : ["risk", "hold"].includes(verdict.tone) ? "비슷한 가격의 다른 단지를 먼저 비교해 보세요."
@@ -18155,6 +18174,11 @@
       return `<header class="zpr-head">
         <span class="zpr-verdict is-${esc(verdict.tone || "missing")}"><i></i>${esc(label)}</span>
         <h3 class="zpr-title">${esc(title)}</h3>
+        <div class="zpr-latest-deal" aria-label="가장 최근 실거래">
+          <span>가장 최근 실거래</span>
+          <strong>${Number.isFinite(latestPrice) && latestPrice > 0 ? esc(transactionMoney(latestPrice)) : "가격 확인 중"}</strong>
+          <small>${esc(latestMeta || "거래 날짜와 면적 확인 중")} · 국토교통부 신고 거래</small>
+        </div>
         <div class="zpr-summary is-verdict">
           <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
           <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
@@ -18184,6 +18208,7 @@
 
     function zippickPriceEvidenceHtml(item) {
       const basis = zippickPriceCheckBasis(item);
+      const numberBasis = zippickNumberBasis(item);
       const basisMeaning = basis?.label.startsWith("마지막 실거래")
         ? "최근 거래가 적어 마지막 거래 1건을 기준으로 봐요."
         : "최근 3개월 비슷한 면적의 거래 평균이에요.";
@@ -18199,6 +18224,7 @@
         <span class="zpr-kicker" data-zpr-step="가격 비교"></span>
         <h5>${basis ? `같은 조건이면 ${esc(transactionMoney(basis.price))}보다 낮은 매물을 먼저 보세요` : "최근 거래를 더 확인한 뒤 가격을 정하세요"}</h5>
         <p class="zpr-lead">${basis ? `${basisMeaning} 매물이 더 비싸다면 층·향·수리 상태 때문에 차이가 나는지 확인하세요. 더 싸더라도 상태를 살펴봐야 해요.` : "비슷한 크기의 최근 거래 자료가 부족해요. 실제 매물 가격을 판단하기 전에 최근 거래를 더 확인하세요."}</p>
+        <details class="zpr-basis-note"><summary>ⓘ 이 비교 가격의 기준</summary><p>${esc(numberBasis.price)}</p></details>
         <details class="zpr-details" open><summary>비교 기준과 실제 거래</summary>
           <p>${basisExplanation}</p>
           <p>아래는 실제로 팔린 거래예요. 매물 가격이 기준보다 낮아도 집 상태와 층을 함께 확인하세요.</p>
@@ -18331,10 +18357,9 @@
       );
       const locationBars = zippickLocationBarsHtml(item);
       const signalBars = zippickSignalBarsHtml(item);
-      // 매수 판단 → 가격 기준 → 대안 → 단지·시장 근거 → 자금 참고 → 현장 질문.
+      // 매수 판단 → 가격 기준 → 단지·시장 근거 → 자금 조건 → 매물 가격·현장 확인.
       return zippickNumberSteps(`<article class="zippick-report" aria-label="${esc(candidateDisplayName(item))} 집픽 분석">
         ${zippickDecisionHtml(item, verdict)}
-        ${zippickNumberBasisHtml(item)}
         ${zippickPriceEvidenceHtml(item)}
         ${zippickAlternativesHtml(item)}
         <details class="zpr-details"><summary>왜 이런 매수 판단이 나왔는지 자세히 보기</summary>
@@ -18370,23 +18395,24 @@
           <span class="zpr-kicker" data-zpr-step="최근 시장 흐름"></span>
           <h5>${esc(zippickSignalHeading(item))}</h5>
           ${(text => text ? `<p class="zpr-insight">${text}</p>` : "")(zippickSignalInsight(item))}
+          <details class="zpr-basis-note"><summary>ⓘ 시장 흐름의 거래 기준</summary><p>${esc(zippickNumberBasis(item).market)}</p></details>
           ${signalBars}
           ${zippickSignalCapsHtml(item)}
           ${(text => text ? `<p class="zpr-insight">${text}</p>` : "")(zippickPriceContext(item))}
         </section>` : ""}
         ${zippickLiquidityHtml(item)}
-        ${zippickPriceCheckHtml(item)}
-        ${zippickViewingChecklistHtml(item)}
-        <details class="zpr-details"><summary>참고: 전세금·매수 비용·내 자금 계산 보기</summary>
-          ${zippickFundingHtml(item)}
-          ${zippickBreakevenHtml(item)}
-          ${zippickPersonalFundingHtml(item)}
+        ${zippickFundingHtml(item)}
+        <details class="zpr-details"><summary>참고: 매수 비용·내 자금 계산 보기</summary>
+          ${zippickOptionalSectionHtml(zippickBreakevenHtml(item))}
+          ${zippickOptionalSectionHtml(zippickPersonalFundingHtml(item))}
         </details>
         <div class="zpr-warn is-limit">
           <b>집픽은 호가를 보지 못합니다.</b><br>
           국토부에 신고된 <b>실거래</b>만 받아옵니다. 지금 부동산에 걸린 매물이 얼마인지는 알 수 없어요.
           이 리포트의 가격은 <b>기준선</b>이지 <b>살 수 있는 가격이 아닙니다.</b>
         </div>
+        ${zippickPriceCheckHtml(item)}
+        ${zippickViewingChecklistHtml(item)}
         <div class="zpr-share">
           <span class="zpr-share-copy"><b>이 단지 공유</b>받은 사람이 같은 단지·면적을 열 수 있어요. 다시 열면 최신 거래로 갱신됩니다.</span>
           <span class="zpr-share-actions">
@@ -23365,7 +23391,9 @@
         ? { price:basePrice, label:check.dataset.zprBaseLabel || "실거래" }
         : null;
       const output = check.querySelector("output");
-      if (output) output.textContent = zippickPriceCheckText(basis, input.value);
+      if (output) output.innerHTML = zippickPriceCheckMarkup(basis, input.value);
+      check.classList.toggle("is-active", !!basis && Number.isFinite(zpNum(input.value))
+        && zpNum(input.value) >= 0.1 && zpNum(input.value) <= 1000);
     });
     aptReportSheet.addEventListener("click", event => {
       if (event.target.closest("[data-apt-report-close]")) {
