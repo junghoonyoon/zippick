@@ -1320,7 +1320,6 @@
     .zpr-buy-band-cell strong { color:#191f28; font-size:14px; line-height:1.35 }
     .zpr-buy-band-cell small { color:#6b7684; font-size:13px; line-height:1.4 }
     .zpr-buy-band-mark { display:block; max-width:100%; color:#1b64da; font-size:13px; font-weight:800; line-height:1.4; overflow-wrap:anywhere }
-    .zpr-buy-band-mark::before { content:"●"; margin-right:5px; font-size:8px; vertical-align:middle }
     .zpr-buy-band-mark.is-asking { color:#191f28 }
     .zpr-buy-band-conclusion { padding:2px 0 2px 11px; border-left:3px solid #3182f6; color:#191f28; font-size:15px; font-weight:800; line-height:1.6 }
     .zpr-basis-note { color:#4e5968; font-size:13px; line-height:1.6 }
@@ -15902,8 +15901,8 @@
         short: "신중 매수",
         tone: "conditional",
         title: risk.surge && !risk.atPeak
-          ? "최근 가격이 빠르게 올랐습니다. 최근 실거래보다 싼 매물만 검토하세요."
-          : "최근 거래가 2년 고점권입니다. 최근 실거래보다 싼 매물만 검토하세요.",
+          ? "최근 가격이 빠르게 올랐지만 단지와 거래 흐름은 좋습니다. 최근 거래 평균 이하라면 매수할 만합니다."
+          : "2년 고점권이지만 단지와 거래 흐름은 좋습니다. 최근 거래 평균 이하라면 매수할 만합니다.",
         peakGuard: risk,
       };
     }
@@ -18128,7 +18127,7 @@
       return 3;
     }
 
-    function zippickBuyBandResultHtml(basisPrice, latestPrice, showLatest, enteredPrice) {
+    function zippickBuyBandResultHtml(basisPrice, latestPrice, showLatest, enteredPrice, peakGuard = false) {
       const low = basisPrice * 0.95;
       const high = basisPrice * 1.05;
       const entered = zpNum(enteredPrice);
@@ -18144,10 +18143,18 @@
       const latestTierText = ["가격이 좋은 구간", "검토 가능한 구간", "협상이 필요한 구간", "비싼 구간"];
       const conclusion = enteredPrice !== "" && !valid
         ? "매물 가격은 0.1억~1,000억 사이로 입력해 주세요."
-        : askTier === 0 ? "이 매물은 최근 거래 평균보다 5% 이상 낮은 구간입니다. 집 상태를 확인하고 우선 검토하세요."
-        : askTier === 1 ? "이 매물은 최근 거래 평균 이하입니다. 같은 층과 상태의 거래를 확인하고 검토하세요."
+        : askTier === 0 ? peakGuard
+          ? "입력한 매물가는 최근 거래 평균보다 5% 이상 낮아요. 같은 면적·비슷한 상태라면 매수할 만해요."
+          : "이 매물은 최근 거래 평균보다 5% 이상 낮은 구간입니다. 집 상태를 확인하고 우선 검토하세요."
+        : askTier === 1 ? peakGuard
+          ? "입력한 매물가는 최근 거래 평균 이하예요. 같은 면적·비슷한 상태라면 매수할 만해요."
+          : "이 매물은 최근 거래 평균 이하입니다. 같은 층과 상태의 거래를 확인하고 검토하세요."
         : askTier === 2 ? "이 매물은 최근 거래 평균보다 높습니다. 가격을 낮춰 달라고 협상하세요."
         : askTier === 3 ? "이 매물은 최근 거래 평균보다 5% 넘게 높아 비싼 구간입니다. 가격을 낮춰야 합니다."
+        : latestTier >= 0 && peakGuard && latestTier <= 1
+          ? `가장 최근 실거래가 ${transactionMoney(latestPrice)}은 최근 거래 평균 이하예요. 같은 면적·비슷한 상태의 매물도 이 가격이면 매수할 만해요.`
+        : latestTier >= 0 && peakGuard
+          ? `가장 최근 실거래가 ${transactionMoney(latestPrice)}은 최근 거래 평균보다 높아요. 평균 이하 매물만 매수할 만해요.`
         : latestTier >= 0 ? `가장 최근 실거래가는 ${latestTierText[latestTier]}에 있어요. 지금 나온 매물의 가격은 아니에요.`
         : "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
       return `<div class="zpr-buy-band-grid" aria-label="매수 판단 가격 구간">${cells.map(([label, range], index) =>
@@ -18173,13 +18180,12 @@
       const shownArea = zpNum(String(item?.displayAreaLabel || item?.areaLabel || "").match(/\d+(?:\.\d+)?/)?.[0]);
       const showLatest = Number.isFinite(latestPrice) && latestPrice > 0 && Number.isFinite(latestArea)
         && (!Number.isFinite(shownArea) || Math.abs(latestArea - shownArea) <= 5);
-      return `<div class="zpr-buy-band" data-zpr-buy-band data-zpr-key="${esc(key)}" data-zpr-base-price="${esc(basis.price)}" data-zpr-latest-price="${Number.isFinite(latestPrice) ? esc(latestPrice) : ""}" data-zpr-show-latest="${showLatest ? "1" : "0"}">
+      return `<div class="zpr-buy-band" data-zpr-buy-band data-zpr-key="${esc(key)}" data-zpr-base-price="${esc(basis.price)}" data-zpr-latest-price="${Number.isFinite(latestPrice) ? esc(latestPrice) : ""}" data-zpr-show-latest="${showLatest ? "1" : "0"}" data-zpr-peak-guard="${verdict?.peakGuard ? "1" : "0"}">
         <h4>매수 판단 밴드</h4>
         <p>비슷한 면적의 최근 3개월 거래 ${esc(basis.count)}건 평균 <b>${esc(transactionMoney(basis.price))}</b>을 기준으로 봐요.</p>
-        <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.price, latestPrice, showLatest, entered)}</div>
+        <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.price, latestPrice, showLatest, entered, Boolean(verdict?.peakGuard))}</div>
         <p class="zpr-buy-band-meta">${showLatest ? `최근 실거래 정보 · ${esc(latestMeta || "거래 날짜·면적 확인 중")} · 국토교통부 신고 거래` : `가장 최근 실거래 ${latestDetail}`}</p>
         <p>평균보다 5% 낮으면 ‘가격 좋음’, 5% 넘게 높으면 ‘비쌈’으로 나눠요. 층·향·수리 상태는 별도로 확인해야 해요.</p>
-        ${verdict?.peakGuard ? `<p>최근 거래가 ${verdict.peakGuard.atPeak ? "고점권" : "급등 직후"}이므로 실제 매물은 최근 실거래보다 싸게 나왔을 때만 검토하세요.</p>` : ""}
         ${showLatest ? "" : "<p>가장 최근 거래는 이 밴드의 면적과 달라 위치를 표시하지 않았어요.</p>"}
       </div>`;
     }
@@ -18236,6 +18242,12 @@
     function zippickDecisionHtml(item, verdict) {
       // 매수 판단은 단지와 시장 자료만 사용한다. 추가 자금은 마련한다고 가정한다.
       const location = zpNum(item?.locationScore?.score);
+      const priceBasis = zippickPriceCheckBasis(item);
+      const peakPriceGuide = priceBasis?.count >= 3 && priceBasis.price > 0
+        ? `최근 거래 평균 ${transactionMoney(priceBasis.price)} 이하라면 매수할 만해요`
+        : priceBasis?.price > 0
+          ? `최근 실거래가 ${transactionMoney(priceBasis.price)} 수준이라면 매수할 만해요`
+          : "실제 매물 가격을 확인한 뒤 매수를 결정하세요";
       const decisions = {
         yes: ["매수 검토", "지금 매수 후보로 검토할 만한 단지입니다"],
         conditional: ["조건부 매수 검토", location >= 65 ? "단지는 좋지만, 지금은 가격을 따져서 살 때입니다" : "시장 흐름은 좋지만, 단지의 약점을 따져봐야 합니다"],
@@ -18245,8 +18257,8 @@
       };
       const [label, title] = verdict.peakGuard
         ? verdict.peakGuard.atPeak
-          ? ["신중 매수", "2년 고점권입니다. 최근 실거래보다 싼 매물만 검토하세요"]
-          : ["신중 매수", "최근 가격이 급등했습니다. 최근 실거래보다 싼 매물만 검토하세요"]
+          ? ["신중 매수", `2년 고점권이지만 단지와 거래 흐름은 좋아요. ${peakPriceGuide}`]
+          : ["신중 매수", `가격이 급등했지만 단지와 거래 흐름은 좋아요. ${peakPriceGuide}`]
         : decisions[verdict.tone] || decisions.missing;
       const locationMeaning = !Number.isFinite(location) ? "자료가 더 필요해요"
         : location >= 80 ? "강점이 뚜렷해요"
@@ -18257,7 +18269,7 @@
       const market = zippickMarketVerdict(item);
       const signalMeaning = market.summary;
       const next = verdict.peakGuard
-        ? "같은 면적·비슷한 층의 최근 실거래보다 싼 매물을 찾아보세요."
+        ? "같은 면적·비슷한 층의 매물이 위 가격 기준에 맞는지 확인하세요."
         : verdict.tone === "missing" ? "최근 거래와 단지 자료를 더 확인한 뒤 다시 판단하세요."
         : ["risk", "hold"].includes(verdict.tone) ? "비슷한 가격의 다른 단지를 먼저 비교해 보세요."
         : "마음에 드는 매물이 있다면 아래 거래 가격과 먼저 비교해 보세요.";
@@ -23489,7 +23501,7 @@
         const bandResult = band.querySelector("[data-zpr-band-result]");
         if (bandResult) bandResult.innerHTML = zippickBuyBandResultHtml(
           zpNum(band.dataset.zprBasePrice), zpNum(band.dataset.zprLatestPrice),
-          band.dataset.zprShowLatest === "1", input.value);
+          band.dataset.zprShowLatest === "1", input.value, band.dataset.zprPeakGuard === "1");
       }
       if (!check) return;
       const basePrice = zpNum(check.dataset.zprBasePrice);
