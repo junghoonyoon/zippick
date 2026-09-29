@@ -366,6 +366,7 @@ def raw_signals(
         "dealCount": len(deals),
         "outlierExcludedCount": outlier_excluded,
         "comparisonBasis": {
+            "areaLabel": area_label or "단지 전체 면적",
             "asOf": datetime.date.today().isoformat(),
             "recent3Start": _months_ago(3),
             "recent3End": _months_ago(1),
@@ -879,6 +880,8 @@ def district_peer_reports(
             details = _score_details(signals)
             collected.append({
                 "name": entity.get("name", ""),
+                "apartmentId": entity.get("apartmentId") or "",
+                "kaptCode": entity.get("kaptCode") or "",
                 "region": region,
                 "legalDong": entity.get("legalDong") or "",
                 "jibun": entity.get("jibun") or "",

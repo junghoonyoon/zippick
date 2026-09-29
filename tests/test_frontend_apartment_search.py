@@ -207,8 +207,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         # 리포트 조립부가 실제로 보정을 거치는지
         self.assertIn("const verdict = zippickGuardVerdict(", html)
-        self.assertIn("실거래보다 싸다는 이유만으로 좋은 매물이라고 판단하지 않아요.", html)
-        self.assertIn("${zippickMatrixTableHtml(item, verdict)}", html)
+        self.assertIn("층·향·수리 상태가 비슷할 때", html)
+        self.assertIn("${zippickDecisionHtml(item, verdict)}", html)
+        self.assertIn("function zippickReportAssessment(item, initial)", html)
 
         # 점수 산식 자체는 건드리지 않는다(카드·정렬·비교 화면과 어긋나면 안 된다)
         self.assertNotIn("signals.score =", html)
@@ -385,7 +386,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('if (!rows.length && !officialZones.length) return "";', report_match)
         self.assertIn("const hasOfficialStage = confirmedRows.length > 0 || officialZones.length > 0;", report_match)
         self.assertIn(': "signal";', report_match)
-        self.assertIn('<span class="zpr-kicker">단지 변화</span>', report_match)
+        self.assertIn('data-zpr-step="단지 변화"', report_match)
         self.assertNotIn('<span class="zpr-kicker">단지 개발</span>', report_match)
         self.assertIn("이 단지 ${word} 추진 소식이 있습니다", report_match)
         self.assertIn("공식 추진 단계는 아직 확인되지 않았습니다", report_match)
@@ -480,9 +481,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         # 네 갈래 판정 문구
         for heading in (
-            "값이 내려도 팔기 쉬운 편이에요",
-            "값이 내리면 거래가 줄어 가격을 낮춰야 팔릴 수 있어요",
-            "값이 내리면 거래가 줄어 팔기 어려울 수 있어요",
+            "값이 내릴 때도 거래가 이어진 점은 긍정적이에요",
+            "값이 내릴 때 거래도 줄어 매도 계획은 여유 있게 잡으세요",
+            "값이 내릴 때 거래가 크게 줄어 빠른 매도는 기대하지 마세요",
             "나중에 팔기 어려울 수 있어 신중하게 보세요",
             "값이 내릴 때도 잘 팔리는지는 아직 알 수 없어요",
         ):
@@ -503,11 +504,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const ZP_COMMUTE_LONG_MINUTES = 60;", html)
 
         # 평균값을 잘못 적으면 안 된다
-        self.assertIn("편도 약 35분", html)
+        self.assertIn("역 수로 계산한 참고값", html)
         self.assertNotIn("약 40분", html)
 
         # 편도 1시간 안쪽은 흔한 범위로 다룬다
-        self.assertIn("편도 1시간 안쪽이라 흔한 범위", html)
+        self.assertIn("출근 시간대 대기·혼잡을 확인한 뒤 판단하세요", html)
         for overblown in (
             "고를 이유가 대부분 사라집니다",
             "통근 30분을 줄이는 값",
