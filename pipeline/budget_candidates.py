@@ -24,7 +24,7 @@ VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
 SHORTLIST_EXTENSION_MAX_RATIO = 1.10
 SHORTLIST_EXTENSION_LIMIT = 3
-CANDIDATE_RESULT_SCHEMA_VERSION = 8
+CANDIDATE_RESULT_SCHEMA_VERSION = 9
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -2178,15 +2178,10 @@ def _candidate_policy_context(
         and policy_profile["mortgageRatePercent"]
     )
     estimate_regions = _region_terms(region) or ["서울시", "경기도"]
-    if budget_eok > 0 and can_estimate_budget and region:
-        regional_budget_eok = policy_evaluator.estimated_purchase_ceiling(
-            policy_profile,
-            estimate_regions,
-        )
-        if regional_budget_eok > 0:
-            budget_eok = regional_budget_eok
-            budget_source = "region_adjusted"
-    elif budget_eok <= 0:
+    # 화면에 표시한 검토 가능 금액은 후보 검색의 상한과 반드시 같아야 한다.
+    # 지역별 대출 규칙으로 여기서 다시 계산하면, 사용자는 6.3억을 보고도
+    # 9억대 후보를 받게 된다. 금액을 받지 못한 경우에만 새로 계산한다.
+    if budget_eok <= 0:
         if not (
             policy_profile["cashEok"]
             and policy_profile["annualIncomeManwon"]

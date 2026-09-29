@@ -5430,9 +5430,10 @@
     // v12부터 지도 지오코딩에 쓰는 원주소(mapAddress)를 포함한다.
     // v16부터 광역 지역도 분산 선별한 실거래 후보를 포함한다.
     // v19부터 화면에 보이는 모든 구매 시나리오에 +5% 상한을 적용한다.
-    const CANDIDATE_RESULT_SCHEMA_VERSION = 8;
+    // v25부터 화면의 검토 가능 금액과 후보 가격 상한을 같은 값으로 쓴다.
+    const CANDIDATE_RESULT_SCHEMA_VERSION = 9;
     const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v4";
-    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v24.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
+    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v25.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
     try {
       Object.keys(localStorage)
@@ -5648,9 +5649,15 @@
 	    }
 
     function budgetStateNeedsRefresh(savedState) {
+      const data = savedState?.currentBudgetData || {};
+      const displayedBudget = Number(savedState?.currentPurchasePower?.budgetEok || 0);
+      const candidateBudget = Number(data?.budgetEok || 0);
+      // 이전 화면 상태도 화면에 표시한 구매력과 다른 후보를 되살리면 안 된다.
+      if (Number(data?.candidateResultSchemaVersion || 0) < CANDIDATE_RESULT_SCHEMA_VERSION) return true;
+      if (displayedBudget > 0 && Math.abs(displayedBudget - candidateBudget) > .01) return true;
       const rows = [
-        ...(Array.isArray(savedState?.currentBudgetData?.allCandidates) ? savedState.currentBudgetData.allCandidates : []),
-        ...(Array.isArray(savedState?.currentBudgetData?.candidates) ? savedState.currentBudgetData.candidates : []),
+        ...(Array.isArray(data.allCandidates) ? data.allCandidates : []),
+        ...(Array.isArray(data.candidates) ? data.candidates : []),
       ];
       return rows.some(locationScoreNeedsRefresh);
     }

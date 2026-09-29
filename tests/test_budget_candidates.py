@@ -1141,7 +1141,7 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertLess(result["budgetEok"], 15)
         self.assertEqual(result["policySnapshot"]["estimatedPurchaseCeilingEok"], result["budgetEok"])
 
-    def test_input_purchase_power_is_adjusted_to_selected_region_policy(self):
+    def test_input_purchase_power_remains_the_candidate_search_cap(self):
         result = budget_candidates.budget_candidates(
             "8.9억",
             region="은평구",
@@ -1154,8 +1154,8 @@ class BudgetCandidatesTest(unittest.TestCase):
             limit=3,
         )
 
-        self.assertEqual(result["budgetSource"], "region_adjusted")
-        self.assertLess(result["budgetEok"], 8.9)
+        self.assertEqual(result["budgetSource"], "input")
+        self.assertEqual(result["budgetEok"], 8.9)
         self.assertEqual(result["policySnapshot"]["estimatedPurchaseCeilingEok"], result["budgetEok"])
 
 
