@@ -17994,10 +17994,11 @@
         : location >= 65 ? "좋은 편이에요"
         : location >= 50 ? "보통이에요"
         : "아쉬운 편이에요";
-      const signalMeaning = !(signal > 0) ? "자료가 더 필요해요"
-        : signal >= 70 ? "흐름이 좋은 편이에요"
-        : signal >= 45 ? "서두를 이유는 적어요"
-        : "흐름이 약한 편이에요";
+      const recentPriceChange = zpNum(item?.signals?.recent3Pct);
+      const signalMeaning = !Number.isFinite(recentPriceChange) ? "최근 가격 자료가 부족해요"
+        : recentPriceChange > 0.05 ? "최근 가격이 오르는 중이에요"
+        : recentPriceChange < -0.05 ? "최근 가격이 내리는 중이에요"
+        : "최근 가격은 비슷해요";
       const next = verdict.peakGuard ? "최근 가격이 많이 올랐어요. 높은 가격에 바로 사지 말고 아래 거래와 비교해 보세요."
         : verdict.tone === "missing" ? "최근 거래와 단지 자료를 더 확인한 뒤 다시 판단하세요."
         : ["risk", "hold"].includes(verdict.tone) ? "비슷한 가격의 다른 단지를 먼저 비교해 보세요."
@@ -18007,7 +18008,7 @@
         <h3 class="zpr-title">${esc(title)}</h3>
         <div class="zpr-summary is-verdict">
           <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"} · 가격과 주변 환경 등을 함께 봤어요.</small></div>
-          <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>최근 시장 흐름 ${signal > 0 ? `${Math.round(signal)}점` : "점수 없음"} · 최근 가격과 거래량을 봤어요.</small></div>
+          <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>최근 3개월과 그 전 3개월의 거래 가격을 비교했어요. 시장 신호 ${signal > 0 ? `${Math.round(signal)}점` : "점수 없음"}은 가격과 거래량을 함께 봤어요.</small></div>
         </div>
         <p class="zpr-insight"><b>다음에 볼 것</b> · ${esc(next)}</p>
       </header>`;
