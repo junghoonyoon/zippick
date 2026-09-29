@@ -15908,8 +15908,8 @@
         short: "신중 매수",
         tone: "conditional",
         title: risk.surge && !risk.atPeak
-          ? "최근 가격이 빠르게 올랐지만 단지와 거래 흐름은 좋습니다. 최근 거래 평균 이하라면 매수할 만합니다."
-          : "2년 고점권이지만 단지와 거래 흐름은 좋습니다. 최근 거래 평균 이하라면 매수할 만합니다.",
+          ? "최근 가격이 빠르게 올랐지만 단지와 거래 흐름은 좋아요."
+          : "2년 고점권이지만 단지와 거래 흐름은 좋아요.",
         peakGuard: risk,
       };
     }
@@ -18310,11 +18310,6 @@
       // 매수 판단은 단지와 시장 자료만 사용한다. 추가 자금은 마련한다고 가정한다.
       const location = zpNum(item?.locationScore?.score);
       const priceBasis = zippickPriceCheckBasis(item);
-      const peakPriceGuide = priceBasis?.count >= 3 && priceBasis.price > 0
-        ? `최근 거래 평균 ${transactionMoney(priceBasis.price)} 이하라면 매수할 만해요`
-        : priceBasis?.price > 0
-          ? `최근 실거래가 ${transactionMoney(priceBasis.price)} 수준이라면 매수할 만해요`
-          : "실제 매물 가격을 확인한 뒤 매수를 결정하세요";
       const conditionalPriceGuide = priceBasis?.price > 0
         ? `단지는 좋지만, 최근 거래 평균 ${transactionMoney(priceBasis.price)} 이하 매물만 검토하세요`
         : "단지는 좋지만, 같은 면적의 최근 실거래와 비교한 매물만 검토하세요";
@@ -18327,8 +18322,8 @@
       };
       const [label, title] = verdict.peakGuard
         ? verdict.peakGuard.atPeak
-          ? ["신중 매수", `2년 고점권이지만 단지와 거래 흐름은 좋아요. ${peakPriceGuide}`]
-          : ["신중 매수", `가격이 급등했지만 단지와 거래 흐름은 좋아요. ${peakPriceGuide}`]
+          ? ["신중 매수", "2년 고점권이지만 단지와 거래 흐름은 좋아요."]
+          : ["신중 매수", "가격이 급등했지만 단지와 거래 흐름은 좋아요."]
         : decisions[verdict.tone] || decisions.missing;
       const locationParts = zpScoredParts(item);
       const strongCount = locationParts.filter(part => zpPartRatio(part) >= .65).length;
