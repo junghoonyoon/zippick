@@ -207,7 +207,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         # 리포트 조립부가 실제로 보정을 거치는지
         self.assertIn("const verdict = zippickGuardVerdict(", html)
-        self.assertIn("실거래보다 싸다는 이유만으로 급매로 판단하지 않아요.", html)
+        self.assertIn("실거래보다 싸다는 이유만으로 좋은 매물이라고 판단하지 않아요.", html)
         self.assertIn("${zippickMatrixTableHtml(item, verdict)}", html)
 
         # 점수 산식 자체는 건드리지 않는다(카드·정렬·비교 화면과 어긋나면 안 된다)
