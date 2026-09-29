@@ -18123,6 +18123,9 @@
 
     function zippickPriceEvidenceHtml(item) {
       const basis = zippickPriceCheckBasis(item);
+      const basisMeaning = basis?.label.startsWith("마지막 실거래")
+        ? "최근 거래가 적어 마지막 거래 1건을 기준으로 봐요."
+        : "최근 3개월 비슷한 면적의 거래 평균이에요.";
       const basisExplanation = basis?.label.startsWith("마지막 실거래")
         ? `최근 거래가 적어 마지막 거래 1건(${basis.statsThrough || item.latestDealDate || "날짜 미확인"})의 ${esc(transactionMoney(basis.price))}을 비교 기준으로 삼았어요. 한 건만으로 시세를 단정하기 어려우니 아래 거래도 함께 살펴보세요.`
         : basis
@@ -20032,6 +20035,7 @@
         void enrichOptionalBudgetLinks(data);
       } catch (error) {
         if (budgetSearchController !== controller) return;
+        console.error("[budget-candidate-load]", error);
         trackEvent("budget_search_failed", {
           aborted:error?.name === "AbortError",
           region_count:multiSelections.region.size,
