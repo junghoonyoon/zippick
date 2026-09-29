@@ -12031,7 +12031,8 @@
             ? { label:"차트 자료가 부족해 가격 타이밍은 판단하기 어려워요" }
             : { label:"2년 가격 타이밍을 확인하고 있어요" };
       const budgetLead = candidateShortlistBudgetReason(row, currentBudgetData?.budgetEok);
-      const reasonLead = candidateShortlistReasonLead(overall, market, timing.label);
+      const reasonLead = zippickMarketVerdict(row).shortlistReason
+        || candidateShortlistReasonLead(overall, market, timing.label);
       const reasonCopy = [budgetLead, reasonLead].filter(Boolean).join(". ");
       return `<div class="candidate-shortlist-reason" aria-label="먼저 보는 이유">
         <span class="candidate-shortlist-reason-copy">${esc(reasonCopy)}</span>
@@ -15920,7 +15921,10 @@
     // 자금 관련 항목(전세가율·투자금)은 이 막대에 오지 않는다.
     // zippickFundingHtml의 '자금 조건' 카드에서 따로 다룬다.
     function zippickBarReason(item, part) {
-      if (part?.key === "market") return zippickMarketVerdict(item).summary;
+      if (part?.key === "market") {
+        const market = zippickMarketVerdict(item);
+        return market.barReason || market.summary;
+      }
       if (part?.key === "product") {
         const households = zpNum(item?.households);
         const age = zpNum(item?.buildingAge);
@@ -17731,7 +17735,9 @@
         action:"거래가 활발해도 최근 실거래보다 비싼 매물은 가격을 따져보세요",
       };
       if (price === "up" && volume === "down") return {
-        summary:"가격은 올랐지만 거래는 줄었어요",
+        summary:"거래는 줄고 가격만 올라 지금 사기엔 불리해요",
+        barReason:"가격 상승으로 점수는 높지만 거래는 줄었어요. 지금 사기엔 불리해요",
+        shortlistReason:"단지 조건은 볼 만하지만 거래가 줄어 높은 가격은 피해야 해요",
         heading:"가격은 올랐지만 거래가 줄어 비싼 매물은 피하세요",
         action:"가격 상승을 거래량이 뒷받침하지 못해요. 최근 실거래보다 비싼 이유를 확인하세요",
       };
@@ -17759,6 +17765,18 @@
 
     function zippickSignalHeading(item) {
       return zippickMarketVerdict(item).heading;
+    }
+
+    function zippickMarketEvidenceText(item) {
+      const momentum = zpNum(item?.signals?.momentumPct);
+      const turnover = zpNum(item?.signals?.turnoverRatio);
+      if (!Number.isFinite(momentum) || !Number.isFinite(turnover)) return "최근 가격과 거래 건수를 더 확인해야 해요.";
+      const price = momentum > 0.05 ? `${momentum.toFixed(1)}% 올랐고`
+        : momentum < -0.05 ? `${Math.abs(momentum).toFixed(1)}% 내렸고` : "거의 그대로였고";
+      const volumeChange = (turnover - 1) * 100;
+      const volume = volumeChange > 5 ? `${Math.round(volumeChange)}% 늘었어요`
+        : volumeChange < -5 ? `${Math.round(Math.abs(volumeChange))}% 줄었어요` : "비슷했어요";
+      return `최근 6개월 가격은 ${price} 거래 건수는 ${volume}. 그 전 6개월과 비교했어요.`;
     }
 
     function zippickStrengthBenefit(item, part) {
@@ -18055,7 +18073,6 @@
     function zippickDecisionHtml(item, verdict) {
       // 매수 판단은 단지와 시장 자료만 사용한다. 추가 자금은 마련한다고 가정한다.
       const location = zpNum(item?.locationScore?.score);
-      const signal = zpNum(item?.signals?.score);
       const decisions = {
         yes: ["매수 검토", "지금 매수 후보로 검토할 만한 단지입니다"],
         conditional: ["조건부 매수 검토", location >= 65 ? "단지는 좋지만, 지금은 가격을 따져서 살 때입니다" : "시장 흐름은 좋지만, 단지의 약점을 따져봐야 합니다"],
@@ -18081,7 +18098,7 @@
         <h3 class="zpr-title">${esc(title)}</h3>
         <div class="zpr-summary is-verdict">
           <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"} · 가격과 주변 환경 등을 함께 봤어요.</small></div>
-          <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>최근 6개월과 그 전 6개월의 가격·거래 건수 비교 · 시장 신호 ${signal > 0 ? `${Math.round(signal)}점` : "점수 없음"}</small></div>
+          <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
         </div>
         <p class="zpr-insight"><b>다음에 볼 것</b> · ${esc(next)}</p>
       </header>`;
