@@ -18343,6 +18343,7 @@
       return `<header class="zpr-head">
         <span class="zpr-verdict is-${esc(verdict.tone || "missing")}"><i></i>${esc(label)}</span>
         <h3 class="zpr-title">${esc(title)}</h3>
+        ${candidateTopScoreBadgesHtml(item)}
         <div class="zpr-summary is-verdict">
           <div><span>이 단지는 어떤가요?</span><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
           <div><span>지금 거래 흐름은 어떤가요?</span><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
