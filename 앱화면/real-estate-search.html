@@ -16968,7 +16968,7 @@
       if (stat.band === "illiquid") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
           <span class="zpr-kicker" data-zpr-step="값이 내릴 때 거래"></span>
-          <h5>나중에 팔기 어려울 수 있어, 신중하게 보세요</h5>
+          <h5>나중에 팔기 어려울 수 있어 신중하게 보세요</h5>
           <p class="zpr-insight">${esc(span)} 중 <b>${esc(stat.silentTotal)}개월</b>은 거래가 <b>한 건도 없었습니다.</b> 값이 오르고 내리고를 따지기 전에, <b>팔고 싶을 때 살 사람을 찾기 어렵다</b>는 뜻이에요.</p>
           <p class="zpr-insight">시세라고 부를 만한 값도 만들어지지 않습니다. <b>이 리포트의 가격은 참고선으로만 보셔야 합니다.</b></p>
         </section>`;
@@ -16983,9 +16983,9 @@
       }
 
       const round1 = value => Number.isFinite(value) ? (Math.round(value * 10) / 10).toFixed(1).replace(/\.0$/, "") : "-";
-      const heading = stat.band === "strong" ? "값이 내려도 거래돼, 팔기 쉬운 편이에요"
-        : stat.band === "fair" ? "값이 내리면 거래가 줄어, 가격을 낮춰야 팔릴 수 있어요"
-        : "값이 내리면 거래가 줄어, 팔기 어려울 수 있어요";
+      const heading = stat.band === "strong" ? "값이 내려도 팔기 쉬운 편이에요"
+        : stat.band === "fair" ? "값이 내리면 거래가 줄어 가격을 낮춰야 팔릴 수 있어요"
+        : "값이 내리면 거래가 줄어 팔기 어려울 수 있어요";
 
       const cells = [
         { lb:"값이 내린 달", vl:`${stat.downMonths}개월`, nt:`${span} 중` },
@@ -17680,10 +17680,10 @@
         .filter(r => Number.isFinite(r.m)).sort((a, b) => a.m - b.m);
       if (!rows.length) return "출퇴근";
       const best = rows[0];
-      if (best.m <= ZP_COMMUTE_GOOD_MINUTES) return `${best.n} 출퇴근이 편해, 이 단지의 장점입니다`;
+      if (best.m <= ZP_COMMUTE_GOOD_MINUTES) return `${best.n} 출퇴근이 편한 점이 이 단지의 장점이에요`;
       if (best.m <= ZP_COMMUTE_OK_MINUTES) return `${best.n} 출퇴근은 괜찮은 편이라 큰 단점은 아니에요`;
-      if (best.m <= ZP_COMMUTE_LONG_MINUTES) return "출퇴근 시간이 보통이라, 직장 위치를 꼭 맞춰보세요";
-      return "출퇴근 시간이 길어, 직장이 멀다면 다른 단지도 보세요";
+      if (best.m <= ZP_COMMUTE_LONG_MINUTES) return "출퇴근 시간이 보통이라 직장 위치를 꼭 맞춰보세요";
+      return "출퇴근 시간이 길어 직장이 멀다면 다른 단지도 보세요";
     }
 
     function zippickSignalHeading(item) {
@@ -17694,13 +17694,13 @@
       const falling = Number.isFinite(momentum) && momentum < -0.05;
       const recentUp = Number.isFinite(recent3) && recent3 > 0.05;
       const recentDown = Number.isFinite(recent3) && recent3 < -0.05;
-      if (rising && recentUp) return "가격이 올랐으니, 지금은 싼 매물인지 더 따져보고 사세요";
-      if (rising && recentDown) return "최근 가격이 꺾여, 지금은 서두르지 말고 지켜보세요";
-      if (rising) return "가격이 올랐으니, 지금은 싼 매물인지 더 따져보고 사세요";
-      if (falling && recentUp) return "가격이 내린 뒤 오르는 중이라, 조금 더 지켜보세요";
-      if (falling) return "가격이 내리고 있어, 지금은 서두르지 마세요";
-      if (recentUp) return "최근 가격이 오르기 시작해, 매물 가격을 더 따져보세요";
-      return "가격이 멈춰 있어, 좋은 매물이 나올 때까지 비교해 보세요";
+      if (rising && recentUp) return "가격이 올랐으니 지금은 싼 매물인지 더 따져보고 사세요";
+      if (rising && recentDown) return "최근 가격이 꺾여 지금은 서두르지 말고 지켜보세요";
+      if (rising) return "가격이 올랐으니 지금은 싼 매물인지 더 따져보고 사세요";
+      if (falling && recentUp) return "가격이 내린 뒤 오르는 중이라 조금 더 지켜보세요";
+      if (falling) return "가격이 내리고 있어 지금은 서두르지 마세요";
+      if (recentUp) return "최근 가격이 오르기 시작해 매물 가격을 더 따져보세요";
+      return "가격이 멈춰 있어 좋은 매물이 나올 때까지 비교해 보세요";
     }
 
     function zippickStrengthBenefit(item, part) {
