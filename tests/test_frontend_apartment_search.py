@@ -808,6 +808,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('mortgage_rate: useSimpleDefaults ? mortgageRateMarketAveragePercent.toFixed(1)', html)
         self.assertIn('loan_term_years: useSimpleDefaults ? "30"', html)
         self.assertIn('purchase_cost_rate: useSimpleDefaults ? "4"', html)
+        self.assertIn('region: [...multiSelections.region].join(",")', html)
         self.assertIn("function readableManwon", html)
         self.assertIn("function purchasePowerLoanBasisMeta", html)
         self.assertIn('"annualIncomeManwon": profile.get("annualIncomeManwon", 0)', (ROOT / "pipeline" / "policy_evaluator.py").read_text(encoding="utf-8"))

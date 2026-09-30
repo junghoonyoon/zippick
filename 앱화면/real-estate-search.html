@@ -14401,6 +14401,7 @@
         mortgage_rate: useSimpleDefaults ? mortgageRateMarketAveragePercent.toFixed(1) : policyMortgageRate.value.trim(),
         loan_term_years: useSimpleDefaults ? "30" : policyLoanTerm.value,
         purchase_cost_rate: useSimpleDefaults ? "4" : policyPurchaseCostRate.value,
+        region: [...multiSelections.region].join(","),
       });
     }
 

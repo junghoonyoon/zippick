@@ -3337,7 +3337,12 @@ class Handler(BaseHTTPRequestHandler):
             if profile["homeOwnership"] == "unknown" or first_time not in {"true", "false"} or not profile["cashEok"] or not profile["annualIncomeManwon"] or not profile["mortgageRatePercent"]:
                 self._json({"error": "보유 주택, 생애최초 여부, 자기자금, 연소득과 예상 금리를 입력해 주세요."}, 400)
                 return
-            review = policy_evaluator.purchase_power_review(profile)
+            regions = [
+                value.strip()
+                for value in params.get("region", ["서울특별시"])[0].split(",")
+                if value.strip()
+            ]
+            review = policy_evaluator.purchase_power_review(profile, regions)
             ceiling = review["budgetEok"]
             selected_band = next(
                 (band for band in review["bands"] if band["id"] == review["selectedBandId"]),
@@ -3356,9 +3361,11 @@ class Handler(BaseHTTPRequestHandler):
                 "estimatedLoanLimitEok": selected_band["loanLimitEok"],
                 "priceCapEok": selected_band["loanCapEok"],
                 "purchaseCostRatePercent": review["policy"]["purchaseCostRate"] * 100,
-                "grossPurchaseCostEok": round(ceiling * review["policy"]["purchaseCostRate"], 2),
+                "grossPurchaseCostEok": selected_band["grossPurchaseCostEok"],
                 "purchaseCostEok": selected_band["purchaseCostEok"],
-                "firstTimeAcquisitionTaxReliefEok": 0,
+                "firstTimeAcquisitionTaxReliefEok": selected_band["firstTimeAcquisitionTaxReliefEok"],
+                "regionLabel": review["regionLabel"],
+                "ltvRate": selected_band["ltvRate"],
             })
             self._json({"budgetEok": ceiling, "snapshot": snapshot, "review": review})
             return

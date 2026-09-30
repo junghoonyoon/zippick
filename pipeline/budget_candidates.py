@@ -2224,7 +2224,7 @@ def _attach_policy_impacts(rows, policy_profile):
         entity = _price_lookup_entity(row)
         row["policyImpact"] = (
             policy_evaluator.evaluate_candidate(row, entity=entity, profile=policy_profile)
-            if row.get("midPriceEok")
+            if _candidate_display_price(row) > 0
             else None
         )
 

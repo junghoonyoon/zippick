@@ -30,10 +30,47 @@ class PolicyEvaluatorTest(unittest.TestCase):
         self.assertEqual(review["dsrLoanLimitEok"], 6.32)
         self.assertEqual(
             [(band["id"], band["reviewAmountEok"]) for band in review["bands"]],
-            [("up_to_15", 15.0), ("15_to_25", 23.1)],
+            [("up_to_15", 15.0), ("15_to_25", 23.0)],
         )
         self.assertEqual(review["selectedBandId"], "15_to_25")
-        self.assertEqual(review["budgetEok"], 23.1)
+        self.assertEqual(review["budgetEok"], 23.0)
+
+    def test_purchase_power_review_uses_first_time_cost_and_tax_relief(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", first_time=True, cash_eok=2,
+            annual_income=6000, mortgage_rate=4.3, loan_term_years=30,
+            purchase_cost_rate=3,
+        )
+
+        review = policy_evaluator.purchase_power_review(profile, ["서울특별시 강동구"])
+        selected = next(
+            band for band in review["bands"] if band["id"] == review["selectedBandId"]
+        )
+
+        self.assertEqual(review["budgetEok"], 4.8)
+        self.assertEqual(review["policy"]["purchaseCostRate"], .03)
+        self.assertEqual(selected["ltvRate"], 70)
+        self.assertEqual(selected["grossPurchaseCostEok"], .14)
+        self.assertEqual(selected["firstTimeAcquisitionTaxReliefEok"], .02)
+        self.assertEqual(selected["purchaseCostEok"], .12)
+
+    def test_purchase_power_review_uses_selected_noncapital_rules(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", first_time=True, cash_eok=2,
+            annual_income=6000, mortgage_rate=4.3, loan_term_years=30,
+            purchase_cost_rate=3,
+        )
+
+        review = policy_evaluator.purchase_power_review(profile, ["부산광역시 해운대구"])
+        selected = next(
+            band for band in review["bands"] if band["id"] == review["selectedBandId"]
+        )
+
+        self.assertEqual(review["regionLabel"], "부산광역시 해운대구")
+        self.assertEqual(review["policy"]["stressRatePercent"], .75)
+        self.assertEqual(review["dsrLoanLimitEok"], 3.7)
+        self.assertEqual(review["budgetEok"], 5.5)
+        self.assertEqual(selected["ltvRate"], 80)
 
     def test_capital_term_limit_cannot_be_bypassed_by_long_input(self):
         for years in (30, 40, 50):

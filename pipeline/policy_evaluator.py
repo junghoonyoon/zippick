@@ -1,6 +1,5 @@
 """현재 시행 중인 주택 정책을 후보와 사용자 조건에 맞춰 설명한다."""
 import json
-import math
 import re
 from copy import deepcopy
 from functools import lru_cache
@@ -122,9 +121,14 @@ def report_loan_repayment(principal_eok, annual_rate_percent, years):
     }
 
 
-def purchase_power_review(profile):
-    """Return viable price bands for the regulated, no-home review baseline."""
+def _purchase_power_review_for_region(profile, region_name):
+    """Return viable price bands using the same rules as candidate evaluation."""
+    snapshot = load_policy_snapshot()
     policy = deepcopy(POLICY)
+    region_name = str(region_name or "서울특별시").strip() or "서울특별시"
+    region = _region_context({"region": region_name})
+    regulated = _is_regulated(region, snapshot)
+    regional_profile = _regional_financing_profile(profile, region, regulated, snapshot)
     cash = max(0, _float(profile.get("cashEok")))
     income = max(0, _float(profile.get("combinedIncomeManwon")))
     monthly_debt = max(0, _float(profile.get("combinedMonthlyDebtPaymentManwon")))
@@ -132,35 +136,73 @@ def purchase_power_review(profile):
     monthly_capacity = max(0, income * dsr_rate / 12 - monthly_debt)
     annual_capacity = monthly_capacity * 12
     mortgage_rate = max(0, _float(profile.get("mortgageRatePercent")))
-    years = min(
-        int(_float(profile.get("loanTermYears")) or 30),
-        int(load_policy_snapshot()["capitalRegionMaxLoanTermYears"]),
+    years = regional_profile["loanTermYears"]
+    stress_rate = regional_profile["stressRatePercent"]
+    applied_rate = mortgage_rate + stress_rate
+    dsr_limit = regional_profile.get("dsrLoanLimitEok")
+    purchase_cost_rate = regional_profile.get("purchaseCostRatePercent", 0) / 100
+    policy.update(
+        effectiveDate=snapshot["asOf"],
+        stressRatePercent=stress_rate,
+        purchaseCostRate=purchase_cost_rate,
     )
-    applied_rate = mortgage_rate + policy["stressRatePercent"]
-    dsr_limit = _annuity_principal_eok(annual_capacity, applied_rate, years)
 
     bands = []
     for band in policy["priceBands"]:
-        loan_limit = round(min(band["loanCapEok"], dsr_limit), 2)
-        cost_rate = policy["purchaseCostRate"]
-        ltv_rate = policy["regulatedLtvRate"]
-        amount = min(
-            (cash + loan_limit) / (1 + cost_rate),
-            cash / (1 + cost_rate - ltv_rate),
+        minimum_step = int(round(band["minPriceEok"] * 10))
+        if not band["minInclusive"]:
+            minimum_step += 1
+        minimum_step = max(1, minimum_step)
+        maximum_step = (
+            int(round(band["maxPriceEok"] * 10))
+            if band["maxPriceEok"] is not None
+            else max(300, minimum_step)
         )
-        if band["maxPriceEok"] is not None:
-            amount = min(amount, band["maxPriceEok"])
-        if amount <= band["minPriceEok"]:
+        impacts = {}
+
+        def impact_at(step):
+            if step not in impacts:
+                impacts[step] = evaluate_candidate(
+                    {"region": region_name, "midPriceEok": step / 10},
+                    profile=profile,
+                )
+            return impacts[step]
+
+        def affordable(step):
+            gap = impact_at(step).get("cashGapEok")
+            return gap is not None and gap >= 0
+
+        if not affordable(minimum_step):
             continue
-        review_amount = round(amount + 1e-9, 1)
-        if not band["minInclusive"] and review_amount <= band["minPriceEok"]:
-            review_amount = math.ceil(amount * 10 - 1e-9) / 10
+
+        if band["maxPriceEok"] is None:
+            while affordable(maximum_step) and maximum_step < 10_000_000:
+                maximum_step *= 2
+
+        if affordable(maximum_step):
+            best_step = maximum_step
+        else:
+            low_step, high_step = minimum_step, maximum_step
+            while high_step - low_step > 1:
+                middle_step = (low_step + high_step) // 2
+                if affordable(middle_step):
+                    low_step = middle_step
+                else:
+                    high_step = middle_step
+            best_step = low_step
+
+        review_amount = best_step / 10
+        impact = impact_at(best_step)
         bands.append({
             **band,
-            "loanLimitEok": loan_limit,
-            "dsrLoanLimitEok": dsr_limit,
+            "loanCapEok": impact.get("priceCapEok") or impact["ltvLimitEok"],
+            "loanLimitEok": impact["estimatedLoanLimitEok"],
+            "dsrLoanLimitEok": impact.get("dsrLoanLimitEok"),
             "reviewAmountEok": review_amount,
-            "purchaseCostEok": round(review_amount * policy["purchaseCostRate"], 2),
+            "grossPurchaseCostEok": impact["grossPurchaseCostEok"],
+            "firstTimeAcquisitionTaxReliefEok": impact["firstTimeAcquisitionTaxReliefEok"],
+            "purchaseCostEok": impact["purchaseCostEok"],
+            "ltvRate": impact["ltvRate"],
         })
 
     selected = max(bands, key=lambda item: item["reviewAmountEok"]) if bands else None
@@ -175,10 +217,22 @@ def purchase_power_review(profile):
         "appliedRatePercent": applied_rate,
         "loanTermYears": years,
         "dsrLoanLimitEok": dsr_limit,
+        "regionLabel": region["display"],
         "bands": bands,
         "selectedBandId": selected["id"] if selected else None,
         "budgetEok": selected["reviewAmountEok"] if selected else 0,
     }
+
+
+def purchase_power_review(profile, regions=None):
+    """Return the highest fundable amount across the user's selected regions."""
+    if isinstance(regions, str):
+        regions = [value.strip() for value in regions.split(",") if value.strip()]
+    regions = list(dict.fromkeys(regions or ["서울특별시"]))
+    reviews = [_purchase_power_review_for_region(profile, region) for region in regions]
+    selected = max(reviews, key=lambda item: item["budgetEok"])
+    selected["consideredRegions"] = regions
+    return selected
 
 
 def user_profile(
