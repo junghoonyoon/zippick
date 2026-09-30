@@ -1,5 +1,6 @@
 import datetime
 import unittest
+from unittest import mock
 
 import price_valuation
 
@@ -131,6 +132,89 @@ class PriceValuationTest(unittest.TestCase):
         self.assertEqual(result["macro"]["status"], "unavailable")
         self.assertIn("연결 설정", result["macro"]["message"])
         self.assertIn("실거래와 주변 시세", result["macro"]["message"])
+
+    def _weekly_index(self, weekly_change_pct, weeks=30, last_monday=datetime.date(2026, 9, 28)):
+        points, value = [], 100.0
+        for offset in range(weeks, -1, -1):
+            points.append([(last_monday - datetime.timedelta(weeks=offset)).isoformat(), round(value, 6)])
+            value *= 1 + weekly_change_pct / 100
+        return {"name": "서울>강북지역>도심권>종로구", "label": "서울 종로구", "points": points}
+
+    def _index_row(self):
+        return {
+            **self.row,
+            "region": "서울특별시 종로구",
+            "valuationTrades": [
+                ["2026-08-31", 10.0], ["2026-08-10", 10.0], ["2026-07-06", 10.0],
+                ["2026-06-01", 10.0], ["2026-05-04", 10.0],
+            ],
+            "valuationEstimateSampleCount": 5,
+        }
+
+    def test_moves_each_trade_by_regional_weekly_index(self):
+        series = self._weekly_index(0.25)
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=series):
+            result = price_valuation.valuation_for_candidate(self._index_row(), today=self.today)
+
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["indexAdjustment"]["status"], "applied")
+        self.assertEqual(result["indexAdjustment"]["region"], "서울 종로구")
+        self.assertEqual(result["indexAdjustment"]["asOf"], "2026-09-28")
+        # 4주 전 거래는 약 1%, 21주 전 거래는 약 5% 오른다. 중심가는 그 사이에 있다.
+        self.assertGreater(result["fairPrice"]["centerEok"], 10.09)
+        self.assertLess(result["fairPrice"]["centerEok"], 10.55)
+        self.assertEqual(result["marketAdjustmentPct"], result["indexAdjustment"]["centerChangePct"])
+        self.assertIn("주간 지수", result["fairPrice"]["method"])
+        # 화면은 이유를 앞에서 세 개만 보여 준다. 지수 설명이 그 안에 들어야 한다.
+        self.assertIn("한국부동산원 서울 종로구 주간 가격 변화", result["reasons"][2])
+        self.assertFalse(any("주변 비교 단지" in reason for reason in result["reasons"]))
+
+    def test_falling_index_lowers_the_range(self):
+        series = self._weekly_index(-0.2)
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=series):
+            result = price_valuation.valuation_for_candidate(self._index_row(), today=self.today)
+
+        self.assertLess(result["fairPrice"]["centerEok"], 10.0)
+        self.assertLess(result["indexAdjustment"]["centerChangePct"], 0)
+
+    def test_index_adjustment_replaces_peer_momentum_adjustment(self):
+        # 최근 거래가 오래돼 예전 방식이면 주변 단지 흐름으로 올렸을 상황이다.
+        row = {**self._index_row(), "latestDealDate": "2026-07-01"}
+        flat = self._weekly_index(0.0)
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=flat):
+            result = price_valuation.valuation_for_candidate(row, today=self.today)
+
+        self.assertEqual(result["indexAdjustment"]["status"], "applied")
+        self.assertEqual(result["marketAdjustmentPct"], 0.0)
+        self.assertEqual(result["fairPrice"]["centerEok"], 10.0)
+
+    def test_limits_a_single_trade_adjustment(self):
+        series = self._weekly_index(2.0)
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=series):
+            result = price_valuation.valuation_for_candidate(self._index_row(), today=self.today)
+
+        limit = 10.0 * (1 + price_valuation.MAX_INDEX_ADJUSTMENT_PCT / 100)
+        self.assertLessEqual(result["fairPrice"]["centerEok"], round(limit, 2))
+
+    def test_keeps_previous_method_when_index_is_missing_or_incomplete(self):
+        row = self._index_row()
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=None):
+            no_index = price_valuation.valuation_for_candidate(row, today=self.today)
+        short = self._weekly_index(0.25, weeks=4)
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=short):
+            incomplete = price_valuation.valuation_for_candidate(row, today=self.today)
+        stale = self._weekly_index(0.25, last_monday=datetime.date(2026, 8, 3))
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=stale):
+            old_index = price_valuation.valuation_for_candidate(row, today=self.today)
+        with mock.patch.object(price_valuation.regional_price_index, "series_for_region") as lookup:
+            no_trades = price_valuation.valuation_for_candidate(self.row, today=self.today)
+            lookup.assert_not_called()
+
+        for result in (no_index, incomplete, old_index, no_trades):
+            self.assertEqual(result["status"], "ready")
+            self.assertEqual(result["indexAdjustment"], {"status": "unavailable"})
+            self.assertEqual(result["fairPrice"]["centerEok"], 10.0)
+            self.assertIn("지역·주변 흐름 보정", result["fairPrice"]["method"])
 
 
 if __name__ == "__main__":

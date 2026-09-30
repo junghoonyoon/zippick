@@ -872,6 +872,7 @@ def _apply_live_band(row, live, comparison=None):
         "valuationEstimateMaxPriceEok": live.get("valuationEstimateMaxPriceEok"),
         "valuationEstimateSampleCount": live.get("valuationEstimateSampleCount", 0),
         "valuationEstimateMethod": live.get("valuationEstimateMethod", ""),
+        "valuationTrades": live.get("valuationTrades") or [],
         "minPriceEok": live.get("minPriceEok"),
         "midPriceEok": live.get("midPriceEok"),
         "maxPriceEok": live.get("maxPriceEok"),

@@ -41,6 +41,7 @@ def _load_settings_file(path):
         ("실거래가키", "PUBLIC_DATA_API_KEY"),
         ("청약홈키", "APPLYHOME_API_KEY"),
         ("한국은행키", "ECOS_API_KEY"),
+        ("한국부동산원키", "RONE_API_KEY"),
         ("나이스키", "NEIS_KEY"),
         ("카카오REST키", "KAKAO_REST_API_KEY"),
         ("카카오지도키", "KAKAO_MAP_JAVASCRIPT_KEY"),
@@ -90,6 +91,8 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 PUBLIC_DATA_API_KEY = os.environ.get("PUBLIC_DATA_API_KEY", os.environ.get("MOLIT_API_KEY", ""))
 APPLYHOME_API_KEY = os.environ.get("APPLYHOME_API_KEY", PUBLIC_DATA_API_KEY)
 ECOS_API_KEY = os.environ.get("ECOS_API_KEY", "")
+# 한국부동산원 R-ONE Open API 키. 주간 아파트 매매가격지수 조회에 쓴다.
+RONE_API_KEY = os.environ.get("RONE_API_KEY", "")
 # 나이스(NEIS) 교육정보 개방 포털 키. 학교 정보 조회에 쓴다.
 NEIS_KEY = os.environ.get("NEIS_KEY", "")
 MOLIT_APARTMENT_TRADE_API_KEY = os.environ.get("MOLIT_APARTMENT_TRADE_API_KEY", PUBLIC_DATA_API_KEY)

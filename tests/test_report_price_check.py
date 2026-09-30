@@ -68,12 +68,33 @@ class ReportPriceCheckTest(unittest.TestCase):
           item.valuation.marketAdjustmentPct = 1.2;
           item.valuation.macro = {message:'기준금리는 향후 시장 위험으로 확인해요.'};
           const modelBand = zippickBuyBandHtml(item, {});
-          if (!modelBand.includes('매수 판단 밴드') || modelBand.includes('집픽 현재 적정가격')) process.exit(10);
+          if (!modelBand.includes('집픽 밴드') || modelBand.includes('집픽 현재 적정가격')) process.exit(10);
+          if (modelBand.includes('data-zpr-asking-price')) process.exit(16);
+          if (!modelBand.includes('집픽이 지키는 3가지') || !modelBand.includes('부르는 값은 계산에 넣지 않아요')) process.exit(18);
+          const holdBand = zippickBuyBandHtml({...item, valuation:{status:'unavailable', reason:'비슷한 면적의 거래가 3건 미만이라 가격 판단을 보류했어요.'}}, {});
+          if (!holdBand.includes('억지로 답을 만들지 않아요') || holdBand.includes('data-zpr-asking-price')) process.exit(19);
           if (!modelBand.includes('적정가격보다 비싸요') || !modelBand.includes('<em>비쌈</em>')) process.exit(11);
           if (!modelBand.includes('이 가격은 어떻게 계산했나요?') || !modelBand.includes('주변 시장 흐름을 +1.2% 반영했어요.')) process.exit(12);
           item.valuation.marketAdjustmentPct = 0;
           const recentTradeBand = zippickBuyBandHtml(item, {});
           if (!recentTradeBand.includes('최근 거래가 30일 이내라 지역 시세 변화는 따로 더하지 않았어요.')) process.exit(15);
+          item.valuation.marketAdjustmentPct = 1.8;
+          item.valuation.indexAdjustment = {status:'applied', region:'서울 종로구', asOf:'2026-09-28', centerChangePct:1.8};
+          const indexBand = zippickBuyBandHtml(item, {});
+          if (!indexBand.includes('지난 실거래에 <b>한국부동산원 서울 종로구 주간 시세</b>를 반영해 적정가격을 <mark>1.8% 올렸어요</mark>. (9월 28일 기준)')) process.exit(20);
+          if (indexBand.includes('주변 시장 흐름을')) process.exit(21);
+          // 주간 시세 반영은 계산 근거보다 앞자리에서 먼저 말한다.
+          if (indexBand.includes('<details') || indexBand.includes('<summary')) process.exit(28);
+          if (indexBand.includes('부르는 값이 아니라')) process.exit(22);
+          // 같은 내용을 알림 줄이나 근거 목록에서 되풀이하지 않는다.
+          if (indexBand.includes('zpr-buy-band-index') || (indexBand.match(/올렸어요/g) || []).length !== 1) process.exit(23);
+          if (indexBand.indexOf('<mark>') > indexBand.indexOf('data-zpr-band-result')) process.exit(24);
+          item.valuation.marketAdjustmentPct = -2.04;
+          if (!zippickBuyBandHtml(item, {}).includes('적정가격을 <mark>2.0% 내렸어요</mark>.')) process.exit(25);
+          item.valuation.marketAdjustmentPct = 0;
+          if (!zippickBuyBandHtml(item, {}).includes('<mark>적정가격도 그대로예요</mark>. (9월 28일 기준)')) process.exit(29);
+          if (!indexBand.includes('집픽이 지키는 4가지') || !indexBand.includes('<b>한국부동산원 주간 시세</b>로 최근 기준에 맞춰요')) process.exit(26);
+          if (!modelBand.includes('부르는 값이 아니라') || modelBand.includes('zpr-buy-band-index')) process.exit(27);
           delete item.valuation;
           item.statsThrough = '2020-01-01';
           if (zippickPriceCheckBasis(item).price !== 12) process.exit(2);

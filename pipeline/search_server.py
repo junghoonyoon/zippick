@@ -297,6 +297,7 @@ MARKET_SNAPSHOT_FIELDS = (
     "valuationEstimateMaxPriceEok",
     "valuationEstimateSampleCount",
     "valuationEstimateMethod",
+    "valuationTrades",
     "latestDealPriceEok",
     "latestDealExclusiveArea",
     "latestDealFloor",
@@ -423,6 +424,7 @@ def _budget_cache_key(arguments):
         config.ROOT / "pipeline" / "momentum_signals.py",
         config.ROOT / "pipeline" / "price_valuation.py",
         config.ROOT / "pipeline" / "market_indicators.py",
+        config.ROOT / "pipeline" / "regional_price_index.py",
         config.ROOT / "pipeline" / "naver_complex.py",
         config.ROOT / "pipeline" / "verdicts.py",
         policy_evaluator.__file__,
@@ -1150,7 +1152,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                     "currentEstimateTrimmedCount", "currentEstimateMethod",
                     "valuationEstimateMinPriceEok", "valuationEstimateMidPriceEok",
                     "valuationEstimateMaxPriceEok", "valuationEstimateSampleCount",
-                    "valuationEstimateMethod",
+                    "valuationEstimateMethod", "valuationTrades",
                     "transactionCount", "sourceNote",
                 ):
                     row[key] = price_band.get(key)
