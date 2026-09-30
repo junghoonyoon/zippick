@@ -95,6 +95,25 @@ class ReportPriceCheckTest(unittest.TestCase):
           if (!zippickBuyBandHtml(item, {}).includes('<mark>적정가격도 그대로예요</mark>. (9월 28일 기준)')) process.exit(29);
           if (!indexBand.includes('집픽이 지키는 4가지') || !indexBand.includes('<b>한국부동산원 주간 시세</b>로 최근 기준에 맞춰요')) process.exit(26);
           if (!modelBand.includes('부르는 값이 아니라') || modelBand.includes('zpr-buy-band-index')) process.exit(27);
+          // 타이틀이 '가격 주의'인 단지는 밴드도 같은 방향으로 말한다.
+          item.latestDealPriceEok = 10;
+          const calmBand = zippickBuyBandHtml(item, {});
+          if (!calmBand.includes('최근 실거래는 적정가격 안에 있어요') || !calmBand.includes('<em>적정</em>') || !calmBand.includes('data-zpr-peak=""')) process.exit(30);
+          const peakBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:true}});
+          if (!peakBand.includes('요즘 시세와 비슷하게 거래됐어요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요.')) process.exit(31);
+          if (!peakBand.includes('<em>시세 수준 · 고점권</em>') || peakBand.includes('적정가격 안에 있어요')) process.exit(32);
+          if (!peakBand.includes('요즘 시세대로 사도 2년 중 가장 높은 구간의 값에 사는 거예요. 다음 거래를 지켜보세요.')) process.exit(33);
+          if (!peakBand.includes('data-zpr-peak="peak"')) process.exit(34);
+          const surgeBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:false, surge:true}});
+          if (!surgeBand.includes('다만 요즘 시세가 최근 석 달 새 빠르게 올랐어요.') || !surgeBand.includes('<em>시세 수준 · 급등 직후</em>')) process.exit(35);
+          item.latestDealPriceEok = 9;
+          const cheapPeakBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:true}});
+          if (!cheapPeakBand.includes('요즘 시세보다 싸게 거래됐어요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요.') || !cheapPeakBand.includes('<em>시세보다 쌈 · 고점권</em>')) process.exit(36);
+          item.latestDealPriceEok = 12;
+          const expensivePeakBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:true}});
+          if (!expensivePeakBand.includes('최근 실거래는 적정가격보다 비싸요') || !expensivePeakBand.includes('<em>비쌈</em>')) process.exit(37);
+          const askedAtPeak = zippickBuyBandResultHtml(9.4, 10.1, 10.8, 10, true, '10', 'peak');
+          if (!askedAtPeak.includes('입력한 매물가는 요즘 시세 수준이에요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요.')) process.exit(38);
           delete item.valuation;
           item.statsThrough = '2020-01-01';
           if (zippickPriceCheckBasis(item).price !== 12) process.exit(2);

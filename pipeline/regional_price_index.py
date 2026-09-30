@@ -39,6 +39,15 @@ PROVINCE_SHORT_NAMES = {
     "경상북도": "경북", "경상남도": "경남", "제주특별자치도": "제주",
 }
 
+# 법정동 코드 앞 두 자리 → 시·도. 후보 목록처럼 지역이 '노원구'로만 올 때 쓴다.
+PROVINCE_BY_CODE = {
+    "11": "서울", "26": "부산", "27": "대구", "28": "인천", "29": "광주", "30": "대전",
+    "31": "울산", "36": "세종", "41": "경기", "42": "강원", "51": "강원", "43": "충북",
+    "44": "충남", "45": "전북", "52": "전북", "46": "전남", "47": "경북", "48": "경남",
+    "50": "제주",
+}
+_PROVINCE_NAMES = set(PROVINCE_SHORT_NAMES) | set(PROVINCE_SHORT_NAMES.values())
+
 _REFRESH_LOCK = threading.Lock()
 _REFRESH_RUNNING = False
 _MEMORY = {"loadedAt": 0.0, "mtime": None, "payload": None}
@@ -202,6 +211,35 @@ def _region_tokens(region):
     return province, tokens[1:]
 
 
+def region_for_row(row):
+    """후보 한 건에서 '시·도 시군구' 형태의 지역 이름을 만든다.
+
+    단지 상세는 '서울특별시 송파구'처럼 오지만 예산 후보는 '노원구'처럼 시·도가
+    빠져 있다. 시·도 없이 구 이름만으로 찾으면 다른 도시의 같은 이름과 섞이므로
+    주소나 법정동 코드로 시·도를 확인할 수 있을 때만 지역을 돌려준다.
+    """
+    if not isinstance(row, dict):
+        return ""
+    region_tokens = str(row.get("region") or "").split()
+    if len(region_tokens) >= 2 and region_tokens[0] in _PROVINCE_NAMES:
+        return " ".join(region_tokens)
+    for field in ("mapAddress", "address", "roadAddress"):
+        tokens = str(row.get(field) or "").split()
+        if len(tokens) < 2 or tokens[0] not in _PROVINCE_NAMES:
+            continue
+        districts = []
+        for token in tokens[1:4]:
+            if not token.endswith(("시", "군", "구")):
+                break
+            districts.append(token)
+        if districts:
+            return " ".join([tokens[0], *districts])
+    province = PROVINCE_BY_CODE.get(str(row.get("cortarNo") or row.get("lawdCd") or "")[:2])
+    if province and region_tokens:
+        return " ".join([province, *region_tokens])
+    return ""
+
+
 def series_for_region(region, snapshot=None):
     """'서울특별시 종로구' 같은 지역의 주간 지수를 찾는다.
 
@@ -216,13 +254,20 @@ def series_for_region(region, snapshot=None):
         return None
     for name, points in (snapshot.get("regions") or {}).items():
         parts = name.split(">")
-        if len(parts) < 2 or parts[0] != province or parts[-1] != districts[-1]:
+        if len(parts) < 2 or parts[0] != province:
             continue
-        if len(districts) >= 2 and districts[-2] not in parts[1:-1]:
+        label_districts = districts
+        if parts[-1] != districts[-1]:
+            # 집픽 단지 자료는 '안양동안구'처럼 시와 구를 붙여 쓴다.
+            city = parts[-2] if len(parts) >= 3 else ""
+            if len(districts) != 1 or not city.endswith("시") or city[:-1] + parts[-1] != districts[0]:
+                continue
+            label_districts = [city, parts[-1]]
+        elif len(districts) >= 2 and districts[-2] not in parts[1:-1]:
             continue
         if len(points) < 2:
             return None
-        return {"name": name, "label": " ".join([province, *districts]), "points": points}
+        return {"name": name, "label": " ".join([province, *label_districts]), "points": points}
     return None
 
 

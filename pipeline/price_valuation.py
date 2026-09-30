@@ -139,7 +139,7 @@ def _index_adjusted_estimate(row, today=None):
     trades = row.get("valuationTrades")
     if not isinstance(trades, list) or len(trades) < MIN_SAMPLE_COUNT:
         return None
-    series = regional_price_index.series_for_region(row.get("region"))
+    series = regional_price_index.series_for_region(regional_price_index.region_for_row(row))
     latest = regional_price_index.latest_point(series, today=today)
     if not latest:
         return None

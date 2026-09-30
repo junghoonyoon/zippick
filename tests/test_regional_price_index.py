@@ -67,10 +67,43 @@ class RegionalPriceIndexTest(unittest.TestCase):
         self.assertEqual(busan_jung["points"][-1][1], 79.0)
         self.assertEqual(bundang["label"], "경기 성남시 분당구")
 
+    def test_matches_combined_city_and_district_names(self):
+        bundang = regional_price_index.series_for_region("경기도 성남분당구", self.snapshot)
+        cheonan = regional_price_index.series_for_region("충남 천안동남구", self.snapshot)
+
+        self.assertEqual(bundang["name"], "경기>경부1권>성남시>분당구")
+        self.assertEqual(bundang["label"], "경기 성남시 분당구")
+        self.assertEqual(cheonan["name"], "충남>천안시>동남구")
+        self.assertIsNone(regional_price_index.series_for_region("경기도 용인분당구", self.snapshot))
+
     def test_does_not_borrow_same_district_name_from_another_city(self):
         self.assertIsNone(regional_price_index.series_for_region("충청남도 아산시 동남구", self.snapshot))
         self.assertIsNone(regional_price_index.series_for_region("서울특별시 없는구", self.snapshot))
         self.assertIsNone(regional_price_index.series_for_region("", self.snapshot))
+
+    def test_builds_full_region_for_rows_without_province(self):
+        region_for_row = regional_price_index.region_for_row
+
+        self.assertEqual(region_for_row({"region": "서울특별시 송파구"}), "서울특별시 송파구")
+        self.assertEqual(region_for_row({"region": "서울 강남구"}), "서울 강남구")
+        self.assertEqual(
+            region_for_row({"region": "노원구", "mapAddress": "서울특별시 노원구 상계동 749-5"}),
+            "서울특별시 노원구",
+        )
+        self.assertEqual(
+            region_for_row({"region": "성남분당구", "mapAddress": "경기도 성남시 분당구 정자동 6"}),
+            "경기도 성남시 분당구",
+        )
+        self.assertEqual(region_for_row({"region": "중구", "cortarNo": "2611010100"}), "부산 중구")
+        # 시·도를 확인할 수 없으면 구 이름만으로 짐작하지 않는다.
+        self.assertEqual(region_for_row({"region": "중구"}), "")
+        self.assertEqual(region_for_row({}), "")
+
+    def test_row_region_finds_the_right_series(self):
+        row = {"region": "중구", "mapAddress": "부산광역시 중구 남포동 1"}
+        series = regional_price_index.series_for_region(regional_price_index.region_for_row(row), self.snapshot)
+
+        self.assertEqual(series["name"], "부산>중부산권>중구")
 
     def test_uses_the_week_in_effect_on_the_deal_date(self):
         series = regional_price_index.series_for_region("서울특별시 종로구", self.snapshot)

@@ -1543,6 +1543,24 @@
     .zpr-summary.is-verdict small { color:#4e5968 }
     .zpr-summary-score { display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px }
     .zpr-summary-score .location-score-badge, .zpr-summary-score .flow-score-badge { margin:0 }
+    /* 리포트 상단: 가장 큰 글씨는 타이틀 하나만 둔다. 나머지는 크기·굵기·색을
+       한 단계씩 낮추고, 회색 상자 대신 얇은 선과 여백으로 묶음을 나눈다. */
+    .zpr-head { gap:0 }
+    .zpr-head .zpr-title { margin-top:10px; font-size:22px }
+    .zpr-head .zpr-summary.is-verdict { gap:0; margin:20px 0 0; padding:16px 0; border-top:1px solid #eef0f3; border-bottom:1px solid #eef0f3; border-radius:0; background:none }
+    .zpr-head .zpr-summary.is-verdict > div { gap:5px; padding-right:18px }
+    .zpr-head .zpr-summary.is-verdict > div + div { padding:0 0 0 18px; border-left:1px solid #eef0f3 }
+    .zpr-head .zpr-summary.is-verdict strong { color:#333d4b; font-size:15px; font-weight:800; line-height:1.5 }
+    .zpr-head .zpr-summary.is-verdict small { color:#6b7684; font-size:13px }
+    .zpr-head .zpr-buy-band { gap:12px; margin-top:24px }
+    .zpr-head .zpr-buy-band-eyebrow { color:#6b7684; font-size:12px; font-weight:800 }
+    .zpr-head .zpr-buy-band h4 { font-size:17px; font-weight:850; line-height:1.5 }
+    .zpr-head .zpr-buy-band-quality { padding:0; background:none; color:#6b7684; font-size:12px; font-weight:700 }
+    .zpr-head .zpr-buy-band-conclusion { border-left-color:#d1d6db; color:#333d4b; font-size:14px; font-weight:700 }
+    .zpr-head .zpr-buy-band .zpr-buy-band-meta { font-size:12px }
+    .zpr-head .zpr-buy-band-basis { padding:12px 14px; background:#fafbfc }
+    .zpr-head .zpr-buy-band-basis-title, .zpr-head .zpr-buy-band-promise { color:#4e5968; font-size:13px; font-weight:800 }
+    .zpr-head .zpr-buy-band-basis ul { gap:4px; margin-top:8px; color:#6b7684; font-size:12.5px }
     .zpr-details { border:1px solid #e5e8eb; border-radius:12px; padding:14px; font-size:14px; line-height:1.7 }
     .zpr-details summary { cursor:pointer; color:#333d4b; font-weight:600; min-height:32px }
     .zpr-details > p { font-size:14px; font-weight:400; color:#4e5968 }
@@ -1566,6 +1584,8 @@
       .zippick-report .zpr-section[aria-label="다른 후보와 비교"] { gap:16px; padding-top:20px }
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:15px }
       .zpr-summary { grid-template-columns:1fr }
+      .zpr-head .zpr-summary.is-verdict > div { padding-right:0 }
+      .zpr-head .zpr-summary.is-verdict > div + div { margin-top:14px; padding:14px 0 0; border-top:1px solid #eef0f3; border-left:0 }
       .zpr-summary strong { font-size:21px }
       .zpr-table { font-size:13px }
       .zpr-table th, .zpr-table td { padding:10px 8px }
@@ -5576,7 +5596,8 @@
     // v19부터 화면에 보이는 모든 구매 시나리오에 +5% 상한을 적용한다.
     // v25부터 화면의 최대 구매가와 후보 가격 상한을 같은 값으로 쓴다.
     // v11부터 매수 판단 밴드 계산값이 없는 예전 후보 응답은 다시 불러온다.
-    const CANDIDATE_RESULT_SCHEMA_VERSION = 11;
+    // 지금 v12: 주간 가격지수 보정용 거래 목록이 없는 예전 후보 응답은 다시 불러온다.
+    const CANDIDATE_RESULT_SCHEMA_VERSION = 12;
     const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v4";
     const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v28.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
@@ -18533,7 +18554,15 @@
       return 2;
     }
 
-    function zippickBuyBandResultHtml(low, basisPrice, high, latestPrice, showLatest, enteredPrice) {
+    // 리포트 타이틀이 '가격 주의'일 때 밴드도 같은 말을 하도록 붙이는 문구.
+    // peak: "peak"(2년 고점권) | "surge"(최근 급등 직후) | ""
+    function zippickBuyBandPeakText(peak) {
+      return peak === "peak" ? { caution:"요즘 시세가 2년 중 가장 높은 구간이에요", buying:"2년 중 가장 높은 구간의 값에", tag:"고점권" }
+        : peak === "surge" ? { caution:"요즘 시세가 최근 석 달 새 빠르게 올랐어요", buying:"빠르게 오른 직후의 값에", tag:"급등 직후" }
+        : null;
+    }
+
+    function zippickBuyBandResultHtml(low, basisPrice, high, latestPrice, showLatest, enteredPrice, peak = "") {
       const entered = zpNum(enteredPrice);
       const valid = Number.isFinite(entered) && entered >= 0.1 && entered <= 1000;
       const askTier = valid ? zippickBuyBandTier(entered, low, high) : -1;
@@ -18545,6 +18574,7 @@
       const markerClass = position => position < 18 ? " is-left" : position > 82 ? " is-right" : "";
       const latestPosition = latestTier >= 0 ? markerPosition(latestPrice) : NaN;
       const askPosition = askTier >= 0 ? markerPosition(entered) : NaN;
+      const peakText = zippickBuyBandPeakText(peak);
       const cells = [
         ["쌈", `${transactionMoney(low)} 미만`, "cheap"],
         ["적정", `${transactionMoney(low)}~${transactionMoney(high)}`, "fair"],
@@ -18553,10 +18583,14 @@
       const conclusion = enteredPrice !== "" && !valid
         ? "매물 가격은 0.1억~1,000억 사이로 입력해 주세요."
         : askTier === 0 ? "입력한 매물가는 싼 구간이에요. 싼 이유가 있는지 집 상태를 먼저 확인하세요."
-        : askTier === 1 ? "입력한 매물가는 적정 구간이에요. 같은 층과 상태의 거래를 확인하세요."
+        : askTier === 1 ? peakText
+          ? `입력한 매물가는 요즘 시세 수준이에요. 다만 ${peakText.caution}.`
+          : "입력한 매물가는 적정 구간이에요. 같은 층과 상태의 거래를 확인하세요."
         : askTier === 2 ? "입력한 매물가는 비싼 구간이에요. 가격 차이의 이유를 확인하고 협상하세요."
         : latestTier === 0 ? "싸게 거래된 이유가 있는지 층·향·집 상태를 확인하세요."
-        : latestTier === 1 ? "같은 층과 상태의 다른 거래도 확인하면 더 안전해요."
+        : latestTier === 1 ? peakText
+          ? `요즘 시세대로 사도 ${peakText.buying} 사는 거예요. 다음 거래를 지켜보세요.`
+          : "같은 층과 상태의 다른 거래도 확인하면 더 안전해요."
         : latestTier === 2 ? "같은 층·향·상태라면 비싼 편이에요. 차이가 없다면 협상하세요."
         : "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
       const chartLabel = `${cells.map(([label, range]) => `${label} ${range}`).join(", ")}.${latestTier >= 0 ? ` 최근 실거래 ${transactionMoney(latestPrice)}.` : ""}${askTier >= 0 ? ` 입력한 매물 ${transactionMoney(entered)}.` : ""}`;
@@ -18590,8 +18624,14 @@
       const showLatest = Number.isFinite(latestPrice) && latestPrice > 0
         && (!Number.isFinite(latestArea) || !Number.isFinite(shownArea) || Math.abs(latestArea - shownArea) <= 5);
       const latestTier = showLatest ? zippickBuyBandTier(latestPrice, basis.low, basis.high) : -1;
-      const latestJudgment = latestTier === 0 ? "쌈" : latestTier === 1 ? "적정" : latestTier === 2 ? "비쌈" : "판단 보류";
-      const headline = latestTier === 0 ? "최근 실거래는 적정가격보다 싸요"
+      // '적정'은 요즘 거래와 비슷하다는 뜻이다. 타이틀이 고점권·급등을 경고하는데
+      // 밴드가 '적정'이라고만 하면 서로 반대로 읽히므로 두 사실을 이어서 말한다.
+      const peak = verdict?.peakGuard ? (verdict.peakGuard.atPeak ? "peak" : "surge") : "";
+      const peakText = latestTier === 0 || latestTier === 1 ? zippickBuyBandPeakText(peak) : null;
+      const latestJudgment = peakText ? `${latestTier === 0 ? "시세보다 쌈" : "시세 수준"} · ${peakText.tag}`
+        : latestTier === 0 ? "쌈" : latestTier === 1 ? "적정" : latestTier === 2 ? "비쌈" : "판단 보류";
+      const headline = peakText ? `${latestTier === 0 ? "요즘 시세보다 싸게 거래됐어요" : "요즘 시세와 비슷하게 거래됐어요"}. 다만 ${peakText.caution}.`
+        : latestTier === 0 ? "최근 실거래는 적정가격보다 싸요"
         : latestTier === 1 ? "최근 실거래는 적정가격 안에 있어요"
         : latestTier === 2 ? "최근 실거래는 적정가격보다 비싸요"
         : "최근 실거래의 가격 위치를 확인해 주세요";
@@ -18626,10 +18666,10 @@
         `<b>평가할 거래는 빼고</b> 기준가격을 계산해요.`,
         `자료가 부족하면 <b>판단을 보류</b>해요.`,
       ].filter(Boolean);
-      return `<div class="zpr-buy-band" data-zpr-buy-band data-zpr-key="${esc(key)}" data-zpr-low-price="${esc(basis.low)}" data-zpr-base-price="${esc(basis.price)}" data-zpr-high-price="${esc(basis.high)}" data-zpr-latest-price="${Number.isFinite(latestPrice) ? esc(latestPrice) : ""}" data-zpr-show-latest="${showLatest ? "1" : "0"}">
+      return `<div class="zpr-buy-band" data-zpr-buy-band data-zpr-key="${esc(key)}" data-zpr-low-price="${esc(basis.low)}" data-zpr-base-price="${esc(basis.price)}" data-zpr-high-price="${esc(basis.high)}" data-zpr-latest-price="${Number.isFinite(latestPrice) ? esc(latestPrice) : ""}" data-zpr-show-latest="${showLatest ? "1" : "0"}" data-zpr-peak="${esc(peak)}">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">집픽 밴드</span><h4>${esc(headline)}${latestTier >= 0 ? ` <em>${esc(latestJudgment)}</em>` : ""}</h4></div><span class="zpr-buy-band-quality">${esc(qualityLabel)}</span></div>
         ${leadHtml}
-        <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.low, basis.price, basis.high, latestPrice, showLatest, entered)}</div>
+        <div data-zpr-band-result>${zippickBuyBandResultHtml(basis.low, basis.price, basis.high, latestPrice, showLatest, entered, peak)}</div>
         <p class="zpr-buy-band-meta">최근 실거래 · ${latestDetail}</p>
         <div class="zpr-buy-band-basis"><strong class="zpr-buy-band-basis-title">이 가격은 어떻게 계산했나요?</strong>
           <ul>${(reasons.length ? reasons : [`비슷한 면적의 이전 실거래 ${sampleCount}건을 사용했어요.`]).map(reason => `<li>${esc(reason)}</li>`).join("")}${adjustmentText ? `<li>${esc(adjustmentText)}</li>` : ""}</ul>
@@ -23919,7 +23959,7 @@
         if (bandResult) bandResult.innerHTML = zippickBuyBandResultHtml(
           zpNum(band.dataset.zprLowPrice), zpNum(band.dataset.zprBasePrice),
           zpNum(band.dataset.zprHighPrice), zpNum(band.dataset.zprLatestPrice),
-          band.dataset.zprShowLatest === "1", input.value);
+          band.dataset.zprShowLatest === "1", input.value, band.dataset.zprPeak || "");
       }
       if (!check) return;
       const basePrice = zpNum(check.dataset.zprBasePrice);
