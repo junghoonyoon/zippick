@@ -1,20 +1,26 @@
 """집픽의 현재 적정가격 범위와 쌈·적정·비쌈 판정을 만든다.
 
 이 모듈은 매물 호가를 모델 입력으로 사용하지 않는다. 최근 같은 면적 실거래로
-중심가와 범위를 만들고, 거래가 뜸한 동안의 지역·주변 단지 흐름만 제한적으로
-시간 보정한다. 금리와 공급은 현재 거래가격을 임의로 움직이지 않고 향후 위험
-근거로 따로 남긴다.
+중심가와 범위를 만든다. 한국부동산원 주간 매매가격지수가 있으면 거래마다 계약한
+주부터 이번 주까지의 지역 변화만큼 가격을 옮겨 오늘 기준으로 맞춘다. 지수가
+없으면 거래가 뜸한 동안의 지역·주변 단지 흐름만 제한적으로 시간 보정한다.
+금리와 공급은 현재 거래가격을 임의로 움직이지 않고 향후 위험 근거로 따로 남긴다.
 """
 
 import datetime
 import math
 import statistics
 
+import molit_transactions
+import regional_price_index
 
-MODEL_VERSION = "zippick-current-value-v1"
+
+MODEL_VERSION = "zippick-current-value-v2"
 MIN_SAMPLE_COUNT = 3
 MAX_TRADE_AGE_DAYS = 120
 MAX_MARKET_ADJUSTMENT_PCT = 3.0
+# 지수 자료가 잘못 들어와도 거래 한 건을 이 폭보다 크게 옮기지 않는다.
+MAX_INDEX_ADJUSTMENT_PCT = 10.0
 
 
 def _number(value):
@@ -124,6 +130,48 @@ def _macro_context(row):
     }
 
 
+def _index_adjusted_estimate(row, today=None):
+    """거래마다 지역 주간 지수 변화를 반영한 가격대를 다시 계산한다.
+
+    지수나 거래 목록이 없거나, 한 건이라도 계약 주의 지수를 찾지 못하면
+    None을 돌려 기존 계산을 쓰게 한다. 일부 거래만 옮기면 범위가 뒤틀린다.
+    """
+    trades = row.get("valuationTrades")
+    if not isinstance(trades, list) or len(trades) < MIN_SAMPLE_COUNT:
+        return None
+    series = regional_price_index.series_for_region(row.get("region"))
+    latest = regional_price_index.latest_point(series, today=today)
+    if not latest:
+        return None
+    original, adjusted = [], []
+    for trade in trades:
+        try:
+            deal_date, price = str(trade[0])[:10], float(trade[1])
+        except (IndexError, TypeError, ValueError):
+            return None
+        base_value = regional_price_index.value_on(series, deal_date)
+        if price <= 0 or not base_value:
+            return None
+        change_pct = _clamp(
+            (latest["value"] / base_value - 1) * 100,
+            -MAX_INDEX_ADJUSTMENT_PCT, MAX_INDEX_ADJUSTMENT_PCT,
+        )
+        original.append({"dealDate": deal_date, "dealAmountEok": price})
+        adjusted.append({"dealDate": deal_date, "dealAmountEok": price * (1 + change_pct / 100)})
+    before = molit_transactions._current_price_estimate(original)
+    after = molit_transactions._current_price_estimate(adjusted)
+    if not before or not after or not before.get("midPriceEok"):
+        return None
+    return {
+        "low": after["minPriceEok"],
+        "center": after["midPriceEok"],
+        "high": after["maxPriceEok"],
+        "centerChangePct": round((after["midPriceEok"] / before["midPriceEok"] - 1) * 100, 2),
+        "regionLabel": series["label"],
+        "asOf": latest["period"],
+    }
+
+
 def _unavailable(reason, row, today=None):
     return {
         "status": "unavailable",
@@ -166,17 +214,23 @@ def valuation_for_candidate(row, today=None):
         return _unavailable("가격 범위를 계산할 실거래 자료가 부족해요.", row, today)
 
     market = _market_context(row)
-    # 최근 거래 이후 비어 있는 기간만 보정한다. 이미 거래가격에 담긴 6개월
-    # 상승률을 다시 더하지 않도록 보정 폭을 35%로 줄이고 최대 3%로 제한한다.
-    blended = market.get("blended6mPct")
+    index_estimate = _index_adjusted_estimate(row, today)
     adjustment_pct = 0.0
-    if blended is not None and age_days > 30:
-        elapsed_share = min(age_days, MAX_TRADE_AGE_DAYS) / 180
-        adjustment_pct = _clamp(blended * elapsed_share * 0.35, -MAX_MARKET_ADJUSTMENT_PCT, MAX_MARKET_ADJUSTMENT_PCT)
-    factor = 1 + adjustment_pct / 100
-    center *= factor
-    low *= factor
-    high *= factor
+    if index_estimate:
+        # 거래마다 이미 오늘 기준으로 옮겼으므로 주변 단지 흐름을 또 더하지 않는다.
+        low, center, high = index_estimate["low"], index_estimate["center"], index_estimate["high"]
+        adjustment_pct = index_estimate["centerChangePct"]
+    else:
+        # 최근 거래 이후 비어 있는 기간만 보정한다. 이미 거래가격에 담긴 6개월
+        # 상승률을 다시 더하지 않도록 보정 폭을 35%로 줄이고 최대 3%로 제한한다.
+        blended = market.get("blended6mPct")
+        if blended is not None and age_days > 30:
+            elapsed_share = min(age_days, MAX_TRADE_AGE_DAYS) / 180
+            adjustment_pct = _clamp(blended * elapsed_share * 0.35, -MAX_MARKET_ADJUSTMENT_PCT, MAX_MARKET_ADJUSTMENT_PCT)
+        factor = 1 + adjustment_pct / 100
+        center *= factor
+        low *= factor
+        high *= factor
 
     # 25~75백분위가 지나치게 좁을 때 표본 수·최신성에 맞는 최소 폭을 둔다.
     minimum_half_width_pct = 4.0 if sample_count >= 10 else 5.0 if sample_count >= 5 else 7.0
@@ -194,13 +248,19 @@ def valuation_for_candidate(row, today=None):
     )
     reasons = [f"비슷한 면적의 이전 실거래 {sample_count}건을 사용했어요."]
     reasons.append("평가할 최근 거래는 기준가격 계산에서 뺐어요.")
-    if market["status"] == "available":
+    if index_estimate:
+        # 가격을 옮긴 근거는 주간 지수 하나다. 쓰지 않은 주변 단지 흐름은 적지 않는다.
+        reasons.append(
+            f"한국부동산원 {index_estimate['regionLabel']} 주간 가격 변화를 거래마다 반영해 "
+            "가장 최근 주 기준으로 맞췄어요."
+        )
+    elif market["status"] == "available":
         reasons.append("단지·같은 구·주변 비교 단지의 6개월 흐름을 함께 확인했어요.")
     else:
         reasons.append("지역·주변 단지 흐름 자료가 부족해 실거래 범위를 더 넓게 잡았어요.")
-    if adjustment_pct:
+    if not index_estimate and adjustment_pct:
         direction = "올려" if adjustment_pct > 0 else "낮춰"
-        reasons.append(f"마지막 거래 뒤 시장 변화를 반영해 중심가를 {abs(adjustment_pct):.1f}% {direction} 봤어요.")
+        reasons.append(f"마지막 거래 뒤 시장 변화를 반영해 적정가격을 {abs(adjustment_pct):.1f}% {direction} 봤어요.")
 
     return {
         "status": "ready",
@@ -213,7 +273,11 @@ def valuation_for_candidate(row, today=None):
             "centerEok": round(center, 2),
             "highEok": round(max(high, low), 2),
             "widthPct": round(width_pct, 1),
-            "method": "평가할 거래를 제외한 실거래 가격대 + 거래 공백 기간의 지역·주변 흐름 보정",
+            "method": (
+                "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+                if index_estimate
+                else "평가할 거래를 제외한 실거래 가격대 + 거래 공백 기간의 지역·주변 흐름 보정"
+            ),
         },
         "dataQuality": {
             "level": quality,
@@ -223,6 +287,13 @@ def valuation_for_candidate(row, today=None):
             "marketContextAvailable": market["status"] == "available",
         },
         "marketAdjustmentPct": round(adjustment_pct, 2),
+        "indexAdjustment": {
+            "status": "applied",
+            "source": regional_price_index.SOURCE,
+            "region": index_estimate["regionLabel"],
+            "asOf": index_estimate["asOf"],
+            "centerChangePct": index_estimate["centerChangePct"],
+        } if index_estimate else {"status": "unavailable"},
         "latestTradeExcluded": has_leave_one_out,
         "market": market,
         "macro": _macro_context(row),
