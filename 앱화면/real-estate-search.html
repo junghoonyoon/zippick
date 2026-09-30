@@ -621,6 +621,24 @@
     .form-step-title { margin:0; color:#242b35; font-size:19px; font-weight:880; line-height:1.35 }
     .form-step-copy { margin:4px 0 0; color:#697384; font-size:13px; line-height:1.55 }
     .power-fields,.preference-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:12px }
+    .power-region-field { grid-column:1 / -1 }
+    .power-advanced.is-always-open > summary,
+    .condition-stage-power .power-advanced.is-always-open > summary { display:none !important }
+    .power-advanced.is-always-open { border-top:0 !important; margin-top:0 !important; padding-top:0 !important }
+    .power-cash-input { display:flex; align-items:center; gap:6px; margin-top:8px; border-bottom:2px solid #9fc8ff }
+    .power-cash-input:focus-within { border-bottom-color:#1267d8 }
+    .power-cash-input.is-error,.power-cash-input.is-error:focus-within { border-bottom-color:#d92d20 }
+    .power-cash-input.is-error input,.power-cash-input.is-error span { color:#d92d20 }
+    .power-funding-item small.is-error { color:#d92d20; font-weight:700 }
+    .power-cash-input input {
+      width:100%; min-width:0; border:0; padding:2px 0; background:transparent; color:#172033;
+      font:inherit; font-size:clamp(17px,4.8vw,20px); font-weight:900;
+    }
+    .power-cash-input input:focus { outline:none }
+    .power-cash-input span { color:#5b6574; font-size:15px; font-weight:800; white-space:nowrap }
+    .power-sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
+    .power-region-hint { margin:0; color:#6b7280; font-size:14px; font-weight:600; line-height:1.45 }
+    .power-region-hint strong { color:#1267d8; font-weight:800 }
     .power-advanced { grid-column:1 / -1; border-top:1px solid #edf0f4; margin-top:4px; padding-top:4px }
     .power-advanced > summary { padding:10px 0; color:#596273; font-size:15px; font-weight:800; cursor:pointer }
     .power-advanced-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:12px; padding-top:6px }
@@ -658,6 +676,27 @@
     .power-result-row-value { color:#172033; font-size:16px; font-weight:900; white-space:nowrap }
     .power-result-row.total .power-result-row-label,.power-result-row.total .power-result-row-value { color:#1267d8 }
     .power-result-note { margin:9px 0 0; color:#7a8493; font-size:14px; font-weight:600; line-height:1.45 }
+    .power-result-hint { margin:14px 0 0; padding:12px 14px; border-radius:12px; background:#eff6ff; color:#1d4ed8; font-size:14px; font-weight:600; line-height:1.5 }
+    .power-result-hint strong { display:block; color:#1e3a8a; font-size:15px }
+    .power-funding-list { margin-top:20px }
+    .power-funding-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:24px; border-top:1px solid #edf0f4; padding-top:18px }
+    .power-funding-item { min-width:0; padding:0 16px 0 0 }
+    .power-funding-item + .power-funding-item { border-left:1px solid #edf0f4; padding:0 0 0 16px }
+    .power-funding-item label,.power-funding-label { display:block; color:#303846; font-size:15px; font-weight:800 }
+    .power-funding-item strong { display:block; margin-top:8px; padding:2px 0; color:#172033; font-size:clamp(17px,4.8vw,20px); font-weight:900; white-space:nowrap }
+    .power-funding-item small { display:block; margin-top:8px; color:#7a8493; font-size:13px; font-weight:600; line-height:1.55 }
+    .power-funding-note { margin:16px 0 0; color:#1267d8; font-size:14px; font-weight:700; line-height:1.6 }
+    .power-constraint-text { margin:14px 0 0; color:#4b5563; font-size:15px; font-weight:600; line-height:1.65 }
+    .power-constraint-text strong { color:#1267d8; font-weight:900 }
+    .power-reason-list { margin:18px 0 0; border-top:1px solid #edf0f4 }
+    .power-reason-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:start; padding:18px 0; border-bottom:1px solid #edf0f4 }
+    .power-reason-row dt { color:#303846; font-size:15px; font-weight:800; line-height:1.4 }
+    .power-reason-row dt small { display:block; margin-top:6px; color:#7a8493; font-size:13px; font-weight:600; line-height:1.55 }
+    .power-reason-row dd { margin:0; color:#172033; font-size:16px; font-weight:900; white-space:nowrap }
+    .power-reason-row.is-total dt,.power-reason-row.is-total dd { color:#1267d8 }
+    .power-result-disclaimer { margin:20px 0 0; color:#8b95a1; font-size:12px; line-height:1.5 }
+    .power-result-section-title { margin:36px 0 0; color:#172033; font-size:17px; font-weight:900 }
+    .power-result-section-title + .power-result-breakdown { margin-top:4px }
     .power-result-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:13px }
     .budget-form .power-result-actions button { grid-column:auto; min-height:38px; width:auto; border:1px solid #cad5e3; padding:0 12px; background:#fff; color:#475467; font-size:13px; box-shadow:none }
     .purchase-power-result.is-sheet .power-result-row { grid-template-columns:28px minmax(0,1fr) auto; column-gap:12px; row-gap:0; padding:15px 0 }
@@ -3576,7 +3615,8 @@
     .purchase-power-result.is-sheet .power-result-row-label { font-size:16px }
     .purchase-power-result.is-sheet .power-result-row-meta { margin-top:3px; font-size:14px }
     .purchase-power-result.is-sheet .power-result-row-value { font-size:18px }
-    .purchase-power-result.is-sheet .power-result-note { margin-top:11px; font-size:14px }
+    .purchase-power-result.is-sheet .power-result-note { margin-top:14px; font-size:14px; line-height:1.6 }
+    .purchase-power-result.is-sheet .power-reason-list + .power-result-note { margin-top:24px }
     .purchase-power-result.is-sheet .power-result-actions {
       display:block; flex:0 0 auto; margin:0; padding:16px 28px calc(18px + env(safe-area-inset-bottom));
       border-top:1px solid #eef1f4;
@@ -4909,6 +4949,13 @@
       <form class="budget-form" id="budgetForm">
         <section class="form-step purchase-power-step" id="purchasePowerStep" role="region" aria-labelledby="conditionPowerTab" aria-label="구매력 계산 입력">
           <div class="power-fields">
+            <div class="budget-field power-region-field">
+              <label for="policyPurchaseRegion">구매 희망지역</label>
+              <select id="policyPurchaseRegion" aria-label="구매 희망지역" aria-describedby="policyPurchaseRegionHint" required>
+                <option value="">지역을 선택해 주세요</option>
+              </select>
+              <p class="power-region-hint" id="policyPurchaseRegionHint">규제지역인지에 따라 대출 한도가 달라져요. 상세 지역은 집 조건에서 골라요.</p>
+            </div>
             <div class="budget-field">
               <label for="policyHomeOwnership">보유 주택</label>
               <select id="policyHomeOwnership" aria-label="현재 보유 주택" required>
@@ -4962,6 +5009,8 @@
               <label for="policyAnnualIncome">연소득</label>
               <div class="input-with-unit"><input id="policyAnnualIncome" type="number" min="100" step="100" inputmode="numeric" placeholder="예: 8000" required><span class="input-unit" aria-hidden="true">만원</span></div>
             </div>
+            <input id="policyReserveCash" type="hidden" value="">
+            <input id="policyPurchaseCostRate" type="hidden" value="">
             <div class="budget-field">
               <label for="policyMonthlyDebt">월 대출 상환액</label>
               <div class="input-with-unit"><input id="policyMonthlyDebt" type="number" min="0" step="10" inputmode="numeric" placeholder="예: 80"><span class="input-unit" aria-hidden="true">만원/월</span></div>
@@ -5017,7 +5066,7 @@
               <label for="policySpouseDebt">배우자 기존 대출 월 상환액</label>
               <div class="input-with-unit"><input id="policySpouseDebt" type="number" min="0" step="10" inputmode="numeric" placeholder="예: 50" disabled><span class="input-unit" aria-hidden="true">만원/월</span></div>
             </div>
-            <details class="power-advanced" id="purchasePowerAdvanced">
+            <details class="power-advanced is-always-open" id="purchasePowerAdvanced" open>
               <summary>내 상황 더 입력하기</summary>
               <div class="power-advanced-fields">
                 <div class="budget-field">
@@ -5027,7 +5076,7 @@
                 </div>
                 <div class="budget-field">
                   <label for="policyMortgageRate" id="policyMortgageRateLabel">예상 주담대 금리</label>
-                  <div class="input-with-unit"><input id="policyMortgageRate" type="number" min="1" max="15" step="0.1" inputmode="decimal" value="4.3" aria-describedby="policyMortgageRateHelper" required><span class="input-unit" aria-hidden="true">%</span></div>
+                  <div class="input-with-unit"><input id="policyMortgageRate" type="number" min="1" max="15" step="0.01" inputmode="decimal" value="" aria-describedby="policyMortgageRateHelper" required><span class="input-unit" aria-hidden="true">%</span></div>
                   <p class="field-helper" id="policyMortgageRateHelper" hidden><span id="policyMortgageRateHelperText"></span><button class="field-helper-action" id="mortgageRateAutoReset" type="button" hidden>자동 예상치 사용</button></p>
                 </div>
                 <div class="budget-field">
@@ -5038,38 +5087,14 @@
                     <option value="40">40년</option>
                   </select>
                 </div>
-                <div class="budget-field purchase-cost-field">
-                  <div class="field-label-row">
-                    <label for="policyPurchaseCostRate">부대비용 기준</label>
-                    <button class="info-button" id="purchaseCostInfoButton" type="button" aria-label="부대비용 기준 설명 보기" aria-controls="purchaseCostInfo" aria-expanded="false">i</button>
-                  </div>
-                  <div class="info-popover" id="purchaseCostInfo" role="dialog" aria-modal="false" aria-labelledby="purchaseCostInfoTitle" aria-hidden="true" hidden>
-                    <div class="info-popover-head">
-                      <h4 class="info-popover-title" id="purchaseCostInfoTitle">부대비용 기준</h4>
-                      <button class="info-popover-close" id="purchaseCostInfoClose" type="button" aria-label="부대비용 기준 설명 닫기"></button>
-                    </div>
-                    <p class="info-popover-copy">검토 가능 금액을 계산할 때 매매가 외 비용을 4%로 가정해요.</p>
-                    <ul class="info-popover-list">
-                      <li><strong>포함 항목</strong> 취득세·지방교육세 3.3%와 중개보수 약 0.7%를 더해요.</li>
-                      <li><strong>계산 예시</strong> 매매가가 8억이면 부대비용은 약 3,200만원으로 계산해요.</li>
-                      <li><strong>확인할 점</strong> 실제 세금과 중개보수는 집값과 거래 조건에 따라 달라질 수 있어요.</li>
-                    </ul>
-                  </div>
-                  <select id="policyPurchaseCostRate" aria-label="부대비용 계산 기준">
-                    <option value="4" selected>매매가의 4%</option>
+                <div class="budget-field">
+                  <label for="policyRateType">금리 유형</label>
+                  <select id="policyRateType" aria-label="주택담보대출 금리 유형" aria-describedby="policyRateTypeHelper">
+                    <option value="periodic" selected>주기형 (5년마다 금리 재산정)</option>
+                    <option value="mixed">혼합형 (5년 고정 후 변동)</option>
+                    <option value="variable">변동형</option>
                   </select>
-                  <details class="single-picker power-single-picker" id="purchaseCostRatePicker" data-power-single-picker="purchaseCostRate">
-                    <summary><span id="purchaseCostRateSummary">매매가의 4%</span></summary>
-                    <div class="multi-option-panel">
-                      <div class="multi-sheet-grabber" aria-hidden="true"></div>
-                      <p class="multi-sheet-title">부대비용 계산 기준</p>
-                      <div class="multi-option-body"><div class="multi-options" id="purchaseCostRateOptions" role="radiogroup" aria-label="부대비용 계산 기준"></div></div>
-                      <div class="multi-option-footer">
-                        <button class="multi-footer-button multi-reset" type="button" data-power-single-action="reset" data-power-single-type="purchaseCostRate">초기화</button>
-                        <div class="multi-option-actions"><button class="multi-footer-button multi-apply" type="button" data-power-single-action="apply" data-power-single-type="purchaseCostRate">적용</button></div>
-                      </div>
-                    </div>
-                  </details>
+                  <p class="field-helper" id="policyRateTypeHelper">금리 유형에 따라 대출 한도를 정할 때 더하는 스트레스 금리가 달라져요.</p>
                 </div>
               </div>
             </details>
@@ -5174,7 +5199,7 @@
       <section class="condition-stage-panel condition-results-panel" id="conditionResultsPanel" role="region" aria-labelledby="conditionResultsTab" hidden>
         <aside class="power-persistent" id="powerPersistent" aria-live="polite">
           <div class="power-persistent-copy">
-            <button class="power-persistent-meta power-condition-shortcut" type="button" data-condition-summary-open="power" aria-haspopup="dialog" aria-controls="conditionSummarySheet" aria-label="구매력 조건 보기"><span class="power-persistent-label">검토 가능 금액</span><strong id="powerPersistentValue"></strong></button>
+            <button class="power-persistent-meta power-condition-shortcut" type="button" data-condition-summary-open="power" aria-haspopup="dialog" aria-controls="conditionSummarySheet" aria-label="구매력 조건 보기"><span class="power-persistent-label">최대 구매가</span><strong id="powerPersistentValue"></strong></button>
             <button class="power-persistent-meta power-condition-shortcut" type="button" data-condition-summary-open="preference" aria-haspopup="dialog" aria-controls="conditionSummarySheet" aria-label="집 조건 보기"><span class="power-persistent-label">지역</span><strong class="power-persistent-region" id="powerPersistentRegion"></strong></button>
           </div>
           <button class="power-condition-change" type="button" data-condition-summary-open="power" aria-haspopup="dialog" aria-controls="conditionSummarySheet">변경</button>
@@ -5346,6 +5371,88 @@
     const policyAnnualIncome = $("policyAnnualIncome");
     const policyMonthlyDebt = $("policyMonthlyDebt");
     const policyMaritalStatus = $("policyMaritalStatus");
+    const policyPurchaseRegion = $("policyPurchaseRegion");
+    const policyReserveCash = $("policyReserveCash");
+    let lastPurchasePowerMode = "approximate";
+
+    function formatEokInput(value) {
+      const number = Math.round(Number(value || 0) * 10000) / 10000;
+      return Number.isFinite(number) ? String(number) : "";
+    }
+
+    // 바텀시트의 '예상 자기자금' 칸에 집값에 넣을 돈을 적으면, 가진 돈과의 차이를 남겨둘 돈으로 다시 계산해요.
+    // 자기자금 칸의 오류를 빨간색으로 표시하거나 지워요.
+    function setPurchasePowerCashError(input, message) {
+      const wrap = input.closest(".power-cash-input");
+      const helper = purchasePowerResult.querySelector("[data-power-cash-helper]");
+      const hasError = Boolean(message);
+      wrap?.classList.toggle("is-error", hasError);
+      helper?.classList.toggle("is-error", hasError);
+      input.setAttribute("aria-invalid", String(hasError));
+      if (helper && hasError) {
+        if (!helper.dataset.defaultText) helper.dataset.defaultText = helper.textContent;
+        helper.textContent = message;
+        helper.setAttribute("role", "alert");
+      } else if (helper && helper.dataset.defaultText) {
+        helper.textContent = helper.dataset.defaultText;
+        helper.removeAttribute("role");
+        delete helper.dataset.defaultText;
+      }
+    }
+
+    function applyPurchasePowerCashInput(input) {
+      const total = Number(policyCash.value);
+      const raw = String(input.value || "").trim();
+      const value = Number(raw);
+      if (!raw || !Number.isFinite(value) || value <= 0) {
+        setPurchasePowerCashError(input, "집값에 넣을 돈을 0보다 크게 적어 주세요.");
+        return;
+      }
+      if (Number.isFinite(total) && value > total + 1e-9) {
+        setPurchasePowerCashError(input, `가진 돈 ${policyMoneyExact(total)}보다 많이 넣을 수 없어요.`);
+        return;
+      }
+      setPurchasePowerCashError(input, "");
+      const reserve = Math.max(0, Math.round((total - value) * 10000) / 10000);
+      if (Math.abs(reserve - Number(policyReserveCash.value || 0)) < 1e-9) return;
+      void recalculatePurchasePowerWithReserve(reserve);
+    }
+
+    async function recalculatePurchasePowerWithReserve(reserveValue) {
+      const helper = purchasePowerResult.querySelector("[data-power-cash-helper]");
+      const cash = Number(policyCash.value);
+      const reserve = Number(reserveValue || 0);
+      if (!Number.isFinite(reserve) || reserve < 0) {
+        if (helper) helper.textContent = "집값에 넣을 돈을 다시 확인해 주세요.";
+        return;
+      }
+      if (Number.isFinite(cash) && reserve >= cash) {
+        if (helper) helper.textContent = "집값에 넣을 돈을 0보다 크게 적어 주세요.";
+        return;
+      }
+      const previousBudgetEok = currentPurchasePower?.budgetEok;
+      const hadCandidates = Boolean(currentBudgetData);
+      policyReserveCash.value = reserve > 0 ? String(reserve) : "";
+      savePurchasePowerForm();
+      if (helper) helper.textContent = "다시 계산하고 있어요…";
+      try {
+        const data = await getJson(`/api/purchase-power?${purchasePowerParams(lastPurchasePowerMode).toString()}`);
+        currentPurchasePower = data;
+        if (hadCandidates && !purchasePowerSheetAfterConfirm) {
+          purchasePowerSheetAfterConfirm = () => loadBudgetCandidates();
+        }
+        renderPurchasePower(data, {
+          changeContext:previousBudgetEok == null ? null : { changedLabels:["집값에 넣을 돈"], previousBudgetEok },
+          preserveConditionStage:true,
+        });
+        syncPurchasePowerSummary();
+        purchasePowerResult.querySelector("#powerCashInput")?.focus({ preventScroll:true });
+      } catch (error) {
+        const target = purchasePowerResult.querySelector("[data-power-cash-helper]");
+        if (target) target.textContent = error.error || "다시 계산하지 못했어요. 잠시 뒤 다시 눌러 주세요.";
+      }
+    }
+    const policyPurchaseRegionHint = $("policyPurchaseRegionHint");
     const maritalStatusPicker = $("maritalStatusPicker");
     const maritalStatusSummary = $("maritalStatusSummary");
     const maritalStatusOptions = $("maritalStatusOptions");
@@ -5362,16 +5469,13 @@
     const policyMortgageRateHelperText = $("policyMortgageRateHelperText");
     const mortgageRateAutoReset = $("mortgageRateAutoReset");
     const policyLoanTerm = $("policyLoanTerm");
+    const policyRateType = $("policyRateType");
     const policyPurchaseCostRate = $("policyPurchaseCostRate");
     const powerSinglePickers = [...document.querySelectorAll("[data-power-single-picker]")];
     const powerSinglePickerConfigs = {
       firstTime: { select:policyFirstTime, picker:$("firstTimePicker"), summary:$("firstTimeSummary"), options:$("firstTimeOptions") },
       coBorrower: { select:policyCoBorrower, picker:$("coBorrowerPicker"), summary:$("coBorrowerSummary"), options:$("coBorrowerOptions") },
-      purchaseCostRate: { select:policyPurchaseCostRate, picker:$("purchaseCostRatePicker"), summary:$("purchaseCostRateSummary"), options:$("purchaseCostRateOptions") },
     };
-    const purchaseCostInfoButton = $("purchaseCostInfoButton");
-    const purchaseCostInfo = $("purchaseCostInfo");
-    const purchaseCostInfoClose = $("purchaseCostInfoClose");
     const purchasePowerAdvanced = $("purchasePowerAdvanced");
     const powerApproximateCalculate = $("powerApproximateCalculate");
     const powerCalculate = $("powerCalculate");
@@ -5470,11 +5574,11 @@
     // v12부터 지도 지오코딩에 쓰는 원주소(mapAddress)를 포함한다.
     // v16부터 광역 지역도 분산 선별한 실거래 후보를 포함한다.
     // v19부터 화면에 보이는 모든 구매 시나리오에 +5% 상한을 적용한다.
-    // v25부터 화면의 검토 가능 금액과 후보 가격 상한을 같은 값으로 쓴다.
+    // v25부터 화면의 최대 구매가와 후보 가격 상한을 같은 값으로 쓴다.
     // v11부터 매수 판단 밴드 계산값이 없는 예전 후보 응답은 다시 불러온다.
     const CANDIDATE_RESULT_SCHEMA_VERSION = 11;
     const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v4";
-    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v27.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
+    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v28.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
     try {
       Object.keys(localStorage)
@@ -5489,8 +5593,67 @@
     const refreshPageStateTtlMs = 30 * 60 * 1000;
     const enhancedMortgageRateUx = true; // false로 바꾸면 기존 금리 입력 UI로 복구됩니다.
     const mortgageStressRatePercent = 3.0;
-    const mortgageRateMarketAveragePercent = 4.3;
-    const mortgageRateMarketAverageAsOf = "2026.05";
+    // 기본 금리는 서버 정책 설정(/api/purchase-power-config)에서 받아요. 받기 전에는 비워 둬요.
+    let mortgageRateMarketAveragePercent = null;
+    let mortgageRateMarketAverageAsOf = "";
+    let purchaseRegions = [];
+    let creditScoreRateAdjustments = [];
+    let pendingPurchaseRegionCode = "";
+
+    function purchaseRegionByCode(code = policyPurchaseRegion.value) {
+      return purchaseRegions.find(region => region.regionCode === code) || null;
+    }
+
+    function purchaseRegionLabel(code = policyPurchaseRegion.value) {
+      return purchaseRegionByCode(code)?.label || "";
+    }
+
+    function renderPurchaseRegionHint() {
+      const region = purchaseRegionByCode();
+      if (!region) {
+        policyPurchaseRegionHint.textContent = "규제지역인지에 따라 대출 한도가 달라져요. 상세 지역은 집 조건에서 골라요.";
+        return;
+      }
+      const tag = region.isRegulatedArea ? "규제지역" : "비규제지역";
+      policyPurchaseRegionHint.innerHTML = `<strong>${esc(tag)}</strong> · ${esc(region.description || region.label)}`;
+    }
+
+    function setPurchaseRegionValue(code) {
+      pendingPurchaseRegionCode = code || "";
+      if (!purchaseRegions.length) return;
+      policyPurchaseRegion.value = purchaseRegionByCode(code) ? code : "";
+      pendingPurchaseRegionCode = "";
+      renderPurchaseRegionHint();
+    }
+
+    function renderPurchaseRegionOptions() {
+      policyPurchaseRegion.innerHTML = `<option value="">지역을 선택해 주세요</option>${purchaseRegions
+        .map(region => `<option value="${esc(region.regionCode)}">${esc(region.label)}</option>`).join("")}`;
+    }
+
+    async function loadPurchasePowerConfig() {
+      try {
+        const config = await getJson("/api/purchase-power-config");
+        purchaseRegions = Array.isArray(config.regions) ? config.regions.filter(Boolean) : [];
+        creditScoreRateAdjustments = Array.isArray(config.creditScoreRateAdjustments)
+          ? [...config.creditScoreRateAdjustments].sort((a, b) => Number(b.minScore) - Number(a.minScore))
+          : [];
+        if (!policyRateType.dataset.userSelected && config.defaultMortgageRateType) policyRateType.value = config.defaultMortgageRateType;
+        const costRate = Number(config.purchaseCostRate);
+        if (Number.isFinite(costRate) && costRate >= 0) policyPurchaseCostRate.value = String(Math.round(costRate * 1000) / 10);
+        const rate = Number(config.mortgageRateDefault?.value);
+        if (Number.isFinite(rate) && rate > 0) {
+          mortgageRateMarketAveragePercent = rate;
+          mortgageRateMarketAverageAsOf = String(config.mortgageRateDefault.asOf || "").replace("-", ".");
+        }
+      } catch (error) {
+        purchaseRegions = [];
+      }
+      const selected = pendingPurchaseRegionCode || policyPurchaseRegion.value;
+      renderPurchaseRegionOptions();
+      setPurchaseRegionValue(selected);
+      if (!mortgageRateManuallyEdited && mortgageRateMarketAveragePercent) applyEstimatedMortgageRate(true);
+    }
     let mortgageRateManuallyEdited = false;
 
     function estimatedMortgageRate(scoreValue = policyCreditScore.value) {
@@ -5499,16 +5662,15 @@
       let adjustment = 0;
       let scoreLabel = "신용점수 미입력";
       if (hasScore) {
-        if (score >= 950) adjustment = -0.25;
-        else if (score >= 900) adjustment = -0.15;
-        else if (score >= 850) adjustment = -0.05;
-        else if (score >= 800) adjustment = 0.05;
-        else if (score >= 750) adjustment = 0.25;
-        else if (score >= 700) adjustment = 0.5;
-        else adjustment = 0.8;
+        // 신용점수 구간별 가감값은 서버 설정(creditScoreRateAdjustments)에서 받아요.
+        const tier = creditScoreRateAdjustments.find(item => score >= Number(item.minScore));
+        adjustment = Number(tier?.adjustmentPercent || 0);
         scoreLabel = `신용점수 ${Math.round(score)}점`;
       }
-      const rate = Math.round((mortgageRateMarketAveragePercent + adjustment) * 10) / 10;
+      if (!(mortgageRateMarketAveragePercent > 0)) {
+        return { rate:NaN, low:NaN, high:NaN, hasScore, scoreLabel };
+      }
+      const rate = Math.round((mortgageRateMarketAveragePercent + adjustment) * 100) / 100;
       const rangeMargin = hasScore ? 0.35 : 0.45;
       return {
         rate,
@@ -5525,8 +5687,12 @@
         return false;
       }
       const estimate = estimatedMortgageRate();
+      if (!Number.isFinite(estimate.rate)) {
+        renderMortgageRateHelper();
+        return false;
+      }
       const changed = Number(policyMortgageRate.value) !== estimate.rate;
-      policyMortgageRate.value = estimate.rate.toFixed(1);
+      policyMortgageRate.value = estimate.rate.toFixed(2);
       renderMortgageRateHelper();
       return changed;
     }
@@ -5541,10 +5707,10 @@
       if (!Number.isFinite(rate) || rate <= 0) {
         policyMortgageRateHelperText.textContent = "적용할 주담대 금리를 입력해 주세요.";
       } else if (mortgageRateManuallyEdited) {
-        policyMortgageRateHelperText.textContent = `직접 입력한 ${rate.toFixed(1)}%를 계산에 반영해요.`;
+        policyMortgageRateHelperText.textContent = `직접 입력한 ${rate.toFixed(2)}%를 계산에 반영해요.`;
       } else {
         policyMortgageRateHelperText.replaceChildren(
-          document.createTextNode(`${estimate.scoreLabel} · 최근 신규 주담대 평균 기반 `),
+          document.createTextNode(`${estimate.scoreLabel} · 한국은행 신규 주담대 평균 기반 `),
           Object.assign(document.createElement("strong"), { textContent:`예상 범위 ${estimate.low.toFixed(1)}~${estimate.high.toFixed(1)}%` }),
           document.createTextNode(` · ${mortgageRateMarketAverageAsOf} 기준`),
         );
@@ -5552,11 +5718,6 @@
       mortgageRateAutoReset.hidden = !mortgageRateManuallyEdited;
     }
 
-    function setPurchaseCostInfoOpen(open) {
-      purchaseCostInfo.hidden = !open;
-      purchaseCostInfo.setAttribute("aria-hidden", String(!open));
-      purchaseCostInfoButton.setAttribute("aria-expanded", String(open));
-    }
     function setResultInfoOpen(open, container = document) {
       const popover = container.querySelector("[data-result-info-popover]");
       const button = container.querySelector("[data-result-info-button]");
@@ -5810,9 +5971,12 @@
     }
     function purchasePowerFormValues() {
       return {
+        purchaseRegion: policyPurchaseRegion.value || pendingPurchaseRegionCode,
         homeOwnership: policyHomeOwnership.value,
         firstTime: policyFirstTime.value,
         cash: policyCash.value.trim(),
+        reserveCash: policyReserveCash.value.trim(),
+        rateType: policyRateType.value,
         annualIncome: policyAnnualIncome.value.trim(),
         monthlyDebt: policyMonthlyDebt.value.trim(),
         maritalStatus: policyMaritalStatus.value,
@@ -5823,7 +5987,6 @@
         mortgageRate: policyMortgageRate.value.trim(),
         mortgageRateMode: mortgageRateManuallyEdited ? "manual" : "auto",
         loanTerm: policyLoanTerm.value,
-        purchaseCostRate: policyPurchaseCostRate.value,
         preference: {
           regions:[...multiSelections.region],
           minArea:budgetMinArea.value,
@@ -5850,9 +6013,15 @@
         saved = null;
       }
       if (!saved || typeof saved !== "object") return;
+      setPurchaseRegionValue(saved.purchaseRegion);
       setSelectValue(policyHomeOwnership, saved.homeOwnership);
       setSelectValue(policyFirstTime, saved.firstTime);
       policyCash.value = saved.cash ?? "";
+      policyReserveCash.value = saved.reserveCash ?? "";
+      if (saved.rateType) {
+        setSelectValue(policyRateType, saved.rateType);
+        policyRateType.dataset.userSelected = "true";
+      }
       policyAnnualIncome.value = saved.annualIncome ?? "";
       policyMonthlyDebt.value = saved.monthlyDebt ?? "";
       setSelectValue(policyMaritalStatus, saved.maritalStatus);
@@ -5865,7 +6034,6 @@
       else if (saved.mortgageRateMode === "auto") mortgageRateManuallyEdited = false;
       else mortgageRateManuallyEdited = saved.mortgageRate != null && Math.abs(Number(saved.mortgageRate) - 4.2) > 0.001;
       setSelectValue(policyLoanTerm, saved.loanTerm);
-      setSelectValue(policyPurchaseCostRate, saved.purchaseCostRate);
       const restoredRegions = Array.isArray(saved.preference?.regions)
         ? saved.preference.regions.map(normalizeConditionRegionValue).filter(Boolean)
         : [];
@@ -7961,6 +8129,16 @@
     function policyMoney(value) {
       const amount = Number(value || 0);
       return `${amount.toFixed(2).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1")}억`;
+    }
+
+    function policyMoneyExact(value) {
+      const manwon = Math.round(Number(value || 0) * 10000);
+      const eok = Math.floor(Math.abs(manwon) / 10000);
+      const remainder = Math.abs(manwon) % 10000;
+      const sign = manwon < 0 ? "-" : "";
+      if (eok && remainder) return `${sign}${eok}억 ${remainder.toLocaleString("ko-KR")}만원`;
+      if (eok) return `${sign}${eok}억`;
+      return `${sign}${remainder.toLocaleString("ko-KR")}만원`;
     }
 
     function readableGapMoney(value) {
@@ -14327,22 +14505,34 @@
     let purchasePowerAdvancedOpenSource = "";
     let purchasePowerAdvancedTrackingReady = false;
 
+    // 후보 카드의 필요 자금은 남겨둘 돈을 뺀 자기자금으로 계산해요.
+    function purchasePowerUsableCashText() {
+      const cash = Number(policyCash.value);
+      const reserve = Number(policyReserveCash.value || 0);
+      if (!Number.isFinite(cash) || cash <= 0) return policyCash.value.trim();
+      const usable = Math.max(0, cash - (Number.isFinite(reserve) && reserve > 0 ? reserve : 0));
+      return String(Math.round(usable * 10000) / 10000);
+    }
+
     function purchasePowerHasCustomDetails() {
-      const estimatedRate = estimatedMortgageRate().rate.toFixed(1);
+      const estimatedRate = estimatedMortgageRate().rate;
+      const rateValue = policyMortgageRate.value.trim();
       return Boolean(
         policyCreditScore.value.trim() ||
         mortgageRateManuallyEdited ||
-        policyMortgageRate.value.trim() !== estimatedRate ||
-        policyLoanTerm.value !== "30" ||
-        policyPurchaseCostRate.value !== "4"
+        (Number.isFinite(estimatedRate) && rateValue && Number(rateValue) !== estimatedRate) ||
+        policyLoanTerm.value !== "30"
       );
     }
 
     function syncPurchasePowerActionLabels() {
-      const advancedOpen = purchasePowerAdvanced.open;
-      powerApproximateCalculate.textContent = advancedOpen ? "입력한 기준으로 계산하기" : "대략 계산하기";
+      // 상세 입력은 항상 펼쳐 두고, 입력한 값으로 한 번에 계산해요.
+      purchasePowerAdvanced.open = true;
+      const advancedOpen = true;
+      powerApproximateCalculate.textContent = "계산하기";
       powerApproximateCalculate.dataset.purchasePowerMode = advancedOpen ? "exact" : "approximate";
       powerCalculate.textContent = advancedOpen ? "기본 기준으로 계산하기" : "내 상황 더 입력하기";
+      powerCalculate.hidden = true;
       purchasePowerAdvanced.querySelector("summary").textContent = advancedOpen ? "상세 입력 닫기" : "내 상황 더 입력하기";
     }
 
@@ -14357,16 +14547,18 @@
     }
 
     function resetPurchasePowerInputs() {
-      [policyCash, policyAnnualIncome, policyMonthlyDebt, policySpouseIncome, policySpouseDebt, policyCreditScore].forEach(input => {
+      [policyCash, policyReserveCash, policyAnnualIncome, policyMonthlyDebt, policySpouseIncome, policySpouseDebt, policyCreditScore].forEach(input => {
         input.value = "";
         clearFieldError(input);
       });
+      setPurchaseRegionValue("");
       policyHomeOwnership.value = "";
       policyFirstTime.value = "";
       policyMaritalStatus.value = "single";
       policyCoBorrower.value = "false";
       policyLoanTerm.value = "30";
-      policyPurchaseCostRate.value = "4";
+      policyRateType.value = "periodic";
+      delete policyRateType.dataset.userSelected;
       mortgageRateManuallyEdited = false;
       applyEstimatedMortgageRate(true);
       syncMaritalFields();
@@ -14394,18 +14586,24 @@
     function purchasePowerParams(mode = "exact") {
       const useSimpleDefaults = mode === "approximate" && !purchasePowerAdvanced.open;
       return new URLSearchParams({
+        purchase_region: policyPurchaseRegion.value,
         home_ownership: policyHomeOwnership.value,
         first_time: policyFirstTime.value,
         cash_eok: policyCash.value.trim(),
+        // 남겨둘 돈은 사용자가 고른 금액이라 간편 계산에서도 빼고 계산해요.
+        reserve_cash_eok: policyReserveCash.value.trim(),
         annual_income: policyAnnualIncome.value.trim(),
         monthly_debt_payment: policyMonthlyDebt.value.trim(),
         co_borrower: policyCoBorrower.value,
         spouse_annual_income: policySpouseIncome.value.trim(),
         spouse_monthly_debt_payment: policySpouseDebt.value.trim(),
-        mortgage_rate: useSimpleDefaults ? mortgageRateMarketAveragePercent.toFixed(1) : policyMortgageRate.value.trim(),
-        loan_term_years: useSimpleDefaults ? "30" : policyLoanTerm.value,
-        purchase_cost_rate: useSimpleDefaults ? "4" : policyPurchaseCostRate.value,
-        region: [...multiSelections.region].join(","),
+        // 간편 계산은 금리·만기·부대비용을 비워 보내 서버 정책 설정의 기본값을 써요.
+        // 신용점수도 금리도 직접 고치지 않았다면 서버의 기본 금리(한국은행 평균)를 그대로 써요.
+        mortgage_rate: useSimpleDefaults || (!mortgageRateManuallyEdited && !policyCreditScore.value.trim()) ? "" : policyMortgageRate.value.trim(),
+        loan_term_years: useSimpleDefaults ? "" : policyLoanTerm.value,
+        rate_type: policyRateType.value,
+        // 부대비용률은 입력받지 않고 서버 정책 설정값을 써요.
+        purchase_cost_rate: "",
       });
     }
 
@@ -14465,30 +14663,13 @@
 
     let purchasePowerSheetChangeContext = null;
 
-    function purchasePowerLoanBasisMeta(review, band) {
-      const policy = review.policy || {};
-      const inputRate = Number(review.mortgageRatePercent || 0);
-      const stressRate = Number(policy.stressRatePercent || 0);
-      const dsrPercent = Number(policy.bankDsrRate || 0.4) * 100;
-      const income = Number(review.annualIncomeManwon || 0);
-      const monthlyDebt = Number(review.monthlyDebtPaymentManwon || 0);
-      const monthlyCapacity = Number(review.monthlyPaymentCapacityManwon || 0);
-      const dsrLimit = Number(review.dsrLoanLimitEok || 0);
-      const loanLimit = Number(band.loanLimitEok || 0);
-      const rateText = `적용 금리 ${((inputRate + stressRate)).toFixed(2)}% = 입력 ${inputRate.toFixed(2)}% + 스트레스 ${stressRate}%p · ${review.loanTermYears}년 원리금균등상환`;
-      const paymentText = `월 상환 가능액: 연소득 ${readableManwon(income)} × DSR ${dsrPercent}% ÷ 12${monthlyDebt > 0 ? ` − 기존 월 상환액 ${readableManwon(monthlyDebt)}` : ""} = ${readableManwon(monthlyCapacity)}`;
-      return [
-        `${band.loanLabel || band.tabLabel || band.label} 주택 한도 ${policyMoney(band.loanCapEok)} · DSR 한도 ${policyMoney(dsrLimit)} 중 작은 값 = ${policyMoney(loanLimit)}`,
-        rateText,
-        paymentText,
-      ].map(text => `<span>${esc(text)}</span>`).join("");
-    }
-
     function purchasePowerChangeLabels(before, after) {
       const fields = [
         ["homeOwnership", "보유 주택"],
         ["firstTime", "생애최초 여부"],
         ["cash", "자기자금"],
+        ["reserveCash", "남겨둘 돈"],
+        ["rateType", "금리 유형"],
         ["annualIncome", "연소득"],
         ["monthlyDebt", "월 대출 상환액"],
         ["maritalStatus", "혼인 상태"],
@@ -14498,7 +14679,6 @@
         ["creditScore", "신용점수"],
         ["mortgageRate", "예상 주담대 금리"],
         ["loanTerm", "대출 기간"],
-        ["purchaseCostRate", "부대비용 기준"],
       ];
       return fields.filter(([key]) => String(before?.[key] ?? "") !== String(after?.[key] ?? ""))
         .map(([, label]) => label);
@@ -14516,57 +14696,105 @@
     }
 
     function renderPurchasePower(data, options = {}) {
-      const snapshot = data.snapshot || {};
       const review = data.review || {};
-      const selectedBand = review.bands?.find(band => band.id === review.selectedBandId) || review.bands?.[0];
       if (Object.prototype.hasOwnProperty.call(options, "changeContext")) {
         purchasePowerSheetChangeContext = options.changeContext;
       }
-      const ceiling = policyMoney(data.budgetEok);
+      const maxPurchase = review.maxPurchase;
+      if (!maxPurchase) {
+        // 예전 형식으로 저장된 결과는 보여 주지 않고 다시 계산하게 해요.
+        currentPurchasePower = null;
+        purchasePowerResult.classList.remove("show", "is-sheet");
+        purchasePowerResult.innerHTML = "";
+        return;
+      }
       const changeContext = purchasePowerSheetChangeContext
         ? { ...purchasePowerSheetChangeContext, nextBudgetEok:data.budgetEok }
         : null;
-      const purchaseCost = Number(selectedBand?.purchaseCostEok || 0);
-      const policyDateParts = String(review.policy?.effectiveDate || snapshot.asOf || "").split("-").map(Number);
-      const policyDateLabel = policyDateParts.length === 3 && policyDateParts.every(Number.isFinite)
-        ? `${policyDateParts[0]}년 ${policyDateParts[1]}월 ${policyDateParts[2]}일 기준 정책 반영`
+      const costAdjusted = review.costAdjusted || {};
+      const housing = review.housingPolicy || {};
+      const constraint = review.constraint || {};
+      const rate = review.mortgageRate || {};
+      const region = review.region || {};
+      const dsrCapacity = review.dsrCapacity || {};
+      const ltvPercent = Math.round(Number(housing.ltv || 0) * 100);
+      const dsrLimitPercent = Math.round(Number(housing.dsr || 0) * 100);
+      const stressRate = Number(housing.stressRatePercent || 0);
+      const ratePercent = Number(rate.valuePercent || 0);
+      const purchaseCostPercent = Math.round(Number(review.purchaseCostRate || 0) * 1000) / 10;
+      const loanEok = Number(maxPurchase.loanEok || 0);
+      const cashUsedEok = Number(maxPurchase.ownCapitalUsedEok || 0);
+      const reserveCashEok = Number(review.reserveCashEok || 0);
+      const totalCashEok = Number(review.totalCashEok || review.cashEok || 0);
+      const monthlyManwon = Number(maxPurchase.monthlyPaymentManwon || 0);
+      const policyDate = String(review.policyDate || "").replaceAll("-", ".");
+      const regionTags = String(region.label || "").includes("규제")
+        ? "수도권"
+        : ["수도권", region.isRegulatedArea ? "규제지역" : "비규제지역"].join(" · ");
+      const capLimits = Array.isArray(housing.mortgageAbsoluteLimits) ? housing.mortgageAbsoluteLimits : [];
+      const capText = maxPurchase.absoluteLimitEok == null
+        ? "해당 없음"
+        : `최대 ${policyMoneyExact(maxPurchase.absoluteLimitEok)}`;
+      const capMeta = capLimits.length
+        ? capLimits.map(band => `${band.maxPriceEok == null ? `${band.minPriceExclusiveEok}억 초과` : `${band.maxPriceEok}억 이하`} ${policyMoney(band.loanCapEok)}`).join(" · ")
+        : housing.firstTimeLoanCapEok != null ? `생애최초 최대 ${policyMoney(housing.firstTimeLoanCapEok)}` : "이 지역은 주택가격별 한도가 없어요.";
+      const creditScoreText = policyCreditScore.value.trim();
+      const rateNote = rate.isDefault
+        ? `예상 주담대 금리 ${ratePercent.toFixed(2)}% 기준 (${rate.source || "주담대 평균금리"}, ${String(rate.asOf || "").replace("-", ".")})`
+        : !mortgageRateManuallyEdited && creditScoreText
+          ? `신용점수 ${creditScoreText}점으로 조정한 예상 주담대 금리 ${ratePercent.toFixed(2)}% 기준 (한국은행 신규 주담대 평균 ${Number(mortgageRateMarketAveragePercent || 0).toFixed(2)}% 기반)`
+          : `직접 입력한 주담대 금리 ${ratePercent.toFixed(2)}% 기준`;
+      const reasonRows = [
+        ["적용 LTV", `${ltvPercent}%`, housing.ltvBasis || ""],
+        ["DSR 한도", `${dsrLimitPercent}%`, "은행권 기준"],
+        ["스트레스 금리", `+${stressRate.toFixed(2).replace(/0$/, "")}%p`, `${housing.rateTypeLabel || "금리 유형"} · 기준 ${Number(housing.stressBasePercent || 0).toFixed(2).replace(/0$/, "")}%p의 ${Math.round(Number(housing.stressRatio || 1) * 100)}%. 대출 한도를 정할 때만 심사 금리 ${Number(review.stressedRatePercent || 0).toFixed(2)}%로 계산해요`],
+        ["DSR 기준 대출 한도", policyMoneyExact(review.dsrLimitEok || 0), `연소득 ${readableManwon(Number(review.annualIncomeManwon || 0))} × ${dsrLimitPercent}%${Number(dsrCapacity.existingAnnualManwon || 0) > 0 ? ` − 기존 대출 연 ${readableManwon(Number(dsrCapacity.existingAnnualManwon))}` : ""}`],
+        ["대출 만기", `${review.loanTermYears}년`, "원리금균등상환"],
+        ["주담대 총액한도", capText, capMeta],
+      ];
+      const policyDateLabel = policyDate ? `정책 기준일 ${policyDate}` : "";
+      // 자기자금을 고쳤을 때 대출이 왜 그렇게 바뀌었는지 한 줄로 알려 줘요.
+      const cashEdited = Boolean(changeContext?.changedLabels?.includes("집값에 넣을 돈"));
+      const cashChangeNote = !cashEdited ? ""
+        : constraint.type === "LTV" ? `대출은 집값의 ${ltvPercent}%까지만 나와요. 그래서 자기자금을 줄이면 대출도 같이 줄어요.`
+        : constraint.type === "MORTGAGE_CAP" ? `대출이 주담대 총액한도(${policyMoneyExact(maxPurchase.absoluteLimitEok || loanEok)})에 막혀 있어요. 그래서 자기자금을 바꿔도 대출은 그대로예요.`
+        : ["DSR", "EXISTING_DEBT"].includes(constraint.type) ? "대출이 소득 기준(DSR) 한도에 막혀 있어요. 그래서 자기자금을 바꿔도 대출은 그대로예요."
+        : constraint.type === "OWNER_RESTRICTION" ? "새 주택담보대출을 받을 수 없어서 자기자금만큼만 살 수 있어요."
         : "";
-      const bandTabs = (review.bands || []).map(band => {
-        const isSelected = band.id === review.selectedBandId;
-        return `<button type="button" class="power-review-tab" role="tab" data-power-review-band="${esc(band.id)}" aria-selected="${isSelected}" tabindex="${isSelected ? "0" : "-1"}">${esc(band.tabLabel || band.label)}</button>`;
-      }).join("");
-      const loanRateMeta = selectedBand ? purchasePowerLoanBasisMeta(review, selectedBand) : "";
-      const purchaseCostRate = Number(review.policy?.purchaseCostRate || 0.04) * 100;
-      purchasePowerResult.innerHTML = `<div class="power-result-card" role="dialog" aria-modal="true" aria-label="검토 가능 금액 계산 결과">
+      purchasePowerResult.innerHTML = `<div class="power-result-card" role="dialog" aria-modal="true" aria-label="최대 구매 가능 주택가격 계산 결과">
         <div class="multi-sheet-grabber" aria-hidden="true"></div>
         <div class="power-result-content">
-          <h2 class="power-result-value">대출 포함 최대 ${esc(ceiling)}까지 검토할 수 있어요</h2>
-          <p class="power-result-assumption">수도권·규제지역, 무주택 기준으로 계산했어요.</p>
+          <p class="power-result-kicker">최대 구매 가능 주택가격</p>
+          <h2 class="power-result-value">${esc(policyMoneyExact(maxPurchase.priceEok))}</h2>
+          <p class="power-result-assumption">${esc(region.label || "")} · ${esc(regionTags)}${policyDate ? ` · ${esc(policyDate)} 금융정책 기준` : ""}</p>
           ${purchasePowerChangeHtml(changeContext)}
-          ${(review.bands?.length || 0) > 1 ? `<div class="power-review-tabs" style="--power-review-tab-count:${review.bands.length}" role="tablist" aria-label="주택 가격 구간">${bandTabs}</div>` : ""}
-          <div class="power-result-breakdown" id="powerReviewBreakdown" aria-label="검토 가능 금액 계산 내역">
-            <div class="power-result-row">
-              <span class="power-result-row-no">1</span>
-              <div class="power-result-row-copy"><span class="power-result-row-label">자기자금</span></div>
-              <strong class="power-result-row-value">${esc(policyMoney(review.cashEok))}</strong>
+          <div class="power-funding-pair" aria-label="자기자금과 대출">
+            <div class="power-funding-item">
+              <label for="powerCashInput">예상 자기자금</label>
+              <span class="power-cash-input"><input id="powerCashInput" type="number" min="0.01" max="${esc(formatEokInput(totalCashEok))}" step="0.01" inputmode="decimal" value="${esc(formatEokInput(cashUsedEok))}" aria-describedby="powerCashHelper"><span aria-hidden="true">억원</span></span>
+              <small id="powerCashHelper" data-power-cash-helper>${reserveCashEok > 0
+                ? `가진 돈 ${esc(policyMoneyExact(totalCashEok))} 중 ${esc(policyMoneyExact(reserveCashEok))}은 남겨 둬요`
+                : "가진 돈을 모두 넣었어요. 숫자를 고치면 바로 다시 계산해요"}</small>
             </div>
-            <div class="power-result-row has-stacked-meta">
-              <span class="power-result-row-no">2</span>
-              <div class="power-result-row-copy"><span class="power-result-row-label">예상 대출 한도</span><span class="power-result-row-meta">${loanRateMeta}</span></div>
-              <strong class="power-result-row-value">${selectedBand ? `+ ${esc(policyMoney(selectedBand.loanLimitEok))}` : "확인 필요"}</strong>
-            </div>
-            <div class="power-result-row">
-              <span class="power-result-row-no">3</span>
-              <div class="power-result-row-copy"><span class="power-result-row-label">부대비용</span><span class="power-result-row-meta">매매가의 ${purchaseCostRate}% · 취득세·지방교육세 3.3% + 중개보수 약 0.7%</span></div>
-              <strong class="power-result-row-value">- ${esc(policyMoney(purchaseCost))}</strong>
-            </div>
-            <div class="power-result-row has-stacked-meta total">
-              <span class="power-result-row-no">4</span>
-              <div class="power-result-row-copy"><span class="power-result-row-label">검토 가능 금액</span><span class="power-result-row-meta">자기자금 + 예상 대출 한도에서 부대비용을 뺐어요.</span>${Number(selectedBand?.loanLimitEok || 0) === 0 ? `<span class="power-result-row-meta">대출 없이 자기자금으로도 가능해요.</span>` : ""}</div>
-              <strong class="power-result-row-value">${esc(ceiling)}</strong>
+            <div class="power-funding-item">
+              <span class="power-funding-label">예상 주택담보대출</span>
+              <strong>${esc(policyMoneyExact(loanEok))}</strong>
+              <small>${loanEok > 0 ? `매달 약 ${esc(Math.round(monthlyManwon).toLocaleString())}만원 · DSR ${esc(maxPurchase.dsrPercent)}%` : "대출 없이 계산했어요"}</small>
             </div>
           </div>
-          <p class="power-result-note">집픽은 실거래가만 반영해요. 매물 호가가 이 금액과 얼마나 차이 나는지 꼭 확인하세요. 실제 한도는 은행 사전심사로 확정돼요.</p>
+          ${cashChangeNote ? `<p class="power-funding-note" data-power-cash-note>${esc(cashChangeNote)}</p>` : ""}
+          <dl class="power-reason-list power-funding-list">
+            <div class="power-reason-row" data-power-cost-adjusted><dt>부대비용 고려 예상 구매가<small>취득세·중개보수 등 부대비용(집값의 ${esc(purchaseCostPercent)}%)을 내면 실제로는 이 금액까지 살 수 있어요</small></dt><dd>약 ${esc(policyMoneyExact(costAdjusted.priceEok || 0))}</dd></div>
+          </dl>
+          <h3 class="power-result-section-title">무엇 때문에 이 금액이 결정됐나요?</h3>
+          <p class="power-constraint-text" data-power-constraint="${esc(constraint.type || "")}"><strong>현재 제한요인: ${esc(constraint.label || "-")}</strong> ${esc(constraint.message || "")}</p>
+          <dl class="power-reason-list" aria-label="적용한 정책">
+            ${reasonRows.map(([label, value, meta]) => `<div class="power-reason-row"><dt>${esc(label)}${meta ? `<small>${esc(meta)}</small>` : ""}</dt><dd>${esc(value)}</dd></div>`).join("")}
+          </dl>
+          <p class="power-result-note">${esc(rateNote)}. 실제 월 상환액은 이 금리로 계산해요.</p>
+          <p class="power-result-note">DSR은 기존 대출 월 상환액 × 12로 간편 추정했어요. 금융회사 산식과 다를 수 있어요.</p>
+          ${housing.moveInRequirementMonths ? `<p class="power-result-note">수도권·규제지역 주담대는 ${esc(housing.moveInRequirementMonths)}개월 안에 전입해야 해요.${housing.disposalRequirementMonths ? ` 기존 집은 ${esc(housing.disposalRequirementMonths)}개월 안에 팔아야 해요.` : ""}</p>` : ""}
+          <p class="power-result-disclaimer">본 결과는 입력한 정보와 현재 금융정책을 기준으로 한 예상값이며, 실제 대출 가능금액은 금융기관의 심사, 신용도, 소득 인정방식, 대출상품 및 금리에 따라 달라질 수 있습니다.</p>
           ${policyDateLabel ? `<p class="power-result-policy-date">${esc(policyDateLabel)}</p>` : ""}
         </div>
         <div class="power-result-actions">
@@ -14601,8 +14829,11 @@
     }
     function conditionEditConfig(targetId) {
       const configs = {
+        policyPurchaseRegion:{ label:"구매 희망지역", stage:"power", description:"집을 사려는 지역을 선택해주세요. 규제지역이면 대출 한도가 달라져요.", fields:[{ name:"value", label:"구매 희망지역", type:"select", field:policyPurchaseRegion }] },
         policyHomeOwnership:{ label:"보유 주택", stage:"power", description:"현재 보유한 주택 상태를 선택해주세요.", fields:[{ name:"value", label:"보유 주택", type:"select", field:policyHomeOwnership }] },
         policyFirstTime:{ label:"생애최초", stage:"power", description:"생애최초 주택 구입 여부를 선택해주세요.", fields:[{ name:"value", label:"생애최초 여부", type:"select", field:policyFirstTime }] },
+        policyRateType:{ label:"금리 유형", stage:"power", description:"금리 유형에 따라 대출 한도를 정할 때 더하는 스트레스 금리가 달라져요.", fields:[{ name:"value", label:"금리 유형", type:"select", field:policyRateType }] },
+        policyReserveCash:{ label:"남겨둘 돈", stage:"power", description:"이사비·수리비·비상금처럼 집값에 넣지 않을 돈을 입력해주세요. 없으면 0으로 두세요.", fields:[{ name:"value", label:"남겨둘 돈", type:"number", field:policyReserveCash, unit:"억원" }] },
         policyCash:{ label:"자기자금", stage:"power", description:"주택 구입에 바로 사용할 수 있는 자기자금을 입력해주세요.", fields:[{ name:"value", label:"자기자금", type:"number", field:policyCash, unit:"억원" }] },
         policyAnnualIncome:{ label:"연소득", stage:"power", description:"세전 기준 연소득을 입력해주세요.", fields:[{ name:"value", label:"연소득", type:"number", field:policyAnnualIncome, unit:"만원" }] },
         policyMonthlyDebt:{ label:"월 대출 상환액", stage:"power", description:"현재 매달 갚고 있는 대출 원리금을 입력해주세요.", fields:[{ name:"value", label:"월 대출 상환액", type:"number", field:policyMonthlyDebt, unit:"만원/월" }] },
@@ -14613,17 +14844,17 @@
         policyCreditScore:{ label:"신용점수", stage:"power", description:"모르면 비워두어도 시장 평균 금리가 적용됩니다.", fields:[{ name:"value", label:"신용점수", type:"number", field:policyCreditScore, unit:"점" }] },
         policyMortgageRate:{ label:"예상 주담대 금리", stage:"power", description:"예상되는 주택담보대출 금리를 입력해주세요.", fields:[{ name:"value", label:"예상 주담대 금리", type:"number", field:policyMortgageRate, unit:"%" }] },
         policyLoanTerm:{ label:"대출 기간", stage:"power", description:"주택담보대출 상환 기간을 선택해주세요.", fields:[{ name:"value", label:"대출 기간", type:"select", field:policyLoanTerm }] },
-        policyPurchaseCostRate:{ label:"부대비용 기준", stage:"power", description:"부대비용은 매매가의 4%로 계산합니다.", fields:[{ name:"value", label:"부대비용 기준", type:"select", field:policyPurchaseCostRate }] },
         budgetMinArea:{ label:"최소 전용면적", stage:"preference", description:"후보에 포함할 최소 전용면적을 선택해주세요.", fields:[{ name:"value", label:"최소 전용면적", type:"select", field:budgetMinArea }] },
         budgetMinHouseholds:{ label:"최소 세대수", stage:"preference", description:"후보에 포함할 최소 단지 세대수를 선택해주세요.", fields:[{ name:"value", label:"최소 세대수", type:"select", field:budgetMinHouseholds }] },
         budgetMaxBuildingAge:{ label:"연식", stage:"preference", description:"원하는 아파트 연식 범위를 선택해주세요.", fields:[{ name:"value", label:"연식", type:"select", field:budgetMaxBuildingAge }] },
       };
       if (targetId === "powerCalculate") return {
-        label:"검토 가능 금액",
+        label:"최대 구매 가능 금액",
         stage:"power",
-        description:"상한 산정에 영향이 큰 금액을 수정하면 현재 정책 기준으로 바로 다시 계산합니다.",
+        description:"금액에 영향이 큰 값을 고치면 현재 정책 기준으로 바로 다시 계산해요.",
         fields:[
           { name:"cash", label:"자기자금", type:"number", field:policyCash, unit:"억원" },
+          { name:"reserve", label:"남겨둘 돈", type:"number", field:policyReserveCash, unit:"억원" },
           { name:"income", label:"연소득", type:"number", field:policyAnnualIncome, unit:"만원" },
           { name:"debt", label:"월 대출 상환액", type:"number", field:policyMonthlyDebt, unit:"만원/월" },
         ],
@@ -14784,9 +15015,15 @@
       const state = conditionSummaryInitialState;
       const saved = state?.form;
       if (!saved) return;
+      setPurchaseRegionValue(saved.purchaseRegion);
       setSelectValue(policyHomeOwnership, saved.homeOwnership);
       setSelectValue(policyFirstTime, saved.firstTime);
       policyCash.value = saved.cash ?? "";
+      policyReserveCash.value = saved.reserveCash ?? "";
+      if (saved.rateType) {
+        setSelectValue(policyRateType, saved.rateType);
+        policyRateType.dataset.userSelected = "true";
+      }
       policyAnnualIncome.value = saved.annualIncome ?? "";
       policyMonthlyDebt.value = saved.monthlyDebt ?? "";
       setSelectValue(policyMaritalStatus, saved.maritalStatus);
@@ -14797,7 +15034,6 @@
       policyMortgageRate.value = saved.mortgageRate ?? "";
       mortgageRateManuallyEdited = saved.mortgageRateMode === "manual";
       setSelectValue(policyLoanTerm, saved.loanTerm);
-      setSelectValue(policyPurchaseCostRate, saved.purchaseCostRate);
       multiSelections.region = new Set(saved.preference?.regions || []);
       syncMultiDraft("region");
       budgetMinArea.value = saved.preference?.minArea ?? "";
@@ -14874,6 +15110,7 @@
       });
       syncMaritalFields();
       syncCoBorrowerFields();
+      renderPurchaseRegionHint();
       if (activeConditionEditTarget === "policyCreditScore") {
         mortgageRateManuallyEdited = false;
         applyEstimatedMortgageRate(true);
@@ -14912,10 +15149,13 @@
     function renderConditionSummary() {
       const combinedIncome = policyCoBorrower.value === "true";
       const powerItems = [
-        ["검토 가능 금액", currentPurchasePower ? policyMoney(currentPurchasePower.budgetEok) : "계산 전", false, "power", "powerCalculate"],
+        ["최대 구매 가능 금액", currentPurchasePower ? policyMoney(currentPurchasePower.budgetEok) : "계산 전", false, "power", "powerCalculate"],
+        ["구매 희망지역", purchaseRegionLabel() || "선택 안 함", false, "power", "policyPurchaseRegion"],
         ["보유 주택", selectedOptionText(policyHomeOwnership), false, "power", "policyHomeOwnership"],
         ["생애최초", selectedOptionText(policyFirstTime), false, "power", "policyFirstTime"],
         ["자기자금", policyCash.value ? `${policyCash.value}억원` : "입력 안 함", false, "power", "policyCash"],
+        ["남겨둘 돈", Number(policyReserveCash.value) > 0 ? `${policyReserveCash.value}억원` : "안 남김", false, "power", "policyReserveCash"],
+        ["금리 유형", selectedOptionText(policyRateType), false, "power", "policyRateType"],
         ["연소득", policyAnnualIncome.value ? `${Number(policyAnnualIncome.value).toLocaleString("ko-KR")}만원` : "입력 안 함", false, "power", "policyAnnualIncome"],
         ["월 대출 상환액", policyMonthlyDebt.value ? `${Number(policyMonthlyDebt.value).toLocaleString("ko-KR")}만원` : "없음", false, "power", "policyMonthlyDebt"],
         ["혼인 상태", selectedOptionText(policyMaritalStatus), false, "power", "policyMaritalStatus"],
@@ -14927,7 +15167,6 @@
         ["신용점수", policyCreditScore.value ? `${policyCreditScore.value}점` : "미입력 · 시장 평균 적용", false, "power", "policyCreditScore"],
         ["예상 주담대 금리", policyMortgageRate.value ? `${policyMortgageRate.value}%` : "시장 평균 적용", false, "power", "policyMortgageRate"],
         ["대출 기간", selectedOptionText(policyLoanTerm), false, "power", "policyLoanTerm"],
-        ["부대비용 기준", selectedOptionText(policyPurchaseCostRate), false, "power", "policyPurchaseCostRate"],
       ];
       const preferenceItems = [
         ["지역", selectionSummary("region"), true, "preference", "budgetRegionPicker"],
@@ -15030,7 +15269,9 @@
         purchasePowerResult.classList.add("show");
         purchasePowerResult.classList.remove("is-sheet");
         document.body.classList.remove("purchase-power-sheet-open");
-        purchasePowerResult.innerHTML = `<div class="empty"><strong>필수 조건을 먼저 입력해 주세요.</strong><br>표시된 항목을 채우면 검토 가능 금액을 계산할 수 있어요.</div>`;
+        purchasePowerResult.innerHTML = firstInvalid === policyPurchaseRegion
+          ? `<div class="empty"><strong>구매 희망지역을 선택해주세요</strong><br>규제지역인지에 따라 대출 한도가 달라서, 지역을 골라야 최대 구매 가능 금액을 알려 드릴 수 있어요.</div>`
+          : `<div class="empty"><strong>필수 조건을 먼저 입력해 주세요.</strong><br>표시된 항목을 채우면 최대 구매 가능 금액을 계산할 수 있어요.</div>`;
         firstInvalid.scrollIntoView({ block: "center", behavior: "smooth" });
         firstInvalid.focus({ preventScroll: true });
         trackEvent("purchase_power_required_missing", {
@@ -15042,6 +15283,7 @@
 
     async function calculatePurchasePower(mode = "exact") {
       if (!validateBudgetRequiredFields()) return;
+      lastPurchasePowerMode = mode;
       trackDailyActiveUser();
       trackEvent("purchase_power_submitted", {
         home_ownership:policyHomeOwnership.value || "unknown",
@@ -15939,19 +16181,19 @@
 
     // '적극 검토'만 낮춘다. 이미 조건부·관망인 단지를 더 낮추면 같은 경고가
     // 두 번 붙는다.
-    // 고점권에서는 '적극 검토' 대신 매수 행동이 드러나는 '신중 매수'를 쓴다.
+    // 단지와 시장 흐름은 좋지만 가격에 주의가 필요한 경우로 표시한다.
     function zippickGuardVerdict(item, verdict) {
       if (!verdict || verdict.tone !== "yes") return verdict;
       const risk = zippickPeakRisk(item);
       if (!risk) return verdict;
       return {
         ...verdict,
-        label: "신중 매수",
-        short: "신중 매수",
+        label: "매수 검토 · 가격 주의",
+        short: "매수 검토 · 가격 주의",
         tone: "conditional",
-        title: risk.surge && !risk.atPeak
-          ? "최근 가격이 빠르게 올랐지만 단지와 거래 흐름은 좋아요."
-          : "2년 고점권이지만 단지와 거래 흐름은 좋아요.",
+        title: risk.atPeak
+          ? "단지와 거래 흐름은 좋지만, 최근 가격이 고점권이에요."
+          : "단지와 거래 흐름은 좋지만, 최근 가격이 빠르게 올랐어요.",
         peakGuard: risk,
       };
     }
@@ -15992,6 +16234,14 @@
       if (ratio >= .62) return "b";
       if (ratio >= .45) return "a";
       return "r";
+    }
+
+    // 점수 계산용 이름은 API와 비교 로직에서 유지하고, 리포트에는 뜻이
+    // 드러나는 이름을 보여준다. 교육 점수에는 학교와 학원 접근성이 들어간다.
+    function zippickReportPartLabel(part) {
+      if (part?.key === "price") return "지역 시세·대장단지 비교";
+      if (part?.key === "demand") return "입지·교육·실수요";
+      return String(part?.label || "항목");
     }
 
     function zippickBarHtml(label, points, maxPoints, reason) {
@@ -16058,7 +16308,7 @@
         .sort((a, b) => (Number(b.points) / Number(b.maxPoints)) - (Number(a.points) / Number(a.maxPoints)));
       if (!rows.length) return "";
       return `<div class="zpr-bars">${rows.map(part =>
-        zippickBarHtml(part.key === "price" ? "단지 가격 비교" : part.label,
+        zippickBarHtml(zippickReportPartLabel(part),
           part.points, part.maxPoints, zippickBarReason(item, part))).join("")}</div>`;
     }
 
@@ -17179,7 +17429,7 @@
       if (label === "가격 비교") {
         const pricePart = zpScoredParts(item).find(part => part.key === "price");
         if (pricePart) {
-          title = "단지 가격 자료 점수";
+          title = "지역 시세·대장단지 비교 점수";
           points = zpNum(pricePart.points);
           maxPoints = zpNum(pricePart.maxPoints);
         }
@@ -17197,7 +17447,7 @@
       const stars = (ratio * 5).toFixed(1);
       const shown = Math.round(points * 10) / 10;
       const info = label === "가격 비교"
-        ? `<span class="zpr-rating-info"><button type="button" class="zpr-rating-info-button" data-zpr-rating-info aria-expanded="false" aria-label="가격 비교 별점 기준 보기">i</button><span class="zpr-rating-info-tooltip" hidden>지역 가격대·대장 단지와의 가격 차이·최근 거래·2년 고점 위치를 합친 점수예요. 지금 나온 매물 가격은 평가하지 않았어요.</span></span>`
+        ? `<span class="zpr-rating-info"><button type="button" class="zpr-rating-info-button" data-zpr-rating-info aria-expanded="false" aria-label="지역 시세·대장단지 비교 점수 기준 보기">i</button><span class="zpr-rating-info-tooltip" hidden>지역 가격대·대장 단지와의 가격 차이·최근 거래·2년 고점 위치를 합친 점수예요. 지금 나온 매물 가격은 평가하지 않았어요.</span></span>`
         : "";
       return `<span class="zpr-section-rating" aria-label="${esc(`${title} ${stars}점, ${shown}/${maxPoints}점`)}">
         <span class="zpr-section-stars" aria-hidden="true" style="--zpr-rating-fill:${Math.round(ratio * 100)}%">★★★★★</span>
@@ -17227,7 +17477,7 @@
       const weakest = scored.reduce((low, part) =>
         (Number(part.points) / Number(part.maxPoints)) < (Number(low.points) / Number(low.maxPoints)) ? part : low);
       const shown = Math.round(Number(weakest.points) * 10) / 10;
-      return `<div class="zpr-warn"><b>가장 낮은 항목은 ${esc(weakest.label)}입니다.</b><br>
+      return `<div class="zpr-warn"><b>가장 낮은 항목은 ${esc(zippickReportPartLabel(weakest))}입니다.</b><br>
         ${esc(shown)} / ${esc(weakest.maxPoints)}점${weakest.reason ? ` · ${esc(weakest.reason)}` : ""}</div>`;
     }
 
@@ -17426,7 +17676,7 @@
         ? `<b>단지·입지 ${esc(Math.round(locationScore))}점, 최근 시장 신호 ${esc(Math.round(signalScore))}점</b>입니다.`
         : "단지·입지 조건과 최근 시장 신호를 함께 본 결과입니다.";
       const strengthText = topParts.length
-        ? ` 특히 ${topParts.map(part => `<b>${esc(part.label)}</b>`).join(", ")} 점수가 좋습니다.`
+        ? ` 특히 ${topParts.map(part => `<b>${esc(zippickReportPartLabel(part))}</b>`).join(", ")} 점수가 좋습니다.`
         : "";
       const s = item?.signals || {};
       const region = esc(item?.region || "이 지역");
@@ -17599,10 +17849,12 @@
       const sorted = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
       const top = sorted[0];
       const second = sorted[1];
+      const topLabel = zippickReportPartLabel(top);
+      const secondLabel = zippickReportPartLabel(second);
       const topPct = Math.round(zpPartRatio(top) * 100);
       const names = second && Math.round(zpPartRatio(second) * 100) >= 70
-        ? `<b>${esc(zpJosa(top.label, "과", "와"))}</b> <b>${esc(second.label)}</b>`
-        : `<b>${esc(top.label)}</b>`;
+        ? `<b>${esc(zpJosa(topLabel, "과", "와"))}</b> <b>${esc(secondLabel)}</b>`
+        : `<b>${esc(topLabel)}</b>`;
       const age = zpNum(item?.buildingAge);
       const households = zpNum(item?.households);
       const spec = [];
@@ -17674,12 +17926,12 @@
       const parts = zpScoredParts(item);
       const weakest = zippickWeakestPart(item);
       if (!weakest) return "";
-      const label = weakest.key === "price" ? "단지 가격 비교" : weakest.label;
+      const label = zippickReportPartLabel(weakest);
       const shown = Math.round(zpNum(weakest.points) * 10) / 10;
       // 항목 수는 세지 말고 그대로 쓴다. 자금 조건을 뺀 뒤로 개수가 달라졌고,
       // 데이터가 없는 항목이 빠지면 단지마다 또 달라진다.
       const scope = parts.length > 1 ? `${["", "", "두", "세", "네", "다섯", "여섯"][parts.length] || parts.length} 항목 중 ` : "";
-      // "입지·실수요이" 같은 문장이 나가지 않게 조사는 zpJosa로 고른다.
+      // 항목 이름에 맞는 조사를 붙여 자연스럽게 읽히게 한다.
       return `${scope}<b>${esc(label)}</b>${zpHasFinal(label) ? "이" : "가"} 가장 낮습니다. ${esc(shown)} / ${esc(weakest.maxPoints)}점.<br>${zippickWeakestBody(item, weakest)}`;
     }
 
@@ -17809,7 +18061,7 @@
       // 고점 보정이 걸린 단지는 표에서 짚은 칸과 위 판정 배지가 달라진다.
       // 왜 다른지 표 안에서 바로 설명해야 사용자가 오류로 읽지 않는다.
       const guardNote = verdict?.peakGuard
-        ? ` 다만 지금 값이 <b>${verdict.peakGuard.atPeak ? "2년 중 가장 높은 구간" : "짧게 많이 오른 직후"}</b>이라, 표의 <b>'적극 검토'</b> 대신 <b>'신중 매수'</b>로 봤습니다.`
+        ? ` 다만 지금 값이 <b>${verdict.peakGuard.atPeak ? "2년 중 가장 높은 구간" : "짧게 많이 오른 직후"}</b>이라, 표의 <b>'적극 검토'</b> 대신 <b>'매수 검토 · 가격 주의'</b>로 봤습니다.`
         : "";
 
       return `<section class="zpr-mx">
@@ -17828,12 +18080,29 @@
     // 이 단지가 무엇을 주고 무엇을 뺏는지 한 줄로 못 박는다.
     // 항목 이름을 나열하면 결론이 안 난다. 얻는 것과 감수할 것으로 번역한다.
     const ZP_TRADEOFF = {
-      price:   { gain:"단지 가격 비교",             give:"실제 매물 가격" },
+      price:   { gain:"지역 시세·대장단지 비교",   give:"실제 매물 가격" },
       jeonse:  { gain:"전세가 받쳐주는 가격",       give:"전세보다 앞서간 매매가" },
       demand:  { gain:"확인된 입지 조건",           give:"입지에서 더 확인할 점" },
       product: { gain:"큰 단지 규모와 연식",         give:"낡은 건물" },
       market:  { gain:"확인된 거래 흐름",           give:"거래 흐름의 불확실성" },
     };
+    function zippickPriceLeaderComparison(item) {
+      const signals = item?.signals || {};
+      const gap = zpNum(signals.leaderGapPct);
+      const localityLeader = String(signals.leaderBasis || "").startsWith("locality_");
+      const leaderPlace = String(localityLeader
+        ? signals.leaderLegalDong || signals.leaderRegion || ""
+        : signals.leaderRegion || item?.region || "").trim();
+      const leaderName = String(signals.leaderName || "").trim();
+      const benchmark = [leaderPlace || "지역", "대장단지", leaderName ? `‘${leaderName}’` : ""]
+        .filter(Boolean).join(" ");
+      if (signals.isRegionalLeader) return `이 단지가 ${benchmark}예요. 대장단지보다 싼지 비교하는 항목은 아니에요.`;
+      if (!Number.isFinite(gap)) return `${benchmark}와 비교할 비슷한 면적대 거래 자료가 부족해, 더 싼지 알 수 없어요.`;
+      const difference = Math.abs(gap).toFixed(1);
+      if (gap > 0.05) return `비슷한 면적대 기준으로 ${benchmark}보다 면적당 실거래가가 ${difference}% 낮아요.`;
+      if (gap < -0.05) return `비슷한 면적대 기준으로 ${benchmark}보다 면적당 실거래가가 ${difference}% 높아요. 대장단지보다 싼 게 장점은 아니에요.`;
+      return `비슷한 면적대 기준으로 ${benchmark}와 면적당 실거래가가 비슷해요. 대장단지보다 싼 게 장점은 아니에요.`;
+    }
     function zippickTradeoffLine(item, verdict) {
       // 고점권 경고가 나온 리포트에서 가격 점수를 '가격 적정성'이라는
       // 강점으로 다시 소개하면 같은 가격에 상반된 판정을 내린 것처럼 보인다.
@@ -17845,6 +18114,9 @@
       const best = ZP_TRADEOFF[String(sorted[0].key || "")];
       const worst = ZP_TRADEOFF[String(sorted[sorted.length - 1].key || "")];
       if (!best || !worst) return "";
+      if (sorted[0].key === "price") {
+        return `<b>${esc(zippickPriceLeaderComparison(item))}</b> ${esc(zpJosa(worst.give, "은", "는"))} 따로 확인해야 해요.`;
+      }
       return `<b>${esc(zpJosa(best.gain, "이", "가"))}</b> 상대적인 강점이고, <b>${esc(zpJosa(worst.give, "은", "는"))}</b> 확인이 필요해요.`;
     }
 
@@ -18011,7 +18283,7 @@
       const top = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a))[0];
       const benefit = zippickStrengthBenefit(item, top);
       if (top.key === "price") return benefit;
-      return benefit ? `<b>${esc(zpJosa(top.label, "이", "가"))}</b> 가장 높은 점수를 받았어요. ${benefit}` : "";
+      return benefit ? `<b>${esc(zpJosa(zippickReportPartLabel(top), "이", "가"))}</b> 가장 높은 점수를 받았어요. ${benefit}` : "";
     }
 
     // 행동 가이드. 데이터가 뒷받침하는 항목만 넣는다.
@@ -18305,7 +18577,7 @@
       const latestMeta = [item?.latestDealDate,
         Number.isFinite(latestArea) && latestArea > 0 ? `전용 ${latestArea}㎡` : "",
         item?.latestDealFloor ? `${item.latestDealFloor}층` : ""].filter(Boolean).join(" · ");
-      const latestDetail = `${Number.isFinite(latestPrice) && latestPrice > 0 ? esc(transactionMoney(latestPrice)) : "가격 확인 중"} · ${esc(latestMeta || "거래 날짜·면적 확인 중")} · 국토교통부 신고 거래`;
+      const latestDetail = `${Number.isFinite(latestPrice) && latestPrice > 0 ? esc(transactionMoney(latestPrice)) : "가격 확인 중"} · ${esc(latestMeta || "거래 날짜·면적 확인 중")} · 국토교통부 신고 거래 · 층·향·수리 상태와 실제 매물 상태는 반영하지 못했어요.`;
       if (valuation.status !== "ready" || !basis?.low || !basis?.high) return `<div class="zpr-buy-band">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">집픽 밴드</span><h4>지금은 가격 판단을 보류해요</h4></div><span class="zpr-buy-band-quality">판단 보류</span></div>
         <p>${esc(valuation.reason || "비슷한 조건의 거래가 부족해 가격을 판단하기 어려워요.")}</p>
@@ -18325,7 +18597,6 @@
         : "최근 실거래의 가격 위치를 확인해 주세요";
       const qualityLabel = basis.quality === "high" ? "자료 충분" : basis.quality === "medium" ? "자료 보통" : "자료 적음";
       const reasons = Array.isArray(valuation.reasons) ? valuation.reasons.slice(0, 3) : [];
-      const limitations = Array.isArray(valuation.limitations) ? valuation.limitations.slice(0, 2) : [];
       const sampleCount = Math.round(zpNum(valuation?.dataQuality?.sampleCount) || basis.count || 0);
       const adjustment = zpNum(valuation.marketAdjustmentPct);
       const latestTradeAgeDays = zpNum(valuation?.dataQuality?.latestTradeAgeDays);
@@ -18441,8 +18712,8 @@
       };
       const [label, title] = verdict.peakGuard
         ? verdict.peakGuard.atPeak
-          ? ["신중 매수", "2년 고점권이지만 단지와 거래 흐름은 좋아요."]
-          : ["신중 매수", "가격이 급등했지만 단지와 거래 흐름은 좋아요."]
+          ? ["매수 검토 · 가격 주의", "단지와 거래 흐름은 좋지만, 최근 가격이 고점권이에요."]
+          : ["매수 검토 · 가격 주의", "단지와 거래 흐름은 좋지만, 최근 가격이 빠르게 올랐어요."]
         : decisions[verdict.tone] || decisions.missing;
       const locationParts = zpScoredParts(item);
       const strongCount = locationParts.filter(part => zpPartRatio(part) >= .65).length;
@@ -18478,12 +18749,12 @@
       if (!Number.isFinite(score) || !parts.length) return "";
       if (verdict?.peakGuard) {
         const riskText = verdict.peakGuard.atPeak ? "최근 거래는 2년 고점권이에요." : "최근 거래 가격이 짧게 많이 올랐어요.";
-        return `단지·입지 ${Math.round(score)}점/100점. 이 점수에는 단지 가격 비교도 들어가지만, 지금 나온 매물 가격은 반영되지 않았어요. ${riskText}`;
+        return `단지·입지 ${Math.round(score)}점/100점. 이 점수에는 지역 시세·대장단지 비교도 들어가지만, 지금 나온 매물 가격은 반영되지 않았어요. ${riskText}`;
       }
       const sorted = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
       const strongest = sorted[0], weakest = sorted[sorted.length - 1];
       const pointsText = part => `${Math.round(zpNum(part.points) * 10) / 10}/${Math.round(zpNum(part.maxPoints) * 10) / 10}점`;
-      const label = part => part.key === "price" ? "단지 가격 비교" : part.label;
+      const label = zippickReportPartLabel;
       let text = `단지·입지 ${Math.round(score)}점/100점. ${label(strongest)} ${pointsText(strongest)}으로 가장 높고 ${label(weakest)} ${pointsText(weakest)}으로 가장 낮아요.`;
       const age = zpNum(item?.buildingAge);
       if (weakest.key === "product" && Number.isFinite(age) && age > 0) {
@@ -18993,7 +19264,7 @@
           const points = comparisonNumber(part?.points);
           const max = comparisonNumber(part?.maxPoints);
           return points !== null && max !== null && max > 0
-            ? { label:part.label || "항목", ratio:points / max }
+            ? { label:zippickReportPartLabel(part), ratio:points / max }
             : null;
         })
         .filter(Boolean)
@@ -19019,7 +19290,7 @@
           const points = comparisonNumber(part?.points);
           const max = comparisonNumber(part?.maxPoints);
           return points !== null && max !== null && max > 0
-            ? { label:part.label || "항목", ratio:points / max }
+            ? { key:part.key, label:zippickReportPartLabel(part), ratio:points / max }
             : null;
         })
         .filter(Boolean);
@@ -19028,7 +19299,7 @@
           const otherRatios = rows
             .filter(other => other !== row)
             .flatMap(other => (Array.isArray(other?.locationScore?.parts) ? other.locationScore.parts : []))
-            .filter(otherPart => (otherPart.label || "항목") === part.label)
+            .filter(otherPart => otherPart?.key === part.key)
             .map(otherPart => {
               const points = comparisonNumber(otherPart?.points);
               const max = comparisonNumber(otherPart?.maxPoints);
@@ -19317,7 +19588,7 @@
       if (key === "market") {
         return "<strong>거래가 많지 않아 현재 가격을 그대로 믿기 어려워요.</strong> 한 건의 거래보다 같은 평형 거래가 이어지는지 보세요.";
       }
-      return weakest.reason ? esc(weakest.reason) : `<strong>${esc(weakest.label)}</strong>은 다른 조건보다 아쉬워요. 이 부분을 받아들일 수 있는지 먼저 보세요.`;
+      return weakest.reason ? esc(weakest.reason) : `<strong>${esc(zpJosa(zippickReportPartLabel(weakest), "은", "는"))}</strong> 다른 조건보다 아쉬워요. 이 부분을 받아들일 수 있는지 먼저 보세요.`;
     }
 
     function comparisonPreferenceNextCheckHtml(recommendation) {
@@ -19631,7 +19902,7 @@
         ["종합점수", "totalScore", "section"],
         ["가격 적정성", "score:price"],
         ["전세가율·입주물량·투자금", "score:jeonse"],
-        ["입지·실수요", "score:demand"],
+        ["입지·교육·실수요", "score:demand"],
         ["상품성·희소성", "score:product"],
         ["거래 유동성·시장 신호", "score:market"],
         ["최근 시장 신호", "signal", "section"],
@@ -20377,7 +20648,7 @@
           max_building_age: budgetMaxBuildingAge.value,
           home_ownership: policyHomeOwnership.value || "unknown",
           first_time: policyFirstTime.value,
-          cash_eok: policyCash.value.trim(),
+          cash_eok: purchasePowerUsableCashText(),
           annual_income: policyAnnualIncome.value.trim(),
           monthly_debt_payment: policyMonthlyDebt.value.trim(),
           co_borrower: policyCoBorrower.value,
@@ -20386,6 +20657,7 @@
           mortgage_rate: policyMortgageRate.value.trim(),
           loan_term_years: policyLoanTerm.value,
           purchase_cost_rate: policyPurchaseCostRate.value,
+          rate_type: policyRateType.value,
           all_matches: "true",
           staged: "true",
         });
@@ -20510,33 +20782,18 @@
       if (!button || button.disabled) return;
       setConditionStage(button.dataset.conditionStage);
     });
+    purchasePowerResult.addEventListener("keydown", event => {
+      if (event.target.id !== "powerCashInput" || event.key !== "Enter") return;
+      event.preventDefault();
+      applyPurchasePowerCashInput(event.target);
+    });
+    purchasePowerResult.addEventListener("change", event => {
+      if (event.target.id === "powerCashInput") applyPurchasePowerCashInput(event.target);
+    });
+    purchasePowerResult.addEventListener("input", event => {
+      if (event.target.id === "powerCashInput") setPurchasePowerCashError(event.target, "");
+    });
     purchasePowerResult.addEventListener("click", event => {
-      const priceBandTab = event.target.closest("[data-power-review-band]");
-      if (priceBandTab) {
-        const bandId = priceBandTab.dataset.powerReviewBand;
-        const band = currentPurchasePower?.review?.bands?.find(item => item.id === bandId);
-        if (!band || bandId === currentPurchasePower.review.selectedBandId) return;
-        const snapshot = {
-          ...(currentPurchasePower.snapshot || {}),
-          estimatedPurchaseCeilingEok:band.reviewAmountEok,
-          estimatedLoanLimitEok:band.loanLimitEok,
-          priceCapEok:band.loanCapEok,
-          grossPurchaseCostEok:band.purchaseCostEok,
-          purchaseCostEok:band.purchaseCostEok,
-        };
-        currentPurchasePower = {
-          ...currentPurchasePower,
-          budgetEok:band.reviewAmountEok,
-          snapshot,
-          review:{ ...currentPurchasePower.review, selectedBandId:bandId },
-        };
-        renderPurchasePower(currentPurchasePower, {
-          changeContext:purchasePowerSheetChangeContext,
-          preserveConditionStage:true,
-        });
-        purchasePowerResult.querySelector(`[data-power-review-band="${CSS.escape(bandId)}"]`)?.focus();
-        return;
-      }
       if (event.target.closest("[data-flow-confirm-change]")) {
         const afterConfirm = purchasePowerSheetAfterConfirm;
         purchasePowerSheetAfterConfirm = null;
@@ -20563,21 +20820,14 @@
         setConditionStage("preference");
       }
     });
-    purchasePowerResult.addEventListener("keydown", event => {
-      const tab = event.target.closest("[data-power-review-band]");
-      if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-      const tabs = [...purchasePowerResult.querySelectorAll("[data-power-review-band]")];
-      if (!tabs.length) return;
-      event.preventDefault();
-      const currentIndex = tabs.indexOf(tab);
-      const nextIndex = event.key === "Home" ? 0
-        : event.key === "End" ? tabs.length - 1
-        : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
-      tabs[nextIndex]?.click();
-    });
-    [policyHomeOwnership, policyFirstTime, policyCash, policyAnnualIncome, policyMonthlyDebt, policyMaritalStatus, policyCoBorrower, policySpouseIncome, policySpouseDebt, policyCreditScore, policyMortgageRate, policyLoanTerm, policyPurchaseCostRate].forEach(field => {
+    [policyPurchaseRegion, policyHomeOwnership, policyFirstTime, policyCash, policyAnnualIncome, policyMonthlyDebt, policyMaritalStatus, policyCoBorrower, policySpouseIncome, policySpouseDebt, policyCreditScore, policyMortgageRate, policyLoanTerm, policyRateType].forEach(field => {
       field.addEventListener(field.tagName === "INPUT" ? "input" : "change", () => {
         if (field.validity.valid) clearFieldError(field);
+        if (field === policyRateType) policyRateType.dataset.userSelected = "true";
+        if (field === policyPurchaseRegion) {
+          pendingPurchaseRegionCode = "";
+          renderPurchaseRegionHint();
+        }
         if (field === policyMortgageRate) {
           mortgageRateManuallyEdited = true;
           renderMortgageRateHelper();
@@ -20743,21 +20993,6 @@
       });
     });
     budgetForm.addEventListener("click", event => {
-      const infoButton = event.target.closest("#purchaseCostInfoButton");
-      if (infoButton) {
-        event.preventDefault();
-        event.stopPropagation();
-        setPurchaseCostInfoOpen(purchaseCostInfo.hidden);
-        return;
-      }
-      const infoCloseButton = event.target.closest("#purchaseCostInfoClose");
-      if (infoCloseButton) {
-        event.preventDefault();
-        event.stopPropagation();
-        setPurchaseCostInfoOpen(false);
-        purchaseCostInfoButton.focus();
-        return;
-      }
       const homeActionButton = event.target.closest("[data-home-ownership-action]");
       if (homeActionButton) {
         event.preventDefault();
@@ -21566,9 +21801,6 @@
     });
     document.addEventListener("click", event => {
       const clickPath = event.composedPath();
-      if (!purchaseCostInfo.hidden && !clickPath.includes(purchaseCostInfo) && !clickPath.includes(purchaseCostInfoButton)) {
-        setPurchaseCostInfoOpen(false);
-      }
       const resultInfoPopover = budgetResultEl.querySelector("[data-result-info-popover]");
       const resultInfoButton = budgetResultEl.querySelector("[data-result-info-button]");
       if (resultInfoPopover && !resultInfoPopover.hidden && !clickPath.includes(resultInfoPopover) && !clickPath.includes(resultInfoButton)) {
@@ -21613,10 +21845,6 @@
         closePurchasePowerSheet();
         afterConfirm?.();
         return;
-      }
-      if (!purchaseCostInfo.hidden) {
-        setPurchaseCostInfoOpen(false);
-        purchaseCostInfoButton.focus();
       }
       const resultInfoPopover = budgetResultEl.querySelector("[data-result-info-popover]");
       if (resultInfoPopover && !resultInfoPopover.hidden) {
@@ -23831,8 +24059,9 @@
     homeButton.addEventListener("click", openHomeView);
 
     restorePurchasePowerForm();
+    void loadPurchasePowerConfig();
     applyEstimatedMortgageRate();
-    purchasePowerAdvanced.open = purchasePowerHasCustomDetails();
+    purchasePowerAdvanced.open = true;
     syncPurchasePowerActionLabels();
     purchasePowerAdvancedTrackingReady = true;
     syncMaritalFields();

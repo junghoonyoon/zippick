@@ -21,7 +21,8 @@
     "capitalGeneral": 0.7,
     "capitalFirstTime": 0.7,
     "additionalHomeInCapital": 0.0,
-    "nonCapitalFirstTime": 0.8
+    "nonCapitalFirstTime": 0.8,
+    "nonCapitalGeneral": 0.7
   },
   "firstTimeAcquisitionTaxRelief": {
     "maxHomePriceEok": 12,
@@ -30,17 +31,117 @@
     "effectiveUntil": "2028-12-31"
   },
   "populationDeclineRegions": {
-    "부산": ["동구", "서구", "영도구"],
-    "대구": ["남구", "서구", "군위군"],
-    "인천": ["강화군", "옹진군"],
-    "경기": ["가평군", "연천군"],
-    "강원": ["고성군", "삼척시", "양구군", "양양군", "영월군", "정선군", "철원군", "태백시", "평창군", "홍천군", "화천군", "횡성군"],
-    "충북": ["괴산군", "단양군", "보은군", "영동군", "옥천군", "제천시"],
-    "충남": ["공주시", "금산군", "논산시", "보령시", "부여군", "서천군", "예산군", "청양군", "태안군"],
-    "전북": ["고창군", "김제시", "남원시", "무주군", "부안군", "순창군", "임실군", "장수군", "정읍시", "진안군"],
-    "전남": ["강진군", "고흥군", "곡성군", "구례군", "담양군", "보성군", "신안군", "영광군", "영암군", "완도군", "장성군", "장흥군", "진도군", "함평군", "해남군", "화순군"],
-    "경북": ["고령군", "문경시", "봉화군", "상주시", "성주군", "안동시", "영덕군", "영양군", "영주시", "영천시", "울릉군", "울진군", "의성군", "청도군", "청송군"],
-    "경남": ["거창군", "고성군", "남해군", "밀양시", "산청군", "의령군", "창녕군", "하동군", "함안군", "함양군", "합천군"]
+    "부산": [
+      "동구",
+      "서구",
+      "영도구"
+    ],
+    "대구": [
+      "남구",
+      "서구",
+      "군위군"
+    ],
+    "인천": [
+      "강화군",
+      "옹진군"
+    ],
+    "경기": [
+      "가평군",
+      "연천군"
+    ],
+    "강원": [
+      "고성군",
+      "삼척시",
+      "양구군",
+      "양양군",
+      "영월군",
+      "정선군",
+      "철원군",
+      "태백시",
+      "평창군",
+      "홍천군",
+      "화천군",
+      "횡성군"
+    ],
+    "충북": [
+      "괴산군",
+      "단양군",
+      "보은군",
+      "영동군",
+      "옥천군",
+      "제천시"
+    ],
+    "충남": [
+      "공주시",
+      "금산군",
+      "논산시",
+      "보령시",
+      "부여군",
+      "서천군",
+      "예산군",
+      "청양군",
+      "태안군"
+    ],
+    "전북": [
+      "고창군",
+      "김제시",
+      "남원시",
+      "무주군",
+      "부안군",
+      "순창군",
+      "임실군",
+      "장수군",
+      "정읍시",
+      "진안군"
+    ],
+    "전남": [
+      "강진군",
+      "고흥군",
+      "곡성군",
+      "구례군",
+      "담양군",
+      "보성군",
+      "신안군",
+      "영광군",
+      "영암군",
+      "완도군",
+      "장성군",
+      "장흥군",
+      "진도군",
+      "함평군",
+      "해남군",
+      "화순군"
+    ],
+    "경북": [
+      "고령군",
+      "문경시",
+      "봉화군",
+      "상주시",
+      "성주군",
+      "안동시",
+      "영덕군",
+      "영양군",
+      "영주시",
+      "영천시",
+      "울릉군",
+      "울진군",
+      "의성군",
+      "청도군",
+      "청송군"
+    ],
+    "경남": [
+      "거창군",
+      "고성군",
+      "남해군",
+      "밀양시",
+      "산청군",
+      "의령군",
+      "창녕군",
+      "하동군",
+      "함안군",
+      "함양군",
+      "합천군"
+    ]
   },
   "stressRatePercent": 3.0,
   "moveInMonths": 6,
@@ -134,6 +235,20 @@
       "title": "생애최초 LTV 80% 및 최대 대출한도 6억원",
       "publishedAt": "2022-07-20",
       "url": "https://www.fsc.go.kr/no010101/78134"
+    },
+    {
+      "id": "bok-lending-rate-202608",
+      "agency": "한국은행",
+      "title": "2026년 8월중 금융기관 가중평균금리",
+      "publishedAt": "2026-09-30",
+      "url": "https://www.bok.or.kr/portal/bbs/B0000501/list.do?menuNo=201264"
+    },
+    {
+      "id": "fsc-stress3-20250520",
+      "agency": "금융위원회",
+      "title": "3단계 스트레스 DSR 시행방안 확정·발표",
+      "publishedAt": "2025-05-20",
+      "url": "https://www.fsc.go.kr/no010101/84617"
     }
   ],
   "capitalRegionMaxLoanTermYears": 30,
@@ -142,5 +257,188 @@
     "effectiveFrom": "2026-07-01",
     "effectiveUntil": "2026-12-31"
   },
-  "firstTimeMaxLoanEok": 6
+  "firstTimeMaxLoanEok": 6,
+  "policyDate": "2026-09-30",
+  "bankDsrRate": 0.4,
+  "nonBankDsrRate": 0.5,
+  "nonCapitalMaxLoanTermYears": 40,
+  "defaultLoanTermYears": 30,
+  "conditionalDisposalMonths": 6,
+  "purchaseCostRate": 0.04,
+  "mortgageRateDefault": {
+    "value": 4.66,
+    "asOf": "2026-08",
+    "source": "한국은행 금융기관 가중평균금리(신규취급액 기준, 예금은행 주택담보대출)",
+    "sourceUrl": "https://www.bok.or.kr/portal/bbs/B0000501/list.do?menuNo=201264",
+    "publishedAt": "2026-09-30",
+    "description": "정책값이 아닌 시장 금리예요. 매달 한국은행 발표를 보고 갱신해요."
+  },
+  "policyMeta": {
+    "capitalRegionMortgageCaps": {
+      "effectiveFrom": "2025-10-16",
+      "effectiveTo": null,
+      "sourceId": "fsc-housing-stability-qa-202510",
+      "description": "수도권·규제지역 주택구입 목적 주담대 최대한도: 15억 이하 6억, 15~25억 4억, 25억 초과 2억"
+    },
+    "ltv.regulatedGeneral": {
+      "effectiveFrom": "2025-10-16",
+      "effectiveTo": null,
+      "sourceId": "fsc-housing-stability-qa-202510",
+      "description": "규제지역 무주택·처분조건부 1주택 LTV 40%"
+    },
+    "ltv.capitalFirstTime": {
+      "effectiveFrom": "2025-06-28",
+      "effectiveTo": null,
+      "sourceId": "fsc-mortgage-20250627",
+      "description": "생애최초 수도권·규제지역 LTV 70%"
+    },
+    "ltv.nonCapitalFirstTime": {
+      "effectiveFrom": "2022-08-01",
+      "effectiveTo": null,
+      "sourceId": "fsc-first-time-20220720",
+      "description": "생애최초 지방 비규제지역 LTV 80%"
+    },
+    "ltv.additionalHomeInCapital": {
+      "effectiveFrom": "2025-06-28",
+      "effectiveTo": null,
+      "sourceId": "fsc-mortgage-20250627",
+      "description": "수도권·규제지역 2주택 이상 또는 1주택 유지 추가구입 주담대 LTV 0%"
+    },
+    "ltv.capitalGeneral": {
+      "effectiveFrom": null,
+      "effectiveTo": null,
+      "sourceId": null,
+      "description": "수도권 비규제지역 일반 LTV 70%"
+    },
+    "ltv.nonCapitalGeneral": {
+      "effectiveFrom": null,
+      "effectiveTo": null,
+      "sourceId": null,
+      "description": "지방 비규제지역 일반 LTV 70% (기존 계산 기준값, 다주택자 세부 LTV는 미반영)"
+    },
+    "bankDsrRate": {
+      "effectiveFrom": "2024-02-26",
+      "effectiveTo": null,
+      "sourceId": "fsc-debt-plan-qa-202604",
+      "description": "은행권 차주단위 DSR 40%"
+    },
+    "nonBankDsrRate": {
+      "effectiveFrom": "2024-02-26",
+      "effectiveTo": null,
+      "sourceId": "fsc-debt-plan-qa-202604",
+      "description": "2금융권 차주단위 DSR 50%"
+    },
+    "stressRatePercent": {
+      "effectiveFrom": "2025-10-16",
+      "effectiveTo": null,
+      "sourceId": "fsc-housing-stability-qa-202510",
+      "description": "수도권·규제지역 주담대 스트레스 금리 하한 3.0%p"
+    },
+    "nonCapitalStressRatePercent": {
+      "effectiveFrom": "2026-07-01",
+      "effectiveTo": "2026-12-31",
+      "sourceId": "fsc-stress-20260618",
+      "description": "지방 주담대 스트레스 금리 0.75%p (2단계 연장)"
+    },
+    "capitalRegionMaxLoanTermYears": {
+      "effectiveFrom": "2025-06-28",
+      "effectiveTo": null,
+      "sourceId": "fsc-mortgage-20250627",
+      "description": "수도권·규제지역 주담대 만기 30년 이내"
+    },
+    "nonCapitalMaxLoanTermYears": {
+      "effectiveFrom": null,
+      "effectiveTo": null,
+      "sourceId": null,
+      "description": "지방 비규제지역은 정책 만기 상한이 없어 은행 상품 관행(40년)을 계산 상한으로 써요"
+    },
+    "firstTimeMaxLoanEok": {
+      "effectiveFrom": "2025-06-28",
+      "effectiveTo": null,
+      "sourceId": "fsc-mortgage-20250627",
+      "description": "생애최초 주담대 최대 6억원"
+    },
+    "moveInMonths": {
+      "effectiveFrom": "2025-06-28",
+      "effectiveTo": null,
+      "sourceId": "fsc-mortgage-20250627",
+      "description": "주택구입 목적 주담대 6개월 이내 전입"
+    },
+    "conditionalDisposalMonths": {
+      "effectiveFrom": "2025-06-28",
+      "effectiveTo": null,
+      "sourceId": "fsc-mortgage-20250627",
+      "description": "1주택자 기존주택 6개월 이내 처분 조건"
+    },
+    "regulatedRegions": {
+      "effectiveFrom": "2026-07-01",
+      "effectiveTo": null,
+      "sourceId": "fsc-regions-20260630",
+      "description": "서울 전역과 경기 일부 시·구. 2026.7.1 화성 동탄구·용인 기흥구·구리시 추가"
+    },
+    "purchaseCostRate": {
+      "effectiveFrom": null,
+      "effectiveTo": null,
+      "sourceId": null,
+      "description": "취득세·중개보수 등 부대비용 간편 가정 4% (정책값 아님)"
+    },
+    "stressRateRatios.capitalOrRegulated": {
+      "effectiveFrom": "2025-07-01",
+      "effectiveTo": null,
+      "sourceId": "fsc-stress3-20250520",
+      "description": "3단계 스트레스 DSR 금리유형별 반영비율: 변동형 100%, 혼합형 80%, 주기형 40%. 고정기간·주기가 길수록 낮아지고 만기의 70% 이상이면 미적용(세부 구간은 미반영)"
+    },
+    "stressRateRatios.nonCapital": {
+      "effectiveFrom": "2026-07-01",
+      "effectiveTo": "2026-12-31",
+      "sourceId": "fsc-stress-20260618",
+      "description": "지방 주담대 2단계 연장: 변동형 100%, 혼합형 60%, 주기형 30%"
+    },
+    "creditScoreRateAdjustments": {
+      "effectiveFrom": null,
+      "effectiveTo": null,
+      "sourceId": null,
+      "description": "정책값 아님. 신용점수별 예상 금리 가감값. 900점 이상은 사용자 제공 예시(최우대 약 3.8~4.0%), 나머지는 기존 추정값"
+    }
+  },
+  "stressRateRatios": {
+    "capitalOrRegulated": {
+      "periodic": 0.4,
+      "mixed": 0.8,
+      "variable": 1.0
+    },
+    "nonCapital": {
+      "periodic": 0.3,
+      "mixed": 0.6,
+      "variable": 1.0
+    }
+  },
+  "defaultMortgageRateType": "periodic",
+  "creditScoreRateAdjustments": [
+    {
+      "minScore": 900,
+      "adjustmentPercent": -0.76,
+      "note": "시중은행 최우대 금리 약 3.8~4.0% (사용자 제공 예시, 공식 통계 아님). 평균 4.66% 기준 약 3.90%"
+    },
+    {
+      "minScore": 850,
+      "adjustmentPercent": -0.05
+    },
+    {
+      "minScore": 800,
+      "adjustmentPercent": 0.05
+    },
+    {
+      "minScore": 750,
+      "adjustmentPercent": 0.25
+    },
+    {
+      "minScore": 700,
+      "adjustmentPercent": 0.5
+    },
+    {
+      "minScore": 1,
+      "adjustmentPercent": 0.8
+    }
+  ]
 }

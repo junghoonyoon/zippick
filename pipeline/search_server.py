@@ -29,6 +29,7 @@ import naver_complex
 import news_catalysts
 import paid_access
 import policy_evaluator
+import purchase_capacity
 import price_valuation
 import real_estate_search
 import report_store
@@ -828,6 +829,7 @@ def _refresh_snapshot_policy_impacts(payload, candidate_arguments):
         mortgage_rate=candidate_arguments.get("mortgage_rate", 0),
         loan_term_years=candidate_arguments.get("loan_term_years", 30),
         purchase_cost_rate=candidate_arguments.get("purchase_cost_rate", 0),
+        mortgage_rate_type=candidate_arguments.get("mortgage_rate_type", ""),
     )
     impacts = []
     price_fields = (
@@ -1901,6 +1903,7 @@ def _apartment_affordability(arguments):
         "mortgage_rate": profile_arguments.get("mortgage_rate") or 0,
         "loan_term_years": profile_arguments.get("loan_term_years") or 30,
         "purchase_cost_rate": profile_arguments.get("purchase_cost_rate") or 0,
+        "mortgage_rate_type": profile_arguments.get("mortgage_rate_type") or "",
     }
     try:
         common_candidate = budget_candidates.apartment_candidate_result(
@@ -2227,6 +2230,7 @@ def _apartment_affordability(arguments):
             mortgage_rate=mortgage_rate,
             loan_term_years=raw_profile.get("loan_term_years") or 30,
             purchase_cost_rate=raw_profile.get("purchase_cost_rate") or 0,
+            mortgage_rate_type=raw_profile.get("mortgage_rate_type") or "",
         )["profile"]
         response["profileComplete"] = True
         response["profile"] = {
@@ -2249,6 +2253,7 @@ def _apartment_affordability(arguments):
         mortgage_rate=mortgage_rate,
         loan_term_years=raw_profile.get("loan_term_years") or 30,
         purchase_cost_rate=raw_profile.get("purchase_cost_rate") or 0,
+        mortgage_rate_type=raw_profile.get("mortgage_rate_type") or "",
     )
     policy_transactions = [
         {
@@ -2361,6 +2366,7 @@ def _asking_price_financing(arguments):
         mortgage_rate=raw_profile.get("mortgage_rate"),
         loan_term_years=raw_profile.get("loan_term_years") or 30,
         purchase_cost_rate=raw_profile.get("purchase_cost_rate") or 0,
+        mortgage_rate_type=raw_profile.get("mortgage_rate_type") or "",
     )
     impact = policy_evaluator.evaluate_candidate(
         {"region": region, "midPriceEok": asking_price},
@@ -3318,56 +3324,66 @@ class Handler(BaseHTTPRequestHandler):
                 "apartments": real_estate_search.region_apartments(region),
             })
             return
+        if parsed.path == "/api/purchase-power-config":
+            policy_snapshot = policy_evaluator.load_policy_snapshot()
+            self._json({
+                "policyDate": policy_snapshot.get("policyDate") or policy_snapshot["asOf"],
+                "mortgageRateDefault": policy_snapshot["mortgageRateDefault"],
+                "purchaseCostRate": policy_snapshot["purchaseCostRate"],
+                "defaultMortgageRateType": policy_snapshot.get("defaultMortgageRateType", "periodic"),
+                "mortgageRateTypes": purchase_capacity.RATE_TYPE_LABELS,
+                "creditScoreRateAdjustments": policy_snapshot.get("creditScoreRateAdjustments", []),
+                "regions": purchase_capacity.purchase_region_groups(policy_snapshot),
+            })
+            return
         if parsed.path == "/api/purchase-power":
-            first_time = params.get("first_time", [""])[0].strip()
+            raw = {key: values[0].strip() for key, values in params.items() if values}
+            errors, cleaned = purchase_capacity.validate_purchase_inputs(raw)
+            if errors:
+                self._json({"error": errors[0], "errors": errors}, 400)
+                return
             profile = policy_evaluator.user_profile(
-                home_ownership=params.get("home_ownership", ["unknown"])[0].strip(),
-                first_time=first_time,
-                cash_eok=params.get("cash_eok", [""])[0].strip(),
-                annual_income=params.get("annual_income", [""])[0].strip(),
-                monthly_debt_payment=params.get("monthly_debt_payment", [""])[0].strip(),
-                co_borrower=params.get("co_borrower", ["false"])[0].strip(),
-                spouse_annual_income=params.get("spouse_annual_income", [""])[0].strip(),
-                spouse_monthly_debt_payment=params.get("spouse_monthly_debt_payment", [""])[0].strip(),
-                mortgage_rate=params.get("mortgage_rate", [""])[0].strip(),
-                loan_term_years=params.get("loan_term_years", ["30"])[0].strip(),
-                purchase_cost_rate=params.get("purchase_cost_rate", ["0"])[0].strip(),
+                home_ownership=raw.get("home_ownership", "unknown"),
+                first_time=raw.get("first_time", ""),
+                cash_eok=raw.get("cash_eok", ""),
+                annual_income=raw.get("annual_income", ""),
+                monthly_debt_payment=raw.get("monthly_debt_payment", ""),
+                co_borrower=raw.get("co_borrower", "false"),
+                spouse_annual_income=raw.get("spouse_annual_income", ""),
+                spouse_monthly_debt_payment=raw.get("spouse_monthly_debt_payment", ""),
+                mortgage_rate=cleaned["mortgageRatePercent"] or policy_evaluator.load_policy_snapshot()["mortgageRateDefault"]["value"],
+                loan_term_years=cleaned["loanTermYears"] or 30,
+                purchase_cost_rate=raw.get("purchase_cost_rate", "") or "0",
+                mortgage_rate_type=cleaned["rateType"] or "",
             )
-            if profile.get("firstTimeRequested") and not profile.get("firstTimeEligibleByOwnership"):
-                self._json({"error": "생애최초는 보유 주택을 '무주택'으로 선택한 경우에만 '예'로 적용할 수 있어요."}, 400)
+            review = policy_evaluator.purchase_power_review(
+                profile,
+                region_policy=cleaned["regionPolicy"],
+                loan_term_years=cleaned["loanTermYears"],
+                reserve_cash_eok=cleaned["reserveCashEok"],
+                rate_type=cleaned["rateType"],
+            )
+            max_purchase = review["maxPurchase"]
+            if not max_purchase:
+                self._json({"error": "입력한 조건으로 최대 구매 가능 금액을 계산하지 못했어요."}, 400)
                 return
-            if profile["homeOwnership"] == "unknown" or first_time not in {"true", "false"} or not profile["cashEok"] or not profile["annualIncomeManwon"] or not profile["mortgageRatePercent"]:
-                self._json({"error": "보유 주택, 생애최초 여부, 자기자금, 연소득과 예상 금리를 입력해 주세요."}, 400)
-                return
-            regions = [
-                value.strip()
-                for value in params.get("region", ["서울특별시"])[0].split(",")
-                if value.strip()
-            ]
-            review = policy_evaluator.purchase_power_review(profile, regions)
             ceiling = review["budgetEok"]
-            selected_band = next(
-                (band for band in review["bands"] if band["id"] == review["selectedBandId"]),
-                None,
-            )
-            if not selected_band:
-                self._json({"error": "입력한 조건으로 검토 가능 금액을 계산하지 못했어요."}, 400)
-                return
             snapshot = policy_evaluator.summarize([], profile)
             snapshot["estimatedPurchaseCeilingEok"] = ceiling
             snapshot.update({
-                "asOf": review["policy"]["effectiveDate"],
+                "asOf": review["policyDate"],
+                "purchaseRegion": review["region"],
                 "dsrLoanLimitEok": review["dsrLoanLimitEok"],
                 "loanTermYears": review["loanTermYears"],
-                "stressRatePercent": review["policy"]["stressRatePercent"],
-                "estimatedLoanLimitEok": selected_band["loanLimitEok"],
-                "priceCapEok": selected_band["loanCapEok"],
-                "purchaseCostRatePercent": review["policy"]["purchaseCostRate"] * 100,
-                "grossPurchaseCostEok": selected_band["grossPurchaseCostEok"],
-                "purchaseCostEok": selected_band["purchaseCostEok"],
-                "firstTimeAcquisitionTaxReliefEok": selected_band["firstTimeAcquisitionTaxReliefEok"],
-                "regionLabel": review["regionLabel"],
-                "ltvRate": selected_band["ltvRate"],
+                "stressRatePercent": review["stressRatePercent"],
+                "mortgageRatePercent": review["mortgageRatePercent"],
+                "estimatedLoanLimitEok": max_purchase["loanEok"],
+                "appliedLoanEok": max_purchase["loanEok"],
+                "purchasePowerConstraint": review["constraint"]["type"],
+                "priceCapEok": max_purchase["absoluteLimitEok"],
+                "purchaseCostRatePercent": review["purchaseCostRate"] * 100,
+                "readyBudgetEok": review["readyBudgetEok"],
+                "firstTimeAcquisitionTaxReliefEok": 0,
             })
             self._json({"budgetEok": ceiling, "snapshot": snapshot, "review": review})
             return
@@ -3618,6 +3634,7 @@ class Handler(BaseHTTPRequestHandler):
             mortgage_rate = params.get("mortgage_rate", [""])[0].strip()
             loan_term_years = params.get("loan_term_years", ["30"])[0].strip()
             purchase_cost_rate = params.get("purchase_cost_rate", ["0"])[0].strip()
+            mortgage_rate_type = params.get("rate_type", [""])[0].strip()
             all_matches = params.get("all_matches", ["false"])[0].strip()
             limit = params.get("limit", ["6"])[0].strip()
             try:
@@ -3646,6 +3663,7 @@ class Handler(BaseHTTPRequestHandler):
                 "mortgage_rate": mortgage_rate,
                 "loan_term_years": loan_term_years,
                 "purchase_cost_rate": purchase_cost_rate,
+                "mortgage_rate_type": mortgage_rate_type,
                 "limit": max(1, min(limit, 12)),
                 "all_matches": all_matches.lower() in {"1", "true", "yes", "on"},
             }

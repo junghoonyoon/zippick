@@ -1,0 +1,416 @@
+{
+ "source": "korea_housing_complex_basic_20250918.csv",
+ "note": "시군구 코드는 필지고유번호 앞 5자리예요. 새 일반구는 상위 시 코드에 구 이름을 붙였어요.",
+ "regions": [
+  {
+   "code": "11680",
+   "province": "서울특별시",
+   "district": "강남구"
+  },
+  {
+   "code": "11740",
+   "province": "서울특별시",
+   "district": "강동구"
+  },
+  {
+   "code": "11305",
+   "province": "서울특별시",
+   "district": "강북구"
+  },
+  {
+   "code": "11500",
+   "province": "서울특별시",
+   "district": "강서구"
+  },
+  {
+   "code": "11620",
+   "province": "서울특별시",
+   "district": "관악구"
+  },
+  {
+   "code": "11215",
+   "province": "서울특별시",
+   "district": "광진구"
+  },
+  {
+   "code": "11530",
+   "province": "서울특별시",
+   "district": "구로구"
+  },
+  {
+   "code": "11545",
+   "province": "서울특별시",
+   "district": "금천구"
+  },
+  {
+   "code": "11350",
+   "province": "서울특별시",
+   "district": "노원구"
+  },
+  {
+   "code": "11320",
+   "province": "서울특별시",
+   "district": "도봉구"
+  },
+  {
+   "code": "11230",
+   "province": "서울특별시",
+   "district": "동대문구"
+  },
+  {
+   "code": "11590",
+   "province": "서울특별시",
+   "district": "동작구"
+  },
+  {
+   "code": "11440",
+   "province": "서울특별시",
+   "district": "마포구"
+  },
+  {
+   "code": "11410",
+   "province": "서울특별시",
+   "district": "서대문구"
+  },
+  {
+   "code": "11650",
+   "province": "서울특별시",
+   "district": "서초구"
+  },
+  {
+   "code": "11200",
+   "province": "서울특별시",
+   "district": "성동구"
+  },
+  {
+   "code": "11290",
+   "province": "서울특별시",
+   "district": "성북구"
+  },
+  {
+   "code": "11710",
+   "province": "서울특별시",
+   "district": "송파구"
+  },
+  {
+   "code": "11470",
+   "province": "서울특별시",
+   "district": "양천구"
+  },
+  {
+   "code": "11560",
+   "province": "서울특별시",
+   "district": "영등포구"
+  },
+  {
+   "code": "11170",
+   "province": "서울특별시",
+   "district": "용산구"
+  },
+  {
+   "code": "11380",
+   "province": "서울특별시",
+   "district": "은평구"
+  },
+  {
+   "code": "11110",
+   "province": "서울특별시",
+   "district": "종로구"
+  },
+  {
+   "code": "11140",
+   "province": "서울특별시",
+   "district": "중구"
+  },
+  {
+   "code": "11260",
+   "province": "서울특별시",
+   "district": "중랑구"
+  },
+  {
+   "code": "41820",
+   "province": "경기도",
+   "district": "가평군"
+  },
+  {
+   "code": "41281",
+   "province": "경기도",
+   "district": "고양시 덕양구"
+  },
+  {
+   "code": "41285",
+   "province": "경기도",
+   "district": "고양시 일산동구"
+  },
+  {
+   "code": "41287",
+   "province": "경기도",
+   "district": "고양시 일산서구"
+  },
+  {
+   "code": "41290",
+   "province": "경기도",
+   "district": "과천시"
+  },
+  {
+   "code": "41210",
+   "province": "경기도",
+   "district": "광명시"
+  },
+  {
+   "code": "41610",
+   "province": "경기도",
+   "district": "광주시"
+  },
+  {
+   "code": "41310",
+   "province": "경기도",
+   "district": "구리시"
+  },
+  {
+   "code": "41410",
+   "province": "경기도",
+   "district": "군포시"
+  },
+  {
+   "code": "41570",
+   "province": "경기도",
+   "district": "김포시"
+  },
+  {
+   "code": "41360",
+   "province": "경기도",
+   "district": "남양주시"
+  },
+  {
+   "code": "41250",
+   "province": "경기도",
+   "district": "동두천시"
+  },
+  {
+   "code": "41194",
+   "province": "경기도",
+   "district": "부천시 소사구"
+  },
+  {
+   "code": "41196",
+   "province": "경기도",
+   "district": "부천시 오정구"
+  },
+  {
+   "code": "41192",
+   "province": "경기도",
+   "district": "부천시 원미구"
+  },
+  {
+   "code": "41135",
+   "province": "경기도",
+   "district": "성남시 분당구"
+  },
+  {
+   "code": "41131",
+   "province": "경기도",
+   "district": "성남시 수정구"
+  },
+  {
+   "code": "41133",
+   "province": "경기도",
+   "district": "성남시 중원구"
+  },
+  {
+   "code": "41113",
+   "province": "경기도",
+   "district": "수원시 권선구"
+  },
+  {
+   "code": "41117",
+   "province": "경기도",
+   "district": "수원시 영통구"
+  },
+  {
+   "code": "41111",
+   "province": "경기도",
+   "district": "수원시 장안구"
+  },
+  {
+   "code": "41115",
+   "province": "경기도",
+   "district": "수원시 팔달구"
+  },
+  {
+   "code": "41390",
+   "province": "경기도",
+   "district": "시흥시"
+  },
+  {
+   "code": "41273",
+   "province": "경기도",
+   "district": "안산시 단원구"
+  },
+  {
+   "code": "41271",
+   "province": "경기도",
+   "district": "안산시 상록구"
+  },
+  {
+   "code": "41550",
+   "province": "경기도",
+   "district": "안성시"
+  },
+  {
+   "code": "41173",
+   "province": "경기도",
+   "district": "안양시 동안구"
+  },
+  {
+   "code": "41171",
+   "province": "경기도",
+   "district": "안양시 만안구"
+  },
+  {
+   "code": "41630",
+   "province": "경기도",
+   "district": "양주시"
+  },
+  {
+   "code": "41830",
+   "province": "경기도",
+   "district": "양평군"
+  },
+  {
+   "code": "41670",
+   "province": "경기도",
+   "district": "여주시"
+  },
+  {
+   "code": "41800",
+   "province": "경기도",
+   "district": "연천군"
+  },
+  {
+   "code": "41370",
+   "province": "경기도",
+   "district": "오산시"
+  },
+  {
+   "code": "41463",
+   "province": "경기도",
+   "district": "용인시 기흥구"
+  },
+  {
+   "code": "41465",
+   "province": "경기도",
+   "district": "용인시 수지구"
+  },
+  {
+   "code": "41461",
+   "province": "경기도",
+   "district": "용인시 처인구"
+  },
+  {
+   "code": "41430",
+   "province": "경기도",
+   "district": "의왕시"
+  },
+  {
+   "code": "41150",
+   "province": "경기도",
+   "district": "의정부시"
+  },
+  {
+   "code": "41500",
+   "province": "경기도",
+   "district": "이천시"
+  },
+  {
+   "code": "41480",
+   "province": "경기도",
+   "district": "파주시"
+  },
+  {
+   "code": "41220",
+   "province": "경기도",
+   "district": "평택시"
+  },
+  {
+   "code": "41650",
+   "province": "경기도",
+   "district": "포천시"
+  },
+  {
+   "code": "41450",
+   "province": "경기도",
+   "district": "하남시"
+  },
+  {
+   "code": "41590-동탄구",
+   "province": "경기도",
+   "district": "화성시 동탄구"
+  },
+  {
+   "code": "41590-만세구",
+   "province": "경기도",
+   "district": "화성시 만세구"
+  },
+  {
+   "code": "41590-병점구",
+   "province": "경기도",
+   "district": "화성시 병점구"
+  },
+  {
+   "code": "41590-효행구",
+   "province": "경기도",
+   "district": "화성시 효행구"
+  },
+  {
+   "code": "28710",
+   "province": "인천광역시",
+   "district": "강화군"
+  },
+  {
+   "code": "28245",
+   "province": "인천광역시",
+   "district": "계양구"
+  },
+  {
+   "code": "28200",
+   "province": "인천광역시",
+   "district": "남동구"
+  },
+  {
+   "code": "28140",
+   "province": "인천광역시",
+   "district": "동구"
+  },
+  {
+   "code": "28177",
+   "province": "인천광역시",
+   "district": "미추홀구"
+  },
+  {
+   "code": "28237",
+   "province": "인천광역시",
+   "district": "부평구"
+  },
+  {
+   "code": "28260",
+   "province": "인천광역시",
+   "district": "서구"
+  },
+  {
+   "code": "28185",
+   "province": "인천광역시",
+   "district": "연수구"
+  },
+  {
+   "code": "28720",
+   "province": "인천광역시",
+   "district": "옹진군"
+  },
+  {
+   "code": "28110",
+   "province": "인천광역시",
+   "district": "중구"
+  }
+ ]
+}

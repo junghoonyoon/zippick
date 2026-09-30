@@ -70,6 +70,7 @@ def _profile(raw_profile, purchase_cost_rate):
         mortgage_rate=raw_profile.get("mortgage_rate") or 0,
         loan_term_years=raw_profile.get("loan_term_years") or 30,
         purchase_cost_rate=purchase_cost_rate,
+        mortgage_rate_type=raw_profile.get("mortgage_rate_type") or "",
     )
 
 

@@ -2166,6 +2166,7 @@ def _candidate_policy_context(
     mortgage_rate=0,
     loan_term_years=30,
     purchase_cost_rate=0,
+    mortgage_rate_type="",
 ):
     """Resolve the shared user profile and regional purchase ceiling."""
     policy_profile = policy_evaluator.user_profile(
@@ -2180,6 +2181,7 @@ def _candidate_policy_context(
         mortgage_rate=mortgage_rate,
         loan_term_years=loan_term_years,
         purchase_cost_rate=purchase_cost_rate,
+        mortgage_rate_type=mortgage_rate_type,
     )
     budget_eok = _budget_eok(budget)
     budget_source = "input"
@@ -2395,6 +2397,7 @@ def apartment_candidate_result(
     mortgage_rate=0,
     loan_term_years=30,
     purchase_cost_rate=0,
+    mortgage_rate_type="",
 ):
     """Build one apartment through the exact same candidate result pipeline."""
     name = str(name or "").strip()
@@ -2420,6 +2423,7 @@ def apartment_candidate_result(
         mortgage_rate=mortgage_rate,
         loan_term_years=loan_term_years,
         purchase_cost_rate=purchase_cost_rate,
+        mortgage_rate_type=mortgage_rate_type,
     )
     if context.get("error"):
         # Direct search is still useful without a completed funding profile.
@@ -2437,6 +2441,7 @@ def apartment_candidate_result(
             mortgage_rate=mortgage_rate,
             loan_term_years=loan_term_years,
             purchase_cost_rate=purchase_cost_rate,
+            mortgage_rate_type=mortgage_rate_type,
         )
         context["budgetEok"] = _budget_eok(budget)
         context["budgetSource"] = "unavailable"
@@ -2598,6 +2603,7 @@ def budget_candidates(
     mortgage_rate=0,
     loan_term_years=30,
     purchase_cost_rate=0,
+    mortgage_rate_type="",
     limit=6,
     all_matches=False,
     fast_mode=False,
@@ -2627,6 +2633,7 @@ def budget_candidates(
         mortgage_rate=mortgage_rate,
         loan_term_years=loan_term_years,
         purchase_cost_rate=purchase_cost_rate,
+        mortgage_rate_type=mortgage_rate_type,
     )
     if context.get("error"):
         return context
