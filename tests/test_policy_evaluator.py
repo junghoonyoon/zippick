@@ -12,28 +12,65 @@ import policy_evaluator  # noqa: E402
 class PolicyEvaluatorTest(unittest.TestCase):
     def test_budget_sheet_policy_and_reference_example(self):
         profile = policy_evaluator.user_profile(
+            mortgage_rate_type="variable",
             home_ownership="no_home",
-            cash_eok=20,
-            annual_income=13000,
-            mortgage_rate=4.3,
+            first_time=True,
+            cash_eok=2,
+            annual_income=10000,
+            mortgage_rate=4.48,
             loan_term_years=30,
             purchase_cost_rate=4,
         )
 
-        review = policy_evaluator.purchase_power_review(profile)
+        review = policy_evaluator.purchase_power_review(profile, region_code="11680")
 
-        self.assertEqual(policy_evaluator.POLICY["effectiveDate"], "2026-09-27")
+        self.assertEqual(policy_evaluator.POLICY["effectiveDate"], "2026-09-30")
         self.assertEqual(policy_evaluator.POLICY["regulatedLtvRate"], 0.4)
         self.assertEqual(policy_evaluator.POLICY["bankDsrRate"], 0.4)
         self.assertEqual(policy_evaluator.POLICY["stressRatePercent"], 3.0)
         self.assertEqual(policy_evaluator.POLICY["purchaseCostRate"], 0.04)
-        self.assertEqual(review["dsrLoanLimitEok"], 6.32)
-        self.assertEqual(
-            [(band["id"], band["reviewAmountEok"]) for band in review["bands"]],
-            [("up_to_15", 15.0), ("15_to_25", 23.1)],
+        # 작업지침서 예시: 서울·생애최초·자기자금 2억·연소득 1억·금리 4.48%.
+        self.assertEqual(review["budgetEok"], 6.66)
+        self.assertEqual(review["readyBudgetEok"], 5.88)
+        self.assertEqual(review["constraint"]["type"], "LTV")
+        self.assertEqual(review["ltvRate"], 0.7)
+        self.assertEqual(review["appliedRatePercent"], 7.48)
+
+    def test_purchase_power_review_keeps_reserve_cash_out_of_the_home_price(self):
+        profile = policy_evaluator.user_profile(
+            home_ownership="no_home", first_time=True, cash_eok=2, annual_income=10000, mortgage_rate=4.48,
         )
-        self.assertEqual(review["selectedBandId"], "15_to_25")
-        self.assertEqual(review["budgetEok"], 23.1)
+        review = policy_evaluator.purchase_power_review(profile, region_code="seoul", reserve_cash_eok=0.3)
+        # 2억 중 3,000만원을 남기면 1.7억 ÷ 30% = 5.666억원 → 5.66억원.
+        self.assertEqual(review["totalCashEok"], 2)
+        self.assertEqual(review["reserveCashEok"], 0.3)
+        self.assertEqual(review["cashEok"], 1.7)
+        self.assertEqual(review["budgetEok"], 5.66)
+        self.assertEqual(review["maxPurchase"]["ownCapitalUsedEok"], 1.7)
+
+    def test_purchase_power_review_requires_purchase_region(self):
+        profile = policy_evaluator.user_profile(home_ownership="no_home", cash_eok=2, annual_income=10000)
+        with self.assertRaises(ValueError):
+            policy_evaluator.purchase_power_review(profile)
+
+    def test_purchase_power_review_uses_region_policy(self):
+        base = {"home_ownership": "no_home", "cash_eok": 2, "annual_income": 10000, "mortgage_rate": 4.48}
+        seoul = policy_evaluator.purchase_power_review(
+            policy_evaluator.user_profile(first_time=False, **base), region_code="11680"
+        )
+        incheon_code = next(
+            region["code"] for region in __import__("purchase_capacity").load_purchase_regions()
+            if region["province"] == "인천광역시" and region["district"] == "부평구"
+        )
+        incheon = policy_evaluator.purchase_power_review(
+            policy_evaluator.user_profile(first_time=False, **base), region_code=incheon_code
+        )
+        # 서울(규제지역) 일반 무주택 LTV 40%: 2억 ÷ 0.6 = 3.33억원.
+        self.assertEqual(seoul["ltvRate"], 0.4)
+        self.assertEqual(seoul["budgetEok"], 3.33)
+        # 인천 부평구(수도권 비규제) LTV 70%.
+        self.assertEqual(incheon["ltvRate"], 0.7)
+        self.assertGreater(incheon["budgetEok"], seoul["budgetEok"])
 
     def test_capital_term_limit_cannot_be_bypassed_by_long_input(self):
         for years in (30, 40, 50):
@@ -41,7 +78,7 @@ class PolicyEvaluatorTest(unittest.TestCase):
                 profile = policy_evaluator.user_profile(
                     home_ownership="no_home", first_time=True, cash_eok=5,
                     annual_income=8000, mortgage_rate=4, loan_term_years=years,
-                    purchase_cost_rate=3,
+                    purchase_cost_rate=3, mortgage_rate_type="variable",
                 )
                 impact = policy_evaluator.evaluate_candidate(
                     {"region": "서울특별시", "midPriceEok": 9}, profile=profile,
@@ -70,6 +107,7 @@ class PolicyEvaluatorTest(unittest.TestCase):
 
     def test_regional_dsr_uses_local_rate_without_mutating_profile(self):
         profile = policy_evaluator.user_profile(
+            mortgage_rate_type="variable",
             home_ownership="no_home", annual_income=8000, mortgage_rate=4,
             loan_term_years=40,
         )
@@ -82,6 +120,7 @@ class PolicyEvaluatorTest(unittest.TestCase):
             self.assertEqual(impact["loanTermYears"], years)
         self.assertEqual(profile, original)
         profile = policy_evaluator.user_profile(
+            mortgage_rate_type="variable",
             home_ownership="no_home", annual_income=8000, mortgage_rate=4,
         )
         impact = policy_evaluator.evaluate_candidate(
@@ -115,6 +154,7 @@ class PolicyEvaluatorTest(unittest.TestCase):
 
     def test_summary_uses_candidate_region_and_does_not_mix_dsr_values(self):
         profile = policy_evaluator.user_profile(
+            mortgage_rate_type="variable",
             home_ownership="no_home", annual_income=8000, mortgage_rate=4,
         )
         local = policy_evaluator.evaluate_candidate({"region": "부산광역시", "midPriceEok": 10}, profile=profile)
@@ -344,6 +384,7 @@ class PolicyEvaluatorTest(unittest.TestCase):
 
     def test_candidate_exposes_required_cash_for_full_transaction_range(self):
         profile = policy_evaluator.user_profile(
+            mortgage_rate_type="variable",
             home_ownership="no_home",
             first_time=True,
             cash_eok="6",

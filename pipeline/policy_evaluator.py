@@ -1,6 +1,5 @@
 """현재 시행 중인 주택 정책을 후보와 사용자 조건에 맞춰 설명한다."""
 import json
-import math
 import re
 from copy import deepcopy
 from functools import lru_cache
@@ -9,48 +8,6 @@ import config
 
 
 POLICY_SNAPSHOT_PATH = config.ROOT / "data" / "housing_policy_snapshot.json"
-
-# 구매력 바텀시트의 비교 기준. 후보별 실제 정책 판정은 아래 최신 스냅샷과
-# 지역 정보를 계속 사용하고, 이 고정 기준은 사용자가 가격대를 비교할 때만 쓴다.
-POLICY = {
-    "effectiveDate": "2026-09-27",
-    "priceBands": [
-        {
-            "id": "up_to_15",
-            "label": "15억 이하",
-            "loanLabel": "15억 이하",
-            "minPriceEok": 0,
-            "minInclusive": True,
-            "maxPriceEok": 15,
-            "loanCapEok": 6,
-        },
-        {
-            "id": "15_to_25",
-            "label": "15억 초과~25억 이하",
-            "tabLabel": "15~25억",
-            "minPriceEok": 15,
-            "minInclusive": False,
-            "maxPriceEok": 25,
-            "loanCapEok": 4,
-        },
-        {
-            "id": "over_25",
-            "label": "25억 초과",
-            "minPriceEok": 25,
-            "minInclusive": False,
-            "maxPriceEok": None,
-            "loanCapEok": 2,
-        },
-    ],
-    "regulatedLtvRate": 0.40,
-    "bankDsrRate": 0.40,
-    "stressRatePercent": 3.0,
-    "purchaseCostRate": 0.04,
-    "purchaseCostBreakdown": {
-        "taxRate": 0.033,
-        "brokerageRate": 0.007,
-    },
-}
 
 HOME_OWNERSHIP_LABELS = {
     "unknown": "보유 주택 미입력",
@@ -89,14 +46,40 @@ def load_policy_snapshot():
         return json.load(handle)
 
 
+def _policy_from_snapshot(snapshot):
+    """화면 설명용 요약 정책값. 숫자는 모두 정책 설정 파일에서 온다."""
+    bands = []
+    lower = 0
+    for index, band in enumerate(snapshot["capitalRegionMortgageCaps"]):
+        upper = band.get("maxHomePriceEok")
+        label = f"{upper}억 이하" if index == 0 else (f"{lower}억 초과~{upper}억 이하" if upper is not None else f"{lower}억 초과")
+        bands.append({
+            "id": f"band_{index + 1}",
+            "label": label,
+            "minPriceEok": lower,
+            "maxPriceEok": upper,
+            "loanCapEok": band["maxLoanEok"],
+        })
+        lower = upper if upper is not None else lower
+    return {
+        "effectiveDate": snapshot.get("policyDate") or snapshot["asOf"],
+        "priceBands": bands,
+        "regulatedLtvRate": snapshot["ltv"]["regulatedGeneral"],
+        "bankDsrRate": snapshot["bankDsrRate"],
+        "stressRatePercent": snapshot["stressRatePercent"],
+        "purchaseCostRate": snapshot["purchaseCostRate"],
+    }
+
+
+POLICY = _policy_from_snapshot(load_policy_snapshot())
+
+
 def _annuity_principal_eok(annual_payment_manwon, annual_rate_percent, years):
-    monthly_payment = max(0, annual_payment_manwon) / 12
-    months = max(1, int(years) * 12)
-    monthly_rate = max(0, annual_rate_percent) / 100 / 12
-    if monthly_rate == 0:
-        principal_manwon = monthly_payment * months
-    else:
-        principal_manwon = monthly_payment * (1 - (1 + monthly_rate) ** -months) / monthly_rate
+    import purchase_capacity
+
+    principal_manwon = purchase_capacity.calculate_mortgage_principal_from_payment(
+        max(0, annual_payment_manwon) / 12, annual_rate_percent, years
+    )
     return round(principal_manwon / 10000, 2)
 
 
@@ -122,62 +105,71 @@ def report_loan_repayment(principal_eok, annual_rate_percent, years):
     }
 
 
-def purchase_power_review(profile):
-    """Return viable price bands for the regulated, no-home review baseline."""
-    policy = deepcopy(POLICY)
-    cash = max(0, _float(profile.get("cashEok")))
-    income = max(0, _float(profile.get("combinedIncomeManwon")))
-    monthly_debt = max(0, _float(profile.get("combinedMonthlyDebtPaymentManwon")))
-    dsr_rate = policy["bankDsrRate"]
-    monthly_capacity = max(0, income * dsr_rate / 12 - monthly_debt)
-    annual_capacity = monthly_capacity * 12
-    mortgage_rate = max(0, _float(profile.get("mortgageRatePercent")))
-    years = min(
-        int(_float(profile.get("loanTermYears")) or 30),
-        int(load_policy_snapshot()["capitalRegionMaxLoanTermYears"]),
+# 검토 가능 금액 시트는 특정 단지를 고르기 전이므로 서울처럼 수도권이면서
+# 규제지역인 곳을 기준으로 삼는다. 대출 비율은 입력한 보유 주택·생애최초를 따른다.
+PURCHASE_POWER_REGION = {
+    "display": "수도권·규제지역",
+    "compact": "",
+    "isSeoul": False,
+    "isGyeonggi": False,
+    "isIncheon": False,
+    "isCapitalRegion": True,
+}
+
+
+def purchase_power_review(profile, region_code=None, loan_term_years=None, region_policy=None, reserve_cash_eok=0, rate_type=None):
+    """구매 희망지역과 입력 조건으로 최대 구매 가능 주택가격을 계산한다.
+
+    남겨둘 돈(이사비·비상금 등)은 자기자금에서 빼고 집값에 넣을 돈만 계산한다.
+    """
+    import purchase_capacity
+
+    snapshot = load_policy_snapshot()
+    region_policy = region_policy or purchase_capacity.resolve_region_policy(region_code, snapshot)
+    if not region_policy:
+        raise ValueError("구매 희망지역을 선택해주세요")
+    cost_percent = _float(profile.get("purchaseCostRatePercent"))
+    total_cash = max(0, _float(profile.get("cashEok")))
+    reserve = min(total_cash, max(0, _float(reserve_cash_eok)))
+    usable_cash = round(total_cash - reserve, 4)
+    result = purchase_capacity.calculate_purchase_capacity(
+        region_policy=region_policy,
+        home_ownership=profile.get("homeOwnership") or "no_home",
+        first_time_buyer=bool(profile.get("firstTimeBuyer")),
+        own_capital_eok=usable_cash,
+        annual_income_manwon=max(0, _float(profile.get("combinedIncomeManwon"))),
+        monthly_debt_manwon=max(0, _float(profile.get("combinedMonthlyDebtPaymentManwon"))),
+        mortgage_rate_percent=_float(profile.get("mortgageRatePercent")) or None,
+        loan_term_years=loan_term_years,
+        purchase_cost_rate=cost_percent / 100 if cost_percent > 0 else None,
+        rate_type=rate_type or profile.get("mortgageRateType"),
+        snapshot=snapshot,
     )
-    applied_rate = mortgage_rate + policy["stressRatePercent"]
-    dsr_limit = _annuity_principal_eok(annual_capacity, applied_rate, years)
-
-    bands = []
-    for band in policy["priceBands"]:
-        loan_limit = round(min(band["loanCapEok"], dsr_limit), 2)
-        cost_rate = policy["purchaseCostRate"]
-        ltv_rate = policy["regulatedLtvRate"]
-        amount = min(
-            (cash + loan_limit) / (1 + cost_rate),
-            cash / (1 + cost_rate - ltv_rate),
-        )
-        if band["maxPriceEok"] is not None:
-            amount = min(amount, band["maxPriceEok"])
-        if amount <= band["minPriceEok"]:
-            continue
-        review_amount = round(amount + 1e-9, 1)
-        if not band["minInclusive"] and review_amount <= band["minPriceEok"]:
-            review_amount = math.ceil(amount * 10 - 1e-9) / 10
-        bands.append({
-            **band,
-            "loanLimitEok": loan_limit,
-            "dsrLoanLimitEok": dsr_limit,
-            "reviewAmountEok": review_amount,
-            "purchaseCostEok": round(review_amount * policy["purchaseCostRate"], 2),
-        })
-
-    selected = max(bands, key=lambda item: item["reviewAmountEok"]) if bands else None
+    housing = result["housingPolicy"]
+    max_purchase = result["maxPurchase"] or {}
+    cost_adjusted = result["costAdjusted"] or {}
+    ownership = profile.get("homeOwnership") or "no_home"
     return {
-        "policy": policy,
-        "cashEok": cash,
-        "annualIncomeManwon": income,
-        "monthlyDebtPaymentManwon": monthly_debt,
-        "monthlyPaymentCapacityManwon": round(monthly_capacity, 2),
-        "annualPaymentCapacityManwon": round(annual_capacity, 2),
-        "mortgageRatePercent": mortgage_rate,
-        "appliedRatePercent": applied_rate,
-        "loanTermYears": years,
-        "dsrLoanLimitEok": dsr_limit,
-        "bands": bands,
-        "selectedBandId": selected["id"] if selected else None,
-        "budgetEok": selected["reviewAmountEok"] if selected else 0,
+        **result,
+        "policy": deepcopy(POLICY),
+        "cashEok": usable_cash,
+        "totalCashEok": total_cash,
+        "reserveCashEok": reserve,
+        "annualIncomeManwon": max(0, _float(profile.get("combinedIncomeManwon"))),
+        "monthlyDebtPaymentManwon": max(0, _float(profile.get("combinedMonthlyDebtPaymentManwon"))),
+        "monthlyPaymentCapacityManwon": round(result["dsrCapacity"]["availableAnnualManwon"] / 12, 2),
+        "annualPaymentCapacityManwon": result["dsrCapacity"]["availableAnnualManwon"],
+        "mortgageRatePercent": result["mortgageRate"]["valuePercent"],
+        "appliedRatePercent": result["stressedRatePercent"],
+        "stressRatePercent": housing["stressRatePercent"],
+        "dsrLoanLimitEok": result["dsrLimitEok"],
+        "ltvRate": housing["ltv"],
+        "ltvBasis": housing["ltvBasis"],
+        "homeOwnership": ownership,
+        "homeOwnershipLabel": HOME_OWNERSHIP_LABELS.get(ownership, ""),
+        "firstTimeBuyer": bool(profile.get("firstTimeBuyer")),
+        "budgetEok": max_purchase.get("priceEok", 0),
+        "readyBudgetEok": cost_adjusted.get("priceEok", 0),
     }
 
 
@@ -193,7 +185,10 @@ def user_profile(
     mortgage_rate=0,
     loan_term_years=30,
     purchase_cost_rate=0,
+    mortgage_rate_type="",
 ):
+    import purchase_capacity
+
     ownership = home_ownership if home_ownership in HOME_OWNERSHIP_LABELS else "unknown"
     first_time_requested = str(first_time).strip().lower() in {"1", "true", "yes", "y", "on"}
     first_time_eligible_by_ownership = ownership == "no_home"
@@ -208,7 +203,9 @@ def user_profile(
     base_rate = max(0, _float(mortgage_rate))
     requested_term_years = max(10, min(50, int(_float(loan_term_years) or 30)))
     term_years = min(requested_term_years, load_policy_snapshot()["capitalRegionMaxLoanTermYears"])
-    stress_rate = _float(load_policy_snapshot().get("stressRatePercent"))
+    # 후보 비교의 기본값은 수도권 기준. 단지별 지역은 _regional_financing_profile에서 다시 정한다.
+    rate_type = str(mortgage_rate_type or "").strip() or None
+    stress_rate = purchase_capacity.resolve_stress_rate(True, rate_type)["percent"]
     dsr_loan_limit = (
         _annuity_principal_eok(dsr_room, base_rate + stress_rate, term_years)
         if dsr_room is not None and base_rate
@@ -235,6 +232,7 @@ def user_profile(
         "loanTermYears": term_years,
         "requestedLoanTermYears": requested_term_years,
         "stressRatePercent": stress_rate,
+        "mortgageRateType": purchase_capacity.resolve_stress_rate(True, rate_type)["rateType"],
         "purchaseCostRatePercent": max(0, min(15, _float(purchase_cost_rate))),
     }
 
@@ -322,7 +320,7 @@ def _ltv(profile, region, regulated, snapshot):
         return float(rates["regulatedGeneral"]), "규제지역 일반 기준"
     if region["isCapitalRegion"]:
         return float(rates["capitalGeneral"]), "수도권 일반 기준"
-    return 0.7, "비수도권 일반 기준"
+    return float(rates.get("nonCapitalGeneral", 0.7)), "비수도권 일반 기준"
 
 
 def _is_population_decline_region(region, snapshot):
@@ -381,11 +379,14 @@ def _regional_financing_profile(profile, region, regulated, snapshot):
     """Resolve variable-rate mortgage terms per home without mutating shared inputs."""
     result = dict(profile)
     years = profile.get("requestedLoanTermYears", profile.get("loanTermYears", 30))
-    if region["isCapitalRegion"] or regulated:
+    import purchase_capacity
+
+    capital_or_regulated = bool(region["isCapitalRegion"] or regulated)
+    if capital_or_regulated:
         years = min(years, snapshot["capitalRegionMaxLoanTermYears"])
-        stress_rate = snapshot["stressRatePercent"]
-    else:
-        stress_rate = snapshot["nonCapitalStressRatePercent"]
+    stress_rate = purchase_capacity.resolve_stress_rate(
+        capital_or_regulated, profile.get("mortgageRateType"), snapshot
+    )["percent"]
     room = profile.get("dsrAnnualRoomManwon")
     rate = profile.get("mortgageRatePercent", 0)
     result.update(
