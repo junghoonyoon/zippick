@@ -17754,53 +17754,90 @@
 
     function zippickVerdictTitle(item, verdict = null) {
       const tone = String(verdict?.tone || "");
-      const label = String(verdict?.label || "");
-      // 고점 보정이 걸린 단지는 아래 일반 분기로 흘려보내면 안 된다.
-      // "약점 확인이 필요합니다" 같은 문장이 나오는데, 약점이 아니라
-      // 가격 위치가 문제라 앞뒤가 어긋난다.
-      if (verdict?.peakGuard) return String(verdict.title || "");
-      const parts = zpScoredParts(item)
-        .slice()
-        .sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
-      const top = parts[0];
-      const second = parts[1];
-      const topLabel = String(top?.label || "");
-      const secondLabel = String(second?.label || "");
-      const pair = topLabel && secondLabel && zpPartRatio(second) >= 0.72
-        ? `${topLabel}, ${secondLabel}`
-        : topLabel;
-      const s = item?.signals || {};
-      const recent3 = zpNum(s.recent3Pct);
-      const recovery = zpNum(s.recoveryPct);
-      const isLeader = Boolean(s.isRegionalLeader || s.isDistrictLeader || item?.isRegionalLeader || item?.isDistrictLeader);
-      const isHighPrice = Boolean(s.isAtPeak) || (Number.isFinite(recovery) && recovery >= 99) || (Number.isFinite(recent3) && recent3 >= 5);
+      const location = zpNum(item?.locationScore?.score);
+      const signal = zpNum(item?.signals?.score);
+      const market = zippickMarketVerdict(item);
+      const basis = zippickPriceCheckBasis(item);
+      const latestPrice = zpNum(item?.latestDealPriceEok);
+      const latestArea = zpNum(item?.latestDealExclusiveArea);
+      const shownArea = zpNum(String(item?.displayAreaLabel || item?.areaLabel || "").match(/\d+(?:\.\d+)?/)?.[0]);
+      const comparableArea = !Number.isFinite(latestArea) || !Number.isFinite(shownArea) || Math.abs(latestArea - shownArea) <= 5;
+      const priceTier = comparableArea && basis?.low > 0 && basis?.high > 0
+        ? zippickBuyBandTier(latestPrice, basis.low, basis.high)
+        : -1;
+      const locationGood = Number.isFinite(location) && location >= 65;
+      const marketGood = Number.isFinite(signal) && (signal >= 70 || market.summary === "가격과 거래가 함께 늘었어요");
+      const priceGood = priceTier === 0 || priceTier === 1;
+      const weakest = zippickWeakestPart(item);
+      const age = zpNum(item?.buildingAge);
+      const liquidity = zippickLiquidityStat(item);
 
-      // 조사를 붙여 쓸 때는 반드시 zpJosa를 거친다. 항목 이름이 '유동성',
-      // '희소성'처럼 받침으로 끝나는 경우가 많아 "유동성가", "유동성는"
-      // 같은 문장이 그대로 화면에 나간다.
-      if (tone === "yes") {
-        if (pair) return `${zpJosa(pair, "이", "가")} 받쳐주는 단지입니다.`;
-        if (isLeader) return "지역 흐름을 대표하는 단지입니다.";
-        return "단지 조건과 최근 흐름이 함께 받쳐주는 단지입니다.";
+      // 대타이틀은 리포트 전체의 결론이다. 가격 기준 하나를 행동 지침처럼
+      // 앞세우지 않고, 가격·단지 조건·최근 흐름을 함께 보고 결론부터 말한다.
+      const positiveReason = locationGood && marketGood
+        ? priceTier === 0
+          ? "최근 실거래는 적정가격보다 싸고, 단지 조건과 최근 흐름이 좋아요"
+          : priceTier === 1
+            ? "가격은 적정하고 단지 조건과 최근 흐름이 좋아요"
+            : priceTier === 2
+              ? "단지 조건과 최근 흐름은 좋지만 최근 실거래는 적정가격보다 비싸요"
+              : "단지 조건과 최근 흐름이 좋아요"
+        : locationGood
+          ? priceGood ? "가격은 적정하고 단지 조건이 좋아요" : "단지 조건은 좋지만 최근 흐름을 더 확인해야 해요"
+          : marketGood
+            ? priceGood ? "가격은 적정하고 최근 흐름이 좋아요" : "최근 흐름은 좋지만 단지 조건을 더 확인해야 해요"
+            : priceGood
+              ? "가격은 적정하지만 단지 조건과 최근 흐름을 더 확인해야 해요"
+              : "단지 조건과 최근 흐름을 더 확인해야 해요";
+
+      const conditionalChecks = [];
+      if (weakest?.key === "product") {
+        conditionalChecks.push(Number.isFinite(age) && age > 0 ? `${Math.round(age)}년차 관리 상태` : "단지 상품성");
+      } else if (weakest?.key === "demand") {
+        conditionalChecks.push("입지·교육 조건");
+      } else if (weakest?.key === "price") {
+        conditionalChecks.push("주변 단지와의 가격 비교");
+      } else if (weakest?.key === "market") {
+        conditionalChecks.push("거래 유동성");
       }
-      if (tone === "conditional" && label === "급매만 검토") {
-        if (isHighPrice) return "좋은 단지지만 가격은 좁게 봐야 합니다.";
-        if (isLeader) return "대장 단지지만 제값은 더 확인해야 합니다.";
-        if (pair) return `${zpJosa(pair, "은", "는")} 좋지만 가격 확인이 필요합니다.`;
-        return "볼 이유는 있지만 제값은 더 확인해야 합니다.";
+      if (["weak", "illiquid"].includes(liquidity?.band)) conditionalChecks.push("하락기 거래");
+      else if (liquidity?.band === "fair") conditionalChecks.push("하락기 매도 가능성");
+      else if (liquidity?.band === "no_downturn") conditionalChecks.push("하락기 거래 자료");
+      const uniqueChecks = [...new Set(conditionalChecks)].slice(0, 2);
+      const conditionalAction = uniqueChecks.length >= 2
+        ? `${zpJosa(uniqueChecks[0], "과", "와")} ${zpJosa(uniqueChecks[1], "을", "를")} 확인하세요`
+        : uniqueChecks.length === 1
+          ? `${zpJosa(uniqueChecks[0], "을", "를")} 확인하세요`
+          : "약한 항목을 확인하세요";
+      const conditionalStrength = locationGood && marketGood
+        ? priceGood ? "가격·단지 조건·최근 흐름은 좋지만," : "단지 조건과 최근 흐름은 좋지만,"
+        : locationGood
+          ? priceGood ? "가격과 단지 조건은 좋지만," : "단지 조건은 좋지만,"
+          : marketGood
+            ? priceGood ? "가격과 최근 흐름은 좋지만," : "최근 흐름은 좋지만,"
+            : priceGood ? "가격은 적정하지만," : "볼 만한 근거는 있지만,";
+
+      if (verdict?.peakGuard) {
+        return verdict.peakGuard.atPeak
+          ? "매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격은 2년 고점권이에요"
+          : "매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격이 최근 빠르게 올랐어요";
       }
-      if (tone === "conditional") {
-        if (pair) return `${zpJosa(pair, "은", "는")} 좋지만 약점 확인이 필요합니다.`;
-        return "볼 만하지만 조건 확인이 필요한 단지입니다.";
-      }
+      if (tone === "yes") return `매수 후보로 우선 검토할 만해요. ${positiveReason}`;
+      if (tone === "conditional") return `조건부로 매수 검토할 만해요. ${conditionalStrength} ${conditionalAction}`;
       if (tone === "hold") {
-        if (pair) return `${zpJosa(pair, "은", "는")} 보이지만 서두를 근거는 약합니다.`;
-        return "지금은 서두를 근거가 약한 단지입니다.";
+        const reason = locationGood
+          ? "단지 조건은 좋지만 최근 흐름이 약해요"
+          : Number.isFinite(location) && location >= 50
+            ? "단지 조건과 최근 흐름이 충분히 받쳐주지 않아요"
+            : "단지 조건이 아쉽고 최근 흐름도 더 확인해야 해요";
+        return `지금은 매수를 서두르지 마세요. ${priceTier === 2 ? "최근 실거래가 적정가격보다 비싸고, " : ""}${reason}`;
       }
-      if (tone === "risk") {
-        return "이번 후보군에서는 강점이 충분하지 않습니다.";
-      }
-      return verdict?.title || "집픽 분석 결과입니다.";
+      if (tone === "risk") return "다른 단지를 먼저 검토하세요. 단지 조건과 최근 흐름이 모두 약해요";
+      if (tone === "missing") return "자료가 더 필요해 매수 판단을 보류해요";
+
+      const s = item?.signals || {};
+      const isLeader = Boolean(s.isRegionalLeader || s.isDistrictLeader || item?.isRegionalLeader || item?.isDistrictLeader);
+      return isLeader ? "지역 대표 단지이지만 매수 판단 자료를 더 확인해야 해요" : "집픽 분석 결과를 더 확인해 주세요";
     }
 
 
@@ -18739,22 +18776,15 @@
     function zippickDecisionHtml(item, verdict) {
       // 매수 판단은 단지와 시장 자료만 사용한다. 추가 자금은 마련한다고 가정한다.
       const location = zpNum(item?.locationScore?.score);
-      const priceBasis = zippickPriceCheckBasis(item);
-      const conditionalPriceGuide = priceBasis?.price > 0
-        ? `단지는 좋지만, 최근 거래 평균 ${transactionMoney(priceBasis.price)} 이하 매물만 검토하세요`
-        : "단지는 좋지만, 같은 면적의 최근 실거래와 비교한 매물만 검토하세요";
       const decisions = {
-        yes: ["매수 검토", "지금 매수 후보로 검토할 만한 단지입니다"],
-        conditional: ["조건부 매수 검토", location >= 65 ? conditionalPriceGuide : "시장 흐름은 좋지만, 단지 약점을 감수할 수 있을 때만 검토하세요"],
-        hold: ["지금은 관망", "지금은 매수를 서두르지 않는 편이 좋습니다"],
-        risk: ["다른 단지 우선", "지금은 다른 단지를 먼저 검토하는 편이 좋습니다"],
-        missing: ["판단 보류", "자료가 부족해 판단을 보류합니다"]
+        yes: "매수 검토",
+        conditional: "조건부 매수 검토",
+        hold: "지금은 관망",
+        risk: "다른 단지 우선",
+        missing: "판단 보류"
       };
-      const [label, title] = verdict.peakGuard
-        ? verdict.peakGuard.atPeak
-          ? ["매수 검토 · 가격 주의", "단지와 거래 흐름은 좋지만, 최근 가격이 고점권이에요."]
-          : ["매수 검토 · 가격 주의", "단지와 거래 흐름은 좋지만, 최근 가격이 빠르게 올랐어요."]
-        : decisions[verdict.tone] || decisions.missing;
+      const label = verdict.peakGuard ? "매수 검토 · 가격 주의" : decisions[verdict.tone] || decisions.missing;
+      const title = zippickVerdictTitle(item, verdict);
       const locationParts = zpScoredParts(item);
       const strongCount = locationParts.filter(part => zpPartRatio(part) >= .65).length;
       const weakCount = locationParts.filter(part => zpPartRatio(part) < .55).length;

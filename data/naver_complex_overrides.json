@@ -88797,6 +88797,24 @@
       "source": "cortar_list"
     },
     {
+      "name": "정릉 이-편한세상",
+      "legalDong": "정릉동",
+      "jibun": "1028",
+      "region": "성북구",
+      "complexNo": "8596",
+      "complexName": "정릉e-편한세상1차",
+      "source": "cortar_list"
+    },
+    {
+      "name": "정릉e-편한세상",
+      "legalDong": "정릉동",
+      "jibun": "1028",
+      "region": "성북구",
+      "complexNo": "8596",
+      "complexName": "정릉e-편한세상1차",
+      "source": "cortar_list"
+    },
+    {
       "name": "정릉2차e-편한세상",
       "legalDong": "정릉동",
       "jibun": "1035",
