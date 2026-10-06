@@ -218,6 +218,14 @@
       align-self:center; display:inline-flex; align-items:center; gap:7px; min-height:42px;
       color:#8b95a1; font-size:13px; font-weight:700; line-height:1.4;
     }
+    .apt-area-relative { position:relative; margin:8px 0 0; color:#4e5968; font-size:13px; line-height:1.55; overflow-wrap:anywhere }
+    .apt-area-relative-summary { display:flex; align-items:flex-start; gap:5px; min-width:0 }
+    .apt-area-relative-summary strong { min-width:0; color:#1b64bd; font-weight:800 }
+    .apt-area-relative-info { display:inline-grid; place-items:center; flex:0 0 auto; width:20px; height:20px; margin-top:1px; border:1.5px solid #aeb7c2; border-radius:50%; padding:0; background:#fff; color:#7b8796; font:inherit; font-size:13px; font-weight:900; line-height:1; cursor:pointer }
+    .apt-area-relative-info:hover,.apt-area-relative-info[aria-expanded="true"] { border-color:#3182f6; color:#1767c5; background:#f4f8ff }
+    .apt-area-relative-info:focus-visible { outline:3px solid rgba(49,130,246,.2); outline-offset:2px }
+    .apt-area-relative-tooltip { position:absolute; top:calc(100% + 8px); left:0; z-index:20; width:min(360px,calc(100vw - 48px)); border:1px solid #dce3eb; border-radius:13px; padding:13px 14px; background:#fff; box-shadow:0 10px 30px rgba(31,52,73,.16); color:#4e5968; font-size:13px; font-weight:650; line-height:1.55; word-break:keep-all }
+    .apt-area-relative-tooltip[hidden] { display:none }
     .apt-area-change {
       display:inline-flex; align-items:center; justify-content:center; min-height:38px; margin-top:16px;
       gap:5px; border:1px solid #d8dee8; border-radius:10px; padding:0 12px 0 13px; background:#fff;
@@ -21748,6 +21756,21 @@
       budgetResultEl.querySelectorAll(".signal-report").forEach(report => setSignalDefinitionOpen(report, false));
       aptReportSheet.querySelectorAll(".signal-report").forEach(report => setSignalDefinitionOpen(report, false));
     });
+    document.addEventListener("click", event => {
+      const clickPath = event.composedPath();
+      aptSearchResults.querySelectorAll("[data-apt-relative-info]").forEach(button => {
+        const tooltip = button.closest("[data-apt-card-index]")?.querySelector("[data-apt-relative-tooltip]");
+        if (!tooltip || tooltip.hidden || clickPath.includes(button) || clickPath.includes(tooltip)) return;
+        setAptRelativePriceInfoOpen(button, false);
+      });
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      aptSearchResults.querySelectorAll("[data-apt-relative-info]").forEach(button => {
+        const tooltip = button.closest("[data-apt-card-index]")?.querySelector("[data-apt-relative-tooltip]");
+        if (tooltip && !tooltip.hidden) setAptRelativePriceInfoOpen(button, false);
+      });
+    });
     compareCart.addEventListener("click", event => {
       const removeButton = event.target.closest("[data-compare-remove-name]");
       if (!removeButton) return;
@@ -22173,6 +22196,7 @@
           <div class="apt-area-options" data-apt-area-options role="radiogroup" aria-label="전용면적 선택">
             <span class="apt-area-options-status">${spinnerHtml("small")}전용면적 불러오는 중…</span>
           </div>
+          <div class="apt-area-relative" data-apt-area-relative hidden></div>
         </div>
         <div class="apt-affordability is-loading" data-apt-affordability aria-live="polite">${spinnerHtml("default")}예상 매수가와 필요한 자금을 계산하고 있어요…</div>
         <div class="apt-result-actions">
@@ -23379,6 +23403,43 @@
       }
     }
 
+    function renderAptRelativePrice(card, signal) {
+      const slot = card?.querySelector("[data-apt-area-relative]");
+      if (!slot) return;
+      slot.hidden = !signal;
+      if (!signal) { slot.innerHTML = ""; return; }
+      if (signal.state !== "ready") {
+        slot.textContent = "59㎡·84㎡ 가격 비교: 두 평형의 거래가 부족해요.";
+        return;
+      }
+      const area = Number(signal.cheaperArea || 0);
+      const counts = signal.counts?.recent || {};
+      const medians = signal.recentMedianPriceEok || {};
+      const result = area
+        ? `${area}㎡가 상대적으로 낮은 편이에요.`
+        : "평형별 가격 차이가 평소 수준이에요.";
+      const comparison = area
+        ? `${area === 84 ? "59㎡ 가격에 비해 84㎡ 가격이" : "84㎡ 가격에 비해 59㎡ 가격이"} 평소보다 낮아요.`
+        : "";
+      const detail = `최근 6개월 중간 거래가격 · 59㎡ ${esc(policyMoney(medians["59"]))} (${esc(counts["59"])}건) · 84㎡ ${esc(policyMoney(medians["84"]))} (${esc(counts["84"])}건) · 마지막 거래 ${esc(signal.latestDealDate || "-")}<br>그 전 약 18개월과 비교했어요. 층·상태와 현재 매물가는 반영하지 않았어요.`;
+      const index = String(card.dataset.aptCardIndex || "0");
+      const tooltipId = `apt-area-relative-tooltip-${index}`;
+      slot.innerHTML = `<div class="apt-area-relative-summary"><strong>${esc(result)}</strong>${comparison ? ` <span>${esc(comparison)}</span>` : ""}<button class="apt-area-relative-info" type="button" data-apt-relative-info aria-expanded="false" aria-controls="${tooltipId}" aria-label="평형별 가격 비교 근거 보기">ⓘ</button></div><div class="apt-area-relative-tooltip" id="${tooltipId}" data-apt-relative-tooltip role="tooltip" hidden>${detail}</div>`;
+    }
+
+    function setAptRelativePriceInfoOpen(button, open) {
+      const card = button?.closest("[data-apt-card-index]");
+      const tooltip = card?.querySelector("[data-apt-relative-tooltip]");
+      if (!button || !tooltip) return;
+      if (open) {
+        aptSearchResults.querySelectorAll("[data-apt-relative-info]").forEach(other => {
+          if (other !== button) setAptRelativePriceInfoOpen(other, false);
+        });
+      }
+      tooltip.hidden = !open;
+      button.setAttribute("aria-expanded", String(open));
+    }
+
     async function enrichAptAreaOptions(item, index, initialData) {
       const card = aptSearchResults.querySelector(`[data-apt-card-index="${index}"]`);
       if (!card) return;
@@ -23388,8 +23449,10 @@
           initialData ? Promise.resolve(initialData) : fetchAptAffordability(item).catch(() => null),
         ]);
         renderAptAreaOptions(card, data.areas?.length ? data.areas : fallbackAptAreaOption(fallbackData, item, card));
+        renderAptRelativePrice(card, data.relativePrice);
       } catch {
         renderAptAreaOptions(card, fallbackAptAreaOption(initialData, item, card));
+        renderAptRelativePrice(card, null);
       }
     }
 
@@ -23717,6 +23780,12 @@
       if (!event.target.closest("#aptSearchBox")) hideAptSuggest();
     });
     aptSearchResults.addEventListener("click", async event => {
+      const relativeInfoButton = event.target.closest("[data-apt-relative-info]");
+      if (relativeInfoButton) {
+        const open = relativeInfoButton.getAttribute("aria-expanded") !== "true";
+        setAptRelativePriceInfoOpen(relativeInfoButton, open);
+        return;
+      }
       const naverLandLink = event.target.closest("[data-naver-land-link]");
       if (naverLandLink && handleNaverLandLinkClick(event, naverLandLink)) return;
       if (naverLandLink) return;

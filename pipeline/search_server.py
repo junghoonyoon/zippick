@@ -32,6 +32,7 @@ import policy_evaluator
 import purchase_capacity
 import price_valuation
 import real_estate_search
+import relative_area_prices
 import report_store
 import rone_estimates
 import supply_forecast
@@ -3455,10 +3456,27 @@ class Handler(BaseHTTPRequestHandler):
                 # 목록이 남아 재검색해도 복구되지 않는다. 오류 응답으로 재시도를 허용한다.
                 self._json({"error": "전용면적을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."}, 502)
                 return
+            relative_price = None
+            area_floors = {
+                int(float(area.get("value") or 0))
+                for area in areas
+                if isinstance(area, dict) and area.get("value")
+            }
+            if months >= 24 and entity is not None and {59, 84} <= area_floors:
+                try:
+                    transactions = molit_transactions.transactions_for_apartment(
+                        name, region=region, area_label="", lookback_months=24,
+                        entity=entity,
+                    )
+                    relative_price = relative_area_prices.relative_area_price_signal(transactions)
+                except Exception:
+                    # 상대가격 비교 장애가 평형 선택 자체를 막지는 않는다.
+                    pass
             self._json({
                 "areas": areas,
                 "lookbackMonths": months,
                 "source": "국토부 실거래",
+                "relativePrice": relative_price,
             })
             return
         if parsed.path == "/api/apartment-leader-context":
