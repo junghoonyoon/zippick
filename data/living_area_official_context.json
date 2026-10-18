@@ -1,0 +1,296 @@
+{
+  "checkedAt": "2026-10-18",
+  "projectsDigest": "ae163c9a1a24f2574f6fe2a0a9fa94c035cae5a7ec002589e6804720fec50c00",
+  "projects": [
+    {
+      "id": "seoul-plan-renewal:7073",
+      "sourceId": "seoul-notice-2026-334",
+      "sourceRecordId": "2026-334",
+      "name": "장안1구역 재개발",
+      "aliases": [
+        "장안동 134-15 일대"
+      ],
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "134-15",
+      "address": "서울특별시 동대문구 장안동 134-15 일대",
+      "projectType": "redevelopment",
+      "stage": "designated",
+      "stageLabel": "정비구역 지정",
+      "stageAsOf": "2026-06-11",
+      "publishedAt": "2026-06-11",
+      "plannedHouseholds": 1754,
+      "householdsStatus": "planned",
+      "siteAreaM2": 67951.8,
+      "parkAreaM2": 5886.2,
+      "publicWalkwayWidthM": 8,
+      "maxFloors": 36,
+      "plannedByArea": {
+        "40": 228,
+        "59": 771,
+        "84": 755
+      },
+      "scopeLabel": "같은 동의 정비계획",
+      "factSummary": "1,754세대와 공원 2곳, 폭 8m 공공보행통로를 계획했어요.",
+      "positiveFactors": [
+        "공원 2곳과 공공보행통로가 계획돼 있어요. 완공 후 주변에서 이용할 수 있는 동선이 늘어날 가능성이 있어요."
+      ],
+      "negativeFactors": [
+        "59㎡ 771세대·84㎡ 755세대가 계획돼 있어요. 비슷한 크기의 신축과 경쟁할 수 있어요.",
+        "구역 지정 단계예요. 착공·입주 시점은 확정되지 않았어요."
+      ],
+      "nextCheck": "사업시행계획 인가와 보행통로의 실제 연결 위치를 확인하세요.",
+      "factsBasis": "서울특별시 고시 제2026-334호 텍스트 조서",
+      "originalSha256": "3c5a51d6ca46098d1ef1e4d26aab23d3044a403455c494b9c26cbcde6d727dab",
+      "rawExcerpt": "◈서울특별시고시 제2026-334호장안1구역 주택정비형 재개발사업 정비계획 결정 및 정비구역 지정, 지구단위계획(구역) 결정 및 지형도면 고시  서울특별시 동대문구 장안동 134-15번지 일대(이하 ‘장안1구역’) 주택정비형 재개발사업 시행을 위하여 「도시 및 주거환경정비법」(이하 ‘도시정비법’) 제16조에 따라 2026년 제1차 도시계획위원회 신속통합기획 정비사업 등 수권분과위원회(2026.02.06.) 심의(수정가결)를 거쳐 정비계획 결정 및 정비구역으로 지정하고, 도시정비법 제17조 및 「국토의 계획 및 이용에 관한 법률」 제50조에 따라 지구단위계획 및 지구단위계획구역으로 결정·고시하며, 「토지이용규제 기본법」 제8조에 따라 지형도면을 고시합니다. 2026년 6월 11일서 울 특 별 시 장Ⅰ. 정비구역의 지정 및 정비계획 결정 1. 정비구역 지정 조서구 분정비사업 명칭위  치 면 적(㎡) 비 고기 정변 경변경후신설장안1구역주택정비형 재개발사업장안동 134-15번지 일대-증)67,951.867,951.8 2. 토지이용계획구 분 명 칭면 적 (㎡)비 율 (%)비 고합  계 67,951.8100.0-정비기반 시설 등소 계 10,439.015.4-도  로 4,552.86.7입체적결정도로 제외공  원 ①2,163.83.2소공원공  원 ②3,722.45.5문화공원획지소 계 57,512.884.6-획  지 ① (공동주택) 57,046.884.0일부구간 도로 입체적결정획  지 ② (종교) 466.00.6-\n 3. 용도지역·지구에 관한 계획(변경)  가. 용도지역 결정(변경)조서구 분 면 적(㎡) 비율(%)비고기 정변 경변경후합계67,951.8-67,951.8100.0주거지역제2종일반주거지역(7층)49,784.8감) 40,613.69,171.213.5제2종일반주거지역6.5감) 6.5--제3종일반주거지역18,160.5증) 40,620.158,780.686.5■ 용도지역 결정(변경)사유서도면표시번호위  치용도지역면적(㎡) 변경사유기 정변 경-장안동 134-15번지 일대제2\n주택공급계획 : 1,754세대∙ 전체 건립규모(전용면적 기준)구분총 세대구분건립규모임대주택세대수(세대)비율(%)소계40㎡이하40㎡초과계1,754100.0초과용적률전 세대수1,5482339314060㎡이하40㎡22813.0구성비 (%)100.015.16.09.159㎡77144.060~85㎡이하84㎡75543.0임대주택구성비(%)-100.039.960.185㎡초과---※ 총세대수 및 초과용적률 전 세대수에 기부채납 임대주택 55세대 포함∙ 85㎡이하 규모의 주택 비율 [기준 : 전체 세대수의 80%이상]   ∙ 임대주택 건설 비율 [기준 : 전체 세대수의 15%이상 또는 연면적의 10%이상] ∙ 전용면적 40㎡ 이하 비율 [기준 : 임대세대(초과용적률제외)의 30%이상 또는 전체 세대수의 5%이상, 임대주택 중\n공공보행통로 : 8m∙ 녹지친화적보행구간 : 7m∙ 차량출입구 : 3개소※ 공공보행통로의 시종점은 유지하되 보행동선은 건축배치계획과 연계하여 유연하게 조정될 수 있음 \n  나. 용적률 계획    1) 개발가능용적률 산정구  분 산 정 내 용사업면적대지면적(획지1)공공시",
+      "checkedAt": "2026-10-15",
+      "collectedAt": "2026-10-15T06:37:40.991239+00:00",
+      "sourceDate": "2026-10-15",
+      "sourceUrl": "https://news.seoul.go.kr/citybuild/files/2025/06/6a2f228cc8fc41.75614968.pdf",
+      "licenseVerifiedAt": "2026-10-15",
+      "licenseUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1029423769",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "44f706e34ffe8aff9e94bca2ac9dd08ea60951dcf99714123bb6aa54cdae6876"
+    },
+    {
+      "id": "ddm-myeonmok-notice:2026-2210",
+      "sourceId": "ddm-myeonmok-notice",
+      "sourceRecordId": "2026-2210",
+      "name": "면목선 도시철도",
+      "region": "동대문구",
+      "legalDong": "",
+      "jibun": "",
+      "projectType": "transport",
+      "stage": "planning",
+      "stageLabel": "기본계획안 공청회",
+      "stageAsOf": "2026-08-14",
+      "publishedAt": "2026-08-04",
+      "plannedHouseholds": null,
+      "routeLengthKm": 9.36,
+      "stationCount": 10,
+      "targetPeriod": "2024~2034년 계획",
+      "routeLabel": "청량리역~신내역",
+      "regionalReference": true,
+      "scopeLabel": "지역 교통계획 참고",
+      "factSummary": "청량리역~신내역 9.36km, 정거장 10곳을 계획하고 있어요.",
+      "positiveFactors": [
+        "청량리역과 신내역을 잇는 새 철도 계획이에요. 실현되면 지역의 이동 선택지가 늘어날 수 있어요."
+      ],
+      "negativeFactors": [
+        "이 단지에서 이용할 역 출입구가 확인되지 않아 거리·도보시간은 계산하지 않았어요.",
+        "2034년은 공고의 사업기간 종료 목표이며 개통 확정일이 아니에요."
+      ],
+      "nextCheck": "기본계획 승인과 역 출입구 확정 여부를 확인하세요.",
+      "factsBasis": "서울특별시 공고 제2026-2210호 · 동대문구 게시",
+      "originalSha256": "741a4d1c656d0884b8caa14ff68df1061d4134ddd2459466d39f8ae8cd4016d3",
+      "rawExcerpt": "면목선 도시철도 기본계획 / 서울특별시 공고 제2026-2210호 / 2026년 7월 30일 / 동대문구 전농동(청량리역)~중랑구 신내동(신내역) / 9.36km, 정거장 10개소, 차량기지 1개소 / 사업기간 2024~2034년 / 동대문구 공청회 2026.8.14.15:00",
+      "checkedAt": "2026-10-15",
+      "collectedAt": "2026-10-15T06:37:40.991239+00:00",
+      "sourceDate": "2026-10-15",
+      "sourceUrl": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=43&key=209&nttNo=192191",
+      "licenseVerifiedAt": "2026-10-15",
+      "licenseUrl": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=43&key=209&nttNo=192191",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "ef87599ca2eb36db11c01dfa7bd4eeccf1381288a155dfd21fb8c0a33d2c5497"
+    },
+    {
+      "id": "seongnam-sanseong-living-zone",
+      "sourceId": "seongnam-living-20260831",
+      "sourceRecordId": "23299:산성동:74",
+      "name": "산성구역 생활권 재개발",
+      "region": "성남수정구",
+      "nearbyRegions": [
+        "성남수정구",
+        "성남중원구"
+      ],
+      "legalDong": "산성동",
+      "jibun": "74",
+      "projectType": "redevelopment",
+      "stage": "designated",
+      "stageLabel": "정비구역 지정·고시",
+      "stageAsOf": "2026-08-31",
+      "publishedAt": "2026-08-31",
+      "plannedHouseholds": 1884,
+      "siteAreaM2": 58403,
+      "householdsStatus": "planned",
+      "expectedCompletionDate": null,
+      "factSummary": "산성동 74 일대에 1,884세대를 계획하고 있어요. 정비구역 지정·고시를 확인했어요.",
+      "positiveFactors": [
+        "낡은 주거지를 새 아파트로 바꾸는 계획이에요."
+      ],
+      "negativeFactors": [
+        "산성동 74번지 사업이에요. 산성동 1336번지의 산성역 헤리스톤 사업과 달라요.",
+        "착공·입주 시점과 보행 연결은 확인되지 않았어요.",
+        "계획 세대수는 같은 해 입주할 확정 물량이 아니에요."
+      ],
+      "nextCheck": "사업 인가와 착공 일정, 단지에서 연결되는 길을 확인하세요.",
+      "factsBasis": "성남시 2026-08-31 발표의 사업별 행정 사실",
+      "checkedAt": "2026-10-16",
+      "collectedAt": "2026-10-16T00:00:00+09:00",
+      "sourceDate": "2026-10-16",
+      "sourceUrl": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "75d462326c0dc3739a099abd80ce52abab415fb77da888b3c131043303dd1f0b"
+    },
+    {
+      "id": "seongnam-dandae-living-zone",
+      "sourceId": "seongnam-living-20260831",
+      "sourceRecordId": "23299:단대동:48-2",
+      "name": "단대구역 생활권 재개발",
+      "region": "성남수정구",
+      "nearbyRegions": [
+        "성남수정구",
+        "성남중원구"
+      ],
+      "legalDong": "단대동",
+      "jibun": "48-2",
+      "projectType": "redevelopment",
+      "stage": "designated",
+      "stageLabel": "정비구역 지정·고시",
+      "stageAsOf": "2026-08-31",
+      "publishedAt": "2026-08-31",
+      "plannedHouseholds": 1618,
+      "siteAreaM2": 42972,
+      "householdsStatus": "planned",
+      "expectedCompletionDate": null,
+      "factSummary": "단대동 48-2 일대에 1,618세대를 계획하고 있어요. 정비구역 지정·고시를 확인했어요.",
+      "positiveFactors": [
+        "낡은 주거지를 새 아파트로 바꾸는 계획이에요."
+      ],
+      "negativeFactors": [
+        "착공·입주 시점과 보행 연결은 확인되지 않았어요.",
+        "계획 세대수는 같은 해 입주할 확정 물량이 아니에요."
+      ],
+      "nextCheck": "사업 인가와 착공 일정, 단지에서 연결되는 길을 확인하세요.",
+      "factsBasis": "성남시 2026-08-31 발표의 사업별 행정 사실",
+      "checkedAt": "2026-10-16",
+      "collectedAt": "2026-10-16T00:00:00+09:00",
+      "sourceDate": "2026-10-16",
+      "sourceUrl": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "8bd6b358030b8db8b131cb54dc8cb3015cd61f3e7ddc436e63ebec227e3f6f14"
+    },
+    {
+      "id": "seongnam-sujin2-living-zone",
+      "sourceId": "seongnam-living-20260831",
+      "sourceRecordId": "23299:수진동:3603",
+      "name": "수진2구역 생활권 재개발",
+      "region": "성남수정구",
+      "nearbyRegions": [
+        "성남수정구",
+        "성남중원구"
+      ],
+      "legalDong": "수진동",
+      "jibun": "3603",
+      "projectType": "redevelopment",
+      "stage": "designated",
+      "stageLabel": "정비구역 지정·고시",
+      "stageAsOf": "2026-08-31",
+      "publishedAt": "2026-08-31",
+      "plannedHouseholds": 3275,
+      "siteAreaM2": 145566,
+      "householdsStatus": "planned",
+      "expectedCompletionDate": null,
+      "factSummary": "수진동 3603 일대에 3,275세대를 계획하고 있어요. 정비구역 지정·고시를 확인했어요.",
+      "positiveFactors": [
+        "낡은 주거지를 새 아파트로 바꾸는 계획이에요."
+      ],
+      "negativeFactors": [
+        "착공·입주 시점과 보행 연결은 확인되지 않았어요.",
+        "계획 세대수는 같은 해 입주할 확정 물량이 아니에요."
+      ],
+      "nextCheck": "사업 인가와 착공 일정, 단지에서 연결되는 길을 확인하세요.",
+      "factsBasis": "성남시 2026-08-31 발표의 사업별 행정 사실",
+      "checkedAt": "2026-10-16",
+      "collectedAt": "2026-10-16T00:00:00+09:00",
+      "sourceDate": "2026-10-16",
+      "sourceUrl": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "9b1c5c2ccc918d0f9efbc73b901429fe32decab9ec866b875c46f76c77419b13"
+    },
+    {
+      "id": "seongnam-taepyeong24-living-zone",
+      "sourceId": "seongnam-living-20260831",
+      "sourceRecordId": "23299:태평동:1180",
+      "name": "태평2·4구역 생활권 재개발",
+      "region": "성남수정구",
+      "nearbyRegions": [
+        "성남수정구",
+        "성남중원구"
+      ],
+      "legalDong": "태평동",
+      "jibun": "1180",
+      "projectType": "redevelopment",
+      "stage": "designated",
+      "stageLabel": "정비구역 지정·고시",
+      "stageAsOf": "2026-08-31",
+      "publishedAt": "2026-08-31",
+      "plannedHouseholds": 4458,
+      "siteAreaM2": 183849,
+      "householdsStatus": "planned",
+      "expectedCompletionDate": null,
+      "factSummary": "태평동 1180 일대에 4,458세대를 계획하고 있어요. 정비구역 지정·고시를 확인했어요.",
+      "positiveFactors": [
+        "낡은 주거지를 새 아파트로 바꾸는 계획이에요."
+      ],
+      "negativeFactors": [
+        "착공·입주 시점과 보행 연결은 확인되지 않았어요.",
+        "계획 세대수는 같은 해 입주할 확정 물량이 아니에요."
+      ],
+      "nextCheck": "사업 인가와 착공 일정, 단지에서 연결되는 길을 확인하세요.",
+      "factsBasis": "성남시 2026-08-31 발표의 사업별 행정 사실",
+      "checkedAt": "2026-10-16",
+      "collectedAt": "2026-10-16T00:00:00+09:00",
+      "sourceDate": "2026-10-16",
+      "sourceUrl": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "d2852391a7df71fb0f61ff6a9493b9e77b29ab68a069f7637c7fa0314fe04626"
+    },
+    {
+      "id": "seongnam-sangdaewon13-living-zone",
+      "sourceId": "seongnam-living-20260831",
+      "sourceRecordId": "23299:상대원동:817",
+      "name": "상대원1·3구역 생활권 재개발",
+      "region": "성남중원구",
+      "nearbyRegions": [
+        "성남수정구",
+        "성남중원구"
+      ],
+      "legalDong": "상대원동",
+      "jibun": "817",
+      "projectType": "redevelopment",
+      "stage": "designated",
+      "stageLabel": "정비구역 지정·고시",
+      "stageAsOf": "2026-08-31",
+      "publishedAt": "2026-08-31",
+      "plannedHouseholds": 2270,
+      "siteAreaM2": 103904,
+      "householdsStatus": "planned",
+      "expectedCompletionDate": null,
+      "factSummary": "상대원동 817 일대에 2,270세대를 계획하고 있어요. 정비구역 지정·고시를 확인했어요.",
+      "positiveFactors": [
+        "낡은 주거지를 새 아파트로 바꾸는 계획이에요."
+      ],
+      "negativeFactors": [
+        "착공·입주 시점과 보행 연결은 확인되지 않았어요.",
+        "계획 세대수는 같은 해 입주할 확정 물량이 아니에요."
+      ],
+      "nextCheck": "사업 인가와 착공 일정, 단지에서 연결되는 길을 확인하세요.",
+      "factsBasis": "성남시 2026-08-31 발표의 사업별 행정 사실",
+      "checkedAt": "2026-10-16",
+      "collectedAt": "2026-10-16T00:00:00+09:00",
+      "sourceDate": "2026-10-16",
+      "sourceUrl": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+      "geometryType": null,
+      "locationConfidence": "unverified",
+      "snapshotId": "e7322dd3ad3ca4dab46efec6819f2ffe73d99fbcf8eccc4369f9d36e9d98d4ec"
+    }
+  ],
+  "notes": "Checked date is retrieval/review, not approval date. No spatial shapes or coordinate guesses."
+}

@@ -1,0 +1,3 @@
+# Optional GIS support. Missing packages yield insufficient_data, never a guessed score.
+shapely>=2.1,<3
+pyproj>=3.6,<4

@@ -1,0 +1,311 @@
+{
+  "checkedAt": "2026-10-16",
+  "environment": "http://127.0.0.1:8766",
+  "productionDeployed": false,
+  "complexCount": 21,
+  "excludedBoundaryCount": 25,
+  "newlyExcludedBoundaryCount": 24,
+  "existingExcludedBoundary": "신사1",
+  "servedBoundaryCount": 1966,
+  "apiChecks": [
+    {
+      "zoneId": "11000UQ120PS202411014108",
+      "zoneName": "신사1",
+      "apartmentName": "새절역 두산위브트레지움",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010658",
+      "zoneName": "가재울8구역",
+      "apartmentName": "DMC 가재울 아이파크",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014308",
+      "zoneName": "가재울8",
+      "apartmentName": "DMC 가재울 아이파크",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014338",
+      "zoneName": "천호4",
+      "apartmentName": "더샵강동센트럴시티",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010725",
+      "zoneName": "천호4구역",
+      "apartmentName": "더샵강동센트럴시티",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010577",
+      "zoneName": "휘경3구역",
+      "apartmentName": "휘경자이디센시아",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014177",
+      "zoneName": "청담삼익아파트",
+      "apartmentName": "청담르엘",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014462",
+      "zoneName": "이문3",
+      "apartmentName": "이문아이파크자이",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010571",
+      "zoneName": "이문3-1구역",
+      "apartmentName": "이문아이파크자이",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014097",
+      "zoneName": "방배6",
+      "apartmentName": "래미안 원페를라",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010716",
+      "zoneName": "용두1구역 3지구",
+      "apartmentName": "힐스테이트청량리메트로블",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010597",
+      "zoneName": "장위4구역",
+      "apartmentName": "장위자이레디언트",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010566",
+      "zoneName": "청량리4구역",
+      "apartmentName": "청량리역 롯데캐슬 SKY-L65",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010642",
+      "zoneName": "중화1구역",
+      "apartmentName": "리버센 SK VIEW 롯데캐슬 아파트",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010580",
+      "zoneName": "수색6구역",
+      "apartmentName": "DMC파인시티자이",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010622",
+      "zoneName": "수색13구역",
+      "apartmentName": "DMC SKVIEW 아이파크포레",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010560",
+      "zoneName": "수색7구역",
+      "apartmentName": "DMC아트포레자이아파트",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014436",
+      "zoneName": "도봉2",
+      "apartmentName": "도봉아테라",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014420",
+      "zoneName": "청량리7",
+      "apartmentName": "청량리롯데캐슬하이루체",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202407010695",
+      "zoneName": "천호3구역",
+      "apartmentName": "이편한세상 강동 프레스티지원",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014115",
+      "zoneName": "천호3",
+      "apartmentName": "이편한세상 강동 프레스티지원",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014235",
+      "zoneName": "잠실진주",
+      "apartmentName": "잠실래미안아이파크",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202408313210",
+      "zoneName": "미성크로바",
+      "apartmentName": "잠실르엘",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014044",
+      "zoneName": "가락현대5차 소규모재건축사업",
+      "apartmentName": "더샵송파루미스타",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    },
+    {
+      "zoneId": "11000UQ120PS202411014218",
+      "zoneName": "반포주공1단지(3주구)",
+      "apartmentName": "반포래미안트리니원",
+      "absentFromFullApi": true,
+      "absentFromViewportApi": true
+    }
+  ],
+  "retainedChecks": [
+    {
+      "zoneName": "방배5",
+      "visible": true,
+      "reason": "입주지정기간 2026.09.01~11.14 진행 중"
+    },
+    {
+      "zoneName": "보문5",
+      "visible": true,
+      "reason": "최근 사용승인(2026.09.08), 입주 종료 미확인"
+    },
+    {
+      "zoneName": "한양연립 일대 가로주택정비사업",
+      "visible": true,
+      "reason": "최근 사용승인(2026.08.25), 입주 종료 미확인"
+    },
+    {
+      "zoneName": "영천",
+      "visible": true,
+      "reason": "사용승인은 확인, 실제 입주 종료 미확인"
+    },
+    {
+      "zoneName": "신반포21차",
+      "visible": true,
+      "reason": "준공은 확인, 실제 입주 종료 미확인"
+    },
+    {
+      "zoneName": "신반포18차(337동)",
+      "visible": true,
+      "reason": "준공은 확인, 실제 입주 종료 미확인"
+    },
+    {
+      "zoneName": "이문3-2구역",
+      "visible": true,
+      "reason": "입주 일정 변경 이력이 있어 1·2단지와 별도 판단. 실제 입주 종료 미확인"
+    }
+  ],
+  "focusedTests": "34 passed, 84 subtests passed",
+  "visualChecks": [
+    {
+      "viewport": "1280x850",
+      "map": "실제 카카오 지도, 정비 토글 켜짐",
+      "excludedAreasObserved": [
+        "신사1",
+        "가재울8구역",
+        "가재울8",
+        "천호4",
+        "천호4구역",
+        "휘경3구역",
+        "청담삼익아파트",
+        "이문3",
+        "이문3-1구역",
+        "방배6",
+        "용두1구역 3지구",
+        "장위4구역",
+        "청량리4구역",
+        "중화1구역",
+        "수색6구역",
+        "수색13구역",
+        "수색7구역",
+        "도봉2",
+        "청량리7",
+        "천호3구역",
+        "천호3",
+        "잠실진주",
+        "미성크로바",
+        "가락현대5차 소규모재건축사업",
+        "반포주공1단지(3주구)"
+      ],
+      "activeAreasObserved": [
+        "수색1구역",
+        "수색3구역",
+        "수색5구역",
+        "수색8구역",
+        "수색12구역",
+        "이문4구역",
+        "가재울9구역",
+        "청량리8",
+        "청량리 미주아파트",
+        "용두1구역 2·4·5·6지구",
+        "전농9구역",
+        "장미1·2·3차",
+        "중화6구역",
+        "도봉동 625-80 일대 가로주택정비사업",
+        "천호8구역"
+      ],
+      "actionsVerified": [
+        "지도 드래그",
+        "확대 50m→30m",
+        "축소 30m→50m",
+        "단지 선택 후 상세 카드 표시",
+        "다른 단지 마커 선택(도봉 서원)"
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "excludedAreasObserved": [
+        "수색7구역",
+        "수색13구역",
+        "천호4",
+        "천호4구역"
+      ],
+      "actionsVerified": [
+        "지도 드래그",
+        "확대 50m→30m",
+        "축소 30m→50m",
+        "상세 카드 펼치기",
+        "상세 카드 접기",
+        "상세 카드 손잡이 위로 드래그해 펼치기",
+        "카드 접은 뒤 지도 다시 드래그"
+      ]
+    }
+  ],
+  "scopeNote": "로컬 실제 지도에서 제외 대상 21개 단지 부지를 검색 또는 주변 지도 이동으로 확인. 해당 25개 경계 ID는 전체·각 위치 API에서 전수 제외 확인. 7개 입주 진행·미확인 구역은 API에 유지. 운영 서버는 미배포.",
+  "visualLimitations": "지도 기본 바탕의 단지명은 카카오 갱신 시점에 따라 옛 이름이 남을 수 있음. 도봉·가락 등은 인접 단지에서 지도를 이동해 실제 부지를 확인. 이문 검색 카드 표기 및 가락현대5차 검색 식별에는 별도의 기존 불일치가 관찰되어, 그 카드명만으로 위치 검증하지 않음.",
+  "existingTestLimitations": "전체 단지검색 UI 검사에는 변경 전에도 실패하던 항목이 있음. 이번 정비구역·Jev 전용 검증은 모두 통과.",
+  "jevReview": {
+    "report": "docs/redevelopment-occupancy-jev-audit.json",
+    "reviewedEvidenceSets": 28,
+    "automaticRemovalAllowed": false,
+    "purpose": "입주 근거 요약의 부족·모순 검토 보조",
+    "followup": "신사1·휘경3의 관리비 및 주거 에너지 사용 공개 내역 추가 확인. 나머지 불확실한 AI 답변은 자동 판정에 사용하지 않음. 날짜 계산과 구역 식별은 코드로 확인.",
+    "limitation": "요약 문구만 전달하므로 원문 독립 검증이 아니며, 낮은 신뢰도 또는 근거 부족 답변이 있음. 최종 제외 목록은 별도 출처 검토 기록 기준."
+  }
+}

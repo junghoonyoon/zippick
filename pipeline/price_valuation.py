@@ -15,7 +15,7 @@ import molit_transactions
 import regional_price_index
 
 
-MODEL_VERSION = "zippick-current-value-v2"
+MODEL_VERSION = "zippick-current-value-v3"
 MIN_SAMPLE_COUNT = 3
 MAX_TRADE_AGE_DAYS = 120
 MAX_MARKET_ADJUSTMENT_PCT = 3.0
@@ -46,6 +46,30 @@ def _age_days(value, today=None):
 
 def _clamp(value, low, high):
     return max(low, min(high, value))
+
+
+def _floor_comparison(row):
+    """평가 거래와 층이 비슷한, 평가 거래를 제외한 실거래를 고른다."""
+    target = _positive(row.get("latestDealFloor"))
+    trades = row.get("valuationTrades")
+    if target is None or not isinstance(trades, list):
+        return {"status": "unknown", "targetFloor": target, "sampleCount": 0}, []
+    target = int(target)
+    known = [trade for trade in trades if isinstance(trade, (list, tuple)) and len(trade) >= 3
+             and _positive(trade[2]) is not None]
+    # 저층은 별도 집단으로 보고, 그 밖의 층은 가까운 층끼리 비교한다.
+    matches = [trade for trade in known if (
+        int(float(trade[2])) <= 3 if target <= 3
+        else int(float(trade[2])) > 3 and abs(int(float(trade[2])) - target) <= 3
+    )]
+    status = "matched" if len(matches) >= MIN_SAMPLE_COUNT else "insufficient"
+    return {
+        "status": status,
+        "targetFloor": target,
+        "sampleCount": len(matches),
+        "knownFloorCount": len(known),
+        "rule": "1~3층" if target <= 3 else "앞뒤 3층",
+    }, matches
 
 
 def _market_context(row):
@@ -213,8 +237,23 @@ def valuation_for_candidate(row, today=None):
     if not low or not center or not high:
         return _unavailable("가격 범위를 계산할 실거래 자료가 부족해요.", row, today)
 
+    floor_comparison, floor_trades = _floor_comparison(row)
+    valuation_row = row
+    if floor_comparison["status"] == "matched":
+        floor_estimate = molit_transactions._current_price_estimate([
+            {"dealDate": trade[0], "dealAmountEok": trade[1]} for trade in floor_trades
+        ])
+        if floor_estimate:
+            low = _positive(floor_estimate.get("minPriceEok")) or low
+            center = _positive(floor_estimate.get("midPriceEok")) or center
+            high = _positive(floor_estimate.get("maxPriceEok")) or high
+            sample_count = len(floor_trades)
+            valuation_row = {**row, "valuationTrades": floor_trades}
+        else:
+            floor_comparison["status"] = "insufficient"
+
     market = _market_context(row)
-    index_estimate = _index_adjusted_estimate(row, today)
+    index_estimate = _index_adjusted_estimate(valuation_row, today)
     adjustment_pct = 0.0
     if index_estimate:
         # 거래마다 이미 오늘 기준으로 옮겼으므로 주변 단지 흐름을 또 더하지 않는다.
@@ -246,6 +285,8 @@ def valuation_for_candidate(row, today=None):
     quality = "high" if sample_count >= 10 and age_days <= 45 and market["status"] == "available" else (
         "medium" if sample_count >= 5 and age_days <= 90 else "low"
     )
+    if floor_comparison["status"] != "matched":
+        quality = "low"
     reasons = [f"비슷한 면적의 이전 실거래 {sample_count}건을 사용했어요."]
     reasons.append("평가할 최근 거래는 기준가격 계산에서 뺐어요.")
     if index_estimate:
@@ -258,6 +299,10 @@ def valuation_for_candidate(row, today=None):
         reasons.append("단지·같은 구·주변 비교 단지의 6개월 흐름을 함께 확인했어요.")
     else:
         reasons.append("지역·주변 단지 흐름 자료가 부족해 실거래 범위를 더 넓게 잡았어요.")
+    if floor_comparison["status"] == "matched":
+        reasons.append(f"최근 거래와 층이 비슷한 실거래 {sample_count}건으로 가격대를 계산했어요.")
+    else:
+        reasons.append("층이 비슷한 거래가 부족해 최근 거래의 쌈·비쌈은 판단하지 않았어요.")
     if not index_estimate and adjustment_pct:
         direction = "올려" if adjustment_pct > 0 else "낮춰"
         reasons.append(f"마지막 거래 뒤 시장 변화를 반영해 적정가격을 {abs(adjustment_pct):.1f}% {direction} 봤어요.")
@@ -286,6 +331,7 @@ def valuation_for_candidate(row, today=None):
             "latestTradeAgeDays": age_days,
             "marketContextAvailable": market["status"] == "available",
         },
+        "floorComparison": floor_comparison,
         "marketAdjustmentPct": round(adjustment_pct, 2),
         "indexAdjustment": {
             "status": "applied",
@@ -298,13 +344,16 @@ def valuation_for_candidate(row, today=None):
         "market": market,
         "macro": _macro_context(row),
         "reasons": reasons,
-        "limitations": ["층·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."],
+        "limitations": ["동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요." if floor_comparison["status"] == "matched"
+                        else "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."],
     }
 
 
 def verdict_for_price(valuation, price_eok):
     """Classify a price against a ready valuation. Useful for APIs and tests."""
     if not isinstance(valuation, dict) or valuation.get("status") != "ready":
+        return "hold"
+    if valuation.get("floorComparison", {}).get("status") != "matched":
         return "hold"
     price = _positive(price_eok)
     fair = valuation.get("fairPrice") if isinstance(valuation.get("fairPrice"), dict) else {}

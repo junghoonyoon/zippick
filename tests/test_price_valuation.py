@@ -35,7 +35,11 @@ class PriceValuationTest(unittest.TestCase):
         }
 
     def test_builds_dynamic_fair_range_and_three_verdicts(self):
-        result = price_valuation.valuation_for_candidate(self.row, today=self.today)
+        row = {**self.row, "latestDealFloor": "10", "valuationTrades": [
+            [f"2026-09-{day:02d}", 9.8 + index * 0.04, "10"]
+            for index, day in enumerate(range(1, 12))
+        ]}
+        result = price_valuation.valuation_for_candidate(row, today=self.today)
 
         self.assertEqual(result["status"], "ready")
         self.assertEqual(result["modelVersion"], price_valuation.MODEL_VERSION)
@@ -46,6 +50,10 @@ class PriceValuationTest(unittest.TestCase):
         self.assertEqual(price_valuation.verdict_for_price(result, fair["lowEok"] - 0.01), "cheap")
         self.assertEqual(price_valuation.verdict_for_price(result, fair["centerEok"]), "fair")
         self.assertEqual(price_valuation.verdict_for_price(result, fair["highEok"] + 0.01), "expensive")
+        self.assertEqual(
+            price_valuation.verdict_for_price(price_valuation.valuation_for_candidate(self.row, today=self.today), 9),
+            "hold",
+        )
 
     def test_adjusts_only_for_gap_after_latest_trade(self):
         recent = price_valuation.valuation_for_candidate(self.row, today=self.today)
@@ -105,6 +113,41 @@ class PriceValuationTest(unittest.TestCase):
         self.assertEqual(result["fairPrice"]["centerEok"], 9.0)
         self.assertEqual(result["dataQuality"]["sampleCount"], 4)
         self.assertIn("평가할 최근 거래는 기준가격 계산에서 뺐어요.", result["reasons"])
+
+    def test_uses_similar_floor_trades_when_enough_exist(self):
+        row = {
+            **self.row,
+            "latestDealFloor": "1",
+            "valuationTrades": [
+                ["2026-09-01", 9.0, "1"], ["2026-08-20", 9.2, "2"],
+                ["2026-08-10", 9.4, "3"], ["2026-08-01", 14.0, "17"],
+                ["2026-07-20", 14.2, "18"], ["2026-07-10", 14.4, "19"],
+            ],
+            "valuationEstimateSampleCount": 6,
+        }
+
+        result = price_valuation.valuation_for_candidate(row, today=self.today)
+
+        self.assertEqual(result["floorComparison"]["status"], "matched")
+        self.assertEqual(result["dataQuality"]["sampleCount"], 3)
+        self.assertLess(result["fairPrice"]["centerEok"], 10.0)
+
+    def test_flags_low_floor_trade_without_similar_floor_comparables(self):
+        row = {
+            **self.row,
+            "latestDealFloor": "1",
+            "valuationTrades": [
+                ["2026-09-01", 14.0, "17"], ["2026-08-20", 14.2, "18"],
+                ["2026-08-10", 14.4, "19"], ["2026-08-01", 14.5, "20"],
+            ],
+        }
+
+        result = price_valuation.valuation_for_candidate(row, today=self.today)
+
+        self.assertEqual(result["floorComparison"]["status"], "insufficient")
+        self.assertEqual(result["floorComparison"]["sampleCount"], 0)
+        self.assertEqual(result["fairPrice"]["centerEok"], 10.0)
+        self.assertIn("최근 거래의 층은 확인했지만", result["limitations"][0])
 
     def test_exposes_official_rate_as_separate_market_risk(self):
         row = {

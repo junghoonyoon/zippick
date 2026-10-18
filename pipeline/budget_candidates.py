@@ -1,12 +1,14 @@
 """Budget-based apartment candidate filtering for the real estate MVP."""
 import csv
 import datetime
+import difflib
 import os
 import re
 import threading
 
 import config
 import education_environment
+import kakao_station_distances
 import location_scores
 import market_indicators
 import molit_transactions
@@ -18,6 +20,9 @@ import price_valuation
 import real_estate_search
 import region_adjacency
 import supply_forecast
+import future_transformation
+import planned_rail
+import typesafe_jev
 
 PRICE_BANDS_CSV = config.ROOT / "data" / "apartment_price_bands.csv"
 MOLIT_PRICE_BANDS_CSV = config.ROOT / "data" / "seoul_small_apartment_price_bands.csv"
@@ -509,6 +514,36 @@ def _candidate_identity_key(row):
         real_estate_search.compact(row.get("name", "")),
         real_estate_search.compact(row.get("region", "")),
     )
+
+
+def _candidate_identity_fields(row, entity=None):
+    """Carry the master complex identity into every candidate surface.
+
+    Candidate cards can open the report before the standalone report API is
+    fetched.  Keep aliases and physical identity on that fast path too, so a
+    short transaction-feed name such as ``남성`` can still be matched to the
+    official ``문래동남성아파트`` redevelopment zone without guessing from
+    the name alone.
+    """
+    entity = entity or {}
+    aliases = []
+    seen = set()
+    for value in (entity.get("name"), row.get("name"), *(entity.get("aliases") or [])):
+        value = str(value or "").strip()
+        key = real_estate_search.compact(value)
+        if value and key and key not in seen:
+            seen.add(key)
+            aliases.append(value)
+    return {
+        "apartmentId": str(entity.get("apartmentId") or "").strip(),
+        "kaptCode": str(entity.get("kaptCode") or "").strip(),
+        "complexNo": str(entity.get("complexNo") or "").strip(),
+        "province": str(entity.get("province") or "").strip(),
+        "city": str(entity.get("city") or "").strip(),
+        "district": str(entity.get("district") or "").strip(),
+        "address": str(entity.get("address") or row.get("address") or "").strip(),
+        "aliases": aliases,
+    }
 
 
 def _dedupe_candidate_rows(rows):
@@ -1419,6 +1454,24 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
             for alias_key, values in lookup.items()
         }
     matches = _ENTITY_LOOKUP.get(key) or []
+    if legal_dong and jibun:
+        # 거래 원본의 짧은 이름과 단지 원장의 정식 이름이 달라도, 법정동과
+        # 지번이 모두 같으면 같은 물리 단지로 안전하게 식별할 수 있다.
+        # 이름부터 거르는 기존 순서는 `현대` ↔ `현대(1,2차)` 같은 경우에
+        # 정확한 지번이 있는데도 지도·역 정보를 누락시켰다.
+        dong_key = real_estate_search.compact(legal_dong)
+        jibun_key = real_estate_search.compact(jibun)
+        matches = [
+            entity for entity in real_estate_search.APARTMENT_MASTER
+            if real_estate_search.compact(entity.get("legalDong")) == dong_key
+            and (
+                real_estate_search.compact(entity.get("jibun")) == jibun_key
+                # 주소 문자열의 단순 suffix 비교는 지번 `1`이 `18-1`, `1341`
+                # 같은 다른 필지까지 잡는 오류를 만든다. 주소에서 얻은
+                # 마지막 필지 토큰도 완전히 같을 때만 같은 단지로 본다.
+                or real_estate_search.compact(_entity_jibun(entity)) == jibun_key
+            )
+        ]
     if region:
         region_key = real_estate_search.compact(region)
         regional_matches = []
@@ -1467,7 +1520,7 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         jibun_key = real_estate_search.compact(jibun)
         matches = [
             entity for entity in matches
-            if real_estate_search.compact(entity.get("address")).endswith(jibun_key)
+            if real_estate_search.compact(_entity_jibun(entity)) == jibun_key
             or real_estate_search.compact(entity.get("jibun")) == jibun_key
         ]
     unique = {}
@@ -1480,6 +1533,138 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         )
         unique.setdefault(physical_key, entity)
     return list(unique.values())
+
+
+def _semantic_identity_shortlist(name, region="", legal_dong="", limit=8):
+    """Jev가 고를 수 있도록 지역과 이름으로 작은 후보군만 만든다."""
+    name_key = real_estate_search.compact(name)
+    region_key = real_estate_search.compact(region)
+    dong_key = real_estate_search.compact(legal_dong)
+    scored = []
+    for entity in real_estate_search.APARTMENT_MASTER:
+        entity_dong = real_estate_search.compact(entity.get("legalDong"))
+        entity_district = real_estate_search.compact(entity.get("district"))
+        entity_city = real_estate_search.compact(entity.get("city"))
+        if dong_key and entity_dong != dong_key:
+            continue
+        if region_key and not (
+            region_key in {entity_district, entity_city}
+            or (entity_district and entity_district in region_key)
+            or (entity_city and entity_city in region_key)
+        ):
+            continue
+        alias_keys = _entity_alias_keys(entity)
+        similarity = max(
+            (
+                difflib.SequenceMatcher(None, name_key, alias_key).ratio()
+                for alias_key in alias_keys
+            ),
+            default=0.0,
+        )
+        if name_key and any(name_key in alias_key or alias_key in name_key for alias_key in alias_keys):
+            similarity = max(similarity, 0.72)
+        if similarity >= 0.35:
+            scored.append((similarity, _float_value(entity.get("households")), entity))
+    scored.sort(key=lambda value: (value[0], value[1]), reverse=True)
+    return [value[2] for value in scored[:max(1, min(int(limit or 8), 8))]]
+
+
+def resolve_apartment_identity(
+    name,
+    region="",
+    legal_dong="",
+    jibun="",
+    identities=None,
+    allow_semantic=True,
+):
+    """단지 식별 결과와 사용한 근거를 구조화해 반환한다.
+
+    고유값과 주소는 결정 규칙으로 처리한다. 이름 표기 차이로 후보가 남는
+    경우에만 TypeSafe Jev가 닫힌 후보 목록에서 선택하며, 낮은 신뢰도는
+    자동 연결하지 않는다.
+    """
+    identities = {
+        key: str(value or "").strip()
+        for key, value in (identities or {}).items()
+        if str(value or "").strip()
+    }
+    id_matches = []
+    if identities:
+        id_matches = [
+            entity for entity in real_estate_search.APARTMENT_MASTER
+            if all(
+                str(entity.get(field) or "").strip() == value
+                for field, value in identities.items()
+            )
+        ]
+        if len(id_matches) == 1:
+            return {
+                "status": "matched",
+                "method": "exact_id",
+                "entity": id_matches[0],
+                "candidateCount": 1,
+                "confidence": 1.0,
+                "selectionProbability": 1.0,
+            }
+
+    matches = _find_entities(name, region, legal_dong, jibun)
+    if identities:
+        matches = [
+            entity for entity in matches
+            if all(
+                str(entity.get(field) or "").strip() == value
+                for field, value in identities.items()
+            )
+        ]
+    if len(matches) == 1:
+        method = (
+            "exact_id" if identities
+            else "exact_location" if legal_dong and jibun
+            else "exact_alias"
+        )
+        return {
+            "status": "matched",
+            "method": method,
+            "entity": matches[0],
+            "candidateCount": 1,
+            "confidence": 1.0,
+            "selectionProbability": 1.0,
+        }
+
+    candidates = matches or id_matches
+    if not candidates and allow_semantic:
+        candidates = _semantic_identity_shortlist(name, region, legal_dong)
+    if allow_semantic and candidates:
+        judgment = typesafe_jev.choose_apartment_identity(
+            {
+                "name": name,
+                "region": region,
+                "legalDong": legal_dong,
+                "jibun": jibun,
+                **identities,
+            },
+            candidates,
+        )
+        selected_index = judgment.get("selectedIndex")
+        if judgment.get("status") == "matched" and isinstance(selected_index, int):
+            return {
+                "status": "matched",
+                "method": "typesafe_jev",
+                "entity": candidates[selected_index],
+                "candidateCount": len(candidates),
+                "confidence": judgment.get("confidence", 0.0),
+                "selectionProbability": judgment.get("selectionProbability", 0.0),
+                "probabilities": judgment.get("probabilities", {}),
+            }
+
+    return {
+        "status": "ambiguous" if len(candidates) > 1 else "unmatched",
+        "method": "unresolved",
+        "entity": None,
+        "candidateCount": len(candidates),
+        "confidence": 0.0,
+        "selectionProbability": 0.0,
+    }
 
 
 def _find_entity(name, region="", legal_dong="", jibun=""):
@@ -2257,12 +2442,20 @@ def _finalize_candidate_rows(
         entity = _price_lookup_entity(row)
         map_entity = entity
         row["resultSchemaVersion"] = CANDIDATE_RESULT_SCHEMA_VERSION
+        row.update(_candidate_identity_fields(row, entity))
         row["displayName"] = _candidate_display_name(row, entity)
         if row.get("naverComplexName"):
             row["displayName"] = row["naverComplexName"]
             row["displayNameSource"] = "naver_complex"
         row["displayRegion"] = _display_region(row, entity)
         row["mapAddress"] = _map_address(row, map_entity)
+        cached_location = kakao_station_distances.cached_station(entity) if entity else None
+        if cached_location:
+            latitude = _float_value(cached_location.get("latitude"))
+            longitude = _float_value(cached_location.get("longitude"))
+            if latitude and longitude:
+                row["latitude"] = latitude
+                row["longitude"] = longitude
         row["displayAreaLabel"] = _display_area_label(row.get("areaLabel"))
         if entity:
             row["educationEnvironment"] = education_environment.education_environment_for_entity(
@@ -2273,6 +2466,8 @@ def _finalize_candidate_rows(
             row["lifestyleChange"] = supply_forecast.lifestyle_change(row, entity)
         except Exception:
             row["lifestyleChange"] = {"status": "error"}
+        row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
+        row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
         row.update(_decision_support(
             row,
             entity,

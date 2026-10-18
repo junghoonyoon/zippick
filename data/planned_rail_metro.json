@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-16",
+  "scope": "수도권 주요 예정 노선의 공식 발표 역 중 지역을 확인한 곳",
+  "note": "역 출입구 위치와 개통일은 달라질 수 있습니다. 같은 시·구의 계획역이라는 뜻이며 단지에서 걸어갈 수 있다는 뜻이 아닙니다.",
+  "lines": [
+    {
+      "id": "gtx-b",
+      "name": "GTX-B",
+      "stage": "착공",
+      "targetOpening": "2031년 목표",
+      "sourceDate": "2025-12-12",
+      "source": "국토교통부 2026년 업무계획·GTX 노선 안내",
+      "sourceUrl": "https://www.molit.go.kr/2026plan/sub5_public.html",
+      "stationsSourceUrl": "https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf",
+      "stations": [
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구"
+        },
+        {
+          "name": "상봉",
+          "sido": "서울특별시",
+          "sigungu": "중랑구"
+        },
+        {
+          "name": "용산",
+          "sido": "서울특별시",
+          "sigungu": "용산구"
+        },
+        {
+          "name": "여의도",
+          "sido": "서울특별시",
+          "sigungu": "영등포구"
+        },
+        {
+          "name": "신도림",
+          "sido": "서울특별시",
+          "sigungu": "구로구"
+        },
+        {
+          "name": "구리",
+          "sido": "경기도",
+          "sigungu": "구리시"
+        },
+        {
+          "name": "별내",
+          "sido": "경기도",
+          "sigungu": "남양주시"
+        },
+        {
+          "name": "마석",
+          "sido": "경기도",
+          "sigungu": "남양주시"
+        }
+      ],
+      "stageCode": "construction"
+    },
+    {
+      "id": "gtx-c",
+      "name": "GTX-C",
+      "stage": "2026년 9월 착공",
+      "targetOpening": "개통 목표 확인 중",
+      "sourceDate": "2026-09-14",
+      "source": "국토교통부 2026년 9월 14일 보도자료·GTX 노선 안내",
+      "sourceUrl": "https://www.molit.go.kr/USR/NEWS/dtl.jsp?id=95092420",
+      "stationsSourceUrl": "https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf",
+      "stations": [
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구"
+        },
+        {
+          "name": "창동",
+          "sido": "서울특별시",
+          "sigungu": "도봉구"
+        },
+        {
+          "name": "삼성",
+          "sido": "서울특별시",
+          "sigungu": "강남구"
+        },
+        {
+          "name": "양재",
+          "sido": "서울특별시",
+          "sigungu": "서초구"
+        },
+        {
+          "name": "의정부",
+          "sido": "경기도",
+          "sigungu": "의정부시"
+        },
+        {
+          "name": "정부과천청사",
+          "sido": "경기도",
+          "sigungu": "과천시"
+        },
+        {
+          "name": "금정",
+          "sido": "경기도",
+          "sigungu": "군포시"
+        }
+      ],
+      "stageCode": "construction"
+    },
+    {
+      "id": "dongbuk",
+      "name": "동북선",
+      "stage": "공사 중",
+      "targetOpening": "2027년 목표",
+      "source": "서울시 동북선 공사 안내·강북권 교통계획",
+      "sourceUrl": "https://cis.seoul.go.kr/TotalAlimi_new/PopInfo.action?cmd=info1&pjt_cd=1112018081799",
+      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/1166904",
+      "stations": [
+        {
+          "name": "왕십리",
+          "sido": "서울특별시",
+          "sigungu": "성동구"
+        },
+        {
+          "name": "제기동",
+          "sido": "서울특별시",
+          "sigungu": "동대문구"
+        },
+        {
+          "name": "고려대",
+          "sido": "서울특별시",
+          "sigungu": "성북구"
+        },
+        {
+          "name": "미아사거리",
+          "sido": "서울특별시",
+          "sigungu": "강북구"
+        },
+        {
+          "name": "월계",
+          "sido": "서울특별시",
+          "sigungu": "노원구"
+        },
+        {
+          "name": "하계",
+          "sido": "서울특별시",
+          "sigungu": "노원구"
+        },
+        {
+          "name": "상계",
+          "sido": "서울특별시",
+          "sigungu": "노원구"
+        }
+      ],
+      "stageCode": "construction",
+      "sourceDate": "2026-10-14"
+    },
+    {
+      "id": "gangbuk-cross",
+      "name": "강북횡단선",
+      "stage": "재추진 계획 · 착공 전",
+      "stageCode": "planning",
+      "targetOpening": "개통일 미확정",
+      "sourceDate": "2026-06-15",
+      "source": "서울시의회 제3차 도시철도망 구축계획안 검토보고서·서울시 홍제 경유 안내",
+      "sourceUrl": "https://ms.smc.seoul.kr/record/recordView.do?key=a66fee32d18c7e8a1ea511f3236da896c20c1e83ea372900adcdde6ef463a1f0baa291bc61d02aef",
+      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/2018271",
+      "planningNote": "2024년 예비타당성조사를 통과하지 못해 다시 추진하는 계획이에요. 역 수와 노선 조정이 검토 중이며, 경유역·출입구와 개통일은 바뀔 수 있어요.",
+      "stations": [
+        {
+          "name": "목동",
+          "sido": "서울특별시",
+          "sigungu": "양천구"
+        },
+        {
+          "name": "홍제",
+          "sido": "서울특별시",
+          "sigungu": "서대문구"
+        },
+        {
+          "name": "길음",
+          "sido": "서울특별시",
+          "sigungu": "성북구"
+        },
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구"
+        }
+      ]
+    },
+    {
+      "id": "wirye",
+      "name": "위례선 트램",
+      "stage": "시운전 중 · 개통 전",
+      "stageCode": "construction",
+      "sourceDate": "2026-02-27",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453106",
+      "stationsSourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453106",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "stations": [
+        {
+          "name": "마천",
+          "sido": "서울특별시",
+          "sigungu": "송파구"
+        },
+        {
+          "name": "복정",
+          "sido": "서울특별시",
+          "sigungu": "송파구"
+        },
+        {
+          "name": "남위례",
+          "sido": "경기도",
+          "sigungu": "성남시"
+        }
+      ]
+    },
+    {
+      "id": "ui-extension",
+      "name": "우이신설 방학 연장",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "sourceDate": "2025-11-24",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://mayor.seoul.go.kr/oh/seoul/newsView.do?photoGallerySn=4086",
+      "stationsSourceUrl": "https://mayor.seoul.go.kr/oh/seoul/newsView.do?photoGallerySn=4086",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "stations": [
+        {
+          "name": "솔밭공원",
+          "sido": "서울특별시",
+          "sigungu": "강북구"
+        },
+        {
+          "name": "방학",
+          "sido": "서울특별시",
+          "sigungu": "도봉구"
+        }
+      ]
+    },
+    {
+      "id": "myeonmok",
+      "name": "면목선",
+      "stage": "기본계획안 의견 수렴",
+      "stageCode": "planning",
+      "sourceDate": "2026-09-29",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_notice.do?nttNo=467266",
+      "stationsSourceUrl": "https://www.seoul.go.kr/news/news_notice.do?nttNo=463192",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "stations": [
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구"
+        },
+        {
+          "name": "신내",
+          "sido": "서울특별시",
+          "sigungu": "중랑구"
+        }
+      ]
+    },
+    {
+      "id": "seobu",
+      "name": "서부선",
+      "stage": "사업 방식 재검토 · 착공 전",
+      "stageCode": "planning",
+      "sourceDate": "2026-04-01",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=455351",
+      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/2018271",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "사업자 확보에 어려움이 있어 민간사업 재공고와 재정사업 전환을 준비 중이에요. 착공·개통 시점은 미확정이에요.",
+      "stations": [
+        {
+          "name": "새절",
+          "sido": "서울특별시",
+          "sigungu": "은평구"
+        },
+        {
+          "name": "노량진",
+          "sido": "서울특별시",
+          "sigungu": "동작구"
+        },
+        {
+          "name": "서울대입구",
+          "sido": "서울특별시",
+          "sigungu": "관악구"
+        }
+      ]
+    },
+    {
+      "id": "indeogwon-dongtan",
+      "name": "인덕원~동탄 복선전철",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "sourceDate": "2026-06-30",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010302",
+      "stationsSourceUrl": "https://www.kr.or.kr/images/template/krhome/sub/05/img_05010302_26_2025.jpg",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "stations": [
+        {
+          "name": "인덕원",
+          "sido": "경기도",
+          "sigungu": "안양시"
+        },
+        {
+          "name": "영통",
+          "sido": "경기도",
+          "sigungu": "수원시"
+        },
+        {
+          "name": "동탄",
+          "sido": "경기도",
+          "sigungu": "화성시"
+        }
+      ]
+    },
+    {
+      "id": "wolgot-pangyo",
+      "name": "월곶~판교 복선전철",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "sourceDate": "2026-06-30",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010302",
+      "stationsSourceUrl": "https://www.kr.or.kr/images/template/krhome/sub/05/img_05010302_24_2025.jpg",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "stations": [
+        {
+          "name": "월곶",
+          "sido": "경기도",
+          "sigungu": "시흥시"
+        },
+        {
+          "name": "시흥시청",
+          "sido": "경기도",
+          "sigungu": "시흥시"
+        },
+        {
+          "name": "광명",
+          "sido": "경기도",
+          "sigungu": "광명시"
+        },
+        {
+          "name": "안양",
+          "sido": "경기도",
+          "sigungu": "안양시"
+        },
+        {
+          "name": "인덕원",
+          "sido": "경기도",
+          "sigungu": "안양시"
+        },
+        {
+          "name": "판교",
+          "sido": "경기도",
+          "sigungu": "성남시"
+        }
+      ]
+    },
+    {
+      "id": "shinbundang-homaesil",
+      "name": "신분당선 광교~호매실",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "sourceDate": "2025-06-04",
+      "source": "서울시·국가철도공단 공식 사업 안내",
+      "sourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1120903",
+      "stationsSourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1120903",
+      "targetOpening": "사업 일정은 공식 자료 참고",
+      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "stations": [
+        {
+          "name": "광교중앙",
+          "sido": "경기도",
+          "sigungu": "수원시"
+        },
+        {
+          "name": "화서",
+          "sido": "경기도",
+          "sigungu": "수원시"
+        }
+      ]
+    },
+    {
+      "id": "line9-phase4",
+      "name": "9호선 4단계 연장",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "sourceDate": "2025-11-18",
+      "source": "지자체·국토교통부 공식 철도계획 안내",
+      "sourceUrl": "https://www.gangdong.go.kr/web/newportal/contents/gdp_005_005_012_003",
+      "stationsSourceUrl": "https://ms.smc.seoul.kr/attach/record/SEOUL/appendix/a11/A0064260.pdf",
+      "targetOpening": "공식 일정 참고",
+      "planningNote": "새 구간과의 연결 계획을 비교해요. 기존 노선의 편의 점수가 아니며 새 출입구와 개통 시점은 달라질 수 있어요.",
+      "stations": [
+        {
+          "name": "중앙보훈병원",
+          "sido": "서울특별시",
+          "sigungu": "강동구"
+        },
+        {
+          "name": "고덕",
+          "sido": "서울특별시",
+          "sigungu": "강동구"
+        }
+      ]
+    },
+    {
+      "id": "goyang-eunpyeong",
+      "name": "고양은평선",
+      "stage": "기본·실시설계 중",
+      "stageCode": "planning",
+      "sourceDate": "2026-06-11",
+      "source": "지자체·국토교통부 공식 철도계획 안내",
+      "sourceUrl": "https://gits.gg.go.kr/web/newboard/3386.do?idx=199392861&mode=view",
+      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/2018271",
+      "targetOpening": "공식 일정 참고",
+      "planningNote": "새 구간과의 연결 계획을 비교해요. 기존 노선의 편의 점수가 아니며 새 출입구와 개통 시점은 달라질 수 있어요.",
+      "stations": [
+        {
+          "name": "새절",
+          "sido": "서울특별시",
+          "sigungu": "은평구"
+        },
+        {
+          "name": "화정",
+          "sido": "경기도",
+          "sigungu": "고양시"
+        }
+      ]
+    },
+    {
+      "id": "wirye-sinsa",
+      "name": "위례신사선",
+      "stage": "예비타당성조사 통과 · 기본계획 수립 전",
+      "stageCode": "planning",
+      "targetOpening": "착공·개통일 미확정",
+      "sourceDate": "2026-03-10",
+      "verifiedAt": "2026-10-18",
+      "source": "서울시 도시철도망 변경 승인·위례신사선 예비타당성조사 통과 발표",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453805",
+      "stationsSourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453805",
+      "regionalScopeSourceUrls": [
+        "https://mediahub.seoul.go.kr/archives/2015024",
+        "https://snvision.seongnam.go.kr/22484"
+      ],
+      "planningNote": "위례에서 서울 송파·강남으로 이어지는 계획이에요. 역 위치와 이 단지에서 가는 길은 아직 확인되지 않았어요. 착공·개통일도 정해지지 않았어요.",
+      "stations": [],
+      "regionalScopes": [
+        "서울특별시:송파구",
+        "서울특별시:강남구",
+        "경기도:성남시:성남수정구"
+      ]
+    }
+  ]
+}

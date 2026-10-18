@@ -34,11 +34,17 @@ class VerdictCardTest(unittest.TestCase):
         report = _function_body(self.html, "candidateZippickReportHtml")
         self.assertIn("const card = verdictCardHtml(item);", wrapper)
         self.assertIn('aria-label="매수와 보유 비용"', wrapper)
+        self.assertIn("계산한 비용을 메우려면 얼마나 올라야 할까요?", wrapper)
         self.assertIn("${zippickBreakevenHtml(item)}", report)
         self.assertLess(
             report.index("${zippickFundingHtml(item)}"),
             report.index("${zippickBreakevenHtml(item)}"),
         )
+        self.assertLess(
+            report.index("${zippickBreakevenHtml(item)}"),
+            report.index('<details class="zpr-details"><summary>왜 이런 매수 판단이 나왔는지 자세히 보기</summary>'),
+        )
+        self.assertNotIn("참고: 매수 비용·내 자금 계산 보기", report)
 
     def test_card_is_hidden_when_breakeven_is_missing(self):
         body = _function_body(self.html, "verdictCardHtml")

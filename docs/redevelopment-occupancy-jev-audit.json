@@ -1,0 +1,321 @@
+{
+  "status": "ok",
+  "model": "jev-1.13.0",
+  "reviews": [
+    {
+      "zoneId": "11000UQ120PS202411014108",
+      "zoneName": "신사1",
+      "choice": "supported",
+      "confidence": 0.95,
+      "probabilities": {
+        "supported": 0.97,
+        "ongoing": 0.0,
+        "insufficient": 0.03
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014308",
+      "zoneName": "가재울8",
+      "choice": "ongoing",
+      "confidence": 0.31,
+      "probabilities": {
+        "supported": 0.03,
+        "ongoing": 0.54,
+        "insufficient": 0.43
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010725",
+      "zoneName": "천호4구역",
+      "choice": "insufficient",
+      "confidence": 0.8,
+      "probabilities": {
+        "supported": 0.02,
+        "ongoing": 0.11,
+        "insufficient": 0.87
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010577",
+      "zoneName": "휘경3구역",
+      "choice": "supported",
+      "confidence": 0.94,
+      "probabilities": {
+        "supported": 0.96,
+        "ongoing": 0.0,
+        "insufficient": 0.04
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014177",
+      "zoneName": "청담삼익아파트",
+      "choice": "insufficient",
+      "confidence": 0.3,
+      "probabilities": {
+        "supported": 0.05,
+        "ongoing": 0.42,
+        "insufficient": 0.53
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010571",
+      "zoneName": "이문3-1구역",
+      "choice": "insufficient",
+      "confidence": 0.59,
+      "probabilities": {
+        "supported": 0.04,
+        "ongoing": 0.23,
+        "insufficient": 0.73
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014097",
+      "zoneName": "방배6",
+      "choice": "insufficient",
+      "confidence": 0.28,
+      "probabilities": {
+        "supported": 0.11,
+        "ongoing": 0.37,
+        "insufficient": 0.52
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010716",
+      "zoneName": "용두1구역 3지구",
+      "choice": "insufficient",
+      "confidence": 0.46,
+      "probabilities": {
+        "supported": 0.21,
+        "ongoing": 0.15,
+        "insufficient": 0.64
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010597",
+      "zoneName": "장위4구역",
+      "choice": "supported",
+      "confidence": 0.22,
+      "probabilities": {
+        "supported": 0.48,
+        "ongoing": 0.11,
+        "insufficient": 0.41
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010566",
+      "zoneName": "청량리4구역",
+      "choice": "insufficient",
+      "confidence": 0.27,
+      "probabilities": {
+        "supported": 0.47,
+        "ongoing": 0.02,
+        "insufficient": 0.51
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010642",
+      "zoneName": "중화1구역",
+      "choice": "supported",
+      "confidence": 0.22,
+      "probabilities": {
+        "supported": 0.48,
+        "ongoing": 0.06,
+        "insufficient": 0.46
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010580",
+      "zoneName": "수색6구역",
+      "choice": "insufficient",
+      "confidence": 0.33,
+      "probabilities": {
+        "supported": 0.42,
+        "ongoing": 0.03,
+        "insufficient": 0.55
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010622",
+      "zoneName": "수색13구역",
+      "choice": "insufficient",
+      "confidence": 0.41,
+      "probabilities": {
+        "supported": 0.37,
+        "ongoing": 0.02,
+        "insufficient": 0.61
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010560",
+      "zoneName": "수색7구역",
+      "choice": "insufficient",
+      "confidence": 0.45,
+      "probabilities": {
+        "supported": 0.34,
+        "ongoing": 0.03,
+        "insufficient": 0.63
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014436",
+      "zoneName": "도봉2",
+      "choice": "supported",
+      "confidence": 0.13,
+      "probabilities": {
+        "supported": 0.42,
+        "ongoing": 0.31,
+        "insufficient": 0.27
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014420",
+      "zoneName": "청량리7",
+      "choice": "supported",
+      "confidence": 0.23,
+      "probabilities": {
+        "supported": 0.49,
+        "ongoing": 0.15,
+        "insufficient": 0.36
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014115",
+      "zoneName": "천호3",
+      "choice": "supported",
+      "confidence": 0.48,
+      "probabilities": {
+        "supported": 0.65,
+        "ongoing": 0.17,
+        "insufficient": 0.18
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014235",
+      "zoneName": "잠실진주",
+      "choice": "supported",
+      "confidence": 0.02,
+      "probabilities": {
+        "supported": 0.35,
+        "ongoing": 0.32,
+        "insufficient": 0.33
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202408313210",
+      "zoneName": "미성크로바",
+      "choice": "ongoing",
+      "confidence": 0.06,
+      "probabilities": {
+        "supported": 0.34,
+        "ongoing": 0.37,
+        "insufficient": 0.29
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014044",
+      "zoneName": "가락현대5차 소규모재건축사업",
+      "choice": "supported",
+      "confidence": 0.61,
+      "probabilities": {
+        "supported": 0.74,
+        "ongoing": 0.08,
+        "insufficient": 0.18
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014218",
+      "zoneName": "반포주공1단지(3주구)",
+      "choice": "ongoing",
+      "confidence": 0.19,
+      "probabilities": {
+        "supported": 0.18,
+        "ongoing": 0.46,
+        "insufficient": 0.36
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "방배5",
+      "choice": "insufficient",
+      "confidence": 0.34,
+      "probabilities": {
+        "supported": 0.09,
+        "ongoing": 0.35,
+        "insufficient": 0.56
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "보문5",
+      "choice": "insufficient",
+      "confidence": 0.67,
+      "probabilities": {
+        "supported": 0.03,
+        "ongoing": 0.19,
+        "insufficient": 0.78
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "한양연립 일대 가로주택정비사업",
+      "choice": "insufficient",
+      "confidence": 0.76,
+      "probabilities": {
+        "supported": 0.03,
+        "ongoing": 0.13,
+        "insufficient": 0.84
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "영천",
+      "choice": "insufficient",
+      "confidence": 0.76,
+      "probabilities": {
+        "supported": 0.04,
+        "ongoing": 0.12,
+        "insufficient": 0.84
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "신반포21차",
+      "choice": "insufficient",
+      "confidence": 0.86,
+      "probabilities": {
+        "supported": 0.01,
+        "ongoing": 0.08,
+        "insufficient": 0.91
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "신반포18차(337동)",
+      "choice": "insufficient",
+      "confidence": 0.83,
+      "probabilities": {
+        "supported": 0.0,
+        "ongoing": 0.11,
+        "insufficient": 0.89
+      }
+    },
+    {
+      "zoneId": null,
+      "zoneName": "이문3-2구역",
+      "choice": "insufficient",
+      "confidence": 0.83,
+      "probabilities": {
+        "supported": 0.0,
+        "ongoing": 0.11,
+        "insufficient": 0.89
+      }
+    }
+  ],
+  "usage": {
+    "input_tokens": 7622,
+    "output_tokens": 1220
+  },
+  "automaticRemovalAllowed": false,
+  "asOfDate": "2026-10-16",
+  "scope": "Provided evidence summaries only; not independent source verification or removal authorization."
+}

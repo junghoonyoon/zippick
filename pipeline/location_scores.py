@@ -20,8 +20,9 @@ import redevelopment_track_record
 import supply_forecast
 
 
-SCORE_FORMULA_VERSION = "purchase-judgment-v4"
+SCORE_FORMULA_VERSION = "purchase-judgment-v7"
 MIN_PRICE_RANK_PEERS = 3
+MAX_PRICE_RANK_NAMED_PEERS = 12
 HOUSEHOLD_SCORE_BANDS = (
     (3000, None, 100.0, "3,000세대 이상"),
     (2000, 2999, 90.0, "2,000~2,999세대"),
@@ -187,6 +188,8 @@ def _price_burden_score(top_percent):
 def _price_rankings(rows):
     groups = {}
     for row in rows:
+        if isinstance(row.get("priceComparison"), dict):
+            continue
         price = _ranking_price_value(row)
         if price is None:
             continue
@@ -211,6 +214,15 @@ def _price_rankings(rows):
                 "topPercent": top_percent,
                 "label": _price_rank_label(top_percent),
                 "score": _price_rank_score(top_percent),
+                "comparisonPeers": [
+                    {
+                        "name": str(other_row.get("displayName") or other_row.get("name") or "").strip(),
+                        "legalDong": str(other_row.get("legalDong") or "").strip(),
+                        "areaLabel": str(other_row.get("displayAreaLabel") or other_row.get("areaLabel") or "").strip(),
+                    }
+                    for other_row, _ in ordered
+                    if other_row is not row
+                ][:MAX_PRICE_RANK_NAMED_PEERS],
             }
     return rankings
 
@@ -328,6 +340,8 @@ def _transport_score(entity):
     score = apartment_leaders.station_score(distance)
     if score is None:
         return None, "역거리 미수집"
+    if station.get("nearestStationDistance") is None:
+        return score, f"반경 {float(distance) / 1000:g}km 안에 지하철역 없음"
     name = station.get("nearestStationName") or "가까운 역"
     distance_text = f"{round(float(distance)):,}m"
     return score, f"{name} · 직선 {distance_text}"
@@ -337,7 +351,14 @@ def _education_score(row):
     education = row.get("educationEnvironment") or {}
     score = _clamp_score(education.get("score"))
     if score is None:
-        return None, "교육환경 데이터 준비 중"
+        status = education.get("status")
+        if status == "no_coordinates":
+            return None, "단지 위치를 확인하지 못해 주변 학교 거리를 계산할 수 없어요"
+        if status == "not_precomputed":
+            return None, "주변 학교 자료를 아직 확인하지 못했어요"
+        if status == "unsupported_region":
+            return None, "서울·경기 밖이라 교육 접근성 점수는 제공하지 않아요"
+        return None, "주변 학교 자료를 확인하지 못해 교육 접근성은 점수에서 뺐어요"
     school_names = education.get("elementarySchoolNames") or []
     elementary_distance = _distance_text(education.get("elementaryDistanceMeters"))
     if education.get("basis") == "nearby_school_access":
@@ -508,13 +529,15 @@ def _leader_gap_price_score(row, signals):
         if ppsm and reference:
             gap = (1 - ppsm / reference) * 100
     if gap is None:
-        current = _float_or_none(row.get("latestDealPriceEok")) or _float_or_none(row.get("midPriceEok"))
-        leader_price = (
+        current_eok = _float_or_none(row.get("latestDealPriceEok")) or _float_or_none(row.get("midPriceEok"))
+        leader_price_manwon = (
             _float_or_none(signals.get("leaderPrice12m"))
             or _float_or_none(signals.get("leaderRepresentativeMedianPrice12m"))
         )
-        if current and leader_price:
-            gap = (1 - current / leader_price) * 100
+        # 단지 행의 가격은 억원, 대장 거래가는 dealAmountManwon에서 온 만원이다.
+        if current_eok and leader_price_manwon:
+            current_manwon = current_eok * 10000
+            gap = (1 - current_manwon / leader_price_manwon) * 100
     if gap is None:
         return None, "지역 대장 가격 비교 데이터 없음"
     if 20 <= gap <= 45:
@@ -533,6 +556,20 @@ def _leader_gap_price_score(row, signals):
 
 
 def _price_rank_burden_score(row, signals):
+    comparison = row.get("priceComparison")
+    if isinstance(comparison, dict):
+        if comparison.get("status") != "ready":
+            return None, comparison.get("reason") or "비슷한 단지의 거래가 부족해요."
+        difference = _float_or_none(comparison.get("differencePct"))
+        count = len(comparison.get("peers") or [])
+        if difference is None or not count:
+            return None, "비교 단지의 평균 가격을 확인하지 못했어요."
+        direction = "낮음" if difference < 0 else "높음" if difference > 0 else "같음"
+        score = 90 if difference <= -5 else 40 if difference >= 5 else 72
+        return score, (
+            f"비교 단지 {count}곳의 최근 {comparison.get('periodMonths')}개월 평균보다 "
+            f"{abs(difference):.1f}% {direction}"
+        )
     price_rank = row.get("_locationPriceRank") or {}
     if price_rank:
         score = _price_burden_score(price_rank.get("topPercent") or 100)
@@ -859,6 +896,21 @@ def _purchase_score_parts(row, entity, signals):
     liquidity_score, liquidity_reason = _liquidity_score(row)
     relative_flow_score, relative_flow_reason = _relative_flow_score(signals)
     confidence_score, confidence_reason = _sample_confidence_score(row, signals)
+    comparison = row.get("priceComparison")
+    price_rank_metric = _metric(
+        "price_rank",
+        "주변 단지 가격 비교" if isinstance(comparison, dict) else "지역 가격 순위",
+        10,
+        price_rank_score,
+        price_rank_reason,
+    )
+    price_rank = row.get("_locationPriceRank") or {}
+    if isinstance(comparison, dict):
+        price_rank_metric["comparisonPeers"] = comparison.get("peers") or []
+        price_rank_metric["comparisonPeerCount"] = len(comparison.get("peers") or [])
+    elif price_rank:
+        price_rank_metric["comparisonPeers"] = price_rank.get("comparisonPeers") or []
+        price_rank_metric["comparisonPeerCount"] = max(0, int(price_rank.get("count") or 0) - 1)
 
     demand_metrics = [
         _metric("station", "역 접근성", 5, station_score, station_reason),
@@ -872,7 +924,7 @@ def _purchase_score_parts(row, entity, signals):
 
     return [
         _category_part("price", "가격 적정성", 30, [
-            _metric("price_rank", "지역 가격 순위", 10, price_rank_score, price_rank_reason),
+            price_rank_metric,
             _metric("leader_gap", "대장 가격 차이", 7, leader_gap_score, leader_gap_reason),
             _metric("estimate_range", "추정 시세 범위", 8, estimate_score, estimate_reason),
             _metric("recovery", "고점 회복률", 5, recovery_score, recovery_reason),

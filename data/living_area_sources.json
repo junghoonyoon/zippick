@@ -1,0 +1,130 @@
+{
+  "seoul-plan-renewal": {
+    "name": "서울시 서울플랜+ 정비사업 현황",
+    "url": "https://data.seoul.go.kr/dataList/OA-23112/S/1/datasetView.do",
+    "licenseStatus": "commercial_allowed",
+    "licenseUrl": "https://data.seoul.go.kr/dataList/OA-23112/S/1/datasetView.do",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false
+  },
+  "molit-renewal": {
+    "name": "국토교통부 전국 도시정비사업 통합 데이터",
+    "url": "https://www.data.go.kr/data/15160169/fileData.do",
+    "licenseStatus": "commercial_allowed",
+    "licenseUrl": "https://www.data.go.kr/data/15160169/fileData.do",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false
+  },
+  "building-hub-register": {
+    "name": "국토교통부 건축HUB 건축물대장정보",
+    "url": "https://www.data.go.kr/data/15134735/openapi.do",
+    "licenseStatus": "commercial_allowed",
+    "licenseUrl": "https://www.data.go.kr/data/15134735/openapi.do",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false
+  },
+  "building-hub-permit": {
+    "name": "국토교통부 건축HUB 주택인허가정보",
+    "url": "https://www.data.go.kr/data/15136560/openapi.do",
+    "licenseStatus": "commercial_allowed",
+    "licenseUrl": "https://www.data.go.kr/data/15136560/openapi.do",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false
+  },
+  "seoul-plan-boundary": {
+    "name": "서울시 도시계획사업 공간정보 OA-22712",
+    "url": "https://data.seoul.go.kr/dataList/OA-22712/S/1/datasetView.do",
+    "licenseStatus": "blocked",
+    "licenseUrl": "https://data.seoul.go.kr/dataList/OA-22712/S/1/datasetView.do",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [],
+    "geometryAllowed": false
+  },
+  "seoul-apartment-points": {
+    "licenseStatus": "commercial_allowed",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false,
+    "name": "서울시 공동주택 아파트 정보",
+    "url": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+    "licenseUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+    "licenseLabel": "공공누리 1유형 · 서울특별시",
+    "pointAllowed": true
+  },
+  "seoul-notice-2026-334": {
+    "licenseStatus": "commercial_allowed",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false,
+    "name": "서울특별시 고시 제2026-334호",
+    "url": "https://news.seoul.go.kr/citybuild/files/2025/06/6a2f228cc8fc41.75614968.pdf",
+    "licenseUrl": "https://www.law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1029423769",
+    "licenseLabel": "저작권법 제7조 제2호 · 공식 고시의 행정 사실",
+    "scope": "고시의 텍스트·수치만 이용. 별도 설계도·지도·사진 재사용 제외."
+  },
+  "ddm-myeonmok-notice": {
+    "licenseStatus": "commercial_allowed",
+    "verifiedAt": "2026-10-15",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false,
+    "name": "동대문구 면목선 기본계획 공청회 공고",
+    "url": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=43&key=209&nttNo=192191",
+    "licenseUrl": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=43&key=209&nttNo=192191",
+    "licenseLabel": "공공누리 1유형 · 동대문구 기후환경과"
+  },
+  "seongnam-living-20260831": {
+    "name": "성남시 생활권 재개발 5개 구역 지정 발표",
+    "url": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+    "licenseStatus": "reviewed_facts_only",
+    "licenseUrl": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+    "licenseLabel": "사업명·주소·단계·계획 수치만 정리 · 원문·사진·도면 재배포 제외",
+    "scope": "factual_metadata_only",
+    "verifiedAt": "2026-10-16",
+    "allowedUses": [
+      "collect",
+      "derive",
+      "web",
+      "pdf"
+    ],
+    "geometryAllowed": false
+  }
+}

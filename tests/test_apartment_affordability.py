@@ -45,6 +45,117 @@ ESTIMATE_PAYLOAD = {
 
 
 class ApartmentAffordabilityTest(unittest.TestCase):
+    def test_station_route_uses_the_exact_apartment_identity_and_cached_station(self):
+        selected = {
+            "name": "한솔마을4단지",
+            "district": "분당구",
+            "legalDong": "정자동",
+            "jibun": "101",
+            "apartmentId": "apt-101",
+            "address": "경기도 성남시 분당구 정자동 101",
+        }
+        different_same_name = {
+            **selected,
+            "apartmentId": "apt-202",
+            "jibun": "202",
+        }
+        station = {
+            "latitude": 37.3677,
+            "longitude": 127.1083,
+            "nearestStationName": "정자역",
+            "nearestStationLatitude": 37.3679,
+            "nearestStationLongitude": 127.1087,
+            "nearestStationDistance": 42.0,
+        }
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entities",
+            return_value=[selected, different_same_name],
+        ) as find_entities, mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "cached_station",
+            return_value=station,
+        ):
+            payload, status = search_server._apartment_station_route({
+                "name": "한솔마을4단지",
+                "region": "분당구",
+                "legalDong": "정자동",
+                "jibun": "101",
+                "apartmentId": "apt-101",
+            })
+
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["state"], "ready")
+        self.assertEqual(payload["apartment"]["apartmentId"], "apt-101")
+        self.assertEqual(payload["station"]["name"], "정자역")
+        self.assertEqual(payload["station"]["estimatedWalkingDistanceMeters"], 50)
+        self.assertEqual(payload["station"]["estimatedWalkingMinutes"], 1)
+        self.assertEqual(payload["reference"]["lineType"], "straight_line")
+        self.assertEqual(payload["identityResolution"]["method"], "exact_id")
+        self.assertEqual(find_entities.call_args.args, ("한솔마을4단지", "분당구", "정자동", "101"))
+
+    def test_station_route_does_not_guess_when_same_named_apartments_remain(self):
+        entities = [
+            {"name": "현대", "district": "강북구", "legalDong": "미아동", "jibun": "1"},
+            {"name": "현대", "district": "강북구", "legalDong": "미아동", "jibun": "2"},
+        ]
+        with mock.patch.object(
+            search_server.budget_candidates,
+            "_find_entities",
+            return_value=entities,
+        ), mock.patch.object(
+            search_server.budget_candidates.typesafe_jev,
+            "choose_apartment_identity",
+            return_value={
+                "status": "review",
+                "selectedIndex": None,
+                "selectionProbability": 0.5,
+                "confidence": 0.0,
+                "probabilities": {},
+            },
+        ):
+            payload, status = search_server._apartment_station_route({
+                "name": "현대", "region": "강북구",
+            })
+
+        self.assertEqual(status, 409)
+        self.assertIn("같은 이름", payload["error"])
+
+    def test_station_route_resolves_hongeun_hyundai_by_exact_location(self):
+        station = {
+            "latitude": 37.5902548794752,
+            "longitude": 126.938328720978,
+            "nearestStationName": "홍제역 3호선",
+            "nearestStationLatitude": 37.5887953806088,
+            "nearestStationLongitude": 126.944158007985,
+            "nearestStationDistance": 539.0,
+        }
+        with mock.patch.object(
+            search_server.kakao_station_distances,
+            "configured",
+            return_value=False,
+        ), mock.patch.object(
+            search_server.kakao_station_distances,
+            "cached_station",
+            return_value=station,
+        ):
+            payload, status = search_server._apartment_station_route({
+                "name": "현대",
+                "region": "서대문구",
+                "legal_dong": "홍은동",
+                "jibun": "202-5",
+            })
+
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["state"], "ready")
+        self.assertEqual(payload["apartment"]["name"], "현대(1,2차)")
+        self.assertEqual(payload["station"]["name"], "홍제역 3호선")
+        self.assertEqual(payload["identityResolution"]["method"], "exact_location")
+
     def test_manual_asking_price_reuses_current_financing_profile(self):
         payload, status = search_server._asking_price_financing({
             "region": "동대문구",
@@ -322,6 +433,33 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertEqual(score_rows[1]["latestDealPriceEok"], 12.0)
         self.assertEqual(report["peers"][0]["locationScore"]["score"], 79)
         self.assertEqual(report["peers"][1]["locationScore"]["score"], 78)
+
+    def test_apartment_report_collects_station_without_trade_api(self):
+        entity = {"name": "테스트단지", "province": "서울특별시", "district": "성동구",
+                  "legalDong": "성수동1가", "jibun": "721", "address": "서울특별시 성동구 성수동1가 721",
+                  "status": "분양권"}
+        lookup_order = []
+        def enrich_before_education(*_args, **_kwargs):
+            lookup_order.append("station")
+        def education_after_station(*_args, **_kwargs):
+            lookup_order.append("education")
+            return {"score": 80}
+        with mock.patch.object(search_server.budget_candidates, "_find_entity", return_value=entity), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=False), \
+             mock.patch.object(search_server.kakao_station_distances, "configured", return_value=True), \
+             mock.patch.object(search_server.kakao_station_distances, "cached_station", return_value=None), \
+             mock.patch.object(search_server.kakao_station_distances, "enrich_entities", side_effect=enrich_before_education) as enrich, \
+             mock.patch.object(search_server.education_environment, "education_environment_for_entity", side_effect=education_after_station), \
+             mock.patch.object(search_server.supply_forecast, "lifestyle_change", return_value={}), \
+             mock.patch.object(search_server.location_scores, "attach_scores") as attach_scores, \
+             mock.patch.object(search_server.market_indicators, "attach"), \
+             mock.patch.object(search_server.price_valuation, "attach_valuations"):
+            payload = search_server._apartment_report("테스트단지", "성동구")
+        self.assertEqual(payload["report"]["name"], "테스트단지")
+        self.assertEqual(payload["report"]["status"], "분양권")
+        self.assertEqual(lookup_order, ["station", "education"])
+        enrich.assert_called_once_with([entity], retry_unavailable=True, limit=1)
+        attach_scores.assert_called_once()
 
     def test_apartment_report_resolves_xi_brand_typo_to_canonical_entity(self):
         entity = {

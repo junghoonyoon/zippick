@@ -1,0 +1,56 @@
+[
+  {
+    "apartmentId": "484457631ccb1633",
+    "identity": {
+      "district": "성남수정구",
+      "legalDong": "산성동",
+      "jibun": "1336"
+    },
+    "source": "국토교통부 건축HUB 건축물대장 표제부",
+    "sourceUrl": "https://www.data.go.kr/data/15134735/openapi.do",
+    "areas": [
+      {
+        "legalDong": "산성동",
+        "dongCode": "4113110500",
+        "recordCount": 385,
+        "fetchedAt": "2026-10-12",
+        "residentialRecordCount": 322,
+        "approvalDateCount": 322,
+        "age30RecordCount": 106,
+        "age30SharePct": 32.9
+      }
+    ]
+  },
+  {
+    "apartmentId": "449db7d556b8ba86",
+    "identity": {
+      "district": "동대문구",
+      "legalDong": "이문동",
+      "jibun": "149-8"
+    },
+    "source": "국토교통부 건축HUB 건축물대장 표제부",
+    "sourceUrl": "https://www.data.go.kr/data/15134735/openapi.do",
+    "areas": [
+      {
+        "legalDong": "이문동",
+        "dongCode": "1123011000",
+        "recordCount": 3457,
+        "fetchedAt": "2026-10-12",
+        "residentialRecordCount": 2880,
+        "approvalDateCount": 2831,
+        "age30RecordCount": 2322,
+        "age30SharePct": 82.0
+      },
+      {
+        "legalDong": "휘경동",
+        "dongCode": "1123010900",
+        "recordCount": 2309,
+        "fetchedAt": "2026-10-12",
+        "residentialRecordCount": 1832,
+        "approvalDateCount": 1807,
+        "age30RecordCount": 1148,
+        "age30SharePct": 63.5
+      }
+    ]
+  }
+]

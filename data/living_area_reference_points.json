@@ -1,0 +1,176 @@
+{
+  "checkedAt": "2026-10-16",
+  "points": [
+    {
+      "identity": {
+        "district": "성남수정구",
+        "legalDong": "산성동",
+        "jibun": "1336",
+        "apartmentId": "484457631ccb1633",
+        "name": "산성역 헤리스톤"
+      },
+      "latitude": 37.454462641495,
+      "longitude": 127.151543173773,
+      "provider": "kakao_local",
+      "coordinateBasis": "address_geocode",
+      "checkedAt": "2026-10-16",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord",
+      "rawAddress": {
+        "address_name": "경기 성남시 수정구 산성동 1336",
+        "b_code": "4113110500",
+        "h_code": "4113160000",
+        "main_address_no": "1336",
+        "mountain_yn": "N",
+        "region_1depth_name": "경기",
+        "region_2depth_name": "성남시 수정구",
+        "region_3depth_h_name": "산성동",
+        "region_3depth_name": "산성동",
+        "sub_address_no": "",
+        "x": "127.151543173773",
+        "y": "37.454462641495"
+      }
+    },
+    {
+      "identity": {
+        "district": "성남수정구",
+        "legalDong": "산성동",
+        "jibun": "74",
+        "projectId": "seongnam-sanseong-living-zone"
+      },
+      "latitude": 37.4572309671841,
+      "longitude": 127.154560878025,
+      "provider": "kakao_local",
+      "coordinateBasis": "address_geocode",
+      "checkedAt": "2026-10-16",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord",
+      "rawAddress": {
+        "address_name": "경기 성남시 수정구 산성동 74",
+        "b_code": "4113110500",
+        "h_code": "4113160000",
+        "main_address_no": "74",
+        "mountain_yn": "N",
+        "region_1depth_name": "경기",
+        "region_2depth_name": "성남시 수정구",
+        "region_3depth_h_name": "산성동",
+        "region_3depth_name": "산성동",
+        "sub_address_no": "",
+        "x": "127.154560878025",
+        "y": "37.4572309671841"
+      }
+    },
+    {
+      "identity": {
+        "district": "성남수정구",
+        "legalDong": "단대동",
+        "jibun": "48-2",
+        "projectId": "seongnam-dandae-living-zone"
+      },
+      "latitude": 37.4583050111477,
+      "longitude": 127.158006898808,
+      "provider": "kakao_local",
+      "coordinateBasis": "address_geocode",
+      "checkedAt": "2026-10-16",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord",
+      "rawAddress": {
+        "address_name": "경기 성남시 수정구 단대동 48-2",
+        "b_code": "4113110400",
+        "h_code": "4113159000",
+        "main_address_no": "48",
+        "mountain_yn": "N",
+        "region_1depth_name": "경기",
+        "region_2depth_name": "성남시 수정구",
+        "region_3depth_h_name": "단대동",
+        "region_3depth_name": "단대동",
+        "sub_address_no": "2",
+        "x": "127.158006898808",
+        "y": "37.4583050111477"
+      }
+    },
+    {
+      "identity": {
+        "district": "성남수정구",
+        "legalDong": "수진동",
+        "jibun": "3603",
+        "projectId": "seongnam-sujin2-living-zone"
+      },
+      "latitude": 37.4379780883779,
+      "longitude": 127.131257630238,
+      "provider": "kakao_local",
+      "coordinateBasis": "address_geocode",
+      "checkedAt": "2026-10-16",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord",
+      "rawAddress": {
+        "address_name": "경기 성남시 수정구 수진동 3603",
+        "b_code": "4113110300",
+        "h_code": "4113158000",
+        "main_address_no": "3603",
+        "mountain_yn": "N",
+        "region_1depth_name": "경기",
+        "region_2depth_name": "성남시 수정구",
+        "region_3depth_h_name": "수진2동",
+        "region_3depth_name": "수진동",
+        "sub_address_no": "",
+        "x": "127.131257630238",
+        "y": "37.4379780883779"
+      }
+    },
+    {
+      "identity": {
+        "district": "성남수정구",
+        "legalDong": "태평동",
+        "jibun": "1180",
+        "projectId": "seongnam-taepyeong24-living-zone"
+      },
+      "latitude": 37.4492412638303,
+      "longitude": 127.13677708862,
+      "provider": "kakao_local",
+      "coordinateBasis": "address_geocode",
+      "checkedAt": "2026-10-16",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord",
+      "rawAddress": {
+        "address_name": "경기 성남시 수정구 태평동 1180",
+        "b_code": "4113110200",
+        "h_code": "4113155000",
+        "main_address_no": "1180",
+        "mountain_yn": "N",
+        "region_1depth_name": "경기",
+        "region_2depth_name": "성남시 수정구",
+        "region_3depth_h_name": "태평2동",
+        "region_3depth_name": "태평동",
+        "sub_address_no": "",
+        "x": "127.13677708862",
+        "y": "37.4492412638303"
+      }
+    },
+    {
+      "identity": {
+        "district": "성남중원구",
+        "legalDong": "상대원동",
+        "jibun": "817",
+        "projectId": "seongnam-sangdaewon13-living-zone"
+      },
+      "latitude": 37.4414865555095,
+      "longitude": 127.165875748778,
+      "provider": "kakao_local",
+      "coordinateBasis": "address_geocode",
+      "checkedAt": "2026-10-16",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord",
+      "rawAddress": {
+        "address_name": "경기 성남시 중원구 상대원동 817",
+        "b_code": "4113310500",
+        "h_code": "4113359000",
+        "main_address_no": "817",
+        "mountain_yn": "N",
+        "region_1depth_name": "경기",
+        "region_2depth_name": "성남시 중원구",
+        "region_3depth_h_name": "상대원3동",
+        "region_3depth_name": "상대원동",
+        "sub_address_no": "",
+        "x": "127.165875748778",
+        "y": "37.4414865555095"
+      }
+    }
+  ],
+  "pointsDigest": "b7df95572f7349de45d07d09eb8fab9a1c0804935243802524d0d62e6f60bf2d",
+  "notes": "공식 발표 주소를 Kakao Local 주소 검색 응답과 대조. 주소 대표점이며 경계·출입구·도보 경로가 아님."
+}

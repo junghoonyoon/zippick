@@ -22,6 +22,29 @@ class BudgetCandidatesTest(unittest.TestCase):
     def tearDown(self):
         self.live_price_patch.stop()
 
+    def test_candidate_identity_keeps_official_ids_address_and_aliases(self):
+        fields = budget_candidates._candidate_identity_fields(
+            {"name": "남성"},
+            {
+                "name": "남성",
+                "aliases": ["남성맨션아파트", "문래동 남성", "남성맨션아파트"],
+                "apartmentId": "11560100001002",
+                "kaptCode": "A-id",
+                "complexNo": "naver-id",
+                "province": "서울특별시",
+                "district": "영등포구",
+                "legalDong": "문래동2가",
+                "jibun": "35",
+                "address": "서울특별시 영등포구 문래동2가 35",
+            },
+        )
+
+        self.assertEqual(fields["apartmentId"], "11560100001002")
+        self.assertEqual(fields["kaptCode"], "A-id")
+        self.assertEqual(fields["complexNo"], "naver-id")
+        self.assertEqual(fields["address"], "서울특별시 영등포구 문래동2가 35")
+        self.assertEqual(fields["aliases"], ["남성", "남성맨션아파트", "문래동 남성"])
+
     def test_purchase_power_stretch_includes_up_to_five_percent(self):
         self.assertEqual(budget_candidates._fit_status(10.5, 10)[0], "상한 근접")
         self.assertEqual(budget_candidates._fit_status(10.51, 10)[0], "제외")
@@ -1070,6 +1093,78 @@ class BudgetCandidatesTest(unittest.TestCase):
 
         self.assertNotIn("대우디오빌", result_names)
         self.assertGreater(result["filterSummary"]["identity"], 0)
+
+    def test_exact_dong_and_jibun_resolve_when_feed_name_differs_from_master(self):
+        matches = budget_candidates._find_entities(
+            "현대",
+            "서대문구",
+            "홍은동",
+            "202-5",
+        )
+
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["name"], "현대(1,2차)")
+        self.assertEqual(matches[0]["jibun"], "202-5")
+
+        resolution = budget_candidates.resolve_apartment_identity(
+            "현대",
+            "서대문구",
+            "홍은동",
+            "202-5",
+        )
+        self.assertEqual(resolution["status"], "matched")
+        self.assertEqual(resolution["method"], "exact_location")
+
+    def test_single_digit_jibun_does_not_match_longer_address_suffixes(self):
+        matches = budget_candidates._find_entities(
+            "래미안 원베일리",
+            "서초구",
+            "반포동",
+            "1",
+        )
+
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["name"], "래미안 원베일리")
+        self.assertEqual(matches[0]["jibun"], "1")
+        self.assertIsNotNone(
+            budget_candidates._price_lookup_entity({
+                "name": "래미안 원베일리",
+                "region": "서초구",
+                "legalDong": "반포동",
+                "jibun": "1",
+            })
+        )
+
+    def test_structured_identity_uses_jev_only_for_ambiguous_candidates(self):
+        entities = [
+            {"name": "현대1", "district": "서대문구", "legalDong": "홍은동", "jibun": "1"},
+            {"name": "현대2", "district": "서대문구", "legalDong": "홍은동", "jibun": "2"},
+        ]
+        with mock.patch.object(
+            budget_candidates,
+            "_find_entities",
+            return_value=entities,
+        ), mock.patch.object(
+            budget_candidates.typesafe_jev,
+            "choose_apartment_identity",
+            return_value={
+                "status": "matched",
+                "selectedIndex": 1,
+                "selectionProbability": 0.93,
+                "confidence": 0.89,
+                "probabilities": {"candidate_0": 0.05, "candidate_1": 0.93, "no_match": 0.02},
+            },
+        ):
+            resolution = budget_candidates.resolve_apartment_identity(
+                "홍은동 현대",
+                "서대문구",
+                "홍은동",
+            )
+
+        self.assertEqual(resolution["status"], "matched")
+        self.assertEqual(resolution["method"], "typesafe_jev")
+        self.assertEqual(resolution["entity"]["name"], "현대2")
+        self.assertEqual(resolution["candidateCount"], 2)
 
     def test_generic_complex_display_name_includes_location_without_jibun(self):
         entity = budget_candidates._find_entity("벽산", "금천구")

@@ -57,8 +57,23 @@ class NewsCatalystsTest(unittest.TestCase):
         related = news_catalysts._select_related_news(articles, self.apartment)
 
         self.assertIsNone(catalyst)
-        self.assertEqual(related[0]["badge"], "단지 소식")
-        self.assertEqual(related[0]["status"], "related")
+        self.assertEqual(related, [])
+
+    def test_rejects_redevelopment_news_for_a_young_complex(self):
+        apartment = {
+            "name": "평촌어바인퍼스트",
+            "displayName": "평촌 어바인 퍼스트",
+            "region": "안양동안구",
+            "legalDong": "호계동",
+            "buildingAge": 5,
+        }
+        article = _article(
+            "평촌 어바인 퍼스트 재개발 추진 소식",
+            "평촌 어바인 퍼스트 재개발 추진 가능성이 언급됐다.",
+        )
+
+        self.assertIsNone(news_catalysts._select_catalyst([article], apartment))
+        self.assertEqual(news_catalysts._select_related_news([article], apartment), [])
 
     def test_rejects_article_about_a_different_apartment(self):
         catalyst = news_catalysts._select_catalyst([
@@ -72,6 +87,7 @@ class NewsCatalystsTest(unittest.TestCase):
 
     def test_short_common_name_requires_location_in_the_article(self):
         apartment = {
+            "buildingAge": 35,
             "name": "우성아파트",
             "region": "강남구",
             "legalDong": "대치동",
@@ -88,6 +104,7 @@ class NewsCatalystsTest(unittest.TestCase):
 
     def test_short_complex_name_uses_city_hint_from_display_region(self):
         apartment = {
+            "buildingAge": 35,
             "name": "은행주공",
             "displayName": "은행주공",
             "region": "성남중원구",
@@ -108,6 +125,7 @@ class NewsCatalystsTest(unittest.TestCase):
 
     def test_reordered_brand_and_phase_name_is_direct_complex_news(self):
         apartment = {
+            "buildingAge": 35,
             "name": "수지4차삼성아파트",
             "region": "용인수지구",
             "displayRegion": "경기도 용인수지구",
@@ -181,11 +199,14 @@ class NewsCatalystsTest(unittest.TestCase):
     def test_old_confirmed_stage_is_related_news_not_current_catalyst_badge(self):
         published = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=600)
         article = {
-            **_article("래미안 원베일리 재건축 정비구역 지정"),
+            **_article("목동 7단지 재건축 정비구역 지정"),
             "pubDate": format_datetime(published),
         }
 
-        related = news_catalysts._select_related_news([article], self.apartment)
+        related = news_catalysts._select_related_news([article], {
+            "name": "목동신시가지아파트7단지", "region": "양천구",
+            "legalDong": "목동", "buildingAge": 40,
+        })
 
         self.assertEqual(related[0]["badge"], "단지 소식")
         self.assertEqual(related[0]["status"], "related")
@@ -361,6 +382,7 @@ class NewsCatalystsTest(unittest.TestCase):
 
     def test_related_news_reserves_one_slot_for_nearby_reconstruction(self):
         apartment = {
+            "buildingAge": 40,
             "name": "목동신시가지아파트7단지",
             "region": "양천구",
             "legalDong": "목동",
@@ -393,6 +415,7 @@ class NewsCatalystsTest(unittest.TestCase):
 
     def test_mokdong_short_name_is_recognized_as_the_target_complex(self):
         apartment = {
+            "buildingAge": 40,
             "name": "목동신시가지아파트7단지",
             "region": "양천구",
             "legalDong": "목동",

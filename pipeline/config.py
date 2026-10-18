@@ -39,6 +39,8 @@ def _load_settings_file(path):
         ("공공데이터키", "PUBLIC_DATA_API_KEY"),
         ("국토부키", "PUBLIC_DATA_API_KEY"),
         ("실거래가키", "PUBLIC_DATA_API_KEY"),
+        ("건축HUB키", "BUILDING_HUB_API_KEY"),
+        ("브이월드키", "VWORLD_API_KEY"),
         ("청약홈키", "APPLYHOME_API_KEY"),
         ("한국은행키", "ECOS_API_KEY"),
         ("한국부동산원키", "RONE_API_KEY"),
@@ -57,6 +59,10 @@ def _load_settings_file(path):
         ("오픈라우터모델", "OPENROUTER_MODEL"),
         ("오픈라우터URL", "OPENROUTER_BASE_URL"),
         ("오픈라우터리퍼러", "OPENROUTER_REFERER"),
+        ("타입세이프키", "TYPESAFE_API_KEY"),
+        ("TypeSafe키", "TYPESAFE_API_KEY"),
+        ("타입세이프모델", "TYPESAFE_MODEL"),
+        ("타입세이프URL", "TYPESAFE_ENDPOINT"),
         ("슈파베이스URL", "SUPABASE_URL"),
         ("슈파베이스서비스키", "SUPABASE_SERVICE_ROLE_KEY"),
         ("슈파베이스버킷", "SUPABASE_STORAGE_BUCKET"),
@@ -89,6 +95,10 @@ SEARCH_INDEX_JSON = CACHE_DIR / "search_index.json"
 
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
 PUBLIC_DATA_API_KEY = os.environ.get("PUBLIC_DATA_API_KEY", os.environ.get("MOLIT_API_KEY", ""))
+# 건축HUB는 별도 활용신청이 필요하므로 다른 공공데이터 키를 자동 재사용하지 않는다.
+BUILDING_HUB_API_KEY = os.environ.get("BUILDING_HUB_API_KEY", "")
+# 브이월드 공간정보 API는 공공데이터포털·건축HUB 인증키와 별개다.
+VWORLD_API_KEY = os.environ.get("VWORLD_API_KEY", "")
 APPLYHOME_API_KEY = os.environ.get("APPLYHOME_API_KEY", PUBLIC_DATA_API_KEY)
 ECOS_API_KEY = os.environ.get("ECOS_API_KEY", "")
 # 한국부동산원 R-ONE Open API 키. 주간 아파트 매매가격지수 조회에 쓴다.
@@ -125,6 +135,13 @@ OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash")
 OPENROUTER_REFERER = os.environ.get("OPENROUTER_REFERER", "")
 OPENROUTER_TITLE = os.environ.get("OPENROUTER_TITLE", "beaver-real-estate-youtube")
+TYPESAFE_API_KEY = os.environ.get("TYPESAFE_API_KEY", "")
+TYPESAFE_MODEL = os.environ.get("TYPESAFE_MODEL", "jev-latest")
+TYPESAFE_ENDPOINT = os.environ.get("TYPESAFE_ENDPOINT", "https://api.typesafe.ai/v1/systemone")
+TYPESAFE_TIMEOUT_SECONDS = max(
+    0.5,
+    min(float(os.environ.get("TYPESAFE_TIMEOUT_SECONDS", "4")), 15),
+)
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:14b")
 OLLAMA_TIMEOUT_SECONDS = int(os.environ.get("OLLAMA_TIMEOUT_SECONDS", "300"))

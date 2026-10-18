@@ -17,6 +17,8 @@
 
 import csv
 import datetime
+import json
+import math
 import re
 from pathlib import Path
 
@@ -26,6 +28,10 @@ ROOT = Path(__file__).resolve().parents[1]
 # 두 파일은 컬럼이 같아서 같은 로더로 읽힌다.
 NATIONWIDE_PATH = ROOT / "data" / "입주예정_전국.csv"
 SUPPLEMENT_PATH = ROOT / "data" / "분양권_입주예정_아파트_보강.csv"
+SEONGNAM_REDEVELOPMENT_PATH = ROOT / "data" / "seongnam_redevelopment_projects.json"
+DONGDAEMUN_REDEVELOPMENT_PATH = ROOT / "data" / "dongdaemun_redevelopment_projects.json"
+PLANNED_COMPLEX_TOTALS_PATH = ROOT / "data" / "planned_complex_totals.json"
+MAJOR_AREA_DEVELOPMENTS_PATH = ROOT / "data" / "major_area_developments.json"
 
 
 def default_paths():
@@ -76,8 +82,12 @@ _CITY_DISTRICT_PREFIXES = (
 _LIFESTYLE_REGION_GROUPS = {
     "구성남 생활권": {"성남수정구", "성남중원구"},
 }
+_OLD_SEONGNAM_DONGS = {
+    "태평동", "수진동", "신흥동", "산성동", "단대동", "양지동",
+    "중앙동", "상대원동", "금광동", "은행동", "성남동", "하대원동",
+}
 _LIFESTYLE_EXCLUDED_PATTERN = re.compile(
-    r"청년안심|역세권청년|임대|공공임대|민간임대|행복주택|장기전세|공공전세|매입임대|전세임대",
+    r"청년안심|역세권청년|임대|공공임대|민간임대|행복주택|장기전세|공공전세|매입임대|전세임대|공공분양|신혼희망타운",
     re.IGNORECASE,
 )
 
@@ -139,6 +149,11 @@ def _city_group(region, sido=""):
 
 def _supply_lifestyle_key(row):
     region = row.get("region") or ""
+    if region in _LIFESTYLE_REGION_GROUPS["구성남 생활권"]:
+        # 수정구·중원구 전체가 구성남 구도심은 아니다. 금토·복정 공공택지나
+        # 동 정보 없는 분양 공고를 구도심 입주 물량에 섞지 않는다.
+        if row.get("legalDong") not in _OLD_SEONGNAM_DONGS:
+            return region
     return _city_group(region, row.get("sido"))
 
 
@@ -148,6 +163,91 @@ def _is_lifestyle_excluded(row):
         for key in ("name", "legalDong", "region", "sido")
     )
     return bool(_LIFESTYLE_EXCLUDED_PATTERN.search(haystack))
+
+
+def _lifestyle_redevelopment_projects(lifestyle_key):
+    path = {
+        "구성남 생활권": SEONGNAM_REDEVELOPMENT_PATH,
+        "동대문구": DONGDAEMUN_REDEVELOPMENT_PATH,
+    }.get(lifestyle_key)
+    if path is None:
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if payload.get("lifestyleKey") != lifestyle_key:
+        return []
+    return [
+        project for project in payload.get("projects", [])
+        if isinstance(project, dict) and project.get("name") and project.get("sourceUrl")
+    ]
+
+
+def _verified_planned_complex_totals():
+    """공식 자료로 확인한 전체 아파트 세대수만 조회한다."""
+    try:
+        payload = json.loads(PLANNED_COMPLEX_TOTALS_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    verified = {}
+    for entry in payload.get("complexes", []):
+        if not isinstance(entry, dict):
+            continue
+        key = (
+            _project_name_key(entry.get("name")),
+            _compact(entry.get("region")),
+            _compact(entry.get("legalDong")),
+        )
+        try:
+            offered = int(entry.get("offeredHouseholds"))
+            total = int(entry.get("plannedTotalHouseholds"))
+        except (TypeError, ValueError):
+            continue
+        if not all(key) or offered <= 0 or total < offered or not entry.get("sourceUrl"):
+            continue
+        verified[key] = entry
+    return verified
+
+
+def _distance_meters(latitude_a, longitude_a, latitude_b, longitude_b):
+    try:
+        latitude_a, longitude_a = float(latitude_a), float(longitude_a)
+        latitude_b, longitude_b = float(latitude_b), float(longitude_b)
+    except (TypeError, ValueError):
+        return None
+    if not (33 <= latitude_a <= 39 and 124 <= longitude_a <= 132
+            and 33 <= latitude_b <= 39 and 124 <= longitude_b <= 132):
+        return None
+    lat_a, lat_b = math.radians(latitude_a), math.radians(latitude_b)
+    lat_diff = lat_b - lat_a
+    lon_diff = math.radians(longitude_b - longitude_a)
+    a = math.sin(lat_diff / 2) ** 2 + math.cos(lat_a) * math.cos(lat_b) * math.sin(lon_diff / 2) ** 2
+    return 2 * 6371000 * math.asin(min(1, math.sqrt(a)))
+
+
+def _major_area_developments(region, legal_dong, latitude=None, longitude=None):
+    """주소 좌표로 가까운 사업을 찾고, 좌표가 없을 때만 같은 동을 쓴다."""
+    if not region:
+        return []
+    try:
+        payload = json.loads(MAJOR_AREA_DEVELOPMENTS_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    nearby = []
+    for project in payload.get("projects", []):
+        if not isinstance(project, dict) or not project.get("name") or not project.get("sourceUrl"):
+            continue
+        distance = _distance_meters(latitude, longitude, project.get("latitude"), project.get("longitude"))
+        if distance is not None and project.get("nearbyRadiusMeters"):
+            if distance <= float(project["nearbyRadiusMeters"]):
+                nearby.append(project)
+            continue
+        if (_compact(project.get("region")) == _compact(region)
+                and legal_dong
+                and _compact(legal_dong) in {_compact(dong) for dong in project.get("legalDongs", [])}):
+            nearby.append(project)
+    return nearby
 
 
 def _load_one(path):
@@ -181,14 +281,20 @@ def load_rows(path=None):
     """입주예정월과 세대수가 모두 있는 행만 남긴다.
 
     전국본과 보강본을 함께 읽을 때 같은 단지가 두 번 세어지면 물량이
-    부풀려진다. 단지명·지역·입주월이 같으면 한 건으로 본다.
+    부풀려진다. 단지명·지역·법정동·입주월이 같으면 한 건으로 본다.
     """
     paths = [path] if path else default_paths()
     index = {}
     merged = []
     for one in paths:
         for row in _load_one(one):
-            key = (_project_name_key(row["name"]), _compact(row["region"]), row["year"], row["month"])
+            key = (
+                _project_name_key(row["name"]),
+                _compact(row["region"]),
+                _compact(row.get("legalDong")),
+                row["year"],
+                row["month"],
+            )
             if key in index:
                 current = merged[index[key]]
                 if row["households"] > current["households"]:
@@ -220,11 +326,21 @@ def lifestyle_change(row, entity=None, today=None, past_months=36, horizon_month
     lifestyle_key = _city_group(region, sido)
     if not lifestyle_key:
         return {"status": "missing", "reason": "지역 정보가 없어 생활권 변화를 계산하지 못했어요."}
+    redevelopment_projects = _lifestyle_redevelopment_projects(lifestyle_key)
+    candidate = row or {}
+    major_developments = _major_area_developments(
+        region, legal_dong,
+        candidate.get("latitude") or source.get("latitude"),
+        candidate.get("longitude") or source.get("longitude"),
+    )
 
-    start = today.year * 12 + today.month - past_months
+    # 이 화면은 '앞으로 입주할' 단지를 보여준다. 지난 입주가 앞자리를 차지하면
+    # 현재 진행 중인 다른 구의 대단지가 잘려 나간다.
+    start = today.year * 12 + today.month
     end = today.year * 12 + today.month + horizon_months
     rows = []
     seen = set()
+    verified_totals = _verified_planned_complex_totals()
     for item in _rows(path):
         if _supply_lifestyle_key(item) != lifestyle_key:
             continue
@@ -233,14 +349,20 @@ def lifestyle_change(row, entity=None, today=None, past_months=36, horizon_month
         month_key = item["year"] * 12 + item["month"]
         if month_key < start or month_key > end:
             continue
-        item_key = (_compact(item["name"]), _compact(item["region"]), item["year"], item["month"])
+        item_key = (
+            _compact(item["name"]),
+            _compact(item["region"]),
+            _compact(item.get("legalDong")),
+            item["year"],
+            item["month"],
+        )
         if item_key in seen:
             continue
         seen.add(item_key)
         households = int(item.get("households") or 0)
         if households <= 0:
             continue
-        rows.append({
+        result_row = {
             "name": item["name"],
             "region": item["region"],
             "legalDong": item.get("legalDong") or "",
@@ -251,9 +373,25 @@ def lifestyle_change(row, entity=None, today=None, past_months=36, horizon_month
             "isLarge": households >= LIFESTYLE_LARGE_COMPLEX,
             "isSameDong": bool(legal_dong and item.get("legalDong") == legal_dong),
             "isTarget": bool(target_name and _compact(item["name"]) == target_name),
-        })
+        }
+        verified = verified_totals.get((
+            _project_name_key(item["name"]),
+            _compact(item["region"]),
+            _compact(item.get("legalDong")),
+        ))
+        if verified and verified["offeredHouseholds"] == households:
+            result_row["plannedTotalHouseholds"] = verified["plannedTotalHouseholds"]
+            result_row["plannedTotalSourceUrl"] = verified["sourceUrl"]
+            result_row["isLarge"] = verified["plannedTotalHouseholds"] >= LIFESTYLE_LARGE_COMPLEX
+        rows.append(result_row)
     if not rows:
-        return {"status": "none", "region": region, "lifestyleKey": lifestyle_key}
+        return {
+            "status": "projects_only" if redevelopment_projects else "none",
+            "region": region,
+            "lifestyleKey": lifestyle_key,
+            "redevelopmentProjects": redevelopment_projects,
+            "majorDevelopments": major_developments,
+        }
 
     rows.sort(key=lambda item: (
         0 if item["isTarget"] else 1,
@@ -262,23 +400,28 @@ def lifestyle_change(row, entity=None, today=None, past_months=36, horizon_month
         item["plannedMoveInMonth"],
     ))
     total = sum(item["households"] for item in rows)
+    # 분양 물량은 그대로 보고하되, 확인된 전체 규모가 있으면 섹션 노출 판단에는
+    # 그 규모를 쓴다. 분양 물량이 적은 대단지를 누락하지 않기 위해서다.
+    visible_scale = sum(item.get("plannedTotalHouseholds", item["households"]) for item in rows)
     adjusted_total = sum(item["adjustedHouseholds"] for item in rows)
     large = [item for item in rows if item["isLarge"]]
     same_dong = [item for item in rows if item["isSameDong"]]
     level = (
         "strong"
-        if total >= LIFESTYLE_STRONG_TOTAL or len(large) >= 2
+        if visible_scale >= LIFESTYLE_STRONG_TOTAL or len(large) >= 2
         else "notable"
-        if total >= LIFESTYLE_NOTABLE_TOTAL or large or len(rows) >= 3
+        if visible_scale >= LIFESTYLE_NOTABLE_TOTAL or large or len(rows) >= 3
         else "light"
     )
     if level == "light":
         return {
-            "status": "light",
+            "status": "projects_only" if redevelopment_projects else "light",
             "region": region,
             "lifestyleKey": lifestyle_key,
             "totalHouseholds": total,
             "complexCount": len(rows),
+            "redevelopmentProjects": redevelopment_projects,
+            "majorDevelopments": major_developments,
         }
     return {
         "status": "ok",
@@ -290,12 +433,14 @@ def lifestyle_change(row, entity=None, today=None, past_months=36, horizon_month
         "complexCount": len(rows),
         "largeComplexCount": len(large),
         "sameDongCount": len(same_dong),
-        "pastMonths": past_months,
+        "pastMonths": 0,
         "horizonMonths": horizon_months,
         "basis": "입주예정·분양권 단지 기준",
         "source": SOURCE_LABEL,
         "sourceUrl": SOURCE_URL,
         "complexes": rows[:5],
+        "redevelopmentProjects": redevelopment_projects,
+        "majorDevelopments": major_developments,
     }
 
 

@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-10-15",
+  "coordinateSource": "Kakao Local API",
+  "coordinateCheckedAt": "2026-10-15",
+  "stations": [
+    {
+      "id": "myeonmok-jangan-reference",
+      "name": "면목선 · 장안2동주민센터 앞",
+      "projectId": "ddm-myeonmok-notice:2026-2210",
+      "latitude": 37.578472915264335,
+      "longitude": 127.0705853082512,
+      "kakaoPlaceId": "10726991",
+      "address": "서울 동대문구 장안동 286-3",
+      "positionLabel": "주민센터 기준 · 예정역 출입구 미확정",
+      "sourceUrl": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=278&key=58&nttNo=106839",
+      "sourceDate": "2025-02-19",
+      "locationBasis": "official_planning_landmark",
+      "lineIds": [
+        "myeonmok"
+      ]
+    },
+    {
+      "id": "myeonmok-jeonnong-reference",
+      "name": "면목선 · 전농2동주민센터 앞",
+      "projectId": "ddm-myeonmok-notice:2026-2210",
+      "latitude": 37.5780426774335,
+      "longitude": 127.060022639582,
+      "kakaoPlaceId": "8062242",
+      "address": "서울 동대문구 전농동 688-2",
+      "positionLabel": "주민센터 기준 · 예정역 출입구 미확정",
+      "sourceUrl": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=278&key=58&nttNo=106839",
+      "sourceDate": "2025-02-19",
+      "locationBasis": "official_planning_landmark",
+      "lineIds": [
+        "myeonmok"
+      ]
+    },
+    {
+      "id": "cheongnyangni-reference",
+      "name": "청량리역 · GTX-B·C 계획",
+      "latitude": 37.580037056302906,
+      "longitude": 127.04472723023305,
+      "kakaoPlaceId": "21160572",
+      "address": "서울 동대문구 전농동 620-67",
+      "positionLabel": "현재 1호선 역 기준 · GTX 출입구 미확정",
+      "sourceUrl": "https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf",
+      "sourceDate": "2024-01-25",
+      "locationBasis": "existing_station_reference",
+      "lineIds": [
+        "gtx-b",
+        "gtx-c"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "myeonmok-local-reference",
+      "stationIds": [
+        "myeonmok-jeonnong-reference",
+        "myeonmok-jangan-reference"
+      ],
+      "label": "면목선 계획 경유지 연결 · 실제 선형 아님",
+      "geometryBasis": "landmark_connection_only"
+    }
+  ],
+  "planReview": {
+    "sourceUrl": "https://seoulboard.seoul.go.kr/comm/getFile?srvcId=BBSTY1&upperNo=463192&fileTy=ATTACH&fileNo=5&bbsNo=277",
+    "sha256": "fc536de57f56674790dad0793bccfca1c275fd3c6dd67b6adc341efa070835bf",
+    "page": 18,
+    "note": "2026 기본계획 초안 그림1-8의 103·104 정거장 구간 대조. 원도면 선형을 좌표로 복제하지 않음. 표기 좌표는 공식 FAQ 경유지의 실제 시설 대표점이며 예정역 좌표 아님."
+  }
+}

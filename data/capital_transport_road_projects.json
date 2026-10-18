@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-18",
+  "scopeNote": "2026~2030년 제5차 혼잡도로 계획의 수도권 사업 2건과 대광위가 2025년 6월 기준 추진 중으로 공개한 광역도로 3건입니다. 각 사업의 현재 착공 상태는 별도 확인이 필요합니다.",
+  "projects": [
+    {
+      "id": "road-2026-jungbong-tunnel",
+      "name": "중봉터널 민간투자사업",
+      "route": "인천 서구 경서동 경서삼거리~왕길동 검단2교차로",
+      "scopes": ["인천광역시:서구"],
+      "stage": "2026~2030년 혼잡도로 계획 반영",
+      "sourceDate": "2026-02-05",
+      "sourceUrl": "https://www.incheon.go.kr/IC010205/view?curPage=144&repSeq=DOM_0000000014099987"
+    },
+    {
+      "id": "road-2026-munhak-industrial",
+      "name": "문학IC~공단고가교 도로 건설사업",
+      "route": "인천 문학IC~공단고가교",
+      "scopes": [],
+      "stage": "2026~2030년 혼잡도로 계획 반영",
+      "sourceDate": "2026-02-05",
+      "sourceUrl": "https://www.incheon.go.kr/IC010205/view?curPage=144&repSeq=DOM_0000000014099987"
+    },
+    {
+      "id": "road-2025-taereung-guri",
+      "name": "태릉~구리 광역도로",
+      "route": "서울 중랑구 목동~경기 구리시 인창동",
+      "scopes": ["서울특별시:중랑구", "경기도:구리시"],
+      "stage": "2025년 6월 기준 실시설계 완료",
+      "sourceDate": "2025-06",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37200/DTL.jsp"
+    },
+    {
+      "id": "road-2025-geomdan-yakam",
+      "name": "인천 거첨도~김포 약암리 광역도로",
+      "route": "인천 서구 거첨도~경기 김포시 약암리",
+      "scopes": ["인천광역시:서구", "경기도:김포시"],
+      "stage": "2025년 6월 기준 공사 중",
+      "sourceDate": "2025-06",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37200/DTL.jsp"
+    },
+    {
+      "id": "road-2025-geomdan-daegok",
+      "name": "검단~대곡 광역도로",
+      "route": "인천 서구 대곡동~경기 김포시 마산동",
+      "scopes": ["인천광역시:서구", "경기도:김포시"],
+      "stage": "2025년 6월 기준 실시설계 중",
+      "sourceDate": "2025-06",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37200/DTL.jsp"
+    }
+  ]
+}

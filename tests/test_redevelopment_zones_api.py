@@ -4,6 +4,13 @@ import search_server
 
 
 class RedevelopmentZonesApiTest(unittest.TestCase):
+    def test_noncommercial_seoul_boundaries_are_served_with_provenance(self):
+        payload = search_server._redevelopment_zones_payload({"limit": ["3000"]})
+        self.assertGreater(len(payload["zones"]), 100)
+        self.assertEqual(payload["useContext"], "noncommercial")
+        self.assertTrue(all(z["commercialAllowed"] is False for z in payload["zones"]))
+        self.assertEqual(payload["mapStatus"], "available")
+
     def test_map_api_excludes_completed_and_background_districts(self):
         cases = [
             {"name": "길음재정비촉진지구", "projectType": "재정비촉진지구", "stage": "지구지정"},
@@ -13,7 +20,7 @@ class RedevelopmentZonesApiTest(unittest.TestCase):
             {"name": "역세권 청년안심주택", "projectType": "청년안심주택", "stage": "사업계획승인"},
             {"name": "장기전세주택 예정지", "projectType": "장기전세주택", "stage": "지구계획승인"},
             {"name": "상도두산위브 트레지움", "projectType": "미리내집", "stage": "입주자 모집공고 완료"},
-            {"id": "11000UQ120PS202411014108", "name": "신사1", "projectType": "재건축(단독)", "stage": "착공"},
+            {"id": "11000UQ120PS202411014108", "name": "신사1", "districtCode": "11380", "projectType": "재건축(단독)", "stage": "착공"},
         ]
 
         for zone in cases:

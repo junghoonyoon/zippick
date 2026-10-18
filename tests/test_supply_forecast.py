@@ -1,14 +1,17 @@
 import csv
 import datetime
+import json
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "pipeline"))
 
 import supply_forecast  # noqa: E402
+import planned_rail  # noqa: E402
 
 
 COLUMNS = ["시도", "자치구", "시군구", "법정동", "대표단지명", "세대수", "입주예정월"]
@@ -178,6 +181,136 @@ class SupplyForecastTest(unittest.TestCase):
         self.assertEqual(result["largeComplexCount"], 2)
         self.assertEqual(result["complexes"][0]["name"], "산성역 헤리스톤")
         self.assertTrue(result["complexes"][0]["isTarget"])
+        self.assertEqual(len(result["redevelopmentProjects"]), 6)
+        self.assertEqual(result["redevelopmentProjects"][0]["name"], "산성구역")
+
+    def test_dongdaemun_report_keeps_district_projects_without_move_in_rows(self):
+        path = self._fixture([])
+        result = supply_forecast.lifestyle_change(
+            {"name": "이문 아이파크 자이", "district": "동대문구", "province": "서울특별시", "legalDong": "이문동"},
+            today=self.today,
+            path=path,
+        )
+
+        self.assertEqual(result["status"], "projects_only")
+        self.assertEqual(result["lifestyleKey"], "동대문구")
+        self.assertEqual(
+            {(project["name"], project["legalDong"]) for project in result["redevelopmentProjects"]},
+            {("청량리제8구역", "청량리동"), ("전농제9구역", "전농동"), ("제기제4구역", "제기동")},
+        )
+        self.assertTrue(all(project["sourceUrl"].startswith("https://www.ddm.go.kr/") for project in result["redevelopmentProjects"]))
+        other_district = supply_forecast.lifestyle_change(
+            {"district": "성북구", "province": "서울특별시", "legalDong": "석관동"},
+            today=self.today,
+            path=path,
+        )
+        self.assertEqual(other_district["redevelopmentProjects"], [])
+
+    def test_cheongnyangni_gtx_keeps_station_and_stage_sources(self):
+        lines = planned_rail.planned_rail_for_candidate({
+            "province": "서울특별시", "district": "동대문구", "legalDong": "이문동",
+        })
+        gtx = {line["id"]: line for line in lines if line["id"].startswith("gtx-")}
+        self.assertEqual(set(gtx), {"gtx-b", "gtx-c"})
+        self.assertTrue(all(line["stations"] == ["청량리"] for line in gtx.values()))
+        self.assertTrue(all(line["region"] == "동대문구" for line in gtx.values()))
+        self.assertTrue(all(line["stationsSourceUrl"].startswith("https://www.molit.go.kr/") for line in gtx.values()))
+        self.assertEqual(gtx["gtx-c"]["sourceDate"], "2026-09-14")
+        self.assertEqual(gtx["gtx-c"]["verifiedAt"], "2026-10-16")
+        seongbuk = planned_rail.planned_rail_for_candidate({
+            "province": "서울특별시", "district": "성북구", "legalDong": "석관동",
+        })
+        self.assertNotIn("gtx-b", {line["id"] for line in seongbuk})
+
+    def test_lifestyle_change_uses_verified_full_size_only_for_exact_project(self):
+        path = self._fixture(
+            [
+                {"시도": "서울특별시", "자치구": "노원구", "법정동": "월계동", "대표단지명": "서울원 아이파크", "세대수": "1856", "입주예정월": "2028-07"},
+                {"시도": "서울특별시", "자치구": "노원구", "법정동": "공릉동", "대표단지명": "서울원 아이파크", "세대수": "1856", "입주예정월": "2028-07"},
+            ]
+        )
+        result = supply_forecast.lifestyle_change(
+            {"name": "다른 단지", "district": "노원구", "province": "서울특별시"},
+            today=self.today,
+            path=path,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        by_dong = {row["legalDong"]: row for row in result["complexes"]}
+        self.assertEqual(by_dong["월계동"]["plannedTotalHouseholds"], 2264)
+        self.assertIn("seoulone_recruitment_full.pdf", by_dong["월계동"]["plannedTotalSourceUrl"])
+        self.assertNotIn("plannedTotalHouseholds", by_dong["공릉동"])
+
+    def test_major_development_is_scoped_to_same_district_and_dong(self):
+        path = self._fixture([])
+        wolgye = supply_forecast.lifestyle_change(
+            {"district": "노원구", "legalDong": "월계동"}, today=self.today, path=path,
+        )
+        sanggye = supply_forecast.lifestyle_change(
+            {"district": "노원구", "legalDong": "상계동"}, today=self.today, path=path,
+        )
+        gongneung = supply_forecast.lifestyle_change(
+            {"district": "노원구", "legalDong": "공릉동"}, today=self.today, path=path,
+        )
+        nearby_other_dong = supply_forecast.lifestyle_change(
+            {"district": "성북구", "legalDong": "석관동", "latitude": 37.619,
+             "longitude": 127.064}, today=self.today, path=path,
+        )
+        far_same_dong = supply_forecast.lifestyle_change(
+            {"district": "노원구", "legalDong": "월계동", "latitude": 37.65,
+             "longitude": 127.064}, today=self.today, path=path,
+        )
+
+        self.assertEqual(wolgye["majorDevelopments"][0]["name"], "광운대역 물류부지 개발")
+        self.assertEqual(sanggye["majorDevelopments"][0]["plannedTotalHouseholds"], 103000)
+        self.assertEqual(gongneung["majorDevelopments"], [])
+        self.assertEqual(nearby_other_dong["majorDevelopments"][0]["name"], "광운대역 물류부지 개발")
+        self.assertEqual(far_same_dong["majorDevelopments"], [])
+
+    def test_verified_large_complex_is_not_hidden_by_small_offered_count(self):
+        import tempfile
+
+        path = self._fixture([
+            {"시도": "서울특별시", "자치구": "구로구", "법정동": "구로동",
+             "대표단지명": "대단지 예시", "세대수": "200", "입주예정월": "2028-07"},
+        ])
+        with tempfile.TemporaryDirectory() as directory:
+            metadata = Path(directory) / "planned_complex_totals.json"
+            metadata.write_text(json.dumps({"complexes": [{
+                "name": "대단지 예시", "region": "구로구", "legalDong": "구로동",
+                "offeredHouseholds": 200, "plannedTotalHouseholds": 5000,
+                "sourceUrl": "https://example.com/official-notice",
+            }]}), encoding="utf-8")
+            with mock.patch.object(supply_forecast, "PLANNED_COMPLEX_TOTALS_PATH", metadata):
+                result = supply_forecast.lifestyle_change(
+                    {"district": "구로구", "legalDong": "구로동"}, today=self.today, path=path,
+                )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["level"], "strong")
+        self.assertEqual(result["totalHouseholds"], 200)
+        self.assertEqual(result["complexes"][0]["plannedTotalHouseholds"], 5000)
+
+    def test_lifestyle_change_omits_public_sale_and_non_downtown_dongs(self):
+        path = self._fixture(
+            [
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "산성동", "대표단지명": "산성역 헤리스톤", "세대수": "3487", "입주예정월": "2027-12"},
+                {"시도": "경기도", "시군구": "성남중원구", "법정동": "중앙동", "대표단지명": "해링턴 스퀘어 신흥역", "세대수": "1319", "입주예정월": "2027-12"},
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "금토동", "대표단지명": "성남금토 A-4블록 신혼희망타운(공공분양)", "세대수": "766", "입주예정월": "2027-11"},
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "금토동", "대표단지명": "금토동 민간단지", "세대수": "1200", "입주예정월": "2027-11"},
+                {"시도": "경기도", "시군구": "성남수정구", "법정동": "", "대표단지명": "동네 미확인 단지", "세대수": "1200", "입주예정월": "2027-11"},
+            ]
+        )
+        result = supply_forecast.lifestyle_change(
+            {"name": "산성역 헤리스톤", "district": "성남수정구", "province": "경기도", "legalDong": "산성동"},
+            today=self.today,
+            path=path,
+        )
+
+        self.assertEqual(result["totalHouseholds"], 4806)
+        self.assertEqual([row["name"] for row in result["complexes"]], [
+            "산성역 헤리스톤", "해링턴 스퀘어 신흥역",
+        ])
 
     def test_lifestyle_change_excludes_rental_like_supply(self):
         path = self._fixture(

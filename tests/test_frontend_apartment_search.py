@@ -12,6 +12,275 @@ REDEVELOPMENT_ZONES = ROOT / "data" / "redevelopment_zones.geojson"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for purchase power copy checks")
+    def test_purchase_power_explains_why_higher_income_does_not_raise_loan(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        helper = re.search(r"    function purchasePowerLoanLimitNote\(review\) \{.*?\n    \}", html, re.S).group()
+        script = helper + """
+          const assert = require('node:assert/strict');
+          assert.match(purchasePowerLoanLimitNote({constraint:{type:'LTV'},housingPolicy:{ltv:.7}}), /70%.*연소득을 더 올려도/);
+          assert.match(purchasePowerLoanLimitNote({constraint:{type:'MORTGAGE_CAP'}}), /주담대 총액한도/);
+          assert.match(purchasePowerLoanLimitNote({constraint:{type:'OWNER_RESTRICTION'}}), /받을 수 없어요/);
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('class="power-funding-limit-note">${esc(purchasePowerLoanLimitNote(review))}', html)
+
+    def test_report_price_comparison_omits_duplicate_basis_note(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertNotIn("ⓘ 이 비교 가격의 기준", html)
+        self.assertIn('<details class="zpr-details" open><summary>비교 기준과 실제 거래</summary>', html)
+
+    def test_missing_redevelopment_is_never_presented_as_a_neutral_score(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+
+        self.assertNotIn("좌표가 없어 중립점수로 계산했어요", html)
+        self.assertNotIn("데이터가 부족해 4점 중 2점으로 계산했어요", html)
+        self.assertIn(
+            '.filter(detail => detail?.status !== "missing" && Number.isFinite(Number(detail?.points)))',
+            html,
+        )
+        self.assertIn("확인하지 못한 자료는 점수에 넣지 않았어요.", html)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_funding_report_shows_two_clear_cash_scenarios_without_repeating_the_gap(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        body = html.split("    function zippickFundingHtml(item) {", 1)[1].split(
+            "    // ── 하락장 환금성", 1,
+        )[0]
+        script = f"""
+          const zpNum = value => value === null || value === undefined || value === '' ? NaN : Number(value);
+          const zpPct = (value, digits=1) => `${{Number(value).toFixed(digits).replace(/\\.0$/, '')}}%`;
+          const transactionMoney = value => ({{8.85:'8억 8,500만원',3.8:'3억 8,000만원',
+            5.05:'5억 500만원',4.27:'4억 2,700만원'}})[Number(value)] || `${{value}}억원`;
+          const esc = value => String(value);
+          const zippickJeonsePeerStat = () => ({{total:70,median:54,band:'low'}});
+          function zippickFundingHtml(item) {{{body}
+          const rendered = zippickFundingHtml({{jeonseRatioPct:42.9,jeonseSalePriceBasisEok:8.85,
+            latestJeonseDepositEok:3.8,policyImpact:{{requiredCashEok:4.27}}}});
+          console.log(JSON.stringify(rendered));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rendered = json.loads(result.stdout)
+        self.assertIn("전세를 끼고 사도 내 돈이 많이 필요해요", rendered)
+        self.assertIn("다른 후보보다 전세금에 비해 매매가가 비싼 편이에요.", rendered)
+        self.assertLess(rendered.index("다른 후보보다 전세금에 비해 매매가가 비싼 편이에요."), rendered.index('class="zpr-fund"'))
+        self.assertIn("비슷한 후보 70곳 중간값 54%", rendered)
+        self.assertEqual(rendered.count('class="zpr-insight"'), 2)
+        self.assertEqual(rendered.count("5억 500만원"), 1)
+        self.assertIn("전세 승계가 가능하다면", rendered)
+        self.assertIn("직접 살 때는 대출을 반영해 내 돈 <b>4억 2,700만원</b>", rendered)
+        self.assertNotIn("비어 있습니다", rendered)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_price_report_explains_region_and_leader_score_basis(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        score_body = html.split("    function zippickPriceScoreReason(part, item) {", 1)[1].split(
+            "    function zippickBarReason(item, part) {", 1,
+        )[0]
+        body = html.split("    function zippickBarReason(item, part) {", 1)[1].split(
+            "    function zippickLocationBarsHtml(item) {", 1,
+        )[0]
+        script = f"""
+          function zippickPriceScoreReason(part, item) {{{score_body}
+          function zippickBarReason(item, part) {{{body}
+          const part = {{key:'price', details:[
+            {{key:'price_rank', reason:'지역 후보 3/20위 · 상위 15% · 상위권 가격'}},
+            {{key:'leader_gap', reason:'지역 대장보다 18.4% 낮음'}},
+          ]}};
+          const item = {{name:'초록',signals:{{leaderName:'문정래미안'}}}};
+          const missingLeader = {{name:'초록',signals:{{}}}};
+          const sameLeader = {{name:'초록',signals:{{leaderName:'초록',isRegionalLeader:true}}}};
+          console.log(JSON.stringify([
+            zippickBarReason(item, part),
+            zippickBarReason(missingLeader, part),
+            zippickBarReason(sameLeader, part),
+          ]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rendered, without_name, own_leader = json.loads(result.stdout)
+        self.assertIn("지역 가격대 3/20위(상위 15%)로 지역에서 비싼 편이에요", rendered)
+        self.assertIn("대장 단지 ‘문정래미안’보다 18.4% 낮아, 단지 조건이 비슷하면 대장 가격을 따라갈 여지가 있어요", rendered)
+        self.assertIn("위치나 연식 차이가 크면 가격 차이가 이어질 수 있어요", rendered)
+        self.assertNotIn("오를 거예요", rendered)
+        self.assertNotIn("상승 예상", rendered)
+        self.assertNotIn("집픽 적정가격", rendered)
+        self.assertNotIn("지금 본 매물값", rendered)
+        self.assertIn("대장 단지보다 18.4% 낮아", without_name)
+        self.assertNotIn("대장 단지 ‘초록’", own_leader)
+        self.assertNotIn("대장 단지보다 18.4% 낮아", own_leader)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_demand_and_market_report_explain_why_the_score_is_good(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        demand_body = html.split("    function zippickDemandScoreReason(part) {", 1)[1].split(
+            "    function zippickMarketScoreReason(item) {", 1,
+        )[0]
+        market_body = html.split("    function zippickMarketScoreReason(item) {", 1)[1].split(
+            "    function zippickBarReason(item, part) {", 1,
+        )[0]
+        bar_body = html.split("    function zippickBarReason(item, part) {", 1)[1].split(
+            "    function zippickLocationBarsHtml(item) {", 1,
+        )[0]
+        script = f"""
+          const zpNum = value => value === null || value === undefined || value === '' ? NaN : Number(value);
+          const zpPct = (value, digits=1) => `${{Math.abs(Number(value)).toFixed(digits).replace(/\\.0$/, '')}}%`;
+          const ZP_PEAK_RECOVERY_PCT = 98;
+          function zippickDetailReasons(part, keys, limit = 2) {{
+            const details = Array.isArray(part?.details) ? part.details : [];
+            return keys.map(key => details.find(detail => detail?.key === key))
+              .map(detail => String(detail?.reason || '').trim()).filter(Boolean).slice(0, limit);
+          }}
+          function zippickDemandScoreReason(part) {{{demand_body}
+          function zippickMarketScoreReason(item) {{{market_body}
+          function zippickBarReason(item, part) {{{bar_body}
+          const demand = zippickBarReason({{}}, {{key:'demand',points:24,maxPoints:30,details:[
+            {{key:'station',reason:'우장산역 5호선 · 직선 422m',status:'available'}},
+            {{key:'education',reason:'강신초등학교 · 468m 거리',status:'available'}},
+          ]}});
+          const market = zippickBarReason({{signals:{{momentumPct:12.9,turnoverRatio:1.33,isAtPeak:true,recoveryPct:100}}}}, {{key:'market'}});
+          console.log(JSON.stringify([demand, market]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        demand, market = json.loads(result.stdout)
+        self.assertIn("역과 학교가 가까워 출퇴근·통학이 편한 편이라 입지·실수요 점수에 유리하게 반영됐어요", demand)
+        self.assertIn("직선거리와 실제 도보 동선·학교 배정은 달라 현장에서 확인해야 해요", demand)
+        self.assertIn("최근 6개월 가격은 12.9% 올랐고 거래는 33% 늘었어요", market)
+        self.assertIn("가격 상승을 실제 거래가 뒷받침해 거래 유동성·시장 신호 점수에 유리하게 반영됐어요", market)
+        self.assertIn("2년 고점권이라 최근 실거래보다 비싼 매물은 조심해야 해요", market)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_market_score_bars_explain_each_signal_in_plain_korean(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        tone_body = html.split("    function zippickBarTone(ratio) {", 1)[1].split(
+            "    // 점수 계산용 이름", 1,
+        )[0]
+        bar_body = html.split("    function zippickBarHtml(label, points, maxPoints, reason) {", 1)[1].split(
+            "    // 자금 관련 항목", 1,
+        )[0]
+        value_body = html.split("    function zippickSignalBarReason(entry, key) {", 1)[1].split(
+            "    function zippickSignalBarsHtml(item) {", 1,
+        )[0]
+        bars_body = html.split("    function zippickSignalBarsHtml(item) {", 1)[1].split(
+            "    function zippickSignalCapsHtml(item) {", 1,
+        )[0]
+        script = f"""
+          const esc = value => String(value);
+          function zippickBarTone(ratio) {{{tone_body}
+          function zippickBarHtml(label, points, maxPoints, reason) {{{bar_body}
+          function zippickSignalBarReason(entry, key) {{{value_body}
+          function zippickSignalBarsHtml(item) {{{bars_body}
+          const rendered = zippickSignalBarsHtml({{signals:{{scoreBreakdown:{{
+            priceMomentum:{{label:'최근 6개월 가격 변화',points:40,maxPoints:40,value:23.5}},
+            turnover:{{label:'거래량 변화',points:16,maxPoints:25,value:1.4}},
+            districtRelative:{{label:'같은 구 대표 단지 대비',points:20,maxPoints:20,value:10.4}},
+            recentPersistence:{{label:'최근 3개월 지속성',points:15,maxPoints:15,value:10.4}},
+          }}}}}});
+          const down = zippickSignalBarReason({{value:-4.2}}, 'districtRelative');
+          const neutral = zippickSignalBarReason({{value:null,neutral:true}}, 'priceMomentum');
+          console.log(JSON.stringify({{rendered,down,neutral}}));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = json.loads(result.stdout)
+        rendered = output["rendered"]
+        self.assertIn("최근 6개월 같은 면적 실거래 가격이 23.5% 올랐어요", rendered)
+        self.assertIn("매수 가격 부담도 커졌는지 함께 보세요", rendered)
+        self.assertIn("최근 6개월 거래량은 직전 6개월의 1.4배예요", rendered)
+        self.assertIn("같은 구 비교 단지보다 10.4%p 높아요", rendered)
+        self.assertIn("최근 3개월 실거래 가격이 직전 3개월보다 10.4% 올랐어요", rendered)
+        self.assertIn("같은 구 비교 단지보다 4.2%p 낮아요", output["down"])
+        self.assertIn("같은 면적 실거래가 부족해 이 항목은 보통 점수로 계산했어요", output["neutral"])
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_older_complex_verdict_names_verified_layout_and_real_cost_risk(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        functions = "    function zippickHasVerifiedMixedCorridor" + html.split(
+            "    function zippickHasVerifiedMixedCorridor", 1,
+        )[1].split("    // ── 해석 문장 생성", 1)[0]
+        evidence_function = "    function zippickLocationEvidenceText" + html.split(
+            "    function zippickLocationEvidenceText", 1,
+        )[1].split("    function zippickReportTable", 1)[0]
+        script = f"""
+          const zpNum = value => value === null || value === undefined || value === '' ? NaN : Number(value);
+          const compactText = value => String(value || '').replace(/[^0-9A-Za-z가-힣]/g, '');
+          const zippickMarketVerdict = () => ({{summary:'가격과 거래가 함께 늘었어요'}});
+          const zippickPriceCheckBasis = () => ({{low:8.5, high:9.53}});
+          const zippickBuyBandTier = () => 1;
+          const zippickWeakestPart = () => ({{key:'product'}});
+          const zippickLiquidityStat = () => ({{band:'good'}});
+          const zpJosa = (value, yes, no) => value + no;
+          const zpScoredParts = () => [{{key:'product',points:4,maxPoints:10}}];
+          {functions}
+          {evidence_function}
+          const base = {{name:'초록',region:'서울특별시 강서구',legalDong:'화곡동',households:625,
+            displayAreaLabel:'59㎡',latestDealExclusiveArea:59.51,latestDealPriceEok:8.85,
+            buildingAge:28,locationScore:{{score:63}},signals:{{score:83}}}};
+          console.log(JSON.stringify([
+            zippickVerdictTitle(base, {{tone:'conditional'}}),
+            zippickVerdictTitle({{...base,name:'다른 단지'}}, {{tone:'conditional'}}),
+            zippickVerdictTitle({{...base,buildingAge:21}}, {{tone:'conditional'}}),
+            zippickHasVerifiedMixedCorridor({{...base,displayAreaLabel:'84㎡'}}),
+            zippickLocationEvidenceText(base, {{peakGuard:{{atPeak:true}}}}),
+          ]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        mixed, other, twenty_one_year, different_area, peak_evidence = json.loads(result.stdout)
+        self.assertIn("구축이라는 점은 감안하세요", mixed)
+        self.assertNotIn("28년차", mixed)
+        self.assertNotIn("복도식", mixed)
+        self.assertNotIn("관리 상태", mixed)
+        self.assertIn("구축이라는 점은 감안하세요", twenty_one_year)
+        self.assertNotIn("21년차", twenty_one_year)
+        self.assertIn("구축이라는 점은 감안하세요", other)
+        self.assertNotIn("새 단지와 경쟁할 때 불리할 수 있어요", other)
+        self.assertNotIn("복도식", other)
+        self.assertNotIn("교체비", other)
+        self.assertFalse(different_area)
+        self.assertIn("계단식·복도식이 섞여 있어요", peak_evidence)
+        self.assertNotIn("교체비", peak_evidence)
+        self.assertIn('현관 구조 출처: KB부동산 단지정보', html)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_product_report_explains_scale_and_age_without_liquidity_claims(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        body = html.split("    function zippickBarReason(item, part) {", 1)[1].split(
+            "    function zippickLocationBarsHtml(item) {", 1,
+        )[0]
+        script = f"""
+          function zpNum(value) {{ return value === null || value === undefined ? NaN : Number(value); }}
+          function zippickHasVerifiedMixedCorridor(item) {{ return Boolean(item?.mixed); }}
+          function zippickBarReason(item, part) {{{body}
+          const withTrades = zippickBarReason({{households:2990, buildingAge:3, transactionCount:12, signals:{{recentDealCount:17}}}}, {{key:'product'}});
+          const withoutTrades = zippickBarReason({{households:2990, buildingAge:3, signals:{{}}}}, {{key:'product'}});
+          const olderMidScale = zippickBarReason({{households:625, buildingAge:28, mixed:true}}, {{key:'product'}});
+          const presale = zippickBarReason({{households:3487, status:'분양권'}}, {{key:'product'}});
+          console.log(JSON.stringify([withTrades, withoutTrades, olderMidScale, presale]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        with_trades, without_trades, older_mid_scale, presale = json.loads(result.stdout)
+        self.assertEqual(with_trades, without_trades)
+        self.assertIn("2,990세대", with_trades)
+        self.assertIn("공용시설과 관리에 드는 비용", with_trades)
+        self.assertIn("준공 3년차", with_trades)
+        self.assertIn("시설 구성·관리비·하자 처리 내역", with_trades)
+        self.assertIn("희소성을 판단", with_trades)
+        self.assertNotIn("실거래", with_trades)
+        self.assertIn("625세대라 단지 규모 점수는 보통 수준이에요", older_mid_scale)
+        self.assertIn("장점은 너무 작은 단지가 아니라는 점이고", older_mid_scale)
+        self.assertIn("아쉬운 점은 1,000세대 이상 대단지처럼 규모가 주는 장점은 크지 않다는 점이에요", older_mid_scale)
+        self.assertIn("오래된 구축이라 연식은 단점이에요", older_mid_scale)
+        self.assertIn("상품성과 매수 선호가 새 단지보다 불리한 편이고", older_mid_scale)
+        self.assertIn("가격이 충분히 낮아야 이 약점을 보완할 수 있어요", older_mid_scale)
+        self.assertIn("계단식·복도식이 섞여 있어 매물 구조에 따라 차이가 납니다", older_mid_scale)
+        self.assertIn("3,487세대로 단지 규모가 장점이고, 세대수 평가에서 가장 높은 구간", presale)
+        self.assertIn("입주 전이라 실제 시설과 관리 상태는 알 수 없어요", presale)
+        self.assertIn("계획된 시설과 예상 관리비", presale)
+
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for the change notice behavior check")
     def test_purchase_power_change_notice_hides_same_or_small_price_changes(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -95,7 +364,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
     def test_extra_cash_section_appears_with_up_to_five_near_budget_candidates(self):
         html = APP_HTML.read_text(encoding="utf-8")
         function = html.split("    function shortlistExtensionRows(rows, budgetEok, shortlistCount) {", 1)[1].split(
-            "    function candidateShortlistExtensionFundingHtml(row) {", 1,
+            "    function candidateShortlistExtensionFundingHtml(row, withReason = false) {", 1,
         )[0]
         script = f"""
           const CANDIDATE_SHORTLIST_MAX_PRICE_RATIO = 1.05;
@@ -134,7 +403,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             "five": ["추가 1", "추가 2", "추가 3"],
         })
         self.assertIn('aria-label="추가 자기자금 후보"', html)
-        self.assertIn('추가 자기자금 <strong>약 ${esc(readableGapMoney(shortage))} 필요</strong>', html)
+        self.assertIn('<div class="candidate-shortlist-extension-funding">자기자금 약 ${esc(readableGapMoney(shortage))} 필요${reason ? `, ${esc(reason)}.` : ""}</div>', html)
+        self.assertNotIn('확인된 거래 가격과 부대비용을 기준으로 계산했어요. 실제 대출 가능액은 금융회사에서 확인해 주세요.', html)
 
     def test_zippick_active_review_copy_does_not_sound_like_hold(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -277,32 +547,29 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("이 숫자가 안 맞으면 위의 점수는 볼 필요가 없습니다.", html)
         self.assertNotIn("값이 충분히 눌려 있지 않다면 굳이 감수할 이유가 없습니다.", html)
         self.assertIn("재건축 근거가 확인되는지", html)
-        self.assertIn("관리비, 수리비, 거래 선호의 약점", html)
         self.assertNotIn("연식에 따른 점수는 시간이 지나며 낮아질 수 있어요.", html)
         self.assertNotIn("연식 약점은 가격과 입지, 관리 상태를 함께 확인하세요.", html)
 
-        # 전세가율은 숫자만 던지면 높은 건지 낮은 건지 알 수 없다.
-        # 같은 검색에 뜬 다른 후보들의 전세가율 중간값과 견줘서 말한다.
+        # 전세금 비중은 후보 중간값과 비교하되, 자금 설명에 같은 금액을 반복하지 않는다.
         self.assertIn("function zippickJeonsePeerStat(item, ratio)", html)
         self.assertIn("function zippickLowJeonseReason(item, ratio)", html)
         self.assertIn("function zippickJeonseFallbackHeading(ratio)", html)
         self.assertIn("function zpJeonseRatioOf(row)", html)
         self.assertIn("const ZP_FUNDING_PEER_MIN = 5;", html)
         self.assertIn("const ZP_JEONSE_PEER_GAP_PT = 3;", html)
-        self.assertIn("같은 조건으로 찾은 후보", html)
-        self.assertIn("검색 후보 중간값", html)
+        self.assertIn("비슷한 후보 ${peer.total}곳 중간값", html)
         self.assertIn("매매가와 전세금 사이에 <b>${transactionMoney(gap)}</b>이 비어 있습니다.", html)
         self.assertIn("전세가율이 낮은 이유가 이 사업 때문인지는 알 수 없어요.", html)
         self.assertIn("전세금과 매매가의 차이가 큽니다", html)
-        self.assertIn("전세금 비중이 높은 편입니다", html)
+        self.assertIn("전세금 비중이 다른 후보보다 높아요", html)
         self.assertNotIn("실사용 가치보다 <b>매매가가 앞서 있다</b>", html)
         self.assertNotIn("실사용 가치보다 매매가가 앞서 있습니다", html)
         self.assertNotIn("실사용 가치보다 매매가가 앞서 있어", html)
 
         # 세 갈래 해석이 모두 있어야 한다 (높다 / 비슷하다 / 낮다)
-        self.assertIn("검색 후보보다 전세가율이 높습니다", html)
-        self.assertIn("전세가율은 검색 후보와 비슷합니다", html)
-        self.assertIn("검색 후보보다 전세가율이 낮습니다", html)
+        self.assertIn("전세금 비중이 다른 후보보다 높아요", html)
+        self.assertIn("전세금 비중이 다른 후보와 비슷해요", html)
+        self.assertIn("전세를 끼고 사도 내 돈이 많이 필요해요", html)
 
         # 당연한 말이나 근거 없는 기준은 쓰지 않는다
         for lazy in (
@@ -389,62 +656,204 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             html,
             re.DOTALL,
         ).group("body")
-        self.assertIn("const rows = zippickOwnDevelopmentRows(allRows);", report_match)
+        self.assertIn("const ownRows = zippickOwnDevelopmentRows(allRows);", report_match)
+        self.assertIn("zippickDevelopmentArticleSignalAllowed(item)", report_match)
         self.assertIn("const officialZones = zippickOwnDevelopmentZones(item, allOfficialZones);", report_match)
         self.assertIn('if (!rows.length && !officialZones.length) return "";', report_match)
         self.assertIn("const hasOfficialStage = confirmedRows.length > 0 || officialZones.length > 0;", report_match)
         self.assertIn(': "signal";', report_match)
-        self.assertIn('<span class="zpr-kicker">단지 변화</span>', report_match)
+        self.assertIn('<span class="zpr-kicker" data-zpr-step="단지 변화"></span>', report_match)
         self.assertNotIn('<span class="zpr-kicker">단지 개발</span>', report_match)
         self.assertIn("이 단지 ${word} 추진 소식이 있습니다", report_match)
         self.assertIn("공식 추진 단계는 아직 확인되지 않았습니다", report_match)
         self.assertIn("기사만으로 ${esc(word)} 대상이나 일정을 확정할 수는 없어요", report_match)
+        self.assertNotIn("확인할 것은 세 가지입니다", report_match)
 
-    def test_zippick_lifestyle_change_ignores_tiny_complexes(self):
-        """100~200세대 나홀로 아파트로는 생활권이 바뀌지 않는다.
-
-        백엔드 supply_forecast.lifestyle_change에는 최소 세대수 필터가 없고
-        `len(rows) >= 3` 조건이 있어, 190·114·101세대 세 곳(합계 405세대)만
-        있어도 '생활권 변화 확인'이 뜬다. 점수와 다른 화면을 건드리지 않기
-        위해 리포트에서 다시 거른다.
-        """
+    def test_lifestyle_transport_facts_visible_without_score_or_station(self):
         html = APP_HTML.read_text(encoding="utf-8")
+        functions = "\n".join(re.search(
+            r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
+        ).group() for name in ("zippickFutureSourceLink", "zippickLivingTransportHtml"))
+        result = subprocess.run(["node"], input="const esc = value => String(value);\n" + functions + """
+          const assert = require('node:assert/strict');
+          const route = {name:'광역급행철도 A노선', stageLabel:'우선개통', distanceMeters:2021,
+            sourceUrl:'https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7',
+            sourceDate:'2026-10-16',geometryBasis:'official_reference_alignment'};
+          const output=zippickLivingTransportHtml({transportRoutes:[route],displayProjects:[],planRating:{score:null}});
+          assert.ok(output.includes('광역급행철도 A노선') && output.includes('우선개통'));
+          assert.ok(output.includes('2,021m') && output.includes('역까지 거리 아님'));
+          assert.ok(!output.includes('<details'));
+          assert.equal(zippickLivingTransportHtml({}), '');
+          assert.equal(zippickLivingTransportHtml({transportRoutes:[{...route,sourceUrl:'https://example.com'}]}),'');
+          const plan={projectType:'transport',name:'강북횡단선',factSummary:'홍제 경유 · 재추진 계획',distanceMeters:491,
+            planningNote:'역과 노선은 바뀔 수 있어요.',sourceUrl:'https://ms.smc.seoul.kr/record/recordView.do?key=test'};
+          const planned=zippickLivingTransportHtml({displayProjects:[plan]});
+          assert.ok(planned.includes('강북횡단선') && planned.includes('491m') && planned.includes('바뀔 수 있어요'));
+          const regional=zippickLivingTransportHtml({displayProjects:[{...plan,name:'위례신사선',distanceMeters:null}]},
+            '광역철도 계획 · 직접 수혜 미확인');
+          assert.ok(regional.includes('위례신사선') && regional.includes('직접 수혜 미확인'));
+          assert.ok(!regional.includes('직선 '));
+          assert.ok(planned.includes('https://ms.smc.seoul.kr/record/recordView.do'));
+          assert.equal(zippickFutureSourceLink('https://ms.smc.seoul.kr.evil.example/'), '');
+          assert.ok(zippickFutureSourceLink('https://www.kr.or.kr/sub/info.do?m=05010302').includes('<a '));
+          assert.equal(zippickFutureSourceLink('https://www.kr.or.kr.evil.example/'), '');
+        """, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
-        self.assertIn("const ZP_LIFESTYLE_MIN_HOUSEHOLDS = 300;", html)
-        self.assertIn("const ZP_LIFESTYLE_MIN_TOTAL = 1000;", html)
-        self.assertIn("const ZP_LIFESTYLE_SMALL_AREA_MAX = 10000;", html)
-        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_COUNT = 3;", html)
-        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_DISTANCE = 700;", html)
-        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_AREA = 20000;", html)
-        self.assertIn("const ZP_LIFESTYLE_SMALL_CLUSTER_ADVANCED = 2;", html)
-        self.assertIn("function zippickLifestyleDevelopmentAssessment(item)", html)
-        self.assertIn("function zippickDevelopmentMajorReason(zone)", html)
-        self.assertIn("function zippickDevelopmentIsSmallProject(zone)", html)
+    @unittest.skipUnless(shutil.which("node"), "Node.js required")
+    def test_shared_rail_catalog_renders_in_every_matching_lifestyle_report(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        functions = "\n".join(re.search(
+            r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
+        ).group() for name in ("zippickFutureSourceLink", "zippickLivingTransportHtml",
+                                "zippickLifestyleChangeHtml"))
+        result = subprocess.run(["node"], input="""
+          const assert = require('node:assert/strict');
+          const esc = value => String(value ?? '');
+          const zippickLifestyleChangeRatingData = () => null;
+          const zippickReportMapHtml = () => '<div>지도</div>';
+        """ + functions + """
+          const rail = {id:'wirye-sinsa',name:'위례신사선',category:'rail',
+            stage:'예비타당성조사 통과 · 기본계획 수립 전',stations:[],
+            note:'역 위치와 단지 이용 경로 미확인',sourceDate:'2026-03-10',
+            sourceUrl:'https://www.seoul.go.kr/news/news_report.do?nttNo=453805'};
+          const item = {futureTransformation:{modelVersion:'living-area-v2-beta',
+            status:'insufficient_data',displayProjects:[],capitalTransport:{
+              status:'partial',matchedPlans:[rail]}}};
+          const output = zippickLifestyleChangeHtml(item);
+          assert.match(output,/같은 지역의 공식 철도사업/);
+          assert.match(output,/위례신사선/);
+          assert.match(output,/예비타당성조사 통과/);
+          assert.match(output,/역 위치와 단지 이용 경로 미확인/);
+          assert.ok(!output.includes('위례신사선</strong><p>') || !output.includes('위례신사선</strong><p>역'));
+          assert.equal((output.match(/위례신사선/g)||[]).length,1);
+        """, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
-        body_match = re.search(
-            r"function zippickLifestyleChangeHtml\(item\) \{(?P<body>.*?)\n    \}",
-            html,
-            re.DOTALL,
-        )
-        self.assertIsNotNone(body_match)
-        body = body_match.group("body")
+    def test_lifestyle_report_shows_facts_without_radius_or_future_score(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        body = html.split("    function zippickLifestyleChangeHtml(item) {", 1)[1].split("    // 매수 후보는", 1)[0]
+        self.assertIn('item?.futureTransformation', body)
+        self.assertNotIn('buildingRegister', body)
+        self.assertNotIn('건축물대장', body)
+        self.assertNotIn('30년 이상', body)
+        self.assertIn('analysis.headline', body)
+        self.assertIn('판단 보류', body)
+        self.assertIn('plan?.missingReasons?.[key]', body)
+        self.assertIn('zpr-living-missing-reason', body)
+        self.assertIn('두 점수는 확인된 사업 계획', body)
+        self.assertIn('새 철도 이용 위치가 확인되지 않아 전체 점수는 보류했어요', body)
+        self.assertIn('실제 도보시간이나 집값 변화를 뜻하지 않아요', body)
+        self.assertNotIn('futureTransformationScore', body)
+        self.assertNotIn('radiusMeters', body)
+        self.assertNotIn('1.5km', body)
+        self.assertNotIn('change.totalHouseholds', body)
+        self.assertNotIn('이 단지 주변의 사업인지 아직 확인되지 않았어요', body)
+        self.assertNotIn('리포트 기준일', body)
 
-        # 개별 필터와 합계 하한이 모두 있어야 한다
-        self.assertIn("Number(row?.households) >= ZP_LIFESTYLE_MIN_HOUSEHOLDS", body)
-        self.assertIn("if (complexes.length && totalHouseholds < ZP_LIFESTYLE_MIN_TOTAL && !lifestyleZones.length) return \"\";", body)
-        self.assertIn("const lifestyleAssessment = zippickLifestyleDevelopmentAssessment(item);", body)
-        self.assertIn("const lifestyleZones = lifestyleAssessment.zones;", body)
+    def test_lifestyle_report_keeps_map_first_and_removes_duplicate_summary_cards(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        body = html.split("    function zippickLifestyleChangeHtml(item) {", 1)[1].split("    // 매수 후보는", 1)[0]
+        self.assertLess(body.index('zippickReportMapHtml(item, { redevelopment:true })'),
+                        body.index('확인한 주변 사업'))
+        self.assertNotIn('<h6>핵심 요약</h6>', body)
+        self.assertNotIn('zpr-living-overview', body)
+        self.assertIn('reportedHouseholds', body)
+        self.assertIn('2024년 공람안 보도', body)
+        self.assertIn('계획 세대수 미확인', body)
 
-        # 백엔드 합계를 그대로 쓰면 뺀 단지가 총량에 남아 숫자가 안 맞는다
-        self.assertNotIn("change.totalHouseholds", body)
-        self.assertNotIn("change.largeComplexCount", body)
-        self.assertNotIn("change.sameDongCount", body)
-        self.assertIn("complexes.reduce((sum, row) => sum + Number(row.households || 0), 0)", body)
+    def test_lifestyle_map_frame_reuses_report_apartment_and_redevelopment_layer(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        self.assertIn('esc(analysis.headline', html)
+        self.assertIn('zippickReportMapHtml(item, { redevelopment:true })', html)
+        self.assertIn('data-zpr-map-redevelopment="true"', html)
+        self.assertIn('mountZippickReportRedevelopmentZones(mapElement, map, kakao)', html)
+        self.assertIn('expandButton.dataset.zprLifestyleMap = "true"', html)
+        self.assertIn('zpr-map-project-pin', html)
+        self.assertIn('대표점 직선거리', html)
+        report_map = html.split('    async function mountZippickReportRedevelopmentZones(', 1)[1].split('    async function mountZippickReportMap(', 1)[0]
+        self.assertIn('project.latitude, project.longitude', report_map)
+        self.assertNotIn('geocoder.addressSearch', report_map)
+        self.assertNotIn('/api/redevelopment-zones', report_map)
+        self.assertIn('map.setBounds(bounds, 95, 45, 80, 45)', report_map)
+        self.assertIn('/living-area-map', report_map)
+        self.assertIn('clickable:false', report_map)
+        self.assertIn('실제 철도 선형', report_map)
+        self.assertIn('station.routeAnchor', report_map)
+        self.assertIn('station.routeId', report_map)
+        self.assertIn('strokeStyle:"shortdot", clickable:false', report_map)
+        self.assertIn('예정역과 계획선 연결', report_map)
+        self.assertIn('route => !linkedRouteIds.size || linkedRouteIds.has(route.id)', report_map)
+        self.assertIn('map.setCenter(center)', report_map)
+        self.assertIn('path:[center,target]', report_map)
+        self.assertIn('const latitudeRadius = 2000 / 111320;', report_map)
+        self.assertIn('const longitudeRadius = latitudeRadius / Math.cos(centerLat * Math.PI / 180);', report_map)
+        self.assertIn('const initialProjects = [...featuredSites, ...(closestPlannedStation ? [closestPlannedStation] : [])]', report_map)
+        self.assertIn('keepDistanceLine:isRail && project === closestPlannedStation', report_map)
+        self.assertIn('insideZone(zone, event.latLng.getLng(), event.latLng.getLat())', report_map)
+        self.assertIn('featuredById.has(zone.projectId)', report_map)
+        self.assertIn('strokeColor:"#18a1ac", strokeOpacity:.85, strokeStyle:"solid"', report_map)
+        self.assertIn('const visibleZones = zones;', report_map)
+        self.assertIn('closestStation.name', report_map)
+        self.assertIn('distanceText(closestStation.distanceMeters)', report_map)
+        self.assertNotIn('zpr-living-map-controls', report_map)
+        self.assertNotIn('project.distanceMeters<=800', report_map)
+        mounted_map = html.split('    async function mountZippickReportMap(', 1)[1].split('    function mountZippickReportMaps(', 1)[0]
+        self.assertIn('level:4,', mounted_map)
+        self.assertIn('void mountZippickReportStationDistance(mapElement, map, kakao, item, position);', mounted_map)
+        self.assertNotIn('level:redevelopment ?', mounted_map)
+        self.assertIn('pointer-events:none;', html)
+        open_map = html.split('    function openZippickReportMap(button) {', 1)[1].split('    function restoreZippickReportFromMap', 1)[0]
+        self.assertIn('button.closest("[data-zpr-report-map]")', open_map)
+        self.assertIn('candidateMapRedevelopmentEnabled = true;', open_map)
+        self.assertIn('candidateMapSelectedKey = candidateIdentityKey(item);', open_map)
+        self.assertIn('candidateMapReturnToReport = {', open_map)
+        self.assertIn('setCandidateViewMode("map", { mapOnly:true });', open_map)
+        self.assertIn('clickable:false,', html)
 
-        # 무엇을 뺐는지 밝힌다
-        self.assertIn("세대 미만 단지", html)
-        self.assertIn("생활권을 바꿀 규모로 보기 어려워 목록에서 뺐습니다.", html)
-        self.assertIn("작은 정비사업 1곳은 생활권 변화로 보지 않고, 지도 참고 정보로만 봅니다.", html)
+    @unittest.skipUnless(shutil.which("node"), "Node.js required")
+    def test_lifestyle_stars_require_fresh_official_area_evidence(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        functions = "\n".join(re.search(
+            r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
+        ).group() for name in (
+            "zippickFutureSourceLink", "zippickLifestyleChangeRatingData",
+            "zippickLifestyleChangeRatingView",
+            "zippickSectionRatingData", "zippickSectionRatingHtml",
+        ))
+        result = subprocess.run(["node"], input="const esc = value => String(value);\n" + functions + """
+          const assert = require('node:assert/strict');
+          for (const item of [{}, {testZones:[{distanceMeters:0,stage:'착공'}]},
+            {lifestyleChange:{totalHouseholds:20000}}, {futureTransformation:{status:'ready',futureTransformationScore:100}}]) {
+            assert.equal(zippickLifestyleChangeRatingData(item), null);
+          }
+          const verifiedAt = new Date().toISOString().slice(0, 10);
+          const project = (id, legalDong, stage, more = {}) => ({id, name:id, legalDong, stage,
+            projectType:'redevelopment', region:'동대문구', verifiedAt,
+            sourceUrl:'https://www.ddm.go.kr/www/contents.do?key=932', ...more});
+          const rail = {id:'gtx-b', region:'동대문구', stations:['청량리'], stage:'착공', verifiedAt,
+            sourceUrl:'https://www.molit.go.kr/2026plan/sub5_public.html',
+            stationsSourceUrl:'https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf'};
+          const area = {district:'동대문구', lifestyleChange:{lifestyleKey:'동대문구',
+            redevelopmentProjects:[project('이문4','이문동','disposal'),project('전농9','전농동','designated')]},
+            plannedRail:[rail]};
+          assert.equal(zippickLifestyleChangeRatingData(area), null);
+          const model={modelVersion:'living-area-v2-beta',status:'ready',score:4.1};
+          assert.equal(zippickLifestyleChangeRatingData({...area,futureTransformation:model}),4.1);
+          assert.match(zippickSectionRatingHtml({...area,futureTransformation:model},'생활권 변화'),/단지별 생활권 변화 · 베타/);
+          assert.match(zippickSectionRatingHtml({},'생활권 변화'),/생활권 변화 · 자료 부족/);
+          assert.match(zippickSectionRatingHtml({},'생활권 변화'),/★★★★★/);
+          const partial={futureTransformation:{modelVersion:'living-area-v2-beta',status:'insufficient_data',planRating:{version:'living-area-plan-v3-beta',status:'insufficient_data',score:null,subScores:{housing:2.9,transport:null}}}};
+          assert.match(zippickSectionRatingHtml(partial,'생활권 변화'),/주거환경 개선 점수 · 교통 평가 보류/);
+          assert.match(zippickSectionRatingHtml(partial,'생활권 변화'),/주거 2.9\\/5/);
+          const planItem={futureTransformation:{modelVersion:'living-area-v2-beta',status:'insufficient_data',planRating:{version:'living-area-plan-v3-beta',status:'ready',score:3.1}}};
+          assert.ok(zippickSectionRatingHtml(planItem,'생활권 변화').includes('3.1/5'));
+          assert.match(zippickSectionRatingHtml(planItem,'생활권 변화'), /--zpr-rating-fill:62%/);
+          assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,score:null}}),null);
+          assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,status:'insufficient_data'}}),null);
+          assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,score:0}}),0);
+        """, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_zippick_report_measures_liquidity_in_falling_months(self):
         """환금성은 하락 구간 거래량으로 잰다.
@@ -528,16 +937,54 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         # 과장된 마무리 문구도 남아 있으면 안 된다
         self.assertNotIn("이 교환을 받아들일 수 있느냐가 판단의 전부", html)
 
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for commute color checks")
+    def test_zippick_commute_rows_use_intuitive_color_grades(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        self.assertIn("function zippickCommuteGrade(minutes)", html)
+        self.assertIn('zpr-cm-row is-${zippickCommuteGrade(row.totalMinutes)}', html)
+        self.assertIn('aria-label="이동시간 색상 기준"', html)
+        self.assertIn("좋음 · 30분 이하", html)
+        self.assertIn("보통 · 31~60분", html)
+        self.assertIn("주의 · 1시간 초과", html)
+        self.assertIn(".zpr-commute-section > h5 { color:#191f28 }", html)
+        self.assertNotIn(".zpr-commute-section.is-good > h5", html)
+        self.assertNotIn(".zpr-commute-section.is-bad > h5", html)
+        match = re.search(
+            r"function zippickCommuteGrade\(minutes\) \{(?P<body>.*?)\n    \}",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        script = f"""
+          const zpNum = value => value === null || value === undefined || value === '' ? NaN : Number(value);
+          const ZP_COMMUTE_GOOD_MINUTES = 30;
+          const ZP_COMMUTE_LONG_MINUTES = 60;
+          function zippickCommuteGrade(minutes) {{{match.group('body')}
+          }}
+          console.log(JSON.stringify([zippickCommuteGrade(28), zippickCommuteGrade(43), zippickCommuteGrade(50), zippickCommuteGrade(61)]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), ["good", "ok", "ok", "bad"])
+
     def test_zippick_report_numbers_only_the_sections_it_renders(self):
         """빠진 섹션이 있어도 번호가 이어지고, 번호만 보고 주제를 알 수 있다."""
         html = APP_HTML.read_text(encoding="utf-8")
 
-        self.assertIn("function zippickNumberSteps(html)", html)
+        self.assertIn("function zippickNumberSteps(html, item)", html)
         self.assertIn("return zippickNumberSteps(`<article class=\"zippick-report\"", html)
+        self.assertNotIn('data-zpr-step="매물 가격 비교"', html)
         for label in ("생활권 변화", "단지 조건", "업무지구 이동시간", "자금 조건", "현장 확인"):
             self.assertIn(f'data-zpr-step="{label}"', html)
         self.assertIn('${step}. ${esc(label)}', html)
         self.assertNotIn('<span class="zpr-kicker" data-zpr-step></span>', html)
+        report = html.split("    function candidateZippickReportHtml(item) {", 1)[1].split(
+            "    function candidateDisplayName(item) {", 1,
+        )[0]
+        self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickFundingHtml(item)}"))
+        self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickDevelopmentHtml(item)}"))
+        self.assertLess(report.index("${zippickFundingHtml(item)}"), report.index("${zippickBreakevenHtml(item)}"))
+        self.assertLess(report.index("${zippickAlternativesHtml(item)}"), report.index("${zippickBreakevenHtml(item)}"))
 
         # 순서 표현만으로는 무슨 내용인지 알 수 없다.
         for fixed in ("첫 번째", "두 번째", "세 번째", "네 번째"):
@@ -549,6 +996,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const ZIPPICK_DEVELOPMENT_PATTERN = /뉴타운|신도시|택지|재개발|재건축|정비사업", html)
         self.assertIn("function zippickDevelopmentRows(item)", html)
         self.assertIn("function zippickDevelopmentHtml(item)", html)
+        self.assertIn("const ZIPPICK_MINIMUM_ARTICLE_RECONSTRUCTION_AGE = 20;", html)
+        self.assertIn("function zippickDevelopmentArticleSignalAllowed(item)", html)
+        self.assertIn("zippickDevelopmentArticleSignalAllowed(item)", html)
         self.assertIn("function zippickDevelopmentHasConfirmedStage(rows = [], officialZones = [])", html)
         self.assertIn("const ZIPPICK_DEVELOPMENT_EXCLUDED_PATTERN = /청년안심|역세권청년|임대주택|공공임대|공공주택|도심 공공|행복주택|장기전세|도시재생|희망하우징/i;", html)
         self.assertIn("function zippickDevelopmentExclusionText(row)", html)
@@ -561,7 +1011,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function zippickActiveOfficialDevelopmentZones(zones = [])", html)
         self.assertIn("&& !zippickDevelopmentCompletedOfficialZone(zone)", html)
         self.assertIn("zippickActiveOfficialDevelopmentZones(officialZones).filter", html)
-        self.assertIn("zone.inside === true && zippickDevelopmentOfficialZoneSelfMatch(item, zone)", html)
+        self.assertIn("function zippickDevelopmentIdentityKeys(item)", html)
+        self.assertIn("...(Array.isArray(item?.aliases) ? item.aliases : [])", html)
+        self.assertIn("ZIPPICK_OWN_DEVELOPMENT_BOUNDARY_TOLERANCE_METERS = 50", html)
+        self.assertIn("return zone.inside === true || closeToBoundary;", html)
         self.assertIn("const allOfficialZones = Array.isArray(insight.zones) ? insight.zones : [];", html)
         self.assertIn("const officialZones = zippickOwnDevelopmentZones(item, allOfficialZones);", html)
         self.assertIn('return "신도시·택지";', html)
@@ -587,14 +1040,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function zippickLifestyleDevelopmentZones(item)", html)
         self.assertIn("function zippickLifestyleDevelopmentAssessment(item)", html)
         self.assertIn("생활권 변화", html)
-        self.assertIn("새 아파트가 이어지며 생활권이 바뀌는 중입니다", html)
-        self.assertIn("큰 정비사업이 생활권을 바꿀 수 있어요", html)
-        self.assertIn("작은 정비사업이 여러 곳에서 같이 움직입니다", html)
-        self.assertIn("새 아파트와 정비사업이 생활권을 바꾸는 중입니다", html)
-        self.assertIn("규모가 있는 재개발·재정비촉진구역·재건축이 확인됩니다.", html)
-        self.assertIn("이 단지의 전세·매매에 직접 영향을 주는지는 확인되지 않았어요.", html)
-        self.assertIn("입주가 몰리는 시기에는 전세와 매물 흐름이 흔들릴 수 있습니다.", html)
-        self.assertIn("정비사업은 규모와 단계에 따라 영향이 달라집니다.", html)
+        self.assertNotIn("공식 자료로 확인한 동네 현황", html)
+        self.assertIn("거리 미확인", html)
+        self.assertIn("확인한 주변 사업", html)
+        self.assertIn("계획 세대수 미확인", html)
+        self.assertNotIn("현재 지도에 정비구역 ${zones.length.toLocaleString(\"ko-KR\")}곳이 보이지만", html)
         self.assertNotIn("좋거나 나쁘게 보지 않습니다", html)
         self.assertIn('return "재정비촉진";', html)
         self.assertIn("/재개발|재건축|재정비촉진구역|모아타운|뉴타운|가로주택|소규모/.test(text)", html)
@@ -615,7 +1065,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn(">주변 개발<", html)
         self.assertNotIn("주변 신축 가격과 이 단지의 가격 차이입니다.", html)
         self.assertNotIn("새 단지 예상 가격", html)
-        self.assertIn("주변 신축과의 가격 차이", html)
+        self.assertNotIn("지역 변화 60% + 단지 영향 40%", html)
         self.assertNotIn("생활권 개선에는 도움이 될 수 있습니다.", html)
         self.assertNotIn("최근 실거래보다 비싼 가격", html)
         self.assertNotIn("최근 실거래보다 비싼 호가", html)
@@ -657,26 +1107,22 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("top:max(40px,env(safe-area-inset-top)); bottom:max(12px,env(safe-area-inset-bottom));", html)
         self.assertIn("height:auto; max-height:none;", html)
 
-    def test_zippick_report_can_share_url_from_top_and_bottom(self):
+    def test_zippick_report_does_not_offer_a_url_share_action(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
-        self.assertIn('id="aptReportShare" type="button" data-apt-report-share>공유</button>', html)
-        self.assertIn('<button type="button" data-apt-report-share>URL 공유하기</button>', html)
-        self.assertIn("async function shareAptReportUrl", html)
-        self.assertIn('url.searchParams.set("apt", item.name || candidateDisplayName(item));', html)
-        self.assertIn('url.searchParams.set("apt_area", item.displayAreaLabel || item.areaLabel);', html)
-        self.assertIn("restoreAptReportFromUrl();", html)
-        self.assertIn("navigator.clipboard.writeText(shareUrl)", html)
-        self.assertIn("URL을 복사했습니다", html)
-        self.assertNotIn("공유창을 열었어요.", html)
-        self.assertNotIn("navigator.share", html)
-        self.assertIn('event.target.closest("[data-apt-report-share]")', html)
+        self.assertNotIn('data-apt-report-share', html)
+        self.assertNotIn('id="aptReportShare"', html)
+        self.assertNotIn("URL 공유하기", html)
+        self.assertNotIn("shareAptReportUrl", html)
+        self.assertNotIn("restoreAptReportFromUrl", html)
+        self.assertNotIn('url.searchParams.set("apt",', html)
+        self.assertNotIn("URL을 복사했습니다", html)
+        self.assertIn('id="aptReportDownload" type="button" data-apt-report-download disabled>PDF 다운로드</button>', html)
 
     def test_zippick_report_can_download_a_pdf_when_ready(self):
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertIn('id="aptReportDownload" type="button" data-apt-report-download disabled>PDF 다운로드</button>', html)
-        self.assertIn('<button type="button" data-apt-report-download>PDF 다운로드</button>', html)
         self.assertIn("function setAptReportDownloadReady(ready)", html)
         self.assertIn("function downloadAptReportPdf(trigger = null)", html)
         self.assertIn("aptReportDownload.disabled = !ready;", html)
@@ -828,8 +1274,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("rate_type: policyRateType.value,", html)
         self.assertIn("creditScoreRateAdjustments.find(item => score >= Number(item.minScore))", html)
         self.assertNotIn("if (score >= 950) adjustment = -0.25;", html)
-        # 집값에 넣을 돈은 바텀시트의 '예상 자기자금' 칸에서 직접 고친다.
-        self.assertIn('<input id="policyReserveCash" type="hidden" value="">', html)
+        # 남겨둘 돈은 구매력 화면에도 보여, 자기자금과 충돌하면 직접 고칠 수 있다.
+        self.assertIn('<label for="policyReserveCash">남겨둘 돈</label>', html)
+        self.assertIn('<input id="policyReserveCash" type="number"', html)
+        self.assertIn('firstInvalid = policyReserveCash;', html)
+        self.assertIn('남길 돈이 없으면 0을 입력하세요.', html)
         self.assertNotIn("data-reserve-value", html)
         self.assertIn('<input id="powerCashInput" type="number"', html)
         self.assertIn("function applyPurchasePowerCashInput(input)", html)
@@ -1021,7 +1470,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("data-spark-trades", chart_match.group("body"))
         self.assertNotIn('data-spark-hover-period', chart_match.group("body"))
         self.assertIn('class="comparison-trend-point"', chart_match.group("body"))
-        self.assertIn('r="3"><title>${esc(pointLabel)}</title></circle>', chart_match.group("body"))
+        self.assertIn('r="3"/>', chart_match.group("body"))
+        self.assertNotIn("<title>", chart_match.group("body"))
         self.assertIn('class="spark-trade-tooltip"', chart_match.group("body"))
         self.assertIn('const width = window.matchMedia("(max-width: 760px)").matches ? 420 : 640;', chart_match.group("body"))
         self.assertIn("const height = 292;", chart_match.group("body"))
@@ -1040,8 +1490,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('comparisonContent.addEventListener("click"', html)
         self.assertIn('comparisonContent.addEventListener("keydown"', html)
         self.assertIn('comparisonContent.addEventListener("pointerover", handleSparkPointHover)', html)
-        self.assertIn('comparisonContent.addEventListener("focusin", handleSparkPointHover)', html)
-        self.assertIn("showSparkPointDetails(sparkPoint)", html)
+        self.assertNotIn('comparisonContent.addEventListener("focusin", handleSparkPointHover)', html)
+        self.assertIn("toggleSparkPointDetails(sparkPoint)", html)
         self.assertIn(".comparison-trend {\n      margin:22px -10px 0; padding:0;", html)
         self.assertIn(".comparison-trend .budget-sparkline-svg { width:100%; height:auto; max-height:400px; aspect-ratio:auto }", html)
         self.assertIn(".comparison-trend { margin:18px 0 0; padding:0 }", html)
@@ -1548,11 +1998,18 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("anchorPrice * value / anchorIndex", series_body)
         self.assertIn("anchorPeriod:periods[anchor]", series_body)
         self.assertIn("axisTrend(value)", chart_body)
-        self.assertIn('const w = window.matchMedia("(max-width: 760px)").matches ? 420 : 510;', chart_body)
-        self.assertIn("const h = 292;", chart_body)
+        self.assertIn('const w = window.matchMedia("(max-width: 760px)").matches ? 420 : options.candidate === true ? 730 : 510;', chart_body)
+        self.assertIn("const h = options.compact === true ? 210 : options.candidate === true ? 290 : 292;", chart_body)
         self.assertIn("const plot = { left:58, right:10, top:16, bottom:24 };", chart_body)
         self.assertIn(".budget-sparkline-svg { display:block; width:100%; max-width:100%; min-width:0; height:auto; max-height:400px; aspect-ratio:auto }", html)
-        self.assertIn('return `<svg class="budget-sparkline-svg"', html)
+        self.assertIn('return `<svg class="budget-sparkline-svg${options.compact === true ? " is-compact" : options.candidate === true ? " is-candidate" : ""}"', html)
+        self.assertIn(".candidate-insight .budget-sparkline-svg.is-candidate { height:290px; max-height:290px }", html)
+        self.assertIn("candidateTrendPanelHtml(item, series, { candidate:true })", html)
+        self.assertIn("candidateTrendPanelHtml(item, null, { candidate:true })", html)
+        self.assertIn('candidateTrendPanelHtml(item, null, { compact:true, hideBasis:true })', html)
+        self.assertIn('options.hideBasis === true ? "" : `<span class="spark-summary-basis">', summary_html_body)
+        self.assertIn('options.hideBasis === true ? "" : `<span class="spark-basis">', chart_body)
+        self.assertIn('aria-label="최근 2년 가격 흐름"', html)
         self.assertNotIn(".flex-fill { flex:1 1 auto; min-width:0 }", html)
         self.assertNotIn("width:calc(100% + 40px)", html)
         self.assertNotIn("width:calc(100% + 28px)", html)
@@ -1577,7 +2034,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("${esc(summary.regionLabel)} ${sparkLegendRateHtml(summary.regionValue)}", legend_body)
         self.assertIn("${esc(series.leaderName)} · ${esc(sharedLeaderRegionName)} 대장 ${sparkLegendRateHtml(summary.leaderValue)}", legend_body)
         self.assertNotIn('data-spark-hover-period', legend_body)
-        self.assertIn("candidateTrendSummaryHtml(summary, legendHtml)", chart_body)
+        self.assertIn("candidateTrendSummaryHtml(summary, legendHtml, options)", chart_body)
         self.assertIn('class="spark-crosshair"', chart_body)
         self.assertIn("const pattern = candidateTrendPattern(series);", summary_body)
         self.assertIn("candidateTrendComparison(complexRate, regionRate, leaderRate, regionLabel, leaderRegionName, series)", summary_body)
@@ -3195,7 +3652,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         focus_body = focus_match.group("body")
         self.assertIn("const CANDIDATE_SHORTLIST_SIZE = 5;", html)
         self.assertIn('let candidateListMode = "shortlist";', html)
-        self.assertIn("const shortlistSortedRows = shortlistCandidateRows(allSortedRows, data.budgetEok);", render_body)
+        self.assertIn("const allListRows = data.allMatches ? allRows : fundingRows;", render_body)
+        self.assertIn("const shortlistSourceRows = viewingExcluded ? excludedRows : fundingRows;", render_body)
+        self.assertIn("const shortlistSortedRows = shortlistCandidateRows(", render_body)
+        self.assertIn("shortlistSourceRows.filter(candidateMatchesActiveFilters),", render_body)
         self.assertIn("const shortlistRows = shortlistSortedRows.slice(0, Math.min(CANDIDATE_SHORTLIST_SIZE, shortlistSortedRows.length));", render_body)
         self.assertIn('const showingShortlist = candidateListMode !== "all";', render_body)
         self.assertIn('candidateShortlistSummaryHtml(resultCount, shortlistRows.length, showingShortlist ? "shortlist" : "all")', render_body)
@@ -3263,7 +3723,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn('"함께 보기";', html)
         self.assertNotIn('`${rank}순위`', html)
         self.assertIn("function candidateShortlistRank(row)", html)
-        self.assertIn("${showingShortlist && scoreDataReady ? candidateShortlistReasonHtml(item, candidateIndex + 1) : \"\"}", render_body)
+        self.assertIn("${showingShortlist && scoreDataReady && candidateIndex < shortlistRows.length ? candidateShortlistReasonHtml(item, candidateIndex + 1) : \"\"}", render_body)
         self.assertIn("candidateShortlistReasonHtml(item, candidateShortlistRank(item))", html)
         self.assertNotIn("candidateRoleHtml", html)
         self.assertNotIn("candidate-role", html)
@@ -4112,7 +4572,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("pointer-events:none;", html)
         self.assertIn(".candidate-map-map-tools {\n      position:absolute; z-index:6;", html)
 
-    def test_flow_score_badge_opens_the_score_sheet_like_total_score(self):
+    def test_candidate_list_score_badges_are_read_only_while_report_badges_can_open_details(self):
         html = APP_HTML.read_text(encoding="utf-8")
         lookup_match = re.search(
             r"function candidateForLocationScoreButton\b(?P<body>.*?)"
@@ -4129,6 +4589,33 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
         self.assertIsNotNone(lookup_match)
         self.assertIsNotNone(preview_match)
+
+        readonly_score_match = re.search(
+            r"function candidateReadonlyScoreBadgeHtml\b(?P<body>.*?)"
+            r"\n    function candidateReadonlyFlowScoreBadgeHtml",
+            html,
+            re.DOTALL,
+        )
+        readonly_flow_match = re.search(
+            r"function candidateReadonlyFlowScoreBadgeHtml\b(?P<body>.*?)"
+            r"\n    function candidateTopScoreBadgesHtml",
+            html,
+            re.DOTALL,
+        )
+        top_badges_match = re.search(
+            r"function candidateTopScoreBadgesHtml\b(?P<body>.*?)"
+            r"\n    function locationScoreJudge",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(readonly_score_match)
+        self.assertIsNotNone(readonly_flow_match)
+        self.assertIsNotNone(top_badges_match)
+        self.assertIn('<span class="candidate-score-badge">종합', readonly_score_match.group("body"))
+        self.assertIn('최근 시장 신호 ${esc(label)}</span>', readonly_flow_match.group("body"))
+        self.assertNotIn("data-location-score-open", readonly_score_match.group("body"))
+        self.assertNotIn("data-flow-score-open", readonly_flow_match.group("body"))
         self.assertIn(
             '<button class="location-score-badge" type="button" data-location-score-open',
             html,
@@ -4142,15 +4629,15 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("background:#f1f7ff; color:#1767c5; font-size:13px; font-weight:850;", html)
         self.assertIn("box-shadow:0 1px 2px rgba(49,130,246,.13)", html)
         self.assertIn("transform:translateY(-1px)", html)
-        self.assertIn('const measurable = Number.isFinite(score) && score > 0;', html)
-        self.assertIn('const label = measurable ? `${Math.round(score)}점` : "측정 불가";', html)
-        self.assertIn('최근 시장 신호 ${esc(label)}', html)
+        self.assertIn('const measurable = Number.isFinite(score) && score > 0;', readonly_flow_match.group("body"))
+        self.assertIn('const label = measurable ? `${Math.round(score)}점` : "측정 불가";', readonly_flow_match.group("body"))
+        self.assertIn('최근 시장 신호 ${esc(label)}', readonly_flow_match.group("body"))
         self.assertIn("function candidateTopScoreBadgesHtml(item)", html)
         self.assertIn("function candidateHasScoreData(item)", html)
         self.assertIn("function candidateShouldWaitForScores(item)", html)
         self.assertIn("if (candidateShouldWaitForScores(item)) return \"\";", html)
         self.assertNotIn("if (currentBudgetData?.candidateScoreDataReady === false) return \"\";", html)
-        self.assertIn("const badges = `${candidateLocationScoreBadgeHtml(item)}${candidateFlowScoreBadgeHtml(item)}`;", html)
+        self.assertIn("const badges = `${candidateReadonlyScoreBadgeHtml(item)}${candidateReadonlyFlowScoreBadgeHtml(item)}`;", top_badges_match.group("body"))
         self.assertIn("signals:item?.signals || {}", html)
         self.assertIn("locationScore:item?.locationScore || null", html)
         self.assertNotIn("showFlowScore", html)
@@ -4160,7 +4647,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("openLocationScoreSheet(candidate, locationScoreOpen);", html)
         self.assertIn("openFlowScoreSheet(candidate, flowScoreOpen);", html)
         self.assertIn("function locationScoreNeedsRefresh(item)", html)
-        self.assertIn('const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v4";', html)
+        self.assertIn('const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v7";', html)
         self.assertIn("item?.locationScore?.scoreFormulaVersion !== LOCATION_SCORE_FORMULA_VERSION", html)
         self.assertIn("const jeonseRatio = Number(item?.jeonseRatioPct);", html)
         self.assertIn('if (!["price", "jeonse", "demand", "product", "market"].every(key => partKeys.has(key))) return true;', html)
@@ -4249,6 +4736,64 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("data-candidate-map-detail-open", preview_match.group("body"))
         self.assertNotIn("검토 리포트", preview_match.group("body"))
 
+    def test_report_map_shows_station_distance_without_redevelopment_zones(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        report_match = re.search(
+            r"async function mountZippickReportStationDistance\b(?P<body>.*?)"
+            r"\n    async function mountZippickReportMap",
+            html,
+            re.DOTALL,
+        )
+        map_match = re.search(
+            r"async function mountZippickReportMap\b(?P<body>.*?)"
+            r"\n    function mountZippickReportMaps",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(report_match)
+        self.assertIsNotNone(map_match)
+        self.assertIn("candidateStationRoutePayload(item)", report_match.group("body"))
+        self.assertIn('distanceTag.className = "zpr-map-station-distance"', report_match.group("body"))
+        self.assertIn("openNaverStationWalkRouteForPayload(payload, \"report_map\")", report_match.group("body"))
+        self.assertIn("new kakao.maps.Polyline({", report_match.group("body"))
+        self.assertIn("path:[apartmentPosition, stationPosition]", report_match.group("body"))
+        self.assertIn('strokeColor:"#2584e8"', report_match.group("body"))
+        self.assertIn("stationLine.setZIndex?.(4);", report_match.group("body"))
+        self.assertIn("stationOverlay.setZIndex?.(30);", report_match.group("body"))
+        self.assertIn("map.setBounds(bounds);", report_match.group("body"))
+        self.assertIn("draggable:true", map_match.group("body"))
+        self.assertIn("scrollwheel:!redevelopment", map_match.group("body"))
+        self.assertIn("if (redevelopment) map.setZoomable?.(false);", map_match.group("body"))
+        self.assertRegex(map_match.group("body"), r"dialog\.showModal\(\);\s*map\.setZoomable\?\.\(true\)")
+        self.assertRegex(map_match.group("body"), r'dialog\.addEventListener\("close",[\s\S]*?map\.setZoomable\?\.\(false\)')
+        self.assertIn("void mountZippickReportStationDistance(mapElement, map, kakao, item, position);", map_match.group("body"))
+        self.assertNotIn("renderCandidateMapRedevelopmentZones", map_match.group("body"))
+
+    def test_report_map_expand_uses_map_only_layout(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        mode_match = re.search(
+            r"function setCandidateViewMode\b(?P<body>.*?)"
+            r"\n    function closeCandidateMapView",
+            html,
+            re.DOTALL,
+        )
+        expand_match = re.search(
+            r"function openZippickReportMap\b(?P<body>.*?)"
+            r"\n    function restoreZippickReportFromMap",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(mode_match)
+        self.assertIsNotNone(expand_match)
+        self.assertIn('mapView?.classList.toggle("candidate-map-only", openingMap && options.mapOnly === true);', mode_match.group("body"))
+        self.assertIn('setCandidateViewMode("map", { mapOnly:true });', expand_match.group("body"))
+        self.assertIn(".candidate-map-view.candidate-map-only { grid-template-rows:minmax(0,1fr);", html)
+        self.assertIn(".candidate-map-view.candidate-map-only .candidate-map-conditions,", html)
+        self.assertIn(".candidate-map-view.candidate-map-only .candidate-map-preview { display:none !important }", html)
+        self.assertIn(".candidate-map-view.candidate-map-only .candidate-map-canvas { grid-column:1 }", html)
+
     def test_candidate_map_reset_removes_stale_sdk_layers(self):
         html = APP_HTML.read_text(encoding="utf-8")
         match = re.search(
@@ -4266,6 +4811,50 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             body.index("candidateMapContainer.replaceChildren();"),
             body.index("candidateMap = null;"),
         )
+
+    def test_candidate_map_station_route_is_automatic_without_a_summary_card(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        request_match = re.search(
+            r"function candidateStationRouteRequestUrl\b(?P<body>.*?)"
+            r"\n    function naverStationWalkRouteUrl",
+            html,
+            re.DOTALL,
+        )
+        route_match = re.search(
+            r"async function showCandidateMapStationRoute\b(?P<body>.*?)"
+            r"\n    function clearCandidateMapClusters",
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(request_match)
+        self.assertIsNotNone(route_match)
+        self.assertIn('"apartment_id", item?.apartmentId || ""', request_match.group("body"))
+        self.assertIn('"legal_dong", item?.legalDong || item?.dong || ""', request_match.group("body"))
+        self.assertIn('"jibun", item?.jibun || ""', request_match.group("body"))
+        self.assertIn("/api/apartment-station-route?${params.toString()}", html)
+        self.assertIn("nmap://route/walk?${params.toString()}", html)
+        self.assertIn("네이버 지도에서 도보 길찾기", html)
+        self.assertIn("도보 예상", html)
+        self.assertIn("function candidateMapStationWalkingEstimate", html)
+        self.assertIn("void showCandidateMapStationRoute(item);", html)
+        self.assertIn("new candidateMapKakao.maps.Polyline({", route_match.group("body"))
+        self.assertIn("candidateMap.setBounds(bounds);", route_match.group("body"))
+        self.assertIn("도보 약 ${walk.distanceLabel} · ${walk.minutesLabel}", route_match.group("body"))
+        self.assertIn('stationMarker.addEventListener("click", event => {', route_match.group("body"))
+        self.assertIn("stationOverlay.setZIndex?.(30);", route_match.group("body"))
+        self.assertIn("clearCandidateMapStationGuide();", html)
+        self.assertIn("candidateMapStationGuide?.candidateKey && candidateMapStationGuide.candidateKey !== key", html)
+        preview_match = re.search(
+            r"function candidateMapPreviewHtml\b(?P<body>.*?)"
+            r"\n    function candidateMapUsesBottomSheet",
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(preview_match)
+        preview = preview_match.group("body")
+        self.assertNotIn("candidateMapStationGuideHtml(item)", preview)
+        self.assertNotIn("candidate-map-station-guide", html)
 
     def test_candidate_map_latest_render_reenables_navigation(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -4432,16 +5021,31 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("function updateSparkHoverPeriod(panel, periodLabel)", html)
         self.assertNotIn('updateSparkHoverPeriod(panel, point.dataset.periodTitle || point.dataset.periodLabel || "")', tooltip_body)
         self.assertIn("function handleSparklinePointerOut(event)", html)
-        self.assertIn('const panel = event.target.closest?.("[data-sparkline]");', html)
-        self.assertIn("if (next && panel.contains(next)) return;", html)
-        self.assertIn("hideSparkTooltips(panel);", html)
+        self.assertIn('const sparkPoint = event.target.closest?.("[data-spark-point]");', html)
+        self.assertIn("if (next && sparkPoint.contains(next)) return;", html)
+        self.assertIn("restorePinnedSparkPoint();", html)
         self.assertIn('budgetResultEl.addEventListener("pointerover", handleSparkPointHover)', html)
         self.assertIn('budgetResultEl.addEventListener("pointerout", handleSparklinePointerOut)', html)
-        self.assertIn('budgetResultEl.addEventListener("focusin", handleSparkPointHover)', html)
+        self.assertNotIn('budgetResultEl.addEventListener("focusin", handleSparkPointHover)', html)
         self.assertIn('comparisonContent.addEventListener("pointerout", handleSparklinePointerOut)', html)
         self.assertIn('aptSearchResults.addEventListener("pointerover", handleSparkPointHover)', html)
         self.assertIn('aptSearchResults.addEventListener("pointerout", handleSparklinePointerOut)', html)
-        self.assertIn('aptSearchResults.addEventListener("focusin", handleSparkPointHover)', html)
+        self.assertNotIn('aptSearchResults.addEventListener("focusin", handleSparkPointHover)', html)
+        self.assertIn('if (event.pointerType === "touch") return;', html)
+        self.assertIn('if (previous && sparkPoint.contains(previous)) return;', html)
+        self.assertIn('if (options.pin !== true && !tooltip.hidden && point.classList.contains("is-selected")) return;', tooltip_body)
+        self.assertIn('transform:translate(-50%,calc(-100% - 12px)); pointer-events:none;', html)
+        self.assertIn("function toggleSparkPointDetails(point)", html)
+        self.assertIn("showSparkPointDetails(point, { pin:true });", html)
+        self.assertIn('point.setAttribute("aria-pressed", "true")', tooltip_body)
+        self.assertIn('const dot = point.querySelector(".spark-trade-point, .comparison-trend-point") || point;', tooltip_body)
+        self.assertIn('const pointBottom = dotRect.bottom - panelRect.top;', tooltip_body)
+        self.assertIn('tooltip.style.top = `${pointBottom}px`;', tooltip_body)
+        self.assertIn('tooltip.classList.add("is-below");', tooltip_body)
+        self.assertIn('.spark-trade-tooltip.is-below { transform:translate(-50%,5px) }', html)
+        self.assertNotIn('if (pointTop < tooltip.offsetHeight + 16)', tooltip_body)
+        self.assertIn('role="button" tabindex="0" aria-pressed="false"', html)
+        self.assertNotIn("<title>${esc(pointLabel)}</title>", html)
         self.assertIn('class="spark-tooltip-period"', tooltip_body)
         self.assertIn("sparkTradeDetailDate(trade.dealDate)", tooltip_body)
         self.assertIn("policyMoney(Number(trade.price || 0))", tooltip_body)

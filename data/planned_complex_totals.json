@@ -1,0 +1,13 @@
+{
+  "note": "공식 모집공고에서 확인된 아파트 전체 세대수. 청약홈 분양 물량과 구분하며, 지역·법정동·단지명·분양 물량이 모두 맞을 때만 연결합니다.",
+  "complexes": [
+    {
+      "name": "서울원 아이파크",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "offeredHouseholds": 1856,
+      "plannedTotalHouseholds": 2264,
+      "sourceUrl": "https://www.seoulone-ipark.co.kr/images/seoulone_recruitment_full.pdf?ver=2"
+    }
+  ]
+}

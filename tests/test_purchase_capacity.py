@@ -178,6 +178,18 @@ class MaxPurchasePriceTest(unittest.TestCase):
         self.assertLessEqual(result["maxPurchase"]["loanEok"], result["dsrLimitEok"])
         self.assertLess(result["dsrLimitEok"] - result["maxPurchase"]["loanEok"], 0.01)
 
+    def test_higher_income_does_not_raise_loan_after_cash_and_ltv_bind(self):
+        inputs = dict(own_capital_eok=1, mortgage_rate_percent=3.9, rate_type="periodic")
+        lower = capacity(annual_income_manwon=4000, **inputs)
+        higher = capacity(annual_income_manwon=9000, **inputs)
+        self.assertEqual(lower["dsrLimitEok"], 2.4557)
+        self.assertEqual(higher["dsrLimitEok"], 5.5253)
+        self.assertGreater(higher["dsrLimitEok"], lower["dsrLimitEok"])
+        self.assertEqual(lower["constraint"]["type"], "LTV")
+        self.assertEqual(higher["constraint"]["type"], "LTV")
+        self.assertEqual(lower["maxPurchase"]["loanEok"], 2.33)
+        self.assertEqual(higher["maxPurchase"]["loanEok"], 2.33)
+
     def test_existing_debt_reduces_dsr_and_is_named(self):
         without = capacity(annual_income_manwon=6000)
         with_debt = capacity(annual_income_manwon=6000, monthly_debt_manwon=50)

@@ -5,6 +5,8 @@ import json
 import math
 from pathlib import Path
 
+import kakao_station_distances
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "redevelopment_zones.geojson"
@@ -51,7 +53,7 @@ COMPLETED_PROJECT_IDS = {
 # 화면에 '이주를 앞두고 있어요'를 띄우는 기준과, 과거 사례를 세는 기준을
 # 같은 값으로 맞춘다. 다르면 말만 꺼내고 근거는 못 보여주는 화면이 나온다.
 MOVE_OUT_NEARBY_METERS = 500
-_CACHE = {"mtime": None, "projects": []}
+_CACHE = {"mtime": None, "projects": [], "loadOk": False}
 
 
 def _float(value):
@@ -71,7 +73,32 @@ def _coordinates(row, entity):
         lng = _float(source.get("longitude") or source.get("lng") or source.get("x"))
         if lat is not None and lng is not None and 32 <= lat <= 39 and 124 <= lng <= 132:
             return {"latitude": lat, "longitude": lng}
+    # 역거리 수집 단계에서 이미 주소를 좌표로 바꿔 저장한다. 정비사업 계산도
+    # 같은 단지 식별값으로 이 좌표를 재사용해야 지도·교육·입지 결과가 어긋나지 않는다.
+    for source in (entity or {}, row or {}):
+        try:
+            cached = kakao_station_distances.cached_station(source) or {}
+        except Exception:
+            cached = {}
+        lat = _float(cached.get("latitude"))
+        lng = _float(cached.get("longitude"))
+        if lat is not None and lng is not None and 32 <= lat <= 39 and 124 <= lng <= 132:
+            return {"latitude": lat, "longitude": lng}
     return None
+
+
+def _supported_region(row, entity):
+    values = []
+    for source in (row or {}, entity or {}):
+        values.extend(str(source.get(key) or "").strip() for key in (
+            "province", "city", "district", "region", "address",
+        ))
+    text = " ".join(value for value in values if value)
+    if not text:
+        return True
+    # 현재 정비사업 원본은 서울시 공간정보다. 다른 지역을 서울 자료와 비교해
+    # '주변 사업 0건'으로 단정하지 않고, 제공 범위 밖으로 분리한다.
+    return "서울" in text
 
 
 def _project_type(raw):
@@ -179,20 +206,25 @@ def _stage(raw):
     return "검토·후보지"
 
 
-def _geometry_points(geometry):
-    points = []
-
-    def walk(value):
-        if not isinstance(value, list):
-            return
-        if len(value) >= 2 and all(isinstance(item, (int, float)) for item in value[:2]):
-            points.append((float(value[1]), float(value[0])))
-            return
-        for child in value:
-            walk(child)
-
-    walk((geometry or {}).get("coordinates"))
-    return points
+def _geometry_polygons(geometry):
+    """Keep outer boundaries and holes together for point-in-zone checks."""
+    kind = (geometry or {}).get("type")
+    coordinates = (geometry or {}).get("coordinates") or []
+    raw_polygons = [coordinates] if kind == "Polygon" else coordinates if kind == "MultiPolygon" else []
+    polygons = []
+    for polygon in raw_polygons:
+        rings = []
+        for ring in polygon:
+            points = [
+                (float(lat), float(lng))
+                for lng, lat, *_ in ring
+                if isinstance(lat, (int, float)) and isinstance(lng, (int, float))
+            ]
+            if len(points) >= 3:
+                rings.append(points)
+        if rings:
+            polygons.append(rings)
+    return polygons
 
 
 def _distance_meters(a, b):
@@ -204,7 +236,45 @@ def _distance_meters(a, b):
     return 6371000 * 2 * math.atan2(math.sqrt(h), math.sqrt(max(0, 1 - h)))
 
 
+def _point_in_ring(point, ring):
+    latitude, longitude = point["latitude"], point["longitude"]
+    inside = False
+    for index, (lat1, lng1) in enumerate(ring):
+        lat2, lng2 = ring[(index + 1) % len(ring)]
+        if (lat1 > latitude) != (lat2 > latitude):
+            crossing = lng1 + (latitude - lat1) * (lng2 - lng1) / (lat2 - lat1)
+            if longitude < crossing:
+                inside = not inside
+    return inside
+
+
+def _point_to_segment_meters(point, start, end):
+    latitude = math.radians(point["latitude"])
+    radius = 6371000
+    scale_x = math.cos(latitude) * math.pi / 180 * radius
+    scale_y = math.pi / 180 * radius
+    ax = (start[1] - point["longitude"]) * scale_x
+    ay = (start[0] - point["latitude"]) * scale_y
+    bx = (end[1] - point["longitude"]) * scale_x
+    by = (end[0] - point["latitude"]) * scale_y
+    dx, dy = bx - ax, by - ay
+    length_squared = dx * dx + dy * dy
+    fraction = max(0, min(1, -(ax * dx + ay * dy) / length_squared)) if length_squared else 0
+    return math.hypot(ax + fraction * dx, ay + fraction * dy)
+
+
 def _zone_distance(point, project):
+    polygons = project.get("_polygons") or []
+    if polygons:
+        if any(_point_in_ring(point, rings[0]) and not any(
+            _point_in_ring(point, hole) for hole in rings[1:]
+        ) for rings in polygons):
+            return 0
+        return min(
+            _point_to_segment_meters(point, ring[index], ring[(index + 1) % len(ring)])
+            for polygon in polygons for ring in polygon for index in range(len(ring))
+        )
+    # Keep compatibility with simple point fixtures and older cached projects.
     distances = [
         _distance_meters(point, {"latitude": lat, "longitude": lng})
         for lat, lng in project.get("_points", [])
@@ -216,6 +286,7 @@ def _load_projects():
     try:
         mtime = DATA_PATH.stat().st_mtime
     except OSError:
+        _CACHE.update({"mtime": None, "projects": [], "loadOk": False})
         return []
     if _CACHE["mtime"] == mtime:
         return _CACHE["projects"]
@@ -223,11 +294,14 @@ def _load_projects():
         with DATA_PATH.open("r", encoding="utf-8") as handle:
             payload = json.load(handle)
     except (json.JSONDecodeError, OSError):
-        _CACHE.update({"mtime": mtime, "projects": []})
+        _CACHE.update({"mtime": mtime, "projects": [], "loadOk": False})
         return []
     projects = []
     for feature in payload.get("features") or []:
         properties = feature.get("properties") or {}
+        # This source is KOG-L type 4 and cannot feed commercial map or scores.
+        if properties.get("sourceDataset") == "OA-22712":
+            continue
         project_id = str(feature.get("id") or properties.get("id") or "")
         if project_id in COMPLETED_PROJECT_IDS:
             continue
@@ -237,8 +311,8 @@ def _load_projects():
         stage = _stage(properties.get("stage"))
         if stage == "완료":
             continue
-        points = _geometry_points(feature.get("geometry") or {})
-        if not points:
+        polygons = _geometry_polygons(feature.get("geometry") or {})
+        if not polygons:
             continue
         projects.append({
             "id": project_id,
@@ -254,18 +328,23 @@ def _load_projects():
             "expectedCompletionYear": properties.get("expectedCompletionYear") or properties.get("준공예정연도"),
             "sourceDate": properties.get("sourceDate") or "2026-02",
             "confidence": "high" if project_type in {"재개발", "재건축", "뉴타운"} else "medium",
-            "_points": points,
+            "_polygons": polygons,
         })
-    _CACHE.update({"mtime": mtime, "projects": projects})
+    _CACHE.update({"mtime": mtime, "projects": projects, "loadOk": bool(projects)})
     return projects
 
 
 def nearby_projects(row, entity, radius_meters=3000, limit=8):
+    if not _supported_region(row, entity):
+        return [], "unsupported_region"
     point = _coordinates(row, entity)
     if not point:
         return [], "no_coordinates"
+    source_projects = _load_projects()
+    if not source_projects and not _CACHE.get("loadOk"):
+        return [], "data_unavailable"
     projects = []
-    for project in _load_projects():
+    for project in source_projects:
         distance = _zone_distance(point, project)
         if distance is None or distance > radius_meters:
             continue
@@ -278,19 +357,29 @@ def nearby_projects(row, entity, radius_meters=3000, limit=8):
 
 def influence_score(row, entity):
     projects, status = nearby_projects(row, entity)
-    if status != "ok":
-        return 50, "좌표가 없어 중립점수로 계산했어요", {
+    if status == "no_coordinates":
+        return None, "단지 위치를 확인하지 못해 주변 정비사업은 점수에서 뺐어요", {
             "status": "missing",
             "projects": [],
             "reason": status,
-            "neutralPoints": 2,
         }
-    if not projects:
-        return 50, "반경 3km 안 공식 정비사업 데이터가 없어 중립점수로 계산했어요", {
+    if status == "unsupported_region":
+        return None, "이 지역은 정비사업 공간자료 제공 범위 밖이라 점수에서 뺐어요", {
             "status": "missing",
             "projects": [],
+            "reason": status,
+        }
+    if status != "ok":
+        return None, "정비사업 공간자료를 불러오지 못해 점수에서 뺐어요", {
+            "status": "missing",
+            "projects": [],
+            "reason": status,
+        }
+    if not projects:
+        return 50, "반경 3km 안에서 진행 중인 정비사업이 확인되지 않았어요", {
+            "status": "ok",
+            "projects": [],
             "reason": "no_projects",
-            "neutralPoints": 2,
         }
 
     # 단계를 모르는 구역은 가점도 감점도 하지 않는다.

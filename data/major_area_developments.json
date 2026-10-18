@@ -1,0 +1,35 @@
+{
+  "note": "단지와 같은 법정동에서 확인된 대형 복합개발만 연결합니다. 아파트 전체 세대수는 별도 분양·입주 자료와 중복 합산하지 않습니다.",
+  "projects": [
+    {
+      "name": "광운대역 물류부지 개발",
+      "kind": "mixed_use",
+      "region": "노원구",
+      "legalDongs": ["월계동"],
+      "siteAddress": "서울특별시 노원구 월계동 85-7",
+      "latitude": 37.618312893351,
+      "longitude": 127.064512115401,
+      "coordinateSource": "카카오 로컬 주소 검색",
+      "nearbyRadiusMeters": 2000,
+      "stage": "공사 중",
+      "plannedCompletion": "2028년 하반기 예정",
+      "landUses": "주거·업무·상업·공공시설",
+      "connections": "동서 연결도로·보행육교",
+      "sourceUrl": "https://news.seoul.go.kr/citybuild/archives/536769",
+      "sourceName": "서울시 사업현황"
+    },
+    {
+      "name": "상계·중계·하계 택지 재정비 구상",
+      "kind": "district_plan",
+      "region": "노원구",
+      "legalDongs": ["상계동", "중계동", "하계동"],
+      "scope": "상계·중계·중계2 택지개발지구",
+      "stage": "지구단위계획 고시",
+      "existingHouseholds": 76000,
+      "plannedTotalHouseholds": 103000,
+      "moveInWindowVerified": false,
+      "sourceUrl": "https://news.seoul.go.kr/citybuild/archives/532401",
+      "sourceName": "서울시 재정비 계획"
+    }
+  ]
+}

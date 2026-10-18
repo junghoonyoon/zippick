@@ -45,6 +45,20 @@ class KakaoStationDistancesTest(unittest.TestCase):
             kakao_station_distances.entity_address(self.entity),
             "서울특별시 성동구 성수동1가 721",
         )
+
+    def test_same_name_at_different_jibun_has_different_cache_identity(self):
+        other = dict(self.entity, jibun="722", address="서울특별시 성동구 성수동1가 722")
+        self.assertNotEqual(kakao_station_distances.entity_id(self.entity),
+                            kakao_station_distances.entity_id(other))
+
+    def test_existing_cache_record_is_reused_only_at_the_same_address(self):
+        legacy_key = kakao_station_distances._legacy_entity_id(self.entity)
+        record = {"apartmentName": self.entity["name"], "address": self.entity["address"],
+                  "status": "ok", "nearestStationName": "서울숲역", "nearestStationDistance": 420}
+        kakao_station_distances._merge_records({legacy_key: record})
+        self.assertEqual(kakao_station_distances.cached_station(self.entity)["nearestStationName"], "서울숲역")
+        other = dict(self.entity, jibun="722", address="서울특별시 성동구 성수동1가 722")
+        self.assertIsNone(kakao_station_distances.cached_station(other))
         entity = dict(self.entity, address="")
         self.assertEqual(
             kakao_station_distances.entity_address(entity),
@@ -62,6 +76,7 @@ class KakaoStationDistancesTest(unittest.TestCase):
                 }],
             },
             {
+                "meta": {"is_end": True},
                 "documents": [{
                     "id": "123",
                     "place_name": "서울숲역",
@@ -80,7 +95,9 @@ class KakaoStationDistancesTest(unittest.TestCase):
 
         self.assertEqual(record["status"], "ok")
         self.assertEqual(record["nearestStationName"], "서울숲역")
-        self.assertEqual(record["nearestStationDistance"], 418.0)
+        self.assertEqual(record["nearestStationDistance"], round(
+            kakao_station_distances._distance_meters(37.544, 127.043, 37.543, 127.044), 1
+        ))
         self.assertEqual(record["stationDistanceType"], "straight_line")
         self.assertEqual(request_json.call_count, 2)
         self.assertEqual(
@@ -111,7 +128,7 @@ class KakaoStationDistancesTest(unittest.TestCase):
             }]},
         ), mock.patch.object(
             kakao_station_distances,
-            "nearest_subway_station",
+            "nearest_subway_station_shared",
             return_value={
                 "nearestStationName": "테스트역",
                 "nearestStationDistance": 500,
@@ -131,7 +148,7 @@ class KakaoStationDistancesTest(unittest.TestCase):
             return_value=coordinates,
         ), mock.patch.object(
             kakao_station_distances,
-            "nearest_subway_station",
+            "nearest_subway_station_shared",
             return_value=None,
         ):
             record = kakao_station_distances.enrich_entity(self.entity)
@@ -182,6 +199,32 @@ class KakaoStationDistancesTest(unittest.TestCase):
             kakao_station_distances.CACHE_PATH.read_text(encoding="utf-8"),
         )
         self.assertEqual(payload["version"], 1)
+
+    def test_nearby_apartments_share_station_query_and_identical_addresses_share_geocode(self):
+        second = dict(self.entity, dedupeKey="second-apartment")
+        third = dict(self.entity, dedupeKey="third-apartment", address="서울특별시 성동구 성수동1가 722")
+        responses = [
+            {"documents": [{"x": "127.043", "y": "37.544", "address_name": self.entity["address"]}]},
+            {"meta": {"is_end": True}, "documents": [{
+                "id": "123", "place_name": "서울숲역", "x": "127.044", "y": "37.543",
+            }]},
+            {"documents": [{"x": "127.0431", "y": "37.5441", "address_name": third["address"]}]},
+        ]
+        with mock.patch.object(kakao_station_distances, "_request_json", side_effect=responses) as request_json:
+            first_record = kakao_station_distances.enrich_entity(self.entity)
+            second_record = kakao_station_distances.enrich_entity(second)
+            third_record = kakao_station_distances.enrich_entity(third)
+        self.assertEqual(request_json.call_count, 3)
+        self.assertEqual(first_record["status"], "ok")
+        self.assertEqual(second_record["coordinateMatchType"], "address_cache")
+        self.assertEqual(third_record["nearestStationName"], "서울숲역")
+        self.assertNotEqual(first_record["nearestStationDistance"], third_record["nearestStationDistance"])
+
+    def test_incomplete_nearby_station_query_is_not_reused(self):
+        query = {"latitude": 37.544, "longitude": 127.043,
+                 "documents": [{"name": "A역", "latitude": 37.543, "longitude": 127.044}],
+                 "isEnd": False, "lastCenterDistance": 150}
+        self.assertIsNone(kakao_station_distances._station_from_query(query, 127.045, 37.544))
 
     def test_memory_cache_reloads_after_another_process_replaces_file(self):
         first_record = {

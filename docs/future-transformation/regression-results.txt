@@ -1,0 +1,53 @@
+................................................................ [  8%]
+........................................................ [ 15%]
+..............F...............................F..............F.......... [ 24%]
+......................................................F.F....F......F.FF...........F.....F.....F..F... [ 38%]
+......F.............................F...F..F....F...............F....F.F [ 47%]
+........................................................................ [ 56%]
+........................................................................ [ 66%]
+.................................................................... [ 75%]
+..................................................................... [ 84%]
+............ [ 85%]
+...................................................... [ 92%]
+.........................................................                [100%]
+=============================== warnings summary ===============================
+tests/test_molit_transactions.py::MolitTransactionsTest::test_fetch_month_reads_every_api_page
+tests/test_molit_transactions.py::MolitTransactionsTest::test_fetch_month_reads_every_api_page
+tests/test_molit_transactions.py::MolitTransactionsTest::test_presale_month_uses_separate_endpoint_key_and_cache
+tests/test_molit_transactions.py::MolitTransactionsTest::test_rent_feed_parses_jeonse_and_monthly_contracts
+tests/test_molit_transactions.py::MolitTransactionsTest::test_same_month_concurrent_requests_share_one_api_call
+  /Users/jay/Documents/집픽/pipeline/molit_transactions.py:352: DeprecationWarning: Testing an element's truth value will always return True in future versions.  Use specific 'len(elem)' or 'elem is not None' test instead.
+    result_code = _xml_text(root.find("header") or root, ["resultCode"])
+
+tests/test_molit_transactions.py::MolitTransactionsTest::test_fetch_month_reads_every_api_page
+tests/test_molit_transactions.py::MolitTransactionsTest::test_fetch_month_reads_every_api_page
+tests/test_molit_transactions.py::MolitTransactionsTest::test_presale_month_uses_separate_endpoint_key_and_cache
+tests/test_molit_transactions.py::MolitTransactionsTest::test_rent_feed_parses_jeonse_and_monthly_contracts
+tests/test_molit_transactions.py::MolitTransactionsTest::test_same_month_concurrent_requests_share_one_api_call
+  /Users/jay/Documents/집픽/pipeline/molit_transactions.py:353: DeprecationWarning: Testing an element's truth value will always return True in future versions.  Use specific 'len(elem)' or 'elem is not None' test instead.
+    result_message = _xml_text(root.find("header") or root, ["resultMsg"])
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_budget_candidates.py::BudgetCandidatesTest::test_parent_complex_does_not_claim_numbered_alias_location
+FAILED tests/test_budget_live_seed.py::BudgetLiveSeedTest::test_static_molit_csv_without_latest_price_is_labeled_as_price_band
+FAILED tests/test_budget_result_cache.py::BudgetResultCacheTest::test_local_month_cache_fills_filtered_search_price_before_reveal
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_budget_candidate_cards_render_compare_controls
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_budget_candidates_render_only_after_price_and_policy_are_verified
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_budget_render_keeps_all_rows_and_caps_shortlist_only
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_candidate_comparison_uses_report_highlights_without_auto_summary
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_candidate_insight_shows_factual_price_flow_and_news
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_candidate_list_score_badges_are_read_only_while_report_badges_can_open_details
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_candidate_sort_and_filter_options_match_the_review_workflow
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_condition_modal_refreshes_results_only_after_final_confirmation
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_demand_and_market_report_explain_why_the_score_is_good
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_direct_apartment_search_omits_manual_asking_price_check
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_first_time_policy_is_visible_and_conflicting_input_is_blocked
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_naver_property_actions_stay_in_app_on_mobile
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_policy_impact_omits_manual_naver_asking_price_check
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_product_report_explains_scale_and_age_without_liquidity_claims
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_region_picker_collapses_many_selected_chips
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_zippick_active_review_copy_does_not_sound_like_hold
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_zippick_report_guards_against_buying_at_the_peak
+FAILED tests/test_frontend_apartment_search.py::FrontendApartmentSearchTest::test_zippick_report_measures_liquidity_in_falling_months
+21 failed, 749 passed, 10 warnings, 151 subtests passed in 54.46s

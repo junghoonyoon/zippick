@@ -889,6 +889,11 @@ def district_peer_reports(
             collected.append({
                 "name": entity.get("name", ""),
                 "region": region,
+                "displayRegion": entity.get("district") or region,
+                "address": entity.get("address") or "",
+                "apartmentId": entity.get("apartmentId") or "",
+                "kaptCode": entity.get("kaptCode") or "",
+                "complexNo": entity.get("complexNo") or "",
                 "legalDong": entity.get("legalDong") or "",
                 "jibun": entity.get("jibun") or "",
                 "households": households,

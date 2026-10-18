@@ -1,0 +1,48 @@
+{
+  "lifestyleKey": "구성남 생활권",
+  "sourceNote": "성남시 공식 발표에서 확인된 주요 사업만 수록. 단지와의 거리는 계산하지 않음.",
+  "projects": [
+    {
+      "name": "산성구역",
+      "region": "성남수정구",
+      "stage": "정비계획 수립 용역",
+      "sourceDate": "2025-09-29",
+      "sourceUrl": "https://snvision.seongnam.go.kr/21681"
+    },
+    {
+      "name": "신흥1구역",
+      "region": "성남수정구",
+      "stage": "사업시행인가 후 관리처분 단계",
+      "sourceDate": "2026-02-24",
+      "sourceUrl": "https://snvision.seongnam.go.kr/22380"
+    },
+    {
+      "name": "수진1구역",
+      "region": "성남수정구",
+      "stage": "관리처분계획인가",
+      "sourceDate": "2026-06-16",
+      "sourceUrl": "https://snvision.seongnam.go.kr/22934"
+    },
+    {
+      "name": "신흥3구역",
+      "region": "성남수정구",
+      "stage": "시공사 선정",
+      "sourceDate": "2026-02-24",
+      "sourceUrl": "https://snvision.seongnam.go.kr/22380"
+    },
+    {
+      "name": "태평3구역",
+      "region": "성남수정구",
+      "stage": "시공사 선정 절차",
+      "sourceDate": "2026-02-24",
+      "sourceUrl": "https://snvision.seongnam.go.kr/22380"
+    },
+    {
+      "name": "상대원3구역",
+      "region": "성남중원구",
+      "stage": "사업시행 협약",
+      "sourceDate": "2026-02-24",
+      "sourceUrl": "https://snvision.seongnam.go.kr/22380"
+    }
+  ]
+}

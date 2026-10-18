@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-18",
+  "coordinateSource": "Kakao Local API 예정역 장소 대표점",
+  "coordinateCheckedAt": "2026-10-18",
+  "note": "예정역 장소점은 공식 철도계획 선형과 일치하지 않을 수 있다. 연결 점선은 두 자료의 위치를 잇는 참고 표시이며 선로·출입구가 아니다.",
+  "stations": [
+    {
+      "id": "shinansan-sindoksan-reference",
+      "name": "신독산역(예정) · 신안산선",
+      "lineName": "신안산선",
+      "latitude": 37.4683023344046,
+      "longitude": 126.897883655057,
+      "address": "서울 금천구 독산동 291-4",
+      "kakaoPlaceId": "155510731",
+      "coordinateSourceUrl": "https://place.map.kakao.com/155510731",
+      "sourceUrl": "https://soco.seoul.go.kr/youth/bbs/BMSR00015/view.do?boardId=6695&menuNo=400008&optn1=2026-10-08",
+      "sourceDate": "2026-10-08",
+      "positionLabel": "예정역 지도 대표점 · 정확한 출입구 위치 아님"
+    },
+    {
+      "id": "shinansan-siheung-crossroads-reference",
+      "name": "시흥사거리역(예정) · 신안산선",
+      "lineName": "신안산선",
+      "latitude": 37.4540598233408,
+      "longitude": 126.900799733562,
+      "address": "서울 금천구 시흥동 1000-48",
+      "kakaoPlaceId": "454414763",
+      "coordinateSourceUrl": "https://place.map.kakao.com/454414763",
+      "sourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1120522&page=27",
+      "sourceDate": "2025-02-20",
+      "positionLabel": "예정역 지도 대표점 · 정확한 출입구 위치 아님"
+    }
+  ]
+}

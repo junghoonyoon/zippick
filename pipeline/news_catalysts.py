@@ -8,6 +8,7 @@ import datetime
 import hashlib
 import html
 import json
+import math
 import re
 import threading
 import time
@@ -24,7 +25,7 @@ import config
 API_HUB_ENDPOINT = "https://naverapihub.apigw.ntruss.com/search/v1/news"
 DEVELOPERS_ENDPOINT = "https://openapi.naver.com/v1/search/news.json"
 CACHE_DIR = config.CACHE_DIR / "news_catalysts"
-CACHE_VERSION = "v10"
+CACHE_VERSION = "v12"
 CACHE_LOCK = threading.Lock()
 KEY_LOCKS = {}
 KEY_LOCKS_LOCK = threading.Lock()
@@ -153,6 +154,11 @@ MARKET_ONLY_NEWS = re.compile(
     r"\d+(?:만|억)원|가격\s*(?:상승|하락)|급등|급락|"
     r"오르(?:다|고|는|며)|올랐|내렸|떨어졌|빠졌|상승\s*왜|하락\s*왜)"
 )
+
+# 기사 제목만으로 단지 자체 재건축·재개발을 판단할 때 쓰는 최소 연식이다.
+# 신축 단지는 주변 정비사업 기사가 단지 기사로 잘못 잡힐 위험이 크다.
+# 공식 구역 정보는 별도 경로로 확인하므로, 여기서는 기사 기반 신호만 제외한다.
+MINIMUM_ARTICLE_RECONSTRUCTION_AGE_YEARS = 20
 
 
 def configured():
@@ -365,6 +371,47 @@ def _progress_event(text):
     }
 
 
+def _own_development_allowed(apartment):
+    """Conservative evidence gate, not a statutory redevelopment age threshold."""
+    if re.search(r"분양권|입주예정|미준공", _compact(apartment.get("status"))):
+        return False
+    ages = []
+    try:
+        age = float(apartment.get("buildingAge"))
+        if math.isfinite(age) and age >= 0:
+            ages.append(age)
+    except (TypeError, ValueError):
+        pass
+    year = datetime.date.today().year
+    for field in ("buildYear", "approvedAt"):
+        match = re.match(r"^(\d{4})(?:\D|$)", str(apartment.get(field) or ""))
+        if match and 1900 <= int(match[1]) <= year + 10:
+            ages.append(max(0, year - int(match[1])))
+    # Conflicting dates use the youngest age; missing age is not evidence of an old building.
+    return bool(ages) and min(ages) >= MINIMUM_ARTICLE_RECONSTRUCTION_AGE_YEARS
+
+
+def _own_development_news_allowed(apartment, row):
+    if not row or row.get("scope") == "area":
+        return True
+    text = " ".join(str(row.get(key) or "") for key in (
+        "title", "description", "label", "eventLabel", "summary", "badge",
+    ))
+    reconstruction = row.get("category") == "reconstruction" or re.search(
+        r"재건축|재개발|정비사업|정비구역|리모델링|모아타운|가로주택", text,
+    )
+    return not reconstruction or _own_development_allowed(apartment)
+
+
+def _validated_news_bundle(apartment, bundle):
+    catalyst = bundle.get("catalyst")
+    return {
+        "catalyst": catalyst if _own_development_news_allowed(apartment, catalyst) else None,
+        "news": [row for row in bundle.get("news") or []
+                 if _own_development_news_allowed(apartment, row)],
+    }
+
+
 def _nearby_event_allowed(confirmed, progress, title):
     event = confirmed or progress
     if not event:
@@ -440,7 +487,7 @@ def _article_candidate(article, apartment, now=None):
     ):
         return None
     event = _confirmed_event(basics["text"])
-    if not event:
+    if not event or not _own_development_news_allowed(apartment, {**basics, **event}):
         return None
     score = event["score"]
     if _article_mentions_apartment(basics["title"], apartment):
@@ -489,6 +536,8 @@ def _related_news_candidate(article, apartment, now=None):
         and basics["ageDays"] <= config.NEWS_CATALYST_LOOKBACK_DAYS
     )
     event = confirmed or progress
+    if direct and not _own_development_news_allowed(apartment, {**basics, **(event or {})}):
+        return None
     if nearby and not direct and not _nearby_event_allowed(
         confirmed,
         progress,
@@ -612,6 +661,10 @@ def _cache_key(apartment):
             "region",
             "displayRegion",
             "legalDong",
+            "buildingAge",
+            "buildYear",
+            "approvedAt",
+            "status",
         )
     )
     digest = hashlib.sha256(material.encode("utf-8")).hexdigest()
@@ -715,10 +768,7 @@ def news_bundle_for_apartment(apartment):
         with CACHE_LOCK:
             cached = _read_cache(key)
         if cached is not None:
-            return {
-                "catalyst": cached.get("catalyst"),
-                "news": cached.get("news") or [],
-            }
+            return _validated_news_bundle(apartment, cached)
         direct_articles = _search_articles(apartment)
         if direct_articles is None:
             return {"catalyst": None, "news": []}
@@ -738,7 +788,7 @@ def news_bundle_for_apartment(apartment):
                     break
         with CACHE_LOCK:
             _write_cache(key, {"catalyst": catalyst, "news": related_news})
-        return {"catalyst": catalyst, "news": related_news}
+        return _validated_news_bundle(apartment, {"catalyst": catalyst, "news": related_news})
 
 
 def catalyst_for_apartment(apartment):

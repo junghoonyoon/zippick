@@ -33,7 +33,7 @@ MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 13
+PRICE_BAND_CACHE_SCHEMA_VERSION = 14
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 # 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
 # 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
@@ -1121,13 +1121,13 @@ VALUATION_TRADE_LIMIT = 200
 
 
 def _valuation_trades(transactions):
-    """적정 범위 계산에 쓴 거래의 계약일과 가격만 남긴다.
+    """적정 범위 계산에 쓴 거래의 계약일·가격·층을 남긴다.
 
     지역 가격지수로 거래마다 오늘 기준에 맞출 때 쓴다. 거래가 너무 많으면
     일부만 넘겨 다른 결과를 만들지 않도록 아예 비워 둔다.
     """
     trades = [
-        [str(row.get("dealDate") or "")[:10], round(float(row.get("dealAmountEok") or 0), 4)]
+        [str(row.get("dealDate") or "")[:10], round(float(row.get("dealAmountEok") or 0), 4), str(row.get("floor") or "")]
         for row in transactions
         if float(row.get("dealAmountEok") or 0) > 0
     ]

@@ -1,0 +1,15 @@
+{
+  "note": "공식 공간정보와 별도로 확인한 사업 규모 참고값. 사업 ID·이름·구역면적·자치구가 모두 맞을 때만 표시하며 점수에는 사용하지 않는다.",
+  "projects": [
+    {
+      "boundaryId": "11000UQ120PS202505310524",
+      "name": "원당아파트 가로주택정비사업",
+      "districtCode": "11260",
+      "siteAreaM2": 3774,
+      "reportedHouseholds": 108,
+      "reportedHouseholdsBasis": "2024년 공람안 기준",
+      "reportedHouseholdsSourceUrl": "https://www.arunews.com/news/articleView.html?idxno=43736",
+      "reportedHouseholdsSourceNote": "중랑구 공람안을 인용한 2024-04-23 보도. 현행 인가 규모는 확인되지 않아 계획 참고값으로만 표시"
+    }
+  ]
+}

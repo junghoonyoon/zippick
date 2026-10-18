@@ -66,11 +66,34 @@ class ProjectTypeTest(unittest.TestCase):
         self.assertIsNone(ra._project_type("미리내집"))
 
 
+class ZoneBoundaryDistanceTest(unittest.TestCase):
+    def test_distance_uses_boundary_segment_and_is_zero_inside(self):
+        geometry = {"type": "Polygon", "coordinates": [[
+            [127.0, 37.0], [127.01, 37.0], [127.01, 37.01],
+            [127.0, 37.01], [127.0, 37.0],
+        ]]}
+        project = {"_polygons": ra._geometry_polygons(geometry)}
+        self.assertEqual(ra._zone_distance({"latitude": 37.005, "longitude": 127.005}, project), 0)
+        midpoint_distance = ra._zone_distance({"latitude": 36.999, "longitude": 127.005}, project)
+        self.assertGreater(midpoint_distance, 105)
+        self.assertLess(midpoint_distance, 118)
+
+    def test_hole_is_not_treated_as_inside_zone(self):
+        geometry = {"type": "Polygon", "coordinates": [
+            [[127.0, 37.0], [127.01, 37.0], [127.01, 37.01], [127.0, 37.01]],
+            [[127.004, 37.004], [127.006, 37.004], [127.006, 37.006], [127.004, 37.006]],
+        ]}
+        project = {"_polygons": ra._geometry_polygons(geometry)}
+        distance = ra._zone_distance({"latitude": 37.005, "longitude": 127.005}, project)
+        self.assertGreater(distance, 80)
+        self.assertLess(distance, 100)
+
+
 class LoadedDataTest(unittest.TestCase):
-    def test_official_dataset_keeps_more_zones_than_before(self):
+    def test_noncommercial_dataset_is_not_loaded_for_scoring(self):
         projects = ra._load_projects()
-        # 매핑을 고치기 전에는 1,549곳만 통과했다.
-        self.assertGreater(len(projects), 1600)
+        self.assertEqual(projects, [])
+        self.assertFalse(ra._CACHE["loadOk"])
 
     def test_household_count_is_never_invented(self):
         with (ROOT / "data" / "redevelopment_zones.geojson").open(encoding="utf-8") as handle:
@@ -86,9 +109,9 @@ class LoadedDataTest(unittest.TestCase):
 
     def test_supply_penalty_is_skipped_when_household_count_is_unknown(self):
         row = {"latitude": 37.5079, "longitude": 126.9268}
-        _, _, detail = ra.influence_score(row, None)
-        self.assertFalse(detail["supplyHouseholdsKnown"])
-        self.assertIsNone(detail["supplyHouseholds"])
+        score, _, detail = ra.influence_score(row, None)
+        self.assertIsNone(score)
+        self.assertEqual(detail["reason"], "data_unavailable")
 
 
 class TrackRecordTest(unittest.TestCase):
@@ -108,8 +131,8 @@ class TrackRecordTest(unittest.TestCase):
     def test_move_out_alert_stays_within_the_distance(self):
         row = {"latitude": 37.5079, "longitude": 126.9268}
         _, _, detail = ra.influence_score(row, None)
-        for project in detail["moveOutNearby"]:
-            self.assertLessEqual(project["distanceMeters"], ra.MOVE_OUT_NEARBY_METERS)
+        self.assertEqual(detail["status"], "missing")
+        self.assertEqual(detail["projects"], [])
 
 
 if __name__ == "__main__":

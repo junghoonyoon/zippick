@@ -1,0 +1,90 @@
+{
+  "version": "fts-v1",
+  "radiusMeters": 1500,
+  "horizonYears": 5,
+  "regionWeight": 0.6,
+  "benefitWeight": 0.4,
+  "conversionFullRatio": 0.5,
+  "staleDays": {
+    "project": 90,
+    "measurement": 30
+  },
+  "stageWeights": {
+    "planning": 0.1,
+    "designated": 0.2,
+    "association": 0.35,
+    "approved": 0.55,
+    "disposal": 0.7,
+    "construction": 0.9
+  },
+  "metrics": [
+    {
+      "key": "housing_conversion",
+      "label": "낡은 주거지가 새집으로 바뀌는 정도",
+      "weight": 30,
+      "missing": "노후 주거지의 토지 면적과 사업구역이 겹치는 면적을 확인해야 해요."
+    },
+    {
+      "key": "new_build_belt",
+      "label": "새 주거지끼리 이어지는 길",
+      "weight": 15,
+      "missing": "새 단지 사이를 실제로 걸어갈 수 있는지 확인해야 해요."
+    },
+    {
+      "key": "transport_improvement",
+      "label": "출퇴근이 편해지는 정도",
+      "weight": 15,
+      "missing": "새 교통편을 이용했을 때 줄어드는 이동시간이 필요해요."
+    },
+    {
+      "key": "amenity_improvement",
+      "label": "공원·학교·편의시설의 변화",
+      "weight": 15,
+      "missing": "새 시설의 위치와 문 여는 시기를 확인해야 해요."
+    },
+    {
+      "key": "project_feasibility",
+      "label": "사업이 얼마나 진행됐는지",
+      "weight": 15,
+      "missing": "사업 규모와 공식 진행 단계, 완료 일정을 함께 확인해야 해요."
+    },
+    {
+      "key": "supply_demand_stability",
+      "label": "입주 물량을 받아줄 수요",
+      "weight": 10,
+      "missing": "입주 물량과 기존 가구 수, 거래·전세 흐름을 함께 확인해야 해요."
+    }
+  ],
+  "benefits": [
+    {
+      "key": "accessibility",
+      "label": "새 시설까지 가는 길",
+      "weight": 35,
+      "missing": "단지에서 사업지까지 실제 이동 경로가 필요해요."
+    },
+    {
+      "key": "belt_connection",
+      "label": "새 주거지와의 연결",
+      "weight": 25,
+      "missing": "큰 도로나 경사로 길이 끊기지 않는지 확인해야 해요."
+    },
+    {
+      "key": "daily_access",
+      "label": "생활 동선의 개선",
+      "weight": 20,
+      "missing": "평소 쓰는 역·공원·시설까지 얼마나 편해지는지 확인해야 해요."
+    },
+    {
+      "key": "negative_impact",
+      "label": "공사·입주 집중 부담이 적은 정도",
+      "weight": 20,
+      "missing": "공사 소음과 차량 동선, 입주 집중을 확인해야 해요."
+    }
+  ],
+  "oldBuildingYears": 30,
+  "fullTransportSavingMinutes": 20,
+  "fullWalkingSavingMinutes": 15,
+  "maxWalkingDistanceMeters": 1500,
+  "supplyExcessRatio": 0.1,
+  "feasibilityFullWeight": 0.9
+}

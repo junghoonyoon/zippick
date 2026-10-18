@@ -254,10 +254,10 @@ class MolitTransactionsTest(unittest.TestCase):
 
     def test_price_band_builds_latest_trade_excluded_valuation_estimate(self):
         transactions = [
-            {"dealDate": "2026-08-10", "dealAmountEok": 9.0},
-            {"dealDate": "2026-09-10", "dealAmountEok": 15.0},
-            {"dealDate": "2026-07-10", "dealAmountEok": 9.2},
-            {"dealDate": "2026-06-10", "dealAmountEok": 9.4},
+            {"dealDate": "2026-08-10", "dealAmountEok": 9.0, "floor": "1"},
+            {"dealDate": "2026-09-10", "dealAmountEok": 15.0, "floor": "18"},
+            {"dealDate": "2026-07-10", "dealAmountEok": 9.2, "floor": "2"},
+            {"dealDate": "2026-06-10", "dealAmountEok": 9.4, "floor": "3"},
         ]
 
         band = molit_transactions._price_band_payload(
@@ -275,7 +275,7 @@ class MolitTransactionsTest(unittest.TestCase):
         # 지역 가격지수 보정에 쓰도록 평가할 최근 거래를 뺀 거래만 넘긴다.
         self.assertEqual(
             band["valuationTrades"],
-            [["2026-08-10", 9.0], ["2026-07-10", 9.2], ["2026-06-10", 9.4]],
+            [["2026-08-10", 9.0, "1"], ["2026-07-10", 9.2, "2"], ["2026-06-10", 9.4, "3"]],
         )
 
     def test_price_band_omits_valuation_trades_without_an_estimate(self):

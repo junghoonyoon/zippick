@@ -1,0 +1,243 @@
+[
+  {
+    "schemaVersion": 1,
+    "scoringVersion": "fts-v1",
+    "radiusMeters": 1500,
+    "horizonYears": 5,
+    "asOfDate": "2026-10-12",
+    "measurements": {},
+    "apartmentId": "484457631ccb1633",
+    "identity": {
+      "district": "성남수정구",
+      "legalDong": "산성동",
+      "jibun": "1336"
+    },
+    "sources": [
+      {
+        "id": "sn-22380",
+        "publisher": "성남시",
+        "url": "https://snvision.seongnam.go.kr/22380",
+        "publishedAt": "2026-02-24",
+        "observedAt": "2026-10-12",
+        "verifiedAt": "2026-10-12",
+        "documentId": "sn-22380",
+        "documentTitle": "상대원3구역 사업시행협약 발표",
+        "verificationStatus": "verified",
+        "licenseStatus": "reviewed",
+        "licenseNote": "원문·사진 재배포 없음. 발표일과 사업 단계 사실만 정리하고 원문 연결."
+      },
+      {
+        "id": "sn-23299",
+        "publisher": "성남시",
+        "url": "https://snvision.seongnam.go.kr/sub_read.html?uid=23299",
+        "publishedAt": "2026-08-31",
+        "observedAt": "2026-10-12",
+        "verifiedAt": "2026-10-12",
+        "documentId": "sn-23299",
+        "documentTitle": "수진2 등 생활권 재개발 5개 구역 지정 발표",
+        "verificationStatus": "verified",
+        "licenseStatus": "reviewed",
+        "licenseNote": "보도문의 사업명·구역 면적·계획 세대수만 발췌하고 원문·사진은 재배포하지 않음."
+      }
+    ],
+    "projects": [
+      {
+        "id": "seongnam-sangdaewon3",
+        "name": "상대원3구역",
+        "projectType": "redevelopment",
+        "stage": "unknown",
+        "stageLabel": "사업시행협약 체결",
+        "region": "성남중원구",
+        "legalDong": "상대원동",
+        "expectedCompletionDate": null,
+        "evidenceIds": [
+          "sn-22380"
+        ]
+      },
+      {
+        "id": "seongnam-sinheung1",
+        "name": "신흥1구역",
+        "projectType": "redevelopment",
+        "stage": "approved",
+        "stageLabel": "사업시행인가 후 관리처분 단계",
+        "region": "성남수정구",
+        "legalDong": "신흥동",
+        "expectedCompletionDate": null,
+        "evidenceIds": [
+          "sn-22380"
+        ]
+      },
+      {
+        "id": "seongnam-sanseong-living-zone",
+        "name": "산성구역 생활권 재개발",
+        "projectType": "redevelopment",
+        "stage": "designated",
+        "stageLabel": "2026.08 정비구역 지정·고시",
+        "region": "성남수정구",
+        "legalDong": "산성동",
+        "siteAreaM2": 58403,
+        "plannedHouseholds": 1884,
+        "expectedCompletionDate": null,
+        "evidenceIds": ["sn-23299"]
+      },
+      {
+        "id": "seongnam-dandae-living-zone",
+        "name": "단대구역 생활권 재개발",
+        "projectType": "redevelopment",
+        "stage": "designated",
+        "stageLabel": "2026.08 정비구역 지정·고시",
+        "region": "성남수정구",
+        "legalDong": "단대동",
+        "siteAreaM2": 42972,
+        "plannedHouseholds": 1618,
+        "expectedCompletionDate": null,
+        "evidenceIds": ["sn-23299"]
+      },
+      {
+        "id": "seongnam-sujin2-living-zone",
+        "name": "수진2구역 생활권 재개발",
+        "projectType": "redevelopment",
+        "stage": "designated",
+        "stageLabel": "2026.08 정비구역 지정·고시",
+        "region": "성남수정구",
+        "legalDong": "수진동",
+        "siteAreaM2": 145566,
+        "plannedHouseholds": 3275,
+        "expectedCompletionDate": null,
+        "evidenceIds": ["sn-23299"]
+      },
+      {
+        "id": "seongnam-taepyeong24-living-zone",
+        "name": "태평2·4구역 생활권 재개발",
+        "projectType": "redevelopment",
+        "stage": "designated",
+        "stageLabel": "2026.08 정비구역 지정·고시",
+        "region": "성남수정구",
+        "legalDong": "태평동",
+        "siteAreaM2": 183849,
+        "plannedHouseholds": 4458,
+        "expectedCompletionDate": null,
+        "evidenceIds": ["sn-23299"]
+      },
+      {
+        "id": "seongnam-sangdaewon13-living-zone",
+        "name": "상대원1·3구역 생활권 재개발",
+        "projectType": "redevelopment",
+        "stage": "designated",
+        "stageLabel": "2026.08 정비구역 지정·고시",
+        "region": "성남중원구",
+        "legalDong": "상대원동",
+        "siteAreaM2": 103904,
+        "plannedHouseholds": 2270,
+        "expectedCompletionDate": null,
+        "evidenceIds": ["sn-23299"]
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "scoringVersion": "fts-v1",
+    "radiusMeters": 1500,
+    "horizonYears": 5,
+    "asOfDate": "2026-10-12",
+    "measurements": {},
+    "apartmentId": "449db7d556b8ba86",
+    "identity": {
+      "district": "동대문구",
+      "legalDong": "이문동",
+      "jibun": "149-8"
+    },
+    "sources": [
+      {
+        "id": "ddm-plan-960",
+        "publisher": "동대문구",
+        "url": "https://www.ddm.go.kr/www/contents.do?key=960",
+        "publishedAt": "2025-10-10",
+        "observedAt": "2026-10-12",
+        "verifiedAt": "2026-10-12",
+        "documentId": "ddm-plan-960",
+        "documentTitle": "이문·휘경 사업추진계획",
+        "verificationStatus": "verified",
+        "licenseStatus": "reviewed",
+        "licenseNote": "공공누리 출처표시. 사업명과 계획 규모 사실을 발췌하며 현재 단계나 완료일로 해석하지 않음."
+      },
+      {
+        "id": "ddm-imun4-gazette-2024",
+        "publisher": "동대문구",
+        "url": "https://www.ddm.go.kr/www/selectBbsNttView.do?bbsNo=53&integrDeptCode=&key=239&nttNo=148911&pageIndex=8&searchCnd=all&searchCtgry=&searchKrwd=",
+        "publishedAt": "2024-04-04",
+        "observedAt": "2026-10-12",
+        "verifiedAt": "2026-10-12",
+        "documentId": "동대문구 고시 제2024-45호",
+        "documentTitle": "이문4구역 관리처분계획인가",
+        "verificationStatus": "verified",
+        "licenseStatus": "reviewed",
+        "licenseNote": "동대문구보의 고시명과 날짜만 발췌하며 첨부 원문은 재배포하지 않음."
+      },
+      {
+        "id": "ddm-imun4-consult-2026",
+        "publisher": "동대문구",
+        "url": "https://www.ddm.go.kr/www/selectEminwonWebView.do?key=3291&notAncmtMgtNo=22316&pageIndex=31&pageUnit=10&searchCnd=notAncmtSj&searchNotAncmtSeCode=01%2C02%2C04%2C05%2C06%2C07",
+        "publishedAt": "2026-07-30",
+        "observedAt": "2026-10-12",
+        "verifiedAt": "2026-10-12",
+        "documentId": "동대문구 공고 제2026-1192호",
+        "documentTitle": "이문4구역 재정비촉진계획 변경안 공람",
+        "verificationStatus": "verified",
+        "licenseStatus": "reviewed",
+        "licenseNote": "공람 사실만 발췌. 변경안은 최종 결정고시 전까지 확정 계획으로 취급하지 않음."
+      },
+      {
+        "id": "ddm-hwigyeong3-status-967",
+        "publisher": "동대문구",
+        "url": "https://www.ddm.go.kr/www/contents.do?key=967",
+        "publishedAt": "2025-10-10",
+        "observedAt": "2026-10-12",
+        "verifiedAt": "2026-10-12",
+        "documentId": "ddm-status-967",
+        "documentTitle": "휘경3구역 사업진행현황",
+        "verificationStatus": "verified",
+        "licenseStatus": "reviewed",
+        "licenseNote": "공공누리 출처표시. 2025.06.26 준공인가 사실만 발췌하고 원문은 연결."
+      }
+    ],
+    "projects": [
+      {
+        "id": "ddm-imun4",
+        "name": "이문4구역",
+        "projectType": "redevelopment",
+        "stage": "disposal",
+        "stageLabel": "2024.04 관리처분계획인가 · 2026 변경안 공람",
+        "region": "동대문구",
+        "legalDong": "이문동",
+        "expectedCompletionDate": null,
+        "evidenceIds": [
+          "ddm-imun4-gazette-2024",
+          "ddm-imun4-consult-2026"
+        ]
+      },
+      {
+        "id": "ddm-hwigyeong3",
+        "name": "휘경3구역",
+        "projectType": "redevelopment",
+        "stage": "completed",
+        "stageLabel": "2025.06.26 준공인가",
+        "region": "동대문구",
+        "legalDong": "휘경동",
+        "plannedHouseholds": 1806,
+        "actualCompletionDate": "2025-06-26",
+        "expectedCompletionDate": null,
+        "evidenceIds": [
+          "ddm-hwigyeong3-status-967"
+        ]
+      }
+    ],
+    "factCorrections": [
+      {
+        "projectId": "ddm-hwigyeong3",
+        "reason": "종전 사업계획 표만 보고 진행 상태를 미확인으로 저장했으나, 동대문구 사업진행현황은 2025년 6월 26일 준공인가를 명시한다.",
+        "evidenceIds": ["ddm-hwigyeong3-status-967"]
+      }
+    ]
+  }
+]

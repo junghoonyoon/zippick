@@ -14,6 +14,34 @@ import momentum_signals
 
 
 class PaidReportTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node required')
+    def test_report_peer_lookup_finishes_loading(self):
+        html = (ROOT / '앱화면/real-estate-search.html').read_text()
+        lookup = re.search(
+            r'    async function ensureZippickReportPeers\([^\n]*\) \{.*?\n    \}',
+            html, re.S,
+        )
+        self.assertIsNotNone(lookup)
+        self.assertIn('reportPeerState:"pending"', html)
+        self.assertNotIn('현재 검색 결과 밖의 단지도 확인하고 있어요.', html)
+        script = lookup.group() + r'''
+const assert = require('node:assert/strict');
+let fetchAptReport = async () => ({report:{peers:[{apartmentId:'peer-1'}]}});
+(async () => {
+  const item = {name:'테스트 단지', region:'성남수정구', peers:[], reportPeerState:'pending'};
+  const states = [];
+  await ensureZippickReportPeers(item, () => states.push(item.reportPeerState));
+  assert.deepEqual(states, ['loading', 'ready']);
+  assert.equal(item.peers[0].apartmentId, 'peer-1');
+  fetchAptReport = async () => { throw new Error('network error'); };
+  const failed = {name:'다른 단지', region:'성남수정구', peers:[], reportPeerState:'pending'};
+  await ensureZippickReportPeers(failed);
+  assert.equal(failed.reportPeerState, 'error');
+})().catch(error => { console.error(error); process.exit(1); });
+'''
+        result = subprocess.run(['node'], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_repayment_separates_interest_from_principal(self):
         result = policy_evaluator.report_loan_repayment(1, 12, 1)
         self.assertAlmostEqual(result['monthlyPaymentManwon'], 888.49, places=2)
@@ -66,6 +94,8 @@ const candidateLocationScoreBadgeHtml = () => '';
 const candidateFlowScoreBadgeHtml = () => '';
 const zippickMarketEvidenceText = () => '';
 const zippickBuyBandHtml = () => '';
+const zippickOverallRatingHtml = () => '';
+const zippickHasVerifiedMixedCorridor = () => false;
 const zippickVerdictTitle = (_item, verdict) => verdict.peakGuard
   ? '매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격은 2년 고점권이에요'
   : verdict.tone === 'yes' ? '매수 후보로 우선 검토할 만해요. 가격·단지 조건·최근 흐름이 좋아요'

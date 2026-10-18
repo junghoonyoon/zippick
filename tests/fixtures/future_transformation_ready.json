@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 1,
+  "scoringVersion": "fts-v1",
+  "apartmentId": "fixture-only",
+  "asOfDate": "2026-10-12",
+  "radiusMeters": 1500,
+  "horizonYears": 5,
+  "center": {
+    "latitude": 37.59,
+    "longitude": 127.06
+  },
+  "sources": [
+    {
+      "id": "s",
+      "publisher": "테스트용 공식기관",
+      "url": "https://www.seoul.go.kr/fixture-only",
+      "documentId": "s",
+      "documentTitle": "가상 테스트 자료",
+      "publishedAt": "2026-10-12",
+      "observedAt": "2026-10-12",
+      "verifiedAt": "2026-10-12",
+      "verificationStatus": "verified",
+      "licenseStatus": "reviewed"
+    }
+  ],
+  "measurements": {
+    "housing_conversion": {
+      "inputs": {
+        "center": {
+          "latitude": 37.59,
+          "longitude": 127.06
+        },
+        "parcels": [
+          {
+            "id": "land1",
+            "approvedAt": "1980-01-01",
+            "use": "residential",
+            "geometryBasis": "residential_land",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    127.059,
+                    37.589
+                  ],
+                  [
+                    127.061,
+                    37.589
+                  ],
+                  [
+                    127.061,
+                    37.591
+                  ],
+                  [
+                    127.059,
+                    37.591
+                  ],
+                  [
+                    127.059,
+                    37.589
+                  ]
+                ]
+              ]
+            },
+            "evidenceIds": [
+              "s"
+            ]
+          }
+        ],
+        "projects": [
+          {
+            "id": "p1",
+            "stage": "construction",
+            "expectedCompletionDate": "2028-01-01",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    127.059,
+                    37.589
+                  ],
+                  [
+                    127.061,
+                    37.589
+                  ],
+                  [
+                    127.061,
+                    37.591
+                  ],
+                  [
+                    127.059,
+                    37.591
+                  ],
+                  [
+                    127.059,
+                    37.589
+                  ]
+                ]
+              ]
+            },
+            "evidenceIds": [
+              "s"
+            ]
+          }
+        ]
+      },
+      "verificationStatus": "verified",
+      "method": "gis_land_intersection",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "new_build_belt": {
+      "inputs": {
+        "beforeConnectedLengthM": 0,
+        "afterConnectedLengthM": 1000,
+        "eligibleNetworkLengthM": 1000
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "transport_improvement": {
+      "inputs": {
+        "beforeMinutes": 50,
+        "afterMinutes": 30,
+        "routeVerified": true
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "amenity_improvement": {
+      "inputs": {
+        "beforeAccessibleFacilities": 0,
+        "afterAccessibleFacilities": 2,
+        "plannedFacilities": 2,
+        "openingScheduleVerified": true
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "project_feasibility": {
+      "inputs": {
+        "projects": [
+          {
+            "id": "p1",
+            "stage": "construction",
+            "siteAreaM2": 1000,
+            "expectedCompletionDate": "2028-01-01"
+          }
+        ]
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "supply_demand_stability": {
+      "inputs": {
+        "plannedHouseholds": 100,
+        "existingHouseholds": 10000,
+        "annualAbsorptionHouseholds": 100,
+        "transactionChangePct": 0,
+        "rentChangePct": 0
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "accessibility": {
+      "inputs": {
+        "distanceMeters": 0,
+        "distanceBasis": "walking"
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "belt_connection": {
+      "inputs": {
+        "connectedRoutes": 2,
+        "assessedRoutes": 2,
+        "barriersReviewed": true
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "daily_access": {
+      "inputs": {
+        "beforeMinutes": 20,
+        "afterMinutes": 5,
+        "routeVerified": true
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    },
+    "negative_impact": {
+      "inputs": {
+        "noiseExposure": 0,
+        "routeDisruption": 0,
+        "supplyConcentration": 0
+      },
+      "verificationStatus": "verified",
+      "method": "raw_inputs_v1",
+      "effectiveDate": "2028-01-01",
+      "explanation": "가상 입력으로 계산한 테스트 결과",
+      "evidenceIds": [
+        "s"
+      ]
+    }
+  },
+  "projects": [
+    {
+      "id": "p1",
+      "name": "가상 구역",
+      "stage": "construction",
+      "siteAreaM2": 1000,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              127.059,
+              37.589
+            ],
+            [
+              127.061,
+              37.589
+            ],
+            [
+              127.061,
+              37.591
+            ],
+            [
+              127.059,
+              37.591
+            ],
+            [
+              127.059,
+              37.589
+            ]
+          ]
+        ]
+      },
+      "evidenceIds": [
+        "s"
+      ],
+      "expectedCompletionDate": "2028-01-01",
+      "latitude": 37.59,
+      "longitude": 127.06
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "lifestyleKey": "동대문구",
+  "sourceNote": "동대문구 공식 현황에서 단계와 법정동을 확인한 대표 사업만 수록. 구 전체 사업의 전수 목록이나 단지 수혜 판정이 아님.",
+  "projects": [
+    {
+      "id": "ddm-cheongnyangni8",
+      "name": "청량리제8구역",
+      "projectType": "redevelopment",
+      "region": "동대문구",
+      "legalDong": "청량리동",
+      "stage": "disposal",
+      "stageLabel": "2025.09 관리처분계획인가 · 이주 중",
+      "sourceDate": "2026-09-21",
+      "verifiedAt": "2026-10-14",
+      "sourceUrl": "https://www.ddm.go.kr/www/contents.do?key=932"
+    },
+    {
+      "id": "ddm-jeonnong9",
+      "name": "전농제9구역",
+      "projectType": "redevelopment",
+      "region": "동대문구",
+      "legalDong": "전농동",
+      "stage": "designated",
+      "stageLabel": "2023.06 정비구역 지정 · 2025.07 공동사업시행자 변경",
+      "sourceDate": "2025-10-01",
+      "verifiedAt": "2026-10-14",
+      "sourceUrl": "https://www.ddm.go.kr/www/contents.do?key=927"
+    },
+    {
+      "id": "ddm-jegi4",
+      "name": "제기제4구역",
+      "projectType": "redevelopment",
+      "region": "동대문구",
+      "legalDong": "제기동",
+      "stage": "construction",
+      "stageLabel": "2026.07 착공 신고 완료",
+      "sourceDate": "2026-08-05",
+      "verifiedAt": "2026-10-14",
+      "sourceUrl": "https://www.ddm.go.kr/www/contents.do?key=930"
+    }
+  ]
+}

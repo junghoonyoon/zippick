@@ -14,6 +14,22 @@ import location_scores  # noqa: E402
 
 
 class LocationScoresTest(unittest.TestCase):
+    def test_missing_education_explains_why_it_was_not_scored(self):
+        score, reason = location_scores._education_score({
+            "educationEnvironment": {"status": "no_coordinates", "score": None},
+        })
+        self.assertIsNone(score)
+        self.assertIn("단지 위치를 확인하지 못해", reason)
+
+    def test_station_not_found_is_explained_as_search_radius(self):
+        with mock.patch.object(
+            kakao_station_distances, "cached_station",
+            return_value={"nearestStationDistance": None, "stationDistanceLowerBound": 20000},
+        ):
+            score, reason = location_scores._transport_score({"name": "테스트단지"})
+        self.assertIsNotNone(score)
+        self.assertEqual(reason, "반경 20km 안에 지하철역 없음")
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.cache_patch = mock.patch.object(
@@ -80,7 +96,7 @@ class LocationScoresTest(unittest.TestCase):
 
         self.assertEqual(result["status"], "ok")
         self.assertGreaterEqual(result["score"], 60)
-        self.assertEqual(result["scoreFormulaVersion"], "purchase-judgment-v4")
+        self.assertEqual(result["scoreFormulaVersion"], "purchase-judgment-v7")
         self.assertEqual(result["title"], "현재 데이터 기준 종합 점수")
         self.assertEqual(
             [part["label"] for part in result["parts"]],
@@ -102,11 +118,10 @@ class LocationScoresTest(unittest.TestCase):
         self.assertEqual(details["상품성·희소성"]["준공연도"]["reason"], "2018년 사용승인")
         self.assertNotIn("주차·평면·브랜드", details["상품성·희소성"])
         self.assertEqual(details["입지·실수요"]["교육 접근성"]["reason"], "테스트초 · 320m 거리")
-        self.assertEqual(details["입지·실수요"]["주변 정비사업 영향"]["score"], 50)
-        self.assertEqual(
-            details["입지·실수요"]["주변 정비사업 영향"]["analysis"]["neutralPoints"],
-            2,
-        )
+        redevelopment = details["입지·실수요"]["주변 정비사업 영향"]
+        self.assertIsNone(redevelopment["score"])
+        self.assertEqual(redevelopment["status"], "missing")
+        self.assertNotIn("neutralPoints", redevelopment["analysis"])
         self.assertEqual(details["전세가율·입주물량·투자금"]["필요 투자금"]["reason"], "필요한 내 돈 4.6억원 · 매매가의 38.3%")
         self.assertEqual(result["areaAnalysis"]["parts"], [])
         self.assertTrue(any(
@@ -185,7 +200,7 @@ class LocationScoresTest(unittest.TestCase):
                 "status": "ok",
                 "momentumPct": 3.0,
                 "districtRelativePct": 1.0,
-                "leaderPrice12m": 12.0,
+                "leaderPrice12m": 120000.0,
                 "sampleConfidence": "medium",
             },
         }
@@ -263,6 +278,54 @@ class LocationScoresTest(unittest.TestCase):
         self.assertTrue(redevelopment["analysis"]["projects"])
         self.assertLessEqual(redevelopment["analysis"]["projects"][0]["distanceMeters"], 1000)
         self.assertIn(redevelopment["analysis"]["projects"][0]["type"], location_scores.redevelopment_analysis.PROJECT_TYPES)
+
+    def test_redevelopment_uses_coordinates_already_saved_with_station_distance(self):
+        cached = {"latitude": 37.5471, "longitude": 126.9609}
+        with mock.patch.object(kakao_station_distances, "cached_station", return_value=cached):
+            point = location_scores.redevelopment_analysis._coordinates({}, self.entity)
+
+        self.assertEqual(point, cached)
+
+    def test_missing_redevelopment_coordinates_are_excluded_instead_of_scored_neutral(self):
+        score, reason, detail = location_scores.redevelopment_analysis.influence_score(
+            {"region": "서울특별시 테스트구"}, self.entity,
+        )
+
+        self.assertIsNone(score)
+        self.assertEqual(detail["status"], "missing")
+        self.assertIn("점수에서 뺐어요", reason)
+        self.assertNotIn("중립", reason)
+
+    def test_redevelopment_outside_seoul_is_excluded_instead_of_treated_as_no_projects(self):
+        score, reason, detail = location_scores.redevelopment_analysis.influence_score(
+            {"region": "부산광역시 해운대구", "latitude": 35.16, "longitude": 129.16},
+            {"province": "부산광역시", "district": "해운대구"},
+        )
+
+        self.assertIsNone(score)
+        self.assertEqual(detail["status"], "missing")
+        self.assertEqual(detail["reason"], "unsupported_region")
+        self.assertIn("제공 범위 밖", reason)
+
+    def test_known_absence_of_nearby_projects_uses_a_factual_reason(self):
+        far_project = {
+            "id": "far",
+            "name": "먼 정비사업",
+            "type": "재개발",
+            "stage": "정비구역 지정",
+            "_points": [(37.0, 127.0)],
+        }
+        row = {"region": "서울특별시 테스트구", "latitude": 37.55, "longitude": 126.96}
+        with mock.patch.object(
+            location_scores.redevelopment_analysis, "_load_projects", return_value=[far_project],
+        ):
+            score, reason, detail = location_scores.redevelopment_analysis.influence_score(row, self.entity)
+
+        self.assertEqual(score, 50)
+        self.assertEqual(detail["status"], "ok")
+        self.assertEqual(detail["reason"], "no_projects")
+        self.assertIn("확인되지 않았어요", reason)
+        self.assertNotIn("중립", reason)
 
     def test_completed_redevelopment_zone_is_not_counted_as_active_project(self):
         path = Path(self.temporary.name) / "redevelopment_zones.geojson"
@@ -355,6 +418,17 @@ class LocationScoresTest(unittest.TestCase):
         self.assertIn("지역 안에서는 가격 부담이 낮은 편이에요", reasons[1])
         self.assertIn("지역 안에서는 가격 부담이 낮은 편이에요", reasons[3])
         self.assertNotIn("지역 최상위권", " ".join(reasons))
+        price_metrics = [
+            next(detail for part in row["locationScore"]["parts"] if part["key"] == "price"
+                 for detail in part["details"] if detail["key"] == "price_rank")
+            for row in rows
+        ]
+        self.assertEqual(price_metrics[0]["comparisonPeerCount"], 3)
+        self.assertEqual(
+            [peer["name"] for peer in price_metrics[0]["comparisonPeers"]],
+            ["후보2아파트", "후보3아파트", "후보4아파트"],
+        )
+        self.assertNotIn("후보1아파트", [peer["name"] for peer in price_metrics[0]["comparisonPeers"]])
 
     def test_purchase_score_changes_when_selected_area_market_changes(self):
         base = {

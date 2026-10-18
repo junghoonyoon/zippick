@@ -5,6 +5,7 @@ import datetime
 import difflib
 import hashlib
 import json
+import math
 import os
 import re
 import threading
@@ -27,6 +28,12 @@ _CACHE_LOCK = threading.RLock()
 _CACHE_DATA = None
 _CACHE_LOADED_PATH = None
 _CACHE_LOADED_REVISION = None
+_ACTIVE_BATCHES = 0
+_STATION_QUERY_LOCK = threading.RLock()
+_GEOCODE_LOCKS = tuple(threading.RLock() for _ in range(64))
+SHARED_STATION_RADIUS_METERS = 500
+STATION_TILE_DEGREES = 0.005
+STATION_CERTAINTY_MARGIN_METERS = 25
 
 
 class KakaoLocalError(RuntimeError):
@@ -38,6 +45,14 @@ def configured():
 
 
 def entity_id(entity):
+    material = "|".join(str(entity.get(key) or "").strip() for key in (
+        "apartmentId", "kaptCode", "complexNo", "province", "district",
+        "legalDong", "jibun", "name",
+    ))
+    return hashlib.sha1(material.encode("utf-8")).hexdigest()[:16]
+
+
+def _legacy_entity_id(entity):
     material = entity.get("dedupeKey") or "|".join(
         str(entity.get(key) or "")
         for key in ("province", "district", "legalDong", "name")
@@ -65,6 +80,8 @@ def _empty_cache():
         "source": SOURCE_NAME,
         "updatedAt": None,
         "records": {},
+        "geocodes": {},
+        "stationQueries": {},
     }
 
 
@@ -105,6 +122,9 @@ def _load_cache():
             payload = _empty_cache()
         if not isinstance(payload.get("records"), dict):
             payload["records"] = {}
+        for key in ("geocodes", "stationQueries"):
+            if not isinstance(payload.get(key), dict):
+                payload[key] = {}
         _CACHE_DATA = payload
         _CACHE_LOADED_PATH = path_key
         _CACHE_LOADED_REVISION = revision
@@ -126,6 +146,12 @@ def _save_cache():
         _CACHE_LOADED_REVISION = _file_revision()
 
 
+def _save_if_not_batching():
+    with _CACHE_LOCK:
+        if _ACTIVE_BATCHES == 0:
+            _save_cache()
+
+
 def _merge_records(records):
     if not records:
         return
@@ -139,6 +165,43 @@ def _merge_records(records):
         _save_cache()
 
 
+def _coordinate_key(address):
+    return hashlib.sha1(address.encode("utf-8")).hexdigest()[:20]
+
+
+def _valid_coordinates(latitude, longitude):
+    try:
+        latitude, longitude = float(latitude), float(longitude)
+    except (TypeError, ValueError):
+        return None
+    if not (math.isfinite(latitude) and math.isfinite(longitude)
+            and 33 <= latitude <= 39 and 124 <= longitude <= 132):
+        return None
+    return latitude, longitude
+
+
+def _coordinates_for_entity(entity, address):
+    direct = _valid_coordinates(entity.get("latitude"), entity.get("longitude"))
+    if direct:
+        return {"latitude": direct[0], "longitude": direct[1], "matchedAddress": address,
+                "coordinateMatchType": "entity"}
+    key = _coordinate_key(address)
+    with _GEOCODE_LOCKS[int(key[:4], 16) % len(_GEOCODE_LOCKS)]:
+        cached = _load_cache()["geocodes"].get(key)
+        if isinstance(cached, dict) and cached.get("address") == address:
+            coordinates = _valid_coordinates(cached.get("latitude"), cached.get("longitude"))
+            if coordinates:
+                return {"latitude": coordinates[0], "longitude": coordinates[1],
+                        "matchedAddress": cached.get("matchedAddress") or address,
+                        "coordinateMatchType": "address_cache"}
+        coordinates = geocode_address(address) or geocode_apartment_keyword(entity)
+        if coordinates:
+            with _CACHE_LOCK:
+                _load_cache()["geocodes"][key] = {"address": address, **coordinates}
+                _save_if_not_batching()
+        return coordinates
+
+
 def cache_revision():
     revision = _file_revision()
     if revision is None:
@@ -148,7 +211,15 @@ def cache_revision():
 
 
 def cached_record(entity):
-    record = _load_cache().get("records", {}).get(entity_id(entity))
+    records = _load_cache().get("records", {})
+    record = records.get(entity_id(entity))
+    if not isinstance(record, dict):
+        legacy = records.get(_legacy_entity_id(entity))
+        if (isinstance(legacy, dict)
+                and legacy.get("apartmentName") == str(entity.get("name") or "")
+                and legacy.get("address") == entity_address(entity)
+                and legacy.get("address")):
+            record = legacy
     return dict(record) if isinstance(record, dict) else None
 
 
@@ -180,8 +251,11 @@ def cache_stats(entities=None):
     payload = _load_cache()
     records = payload.get("records", {})
     if entities is not None:
-        keys = {entity_id(entity) for entity in entities}
-        records = {key: value for key, value in records.items() if key in keys}
+        records = {
+            entity_id(entity): record
+            for entity in entities
+            if (record := cached_record(entity)) is not None
+        }
     ready = sum(1 for value in records.values() if value.get("status") == "ok")
     unavailable = sum(
         1 for value in records.values()
@@ -192,6 +266,8 @@ def cache_stats(entities=None):
         "recordCount": len(records),
         "readyCount": ready,
         "unavailableCount": unavailable,
+        "geocodeCount": len(payload["geocodes"]),
+        "stationQueryCount": sum(len(items) for items in payload["stationQueries"].values()),
         "updatedAt": payload.get("updatedAt"),
         "source": SOURCE_NAME,
         "distanceType": "straight_line",
@@ -402,6 +478,109 @@ def nearest_subway_station(longitude, latitude):
     }
 
 
+def _distance_meters(latitude_a, longitude_a, latitude_b, longitude_b):
+    latitude_a, longitude_a, latitude_b, longitude_b = map(
+        math.radians, (latitude_a, longitude_a, latitude_b, longitude_b)
+    )
+    return 6371000 * 2 * math.asin(math.sqrt(
+        math.sin((latitude_b - latitude_a) / 2) ** 2
+        + math.cos(latitude_a) * math.cos(latitude_b)
+        * math.sin((longitude_b - longitude_a) / 2) ** 2
+    ))
+
+
+def _station_from_query(query, longitude, latitude):
+    center = _valid_coordinates(query.get("latitude"), query.get("longitude"))
+    if not center:
+        return None
+    center_gap = _distance_meters(latitude, longitude, *center)
+    if center_gap > SHARED_STATION_RADIUS_METERS:
+        return None
+    stations = []
+    for document in query.get("documents") or []:
+        point = _valid_coordinates(document.get("latitude"), document.get("longitude"))
+        if point:
+            stations.append((_distance_meters(latitude, longitude, *point), document))
+    if not stations:
+        return None
+    distance, nearest = min(stations, key=lambda item: item[0])
+    # An omitted station is at least this far from the query center. The
+    # triangle inequality proves it cannot be nearer to this apartment.
+    boundary = (config.KAKAO_STATION_RADIUS_METERS if query.get("isEnd")
+                else query.get("lastCenterDistance"))
+    if boundary is None or distance >= float(boundary) - center_gap - STATION_CERTAINTY_MARGIN_METERS:
+        return None
+    return {
+        "nearestStationName": nearest["name"],
+        "nearestStationDistance": round(distance, 1),
+        "nearestStationLatitude": nearest["latitude"],
+        "nearestStationLongitude": nearest["longitude"],
+        "nearestStationKakaoPlaceId": nearest.get("id"),
+    }
+
+
+def _station_tile(latitude, longitude):
+    return (math.floor(latitude / STATION_TILE_DEGREES),
+            math.floor(longitude / STATION_TILE_DEGREES))
+
+
+def nearest_subway_station_shared(longitude, latitude):
+    # Serialize only station queries, so concurrent apartments in one area
+    # reuse the first result instead of sending duplicate Kakao requests.
+    with _STATION_QUERY_LOCK:
+        queries = _load_cache()["stationQueries"]
+        tile_lat, tile_lon = _station_tile(latitude, longitude)
+        for lat_index in range(tile_lat - 1, tile_lat + 2):
+            for lon_index in range(tile_lon - 1, tile_lon + 2):
+                for query in queries.get(f"{lat_index},{lon_index}", []):
+                    station = _station_from_query(query, longitude, latitude)
+                    if station:
+                        return station
+        payload = _request_json("search/category.json", {
+            "category_group_code": "SW8",
+            "x": f"{float(longitude):.12f}",
+            "y": f"{float(latitude):.12f}",
+            "radius": config.KAKAO_STATION_RADIUS_METERS,
+            "sort": "distance",
+            "size": 15,
+        })
+        raw_documents = payload.get("documents") or []
+        documents = []
+        for document in raw_documents:
+            point = _valid_coordinates(document.get("y"), document.get("x"))
+            name = str(document.get("place_name") or "").strip()
+            if point and name:
+                documents.append({
+                    "id": str(document.get("id") or "").strip() or None,
+                    "name": name,
+                    "latitude": point[0], "longitude": point[1],
+                })
+        if len(documents) != len(raw_documents):
+            return nearest_subway_station(longitude, latitude)
+        if not documents:
+            return None
+        last_center_distance = max(
+            _distance_meters(latitude, longitude, item["latitude"], item["longitude"])
+            for item in documents
+        )
+        query = {
+            "latitude": latitude, "longitude": longitude,
+            "documents": documents,
+            "isEnd": (payload.get("meta") or {}).get("is_end") is True,
+            "lastCenterDistance": last_center_distance,
+        }
+        station = _station_from_query(query, longitude, latitude)
+        if station:
+            key = f"{tile_lat},{tile_lon}"
+            with _CACHE_LOCK:
+                _load_cache()["stationQueries"].setdefault(key, []).append(query)
+                _save_if_not_batching()
+            return station
+        # Malformed or incomplete category response: retain the established
+        # single-result lookup rather than guessing which station is nearest.
+        return nearest_subway_station(longitude, latitude)
+
+
 def _base_record(entity, status, address, **extra):
     return {
         "apartmentId": entity_id(entity),
@@ -416,12 +595,12 @@ def _base_record(entity, status, address, **extra):
 
 def enrich_entity(entity):
     address = entity_address(entity)
-    if not address:
+    if not address and not _valid_coordinates(entity.get("latitude"), entity.get("longitude")):
         return _base_record(entity, "no_address", "")
-    coordinates = geocode_address(address) or geocode_apartment_keyword(entity)
+    coordinates = _coordinates_for_entity(entity, address)
     if not coordinates:
         return _base_record(entity, "address_not_found", address)
-    station = nearest_subway_station(
+    station = nearest_subway_station_shared(
         coordinates["longitude"],
         coordinates["latitude"],
     )
@@ -497,11 +676,10 @@ def enrich_entities(
     entities = list(entities)
     if limit is not None:
         entities = entities[:max(0, int(limit))]
-    records = _load_cache().get("records", {})
     cached = []
     pending = []
     for entity in entities:
-        record = records.get(entity_id(entity))
+        record = cached_record(entity)
         if (
             not force
             and isinstance(record, dict)
@@ -529,35 +707,44 @@ def enrich_entities(
         return summary
     if not configured():
         raise KakaoLocalError("KAKAO_REST_API_KEY 또는 카카오REST키를 설정해 주세요.")
+    global _ACTIVE_BATCHES
     max_workers = max(1, min(int(workers or config.KAKAO_STATION_MAX_WORKERS), 16))
     updates = {}
-    with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        future_entities = {
-            pool.submit(enrich_entity, entity): entity
-            for entity in pending
-        }
-        for future in as_completed(future_entities):
-            entity = future_entities[future]
-            summary["processedCount"] += 1
-            try:
-                record = future.result()
-            except KakaoLocalError as exc:
-                summary["failedCount"] += 1
-                if len(summary["failures"]) < 20:
-                    summary["failures"].append({
-                        "apartmentName": entity.get("name"),
-                        "error": str(exc),
-                    })
-                continue
-            updates[entity_id(entity)] = record
-            if record.get("status") == "ok":
-                summary["readyCount"] += 1
-            else:
-                summary["unavailableCount"] += 1
-            if len(updates) >= 250:
-                _merge_records(updates)
-                updates.clear()
-    _merge_records(updates)
+    with _CACHE_LOCK:
+        _ACTIVE_BATCHES += 1
+    try:
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            future_entities = {
+                pool.submit(enrich_entity, entity): entity
+                for entity in pending
+            }
+            for future in as_completed(future_entities):
+                entity = future_entities[future]
+                summary["processedCount"] += 1
+                try:
+                    record = future.result()
+                except KakaoLocalError as exc:
+                    summary["failedCount"] += 1
+                    if len(summary["failures"]) < 20:
+                        summary["failures"].append({
+                            "apartmentName": entity.get("name"),
+                            "error": str(exc),
+                        })
+                    continue
+                updates[entity_id(entity)] = record
+                if record.get("status") == "ok":
+                    summary["readyCount"] += 1
+                else:
+                    summary["unavailableCount"] += 1
+                if len(updates) >= 250:
+                    _merge_records(updates)
+                    updates.clear()
+        _merge_records(updates)
+    finally:
+        with _CACHE_LOCK:
+            _ACTIVE_BATCHES -= 1
+            if _ACTIVE_BATCHES == 0:
+                _save_cache()
     summary["cache"] = cache_stats(entities)
     return summary
 

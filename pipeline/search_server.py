@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import hmac
 import json
+import math
 import mimetypes
 import os
 import re
@@ -17,6 +18,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 import config
 import apartment_leaders
+import redevelopment_occupancy
 import budget_candidates
 import education_environment
 import location_scores
@@ -25,6 +27,7 @@ import listing_review
 import market_indicators
 import molit_transactions
 import momentum_signals
+import report_price_comparison
 import naver_complex
 import news_catalysts
 import paid_access
@@ -36,6 +39,9 @@ import relative_area_prices
 import report_store
 import rone_estimates
 import supply_forecast
+import future_transformation
+import planned_rail
+import living_area_map
 
 ROOT = config.ROOT
 APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
@@ -49,7 +55,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 25
+BUDGET_CACHE_SCHEMA_VERSION = 26
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
@@ -62,10 +68,6 @@ BUDGET_PREWARM_STATE = {"running": False, "done": False, "pairCount": 0, "finish
 REDEVELOPMENT_ZONES_PATH = ROOT / "data" / "redevelopment_zones.geojson"
 REDEVELOPMENT_ZONES_CACHE = {"mtime": None, "zones": []}
 REDEVELOPMENT_ZONES_LOCK = threading.Lock()
-COMPLETED_REDEVELOPMENT_ZONE_IDS = {
-    # 새절역 두산위브 트레지움. 원본 공간정보에는 신사1/착공으로 남아 있어 지도에서 제외한다.
-    "11000UQ120PS202411014108",
-}
 RATE_LIMIT_LOCK = threading.Lock()
 RATE_LIMIT_BUCKETS = {}
 RATE_LIMIT_MAX_CLIENTS = 5000
@@ -77,6 +79,7 @@ RATE_LIMIT_HEAVY_PATHS = {
     "/api/apartment-location-score",
 }
 RATE_LIMIT_MEDIUM_PATHS = {
+    "/api/apartment-station-route",
     "/api/search",
     "/api/search/start",
     "/api/apartment-catalysts",
@@ -167,16 +170,22 @@ def _redevelopment_zones():
                 continue
             geometry = feature.get("geometry") or {}
             properties = feature.get("properties") or {}
+            # User-confirmed noncommercial mode: original reference geometry is
+            # available on both the main map and report, with attribution retained.
             if geometry.get("type") not in {"Polygon", "MultiPolygon"}:
                 continue
             zones.append({
                 "id": str(feature.get("id") or properties.get("id") or properties.get("zoneId") or properties.get("구역ID") or ""),
                 "name": str(properties.get("name") or properties.get("구역명") or properties.get("zoneName") or "정비구역"),
+                "districtCode": str(properties.get("districtCode") or ""),
                 "projectType": str(properties.get("projectType") or properties.get("사업종류") or properties.get("type") or "정비사업"),
                 "stage": str(properties.get("stage") or properties.get("진행단계") or properties.get("status") or "단계 확인 필요"),
                 "areaSqm": properties.get("areaSqm") or properties.get("면적") or properties.get("area"),
                 "source": str(properties.get("source") or properties.get("출처") or "서울시 공간정보"),
                 "sourceNote": str(properties.get("sourceNote") or properties.get("비고") or ""),
+                "sourceDataset": properties.get("sourceDataset"),
+                "useContext": "noncommercial",
+                "commercialAllowed": False if properties.get("sourceDataset") == "OA-22712" else None,
                 "geometry": geometry,
                 "_bbox": _geometry_bbox(geometry),
             })
@@ -185,10 +194,7 @@ def _redevelopment_zones():
 
 
 def _redevelopment_zone_completed(stage):
-    return bool(re.search(
-        r"(?:준공|사용승인|사업완료|입주완료|입주자\s*모집공고\s*완료|해제|폐지)(?!\s*예정)",
-        str(stage or "").strip(),
-    ))
+    return redevelopment_occupancy.completed_stage(stage)
 
 
 def _redevelopment_zone_public_rental_like(zone):
@@ -201,7 +207,7 @@ def _redevelopment_zone_public_rental_like(zone):
 
 def _redevelopment_zone_active(zone):
     text = " ".join(str(zone.get(key) or "") for key in ("name", "projectType", "stage", "sourceNote"))
-    if str(zone.get("id") or "") in COMPLETED_REDEVELOPMENT_ZONE_IDS:
+    if redevelopment_occupancy.occupancy_evidence(zone):
         return False
     if _redevelopment_zone_completed(zone.get("stage")):
         return False
@@ -233,7 +239,7 @@ def _redevelopment_zone_sort_key(zone):
         stage_rank = 3
     else:
         stage_rank = 4
-    return (type_rank, stage_rank, float(zone.get("areaSqm") or 0) * -1)
+    return (type_rank, stage_rank, float(zone.get("areaSqm") or 0))
 
 
 def _redevelopment_zones_payload(params=None):
@@ -249,7 +255,9 @@ def _redevelopment_zones_payload(params=None):
     zones = zones[:limit]
     return {
         "zones": zones,
-        "source": "data/redevelopment_zones.geojson" if zones or REDEVELOPMENT_ZONES_PATH.exists() else "none",
+        "source": "data/redevelopment_zones.geojson" if zones else "none",
+        "mapStatus": "available" if zones else "no_matching_boundaries",
+        "useContext": "noncommercial",
         "count": len(zones),
         "limited": bool(bbox and len(zones) >= limit),
     }
@@ -427,6 +435,28 @@ def _budget_cache_key(arguments):
         config.ROOT / "pipeline" / "price_valuation.py",
         config.ROOT / "pipeline" / "market_indicators.py",
         config.ROOT / "pipeline" / "regional_price_index.py",
+        future_transformation.__file__,
+        config.ROOT / "pipeline" / "living_area.py",
+        config.ROOT / "pipeline" / "living_area_scoring_policy.py",
+        config.ROOT / "pipeline" / "living_area_sources.py",
+        config.ROOT / "pipeline" / "living_area_context.py",
+        config.ROOT / "pipeline" / "capital_transport.py",
+        config.ROOT / "data" / "capital_transport_plan_inventory.json",
+        config.ROOT / "data" / "capital_transport_transfer_2026.json",
+        config.ROOT / "data" / "capital_transport_brt_2026.json",
+        config.ROOT / "data" / "capital_transport_road_projects.json",
+        config.ROOT / "pipeline" / "living_area_plan_rating.py",
+        config.ROOT / "pipeline" / "living_area_map.py",
+        config.ROOT / "pipeline" / "living_area_reference_points.py",
+        config.ROOT / "data" / "living_area_reference_points.json",
+        config.ROOT / "data" / "living_area_map_references.json",
+        config.ROOT / "data" / "living_area_apartment_points.json",
+        config.ROOT / "data" / "living_area_official_context.json",
+        config.ROOT / "data" / "living_area_sources.json",
+        config.ROOT / "data" / "redevelopment_project_scales.json",
+        config.ROOT / "data" / "future_transformation_scoring.json",
+        planned_rail.__file__,
+        planned_rail.DATA_PATH,
         config.ROOT / "pipeline" / "naver_complex.py",
         config.ROOT / "pipeline" / "verdicts.py",
         policy_evaluator.__file__,
@@ -451,6 +481,7 @@ def _budget_cache_key(arguments):
         # 파일 수정시간은 새 릴리스마다 달라져 내용이 같은 캐시까지 매번
         # 무효화한다. 내용 해시는 실제 로직·데이터가 바뀔 때만 키를 바꾼다.
         "revisions": BUDGET_SOURCE_REVISIONS,
+        "futureRevision": future_transformation.data_revision(),
     }
     encoded = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -1106,6 +1137,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         "address": str(entity.get("address") or "").strip(),
         "aliases": aliases,
         "households": int(entity.get("households") or 0),
+        "status": str(entity.get("status") or "").strip(),
         "approvedAt": building.get("approvedAt") or "",
         "buildYear": building.get("buildYear") or 0,
         "buildingAge": building.get("buildingAge") or 0,
@@ -1113,6 +1145,19 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
     }
     if area_label:
         row["displayAreaLabel"] = area_label
+    # 교육 접근성은 단지 좌표가 필요하다. 첫 조회에서도 좌표를 먼저 채운다.
+    if entity:
+        try:
+            if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
+                kakao_station_distances.enrich_entities([entity], retry_unavailable=True, limit=1)
+        except Exception:
+            _record_operation("externalDataFallbacks")
+        cached_location = kakao_station_distances.cached_station(entity) or {}
+        latitude = budget_candidates._float_value(cached_location.get("latitude"))
+        longitude = budget_candidates._float_value(cached_location.get("longitude"))
+        if latitude and longitude:
+            row["latitude"] = latitude
+            row["longitude"] = longitude
     if entity:
         try:
             row["educationEnvironment"] = education_environment.education_environment_for_entity(entity)
@@ -1122,6 +1167,8 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         row["lifestyleChange"] = supply_forecast.lifestyle_change(row, entity)
     except Exception:
         row["lifestyleChange"] = {"status": "error"}
+    row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
+    row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
     if molit_transactions.configured():
         try:
             months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
@@ -1193,41 +1240,42 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             )
         except Exception:
             row["peers"] = []
-        # 직접 연 리포트도 후보 카드와 같은 출퇴근 자료를 사용한다.
-        # 역 캐시가 비어 있으면 점수 계산 전에 단지 한 곳만 채운다.
-        if entity:
-            try:
-                if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
-                    kakao_station_distances.enrich_entities([entity], retry_unavailable=True, limit=1)
-            except Exception:
-                _record_operation("externalDataFallbacks")
-        try:
-            score_rows = [row]
-            peer_score_rows = []
-            for peer in row.get("peers") or []:
-                peer_score_row = {
-                    "name": peer.get("name") or "",
-                    "displayName": peer.get("name") or "",
-                    "region": peer.get("region") or row.get("region") or row.get("regionLabel") or "",
-                    "legalDong": peer.get("legalDong") or "",
-                    "jibun": peer.get("jibun") or "",
-                    "households": peer.get("households") or 0,
-                    "latestDealPriceEok": peer.get("latestDealPriceEok") or peer.get("priceEok") or 0,
-                    "transactionCount": peer.get("recentDealCount") or 0,
-                    "signals": {
-                        "status": "ok" if peer.get("score") is not None else "insufficient",
-                        "score": peer.get("score"),
-                        "momentumPct": peer.get("momentumPct"),
-                        "recent3Pct": peer.get("recent3Pct"),
-                    },
-                }
-                peer_score_rows.append((peer, peer_score_row))
-                score_rows.append(peer_score_row)
-            location_scores.attach_scores(score_rows, budget_candidates._price_lookup_entity)
-            for peer, score_row in peer_score_rows:
-                peer["locationScore"] = score_row.get("locationScore")
-        except Exception:
-            pass
+    try:
+        row["priceComparison"] = report_price_comparison.compare(
+            row,
+            entity,
+            row.get("peers") or [],
+            area_label or row.get("displayAreaLabel") or "",
+        )
+    except Exception:
+        row["priceComparison"] = {"status": "unavailable", "reason": "비교 단지의 실거래를 확인하지 못했어요."}
+    try:
+        score_rows = [row]
+        peer_score_rows = []
+        for peer in row.get("peers") or []:
+            peer_score_row = {
+                "name": peer.get("name") or "",
+                "displayName": peer.get("name") or "",
+                "region": peer.get("region") or row.get("region") or row.get("regionLabel") or "",
+                "legalDong": peer.get("legalDong") or "",
+                "jibun": peer.get("jibun") or "",
+                "households": peer.get("households") or 0,
+                "latestDealPriceEok": peer.get("latestDealPriceEok") or peer.get("priceEok") or 0,
+                "transactionCount": peer.get("recentDealCount") or 0,
+                "signals": {
+                    "status": "ok" if peer.get("score") is not None else "insufficient",
+                    "score": peer.get("score"),
+                    "momentumPct": peer.get("momentumPct"),
+                    "recent3Pct": peer.get("recent3Pct"),
+                },
+            }
+            peer_score_rows.append((peer, peer_score_row))
+            score_rows.append(peer_score_row)
+        location_scores.attach_scores(score_rows, budget_candidates._price_lookup_entity)
+        for peer, score_row in peer_score_rows:
+            peer["locationScore"] = score_row.get("locationScore")
+    except Exception:
+        pass
     try:
         market_indicators.attach([row])
     except Exception:
@@ -1287,10 +1335,18 @@ def _apartment_location_score(arguments):
         "buildingAge": building.get("buildingAge") or arguments.get("buildingAge") or 0,
         "status": entity.get("status") or arguments.get("status") or "",
     }
+    cached_location = kakao_station_distances.cached_station(entity) or {}
+    latitude = budget_candidates._float_value(cached_location.get("latitude"))
+    longitude = budget_candidates._float_value(cached_location.get("longitude"))
+    if latitude and longitude:
+        row["latitude"] = latitude
+        row["longitude"] = longitude
     try:
         row["lifestyleChange"] = supply_forecast.lifestyle_change(row, entity)
     except Exception:
         row["lifestyleChange"] = {"status": "error"}
+    row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
+    row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
     _apply_jeonse_snapshot(row, entity)
     try:
         row["educationEnvironment"] = education_environment.education_environment_for_entity(
@@ -1315,6 +1371,8 @@ def _apartment_location_score(arguments):
             "buildingAge": row.get("buildingAge") or 0,
             "buildYear": row.get("buildYear") or 0,
             "status": row.get("status") or "",
+            "latitude": row.get("latitude"),
+            "longitude": row.get("longitude"),
             **{
                 field: row.get(field)
                 for field in MARKET_SNAPSHOT_FIELDS
@@ -1322,7 +1380,102 @@ def _apartment_location_score(arguments):
             },
             "educationEnvironment": row.get("educationEnvironment"),
             "lifestyleChange": row.get("lifestyleChange"),
+            "futureTransformation": row.get("futureTransformation"),
             "locationScore": row.get("locationScore"),
+        },
+    }, 200
+
+
+def _apartment_station_route(arguments):
+    """Return one exact apartment and its cached nearest subway station.
+
+    This endpoint deliberately returns the two verified points, not a made-up
+    pedestrian polyline.  The client uses the points as a map reference and
+    hands the actual walking directions to the NAVER Maps app.
+    """
+    name = str(arguments.get("name") or arguments.get("displayName") or "").strip()
+    region = str(
+        arguments.get("region")
+        or arguments.get("displayRegion")
+        or arguments.get("regionLabel")
+        or ""
+    ).strip()
+    legal_dong = str(arguments.get("legal_dong") or arguments.get("legalDong") or "").strip()
+    jibun = str(arguments.get("jibun") or "").strip()
+    identities = {
+        "apartmentId": str(arguments.get("apartment_id") or arguments.get("apartmentId") or "").strip(),
+        "kaptCode": str(arguments.get("kapt_code") or arguments.get("kaptCode") or "").strip(),
+        "complexNo": str(arguments.get("complex_no") or arguments.get("complexNo") or "").strip(),
+    }
+    if len(name) < 2 or len(region) < 2:
+        return {"error": "단지명과 지역을 확인해 주세요."}, 400
+
+    resolution = budget_candidates.resolve_apartment_identity(
+        name,
+        region,
+        legal_dong,
+        jibun,
+        identities=identities,
+    )
+    entity = resolution.get("entity")
+    if not entity and resolution.get("status") != "ambiguous":
+        return {"error": "선택한 단지를 정확히 찾지 못했어요."}, 404
+    if not entity:
+        return {"error": "같은 이름의 단지가 있어 역 길찾기를 열지 못했어요."}, 409
+
+    try:
+        if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
+            kakao_station_distances.enrich_entities([entity], retry_unavailable=True, limit=1)
+    except Exception:
+        _record_operation("externalDataFallbacks")
+    location = kakao_station_distances.cached_station(entity) or {}
+    apartment_latitude = budget_candidates._float_value(location.get("latitude"))
+    apartment_longitude = budget_candidates._float_value(location.get("longitude"))
+    station_latitude = budget_candidates._float_value(location.get("nearestStationLatitude"))
+    station_longitude = budget_candidates._float_value(location.get("nearestStationLongitude"))
+    station_name = str(location.get("nearestStationName") or "").strip()
+    station_distance = budget_candidates._float_value(location.get("nearestStationDistance"))
+    if not all((apartment_latitude, apartment_longitude, station_latitude, station_longitude, station_name)):
+        return {
+            "state": "unavailable",
+            "error": "가까운 전철역 위치를 아직 확인하지 못했어요.",
+        }, 200
+    estimated_walking_distance = None
+    estimated_walking_minutes = None
+    if station_distance > 0:
+        # The cache has a verified straight-line distance only.  Add a modest
+        # street-layout allowance and use a normal walking pace; both values
+        # stay explicitly labelled as estimates in the client.
+        estimated_walking_distance = int(round(station_distance * 1.25 / 10.0) * 10)
+        estimated_walking_minutes = max(1, math.ceil(estimated_walking_distance / 67.0))
+    return {
+        "state": "ready",
+        "apartment": {
+            "name": str(entity.get("name") or name).strip(),
+            "address": str(entity.get("address") or "").strip(),
+            "apartmentId": str(entity.get("apartmentId") or "").strip(),
+            "kaptCode": str(entity.get("kaptCode") or "").strip(),
+            "complexNo": str(entity.get("complexNo") or "").strip(),
+            "latitude": apartment_latitude,
+            "longitude": apartment_longitude,
+        },
+        "station": {
+            "name": station_name,
+            "latitude": station_latitude,
+            "longitude": station_longitude,
+            "straightLineDistanceMeters": station_distance if station_distance > 0 else None,
+            "estimatedWalkingDistanceMeters": estimated_walking_distance,
+            "estimatedWalkingMinutes": estimated_walking_minutes,
+        },
+        "reference": {
+            "lineType": "straight_line",
+            "notice": "도보 거리와 시간은 직선 거리에 길 굽음을 더한 예상값이에요. 실제 도보 길은 네이버 지도에서 확인해 주세요.",
+        },
+        "identityResolution": {
+            "method": resolution.get("method"),
+            "confidence": resolution.get("confidence"),
+            "selectionProbability": resolution.get("selectionProbability"),
+            "candidateCount": resolution.get("candidateCount"),
         },
     }, 200
 
@@ -3176,6 +3329,18 @@ class Handler(BaseHTTPRequestHandler):
                 MAP_GEOCODE_CACHE[address] = coordinates
             self._json({"found": bool(coordinates), "coordinates": coordinates})
             return
+        if parsed.path == "/api/apartment-station-route":
+            payload, status = _apartment_station_route({
+                "name": params.get("name", [""])[0],
+                "region": params.get("region", [""])[0],
+                "legalDong": params.get("legal_dong", [""])[0],
+                "jibun": params.get("jibun", [""])[0],
+                "apartmentId": params.get("apartment_id", [""])[0],
+                "kaptCode": params.get("kapt_code", [""])[0],
+                "complexNo": params.get("complex_no", [""])[0],
+            })
+            self._json(payload, status)
+            return
         if parsed.path == "/api/redevelopment-zones":
             self._json(_redevelopment_zones_payload(params))
             return
@@ -3255,6 +3420,22 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"error": "지역 대장 순위를 불러오지 못했어요."}, 502)
                 return
             self._json(payload)
+            return
+        future_match = re.fullmatch(r"/api/apartments/([^/]+)/(future-transformation|living-area-map)", parsed.path)
+        if future_match:
+            apartment_id = unquote(future_match.group(1))
+            entity = future_transformation.registry_entity(apartment_id)
+            if not entity:
+                self._json({"error": "선택한 단지를 찾지 못했어요."}, 404)
+                return
+            location = kakao_station_distances.cached_station(entity) or {}
+            analysis = future_transformation.public_facts(future_transformation.analyze({**entity, **{
+                key: location[key] for key in ("latitude", "longitude") if key in location
+            }}, entity))
+            if future_match.group(2) == 'living-area-map':
+                self._json(living_area_map.map_context(entity, analysis))
+            else:
+                self._json(analysis)
             return
         detail_match = re.fullmatch(r"/api/apartments/([^/]+)/leader-score", parsed.path)
         if detail_match:
