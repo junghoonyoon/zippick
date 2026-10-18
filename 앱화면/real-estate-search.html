@@ -4900,7 +4900,7 @@
     .zpr-living-route-label { border:1px solid #118f9a;border-radius:8px;background:#fff;color:#08747d;padding:5px 8px;font-size:13px;font-weight:700;box-shadow:0 2px 8px #243c4b2b;cursor:pointer; }
     .zpr-living-project-dot { width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#3179e9;box-shadow:0 1px 5px #68758a;cursor:pointer; }
     .zpr-living-project-dot.is-zone,.zpr-living-project-dot.is-renewal { background:#f05a28; }
-    .zpr-living-featured-tag { display:flex;flex-direction:column;align-items:center;gap:2px;box-sizing:border-box;width:max-content;min-width:96px;max-width:180px;border:2px solid #fff;border-radius:14px;padding:7px 10px;background:#f05a28;color:#fff;box-shadow:0 3px 10px #243c4b3d;font:inherit;text-align:center;line-height:1.3;white-space:normal;word-break:keep-all;cursor:pointer; }
+    .zpr-living-featured-tag { display:flex;flex-direction:column;align-items:center;gap:2px;box-sizing:border-box;width:180px;min-height:76px;border:2px solid #fff;border-radius:14px;padding:7px 10px;background:#f05a28;color:#fff;box-shadow:0 3px 10px #243c4b3d;font:inherit;text-align:center;line-height:1.3;white-space:normal;word-break:keep-all;cursor:pointer; }
     .zpr-living-featured-tag strong { font-size:13px;font-weight:800;overflow-wrap:anywhere; }
     .zpr-living-featured-tag small { color:#fff;font-size:11px;font-weight:650; }
     .zpr-living-featured-tag.is-compact { min-width:72px;max-width:126px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800;overflow-wrap:anywhere; }
@@ -4925,7 +4925,7 @@
     .zpr-map--redevelopment .zpr-map-station-distance { white-space:normal; max-width:200px; }
     @media (max-width:700px) {
       .zpr-living-map-column .zpr-map-canvas { height:400px; }
-      .zpr-living-featured-tag { max-width:140px;padding:5px 7px; }
+      .zpr-living-featured-tag { width:140px;padding:5px 7px; }
       .zpr-living-featured-tag strong { font-size:12px; }
       .zpr-living-featured-tag small { font-size:10px; }
       .zpr-living-map-top-tags { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 10px; }
@@ -20525,7 +20525,7 @@
           compactItem = overlay(sitePoint,tag,.5,true,.5);
           compactItem.setMap(null);
         }
-        overlays.push({ item, project, distanceLine, compactItem,
+        overlays.push({ item, label, project, distanceLine, compactItem,
           keepDistanceLine:isRail && project === closestPlannedStation });
       });
       routesByStation.filter(validPoint).filter(route => !linkedRouteIds.size || linkedRouteIds.has(route.id)).forEach(route => {
@@ -20592,9 +20592,41 @@
           w:pinRect.width+16,h:pinRect.height+16}]
           : origin ? [{x:origin.x-70,y:origin.y-48,w:140,h:56}] : [];
         const width=mapElement.clientWidth, height=mapElement.clientHeight;
-        overlays.forEach(({item,project,distanceLine,compactItem,keepDistanceLine}) => {
+        overlays.forEach(({item,label,project,distanceLine,compactItem,keepDistanceLine}) => {
           const mobileFeatured = width < 500 && featuredById.has(project.projectId || project.id);
           const xy=projection?.containerPointFromCoords(new kakao.maps.LatLng(project.latitude,project.longitude));
+          const featured = featuredById.has(project.projectId || project.id);
+          if (featured && !mobileFeatured && xy) {
+            // Keep the three largest projects in one full format. Move a badge
+            // around its actual map point when nearby projects would cover it.
+            const tagWidth = label?.offsetWidth || 180;
+            const tagHeight = label?.offsetHeight || 76;
+            const gaps = [
+              [0,0],[-96,0],[96,0],[0,-88],[0,88],
+              [-96,-88],[96,-88],[-96,88],[96,88],
+              [-192,0],[192,0],[-192,-88],[192,-88],
+              [-192,88],[192,88],[0,-176],[0,176],
+            ];
+            const placement = gaps.map(([dx,dy]) => ({
+              dx,dy,x:xy.x-tagWidth/2+dx,y:xy.y-tagHeight*1.2+dy,
+              w:tagWidth,h:tagHeight,
+            })).find(box => box.x>=8 && box.y>=8 && box.x+box.w<=width-8 && box.y+box.h<=height-8
+              && !occupied.some(other => box.x < other.x+other.w+8 && box.x+box.w+8 > other.x
+                && box.y < other.y+other.h+8 && box.y+box.h+8 > other.y));
+            if (placement) {
+              label.style.transform = `translate(${placement.dx}px, ${placement.dy}px)`;
+              item.setMap(map);
+              compactItem?.setMap(null);
+              distanceLine?.setMap(map);
+              occupied.push(placement);
+            } else {
+              item.setMap(null);
+              const pointVisible=xy.x>=12 && xy.x<=width-12 && xy.y>=12 && xy.y<=height-12;
+              compactItem?.setMap(pointVisible ? map : null);
+              distanceLine?.setMap(pointVisible ? map : null);
+            }
+            return;
+          }
           const box=xy ? featuredById.has(project.projectId || project.id)
             ? {x:xy.x-90,y:xy.y-84,w:180,h:76}
             : routes.includes(project) ? {x:xy.x+6,y:xy.y-40,w:155,h:36}
