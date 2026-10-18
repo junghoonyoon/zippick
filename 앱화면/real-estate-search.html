@@ -20389,8 +20389,8 @@
         return item;
       };
       // This is a 2 km straight-line search boundary, not a walking catchment.
-      new kakao.maps.Circle({ map, center, radius:2000, strokeWeight:3, strokeColor:"#3179e9",
-        strokeOpacity:.9, strokeStyle:"dash", fillColor:"#70a6ff", fillOpacity:.025, clickable:false, zIndex:1 });
+      new kakao.maps.Circle({ map, center, radius:2000, strokeWeight:3, strokeColor:"#8b5cf6",
+        strokeOpacity:.9, strokeStyle:"dash", fillColor:"#c4b5fd", fillOpacity:.025, clickable:false, zIndex:1 });
       zones.forEach(zone => {
         const polygons = zone.geometry.type === "MultiPolygon" ? zone.geometry.coordinates : [zone.geometry.coordinates];
         polygons.forEach(rings => new kakao.maps.Polygon({ map,
@@ -20556,7 +20556,7 @@
       legend.className = "zpr-living-map-legend";
       const closestStation = closestPlannedStation;
       const linkedRail = stations.some(station => station.routeAnchor);
-      legend.innerHTML = `<div>직선 2km 안의 큰 사업 ${featuredDevelopments.length}곳은 항상 표시해요.</div>${visibleZones.length ? '<div><i></i>다른 파란 구역을 누르면 이름표와 정보를 볼 수 있어요.</div>' : ''}${closestStation ? `<div><i class="rail"></i>${esc(closestStation.name)} · ${esc(distanceText(closestStation.distanceMeters))}</div>` : routes.length ? '<div><i class="rail"></i>철도 계획 노선</div>' : ''}<div>파란 점선 원: 직선 2km · 선: 단지에서의 직선거리${linkedRail ? ' · 청록 점선: 예정역과 계획선 연결' : ''}</div>${failed ? '<div>추가 지도 자료를 불러오지 못했어요. 리포트를 다시 열어 주세요.</div>' : ''}`;
+      legend.innerHTML = `<div>직선 2km 안의 큰 사업 ${featuredDevelopments.length}곳은 항상 표시해요.</div>${visibleZones.length ? '<div><i></i>다른 파란 구역을 누르면 이름표와 정보를 볼 수 있어요.</div>' : ''}${closestStation ? `<div><i class="rail"></i>${esc(closestStation.name)} · ${esc(distanceText(closestStation.distanceMeters))}</div>` : routes.length ? '<div><i class="rail"></i>철도 계획 노선</div>' : ''}<div>보라색 점선 원: 직선 2km · 선: 단지에서의 직선거리${linkedRail ? ' · 청록 점선: 예정역과 계획선 연결' : ''}</div>${failed ? '<div>추가 지도 자료를 불러오지 못했어요. 리포트를 다시 열어 주세요.</div>' : ''}`;
       if (mapHome) mapHome.prepend(legend);
       else mapElement.parentElement.before(legend);
       if (mapHome && featuredDevelopments.length) {
