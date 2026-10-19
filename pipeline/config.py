@@ -214,6 +214,13 @@ PUBLIC_MEDIUM_RATE_LIMIT = max(
     1,
     int(os.environ.get("PUBLIC_MEDIUM_RATE_LIMIT", "120")),
 )
+# 실거래 추정 API는 후보 카드마다 본 단지·동 대장·구 대장까지 여러 번 부르므로
+# 한 명이 목록을 훑어보기만 해도 분당 수백 건이 된다. 서버 쪽은 6시간
+# 디스크 캐시로 가벼워 넓은 한도를 따로 둔다.
+PUBLIC_ESTIMATE_RATE_LIMIT = max(
+    1,
+    int(os.environ.get("PUBLIC_ESTIMATE_RATE_LIMIT", "600")),
+)
 ADMIN_API_TOKEN = (
     os.environ.get("ADMIN_API_TOKEN", "")
     or os.environ.get("APARTMENT_LEADER_ADMIN_TOKEN", "")
