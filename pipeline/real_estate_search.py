@@ -517,7 +517,9 @@ def _load_apartment_csv_entities(limit=None):
                         "plannedMoveInMonth": str(row.get("입주예정월") or "").strip(),
                         "lawdCd": lawd_cd,
                         "status": str(row.get("상태") or "").strip(),
+                        "members": [],
                     })
+                    group["members"].append(entities[-1])
                     group["aliases"].extend([name, *aliases])
                     group["households"] += _int_value(row.get("세대수"))
                     approved_at = str(row.get("사용승인일") or "").strip()
@@ -533,8 +535,41 @@ def _load_apartment_csv_entities(limit=None):
                     ):
                         group["plannedMoveInMonth"] = planned_move_in_month
                 if limit and len(entities) >= limit:
-                    return _merge_entities(entities, numbered_groups.values())
-    return _merge_entities(entities, numbered_groups.values())
+                    return _merge_entities(entities, _numbered_group_entities(entities, numbered_groups.values()))
+    return _merge_entities(entities, _numbered_group_entities(entities, numbered_groups.values()))
+
+
+def _numbered_group_entities(entities, groups):
+    """Finish numbered-complex groups using the exact rows that formed them.
+
+    A group records its member complexes by id, legal dong and parcel, so a
+    group never has to be matched back to real complexes by name.  A group
+    with one member (its siblings are rentals) is that complex under its family
+    name: the complex gets the family name as an alias instead of a second,
+    id-less copy, unless another complex in the same legal dong uses that name.
+    """
+    names = {}
+    for entity in entities:
+        location = (entity.get("province"), entity.get("district"), entity.get("legalDong"))
+        for value in (entity.get("name"), *(entity.get("aliases") or [])):
+            names.setdefault((location, compact(value)), set()).add(id(entity))
+    out = []
+    for group in groups:
+        members = group.pop("members")
+        if len(members) == 1:
+            member = members[0]
+            location = (member.get("province"), member.get("district"), member.get("legalDong"))
+            if names.get((location, compact(group["name"])), set()) <= {id(member)}:
+                member["aliases"] = [*member["aliases"], group["name"]]
+            continue
+        group["members"] = [
+            {field: member.get(field, "") for field in (
+                *apartment_identity.ID_FIELDS, "dedupeKey", "name", "legalDong", "jibun", "households",
+            )}
+            for member in members
+        ]
+        out.append(group)
+    return out
 
 
 def _merge_entities(*groups):
@@ -585,8 +620,11 @@ def _merge_entities(*groups):
                     "lawdCd": entity.get("lawdCd", ""),
                     "status": entity.get("status", ""),
                     "sectionIdentity": entity.get("sectionIdentity"),
+                    **({"members": entity["members"]} if entity.get("members") else {}),
                 }
             else:
+                if entity.get("members") and not merged[key].get("members"):
+                    merged[key]["members"] = entity["members"]
                 for field in ("province", "city", "district", "legalDong", "jibun", "cortarNo", "address", "lawdCd", "status"):
                     if entity.get(field) and not merged[key].get(field):
                         merged[key][field] = entity.get(field)

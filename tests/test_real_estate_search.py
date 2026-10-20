@@ -142,6 +142,65 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
                 self.assertEqual(target_rows[0]["status"], "분양권")
 
 
+class NumberedComplexGroupTest(unittest.TestCase):
+    @staticmethod
+    def _complex(name, apartment_id, jibun, households, legal_dong="병점동"):
+        return {
+            "apartmentId": apartment_id, "kaptCode": "", "complexNo": "", "name": name, "aliases": [],
+            "province": "경기도", "district": "화성시", "legalDong": legal_dong, "jibun": jibun,
+            "dedupeKey": f"{name}|경기도|화성시|{legal_dong}", "households": households,
+        }
+
+    @staticmethod
+    def _group(name, members):
+        return {"name": name, "aggregate": True, "members": list(members)}
+
+    def test_group_records_its_member_complexes_by_id_and_parcel(self):
+        group = next(
+            entity for entity in real_estate_search.APARTMENT_MASTER
+            if entity.get("aggregate") and entity["name"] == "안화동마을주공" and entity["district"] == "화성시"
+        )
+
+        members = {member["name"]: member for member in group["members"]}
+        self.assertEqual(set(members), {f"안화동마을주공{number}단지" for number in range(5, 10)})
+        self.assertEqual(members["안화동마을주공6단지"]["apartmentId"], "41590100255211")
+        self.assertEqual(members["안화동마을주공9단지"]["jibun"], "819")
+        self.assertTrue(all(member["legalDong"] == "병점동" for member in members.values()))
+        self.assertEqual(sum(member["households"] for member in members.values()), group["households"])
+
+    def test_single_member_group_becomes_an_alias_of_that_complex(self):
+        member = self._complex("세곡리엔파크4단지", "1", "1", 407)
+        groups = real_estate_search._numbered_group_entities([member], [self._group("세곡리엔파크", [member])])
+
+        self.assertEqual(groups, [])
+        self.assertIn("세곡리엔파크", member["aliases"])
+
+    def test_single_member_group_name_used_by_another_complex_is_not_borrowed(self):
+        member = self._complex("신원당마을9단지", "1", "1", 300)
+        plain = self._complex("신원당마을", "2", "2", 500)
+        groups = real_estate_search._numbered_group_entities([member, plain], [self._group("신원당마을", [member])])
+
+        self.assertEqual(groups, [])
+        self.assertNotIn("신원당마을", member["aliases"])
+
+    def test_same_name_in_another_legal_dong_does_not_block_the_alias(self):
+        member = self._complex("세곡리엔파크4단지", "1", "1", 407)
+        elsewhere = self._complex("세곡리엔파크", "2", "2", 500, legal_dong="진안동")
+        real_estate_search._numbered_group_entities([member, elsewhere], [self._group("세곡리엔파크", [member])])
+
+        self.assertIn("세곡리엔파크", member["aliases"])
+
+    def test_real_single_member_group_is_found_as_its_complex(self):
+        rows = [
+            entity for entity in real_estate_search.APARTMENT_MASTER
+            if entity["district"] == "강남구" and entity["legalDong"] == "세곡동"
+            and "세곡리엔파크" in {real_estate_search.compact(value) for value in (entity["name"], *entity["aliases"])}
+        ]
+
+        self.assertEqual([(row["name"], row.get("aggregate")) for row in rows], [("세곡리엔파크4단지", False)])
+        self.assertEqual(rows[0]["apartmentId"], "11680120145599")
+
+
 class OpinionAnalysisFailureTest(unittest.TestCase):
     def tearDown(self):
         analyze_real_estate._analysis_blocked_until = 0
