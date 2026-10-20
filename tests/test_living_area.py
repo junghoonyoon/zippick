@@ -435,24 +435,6 @@ def test_pangyo_valley_xi_2_route_is_not_described_as_a_new_station(tmp_path):
     assert '0점을 주지 않아요' in result['planRating']['missingReasons']['transport']
 
 
-def test_miseong_reports_strong_housing_change_when_rail_score_is_missing(tmp_path):
-    import future_transformation as transformation
-    import real_estate_search
-
-    entity = next(e for e in real_estate_search._search_entities()
-                  if e.get('name') == '미성아파트' and e.get('district') == '은평구'
-                  and e.get('legalDong') == '불광동' and e.get('jibun') == '248')
-    identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
-    result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 18))
-
-    assert result['planRating']['score'] is None
-    assert result['planRating']['subScores'] == {'housing': 4.5, 'transport': None}
-    assert result['headline'] == '생활권 변화는 판단을 보류했어요. 정비사업은 기대되지만, 교통 자료가 아직 없어요.'
-    assert '대조1' in ' '.join(result['briefing']['strengths'])
-    assert result['planRating']['missingReasons']['transport'] in result['briefing']['unknowns']
-    assert '주거환경만 보면 기대할 만해요' in result['intro']
-
-
 def test_living_area_headline_uses_korean_particles_for_numbered_complexes_and_projects():
     import living_area_context as context
 
@@ -718,3 +700,37 @@ def test_gyeonggi_address_with_combined_district_still_matches_city_rail_plans()
            'address': '경기도 성남수정구 신흥동 6951'}
     assert 'wirye-sinsa' in {line['id'] for line in planned_rail.planned_rail_for_candidate(row)}
     assert capital_transport._location(row) == ('경기도', '성남시')
+
+
+def test_operating_station_gains_half_points_when_its_line_adds_new_stops():
+    import living_area_plan_rating as rating
+
+    center = {'latitude': 37.6190, 'longitude': 126.9200}
+    operating = [{'id': 'gtx-a:004', 'name': '연신내역 · GTX-A', 'lineId': 'gtx-a',
+                  'projectId': 'metro-rail:gtx-a', 'distanceMeters': 798}]
+    rows = rating.line_extension_inputs(operating, center)
+
+    assert [row['name'] for row in rows] == ['연신내역 · GTX-A']
+    row = rows[0]
+    assert row['kind'] == 'line_extension' and '삼성역' in row['pendingStations']
+    new_station = 5 * row['accessFactor'] * row['impactFactor'] * row['maturityFactor']
+    assert row['rawScore'] == pytest.approx(new_station * rating.LINE_EXTENSION_SHARE)
+    assert rating.line_extension_inputs([], center) == []
+
+
+def test_miseong_counts_gtx_a_extension_instead_of_withholding_transport(tmp_path):
+    import future_transformation as transformation
+    import real_estate_search
+
+    entity = next(e for e in real_estate_search._search_entities()
+                  if e.get('name') == '미성아파트' and e.get('legalDong') == '불광동' and e.get('jibun') == '248')
+    identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
+    result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 20))
+    transport = result['planRating']['components']['transport']
+
+    assert transport['inputs'][0]['kind'] == 'line_extension'
+    assert transport['inputs'][0]['name'] == '연신내역 · GTX-A'
+    assert result['planRating']['subScores']['transport'] > 0
+    text = briefing_text(result)
+    assert '이미 운행 중인 연신내역 · GTX-A' in text and '삼성역' in text
+    assert '이미 있는 교통이라 변화 점수에는 넣지 않았어요' not in text

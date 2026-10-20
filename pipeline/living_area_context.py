@@ -312,7 +312,7 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v15'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v16'
 VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
                   'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
 STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
@@ -449,7 +449,17 @@ def conclude(result, identity):
         station = rail_input.get('name') or rail_name
         line = rail_input.get('lineName') or rail_name
         station_label = station if not line or line in station else f'{line} {station}'
-        if isinstance(rail_meters, (int, float)):
+        extension = rail_input.get('kind') == 'line_extension'
+        if isinstance(rail_meters, (int, float)) and extension:
+            pending = '·'.join(rail_input.get('pendingStations') or [])
+            rail_text = (f'이미 운행 중인 {station_label}까지 직선 {rail_meters:,.0f}m예요. '
+                         f'이 노선에 **{pending} 정차가 더해질 예정**이에요.')
+            if (transport_score if transport_known else 3.0) >= 3.0:
+                strengths.append(rail_text)
+            else:
+                weaknesses.append(rail_text + ' 새 교통 가점은 작아요.')
+            caveats.append('이미 타는 노선이 더 이어지는 변화라서 새 역 가점의 절반만 반영했어요.')
+        elif isinstance(rail_meters, (int, float)):
             rail_text = f'{station_label} 예정 위치가 직선 {rail_meters:,.0f}m예요. **{_station_distance_meaning(rail_meters)}**.'
             if (transport_score if transport_known else 3.0) >= 3.0:
                 strengths.append(rail_text)
@@ -547,6 +557,8 @@ def conclude(result, identity):
     if lead_meters is not None or rail_meters is not None:
         caveats.insert(0, '거리는 모두 직선 기준이에요. 실제 걸어가는 길과 달라요.')
     operating_stations = (plan.get('transportCoverage') or {}).get('nearbyOperatingStations', [])
+    extended_lines = {row.get('lineId') for row in rail_component.get('inputs', []) if row.get('kind') == 'line_extension'}
+    operating_stations = [row for row in operating_stations if row.get('lineId') not in extended_lines]
     if operating_stations:
         current = operating_stations[0]
         caveats.append(f'지금 이용하는 {current["name"]}까지는 직선 {current["distanceMeters"]:,}m예요. '

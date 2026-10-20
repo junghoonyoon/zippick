@@ -25,7 +25,7 @@ def aggregate(scores):
     return rounded(sum(scores[k]*weight for k,weight in WEIGHTS.items()))
 
 
-def calculate(projects, spatial, day):
+def calculate(projects, spatial, day, extra_rail=()):
     """All coefficients below are declared product policy, not observed outcomes."""
     output = {'version': VERSION, 'status':'insufficient_data', 'score':None,
               'subScores':dict.fromkeys(WEIGHTS), 'weights':WEIGHTS,
@@ -151,6 +151,10 @@ def calculate(projects, spatial, day):
         if previous is None or (score, -distance, station['name']) > (
                 previous['rawScore'], -previous['distanceMeters'], previous['name']):
             rail_by_line[line_id] = row
+    for row in extra_rail:
+        previous = rail_by_line.get(row['lineId'])
+        if previous is None or row['rawScore'] > previous['rawScore']:
+            rail_by_line[row['lineId']] = row
     rail = sorted(rail_by_line.values(), key=lambda row:(-row['rawScore'], row['lineId']))
     if rail:
         best = rail[0]
@@ -187,6 +191,46 @@ def calculate(projects, spatial, day):
 
 
 CURRENT_STATION_MATCH_METERS = 500
+# An operating line that gains new stops elsewhere opens new destinations
+# from a station residents already use; it earns half a new station's points.
+LINE_EXTENSION_SHARE = .5
+
+
+def line_extension_inputs(operating, center):
+    """Pending stops on lines that already serve a nearby operating station."""
+    from living_area import distance
+    import rail_station_mapping
+    try:
+        stations = [rail_station_mapping.annotate(row) for row in rail_station_mapping.load().get('stations', [])]
+    except (OSError, ValueError, KeyError):
+        return []
+    rows = []
+    for station in sorted(operating, key=lambda row:row['distanceMeters']):
+        line_id = station.get('lineId')
+        if not line_id or any(row['lineId'] == line_id for row in rows) or not valid(station.get('distanceMeters')):
+            continue
+        pending = [row for row in stations if row.get('lineId') == line_id
+                   and row.get('serviceStatus') != 'operating' and not under_review(row)
+                   and row.get('locationStatus') == 'located'
+                   and (distance(center, row) or 0) > 2000]
+        policy = next((line_policy(line_id, row.get('stage'), row.get('stageLabel')) for row in pending), None)
+        if not pending or not policy:
+            continue
+        meters = station['distanceMeters']
+        access = .4 + .6*distance_decay(meters)
+        score = 5*access*policy['impactFactor']*policy['maturityFactor']*LINE_EXTENSION_SHARE
+        rows.append({'projectId':station.get('projectId'), 'lineId':line_id, 'lineName':policy['lineName'],
+                     'name':station['name'], 'distanceMeters':meters, 'kind':'line_extension',
+                     'pendingStations':[row['name'].split(' · ')[0] for row in pending],
+                     'positionLabel':station.get('positionLabel'), 'stage':pending[0].get('stage'),
+                     'stageLabel':policy['stageLabel'], 'planningNote':'이미 운행 중인 역이에요. 노선의 새 정차역·연결 구간이 생기면 갈 수 있는 곳이 늘어나요.',
+                     'impactClass':policy['impactClass'], 'impactLabel':policy['impactLabel'] + ' · 기존 노선 연장',
+                     'impactFactor':policy['impactFactor'], 'maturity':policy['maturity'],
+                     'maturityLabel':policy['maturityLabel'], 'maturityFactor':policy['maturityFactor'],
+                     'accessFactor':access, 'extensionShare':LINE_EXTENSION_SHARE,
+                     'sourceUrl':policy['sourceUrl'], 'positionSourceUrl':station.get('coordinateSourceUrl'),
+                     'rawScore':score})
+    return rows
 
 
 def current_station(identity, center):
@@ -242,10 +286,14 @@ def attach(result, identity, day):
         spatial = map_context(identity,result)
     except (OSError, ValueError, KeyError):
         spatial = {'zones': [], 'stations': []}
-    current = current_station(identity, result.get('center') or result.get('mapCenter'))
+    center = result.get('center') or result.get('mapCenter')
+    current = current_station(identity, center)
     useful, farther = split_useful_stations(spatial.get('stations', []), current)
     spatial = {**spatial, 'stations':useful}
-    rating = calculate(result.get('displayProjects',[]),spatial,day)
+    import rail_station_mapping
+    coverage = rail_station_mapping.complex_coverage(center, day)
+    extensions = line_extension_inputs(coverage.get('nearbyOperatingStations', []), center) if center else []
+    rating = calculate(result.get('displayProjects',[]),spatial,day,extensions)
     if rating['subScores']['transport'] is not None:
         transport_status='scored'
     elif not result.get('metroCoverage'):
@@ -305,8 +353,6 @@ def attach(result, identity, day):
             rating['missingReasons']['transport'] = (
                 f'직선 2km 안에 예정역 참고 위치가 있지만, {len(unscored)}개 노선은 단계가 미확인됐거나 이 점수의 대상이 아니어서 보류했어요. '
                 '교통이 나쁘다는 뜻은 아니에요.')
-    import rail_station_mapping
-    coverage = rail_station_mapping.complex_coverage(result.get('center') or result.get('mapCenter'), day)
     if (rating['subScores']['transport'] is None and coverage.get('nearbyReviewStations')
             and not coverage.get('nearbyPlannedStations') and not map_references and not visible_routes):
         transport_status = 'rail_under_review'
