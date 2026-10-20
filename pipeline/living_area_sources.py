@@ -282,7 +282,7 @@ def revision():
     context_paths.extend(config.ROOT / 'pipeline' / name for name in (
         'living_area_context.py', 'living_area_metro.py', 'living_area_plan_rating.py', 'living_area_rail_policy.py',
         'project_official_links.py',
-        'capital_transport.py', 'rail_station_mapping.py', 'map_zone_policy.py', 'map_zone_stage.py',
+        'capital_transport.py', 'planned_rail.py', 'rail_station_mapping.py', 'map_zone_policy.py', 'map_zone_stage.py',
         'living_area_map.py', 'living_area_reference_points.py', 'redevelopment_occupancy.py', 'redevelopment_completion.py'))
     context_paths.append(config.ROOT / 'pipeline/cache/living_area_audited_centers.json')
     return digest({'registry': REGISTRY, 'bundle': BUNDLED_PATH.stat().st_mtime_ns if BUNDLED_PATH.exists() else None, 'store': path.stat().st_mtime_ns if path.exists() else None,
