@@ -186,6 +186,54 @@ def calculate(projects, spatial, day):
     return output
 
 
+CURRENT_STATION_MATCH_METERS = 500
+
+
+def current_station(identity, center):
+    """Nearest operating subway station already cached for this exact complex.
+
+    The cache is keyed by complex identity; the cached coordinate must also sit
+    next to the living-area center so a same-name complex is never borrowed.
+    """
+    from living_area import distance
+    try:
+        import kakao_station_distances as stations
+        record = (stations.cached_station(identity)
+                  or stations.cached_station({k:v for k,v in identity.items() if k != 'apartmentId'}))
+    except (ImportError, OSError, ValueError):
+        return None
+    if (not record or not record.get('nearestStationName') or not valid(record.get('nearestStationDistance'))
+            or not center):
+        return None
+    offset = distance(center, {'latitude':record.get('latitude'), 'longitude':record.get('longitude')})
+    if offset is None or offset > CURRENT_STATION_MATCH_METERS:
+        return None
+    return {'name':record['nearestStationName'], 'distanceMeters':round(record['nearestStationDistance']),
+            'source':record.get('stationDistanceSource'), 'checkedAt':record.get('stationDistanceUpdatedAt')}
+
+
+def split_useful_stations(stations, current):
+    """A planned stop is a new-transport change only when residents would use it.
+
+    Non-GTX stops farther than the station residents already walk to add no new
+    access. GTX stays because people ride buses or cars to reach its express service.
+    """
+    if not current:
+        return list(stations), []
+    kept, excluded = [], []
+    for station in stations:
+        meters = station.get('distanceMeters')
+        policy = (line_policy(station.get('lineId'), station.get('stage'), station.get('stageLabel'))
+                  if station.get('serviceStatus') != 'operating' and station.get('scoringEligible') is not False
+                  and not under_review(station) and valid(meters) and 0 <= meters <= 2000 else None)
+        if policy and policy['impactClass'] != 'gtx' and meters >= current['distanceMeters']:
+            excluded.append({'name':station.get('name'), 'lineId':station.get('lineId'),
+                             'lineName':policy['lineName'], 'distanceMeters':round(meters)})
+        else:
+            kept.append(station)
+    return kept, excluded
+
+
 def attach(result, identity, day):
     from living_area_map import map_context
     # Each map source checks its own review date. An old pilot file must not
@@ -194,6 +242,9 @@ def attach(result, identity, day):
         spatial = map_context(identity,result)
     except (OSError, ValueError, KeyError):
         spatial = {'zones': [], 'stations': []}
+    current = current_station(identity, result.get('center') or result.get('mapCenter'))
+    useful, farther = split_useful_stations(spatial.get('stations', []), current)
+    spatial = {**spatial, 'stations':useful}
     rating = calculate(result.get('displayProjects',[]),spatial,day)
     if rating['subScores']['transport'] is not None:
         transport_status='scored'
@@ -283,6 +334,22 @@ def attach(result, identity, day):
         rating['missingReasons'].pop('transport', None)
         rating['score'] = aggregate(rating['subScores'])
         rating['status'] = 'ready' if rating['score'] is not None else 'insufficient_data'
+    if rating['subScores']['transport'] is None and farther:
+        transport_status = 'planned_stations_farther_than_current'
+        rating['subScores']['transport'] = 0
+        rating['components']['transport'] = {
+            'summary':'직선 2km 안 예정역은 있지만, 지금 걸어서 타는 역보다 멀어 새 교통 가점은 0점이에요.',
+            'formula':'새 예정역이 지금 가장 가까운 역보다 가깝거나, GTX처럼 더 빠른 길을 열 때만 교통 가점을 줘요.',
+            'policy':(f'지금 가장 가까운 역은 {current["name"]}, 직선 {current["distanceMeters"]:,}m예요. '
+                      '이미 있는 역은 생활권 변화로 보지 않고, 새 예정역이 쓸모 있는지 가리는 기준으로만 써요. '
+                      '제외한 예정역: ' + ' · '.join(f'{row["name"]} {row["distanceMeters"]:,}m' for row in farther[:3])),
+            'inputs':[], 'excludedStations':farther, 'currentStation':current,
+            'noUsefulPlannedStation':True}
+        rating['missingReasons'].pop('transport', None)
+        rating['score'] = aggregate(rating['subScores'])
+        rating['status'] = 'ready' if rating['score'] is not None else 'insufficient_data'
+    elif farther and rating['components'].get('transport'):
+        rating['components']['transport']['excludedStations'] = farther
     if rating['subScores']['transport'] is not None and not coverage['scopeComplete']:
         rating['components']['transport']['coverageIncomplete'] = True
     rating['transportCoverage']={**coverage, 'status':transport_status,'radiusMeters':2000,

@@ -33,9 +33,13 @@ def planned_rail_for_candidate(row):
             sido = tokens[0]
             if len(tokens) >= 2:
                 if sido == "경기도":
-                    city = tokens[1]
-                    if len(tokens) >= 3 and tokens[2].endswith("구"):
-                        address_district = city.removesuffix("시") + tokens[2]
+                    # "경기도 성남수정구 …" names the district, not the city.
+                    if tokens[1].endswith(("시", "군")):
+                        city = tokens[1]
+                        if len(tokens) >= 3 and tokens[2].endswith("구"):
+                            address_district = city.removesuffix("시") + tokens[2]
+                    elif tokens[1].endswith("구"):
+                        address_district = tokens[1]
                 else:
                     district = tokens[1]
             break

@@ -653,3 +653,68 @@ def test_map_provider_failure_is_not_silently_replaced():
     js = "const assert=require('node:assert/strict'); let fallback=0; let fail=true; const provider={native:true}; async function loadKakaoMapApi(){if(fail)throw new Error('domain');return provider;} async function loadLeafletMapApi(){fallback++;}\n"+body+"\n(async()=>{await assert.rejects(loadMapApi(),/domain/);assert.equal(fallback,0);fail=false;assert.equal(await loadMapApi(),provider);})().catch(e=>{console.error(e);process.exitCode=1;});"
     result = subprocess.run(['node'], input=js, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_planned_stop_farther_than_current_station_is_not_a_transport_change():
+    import living_area_plan_rating as rating
+
+    current = {'name': '가상역 8호선', 'distanceMeters': 300}
+    tram = {'name': '먼트램역', 'lineId': 'wirye', 'stage': 'construction', 'stageLabel': '시운전 중 · 개통 전',
+            'distanceMeters': 1500}
+    near_tram = {**tram, 'name': '가까운트램역', 'distanceMeters': 250}
+    gtx = {'name': '먼GTX역', 'lineId': 'gtx-c', 'stage': 'construction', 'stageLabel': '2026년 9월 착공',
+           'distanceMeters': 1700}
+    operating = {'name': '기존역', 'lineId': 'wirye', 'serviceStatus': 'operating', 'distanceMeters': 900}
+
+    kept, excluded = rating.split_useful_stations([tram, near_tram, gtx, operating], current)
+    assert [row['name'] for row in kept] == ['가까운트램역', '먼GTX역', '기존역']
+    assert excluded == [{'name': '먼트램역', 'lineId': 'wirye', 'lineName': '위례선 트램', 'distanceMeters': 1500}]
+    assert rating.split_useful_stations([tram], None) == ([tram], [])
+
+
+def test_briefing_says_no_new_rail_when_every_planned_stop_is_farther_than_current_station():
+    import living_area_context as context
+
+    report = {'displayProjects': [
+        {'id': 'zone-1', 'name': '가상구역', 'projectType': 'redevelopment', 'stage': 'disposal', 'distanceMeters': 900},
+    ], 'planRating': {'score': 3.0, 'subScores': {'housing': 5.0, 'transport': 0},
+                      'components': {'housing': {'selectedProjectId': 'zone-1', 'projectCount': 4},
+                                     'transport': {'inputs': [], 'noUsefulPlannedStation': True,
+                                                   'excludedStations': [{'lineId': 'wirye', 'name': '먼트램역'}]}}},
+        'judgment': {}}
+    result = context.conclude(report, {**IDENTITY, 'name': '가상단지'})
+
+    assert result['headline'] == '생활권 변화는 보통이에요. 정비사업은 많지만, 새로 생길 철도 호재는 없어요.'
+    assert result['briefing']['weaknesses'] == ['근처에 새로 탈 만한 철도 계획은 없어요.']
+    assert '먼트램역' not in briefing_text(result)
+    assert '지금 걸어서 타는 역보다 멀어서' in ' '.join(result['briefing']['caveats'])
+
+
+def test_heriston_drops_wirye_tram_and_reports_wirye_sinsa_as_regional_news(tmp_path):
+    import future_transformation as transformation
+    import real_estate_search
+
+    entity = next(e for e in real_estate_search._search_entities()
+                  if e.get('name') == '산성역 헤리스톤' and e.get('legalDong') == '산성동' and e.get('jibun') == '1336')
+    identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
+    result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 20))
+    transport = result['planRating']['components'].get('transport') or {}
+    if not transport.get('currentStation'):
+        pytest.skip('현재 이용역 거리 캐시가 없어요.')
+
+    assert transport['currentStation']['name'] == '산성역 8호선'
+    assert transport['noUsefulPlannedStation'] is True
+    assert {row['lineId'] for row in transport['excludedStations']} == {'wirye'}
+    news = ' '.join(result['briefing']['news'])
+    assert '위례신사선' in news and '예비타당성조사 통과' in news
+    assert '위례선 트램' not in news and '월곶~판교' not in news
+
+
+def test_gyeonggi_address_with_combined_district_still_matches_city_rail_plans():
+    import capital_transport
+    import planned_rail
+
+    row = {'province': '경기도', 'city': '성남시', 'district': '성남수정구',
+           'address': '경기도 성남수정구 신흥동 6951'}
+    assert 'wirye-sinsa' in {line['id'] for line in planned_rail.planned_rail_for_candidate(row)}
+    assert capital_transport._location(row) == ('경기도', '성남시')

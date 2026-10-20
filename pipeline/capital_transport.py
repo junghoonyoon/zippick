@@ -63,7 +63,7 @@ def _location(identity):
             province = parts[0]
             if len(parts) > 1:
                 if province == '경기도':
-                    city = parts[1]
+                    city = parts[1] if parts[1].endswith(('시', '군')) else city
                 else:
                     district = parts[1]
             break

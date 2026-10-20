@@ -312,7 +312,7 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v14'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v15'
 VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
                   'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
 STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
@@ -328,6 +328,32 @@ def _station_distance_meaning(meters):
     if meters <= 1500:
         return '매일 걸어서 타기엔 조금 먼 거리예요'
     return '매일 걸어서 타기엔 먼 거리예요'
+
+
+def regional_rail_news(result, identity, rail_component):
+    """Same-city rail plans whose local stops have no decided location yet.
+
+    Lines with a located local stop were already judged by distance, so only
+    plans that distance cannot judge yet are shown as news, never scored.
+    """
+    from living_area_rail_policy import under_review
+    try:
+        import rail_station_mapping
+        stations = [rail_station_mapping.annotate(row) for row in rail_station_mapping.load().get('stations', [])]
+    except (OSError, ValueError, KeyError):
+        return []
+    places = {identity.get('city'), identity.get('district')} - {None, ''}
+    judged = {row.get('lineId') for key in ('inputs', 'excludedStations') for row in rail_component.get(key) or []}
+    news = []
+    for item in (result.get('capitalTransport') or {}).get('matchedPlans') or []:
+        if item.get('category') != 'rail' or under_review(item) or item.get('id') in judged:
+            continue
+        local = [row for row in stations if row.get('lineId') == item.get('id') and row.get('sigungu') in places]
+        if not local or any(row.get('locationStatus') == 'located' for row in local):
+            continue
+        dated = f' · 자료 {item["sourceDate"]}' if item.get('sourceDate') else ''
+        news.append(f'**{item["name"]}** · {item.get("stage") or "진행 단계 확인 중"}{dated}. {item.get("note") or ""}'.strip())
+    return news[:2]
 
 
 def conclude(result, identity):
@@ -432,6 +458,9 @@ def conclude(result, identity):
             caveats.append('새 노선 출입구와 걸어가는 시간은 확인되지 않았어요.')
         else:
             unknowns.append(f'{station_label} 계획은 있지만, 이 단지에서 이용할 역 위치는 확인 중이에요.')
+    elif transport_score == 0 and rail_component.get('noUsefulPlannedStation'):
+        weaknesses.append('근처에 새로 탈 만한 철도 계획은 없어요.')
+        caveats.append('지도에 보이는 예정역은 지금 걸어서 타는 역보다 멀어서 새 교통 변화로 보지 않았어요.')
     elif transport_score == 0 and stations_outside:
         weaknesses.append('직선 2km 안에 새로 생길 예정역이 없어요.')
     elif map_station_only or stations_outside or station_mapping_incomplete or not route:
@@ -481,9 +510,9 @@ def conclude(result, identity):
                   '가장 빠른 사업의 진행 상황부터 확인하세요.']
     else:
         verdict = 'weak' if score < 3.0 else 'normal'
-        if lead and rail_name and housing_known and transport_known and housing_score >= 3.5 and transport_score < 3.0:
-            reason = ('정비사업은 많지만, 새 교통 호재는 약해요' if housing_count >= 3 else
-                      '정비사업은 기대되지만, 새 교통 호재는 약해요')
+        if lead and housing_known and transport_known and housing_score >= 3.5 and transport_score < 3.0:
+            reason = (('정비사업은 많지만, ' if housing_count >= 3 else '정비사업은 기대되지만, ')
+                      + ('새 교통 호재는 약해요' if rail_input else '새로 생길 철도 호재는 없어요'))
             advice = [f"{named_subject} '교통이 좋아지는 곳'보다 '동네가 새 아파트로 바뀌는 곳'에 가까워요.",
                       '매수 판단의 근거는 새 철도보다 주변 정비사업이에요.',
                       '사업이 끝날 때마다 새 아파트와 이 단지의 가격 차이를 비교해 보세요.']
@@ -527,11 +556,13 @@ def conclude(result, identity):
     if verdict == 'weak':
         caveats.append("'약해요'는 지금 살기 나쁘다는 뜻이 아니에요. 앞으로 바뀔 거리가 적다는 뜻이에요.")
 
+    news = regional_rail_news(result, identity, rail_component)
+
     label, sentence = VERDICT_LABELS[verdict]
     headline = f'생활권 변화는 {sentence} {reason}.'
     intro = ' '.join(advice)
     result['briefing'] = {'verdict':verdict, 'label':label, 'reason':reason + '.',
-                          'strengths':strengths, 'weaknesses':weaknesses, 'unknowns':unknowns,
+                          'strengths':strengths, 'weaknesses':weaknesses, 'unknowns':unknowns, 'news':news,
                           'advice':advice, 'caveats':caveats}
     result['headline'] = headline
     result['intro'] = intro
