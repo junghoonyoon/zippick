@@ -425,6 +425,7 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             latest_transaction.call_args.kwargs["entity"]["legalDong"],
             "정자동",
         )
+        self.assertIs(latest_transaction.call_args.kwargs["entity"], entity)
         self.assertEqual(district_peer_reports.call_args.kwargs["target_households"], 1651)
         self.assertEqual(report["educationEnvironment"], {"score": 80})
         attach_location_scores.assert_called_once()
@@ -433,6 +434,70 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertEqual(score_rows[1]["latestDealPriceEok"], 12.0)
         self.assertEqual(report["peers"][0]["locationScore"]["score"], 79)
         self.assertEqual(report["peers"][1]["locationScore"]["score"], 78)
+
+    def test_apartment_report_keeps_reviewed_shared_transaction_scope(self):
+        entity = {
+            "name": "이문아이파크자이 2단지",
+            "district": "동대문구",
+            "legalDong": "이문동",
+            "jibun": "149-8",
+            "apartmentId": "zippick:1123011000:imun-ipark-xi:2",
+            "sectionIdentity": {
+                "transactionScope": {
+                    "id": "imun-ipark-xi-3-1bl",
+                    "label": "이문아이파크자이 1·2단지 통합 거래",
+                    "sourceName": "이문아이파크자이",
+                    "legalDong": "이문동",
+                    "jibun": "149-8",
+                    "memberApartmentIds": [
+                        "zippick:1123011000:imun-ipark-xi:1",
+                        "zippick:1123011000:imun-ipark-xi:2",
+                    ],
+                    "allowUnnumberedTransactions": True,
+                    "transactionKinds": ["apartment", "presale"],
+                },
+            },
+        }
+        public_scope = {
+            "id": "imun-ipark-xi-3-1bl",
+            "label": "이문아이파크자이 1·2단지 통합 거래",
+            "sourceName": "이문아이파크자이",
+            "sourceNote": "국토부 원본은 1·2단지를 함께 표기해요.",
+        }
+        band = {
+            "latestDealPriceEok": 20.6,
+            "latestDealDate": "2026-08-18",
+            "latestDealExclusiveArea": 84.95,
+            "latestDealFloor": "15",
+            "transactionCount": 2,
+            "transactionScope": public_scope,
+        }
+        with mock.patch.object(search_server.budget_candidates, "_find_entity", return_value=entity), \
+             mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
+             mock.patch.object(search_server.molit_transactions, "source_rows_for_entity", return_value=[]), \
+             mock.patch.object(search_server.molit_transactions, "prefetch_months"), \
+             mock.patch.object(search_server.momentum_signals, "attach_signals"), \
+             mock.patch.object(search_server.molit_transactions, "price_band_for_apartment", return_value=band) as price_band, \
+             mock.patch.object(search_server.molit_transactions, "latest_transaction_for_apartment", return_value=None), \
+             mock.patch.object(search_server.momentum_signals, "district_peer_reports", return_value=[]), \
+             mock.patch.object(search_server.location_scores, "attach_scores"), \
+             mock.patch.object(search_server.market_indicators, "attach"), \
+             mock.patch.object(search_server.price_valuation, "attach_valuations"):
+            report = search_server._apartment_report(
+                entity["name"], entity["district"], area_label="전용 84㎡",
+            )["report"]
+
+        self.assertIs(price_band.call_args.kwargs["entity"], entity)
+        self.assertEqual(report["transactionScope"], public_scope)
+        self.assertEqual(report["latestDealPriceEok"], 20.6)
+        # 화면명은 네이버 지도 표기를 따르되, 가격 조회는 위의 정확한
+        # 물리 단지 entity를 계속 사용한다.
+        self.assertEqual(report["displayName"], "이문아이파크자이(3-1BL)")
+        self.assertEqual(report["naverComplexNo"], "174562")
+        self.assertEqual(
+            report["naverPropertyUrl"],
+            "https://fin.land.naver.com/complexes/174562",
+        )
 
     def test_apartment_report_collects_station_without_trade_api(self):
         entity = {"name": "테스트단지", "province": "서울특별시", "district": "성동구",

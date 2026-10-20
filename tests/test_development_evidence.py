@@ -69,6 +69,7 @@ class DevelopmentEvidenceTest(unittest.TestCase):
             "zippickDevelopmentCompletedOfficialZone", "zippickActiveOfficialDevelopmentZones",
             "zippickDevelopmentIdentityKeys", "zippickDevelopmentOfficialZoneSelfMatch", "zippickOwnDevelopmentWord",
             "zippickConfirmedOwnDevelopmentRows",
+            "zippickDevelopmentStageTier", "zippickDevelopmentProjectWord",
         ]
         functions = []
         for name in names:
@@ -85,7 +86,7 @@ class DevelopmentEvidenceTest(unittest.TestCase):
           const zone = {inside:true, name:'검증아파트 재개발', projectType:'재개발', stage:'조합설립인가'};
           const area = {...own, scope:'area', title:'옆 단지 재개발', url:'https://example.com/area'};
           const transport = {scope:'complex', category:'transport', title:'GTX 개통'};
-        """ + f"const cases = {json.dumps(self.cases())};" + """
+        """ + f"const cases = {json.dumps(self.cases())};" + r"""
           for (const [metadata, allowed] of cases) {
             const item = {name:'검증아파트', ...metadata, newsCatalyst:own, relatedNews:[own],
               zippickDevelopmentInsight:{zones:[zone]}};
@@ -124,5 +125,31 @@ class DevelopmentEvidenceTest(unittest.TestCase):
           const daerimShindonga = {name:'신동아', aliases:['신동아아파트'], buildingAge:40};
           assert.equal(zippickOwnDevelopmentZones(daerimShindonga, [{inside:false, distanceMeters:2793,
             name:'양평동신동아아파트', projectType:'재건축(공동)', stage:'조합설립인가'}]).length, 0);
+
+          // Official planning areas must survive when the separate news request is absent.
+          const misung = {apartmentId:'11380100000585', name:'미성아파트', displayName:'미성',
+            legalDong:'불광동', jibun:'248', buildingAge:38};
+          const misungZone = {id:'11000UQ120PS202407010944', name:'불광미성',
+            districtCode:'11380', projectType:'신속통합기획', stage:'대상지선정(추진중)',
+            inside:true, distanceMeters:0, source:'서울시 공식 공간정보'};
+          assert.equal(zippickOwnDevelopmentZones(misung, [misungZone]).length, 1);
+          assert.equal(zippickOwnDevelopmentZones({...misung, name:'미성'}, [misungZone]).length, 1);
+          for (const otherZone of [
+            {...misungZone, districtCode:'11710'},
+            {...misungZone, name:'불광미성2차'},
+            {...misungZone, name:'월계미성'},
+            {...misungZone, inside:false, distanceMeters:51},
+            {...misungZone, stage:'준공'},
+            {...misungZone, projectType:'도시재생활성화지역'},
+          ]) assert.equal(zippickOwnDevelopmentZones(misung, [otherZone]).length, 0);
+          function esc(value) { return String(value); }
+          function zpJosa(word, a, b) { return word + a; }
+          function zippickDevelopmentDistanceText() { return '단지와 맞닿음'; }
+          function zippickDevelopmentOfficialType(value) { return value; }
+          const report = zippickDevelopmentHtml({...misung, zippickDevelopmentInsight:{zones:[misungZone]}});
+          assert.match(report, /data-zpr-step="단지 변화"/);
+          assert.match(report, /불광미성/);
+          assert.match(report, /대상지선정\(추진중\)/);
+          assert.doesNotMatch(report, /이 단지가 재건축 대상입니다/);
         """
         subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)

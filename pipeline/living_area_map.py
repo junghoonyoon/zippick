@@ -7,6 +7,8 @@ become verified benefit-score inputs.
 import math
 
 import config
+from living_area_rail_policy import annotate
+import project_official_links
 from living_area_context import read
 
 ZONE_BINDINGS = {
@@ -26,7 +28,8 @@ def _featured_developments(zones, projects, limit=3):
     for zone in zones:
         kind = zone.get('projectTypeLabel') or ''
         if (zone.get('containsSubject') or not zone.get('businessNameConfirmed')
-                or not (zone.get('projectType') in ('redevelopment', 'reconstruction')
+                or (zone.get('zoneKind') is not None and zone['zoneKind'] != 'renewal')
+                or not (zone.get('zoneKind') == 'renewal' or zone.get('projectType') in ('redevelopment', 'reconstruction')
                         or any(word in kind for word in ('재개발', '재건축', '주택정비', '가로주택', '소규모', '신속통합기획')))):
             continue
         candidates[zone['projectId']] = {
@@ -100,23 +103,30 @@ def map_context(entity, analysis):
             for k in ('province','district','legalDong','jibun')):
         return result
     origin = transform(FORWARD, Point(lon, lat))
-    if analysis.get('metroCoverage'):
+    if analysis.get('metroCoverage') or (metro.supported(entity) and metro.catalog()):
         candidates = {p['id']:p for p in metro.catalog().get('projects', [])}
-        for project in analysis.get('displayProjects',[]):
-            official=candidates.get(project['id'],{})
-            candidates[project['id']]={**official,**project}
-            # Display rows can rename a reviewed project, but often omit the
-            # verified address point needed to join it to a map boundary.
-            if official.get('point') and not project.get('point'):
-                candidates[project['id']]['point']=official['point']
+        # Use the same canonical projects as the viewport API. Cached display
+        # rows can include derived boundary:* entries, which duplicate real
+        # projects and make an otherwise exact spatial match ambiguous.
         spatial = metro.spatial(center,list(candidates.values()),day)
         result.update(spatial)
         from living_area import distance
         from living_area_context import recent
-        for station in metro.catalog().get('railStations',[]):
+        for station in metro.station_references(day):
             meters=distance(center,station)
-            if meters is not None and meters <= 3000 and metro.station_active(station,day):
-                result['stations'].append({k:v for k,v in station.items() if k!='rawPlace'} | {'distanceMeters':round(meters)})
+            if meters is not None and meters <= 3000 and metro.station_visible(station,day):
+                row = {k:v for k,v in station.items() if k!='rawPlace'} | {'distanceMeters':round(meters)}
+                row.update(project_official_links.for_project(station, day))
+                if station.get('serviceStatus') == 'operating':
+                    row.update(stage='completed', stageLabel='운행 중', scoringEligible=False,
+                               positionLabel='기존역 대표점 · 실제 출입구와 다를 수 있어요.')
+                # Link by reviewed route IDs, never by a similar line/station name.
+                station_point = transform(FORWARD, Point(station['longitude'], station['latitude']))
+                routes = [route for route in result.get('routes', []) if route['id'] in station.get('routeIds', [])]
+                if routes:
+                    route = min(routes, key=lambda route: station_point.distance(transform(FORWARD, shape(route['geometry']))))
+                    row['routeId'] = route['id']
+                result['stations'].append(row)
         # Match named planned stations only to the same official railway route.
         # Kakao's planned-station place points can be offset from the public
         # reference alignment, so keep both positions and expose the gap.
@@ -124,6 +134,9 @@ def map_context(entity, analysis):
         references = read(reference_path) if reference_path.exists() else {}
         if recent(references.get('checkedAt'),day):
             for station in references.get('stations',[]):
+                # A reviewed station registry supersedes the old map-only point.
+                if any(s.get('coordinateSourceUrl') == station.get('coordinateSourceUrl')
+                       for s in result['stations']):continue
                 if station.get('sourceDate','9999-12-31') > day.isoformat():
                     continue
                 route = next((route for route in result.get('routes',[])
@@ -142,6 +155,7 @@ def map_context(entity, analysis):
                 result['stations'].append({**station,'distanceMeters':round(meters),
                     'routeId':route['id'],'routeAnchor':{'latitude':anchor.y,'longitude':anchor.x},
                     'routeLinkMeters':round(gap),'routeLinkBasis':'reference_point_to_official_alignment',
+                    'scoringEligible':False,
                     'stationEntranceVerified':False,'walkingMeters':None,'walkingMinutes':None,
                     'checkedAt':references['checkedAt'],
                     'coordinateSource':references['coordinateSource']})
@@ -160,6 +174,10 @@ def map_context(entity, analysis):
         bundle = read(config.ROOT / 'data/living_area_map_references.json')
         if not recent(bundle.get('checkedAt'),day):return result
         for station in bundle['stations']:
+            # Current metro reports use the shared reviewed registry. Retain
+            # pilot anchors only for historical reports without that coverage.
+            if analysis.get('metroCoverage') and metro.rail_station_mapping.current(metro.rail_station_mapping.load(), day):
+                continue
             point = transform(FORWARD, Point(station['longitude'], station['latitude']))
             distance = origin.distance(point)
             if distance <= 3000:
@@ -168,4 +186,5 @@ def map_context(entity, analysis):
                     'checkedAt': bundle['checkedAt'], 'coordinateSource': bundle['coordinateSource']})
         ids = {s['id'] for s in result['stations']}
         result['connections'] = [c for c in bundle['connections'] if set(c['stationIds']) <= ids]
+    result['stations'] = [annotate(station) for station in result['stations']]
     return result

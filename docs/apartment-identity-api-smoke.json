@@ -1,0 +1,26 @@
+[
+  {
+    "case": "correct",
+    "httpStatus": 200,
+    "expectedStatus": 200,
+    "areaCount": 8,
+    "error": null,
+    "passed": true
+  },
+  {
+    "case": "different_parcel",
+    "httpStatus": 409,
+    "expectedStatus": 409,
+    "areaCount": 0,
+    "error": "법정동·지번으로 단지를 정확히 식별하지 못했습니다.",
+    "passed": true
+  },
+  {
+    "case": "wrong_id",
+    "httpStatus": 409,
+    "expectedStatus": 409,
+    "areaCount": 0,
+    "error": "법정동·지번으로 단지를 정확히 식별하지 못했습니다.",
+    "passed": true
+  }
+]

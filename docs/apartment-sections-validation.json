@@ -1,0 +1,184 @@
+{
+  "generatedAt": "2026-10-19T05:12:41.178849+00:00",
+  "status": "local_checks_passed_with_external_verification_limits",
+  "summary": "이문아이파크자이 1·2·3단지를 별도로 표시하고, 전체 저장 목록의 단지 번호와 네이버 연결 충돌을 수정함.",
+  "catalog": {
+    "sourceRows": 20477,
+    "masterRecords": 20135,
+    "individualApartments": 19661,
+    "numberedNamesRestoredFromSource": 1076,
+    "naverAliasMappings": 12824,
+    "remainingOmittedPhaseNames": 0,
+    "unreviewedNaverPhaseConflicts": 0,
+    "knownWrongLinksRemaining": 0,
+    "reviewedMappingResolutionFailures": 0,
+    "unresolvedReviewedLocations": 3
+  },
+  "naverChanges": {
+    "correctedLocations": 12,
+    "correctedAliasMappings": 53,
+    "removedIncorrectOrAmbiguousAliases": 10,
+    "addedImunSections": 3,
+    "verifiedExternalNameDifferences": 3,
+    "verifiedSharedPages": 10
+  },
+  "tests": {
+    "passed": 180,
+    "subtestsPassed": 83,
+    "failed": 0,
+    "warnings": 10,
+    "seconds": 106.25,
+    "files": [
+      "tests/test_apartment_sections.py",
+      "tests/test_apartment_identity.py",
+      "tests/test_naver_complex.py",
+      "tests/test_typesafe_jev.py",
+      "tests/test_real_estate_search.py",
+      "tests/test_molit_transactions.py",
+      "tests/test_budget_candidates.py"
+    ],
+    "frontendJavaScriptSyntax": "passed",
+    "gitDiffWhitespace": "passed",
+    "broaderFrontendTestNote": "별도로 실행한 기존 화면 정적 검사에는 이번 화면 수정 전부터 실패하던 18개 검사가 있음. 저장소 전체 테스트 통과를 주장하지 않음."
+  },
+  "localApi": {
+    "url": "http://127.0.0.1:8766",
+    "sections": [
+      {
+        "name": "이문아이파크자이 1단지",
+        "apartmentId": "zippick:1123011000:imun-ipark-xi:1",
+        "address": "서울특별시 동대문구 이문로 120",
+        "latitude": 37.5984702182265,
+        "longitude": 127.062682937358,
+        "naverComplexNo": "174562",
+        "naverPropertyUrl": "https://fin.land.naver.com/complexes/174562",
+        "exactSearchPassed": true
+      },
+      {
+        "name": "이문아이파크자이 2단지",
+        "apartmentId": "zippick:1123011000:imun-ipark-xi:2",
+        "address": "서울특별시 동대문구 이문로 150",
+        "latitude": 37.6000627788581,
+        "longitude": 127.062400831493,
+        "naverComplexNo": "174562",
+        "naverPropertyUrl": "https://fin.land.naver.com/complexes/174562",
+        "exactSearchPassed": true
+      },
+      {
+        "name": "이문아이파크자이 3단지",
+        "apartmentId": "zippick:1123011000:imun-ipark-xi:3",
+        "address": "서울특별시 동대문구 천장산로13길 15",
+        "latitude": 37.6012018118991,
+        "longitude": 127.057058429998,
+        "naverComplexNo": "184737",
+        "naverPropertyUrl": "https://fin.land.naver.com/complexes/184737",
+        "exactSearchPassed": true
+      }
+    ],
+    "passed": true
+  },
+  "jev": {
+    "skillUsed": true,
+    "liveApiCalled": true,
+    "resultFile": "docs/apartment-sections-jev-check.json",
+    "correctSectionSelected": true,
+    "ambiguousFamilyRejectedBeforeApi": true,
+    "selectionProbability": 0.98,
+    "confidence": 0.96
+  },
+  "ui": {
+    "desktop": {
+      "nameAndSectionFullyVisible": true,
+      "drag": true,
+      "zoom": true,
+      "markerSelection": true,
+      "detailOpenClose": true
+    },
+    "mobile390x844": {
+      "nameAndSectionFullyVisible": true,
+      "drag": true,
+      "zoom": true,
+      "markerSelection": true,
+      "bottomSheetExpandCollapse": true,
+      "listReturn": true
+    },
+    "staleBrowserIdentityCacheInvalidated": true,
+    "viewportReset": true
+  },
+  "externalVerification": {
+    "storedMappingsAudited": 12824,
+    "liveNaverDongListsRequested": 250,
+    "liveNaverDongListsRead": 93,
+    "liveNaverDongListsUnavailable": 157,
+    "limit": "HTTP 307 응답으로 네이버 전체 목록 실시간 확인은 완료하지 못함. 주소별 공공 자료와 주요 네이버 단지 페이지를 별도 확인함.",
+    "unresolvedLocations": [
+      {
+        "region": "강동구",
+        "legalDong": "상일동",
+        "jibun": "36-3",
+        "aliases": [
+          "강동리엔파크11단지",
+          "상일동 강동리엔파크11",
+          "상일동 강동리엔파크11단지"
+        ],
+        "rejectedComplexNos": [
+          "134513"
+        ],
+        "verifiedAt": "2026-10-19",
+        "status": "unresolved",
+        "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+      },
+      {
+        "region": "강동구",
+        "legalDong": "상일동",
+        "jibun": "산2-3",
+        "aliases": [
+          "강동 리엔파크 13단지",
+          "상일동 강동 리엔파크 13",
+          "상일동 강동 리엔파크 13단지"
+        ],
+        "rejectedComplexNos": [
+          "134513"
+        ],
+        "verifiedAt": "2026-10-19",
+        "status": "unresolved",
+        "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+      },
+      {
+        "region": "관악구",
+        "legalDong": "신림동",
+        "jibun": "1713",
+        "aliases": [
+          "신림2단지 주공아파트",
+          "신림2단지주공(임대)"
+        ],
+        "rejectedComplexNos": [
+          "1263"
+        ],
+        "verifiedAt": "2026-10-19",
+        "addressEvidence": {
+          "address": "서울 관악구 신림동 1713",
+          "latitude": 37.4640458881738,
+          "longitude": 126.926531939083
+        },
+        "status": "unresolved",
+        "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+      }
+    ]
+  },
+  "limitations": [
+    "네이버 일반 단지 페이지가 확인되지 않은 임대단지 연결은 비활성화함.",
+    "이문 1·2단지의 동번호 없는 공통 거래를 개별 단지 거래로 복제하지 않음.",
+    "외부 서비스의 전체 신규 단지 등록 여부·모든 주소를 실시간 전수 확인한 결과는 아님.",
+    "이문 1·2단지의 개별 세대수는 확인된 값이 없어 합산 세대수를 복제하지 않음.",
+    "1·2단지는 네이버 3-1BL(174562), 3단지는 네이버 3-2BL(184737)에 연결함."
+  ],
+  "delivery": {
+    "localUrl": "http://127.0.0.1:8766/",
+    "localServerRestarted": true,
+    "temporaryServer8767Stopped": true,
+    "productionDeployed": false,
+    "committed": false,
+    "note": "기존 및 동시에 진행 중인 다른 작업의 변경을 보존함."
+  }
+}

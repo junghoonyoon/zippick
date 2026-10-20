@@ -13,6 +13,8 @@ DAY=dt.date(2026,10,16)
 
 @pytest.mark.parametrize('relative', ['data/living_area_metro_catalog.json', 'data/planned_rail_metro.json', 'data/redevelopment_zones.geojson',
                                     'data/redevelopment_project_scales.json',
+                                    'data/redevelopment_occupancy_overrides.json',
+                                    'pipeline/redevelopment_occupancy.py',
                                     'pipeline/living_area_plan_rating.py'])
 def test_data_and_rating_refresh_invalidates_candidate_cache(tmp_path, monkeypatch, relative):
     import os

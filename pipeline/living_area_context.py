@@ -220,10 +220,12 @@ def describe(result, identity):
     projects.sort(key=lambda p: (0 if p.get('siteAreaM2') else 1 if p.get('distanceMeters') is not None else 2,
                                  p.get('distanceMeters') or 0, p['id']))
     result['displayProjects'] = projects
+    from living_area_rail_policy import under_review
+    projects = [p for p in projects if p.get('projectType') != 'transport' or not under_review(p)]
     result['coverage'] = {'projects':len(projects), 'mappedProjects':sum(p.get('geometryType') == 'point' for p in projects),
                           'verifiedMetrics':sum(m['value'] is not None for m in result['metrics']),
                           'totalMetrics':len(result['metrics'])}
-    routes=result.get('transportRoutes',[])
+    routes=[route for route in result.get('transportRoutes',[]) if not under_review(route)]
     route_insight=None
     if routes:
         route_insight={'kind':'transport','title':'철도 노선과 가까워도 이용할 역은 따로 확인해야 해요.',
@@ -237,6 +239,10 @@ def describe(result, identity):
                       intro=route_insight['fact'])
         return result
     if not projects:
+        if any(p.get('projectType') == 'transport' and under_review(p) for p in all_projects):
+            result.update(insights=[], findings=[],
+                headline='주변의 확인된 변화 자료가 부족해요.',
+                intro='재추진 중인 철도는 일정이 정해지지 않아 매수 이유에서 제외했어요.')
         return result
     housing = [p for p in projects if p['projectType'] in ('redevelopment','reconstruction')]
     rail = [p for p in projects if p['projectType'] == 'transport']
@@ -306,7 +312,22 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v7'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v14'
+VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
+                  'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
+STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
+                 'association':'조합을 만든 중간 단계', 'approved':'사업 인가를 받은 중반 단계',
+                 'disposal':'관리처분 인가를 받은 착공 바로 전 단계', 'construction':'공사 중인 단계',
+                 'completed':'공사가 끝난 단계'}
+EARLY_STAGES = {'planning', 'designated'}
+
+
+def _station_distance_meaning(meters):
+    if meters <= 800:
+        return '걸어서 다닐 만한 거리예요'
+    if meters <= 1500:
+        return '매일 걸어서 타기엔 조금 먼 거리예요'
+    return '매일 걸어서 타기엔 먼 거리예요'
 
 
 def conclude(result, identity):
@@ -322,6 +343,7 @@ def conclude(result, identity):
     score = plan.get('score')
     components = plan.get('components') or {}
     housing_component = components.get('housing') or {}
+    housing_count = housing_component.get('projectCount') or 0
     lead = next((p for p in housing if p.get('id') == housing_component.get('selectedProjectId')), None)
     if lead is None:
         lead = min((p for p in housing if p.get('distanceMeters') is not None),
@@ -333,116 +355,193 @@ def conclude(result, identity):
                      key=lambda row: row.get('rawScore', -1), default=None)
     rail_project = next((p for p in projects if p.get('id') == (rail_input or {}).get('projectId')), None)
     rail_name = rail_project['name'] if rail_project else (rail_input or {}).get('name')
-    route = next(iter(result.get('transportRoutes') or []), None)
+    from living_area_rail_policy import under_review
+    route = next((route for route in result.get('transportRoutes') or [] if not under_review(route)), None)
     direct = lead is not None and lead.get('benefitClass') == 'direct'
     planned_move_in = bool(identity.get('plannedMoveInMonth')) and not identity.get('approvedAt')
     sub_scores = plan.get('subScores') or {}
     housing_score = sub_scores.get('housing')
     transport_score = sub_scores.get('transport')
+    map_station_only = (plan.get('transportCoverage') or {}).get('status') == 'map_reference_only'
+    stations_outside = (plan.get('transportCoverage') or {}).get('status') == 'mapped_stations_outside_2km'
+    station_mapping_incomplete = (plan.get('transportCoverage') or {}).get('status') == 'station_mapping_incomplete'
+    transport_reason = (rail_component.get('summary') or (plan.get('missingReasons') or {}).get('transport')
+                        or '새 철도 계획의 역 위치·진행 단계 자료가 부족해 교통 점수를 계산하지 못했어요.')
     strong_plans = (score is not None and score >= 3.8 and lead is not None and rail_input is not None
                     and (housing_score or 0) >= 3.5 and (transport_score or 0) >= 3.5)
-    contrast_decision = None
-    partial_headline = None
-    if lead and rail_name and housing_score is not None and transport_score is not None:
-        if housing_score >= 3.5 and transport_score < 3.0:
-            contrast_decision = f'{named_subject} {lead_name} 계획이 눈여겨볼 만하지만 {rail_name}의 교통 가점은 작아요.'
-        elif transport_score >= 3.5 and housing_score < 3.0:
-            contrast_decision = f'{named_subject} {rail_name} 계획이 눈여겨볼 만하지만 {lead_name}의 주거 변화 가점은 작아요.'
+    # Multiple scored housing plans and a nearby scored station can describe a
+    # changing neighborhood even when the single best rail plan is only moderate.
+    nearby_housing = {row.get('projectId') for row in housing_component.get('inputs', [])
+                      if row.get('projectId') and isinstance(row.get('distanceMeters'), (int, float))
+                      and 0 <= row['distanceMeters'] <= 2000}
+    clustered_plans = (score is not None and score >= 3.8 and lead is not None and rail_input is not None
+                       and (housing_score or 0) >= 3.5 and (transport_score or 0) >= 3.0
+                       and len(nearby_housing) >= 3
+                       and any(row.get('projectId') in nearby_housing and isinstance(row.get('distanceMeters'), (int, float))
+                               and row['distanceMeters'] <= 800 for row in housing_component.get('inputs', []))
+                       and isinstance(rail_input.get('distanceMeters'), (int, float))
+                       and rail_input['distanceMeters'] <= 1500)
+    lead_row = next((row for row in housing_component.get('inputs', [])
+                     if lead and row.get('projectId') == lead.get('id')), None) or {}
+    lead_meters = lead_row.get('distanceMeters', (lead or {}).get('distanceMeters'))
+    lead_stage = lead_row.get('stage') or (lead or {}).get('stage')
+    households_total = housing_component.get('plannedHouseholdsTotal')
+    rail_meters = (rail_input or {}).get('distanceMeters')
+    housing_known = housing_score is not None
+    transport_known = transport_score is not None
 
-    if score is None:
-        verdict = '판단할 수 없어요.'
-        if housing_score is not None and transport_score is None and lead:
-            nearby_housing = [row for row in housing_component.get('inputs', [])
-                              if row.get('distanceMeters') is not None and row['distanceMeters'] <= 800]
-            selected_is_nearby = any(row.get('projectId') == housing_component.get('selectedProjectId')
-                                     for row in nearby_housing)
-            project_phrase = (f'{lead_name} 등 가까운 정비사업'
-                              if selected_is_nearby and len(nearby_housing) > 1 else f'{lead_name} 계획')
-            if housing_score >= 4.0:
-                decision = f'{named_subject} {project_phrase}으로 주변 주거환경이 크게 바뀔 수 있어요. 새 철도 수혜는 아직 확인되지 않았어요.'
-            elif housing_score >= 3.0:
-                decision = f'{named_subject} {project_phrase}으로 주거환경이 달라질 수 있어요. 교통 개선은 아직 평가하지 못했어요.'
-            else:
-                decision = f'{named_subject} 확인된 주거환경 변화의 가점은 작아요. 교통 개선은 아직 평가하지 못했어요.'
-            partial_headline = decision
-        elif transport_score is not None and housing_score is None and rail_name:
-            if transport_score >= 3.5:
-                decision = f'{subject}의 {rail_name} 계획에 따른 교통 가점은 눈여겨볼 만해요. 주거환경 변화는 아직 평가하지 못했어요.'
-            elif transport_score >= 3.0:
-                decision = f'{subject}의 {rail_name} 계획에 따른 교통 가점은 보통이에요. 주거환경 변화는 아직 평가하지 못했어요.'
-            else:
-                decision = f'{subject}의 {rail_name} 계획에 따른 교통 가점은 작아요. 주거환경 변화는 아직 평가하지 못했어요.'
-            partial_headline = decision
-        elif lead and (rail_input or route):
-            decision = f'{named_subject} 주변 사업은 보이지만 생활권 전체를 평가할 자료는 부족해요.'
-        elif lead:
-            decision = f'{named_subject} {lead_name}{_topic(lead_name)} 확인됐지만 교통 변화는 아직 평가할 수 없어요.'
-        elif rail_input or route:
-            decision = f'{named_subject} 새 철도 계획은 있지만 이용할 역의 위치가 확인되지 않았어요.'
-        else:
-            decision = f'{named_subject} 주변의 확인된 변화 자료가 부족해요.'
-    elif direct and score >= 3.5:
-        verdict = '좋아요.'
-        decision = f'{named_subject} {lead_name}까지 가는 길이 확인됐어요. 완공 시점을 따져 보세요.'
-    elif strong_plans:
-        verdict = '좋아요.'
-        decision = f'{subject}의 매수 비교에서는 {lead_name}{_with(lead_name)} {rail_name} 계획이 모두 가점이에요.'
-    elif score < 3.0:
-        verdict = '아쉬워요.'
-        if contrast_decision:
-            decision = contrast_decision
-        elif rail_name and lead:
-            decision = f'{named_subject} {lead_name}{_with(lead_name)} {rail_name} 계획이 있어도 현재 확인된 가점은 작아요.'
-        elif rail_name:
-            decision = f'{named_subject} {rail_name} 계획에서 확인된 교통 가점은 작아요.'
-        elif lead:
-            decision = f'{named_subject} {lead_name} 계획에서 확인된 주거 변화 가점은 작아요.'
-        else:
-            decision = f'{named_subject} 현재 확인된 주변 계획의 가점은 작아요.'
-    else:
-        verdict = '보통이에요.'
-        if contrast_decision:
-            decision = contrast_decision
-        elif planned_move_in:
-            decision = f'{named_subject} 입주할 때 {lead_name}{_with(lead_name)} {rail_name} 계획이 어디까지 진행됐는지 확인하세요.' if lead and rail_name else f'{named_subject} 입주할 때 주변 사업의 진행 상황을 확인하세요.'
-        elif lead and rail_name:
-            decision = f'{named_subject} {lead_name}{_with(lead_name)} {rail_name} 계획이 있지만 실제 이용 변화는 더 확인해야 해요.'
-        elif lead:
-            decision = f'{named_subject} {lead_name} 계획이 있지만 실제 생활 변화는 더 확인해야 해요.'
-        elif rail_name:
-            decision = f'{named_subject} {rail_name} 계획이 있지만 이용할 역은 더 확인해야 해요.'
-        else:
-            decision = f'{named_subject} 확인된 계획의 실제 이용 변화는 더 확인해야 해요.'
-
-    facts = []
+    # Briefing frame: verdict -> one-line reason -> strengths/weaknesses -> advice.
+    # "**" marks the one phrase per line that the report screen shows in bold.
+    strengths, weaknesses, unknowns, caveats = [], [], [], []
     if lead:
-        _, housing_intro = housing_judgment(identity, lead)
-        facts.append(housing_intro)
+        brief_lead = lead_name if re.search(r'(구역|사업|재개발|재건축|아파트|단지|차)$', lead_name) else lead_name + ' 사업'
+        named_lead = brief_lead + _topic(brief_lead)
+        stage_text = STAGE_MEANING.get(lead_stage) or ((lead.get('stageLabel') or '진행 단계 미확인') + ' 단계')
+        if isinstance(lead_meters, (int, float)):
+            lead_text = (f'가장 영향이 큰 {named_lead} 직선 {lead_meters:,.0f}m 떨어져 있고, **{stage_text}**예요.'
+                         if housing_count > 1 else
+                         f'{named_lead} 직선 {lead_meters:,.0f}m 떨어져 있고, **{stage_text}**예요.')
+        else:
+            lead_text = f'{named_lead} **{stage_text}**예요. 이 단지와의 거리는 확인 중이에요.'
+        if housing_count > 1:
+            lead_text = (f'직선 2km 안에 정비사업이 {housing_count}곳이에요. '
+                         + (('세대수가 확인된 곳의 ' if housing_component.get('areaOnlyProjectCount') else '')
+                            + f'계획 세대는 모두 {households_total:,.0f}세대예요. ' if households_total else '')
+                         + lead_text)
+        if direct:
+            lead_text += f' 단지에서 {brief_lead}까지 걸어가는 길도 확인됐어요.'
+        if (housing_score if housing_known else score if score is not None else 3.0) >= 3.0:
+            strengths.append(lead_text)
+        else:
+            weaknesses.append(lead_text + ' 규모와 거리를 따지면 가점은 작아요.')
+    elif score is None:
+        unknowns.append('현재 자료에서 직선 2km 안의 정비사업을 찾지 못했어요.')
+    else:
+        weaknesses.append('직선 2km 안에 확인된 정비사업이 없어요.')
+
     if rail_input:
         station = rail_input.get('name') or rail_name
-        meters = rail_input.get('distanceMeters')
-        if meters is not None:
-            facts.append(f'{station}의 참고 위치는 직선 {meters:,.0f}m예요. 새 노선 출입구와 걸어가는 시간은 확인되지 않았어요.')
+        line = rail_input.get('lineName') or rail_name
+        station_label = station if not line or line in station else f'{line} {station}'
+        if isinstance(rail_meters, (int, float)):
+            rail_text = f'{station_label} 예정 위치가 직선 {rail_meters:,.0f}m예요. **{_station_distance_meaning(rail_meters)}**.'
+            if (transport_score if transport_known else 3.0) >= 3.0:
+                strengths.append(rail_text)
+            else:
+                weaknesses.append(rail_text + ' 새 교통 가점은 작아요.')
+            caveats.append('새 노선 출입구와 걸어가는 시간은 확인되지 않았어요.')
         else:
-            facts.append(f'{station} 계획은 확인했지만 이 단지에서 이용할 역의 위치는 확인되지 않았어요.')
-    elif route:
-        facts.append(f'{route["name"]} 노선 자료는 확인했지만 이 단지에서 이용할 새 역의 위치는 확인되지 않았어요.')
-    if strong_plans and not direct:
-        facts.append('계획 점수는 실제로 누릴 이점이나 집값 상승을 뜻하지 않아요.')
-    if score is not None and score < 3.0:
-        facts.append('낮은 계획 점수는 지금 살기 나쁘거나 집값이 내려간다는 뜻이 아니에요.')
-    if not facts:
-        facts.append('사업 위치와 새 역 자료가 확인되면 다시 평가할 수 있어요.')
-    headline = partial_headline or f'생활권 변화는 {verdict} {decision}'
-    intro = ' '.join(facts)
+            unknowns.append(f'{station_label} 계획은 있지만, 이 단지에서 이용할 역 위치는 확인 중이에요.')
+    elif transport_score == 0 and stations_outside:
+        weaknesses.append('직선 2km 안에 새로 생길 예정역이 없어요.')
+    elif map_station_only or stations_outside or station_mapping_incomplete or not route:
+        unknowns.append(transport_reason)
+    else:
+        route_meters = route.get('distanceMeters')
+        unknowns.append(f'{route["name"]}' + (f'까지 직선 {route_meters:,.0f}m예요. ' if route_meters is not None else ' 노선 자료만 확인했어요. ')
+                        + '이용할 역 위치를 몰라 교통 점수는 계산하지 않았어요.')
+
+    if score is None:
+        verdict = 'pending'
+        if housing_known and not transport_known:
+            reason = ('정비사업은 기대되지만, 교통 자료가 아직 없어요' if housing_score >= 3.0 else
+                      '정비사업 가점은 작고, 교통 자료는 아직 없어요')
+            advice = [f'{named_subject} 주거환경만 보면 기대할 만해요.' if housing_score >= 3.0 else
+                      f'{named_subject} 주변 주거환경 변화가 크지 않아요.',
+                      '교통 자료가 들어오면 판정을 다시 내려요.']
+        elif transport_score == 0 and stations_outside and not housing_known:
+            reason = '2km 안에 새 예정역이 없고, 주거환경 자료는 아직 없어요'
+            advice = ['새 철도로 교통이 좋아질 계획은 확인되지 않았어요.', '주거환경 자료가 들어오면 판정을 다시 내려요.']
+        elif transport_known and not housing_known:
+            reason = ('새 철도는 기대되지만, 주거환경 자료가 아직 없어요' if transport_score >= 3.0 else
+                      '새 철도 가점은 작고, 주거환경 자료는 아직 없어요')
+            advice = [f'{named_subject} 새 철도 계획만 확인했어요.', '주거환경 자료가 들어오면 판정을 다시 내려요.']
+        else:
+            reason = ('주변 사업은 보이지만, 판단할 자료가 아직 부족해요' if lead and (rail_input or route) else
+                      '정비사업은 보이지만, 판단할 자료가 아직 부족해요' if lead else
+                      '철도 계획은 보이지만, 판단할 자료가 아직 부족해요' if rail_input or route else
+                      '판단할 자료가 아직 부족해요')
+            advice = ['사업 위치와 새 역 자료가 확인되면 다시 평가할 수 있어요.']
+    elif direct and score >= 3.5:
+        verdict = 'good'
+        reason = '정비사업 구역까지 걸어가는 길이 이어져 있어요'
+        advice = [f'{lead_name}에 새 아파트와 생활시설이 들어서면 {subject}에서도 가까이 누릴 수 있어요.',
+                  '완공 시점에 맞춰 주변 새 아파트와 가격 차이를 살펴보세요.']
+    elif strong_plans:
+        verdict = 'good'
+        reason = '정비사업과 새 역, 두 계획이 함께 있어요'
+        advice = [f'{named_subject} 주변이 새 아파트 동네로 바뀌고, 새 역도 계획된 곳이에요.',
+                  '두 계획이 함께 있는 단지는 비교 후보로 먼저 볼 만해요.',
+                  '다만 기대가 이미 가격에 들어갔는지 주변 새 아파트 가격과 비교해 보세요.']
+    elif clustered_plans:
+        verdict = 'good'
+        reason = '정비사업이 몰려 있고, 예정역도 가까워요'
+        advice = [f'{named_subject} 한두 곳이 아니라 동네 전체가 바뀌는 곳이에요.',
+                  '사업마다 속도가 달라서 몇 년에 걸쳐 바뀐다고 보세요.',
+                  '가장 빠른 사업의 진행 상황부터 확인하세요.']
+    else:
+        verdict = 'weak' if score < 3.0 else 'normal'
+        if lead and rail_name and housing_known and transport_known and housing_score >= 3.5 and transport_score < 3.0:
+            reason = ('정비사업은 많지만, 새 교통 호재는 약해요' if housing_count >= 3 else
+                      '정비사업은 기대되지만, 새 교통 호재는 약해요')
+            advice = [f"{named_subject} '교통이 좋아지는 곳'보다 '동네가 새 아파트로 바뀌는 곳'에 가까워요.",
+                      '매수 판단의 근거는 새 철도보다 주변 정비사업이에요.',
+                      '사업이 끝날 때마다 새 아파트와 이 단지의 가격 차이를 비교해 보세요.']
+        elif lead and rail_name and housing_known and transport_known and transport_score >= 3.5 and housing_score < 3.0:
+            reason = '새 역은 기대되지만, 동네 변화는 작아요'
+            advice = [f'{named_subject} 새 역이 생기면 출퇴근이 편해질 수 있어요.',
+                      '하지만 동네 모습은 크게 바뀌지 않아요.',
+                      '착공과 개통 일정이 실제로 진행되는지가 가장 중요해요.']
+        elif planned_move_in and verdict == 'normal':
+            reason = '주변 사업이 입주 때까지 얼마나 진행될지가 관건이에요'
+            advice = [f'{named_subject} 입주 직후에 주변이 아직 공사 중일 수 있어요.',
+                      '주변 사업이 끝나면 이 단지와 새 아파트가 서로 비교 대상이 돼요.',
+                      '입주 시기와 주변 공사 일정을 겹쳐서 보세요.']
+        elif verdict == 'weak':
+            if lead and lead_stage in EARLY_STAGES and isinstance(lead_meters, (int, float)) and lead_meters > 1000:
+                reason = '계획은 있지만, 아직 초기이고 거리도 멀어요'
+                advice = [f'{named_subject} 몇 년 뒤 주변이 바뀔 수는 있지만, 지금 가격에 넣기에는 이른 단계예요.',
+                          '사업이 조합 설립이나 인가로 넘어가면 다시 볼 만해요.']
+            else:
+                reason = ('주변 계획은 있지만, 가점이 될 만큼 크지 않아요' if lead or rail_name else
+                          '주변에 큰 변화 계획이 아직 없어요')
+                advice = [f'{named_subject} 변화를 기대하고 사는 단지는 아니에요.',
+                          '지금의 교통, 학교, 상권이 마음에 드는지로 판단하세요.']
+        else:
+            reason = ('정비사업과 새 철도 계획이 있지만, 효과는 보통이에요' if lead and rail_name else
+                      '정비사업은 있지만, 새 교통 계획은 확인되지 않았어요' if lead else
+                      '새 철도 계획은 있지만, 주변 정비사업은 확인되지 않았어요' if rail_name else
+                      '확인된 계획의 실제 효과는 더 지켜봐야 해요')
+            advice = [f'{named_subject} 변화 계획은 있지만, 바로 체감할 정도는 아니에요.',
+                      '가장 가까운 사업의 진행 단계를 지켜보세요.']
+
+    if lead_meters is not None or rail_meters is not None:
+        caveats.insert(0, '거리는 모두 직선 기준이에요. 실제 걸어가는 길과 달라요.')
+    operating_stations = (plan.get('transportCoverage') or {}).get('nearbyOperatingStations', [])
+    if operating_stations:
+        current = operating_stations[0]
+        caveats.append(f'지금 이용하는 {current["name"]}까지는 직선 {current["distanceMeters"]:,}m예요. '
+                       '이미 있는 교통이라 변화 점수에는 넣지 않았어요.')
+    if verdict == 'good' and not direct:
+        caveats.append('계획 점수는 실제로 누릴 이점이나 집값 상승을 뜻하지 않아요.')
+    if verdict == 'weak':
+        caveats.append("'약해요'는 지금 살기 나쁘다는 뜻이 아니에요. 앞으로 바뀔 거리가 적다는 뜻이에요.")
+
+    label, sentence = VERDICT_LABELS[verdict]
+    headline = f'생활권 변화는 {sentence} {reason}.'
+    intro = ' '.join(advice)
+    result['briefing'] = {'verdict':verdict, 'label':label, 'reason':reason + '.',
+                          'strengths':strengths, 'weaknesses':weaknesses, 'unknowns':unknowns,
+                          'advice':advice, 'caveats':caveats}
     result['headline'] = headline
     result['intro'] = intro
-    result.setdefault('judgment', {}).update(headline=headline, shortTerm=decision, longTerm=intro,
+    result.setdefault('judgment', {}).update(headline=headline, shortTerm=reason + '.', longTerm=intro,
                                              policyVersion=VERDICT_POLICY_VERSION)
     if result.get('snapshotId'):
         result['snapshotId'] = sources.digest({'planSnapshot':result['snapshotId'],
                                                'judgmentVersion':VERDICT_POLICY_VERSION,
-                                               'headline':headline, 'intro':intro})
+                                               'headline':headline, 'intro':intro,
+                                               'briefing':result['briefing']})
     return result
 
 

@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-19",
+  "targetedTests": {
+    "passed": 59,
+    "subtestsPassed": 88,
+    "failed": 0
+  },
+  "frontendMapChecks": {
+    "passed": 22,
+    "failed": 0
+  },
+  "stageMappingTests": {
+    "passed": 21,
+    "failed": 0
+  },
+  "legacyMapTests": {
+    "passed": 1,
+    "failed": 5,
+    "limitations": [
+      "기존 지도 테스트 4개는 현재 단지 목록에 없는 과거 고유값을 조회하여 entity=None으로 중단됨.",
+      "기존 미성아파트 테스트 1개는 직접 분석 호출에 좌표가 없어 지도가 비어 있음. 실제 API는 단지 좌표를 넘겨 호출하며 별도 확인함."
+    ]
+  },
+  "browserChecks": {
+    "candidateMapDesktop": [
+      "지도 이동",
+      "더블클릭 확대",
+      "구역 선택 시 산성·착공 표시"
+    ],
+    "candidateMapMobile390": [
+      "지도 이동",
+      "확대",
+      "상세 카드 펼치기·접기",
+      "클릭 위치에 산성·착공 말풍선 표시"
+    ],
+    "reportMapDesktop": [
+      "생활권 지도 로딩",
+      "동네별 구역 표시",
+      "세 가지 색상 범례",
+      "자료 범위 안내"
+    ],
+    "limitations": [
+      "지도 조작은 실제 데스크톱·모바일 폭으로 확인했으며 물리 모바일 기기의 터치 제스처 검사는 아님."
+    ]
+  },
+  "deployment": {
+    "local": "applied",
+    "production": "deferred_by_user",
+    "note": "2026-10-19 사용자 요청: 운영에 올리지 않고 진행 단계 보강. 커밋·푸시·배포 미실행."
+  },
+  "stageEnrichmentTests": {
+    "passed": 5,
+    "failed": 0
+  }
+}

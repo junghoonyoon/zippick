@@ -1,4 +1,5 @@
 import copy
+import datetime as dt
 
 import future_transformation as future
 import living_area_map as maps
@@ -110,6 +111,41 @@ def test_miseong_map_keeps_subject_boundary_but_labels_three_external_projects()
                    for row in result['featuredDevelopments'])
     assert result['featuredDevelopment']['scaleValue']==2451
     assert result['featuredDevelopment']['selectionRadiusMeters']==2000
+
+
+def test_miseong_map_connects_operating_yeonsinnae_gtx_a_without_future_bonus():
+    import real_estate_search
+    import living_area_plan_rating
+
+    entity=next(row for row in real_estate_search._search_entities()
+                if row.get('name')=='미성아파트' and row.get('district')=='은평구'
+                and row.get('legalDong')=='불광동' and row.get('jibun')=='248')
+    analysis={'modelVersion':'living-area-v2-beta','apartmentId':future.apartment_key(entity),
+              'asOfDate':'2026-10-19','center':{'latitude':37.6148205101596,'longitude':126.928054602465},
+              'metroCoverage':{'status':'partial'},
+              'metroIdentity':{key:entity.get(key) for key in ('province','district','legalDong','jibun')},
+              'displayProjects':[]}
+    result=maps.map_context(entity,analysis)
+    station=next(station for station in result['stations'] if station['id']=='gtx-a:004')
+    assert station['name']=='연신내역 · GTX-A'
+    assert station['distanceMeters']==798
+    assert station['serviceStatus']=='operating'
+    assert station['stageLabel']=='운행 중'
+    assert station['routeId']=='gg-rail:650'
+    assert station['scoringEligible'] is False
+    assert station['walkingMinutes'] is None and not station['stationEntranceVerified']
+    rating=living_area_plan_rating.calculate([],result,dt.date(2026,10,19))
+    assert rating['subScores']['transport'] is None
+    assert maps.map_context({**entity,'jibun':'different lot'},analysis)['stations']==[]
+
+
+def test_operating_station_visibility_is_separate_from_planned_bonus():
+    station={'serviceStatus':'operating','stage':'completed',
+             'checkedAt':'2026-10-19','sourceDate':'2026-06-30'}
+    day=dt.date(2026,10,19)
+    assert metro.station_visible(station,day)
+    assert not metro.station_active(station,day)
+    assert not metro.station_visible({**station,'checkedAt':'2026-01-01'},day)
 
 
 def test_nearby_planned_stations_link_to_their_named_route_without_claiming_entrances():

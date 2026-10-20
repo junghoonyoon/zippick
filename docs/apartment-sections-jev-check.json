@@ -1,0 +1,37 @@
+[
+  {
+    "query": {
+      "name": "이문 아이파크 자이 1단지",
+      "region": "동대문구",
+      "legalDong": "이문동",
+      "jibun": "149-8"
+    },
+    "result": {
+      "status": "matched",
+      "selectedIndex": 1,
+      "selectionProbability": 0.98,
+      "confidence": 0.96,
+      "probabilities": {
+        "candidate_0": 0.98,
+        "no_match": 0.02
+      },
+      "reason": "typesafe_jev"
+    }
+  },
+  {
+    "query": {
+      "name": "이문아이파크자이",
+      "region": "동대문구",
+      "legalDong": "이문동",
+      "jibun": "149-8"
+    },
+    "result": {
+      "status": "unavailable",
+      "selectedIndex": null,
+      "selectionProbability": 0.0,
+      "confidence": 0.0,
+      "probabilities": {},
+      "reason": "section_number_missing"
+    }
+  }
+]

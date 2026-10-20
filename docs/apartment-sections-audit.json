@@ -1,0 +1,7685 @@
+{
+  "generatedAt": "2026-10-19T05:11:58.746176+00:00",
+  "scope": "전체 원본 행·단지 마스터·저장된 네이버 연결의 단지 번호 정합성. 네이버 전체 페이지의 실시간 검증을 뜻하지 않음.",
+  "counts": {
+    "sourceRows": 20477,
+    "masterRecords": 20135,
+    "individualApartments": 19661,
+    "numberedNamesRestoredFromSource": 1076,
+    "naverAliasMappings": 12824,
+    "remainingOmittedPhaseNames": 0,
+    "unreviewedNaverPhaseConflicts": 0,
+    "knownWrongLinksRemaining": 0,
+    "reviewedMappingResolutionFailures": 0,
+    "unresolvedReviewedLocations": 3
+  },
+  "status": "passed",
+  "imunSections": [
+    {
+      "latitude": 37.5984702182265,
+      "longitude": 127.062682937358,
+      "apartmentId": "zippick:1123011000:imun-ipark-xi:1",
+      "kaptCode": "",
+      "complexNo": "174562",
+      "name": "이문아이파크자이 1단지",
+      "region": "동대문구",
+      "address": "서울특별시 동대문구 이문로 120",
+      "legalDong": "이문동",
+      "jibun": "149-8",
+      "cortarNo": "1123011000",
+      "lawdCd": "11230",
+      "households": 0,
+      "approvedAt": "2025-11",
+      "status": "준공",
+      "category": "아파트",
+      "complexName": "이문아이파크자이(3-1BL)",
+      "displayName": "이문아이파크자이 1단지",
+      "scope": "shared_sections"
+    },
+    {
+      "latitude": 37.6000627788581,
+      "longitude": 127.062400831493,
+      "apartmentId": "zippick:1123011000:imun-ipark-xi:2",
+      "kaptCode": "",
+      "complexNo": "174562",
+      "name": "이문아이파크자이 2단지",
+      "region": "동대문구",
+      "address": "서울특별시 동대문구 이문로 150",
+      "legalDong": "이문동",
+      "jibun": "149-8",
+      "cortarNo": "1123011000",
+      "lawdCd": "11230",
+      "households": 0,
+      "approvedAt": "2025-11",
+      "status": "준공",
+      "category": "아파트",
+      "complexName": "이문아이파크자이(3-1BL)",
+      "displayName": "이문아이파크자이 2단지",
+      "scope": "shared_sections"
+    },
+    {
+      "latitude": 37.6012018118991,
+      "longitude": 127.057058429998,
+      "apartmentId": "zippick:1123011000:imun-ipark-xi:3",
+      "kaptCode": "A10020006",
+      "complexNo": "184737",
+      "name": "이문아이파크자이 3단지",
+      "region": "동대문구",
+      "address": "서울특별시 동대문구 천장산로13길 15",
+      "legalDong": "이문동",
+      "jibun": "419-1",
+      "cortarNo": "1123011000",
+      "lawdCd": "11230",
+      "households": 152,
+      "approvedAt": "2026-06-25",
+      "status": "준공",
+      "category": "아파트",
+      "complexName": "이문아이파크자이(3-2BL)",
+      "displayName": "이문아이파크자이 3단지",
+      "scope": "single_section"
+    }
+  ],
+  "restoredNames": [
+    {
+      "name": "DMC2차아이파크",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "남가좌동",
+      "jibun": "388"
+    },
+    {
+      "name": "DMC센트럴자이(1단지)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "증산동",
+      "jibun": "258"
+    },
+    {
+      "name": "DMC센트럴자이(2단지)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "증산동",
+      "jibun": "258"
+    },
+    {
+      "name": "DMC센트럴자이(3단지)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "증산동",
+      "jibun": "258"
+    },
+    {
+      "name": "DMC센트럴자이(4단지)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "증산동",
+      "jibun": "258"
+    },
+    {
+      "name": "DMC파크뷰자이1단지",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "남가좌동",
+      "jibun": "385"
+    },
+    {
+      "name": "DMC파크뷰자이2단지",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "남가좌동",
+      "jibun": "385"
+    },
+    {
+      "name": "DMC파크뷰자이3단지",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "남가좌동",
+      "jibun": "385"
+    },
+    {
+      "name": "DMC파크뷰자이4단지",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "남가좌동",
+      "jibun": "385"
+    },
+    {
+      "name": "DMC파크뷰자이5단지",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "남가좌동",
+      "jibun": "385"
+    },
+    {
+      "name": "LIG대학마을(건영아파트3차)",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1703-1"
+    },
+    {
+      "name": "SH대치1단지아파트",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "12"
+    },
+    {
+      "name": "SKVIEW1단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "766-2"
+    },
+    {
+      "name": "SKVIEW2단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "766"
+    },
+    {
+      "name": "SM이로빌5차",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "312-7"
+    },
+    {
+      "name": "e편한세상선부파크플레이스1차",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "1186"
+    },
+    {
+      "name": "e편한세상선부파크플레이스2차",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "1186"
+    },
+    {
+      "name": "e편한세상오포4차",
+      "province": "경기도",
+      "region": "광주시",
+      "legalDong": null,
+      "jibun": "1106"
+    },
+    {
+      "name": "가나3차",
+      "province": "경기도",
+      "region": "성남중원구",
+      "legalDong": null,
+      "jibun": "4117"
+    },
+    {
+      "name": "가나3차",
+      "province": "경기도",
+      "region": "성남중원구",
+      "legalDong": null,
+      "jibun": "4117-1"
+    },
+    {
+      "name": "가락(1차)쌍용아파트",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "가락동",
+      "jibun": "140"
+    },
+    {
+      "name": "가림22차(가동)",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "816-1"
+    },
+    {
+      "name": "가림22차(나동)",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "816-2"
+    },
+    {
+      "name": "가림25차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "805-5"
+    },
+    {
+      "name": "가림29차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "933-12"
+    },
+    {
+      "name": "가림29차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "933-14"
+    },
+    {
+      "name": "가야아파트2단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "복지리93-3"
+    },
+    {
+      "name": "가양1차보람더하임",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "가양동",
+      "jibun": "1497"
+    },
+    {
+      "name": "가양도시개발9-1단지",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "가양동",
+      "jibun": "1489"
+    },
+    {
+      "name": "가좌마을1단지양우",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1090"
+    },
+    {
+      "name": "가좌마을2단지대우",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1089"
+    },
+    {
+      "name": "가좌마을3단지청원벽산블루밍",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1088"
+    },
+    {
+      "name": "가좌마을5단지벽산",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1087"
+    },
+    {
+      "name": "가좌마을6단지벽산",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1086"
+    },
+    {
+      "name": "가좌마을7단지꿈에그린",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1105"
+    },
+    {
+      "name": "가천대역동부센트레빌1단지",
+      "province": "경기도",
+      "region": "성남수정구",
+      "legalDong": null,
+      "jibun": "7343"
+    },
+    {
+      "name": "갈매5단지",
+      "province": "경기도",
+      "region": "구리시",
+      "legalDong": null,
+      "jibun": "626"
+    },
+    {
+      "name": "강남드리움2차",
+      "province": "서울특별시",
+      "region": "동작구",
+      "legalDong": "사당동",
+      "jibun": "1051-6"
+    },
+    {
+      "name": "강남마을계룡리슈빌(7단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "604"
+    },
+    {
+      "name": "강남마을자연앤(4단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "600"
+    },
+    {
+      "name": "강남마을자연앤(6단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "603"
+    },
+    {
+      "name": "강남한양수자인(4단지)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "자곡동",
+      "jibun": "686"
+    },
+    {
+      "name": "강선마을10단지한양",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "75"
+    },
+    {
+      "name": "강선마을11단지태영",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "73"
+    },
+    {
+      "name": "강선마을12단지두진",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "83"
+    },
+    {
+      "name": "강선마을13단지뉴서울",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "81"
+    },
+    {
+      "name": "강선마을14단지두산",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "101"
+    },
+    {
+      "name": "강선마을15단지보성",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "84"
+    },
+    {
+      "name": "강선마을16단지동문",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "86"
+    },
+    {
+      "name": "강선마을17단지동성",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "90"
+    },
+    {
+      "name": "강선마을19단지우성",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "98"
+    },
+    {
+      "name": "강선마을1단지대우벽산",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "36"
+    },
+    {
+      "name": "강선마을2단지경남",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "38"
+    },
+    {
+      "name": "강선마을3단지한신",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "43"
+    },
+    {
+      "name": "강선마을4단지동신",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "46"
+    },
+    {
+      "name": "강선마을5단지건영동부",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "49"
+    },
+    {
+      "name": "강선마을6단지금호한양",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "50"
+    },
+    {
+      "name": "강선마을7단지삼환유원",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "65"
+    },
+    {
+      "name": "강선마을8단지럭키롯데",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "63"
+    },
+    {
+      "name": "강선마을9단지화성",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "60"
+    },
+    {
+      "name": "강일리버파크10단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "695"
+    },
+    {
+      "name": "강일리버파크1단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "665"
+    },
+    {
+      "name": "강일리버파크2단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "668"
+    },
+    {
+      "name": "강일리버파크3단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "674"
+    },
+    {
+      "name": "강일리버파크4단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "673"
+    },
+    {
+      "name": "강일리버파크5단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "670"
+    },
+    {
+      "name": "강일리버파크6단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "684"
+    },
+    {
+      "name": "강일리버파크7단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "686"
+    },
+    {
+      "name": "강일리버파크8단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "701"
+    },
+    {
+      "name": "강일리버파크9단지",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "강일동",
+      "jibun": "699"
+    },
+    {
+      "name": "개포우성3차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "652"
+    },
+    {
+      "name": "개포주공5단지",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "187"
+    },
+    {
+      "name": "개포주공6단지",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "185"
+    },
+    {
+      "name": "개포주공7단지",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "185"
+    },
+    {
+      "name": "거성리젠시2차",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "역촌동",
+      "jibun": "44-6"
+    },
+    {
+      "name": "건양1차",
+      "province": "경기도",
+      "region": "군포시",
+      "legalDong": null,
+      "jibun": "654-14"
+    },
+    {
+      "name": "건일장미5차",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "228-1"
+    },
+    {
+      "name": "건일장미6차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "228-4"
+    },
+    {
+      "name": "경남(2차)",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "118-9"
+    },
+    {
+      "name": "경남1차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "142-3"
+    },
+    {
+      "name": "경남2차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "649"
+    },
+    {
+      "name": "경남2차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "274"
+    },
+    {
+      "name": "경남3차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "145"
+    },
+    {
+      "name": "경남4차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "274-5"
+    },
+    {
+      "name": "경남아너스빌(문산선유4단지)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "선유리1409"
+    },
+    {
+      "name": "경남아너스빌1차",
+      "province": "서울특별시",
+      "region": "동작구",
+      "legalDong": "사당동",
+      "jibun": "1134"
+    },
+    {
+      "name": "경남아너스빌2차",
+      "province": "서울특별시",
+      "region": "동작구",
+      "legalDong": "사당동",
+      "jibun": "1135"
+    },
+    {
+      "name": "경성큰마을(1단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "묵현리596"
+    },
+    {
+      "name": "경성큰마을(2단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "묵현리604-4"
+    },
+    {
+      "name": "경희궁자이(1단지)",
+      "province": "서울특별시",
+      "region": "종로구",
+      "legalDong": "행촌동",
+      "jibun": "211"
+    },
+    {
+      "name": "경희궁자이(2단지)",
+      "province": "서울특별시",
+      "region": "종로구",
+      "legalDong": "홍파동",
+      "jibun": "199"
+    },
+    {
+      "name": "경희궁자이(3단지)",
+      "province": "서울특별시",
+      "region": "종로구",
+      "legalDong": "평동",
+      "jibun": "233"
+    },
+    {
+      "name": "경희궁자이(4단지)",
+      "province": "서울특별시",
+      "region": "종로구",
+      "legalDong": "교북동",
+      "jibun": "126"
+    },
+    {
+      "name": "고강1차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "246-2"
+    },
+    {
+      "name": "고강2차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "246-5"
+    },
+    {
+      "name": "고강3차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "249"
+    },
+    {
+      "name": "고산수자인디에스티지1단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "709"
+    },
+    {
+      "name": "고산수자인디에스티지2단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "725"
+    },
+    {
+      "name": "고양창릉 S-3블록 이익공유형 분양주택",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": "도내동",
+      "jibun": ""
+    },
+    {
+      "name": "고양창릉 S-4블록 공공분양주택",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": "도내동",
+      "jibun": ""
+    },
+    {
+      "name": "골든빌3차",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "성산동",
+      "jibun": "50-1"
+    },
+    {
+      "name": "골든빌6차",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "성산동",
+      "jibun": "65-2"
+    },
+    {
+      "name": "공감대2차(375-7)",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "375-7"
+    },
+    {
+      "name": "공릉1단지아파트",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "708"
+    },
+    {
+      "name": "과천수자인아파트(13단지)",
+      "province": "경기도",
+      "region": "과천시",
+      "legalDong": null,
+      "jibun": "641"
+    },
+    {
+      "name": "광교호반마을21단지",
+      "province": "경기도",
+      "region": "수원영통구",
+      "legalDong": null,
+      "jibun": "1032"
+    },
+    {
+      "name": "광남벨라스(1차)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "서교동",
+      "jibun": "465-1"
+    },
+    {
+      "name": "광명(4차)",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "26-5"
+    },
+    {
+      "name": "광명12차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "359"
+    },
+    {
+      "name": "광명13차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "359-2"
+    },
+    {
+      "name": "광장현대9단지",
+      "province": "서울특별시",
+      "region": "광진구",
+      "legalDong": "광장동",
+      "jibun": "576"
+    },
+    {
+      "name": "구월힐스테이트1단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "23"
+    },
+    {
+      "name": "구월힐스테이트3단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "20"
+    },
+    {
+      "name": "구의현대6단지",
+      "province": "서울특별시",
+      "region": "광진구",
+      "legalDong": "구의동",
+      "jibun": "610"
+    },
+    {
+      "name": "구파발10단지어울림(1011~1019동)BL3-1",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "27"
+    },
+    {
+      "name": "구파발10단지어울림(1020~1028동)임대BL3-5",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "29"
+    },
+    {
+      "name": "구파발9단지래미안(901~915동)임대BL3-3",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "22"
+    },
+    {
+      "name": "구파발9단지래미안(916~928동)BL3-2",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "25"
+    },
+    {
+      "name": "그린힐반도유보라아이비파크10(1단지)",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "744"
+    },
+    {
+      "name": "금강(3차)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "31-5"
+    },
+    {
+      "name": "금강1차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "361"
+    },
+    {
+      "name": "금강1차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "361-6"
+    },
+    {
+      "name": "금반석시티1차(158-854)",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "158-854"
+    },
+    {
+      "name": "금반석시티2차",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "98-9"
+    },
+    {
+      "name": "금촌주공7단지(1019-0)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1019"
+    },
+    {
+      "name": "금호(1차)",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1705"
+    },
+    {
+      "name": "금호어울림1단지",
+      "province": "경기도",
+      "region": "안성시",
+      "legalDong": null,
+      "jibun": "만정리785-6"
+    },
+    {
+      "name": "금호어울림2단지",
+      "province": "경기도",
+      "region": "안성시",
+      "legalDong": null,
+      "jibun": "만정리777-1"
+    },
+    {
+      "name": "금호어울림3단지",
+      "province": "경기도",
+      "region": "안성시",
+      "legalDong": null,
+      "jibun": "만정리786-1"
+    },
+    {
+      "name": "금호타운2차아파트",
+      "province": "서울특별시",
+      "region": "성동구",
+      "legalDong": "성수동2가",
+      "jibun": "832"
+    },
+    {
+      "name": "금화대우현대1단지",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "461"
+    },
+    {
+      "name": "금화마을5단지주공그린빌",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "454"
+    },
+    {
+      "name": "금화마을주공3단지",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "481"
+    },
+    {
+      "name": "금화마을주공그린빌6차",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "480"
+    },
+    {
+      "name": "길명1차아파트",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "456-9"
+    },
+    {
+      "name": "길명2차(455-4)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "455-4"
+    },
+    {
+      "name": "길음뉴타운2단지(푸르지오)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1280"
+    },
+    {
+      "name": "길음뉴타운3단지(푸르지오)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1280-1"
+    },
+    {
+      "name": "길음뉴타운4단지(e편한세상)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1281"
+    },
+    {
+      "name": "길음뉴타운5단지(래미안)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1282"
+    },
+    {
+      "name": "길음뉴타운6단지(래미안)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1283"
+    },
+    {
+      "name": "길음뉴타운7단지(두산위브)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1285"
+    },
+    {
+      "name": "길음뉴타운8단지(래미안)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1284"
+    },
+    {
+      "name": "길음뉴타운9단지(래미안)",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "길음동",
+      "jibun": "1286"
+    },
+    {
+      "name": "길훈1차",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "신곡리539-1"
+    },
+    {
+      "name": "김포센트럴헤센1단지",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "705"
+    },
+    {
+      "name": "김포한강신안실크밸리3차",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "696"
+    },
+    {
+      "name": "까치마을(1단지)(대우롯데선경)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "77"
+    },
+    {
+      "name": "까치마을(2단지)(주공)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "88"
+    },
+    {
+      "name": "까치마을(3단지)(신원)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "66"
+    },
+    {
+      "name": "까치마을(4단지)(롯데)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "63"
+    },
+    {
+      "name": "까치마을(4단지)(선경)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "63"
+    },
+    {
+      "name": "꽃메마을힐스테이트(4차3단지)",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1304"
+    },
+    {
+      "name": "꽃메마을힐스테이트(4차4단지)",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1303"
+    },
+    {
+      "name": "꽃메마을힐스테이트4차2단지",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1269"
+    },
+    {
+      "name": "꿈마을건영3차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "933-7"
+    },
+    {
+      "name": "꿈마을건영5차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "933-6"
+    },
+    {
+      "name": "남성1차현대타운",
+      "province": "서울특별시",
+      "region": "서초구",
+      "legalDong": "양재동",
+      "jibun": "16-19"
+    },
+    {
+      "name": "남양뉴타운양우내안애1차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "남양리2299"
+    },
+    {
+      "name": "남영라끄빌2차",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "128-26"
+    },
+    {
+      "name": "남촌풍림1차",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "320-2"
+    },
+    {
+      "name": "내대지마을주공5단지",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1367"
+    },
+    {
+      "name": "냇마을신영지웰(9단지)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "604-1"
+    },
+    {
+      "name": "네오빌3차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "219-4"
+    },
+    {
+      "name": "녹양2차동원아파트",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "106-16"
+    },
+    {
+      "name": "녹원마을새천년그린빌2단지",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "682"
+    },
+    {
+      "name": "느치미마을2단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "822"
+    },
+    {
+      "name": "느티마을(3단지)(공무원)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "88"
+    },
+    {
+      "name": "느티마을(4단지)(공무원)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "90"
+    },
+    {
+      "name": "늘푸른오스카빌1단지",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "552"
+    },
+    {
+      "name": "늘푸른오스카빌2단지",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "551"
+    },
+    {
+      "name": "늘푸른오스카빌3단지",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "550"
+    },
+    {
+      "name": "능곡풍림아이원1단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "70"
+    },
+    {
+      "name": "능곡풍림아이원2단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "60"
+    },
+    {
+      "name": "다산리버펠리체1단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4432"
+    },
+    {
+      "name": "다산리버펠리체2단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4432-2"
+    },
+    {
+      "name": "다산리버펠리체3단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4432-4"
+    },
+    {
+      "name": "다산한신더휴6단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "682"
+    },
+    {
+      "name": "다산한신더휴7단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "681"
+    },
+    {
+      "name": "다산한신더휴8단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "690"
+    },
+    {
+      "name": "다성2차",
+      "province": "경기도",
+      "region": "구리시",
+      "legalDong": null,
+      "jibun": "611-3"
+    },
+    {
+      "name": "다성씨티(1차)",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "명일동",
+      "jibun": "351-5"
+    },
+    {
+      "name": "다성이즈빌(명일4차)",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "명일동",
+      "jibun": "348-1"
+    },
+    {
+      "name": "다정마을신한에스빌1차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "866"
+    },
+    {
+      "name": "달빛마을3단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "865"
+    },
+    {
+      "name": "달빛마을4단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "868"
+    },
+    {
+      "name": "당동주공1단지(50년임대)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "당동리874"
+    },
+    {
+      "name": "당동주공2단지",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "당동리871"
+    },
+    {
+      "name": "당산삼성래미안4차",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "당산동5가",
+      "jibun": "42"
+    },
+    {
+      "name": "당산현대3차",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "당산동4가",
+      "jibun": "88"
+    },
+    {
+      "name": "당하풍림아이원1차",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "1099-3"
+    },
+    {
+      "name": "대림(1차)",
+      "province": "서울특별시",
+      "region": "성동구",
+      "legalDong": "응봉동",
+      "jibun": "100"
+    },
+    {
+      "name": "대림1차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "64-20"
+    },
+    {
+      "name": "대림e-편한세상(검단2지구66BL1L)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "661-1"
+    },
+    {
+      "name": "대림e-편한세상1차",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "202-1"
+    },
+    {
+      "name": "대림e-편한세상2차",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "213"
+    },
+    {
+      "name": "대림e-편한세상3차",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "213-25"
+    },
+    {
+      "name": "대림e편한세상(원당지구78BL1L)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "852-1"
+    },
+    {
+      "name": "대방노블랜드(7단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "692-1"
+    },
+    {
+      "name": "대방노블랜드(8단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "692-3"
+    },
+    {
+      "name": "대방노블랜드2차",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "714-5"
+    },
+    {
+      "name": "대성1차",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "양지리465-1"
+    },
+    {
+      "name": "대성유니드1차",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1198-23"
+    },
+    {
+      "name": "대성유니드2차",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1198-3"
+    },
+    {
+      "name": "대아2차아파트",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "492-1"
+    },
+    {
+      "name": "대아아파트1차",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "740"
+    },
+    {
+      "name": "대영장미1차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "230-1"
+    },
+    {
+      "name": "대영장미3차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "233-6"
+    },
+    {
+      "name": "대영장미7차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "255-5"
+    },
+    {
+      "name": "대우2차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "543-1"
+    },
+    {
+      "name": "대우푸르지오1차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "546"
+    },
+    {
+      "name": "대진2단지",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "22-1"
+    },
+    {
+      "name": "대화마을동문(3단지)",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "2573"
+    },
+    {
+      "name": "대화마을한라(2단지)",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1580"
+    },
+    {
+      "name": "더레이크시티부영4단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "729"
+    },
+    {
+      "name": "더샵엑스포10단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "16-4"
+    },
+    {
+      "name": "더샵엑스포6단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "15-2"
+    },
+    {
+      "name": "더샵엑스포9단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "16-6"
+    },
+    {
+      "name": "더샵지제역센트럴파크3BL",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "941"
+    },
+    {
+      "name": "덕원맨숀6차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "1425"
+    },
+    {
+      "name": "도덕파크타운1단지",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "625"
+    },
+    {
+      "name": "도덕파크타운2단지",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "625"
+    },
+    {
+      "name": "도봉주공1단지",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "도봉동",
+      "jibun": "649"
+    },
+    {
+      "name": "도원스위트빌1차",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "1087-12"
+    },
+    {
+      "name": "도원스위트빌2차",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "1087-15"
+    },
+    {
+      "name": "독산주공13단지",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "1088-1"
+    },
+    {
+      "name": "독산주공14단지",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "1088"
+    },
+    {
+      "name": "동도아카데미하우스2차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "연희동",
+      "jibun": "74-14"
+    },
+    {
+      "name": "동도아카데미하우스3차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "연희동",
+      "jibun": "75-1"
+    },
+    {
+      "name": "동문1단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "227"
+    },
+    {
+      "name": "동문1차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "70-1"
+    },
+    {
+      "name": "동문1차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "11-13"
+    },
+    {
+      "name": "동문1차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "11-27"
+    },
+    {
+      "name": "동문1차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "11-7"
+    },
+    {
+      "name": "동문2단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "222-4"
+    },
+    {
+      "name": "동문2차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "67"
+    },
+    {
+      "name": "동문2차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "16"
+    },
+    {
+      "name": "동문2차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "23"
+    },
+    {
+      "name": "동문3단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "189"
+    },
+    {
+      "name": "동문3차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "15-6"
+    },
+    {
+      "name": "동문3차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "17-16"
+    },
+    {
+      "name": "동문3차아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "24-24"
+    },
+    {
+      "name": "동문5차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "121"
+    },
+    {
+      "name": "동문굿모닝힐3차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "858"
+    },
+    {
+      "name": "동민캐슬7차",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "102-3"
+    },
+    {
+      "name": "동부센트레빌3단지",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "411"
+    },
+    {
+      "name": "동산마을21단지호반베르디움",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "344"
+    },
+    {
+      "name": "동산빌라(2차)",
+      "province": "서울특별시",
+      "region": "중구",
+      "legalDong": "신당동",
+      "jibun": "432-1952"
+    },
+    {
+      "name": "동성1차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "501"
+    },
+    {
+      "name": "동신1단지",
+      "province": "경기도",
+      "region": "수원장안구",
+      "legalDong": null,
+      "jibun": "395"
+    },
+    {
+      "name": "동신2단지",
+      "province": "경기도",
+      "region": "수원장안구",
+      "legalDong": null,
+      "jibun": "313-1"
+    },
+    {
+      "name": "동신3단지",
+      "province": "경기도",
+      "region": "수원장안구",
+      "legalDong": null,
+      "jibun": "303"
+    },
+    {
+      "name": "동아(1차)",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "70-5"
+    },
+    {
+      "name": "동아(2차)",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "70-123"
+    },
+    {
+      "name": "동아하이빌14차",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "미아동",
+      "jibun": "192-16"
+    },
+    {
+      "name": "동안마을(주공3단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "122"
+    },
+    {
+      "name": "동양1차",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "휘경동",
+      "jibun": "115"
+    },
+    {
+      "name": "동양메이저1차",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "55"
+    },
+    {
+      "name": "동양메이저2차",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "48-55"
+    },
+    {
+      "name": "동양정자파라곤(1단지)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "14-3"
+    },
+    {
+      "name": "동양정자파라곤(2단지)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "14-1"
+    },
+    {
+      "name": "동양정자파라곤(3단지)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "13-1"
+    },
+    {
+      "name": "동은4차",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "883-10"
+    },
+    {
+      "name": "동은5차",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "883-21"
+    },
+    {
+      "name": "동은6차",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "883-22"
+    },
+    {
+      "name": "동일1차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "홍제동",
+      "jibun": "312-240"
+    },
+    {
+      "name": "동일스카이씨티(37차)",
+      "province": "서울특별시",
+      "region": "중랑구",
+      "legalDong": "면목동",
+      "jibun": "1286-1"
+    },
+    {
+      "name": "동일하이빌1단지",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1310"
+    },
+    {
+      "name": "동일하이빌2단지",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1311"
+    },
+    {
+      "name": "동탄2아이파크1단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "1010"
+    },
+    {
+      "name": "동탄2아이파크2단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "1011"
+    },
+    {
+      "name": "동탄역반도유보라아이비파크2차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "716"
+    },
+    {
+      "name": "동탄역신안인스빌리베라1차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "545"
+    },
+    {
+      "name": "동편마을(1단지)",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "1672"
+    },
+    {
+      "name": "동편마을(3단지)",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "1651"
+    },
+    {
+      "name": "동편마을(4단지)",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "1669"
+    },
+    {
+      "name": "드림2차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "13-93"
+    },
+    {
+      "name": "드림3차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "944-10"
+    },
+    {
+      "name": "드림시드2차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "915-39"
+    },
+    {
+      "name": "드림시드아파트1차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "899-13"
+    },
+    {
+      "name": "라이프비취1차",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "27-107"
+    },
+    {
+      "name": "라이프비취2차",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "27-107"
+    },
+    {
+      "name": "라이프비취3차",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "27-107"
+    },
+    {
+      "name": "래미안그레이튼(진달래2차)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "역삼동",
+      "jibun": "762-3"
+    },
+    {
+      "name": "래미안노블클래스1단지",
+      "province": "경기도",
+      "region": "수원팔달구",
+      "legalDong": null,
+      "jibun": "384"
+    },
+    {
+      "name": "래미안노블클래스2단지",
+      "province": "경기도",
+      "region": "수원팔달구",
+      "legalDong": null,
+      "jibun": "465"
+    },
+    {
+      "name": "래미안포레(3단지)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "자곡동",
+      "jibun": "687"
+    },
+    {
+      "name": "럭키베스트빌2차(749-8)",
+      "province": "경기도",
+      "region": "군포시",
+      "legalDong": null,
+      "jibun": "749-8"
+    },
+    {
+      "name": "롯데1차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "내발산동",
+      "jibun": "728"
+    },
+    {
+      "name": "르네상스1차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "275-15"
+    },
+    {
+      "name": "르메이에르1차(344-1)",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "344-1"
+    },
+    {
+      "name": "리버뷰신안인스빌1단지",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "문래동4가",
+      "jibun": "67"
+    },
+    {
+      "name": "리버뷰신안인스빌2단지",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "문래동4가",
+      "jibun": "68"
+    },
+    {
+      "name": "마고정3단지센트레빌(301~309동)BL2-11",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "106"
+    },
+    {
+      "name": "마고정3단지센트레빌(310~322동)BL2-3",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "107"
+    },
+    {
+      "name": "마고정3단지센트레빌(323~335동)BL2-2",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "105"
+    },
+    {
+      "name": "마포그랑자이(1단지)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "대흥동",
+      "jibun": "806"
+    },
+    {
+      "name": "마포그랑자이(1단지,임대)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "대흥동",
+      "jibun": "806"
+    },
+    {
+      "name": "마포그랑자이(2단지)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "대흥동",
+      "jibun": "807"
+    },
+    {
+      "name": "마포그랑자이(2단지,임대)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "대흥동",
+      "jibun": "807"
+    },
+    {
+      "name": "마포래미안푸르지오1단지",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "아현동",
+      "jibun": "777"
+    },
+    {
+      "name": "마포래미안푸르지오2단지",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "아현동",
+      "jibun": "777"
+    },
+    {
+      "name": "마포래미안푸르지오3단지",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "아현동",
+      "jibun": "777"
+    },
+    {
+      "name": "마포래미안푸르지오4단지",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "아현동",
+      "jibun": "777"
+    },
+    {
+      "name": "만민하늘애2차",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "역촌동",
+      "jibun": "42-7"
+    },
+    {
+      "name": "만석2차",
+      "province": "인천광역시",
+      "region": "동구",
+      "legalDong": null,
+      "jibun": "71"
+    },
+    {
+      "name": "만수주공1단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "29"
+    },
+    {
+      "name": "만수주공2단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "29"
+    },
+    {
+      "name": "만수주공4단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "13"
+    },
+    {
+      "name": "만수주공5단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "17"
+    },
+    {
+      "name": "만수주공6단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "20"
+    },
+    {
+      "name": "만수주공아파트7단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "1005"
+    },
+    {
+      "name": "만현마을쌍용1차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "850"
+    },
+    {
+      "name": "망포마을쌍용1차",
+      "province": "경기도",
+      "region": "수원영통구",
+      "legalDong": null,
+      "jibun": "691"
+    },
+    {
+      "name": "매그놀리아(1차)",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "오금동",
+      "jibun": "81-2"
+    },
+    {
+      "name": "매그놀리아(2차)",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "오금동",
+      "jibun": "81-1"
+    },
+    {
+      "name": "명지2차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "홍은동",
+      "jibun": "277-95"
+    },
+    {
+      "name": "명지미래힐1단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "내기리697"
+    },
+    {
+      "name": "모아미래도1단지아파트",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "599"
+    },
+    {
+      "name": "모아미래도2단지아파트",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "593"
+    },
+    {
+      "name": "목동현대3차",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1279"
+    },
+    {
+      "name": "목련마을1단지(111,112동)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "165"
+    },
+    {
+      "name": "목련마을2단지대우선경",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "1052"
+    },
+    {
+      "name": "목련마을주공1단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "165"
+    },
+    {
+      "name": "목화(4단지)",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "중계동",
+      "jibun": "511-2"
+    },
+    {
+      "name": "무원마을1단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "773"
+    },
+    {
+      "name": "무원마을5단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "767"
+    },
+    {
+      "name": "무원마을7단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "699"
+    },
+    {
+      "name": "무원마을8단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "700"
+    },
+    {
+      "name": "무지개(10단지)(건영)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "222"
+    },
+    {
+      "name": "무지개(10단지)(삼성)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "222"
+    },
+    {
+      "name": "무지개(11단지)(금강센테리움)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "213"
+    },
+    {
+      "name": "무지개(12단지)(주공뜨란체)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "212"
+    },
+    {
+      "name": "무지개(1단지)(대림)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "211"
+    },
+    {
+      "name": "무지개(2단지)(엘지)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "202"
+    },
+    {
+      "name": "무지개(3단지)(건영)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "201"
+    },
+    {
+      "name": "무지개(3단지)(신한)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "201"
+    },
+    {
+      "name": "무지개(4단지)(주공)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "220"
+    },
+    {
+      "name": "무지개(5단지)(청구)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "221"
+    },
+    {
+      "name": "무지개(6단지)(건영)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "225"
+    },
+    {
+      "name": "무지개(7단지)(라이프)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "242"
+    },
+    {
+      "name": "무지개(8단지)(제일)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "243"
+    },
+    {
+      "name": "무지개(9단지)(동아)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "240"
+    },
+    {
+      "name": "무한레뷰8차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "204-45"
+    },
+    {
+      "name": "문정가락현대1차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "문정동",
+      "jibun": "3"
+    },
+    {
+      "name": "문정대우푸르지오1차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "문정동",
+      "jibun": "18"
+    },
+    {
+      "name": "문정대우푸르지오2차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "문정동",
+      "jibun": "19"
+    },
+    {
+      "name": "문촌마을10단지동부",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "17"
+    },
+    {
+      "name": "문촌마을11단지건영",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "15"
+    },
+    {
+      "name": "문촌마을12단지유승",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "138"
+    },
+    {
+      "name": "문촌마을13단지대우",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "136"
+    },
+    {
+      "name": "문촌마을14단지세경",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "133"
+    },
+    {
+      "name": "문촌마을15단지부영",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "135"
+    },
+    {
+      "name": "문촌마을16단지뉴삼익",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "117"
+    },
+    {
+      "name": "문촌마을17단지신안",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "120"
+    },
+    {
+      "name": "문촌마을18단지대원",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "128"
+    },
+    {
+      "name": "문촌마을19단지신우",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "126"
+    },
+    {
+      "name": "문촌마을1단지우성",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1"
+    },
+    {
+      "name": "문촌마을2단지라이프",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "5"
+    },
+    {
+      "name": "문촌마을3단지우성",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "32"
+    },
+    {
+      "name": "문촌마을4단지삼익",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "29"
+    },
+    {
+      "name": "문촌마을5단지쌍용한일",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "6"
+    },
+    {
+      "name": "문촌마을6단지기산쌍용",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "8"
+    },
+    {
+      "name": "문촌마을7단지주공",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "14"
+    },
+    {
+      "name": "문촌마을8단지동아",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "12"
+    },
+    {
+      "name": "문촌마을9단지주공",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "23"
+    },
+    {
+      "name": "문화1차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "214-7"
+    },
+    {
+      "name": "문화2차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "산27-1"
+    },
+    {
+      "name": "미도맨션3차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "601-1"
+    },
+    {
+      "name": "미도아파트2차",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "933"
+    },
+    {
+      "name": "미래타운2차",
+      "province": "경기도",
+      "region": "성남수정구",
+      "legalDong": null,
+      "jibun": "65"
+    },
+    {
+      "name": "미성1차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "414"
+    },
+    {
+      "name": "미성2차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "397"
+    },
+    {
+      "name": "민락센트럴15단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "895"
+    },
+    {
+      "name": "민락센트럴17단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "891"
+    },
+    {
+      "name": "박석고개1단지힐스테이트(101~111동)BL2-12",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "101"
+    },
+    {
+      "name": "박석고개1단지힐스테이트(101~111동)임대BL2-12",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "101"
+    },
+    {
+      "name": "박석고개1단지힐스테이트(112~115동)BL2-13",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "123"
+    },
+    {
+      "name": "박석고개1단지힐스테이트(116~131동)BL2-1",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "102"
+    },
+    {
+      "name": "박석고개1단지힐스테이트(116~131동)임대BL2-1",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "102"
+    },
+    {
+      "name": "반달마을두산위브1단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "880"
+    },
+    {
+      "name": "반달마을두산위브2단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "883"
+    },
+    {
+      "name": "반포주공1단지 3주구",
+      "province": "서울특별시",
+      "region": "서초구",
+      "legalDong": "반포동",
+      "jibun": "1109"
+    },
+    {
+      "name": "방배임광3차",
+      "province": "서울특별시",
+      "region": "서초구",
+      "legalDong": "방배동",
+      "jibun": "1010-1"
+    },
+    {
+      "name": "방화4단지",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "방화동",
+      "jibun": "831"
+    },
+    {
+      "name": "백설마을주공2단지",
+      "province": "경기도",
+      "region": "수원장안구",
+      "legalDong": null,
+      "jibun": "871-3"
+    },
+    {
+      "name": "백현마을2단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "545"
+    },
+    {
+      "name": "백현마을3단지(주공)임대",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "546"
+    },
+    {
+      "name": "백현마을4단지(주공)임대",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "553"
+    },
+    {
+      "name": "백현마을5단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "554"
+    },
+    {
+      "name": "백현마을6단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "555"
+    },
+    {
+      "name": "백현마을7단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "556"
+    },
+    {
+      "name": "백현마을8단지(대림)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "558"
+    },
+    {
+      "name": "백현마을9단지(e편한세상)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "525"
+    },
+    {
+      "name": "백현마을한라비발디(1차)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "596"
+    },
+    {
+      "name": "백현마을한라비발디(2차)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "662"
+    },
+    {
+      "name": "벽산3차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "547-1"
+    },
+    {
+      "name": "벽산첼시빌2차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "723"
+    },
+    {
+      "name": "별빛마을7단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "953"
+    },
+    {
+      "name": "별빛마을9단지(기산)",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "948"
+    },
+    {
+      "name": "별빛마을9단지(벽산)",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "948"
+    },
+    {
+      "name": "별빛마을9단지(코오롱)",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "948"
+    },
+    {
+      "name": "별빛마을9단지(한일)",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "948"
+    },
+    {
+      "name": "별빛마을웰카운티(10단지)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "601-1"
+    },
+    {
+      "name": "복사골2차",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "125"
+    },
+    {
+      "name": "봇들마을1단지(풍성신미주)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "705"
+    },
+    {
+      "name": "봇들마을2단지(이지더원)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "717"
+    },
+    {
+      "name": "봇들마을3단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "722"
+    },
+    {
+      "name": "봇들마을4단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "718"
+    },
+    {
+      "name": "봇들마을5단지(주공)임대",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "726"
+    },
+    {
+      "name": "봇들마을6단지(주공)임대",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "728"
+    },
+    {
+      "name": "봇들마을7단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "738"
+    },
+    {
+      "name": "봇들마을8단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "742"
+    },
+    {
+      "name": "봇들마을9단지(금호어울림)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "744"
+    },
+    {
+      "name": "봉우마을(주공5단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "235"
+    },
+    {
+      "name": "봉일천2차동문아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "봉일천리147-1"
+    },
+    {
+      "name": "부강1차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "304-3"
+    },
+    {
+      "name": "부강2차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "303-2"
+    },
+    {
+      "name": "부영사랑으로(3차)",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "옥길리1102"
+    },
+    {
+      "name": "부영사랑으로1단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "옥길리1110"
+    },
+    {
+      "name": "부영사랑으로2단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "옥길리1104"
+    },
+    {
+      "name": "부영아파트(1단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "714-2"
+    },
+    {
+      "name": "부영아파트(3단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "691"
+    },
+    {
+      "name": "부영아파트(5단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "715-1"
+    },
+    {
+      "name": "부영아파트(6단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "715-7"
+    },
+    {
+      "name": "부영아파트(9단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "692-6"
+    },
+    {
+      "name": "부천동부센트레빌1,2단지",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "409"
+    },
+    {
+      "name": "부천위브트레지움1단지",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "196"
+    },
+    {
+      "name": "부촌1차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "292-6"
+    },
+    {
+      "name": "부촌2차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "292-8"
+    },
+    {
+      "name": "부촌5차가동",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "152-6"
+    },
+    {
+      "name": "북수원이목지구 대방 디에트르 더 리체Ⅱ(A3BL)",
+      "province": "경기도",
+      "region": "수원장안구",
+      "legalDong": "이목동",
+      "jibun": ""
+    },
+    {
+      "name": "북한산래미안아파트(1단지)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "불광동",
+      "jibun": "638"
+    },
+    {
+      "name": "북한산래미안아파트(2단지)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "불광동",
+      "jibun": "637"
+    },
+    {
+      "name": "북한산아이파크5차",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "825"
+    },
+    {
+      "name": "불로금호어울림(불로지구39BL)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "798-1"
+    },
+    {
+      "name": "브라운스톤2차",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "630"
+    },
+    {
+      "name": "사당롯데캐슬2차",
+      "province": "서울특별시",
+      "region": "동작구",
+      "legalDong": "사당동",
+      "jibun": "1149"
+    },
+    {
+      "name": "사리현동문디이스트1단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "186"
+    },
+    {
+      "name": "사리현동문디이스트2단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "187"
+    },
+    {
+      "name": "사슴아파트1단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "jibun": "321"
+    },
+    {
+      "name": "사슴아파트2단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "jibun": "320-9"
+    },
+    {
+      "name": "사슴아파트3단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "jibun": "320-11"
+    },
+    {
+      "name": "산내마을10단지운정푸르지오",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1142"
+    },
+    {
+      "name": "산내마을13단지디에트르라포레",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1009"
+    },
+    {
+      "name": "산내마을3단지운정센트레빌",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "911"
+    },
+    {
+      "name": "산내마을7단지화성파크드림",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "898"
+    },
+    {
+      "name": "산내마을9단지힐스테이트운정",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1149"
+    },
+    {
+      "name": "산들마을2단지",
+      "province": "경기도",
+      "region": "성남중원구",
+      "legalDong": null,
+      "jibun": "602"
+    },
+    {
+      "name": "산들마을3단지",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1654"
+    },
+    {
+      "name": "산들마을4단지아이파크",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "694"
+    },
+    {
+      "name": "산들마을5단지",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1670"
+    },
+    {
+      "name": "산운마을10단지(대광로제비앙)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "949"
+    },
+    {
+      "name": "산운마을11단지(판교포레라움)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "922"
+    },
+    {
+      "name": "산운마을12단지판교센트럴포레와이시티",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "921"
+    },
+    {
+      "name": "산운마을13단지(태영)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "918"
+    },
+    {
+      "name": "산운마을14단지(경남아너스빌)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "916"
+    },
+    {
+      "name": "산운마을4단지(리가)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "899"
+    },
+    {
+      "name": "산운마을5단지(한성필하우스)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "989"
+    },
+    {
+      "name": "산운마을6단지(신동아파밀리에)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "988"
+    },
+    {
+      "name": "산운마을8단지(부영사랑으로)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "956"
+    },
+    {
+      "name": "산운마을9단지(대방노블랜드)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "958"
+    },
+    {
+      "name": "산호3차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "870-2"
+    },
+    {
+      "name": "삼보해피하임1단지(불로지구34BL1L)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "792-1"
+    },
+    {
+      "name": "삼보해피하임2단지(불로지구51BL1L)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "793-1"
+    },
+    {
+      "name": "삼산주공미래타운1차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "387-2"
+    },
+    {
+      "name": "삼산주공미래타운2차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "388-7"
+    },
+    {
+      "name": "삼산주공미래타운3차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "390-6"
+    },
+    {
+      "name": "삼산주공미래타운4차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "389-8"
+    },
+    {
+      "name": "삼산주공미래타운5차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "393-4"
+    },
+    {
+      "name": "삼산타운2단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "445-5"
+    },
+    {
+      "name": "삼산타운6단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "454-13"
+    },
+    {
+      "name": "삼산타운7단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "453-1"
+    },
+    {
+      "name": "삼성동힐스테이트1단지",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "삼성동",
+      "jibun": "16-2"
+    },
+    {
+      "name": "삼성래미안트리베라2단지",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "미아동",
+      "jibun": "812"
+    },
+    {
+      "name": "삼성마을2단지",
+      "province": "경기도",
+      "region": "군포시",
+      "legalDong": null,
+      "jibun": "1199"
+    },
+    {
+      "name": "삼성마을시티프라디움(3단지)",
+      "province": "경기도",
+      "region": "군포시",
+      "legalDong": null,
+      "jibun": "1020"
+    },
+    {
+      "name": "삼성베스트빌(31차)",
+      "province": "서울특별시",
+      "region": "광진구",
+      "legalDong": "중곡동",
+      "jibun": "186-9"
+    },
+    {
+      "name": "삼성산주공(주공3단지)",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1714"
+    },
+    {
+      "name": "삼성아트빌6차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "185-4"
+    },
+    {
+      "name": "삼송10단지동일스위트2차",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "661"
+    },
+    {
+      "name": "삼안리치10차",
+      "province": "서울특별시",
+      "region": "용산구",
+      "legalDong": "후암동",
+      "jibun": "123-51"
+    },
+    {
+      "name": "삼익(2단지)",
+      "province": "서울특별시",
+      "region": "구로구",
+      "legalDong": "고척동",
+      "jibun": "331"
+    },
+    {
+      "name": "삼익3차",
+      "province": "경기도",
+      "region": "부천소사구",
+      "legalDong": null,
+      "jibun": "204-1"
+    },
+    {
+      "name": "삼익4단지아파트",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "714"
+    },
+    {
+      "name": "삼익그린2차",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "명일동",
+      "jibun": "15"
+    },
+    {
+      "name": "삼익금광1차",
+      "province": "경기도",
+      "region": "성남중원구",
+      "legalDong": null,
+      "jibun": "3950"
+    },
+    {
+      "name": "삼호가든맨션(5차)",
+      "province": "서울특별시",
+      "region": "서초구",
+      "legalDong": "반포동",
+      "jibun": "30-1"
+    },
+    {
+      "name": "삼호한아름1차",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "115-1"
+    },
+    {
+      "name": "삼호한아름2차",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "125"
+    },
+    {
+      "name": "삼환1단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "983-1"
+    },
+    {
+      "name": "삼환2(삼환관교2단지)",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "13-10"
+    },
+    {
+      "name": "삼환2단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "966"
+    },
+    {
+      "name": "상갈메트로파크(금화마을4단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "463"
+    },
+    {
+      "name": "상록마을(3단지우성아파트)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "121"
+    },
+    {
+      "name": "상록마을(라이프1차)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "124"
+    },
+    {
+      "name": "상록마을(라이프2차)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "125"
+    },
+    {
+      "name": "상림마을6단지푸르지오(601~605동)BL1-8",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "3"
+    },
+    {
+      "name": "상림마을6단지푸르지오(606~614동)BL1-7",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "2"
+    },
+    {
+      "name": "상림마을6단지푸르지오(615~621동)BL1-6",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "1"
+    },
+    {
+      "name": "상림마을6단지푸르지오(622~629동)BL1-5",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "5"
+    },
+    {
+      "name": "상림마을7단지아이파크(701동)임대BL1-9",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "7"
+    },
+    {
+      "name": "상림마을7단지아이파크(702~705동)BL1-4",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "6"
+    },
+    {
+      "name": "상림마을7단지아이파크(706~708동)BL1-3",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "13"
+    },
+    {
+      "name": "상림마을7단지아이파크(709~712동)BL1-10",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "12"
+    },
+    {
+      "name": "상림마을7단지아이파크(713~718동)BL1-11",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "15"
+    },
+    {
+      "name": "상림마을7단지아이파크(719~729동)BL1-13",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "11"
+    },
+    {
+      "name": "상림마을7단지아이파크(730~742동)BL1-14",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "10"
+    },
+    {
+      "name": "상림마을8단지롯데캐슬(801~809동)BL1-2",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "14"
+    },
+    {
+      "name": "상림마을8단지롯데캐슬(810~820동)BL1-1",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "19"
+    },
+    {
+      "name": "상림마을8단지롯데캐슬(821~830동)BL1-12",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "20"
+    },
+    {
+      "name": "상아1차아파트",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "299"
+    },
+    {
+      "name": "상아1차아파트",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "오금동",
+      "jibun": "166"
+    },
+    {
+      "name": "상아2차아파트",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "300"
+    },
+    {
+      "name": "상아2차아파트",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "오금동",
+      "jibun": "165"
+    },
+    {
+      "name": "상우1차",
+      "province": "경기도",
+      "region": "여주시",
+      "legalDong": null,
+      "jibun": "377-1"
+    },
+    {
+      "name": "상우2차",
+      "province": "경기도",
+      "region": "여주시",
+      "legalDong": null,
+      "jibun": "377-6"
+    },
+    {
+      "name": "상지리츠빌3차",
+      "province": "서울특별시",
+      "region": "서초구",
+      "legalDong": "방배동",
+      "jibun": "843-15"
+    },
+    {
+      "name": "상지리츠빌카일룸2차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "청담동",
+      "jibun": "128-18"
+    },
+    {
+      "name": "상현마을금호베스트빌2단지",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "832"
+    },
+    {
+      "name": "상현마을현대성우1차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "851"
+    },
+    {
+      "name": "새꽃마을1단지뜨란채(972-0)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "972"
+    },
+    {
+      "name": "새진4차",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "봉천동",
+      "jibun": "180-374"
+    },
+    {
+      "name": "새진5차",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "봉천동",
+      "jibun": "180-376"
+    },
+    {
+      "name": "샘터마을1단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "973"
+    },
+    {
+      "name": "생연주공아파트(1단지)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "163"
+    },
+    {
+      "name": "서강1차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "홍은동",
+      "jibun": "186-22"
+    },
+    {
+      "name": "서능1차(101~103동)",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "207"
+    },
+    {
+      "name": "서수원울트라참누리파크1단지",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "375"
+    },
+    {
+      "name": "서수원울트라참누리파크2단지",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "377"
+    },
+    {
+      "name": "서정센텀퍼스티지(서정마을4단지)",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "1068"
+    },
+    {
+      "name": "서창베라체아파트(11단지)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "715"
+    },
+    {
+      "name": "서창퍼스트뷰(7단지)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "699"
+    },
+    {
+      "name": "서천마을4단지쌍용예가",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "823"
+    },
+    {
+      "name": "서초더샵포레(포레스타1단지)",
+      "province": "서울특별시",
+      "region": "서초구",
+      "legalDong": "내곡동",
+      "jibun": "411"
+    },
+    {
+      "name": "서해그랑블5단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "454-4"
+    },
+    {
+      "name": "선경1차(1동-7동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "506"
+    },
+    {
+      "name": "선경2차(8동-12동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "506"
+    },
+    {
+      "name": "선경3차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "602"
+    },
+    {
+      "name": "성내3차e-편한세상",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "성내동",
+      "jibun": "600"
+    },
+    {
+      "name": "성원1차",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "532-35"
+    },
+    {
+      "name": "성원2차이화",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "104-20"
+    },
+    {
+      "name": "성원3차",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "551-1"
+    },
+    {
+      "name": "성원5차",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "618-77"
+    },
+    {
+      "name": "성원대치2단지일반분양(11개동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "12"
+    },
+    {
+      "name": "성원아파트4단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "jibun": "322-1"
+    },
+    {
+      "name": "성재I캐슬2차",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "당산동",
+      "jibun": "121-134"
+    },
+    {
+      "name": "성저마을(동익1단지)",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "2212"
+    },
+    {
+      "name": "성현마을우미이노스빌2차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1329"
+    },
+    {
+      "name": "세광엔리치빌1차",
+      "province": "인천광역시",
+      "region": "강화군",
+      "legalDong": null,
+      "jibun": "창리663"
+    },
+    {
+      "name": "세아청솔3차",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "가업리99-1"
+    },
+    {
+      "name": "세종2차",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "94-12"
+    },
+    {
+      "name": "센트럴타운(3단지)",
+      "province": "경기도",
+      "region": "성남중원구",
+      "legalDong": null,
+      "jibun": "600"
+    },
+    {
+      "name": "소만마을1단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "796"
+    },
+    {
+      "name": "소만마을3단지(늘푸른아파트)",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "799"
+    },
+    {
+      "name": "소만마을9단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "793"
+    },
+    {
+      "name": "송내주공2단지",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "722-5"
+    },
+    {
+      "name": "송내주공3단지",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "664-6"
+    },
+    {
+      "name": "송내주공4단지",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "665-3"
+    },
+    {
+      "name": "송내주공5단지",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "696-3"
+    },
+    {
+      "name": "송도코오롱더프라우3단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "15-10"
+    },
+    {
+      "name": "송도푸르지오월드마크1단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "20-22"
+    },
+    {
+      "name": "송도푸르지오월드마크2단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "20-23"
+    },
+    {
+      "name": "송도푸르지오월드마크7단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "22-21"
+    },
+    {
+      "name": "송도푸르지오월드마크8단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "22-22"
+    },
+    {
+      "name": "송도풍림아이원1단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "2-7"
+    },
+    {
+      "name": "송도풍림아이원2단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "3-10"
+    },
+    {
+      "name": "송도풍림아이원3단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "3-13"
+    },
+    {
+      "name": "송도풍림아이원4단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "2-9"
+    },
+    {
+      "name": "송도풍림아이원6단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "3-40"
+    },
+    {
+      "name": "송산센트럴(송산주공7단지)",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "736-1"
+    },
+    {
+      "name": "송산주공1단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "547-3"
+    },
+    {
+      "name": "송산주공3단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "735-3"
+    },
+    {
+      "name": "송산팰리스(송산주공2단지)",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "731-2"
+    },
+    {
+      "name": "송파더센트레(위례22단지)",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "장지동",
+      "jibun": "879"
+    },
+    {
+      "name": "쇠재마을1단지풍림아이원(1008-0)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1008"
+    },
+    {
+      "name": "쇠재마을5단지뜨란채주공",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1003"
+    },
+    {
+      "name": "수산타운(2차)",
+      "province": "서울특별시",
+      "region": "중구",
+      "legalDong": "신당동",
+      "jibun": "432-2006"
+    },
+    {
+      "name": "수서1단지아파트",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "일원동",
+      "jibun": "711"
+    },
+    {
+      "name": "수원역센트럴어반시티아파트(수원센트럴타운3단지)",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "1280"
+    },
+    {
+      "name": "수원역해모로아파트(수원센트럴타운1단지)",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "1260"
+    },
+    {
+      "name": "수유벽산1차",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "수유동",
+      "jibun": "205"
+    },
+    {
+      "name": "수유벽산2차",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "수유동",
+      "jibun": "648"
+    },
+    {
+      "name": "숲속길마을7단지월드메르디앙센트럴파크",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1690"
+    },
+    {
+      "name": "숲속마을(7단지)",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1261"
+    },
+    {
+      "name": "숲속마을2단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1286"
+    },
+    {
+      "name": "숲속마을3단지(요진더포레스트)",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1283"
+    },
+    {
+      "name": "숲속마을5단지(I-PARK)",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1267"
+    },
+    {
+      "name": "숲속마을8단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1258"
+    },
+    {
+      "name": "승기마을,연수1차시영",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "582-2"
+    },
+    {
+      "name": "시영2단지(라이프)아파트",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "707"
+    },
+    {
+      "name": "시영3차(라이프)아파트",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "715"
+    },
+    {
+      "name": "시티파크(2단지)",
+      "province": "서울특별시",
+      "region": "용산구",
+      "legalDong": "한강로3가",
+      "jibun": "63-387"
+    },
+    {
+      "name": "시흥능곡자연앤(4단지)",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "554"
+    },
+    {
+      "name": "신내(10단지)",
+      "province": "서울특별시",
+      "region": "중랑구",
+      "legalDong": "신내동",
+      "jibun": "660"
+    },
+    {
+      "name": "신내아파트(12단지)",
+      "province": "서울특별시",
+      "region": "중랑구",
+      "legalDong": "상봉동",
+      "jibun": "481"
+    },
+    {
+      "name": "신대림자이1단지",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "대림동",
+      "jibun": "1121"
+    },
+    {
+      "name": "신대림자이2단지",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "대림동",
+      "jibun": "1122"
+    },
+    {
+      "name": "신림2차현대",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "551-9"
+    },
+    {
+      "name": "신부파스카4차",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "507"
+    },
+    {
+      "name": "신성미소지움3단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "448-1"
+    },
+    {
+      "name": "신세계2차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "1009-6"
+    },
+    {
+      "name": "신신(2차)",
+      "province": "서울특별시",
+      "region": "중구",
+      "legalDong": "신당동",
+      "jibun": "432-1957"
+    },
+    {
+      "name": "신안실크밸리1차(897-0)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "897"
+    },
+    {
+      "name": "신안인스빌1단지",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "일산리669"
+    },
+    {
+      "name": "신안인스빌2단지",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "일산리671"
+    },
+    {
+      "name": "신영통현대1차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "865-1"
+    },
+    {
+      "name": "신영통현대2차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "868"
+    },
+    {
+      "name": "신영통현대3차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "860"
+    },
+    {
+      "name": "신영통현대4차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "870"
+    },
+    {
+      "name": "신우아이딜(1차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리429"
+    },
+    {
+      "name": "신원1차",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "둔전리385"
+    },
+    {
+      "name": "신원2차",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "둔전리147"
+    },
+    {
+      "name": "신원당마을9단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "725"
+    },
+    {
+      "name": "신일1차",
+      "province": "경기도",
+      "region": "이천시",
+      "legalDong": null,
+      "jibun": "306"
+    },
+    {
+      "name": "신일2차",
+      "province": "경기도",
+      "region": "이천시",
+      "legalDong": null,
+      "jibun": "311-1"
+    },
+    {
+      "name": "신일해피트리(1차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리425"
+    },
+    {
+      "name": "신일해피트리(2차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리426"
+    },
+    {
+      "name": "신일해피트리2차(567)",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "567"
+    },
+    {
+      "name": "신일해피트리3차(568)",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "568"
+    },
+    {
+      "name": "신태양1차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "119-42"
+    },
+    {
+      "name": "신태양2차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "137-2"
+    },
+    {
+      "name": "신태양3차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "132-1"
+    },
+    {
+      "name": "신태양4차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "134-2"
+    },
+    {
+      "name": "신현대11차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "433"
+    },
+    {
+      "name": "신현대12차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "434"
+    },
+    {
+      "name": "신현대1차",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "97-129"
+    },
+    {
+      "name": "신현대9차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "426"
+    },
+    {
+      "name": "십정뜨란채1단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "608-4"
+    },
+    {
+      "name": "쌍령현대1차모닝사이드",
+      "province": "경기도",
+      "region": "광주시",
+      "legalDong": null,
+      "jibun": "353-9"
+    },
+    {
+      "name": "쌍용(3단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "621"
+    },
+    {
+      "name": "쌍용스윗닷홈(2단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "652"
+    },
+    {
+      "name": "쌍용스윗닷홈1단지",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "오금동",
+      "jibun": "29"
+    },
+    {
+      "name": "아이파크종암동1차",
+      "province": "서울특별시",
+      "region": "성북구",
+      "legalDong": "종암동",
+      "jibun": "130"
+    },
+    {
+      "name": "아주1차아파트",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "640-1"
+    },
+    {
+      "name": "안양동2차성원아파트",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "714-27"
+    },
+    {
+      "name": "안화동마을주공5단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "820"
+    },
+    {
+      "name": "안화동마을주공6단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "850"
+    },
+    {
+      "name": "안화동마을주공7단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "849"
+    },
+    {
+      "name": "안화동마을주공8단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "848"
+    },
+    {
+      "name": "안화동마을주공9단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "819"
+    },
+    {
+      "name": "양벌쌍용1차",
+      "province": "경기도",
+      "region": "광주시",
+      "legalDong": null,
+      "jibun": "285"
+    },
+    {
+      "name": "양우내안애1단지",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "선유리1353"
+    },
+    {
+      "name": "양우내안애2단지",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "선유리1356"
+    },
+    {
+      "name": "양우내안애3단지",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "선유리1352"
+    },
+    {
+      "name": "양주자이(6단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "688"
+    },
+    {
+      "name": "양주자이(7단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "689"
+    },
+    {
+      "name": "양주자이1단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "686-1"
+    },
+    {
+      "name": "양주자이2단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "684-1"
+    },
+    {
+      "name": "양주자이3단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "683-1"
+    },
+    {
+      "name": "양주자이5단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "681-1"
+    },
+    {
+      "name": "양지마을(1단지)(금호)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "34"
+    },
+    {
+      "name": "양지마을(2단지)(청구)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "36"
+    },
+    {
+      "name": "양지마을(3단지)(금호)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "27"
+    },
+    {
+      "name": "양지마을(5단지)(한양501-514)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "24"
+    },
+    {
+      "name": "양지마을(5단지)(한양515-529)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "24"
+    },
+    {
+      "name": "양지마을(6단지)(금호,청구)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "32"
+    },
+    {
+      "name": "양지마을(6단지)(한양603동)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "29"
+    },
+    {
+      "name": "어진마을한화꿈에그린(6단지)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "634-1"
+    },
+    {
+      "name": "에이스아파트(1차)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "334-1"
+    },
+    {
+      "name": "에이스아파트(2차)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "335"
+    },
+    {
+      "name": "에이스아파트(3차)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "350"
+    },
+    {
+      "name": "에이스아파트(4차)",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "352"
+    },
+    {
+      "name": "역곡4차e-편한세상",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "407"
+    },
+    {
+      "name": "역곡5차e-편한세상",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "408"
+    },
+    {
+      "name": "연꽃마을(4단지)",
+      "province": "경기도",
+      "region": "성남중원구",
+      "legalDong": null,
+      "jibun": "601"
+    },
+    {
+      "name": "연세리버빌6차",
+      "province": "서울특별시",
+      "region": "광진구",
+      "legalDong": "광장동",
+      "jibun": "184-1"
+    },
+    {
+      "name": "연수3차대우아파트",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "920-1"
+    },
+    {
+      "name": "염창1차보람더하임",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "염창동",
+      "jibun": "305"
+    },
+    {
+      "name": "염창1차한화꿈에그린",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "염창동",
+      "jibun": "281-22"
+    },
+    {
+      "name": "영동2차아파트",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "385-11"
+    },
+    {
+      "name": "영종주공스카이빌10단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2788-6"
+    },
+    {
+      "name": "영통로효성해링턴플레이스1차",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "828"
+    },
+    {
+      "name": "영화(6차)",
+      "province": "경기도",
+      "region": "군포시",
+      "legalDong": null,
+      "jibun": "769-1"
+    },
+    {
+      "name": "예성그린캐슬1차",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "남현동",
+      "jibun": "1084-1"
+    },
+    {
+      "name": "오산세교삼미마을16단지",
+      "province": "경기도",
+      "region": "오산시",
+      "legalDong": null,
+      "jibun": "897"
+    },
+    {
+      "name": "오스타파라곤1단지",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1558"
+    },
+    {
+      "name": "오스타파라곤2단지",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1561"
+    },
+    {
+      "name": "오스타파라곤3단지",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1555"
+    },
+    {
+      "name": "오포자이디오브(3단지)",
+      "province": "경기도",
+      "region": "광주시",
+      "legalDong": null,
+      "jibun": "704"
+    },
+    {
+      "name": "오포자이디오브(4단지)",
+      "province": "경기도",
+      "region": "광주시",
+      "legalDong": null,
+      "jibun": "705"
+    },
+    {
+      "name": "옥빛마을12단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "988"
+    },
+    {
+      "name": "옥빛마을13단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "987"
+    },
+    {
+      "name": "옥빛마을14단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "1004"
+    },
+    {
+      "name": "옥정역로제비앙메트로파크1단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "690"
+    },
+    {
+      "name": "옥정역로제비앙메트로파크2단지",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "693"
+    },
+    {
+      "name": "올림픽선수기자촌1단지",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "방이동",
+      "jibun": "89"
+    },
+    {
+      "name": "올림픽선수기자촌2단지",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "방이동",
+      "jibun": "89"
+    },
+    {
+      "name": "올림픽선수기자촌3단지",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "방이동",
+      "jibun": "89"
+    },
+    {
+      "name": "용산시티파크(1단지)",
+      "province": "서울특별시",
+      "region": "용산구",
+      "legalDong": "한강로3가",
+      "jibun": "63-389"
+    },
+    {
+      "name": "용인보정대림(1차)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "911-1"
+    },
+    {
+      "name": "용인보정대림(2차)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "909"
+    },
+    {
+      "name": "용인상하진흥더루벤스1단지",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "659"
+    },
+    {
+      "name": "용인상하진흥더루벤스2단지",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "660"
+    },
+    {
+      "name": "용인죽전성현마을주공3단지",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1233"
+    },
+    {
+      "name": "용진3차아파트",
+      "province": "인천광역시",
+      "region": "강화군",
+      "legalDong": null,
+      "jibun": "갑곳리394-1"
+    },
+    {
+      "name": "용현세아1차",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "390"
+    },
+    {
+      "name": "용현현대1차",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "46"
+    },
+    {
+      "name": "우남2차",
+      "province": "경기도",
+      "region": "부천원미구",
+      "legalDong": null,
+      "jibun": "69"
+    },
+    {
+      "name": "우리3차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "772-1"
+    },
+    {
+      "name": "우림필유1단지",
+      "province": "경기도",
+      "region": "가평군",
+      "legalDong": null,
+      "jibun": "대곡리360"
+    },
+    {
+      "name": "우림필유2단지",
+      "province": "경기도",
+      "region": "가평군",
+      "legalDong": null,
+      "jibun": "대곡리366-8"
+    },
+    {
+      "name": "우만주공1단지",
+      "province": "경기도",
+      "region": "수원팔달구",
+      "legalDong": null,
+      "jibun": "28"
+    },
+    {
+      "name": "우만주공2단지",
+      "province": "경기도",
+      "region": "수원팔달구",
+      "legalDong": null,
+      "jibun": "28"
+    },
+    {
+      "name": "우만주공3단지",
+      "province": "경기도",
+      "region": "수원팔달구",
+      "legalDong": null,
+      "jibun": "301"
+    },
+    {
+      "name": "우만주공4단지",
+      "province": "경기도",
+      "region": "수원팔달구",
+      "legalDong": null,
+      "jibun": "300"
+    },
+    {
+      "name": "우물골2단지두산위브(201~203동)BL2-4",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "82"
+    },
+    {
+      "name": "우물골2단지두산위브(204~208동)BL2-5",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "83"
+    },
+    {
+      "name": "우물골2단지두산위브(209~222동)BL2-8",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "88"
+    },
+    {
+      "name": "우물골2단지두산위브(223~244동)BL2-7",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "84"
+    },
+    {
+      "name": "우물골2단지두산위브(245~255동)BL2-6",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "81"
+    },
+    {
+      "name": "우미쁘띠린1차",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "199-3"
+    },
+    {
+      "name": "우미쁘띠린2차",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "199-10"
+    },
+    {
+      "name": "우성1차",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "735"
+    },
+    {
+      "name": "우성1차",
+      "province": "서울특별시",
+      "region": "동작구",
+      "legalDong": "신대방동",
+      "jibun": "565"
+    },
+    {
+      "name": "우성1차2차(294-35)",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "294-35"
+    },
+    {
+      "name": "우성3차(294-35)",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "294-35"
+    },
+    {
+      "name": "우성4차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "잠실동",
+      "jibun": "320"
+    },
+    {
+      "name": "우성4차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "306-3"
+    },
+    {
+      "name": "우성5차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "251-2"
+    },
+    {
+      "name": "욱일7차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "220-3"
+    },
+    {
+      "name": "욱일8차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "221-8"
+    },
+    {
+      "name": "원당LG자이(원당지구69BL1L)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "823-1"
+    },
+    {
+      "name": "원평5차",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "가산동",
+      "jibun": "239-22"
+    },
+    {
+      "name": "원흥호반베르디움더퍼스트5단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "1006"
+    },
+    {
+      "name": "월드메르디앙1단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "935"
+    },
+    {
+      "name": "월드메르디앙2단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "936"
+    },
+    {
+      "name": "유진스웰2단지",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "2147"
+    },
+    {
+      "name": "유환3차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "970-17"
+    },
+    {
+      "name": "윤창아파트1단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "633-67"
+    },
+    {
+      "name": "은동마을(주공1단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "164"
+    },
+    {
+      "name": "은빛1단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "1255"
+    },
+    {
+      "name": "은빛2단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "1256"
+    },
+    {
+      "name": "은빛3단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "1264"
+    },
+    {
+      "name": "은빛마을11단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "961"
+    },
+    {
+      "name": "은성2차",
+      "province": "경기도",
+      "region": "부천오정구",
+      "legalDong": null,
+      "jibun": "139-2"
+    },
+    {
+      "name": "은진스톤하우스21차",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "미아동",
+      "jibun": "198-16"
+    },
+    {
+      "name": "은진아파트5차",
+      "province": "서울특별시",
+      "region": "광진구",
+      "legalDong": "구의동",
+      "jibun": "57-3"
+    },
+    {
+      "name": "은천1단지아파트",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "봉천동",
+      "jibun": "1707"
+    },
+    {
+      "name": "은천2단지아파트",
+      "province": "서울특별시",
+      "region": "관악구",
+      "legalDong": "봉천동",
+      "jibun": "1707-1"
+    },
+    {
+      "name": "이너스5차동진",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "염창동",
+      "jibun": "304"
+    },
+    {
+      "name": "이천마장호반베르디움1차",
+      "province": "경기도",
+      "region": "이천시",
+      "legalDong": null,
+      "jibun": "오천리422"
+    },
+    {
+      "name": "이천마장호반베르디움2차",
+      "province": "경기도",
+      "region": "이천시",
+      "legalDong": null,
+      "jibun": "오천리413"
+    },
+    {
+      "name": "이충동부영1단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "589-5"
+    },
+    {
+      "name": "이충동부영2단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "593"
+    },
+    {
+      "name": "이충동부영3단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "594-2"
+    },
+    {
+      "name": "이편한세상신촌(1단지)",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "1013"
+    },
+    {
+      "name": "이편한세상신촌(2단지)",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "1013"
+    },
+    {
+      "name": "이편한세상신촌(3단지)",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "1013"
+    },
+    {
+      "name": "이편한세상신촌(4단지)",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "1013"
+    },
+    {
+      "name": "인덕원대림1차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "93-1"
+    },
+    {
+      "name": "인덕원센트럴자이1단지",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "844"
+    },
+    {
+      "name": "인덕원센트럴자이2단지",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "844"
+    },
+    {
+      "name": "인덕원숲속마을3단지",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "645"
+    },
+    {
+      "name": "인덕원숲속마을4단지",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "646"
+    },
+    {
+      "name": "인덕원숲속마을5단지",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "649"
+    },
+    {
+      "name": "인천가좌두산위브트레지움1,2단지",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "611"
+    },
+    {
+      "name": "인천석남동어울림2차",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "527-25"
+    },
+    {
+      "name": "인천송도힐스테이트3단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "21-59"
+    },
+    {
+      "name": "인천송도힐스테이트4단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "21-60"
+    },
+    {
+      "name": "인천송도힐스테이트5단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "21-64"
+    },
+    {
+      "name": "인천송도힐스테이트6단지",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "21-65"
+    },
+    {
+      "name": "인천청라국제도시호반베르디움6차(A-3블럭)",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "84-6"
+    },
+    {
+      "name": "인택스빌3차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "방이동",
+      "jibun": "186-12"
+    },
+    {
+      "name": "인현마을힐스테이트(7차1단지)",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1151"
+    },
+    {
+      "name": "인현마을힐스테이트(7차2단지)",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1152"
+    },
+    {
+      "name": "일광2차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "343-21"
+    },
+    {
+      "name": "일산1차현대홈타운",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "645"
+    },
+    {
+      "name": "임광한마음1차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "895"
+    },
+    {
+      "name": "자연앤꿈에그린5단지아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "당동리909"
+    },
+    {
+      "name": "자연앤꿈에그린6단지아파트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "당동리930"
+    },
+    {
+      "name": "자연앤자이1단지",
+      "province": "경기도",
+      "region": "수원영통구",
+      "legalDong": null,
+      "jibun": "1367"
+    },
+    {
+      "name": "자연앤자이2단지",
+      "province": "경기도",
+      "region": "수원영통구",
+      "legalDong": null,
+      "jibun": "1353"
+    },
+    {
+      "name": "자연앤자이3단지",
+      "province": "경기도",
+      "region": "수원영통구",
+      "legalDong": null,
+      "jibun": "1339"
+    },
+    {
+      "name": "작전현대1차",
+      "province": "인천광역시",
+      "region": "계양구",
+      "legalDong": null,
+      "jibun": "111"
+    },
+    {
+      "name": "장미8차",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "873"
+    },
+    {
+      "name": "적성4차",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "103"
+    },
+    {
+      "name": "적성5차",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "103-1"
+    },
+    {
+      "name": "전원마을(월드3차1단지)",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1436"
+    },
+    {
+      "name": "전원마을(월드4차2단지)",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1435"
+    },
+    {
+      "name": "전원마을(월드5차3단지)",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1439"
+    },
+    {
+      "name": "전원마을(월드6차4단지)",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "1434"
+    },
+    {
+      "name": "정든마을(1단지)(동아)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "200"
+    },
+    {
+      "name": "정든마을(2단지)(동아)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "198"
+    },
+    {
+      "name": "정든마을(4단지)(우성)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "197"
+    },
+    {
+      "name": "정든마을(5단지)(신화)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "192"
+    },
+    {
+      "name": "정든마을(6단지)(우성)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "198"
+    },
+    {
+      "name": "정든마을(6단지)(한진)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "191"
+    },
+    {
+      "name": "정든마을(7단지)(한진)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "194"
+    },
+    {
+      "name": "정든마을(8단지)(한진)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "192"
+    },
+    {
+      "name": "정우팰리스2차",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "111-16"
+    },
+    {
+      "name": "정은스카이빌2차",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신월동",
+      "jibun": "1051"
+    },
+    {
+      "name": "정은스카이빌2차",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1304"
+    },
+    {
+      "name": "정익제이원(4차)",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "불광동",
+      "jibun": "484-56"
+    },
+    {
+      "name": "정익제이원6차",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "대조동",
+      "jibun": "186-12"
+    },
+    {
+      "name": "제각말5단지푸르지오(501~513동)BL3-8",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "154"
+    },
+    {
+      "name": "제각말5단지푸르지오(514~521동)BL3-7",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "155"
+    },
+    {
+      "name": "제각말5단지푸르지오(522~528동)BL3-6",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "94"
+    },
+    {
+      "name": "제각말5단지푸르지오(529~542동)BL2-9",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "92"
+    },
+    {
+      "name": "제일풍경채제이드카운티2단지",
+      "province": "경기도",
+      "region": "부천소사구",
+      "legalDong": null,
+      "jibun": "739-1"
+    },
+    {
+      "name": "조양아파트(6차)",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "전대리368"
+    },
+    {
+      "name": "조은1차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "1-1201"
+    },
+    {
+      "name": "조은2차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "북아현동",
+      "jibun": "1-1836"
+    },
+    {
+      "name": "조은마을(6단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "580"
+    },
+    {
+      "name": "주공(9단지)",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "672"
+    },
+    {
+      "name": "주공12단지(산뒤마을)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "600-1"
+    },
+    {
+      "name": "주공13,14단지아파트",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "1079"
+    },
+    {
+      "name": "주공13단지(푸르내마을)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "600-9"
+    },
+    {
+      "name": "주공14단지(등대마을)",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "599-1"
+    },
+    {
+      "name": "주공17단지",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "38"
+    },
+    {
+      "name": "주공19단지(창동리버타운)",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "27"
+    },
+    {
+      "name": "주공1단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "현화리843-1"
+    },
+    {
+      "name": "주공1단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "809"
+    },
+    {
+      "name": "주공1단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "564-1"
+    },
+    {
+      "name": "주공1단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "359"
+    },
+    {
+      "name": "주공2단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "현화리842"
+    },
+    {
+      "name": "주공2단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "563-3"
+    },
+    {
+      "name": "주공3단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "93-9"
+    },
+    {
+      "name": "주공3단지",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "번동",
+      "jibun": "237"
+    },
+    {
+      "name": "주공3단지아파트",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "602"
+    },
+    {
+      "name": "주공4단지",
+      "province": "서울특별시",
+      "region": "강북구",
+      "legalDong": "번동",
+      "jibun": "234"
+    },
+    {
+      "name": "주공7단지아파트",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "581"
+    },
+    {
+      "name": "주공8단지",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "1005"
+    },
+    {
+      "name": "주공9단지",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "790"
+    },
+    {
+      "name": "주공9단지아파트",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "584"
+    },
+    {
+      "name": "주공그린빌10단지",
+      "province": "경기도",
+      "region": "안산상록구",
+      "legalDong": null,
+      "jibun": "664"
+    },
+    {
+      "name": "주공그린빌13단지",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "724"
+    },
+    {
+      "name": "주공그린빌14단지",
+      "province": "경기도",
+      "region": "안산단원구",
+      "legalDong": null,
+      "jibun": "725"
+    },
+    {
+      "name": "주공삼산타운4단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "456-8"
+    },
+    {
+      "name": "주공스카이빌12단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2786-1"
+    },
+    {
+      "name": "주공스카이빌7단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2709-3"
+    },
+    {
+      "name": "주공아파트3단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "퇴계원리367"
+    },
+    {
+      "name": "주공아파트4단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "퇴계원리366"
+    },
+    {
+      "name": "주공아파트5단지",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "잠실동",
+      "jibun": "27"
+    },
+    {
+      "name": "주안태화2차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "26-8"
+    },
+    {
+      "name": "주원마을(주공2단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "121-2"
+    },
+    {
+      "name": "죽전현대1차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "89-1"
+    },
+    {
+      "name": "중산마을1단지(두산)",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1555"
+    },
+    {
+      "name": "중산마을3단지(일신)",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1554-2"
+    },
+    {
+      "name": "중산마을9단지두산한성",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1566-2"
+    },
+    {
+      "name": "증포동한솔솔파크2차",
+      "province": "경기도",
+      "region": "이천시",
+      "legalDong": null,
+      "jibun": "478"
+    },
+    {
+      "name": "지행주공1단지",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "270-4"
+    },
+    {
+      "name": "지행주공2단지",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "270-3"
+    },
+    {
+      "name": "지행현대1차아파트",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "282-5"
+    },
+    {
+      "name": "지행현대2차아파트",
+      "province": "경기도",
+      "region": "동두천시",
+      "legalDong": null,
+      "jibun": "282-3"
+    },
+    {
+      "name": "진도1차",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "1002"
+    },
+    {
+      "name": "진도2차",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "1133"
+    },
+    {
+      "name": "진안골마을주공10단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "908"
+    },
+    {
+      "name": "진안골마을주공11단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "911"
+    },
+    {
+      "name": "진안골마을주공12단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "910"
+    },
+    {
+      "name": "진위역 서희스타힐스 더 파크뷰(3차)",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": "갈곶리",
+      "jibun": "239-60"
+    },
+    {
+      "name": "진주(10차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-36"
+    },
+    {
+      "name": "진주(1차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-5"
+    },
+    {
+      "name": "진주(2차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-25"
+    },
+    {
+      "name": "진주(3차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-12"
+    },
+    {
+      "name": "진주(4차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-11"
+    },
+    {
+      "name": "진주(5차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리632-1"
+    },
+    {
+      "name": "진주(6차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리632"
+    },
+    {
+      "name": "진주(7차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-40"
+    },
+    {
+      "name": "진주(8차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-30"
+    },
+    {
+      "name": "진주(9차)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "오남리683-37"
+    },
+    {
+      "name": "진주브라운2차",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "585-7"
+    },
+    {
+      "name": "진주하이츠2차",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "역촌동",
+      "jibun": "10-83"
+    },
+    {
+      "name": "진흥5차",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "328-5"
+    },
+    {
+      "name": "참아름2단지",
+      "province": "경기도",
+      "region": "안성시",
+      "legalDong": null,
+      "jibun": "만정리783-2"
+    },
+    {
+      "name": "참아름5단지",
+      "province": "경기도",
+      "region": "안성시",
+      "legalDong": null,
+      "jibun": "만정리788-4"
+    },
+    {
+      "name": "참존1차(419-3)",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "419-3"
+    },
+    {
+      "name": "창동주공18단지",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "30"
+    },
+    {
+      "name": "창동주공1단지",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "305"
+    },
+    {
+      "name": "창동주공2단지",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "316"
+    },
+    {
+      "name": "창동주공3단지(해등마을)",
+      "province": "서울특별시",
+      "region": "도봉구",
+      "legalDong": "창동",
+      "jibun": "347"
+    },
+    {
+      "name": "창현두산1단지아파트",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "창현리757"
+    },
+    {
+      "name": "창현두산2단지아파트",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "창현리745"
+    },
+    {
+      "name": "책향기마을12단지진흥효자",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1702"
+    },
+    {
+      "name": "책향기마을13단지경남아너스빌",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1704"
+    },
+    {
+      "name": "책향기마을14단지우남퍼스트빌(1711)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1711"
+    },
+    {
+      "name": "책향기마을15단지상록데시앙",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1708"
+    },
+    {
+      "name": "천우네오젠5차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "내발산동",
+      "jibun": "663-2"
+    },
+    {
+      "name": "천우네오젠6차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "내발산동",
+      "jibun": "670-17"
+    },
+    {
+      "name": "청구1차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "홍제동",
+      "jibun": "453"
+    },
+    {
+      "name": "청구2차",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "홍제동",
+      "jibun": "453-1"
+    },
+    {
+      "name": "청담대우로얄카운티5차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "청담동",
+      "jibun": "59-13"
+    },
+    {
+      "name": "청담마을(주공4단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "210-2"
+    },
+    {
+      "name": "청라지구중흥S-CLASS1단지",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "116-4"
+    },
+    {
+      "name": "청라지구중흥S-CLASS2단지",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "165-13"
+    },
+    {
+      "name": "청백아파트4단지",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "jibun": "781"
+    },
+    {
+      "name": "청석마을8단지동문굿모닝힐",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "982"
+    },
+    {
+      "name": "청석마을9단지대원효성",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "986"
+    },
+    {
+      "name": "청솔마을(주공9단지)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "133"
+    },
+    {
+      "name": "청학주공(1단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리420"
+    },
+    {
+      "name": "청학주공(2단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리419"
+    },
+    {
+      "name": "청학주공(3단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리409"
+    },
+    {
+      "name": "청학주공(4단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리411"
+    },
+    {
+      "name": "청학주공(5단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리412"
+    },
+    {
+      "name": "청학주공(6단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리350-1"
+    },
+    {
+      "name": "청학주공(7단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "청학리353-1"
+    },
+    {
+      "name": "초당마을삼부르네상스12단지아파트(코아루)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "1047"
+    },
+    {
+      "name": "초당마을삼부르네상스13단지아파트(코아루)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "1046"
+    },
+    {
+      "name": "초롱꽃마을12단지e편한세상운정어반프라임",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "2129"
+    },
+    {
+      "name": "초롱꽃마을13단지디에트르더퍼스트",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "2119"
+    },
+    {
+      "name": "초롱꽃마을6단지금강펜테리움",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "2071"
+    },
+    {
+      "name": "초원마을성원상떼빌2차",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "500"
+    },
+    {
+      "name": "충무로엘크루메크로시티2차",
+      "province": "서울특별시",
+      "region": "중구",
+      "legalDong": "충무로5가",
+      "jibun": "36-2"
+    },
+    {
+      "name": "코오롱(1차)",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "성내동",
+      "jibun": "196-8"
+    },
+    {
+      "name": "코오롱하늘채(5단지)",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "597"
+    },
+    {
+      "name": "킨텍스자이(1단지)",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "1499"
+    },
+    {
+      "name": "킨텍스휴먼빌(5단지)",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "2570"
+    },
+    {
+      "name": "킨텍스휴먼빌(6단지)",
+      "province": "경기도",
+      "region": "고양일산서구",
+      "legalDong": null,
+      "jibun": "2570"
+    },
+    {
+      "name": "탑캐슬13차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "816-4"
+    },
+    {
+      "name": "탑캐슬17차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "876-3"
+    },
+    {
+      "name": "탑캐슬19차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "827-5"
+    },
+    {
+      "name": "태산1차",
+      "province": "경기도",
+      "region": "안성시",
+      "legalDong": null,
+      "jibun": "용두리683"
+    },
+    {
+      "name": "태솔타운(1차)",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "344-8"
+    },
+    {
+      "name": "태영아이원3차",
+      "province": "경기도",
+      "region": "수원권선구",
+      "legalDong": null,
+      "jibun": "884-3"
+    },
+    {
+      "name": "태천해오름15차",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "성내동",
+      "jibun": "422"
+    },
+    {
+      "name": "태천해오름18차",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "길동",
+      "jibun": "83-2"
+    },
+    {
+      "name": "태평1차",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "537"
+    },
+    {
+      "name": "태평2차",
+      "province": "인천광역시",
+      "region": "남동구",
+      "legalDong": null,
+      "jibun": "538"
+    },
+    {
+      "name": "태평샹베르1차",
+      "province": "인천광역시",
+      "region": "서구",
+      "legalDong": null,
+      "jibun": "722-1"
+    },
+    {
+      "name": "태현아파트3차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "1-71"
+    },
+    {
+      "name": "텐즈힐(1단지)",
+      "province": "서울특별시",
+      "region": "성동구",
+      "legalDong": "하왕십리동",
+      "jibun": "1066"
+    },
+    {
+      "name": "텐즈힐(2단지)",
+      "province": "서울특별시",
+      "region": "성동구",
+      "legalDong": "상왕십리동",
+      "jibun": "811"
+    },
+    {
+      "name": "토토타워(5차)",
+      "province": "서울특별시",
+      "region": "중구",
+      "legalDong": "신당동",
+      "jibun": "432-1061"
+    },
+    {
+      "name": "트리우스광명(1단지)",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": "광명동",
+      "jibun": "12-2"
+    },
+    {
+      "name": "파라다이스2단지",
+      "province": "경기도",
+      "region": "광주시",
+      "legalDong": null,
+      "jibun": "123-1"
+    },
+    {
+      "name": "판교알파리움1단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "531"
+    },
+    {
+      "name": "판교알파리움2단지",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "530"
+    },
+    {
+      "name": "판교원마을11단지(힐스테이트)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "513"
+    },
+    {
+      "name": "판교원마을12단지(힐스테이트)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "494"
+    },
+    {
+      "name": "판교원마을2단지(푸르지오)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "623"
+    },
+    {
+      "name": "판교원마을3단지(푸르지오)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "629"
+    },
+    {
+      "name": "판교원마을5단지(푸르지오)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "634"
+    },
+    {
+      "name": "판교원마을6단지(진원로제비앙)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "635"
+    },
+    {
+      "name": "판교원마을7단지(모아미래도)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "637"
+    },
+    {
+      "name": "판교원마을8단지(상록)임대",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "638"
+    },
+    {
+      "name": "판교원마을9단지(한림풀에버)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "585"
+    },
+    {
+      "name": "평내마을중흥에스-클래스(1단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "599"
+    },
+    {
+      "name": "평내마을중흥에스-클래스(2단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "606"
+    },
+    {
+      "name": "평내마을중흥에스-클래스(3단지)",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "608"
+    },
+    {
+      "name": "평택소사벌반도유보라아이비파크1단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "722"
+    },
+    {
+      "name": "평택소사벌반도유보라아이비파크2단지",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "720"
+    },
+    {
+      "name": "평택화양 서희스타힐스 센트럴파크 2차",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": "화양리",
+      "jibun": "산184-2"
+    },
+    {
+      "name": "포일숲속마을2단지",
+      "province": "경기도",
+      "region": "의왕시",
+      "legalDong": null,
+      "jibun": "652"
+    },
+    {
+      "name": "폭포동4단지힐스테이트(401~407동)임대BL2-10",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "113"
+    },
+    {
+      "name": "폭포동4단지힐스테이트(408~422동)BL3-9",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "140"
+    },
+    {
+      "name": "폭포동4단지힐스테이트(423~425동)BL3-10",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "132"
+    },
+    {
+      "name": "폭포동4단지힐스테이트(426~428동)BL3-11",
+      "province": "서울특별시",
+      "region": "은평구",
+      "legalDong": "진관동",
+      "jibun": "135"
+    },
+    {
+      "name": "푸르지오1차",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "471-1"
+    },
+    {
+      "name": "푸르지오2차",
+      "province": "경기도",
+      "region": "안산상록구",
+      "legalDong": null,
+      "jibun": "664-1"
+    },
+    {
+      "name": "푸른마을3단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "719"
+    },
+    {
+      "name": "풍림(1차)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "삼성동",
+      "jibun": "106"
+    },
+    {
+      "name": "풍림아이원1단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2745-2"
+    },
+    {
+      "name": "풍림아이원1차101동(910-3)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "910-3"
+    },
+    {
+      "name": "풍림아이원1차103동(910-5)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "910-5"
+    },
+    {
+      "name": "풍림아이원2단지1차",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2748-1"
+    },
+    {
+      "name": "풍림아이원2단지2차",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2744-1"
+    },
+    {
+      "name": "풍림아이원2차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "910-6"
+    },
+    {
+      "name": "풍림아이원2차",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "910-7"
+    },
+    {
+      "name": "풍림아이원3단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2744-2"
+    },
+    {
+      "name": "풍림아이원5단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2743-1"
+    },
+    {
+      "name": "풍림아이원6-1단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2708-1"
+    },
+    {
+      "name": "풍림아이원6-2단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2708-8"
+    },
+    {
+      "name": "풍림아이원8단지",
+      "province": "인천광역시",
+      "region": "중구",
+      "legalDong": null,
+      "jibun": "2787-2"
+    },
+    {
+      "name": "풍무자이1단지",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "764"
+    },
+    {
+      "name": "풍무자이2단지",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "766"
+    },
+    {
+      "name": "플루리움1단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4002-1"
+    },
+    {
+      "name": "플루리움2단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4002-1"
+    },
+    {
+      "name": "플루리움3단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4002-1"
+    },
+    {
+      "name": "플루리움4,5단지",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "4002-1"
+    },
+    {
+      "name": "하나2차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "682-1"
+    },
+    {
+      "name": "하늘마을2단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1700"
+    },
+    {
+      "name": "하늘마을주공5단지",
+      "province": "경기도",
+      "region": "고양일산동구",
+      "legalDong": null,
+      "jibun": "1800"
+    },
+    {
+      "name": "하안주공13단지",
+      "province": "경기도",
+      "region": "광명시",
+      "legalDong": null,
+      "jibun": "200"
+    },
+    {
+      "name": "하얀마을(5단지)(주공)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "110"
+    },
+    {
+      "name": "학마을1단지",
+      "province": "서울특별시",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1293"
+    },
+    {
+      "name": "한강그린1차아파트",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "236-2"
+    },
+    {
+      "name": "한강능곡역성원상떼빌2차",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "347-7"
+    },
+    {
+      "name": "한보라마을9단지경남아너스빌",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "679"
+    },
+    {
+      "name": "한빛골드빌1차",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "길동",
+      "jibun": "384-1"
+    },
+    {
+      "name": "한빛마을4단지롯데캐슬Ⅱ",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1015"
+    },
+    {
+      "name": "한빛마을8단지아모리움",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1031"
+    },
+    {
+      "name": "한빛마을9단지롯데캐슬1차",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1016"
+    },
+    {
+      "name": "한서1차",
+      "province": "서울특별시",
+      "region": "강서구",
+      "legalDong": "내발산동",
+      "jibun": "716-5"
+    },
+    {
+      "name": "한솔마을(1단지)(청구)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "110"
+    },
+    {
+      "name": "한솔마을(2단지)(LG)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "111"
+    },
+    {
+      "name": "한솔마을(3단지)(한일)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "107"
+    },
+    {
+      "name": "한솔마을(4단지)(주공)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "102"
+    },
+    {
+      "name": "한솔마을(5단지)(주공)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "112"
+    },
+    {
+      "name": "한솔마을(6단지)(주공)",
+      "province": "경기도",
+      "region": "성남분당구",
+      "legalDong": null,
+      "jibun": "117"
+    },
+    {
+      "name": "한솔애리즈3차",
+      "province": "서울특별시",
+      "region": "강동구",
+      "legalDong": "성내동",
+      "jibun": "420-2"
+    },
+    {
+      "name": "한신1차",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "10-1"
+    },
+    {
+      "name": "한신1차",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "135"
+    },
+    {
+      "name": "한신2차",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "451"
+    },
+    {
+      "name": "한신3차",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "458"
+    },
+    {
+      "name": "한신4차",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "상계동",
+      "jibun": "995"
+    },
+    {
+      "name": "한신그린1차",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "용정리750-1"
+    },
+    {
+      "name": "한신그린2차",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "용정리750-5"
+    },
+    {
+      "name": "한신그린3차",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "용정리751-5"
+    },
+    {
+      "name": "한신그린4차",
+      "province": "경기도",
+      "region": "남양주시",
+      "legalDong": null,
+      "jibun": "용정리790"
+    },
+    {
+      "name": "한신휴플러스2차",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "34"
+    },
+    {
+      "name": "한신휴플러스3차",
+      "province": "경기도",
+      "region": "안양만안구",
+      "legalDong": null,
+      "jibun": "37"
+    },
+    {
+      "name": "한아름1차(가,나동)",
+      "province": "경기도",
+      "region": "부천소사구",
+      "legalDong": null,
+      "jibun": "3-16"
+    },
+    {
+      "name": "한아름1차다동",
+      "province": "경기도",
+      "region": "부천소사구",
+      "legalDong": null,
+      "jibun": "110-21"
+    },
+    {
+      "name": "한양1차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "627-78"
+    },
+    {
+      "name": "한양1차(영동한양)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "490"
+    },
+    {
+      "name": "한양2차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "627-105"
+    },
+    {
+      "name": "한우리2차",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "280-3"
+    },
+    {
+      "name": "한울마을1단지운정신도시IPARK",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1781"
+    },
+    {
+      "name": "한울마을6단지아모리움에듀파크",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1771"
+    },
+    {
+      "name": "한울마을신창비바패밀리1단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "수영리672"
+    },
+    {
+      "name": "한울마을신창비바패밀리2단지",
+      "province": "경기도",
+      "region": "화성시",
+      "legalDong": null,
+      "jibun": "수영리673"
+    },
+    {
+      "name": "한일유앤아이1차(1014-0)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1014"
+    },
+    {
+      "name": "한일유앤아이2차(1014-1)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1014-1"
+    },
+    {
+      "name": "한전영흥화력사택(1,2단지)",
+      "province": "인천광역시",
+      "region": "옹진군",
+      "legalDong": null,
+      "jibun": "외리680"
+    },
+    {
+      "name": "한화1단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "124-23"
+    },
+    {
+      "name": "한화2단지",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "124-23"
+    },
+    {
+      "name": "한화유로메트로1차",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "770"
+    },
+    {
+      "name": "한화유로메트로2차",
+      "province": "경기도",
+      "region": "김포시",
+      "legalDong": null,
+      "jibun": "775"
+    },
+    {
+      "name": "해오름2차",
+      "province": "서울특별시",
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "382-3"
+    },
+    {
+      "name": "해오름마을10단지파크푸르지오",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1036"
+    },
+    {
+      "name": "해오름마을14단지푸르지오파르세나",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1035"
+    },
+    {
+      "name": "햇빛마을18-1단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "895"
+    },
+    {
+      "name": "햇빛마을18-2단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "938"
+    },
+    {
+      "name": "햇빛마을19단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "903"
+    },
+    {
+      "name": "햇빛마을20단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "934"
+    },
+    {
+      "name": "햇빛마을21단지",
+      "province": "경기도",
+      "region": "고양덕양구",
+      "legalDong": null,
+      "jibun": "905"
+    },
+    {
+      "name": "행복한마을(8단지)",
+      "province": "경기도",
+      "region": "양주시",
+      "legalDong": null,
+      "jibun": "584"
+    },
+    {
+      "name": "향촌마을현대4차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "899-2"
+    },
+    {
+      "name": "향촌마을현대5차",
+      "province": "경기도",
+      "region": "안양동안구",
+      "legalDong": null,
+      "jibun": "899-7"
+    },
+    {
+      "name": "현광1차",
+      "province": "인천광역시",
+      "region": "미추홀구",
+      "legalDong": null,
+      "jibun": "711-3"
+    },
+    {
+      "name": "현대(1,2차)",
+      "province": "서울특별시",
+      "region": "서대문구",
+      "legalDong": "홍은동",
+      "jibun": "202-5"
+    },
+    {
+      "name": "현대(2-4차)",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "오금동",
+      "jibun": "43"
+    },
+    {
+      "name": "현대(3차)",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "중계동",
+      "jibun": "576"
+    },
+    {
+      "name": "현대(5차)",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "가락동",
+      "jibun": "161-2"
+    },
+    {
+      "name": "현대10차(201,202동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "436"
+    },
+    {
+      "name": "현대13차(208~211동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "448"
+    },
+    {
+      "name": "현대14차(203,204,205,206동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "447"
+    },
+    {
+      "name": "현대1차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "거여동",
+      "jibun": "362"
+    },
+    {
+      "name": "현대1차",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "문래동6가",
+      "jibun": "46"
+    },
+    {
+      "name": "현대1차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "307"
+    },
+    {
+      "name": "현대1차(12,13,21,22,31,32,33동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "369-1"
+    },
+    {
+      "name": "현대1차101동~",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "653"
+    },
+    {
+      "name": "현대2-1차",
+      "province": "인천광역시",
+      "region": "계양구",
+      "legalDong": null,
+      "jibun": "580"
+    },
+    {
+      "name": "현대2-2차",
+      "province": "인천광역시",
+      "region": "계양구",
+      "legalDong": null,
+      "jibun": "580"
+    },
+    {
+      "name": "현대2차",
+      "province": "서울특별시",
+      "region": "송파구",
+      "legalDong": "거여동",
+      "jibun": "44"
+    },
+    {
+      "name": "현대2차",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "문래동6가",
+      "jibun": "45"
+    },
+    {
+      "name": "현대2차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "311-126"
+    },
+    {
+      "name": "현대2차(10,11,20,23,24,25동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "369-1"
+    },
+    {
+      "name": "현대3차",
+      "province": "서울특별시",
+      "region": "영등포구",
+      "legalDong": "양평동3가",
+      "jibun": "79"
+    },
+    {
+      "name": "현대3차",
+      "province": "인천광역시",
+      "region": "부평구",
+      "legalDong": null,
+      "jibun": "370-399"
+    },
+    {
+      "name": "현대3차(61~64동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "443"
+    },
+    {
+      "name": "현대4차저층(51~56동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "462"
+    },
+    {
+      "name": "현대5차(71,72동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "455"
+    },
+    {
+      "name": "현대6차(78~81,83,84,86,87동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "456"
+    },
+    {
+      "name": "현대7차(73~77,82,85동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "456"
+    },
+    {
+      "name": "현대8차(성수현대:91~95동)",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "압구정동",
+      "jibun": "481"
+    },
+    {
+      "name": "현대성우8차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1112"
+    },
+    {
+      "name": "현대힐스테이트2단지",
+      "province": "서울특별시",
+      "region": "강남구",
+      "legalDong": "삼성동",
+      "jibun": "50"
+    },
+    {
+      "name": "현인마을이-편한세상2차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1153"
+    },
+    {
+      "name": "현인마을이-편한세상3차",
+      "province": "경기도",
+      "region": "용인수지구",
+      "legalDong": null,
+      "jibun": "1154"
+    },
+    {
+      "name": "현진2차",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "782-1"
+    },
+    {
+      "name": "형우베스트빌3차",
+      "province": "서울특별시",
+      "region": "용산구",
+      "legalDong": "한남동",
+      "jibun": "27-2"
+    },
+    {
+      "name": "형인허브빌2차(566)",
+      "province": "서울특별시",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "566"
+    },
+    {
+      "name": "호반베르디움더프라임(1차)",
+      "province": "경기도",
+      "region": "시흥시",
+      "legalDong": null,
+      "jibun": "406"
+    },
+    {
+      "name": "화남(6차)",
+      "province": "경기도",
+      "region": "군포시",
+      "legalDong": null,
+      "jibun": "757-5"
+    },
+    {
+      "name": "회룡한주6차",
+      "province": "경기도",
+      "region": "의정부시",
+      "legalDong": null,
+      "jibun": "428"
+    },
+    {
+      "name": "효창팰리스2차",
+      "province": "서울특별시",
+      "region": "용산구",
+      "legalDong": "효창동",
+      "jibun": "5-49"
+    },
+    {
+      "name": "후곡마을1단지중앙하이츠(997-0)",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "997"
+    },
+    {
+      "name": "후곡마을4단지뜨란채주공",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "992"
+    },
+    {
+      "name": "후곡마을6단지주공",
+      "province": "경기도",
+      "region": "파주시",
+      "legalDong": null,
+      "jibun": "1022"
+    },
+    {
+      "name": "흥덕마을7단지힐스테이트",
+      "province": "경기도",
+      "region": "용인기흥구",
+      "legalDong": null,
+      "jibun": "969"
+    },
+    {
+      "name": "힐스테이트레이크송도1차",
+      "province": "인천광역시",
+      "region": "연수구",
+      "legalDong": null,
+      "jibun": "397-11"
+    },
+    {
+      "name": "힐스테이트용인고진역2단지",
+      "province": "경기도",
+      "region": "용인처인구",
+      "legalDong": null,
+      "jibun": "1028"
+    },
+    {
+      "name": "힐스테이트평택1차",
+      "province": "경기도",
+      "region": "평택시",
+      "legalDong": null,
+      "jibun": "573"
+    },
+    {
+      "name": "힐탑아파트3차(894-3)",
+      "province": "서울특별시",
+      "region": "금천구",
+      "legalDong": "독산동",
+      "jibun": "894-3"
+    },
+    {
+      "name": "힐튼빌리지1차",
+      "province": "서울특별시",
+      "region": "용산구",
+      "legalDong": "후암동",
+      "jibun": "244-91"
+    }
+  ],
+  "omittedPhaseNames": [],
+  "naverPhaseConflicts": [],
+  "rejectedMappings": [],
+  "resolutionErrors": [],
+  "unresolvedReviewedLocations": [
+    {
+      "region": "강동구",
+      "legalDong": "상일동",
+      "jibun": "36-3",
+      "aliases": [
+        "강동리엔파크11단지",
+        "상일동 강동리엔파크11",
+        "상일동 강동리엔파크11단지"
+      ],
+      "rejectedComplexNos": [
+        "134513"
+      ],
+      "verifiedAt": "2026-10-19",
+      "status": "unresolved",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    },
+    {
+      "region": "강동구",
+      "legalDong": "상일동",
+      "jibun": "산2-3",
+      "aliases": [
+        "강동 리엔파크 13단지",
+        "상일동 강동 리엔파크 13",
+        "상일동 강동 리엔파크 13단지"
+      ],
+      "rejectedComplexNos": [
+        "134513"
+      ],
+      "verifiedAt": "2026-10-19",
+      "status": "unresolved",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    },
+    {
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1713",
+      "aliases": [
+        "신림2단지 주공아파트",
+        "신림2단지주공(임대)"
+      ],
+      "rejectedComplexNos": [
+        "1263"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 관악구 신림동 1713",
+        "latitude": 37.4640458881738,
+        "longitude": 126.926531939083
+      },
+      "status": "unresolved",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    }
+  ],
+  "reviewCounts": {
+    "corrected": 12,
+    "unresolved": 3,
+    "verified_name_difference": 3,
+    "split_into_sections": 1
+  },
+  "limitations": [
+    "네이버 일반 단지 페이지가 확인되지 않은 임대단지 연결은 비활성화함.",
+    "이문 1·2단지의 동번호 없는 공통 거래를 개별 단지 거래로 복제하지 않음.",
+    "외부 서비스의 전체 신규 단지 등록 여부·모든 주소를 실시간 전수 확인한 결과는 아님."
+  ]
+}

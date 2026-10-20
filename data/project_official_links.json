@@ -1,0 +1,54 @@
+{
+  "note": "사업별 공식 원문만 연결합니다. 고시 날짜는 진행 단계의 최신 확인일을 뜻하지 않습니다.",
+  "links": [
+    {
+      "ids": ["seoul-plan-renewal:10064", "seoul-plan-renewal:7063", "11000UQ120PS202601310051", "11000UQ120PS202407010920"],
+      "names": ["방학3구역"],
+      "title": "방학3구역 주택정비형 재개발사업 정비계획 수립 및 정비구역 지정",
+      "url": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=614397",
+      "sourceDate": "2025-05-22", "checkedAt": "2026-10-19"
+    },
+    {
+      "ids": ["seoul-plan-renewal:4582434", "seoul-plan-renewal:7065", "11320UQ120PS202605210001", "11000UQ120PS202407010966"],
+      "names": ["방학신동아1단지아파트", "방학신동아1차"],
+      "title": "방학신동아1단지아파트 재건축 정비구역 지정 및 정비계획 결정 고시",
+      "url": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=622475",
+      "sourceDate": "2025-10-02", "checkedAt": "2026-10-19"
+    },
+    {
+      "ids": ["seoul-plan-renewal:10028", "11320UQ120PS202608040002"],
+      "names": ["방학동 638"],
+      "title": "방학동 638일대 주택정비형 재개발사업",
+      "url": "https://cleanup.seoul.go.kr/assc/scrin-bbs/execute.do?cafeId=320900001427z24",
+      "sourceDate": null, "checkedAt": "2026-10-19"
+    },
+    {
+      "ids": ["seoul-plan-renewal:10027", "11320UQ120PS202608040001"],
+      "names": ["방학동 641"],
+      "title": "방학동 641일대 주택정비형 재개발사업",
+      "url": "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeUrl=dobongbanghak2",
+      "sourceDate": null, "checkedAt": "2026-10-19"
+    },
+    {
+      "ids": ["gtx-c", "metro-rail:gtx-c", "gg-rail:652"],
+      "names": ["GTX-C", "광역급행철도 C노선"],
+      "title": "수도권광역급행철도 C노선 민간투자사업 실시계획 변경(2차) 승인",
+      "url": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=640498",
+      "sourceDate": "2026-08-13", "checkedAt": "2026-10-19"
+    },
+    {
+      "ids": ["gg-rail:649", "dobongsan-okjeong", "metro-rail:dobongsan-okjeong"],
+      "names": ["도봉산~옥정 광역철도"],
+      "title": "도봉산~옥정 광역철도 건설사업 사업계획 변경(8차)",
+      "url": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=626638",
+      "sourceDate": "2025-12-18", "checkedAt": "2026-10-19"
+    },
+    {
+      "ids": ["ui-extension", "metro-rail:ui-extension"],
+      "names": ["우이신설 방학 연장"],
+      "title": "우이신설선 연장선 도시철도 건설사업 기본계획 고시",
+      "url": "https://www.molit.go.kr/mtc/USR/I0204/m_37140/dtl.jsp?gubun=1&idx=18136",
+      "sourceDate": "2024-02-16", "checkedAt": "2026-10-19"
+    }
+  ]
+}

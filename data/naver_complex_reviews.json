@@ -1,0 +1,652 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "region": "강동구",
+      "legalDong": "둔촌동",
+      "jibun": "70-5",
+      "aliases": [
+        "2차현대아파트",
+        "둔촌동 2차현대",
+        "둔촌동 2차현대아파트",
+        "둔촌동 현대2",
+        "현대2"
+      ],
+      "rejectedComplexNos": [
+        "1301"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 강동구 둔촌동 70-5",
+        "latitude": 37.5293650086604,
+        "longitude": 127.140556326181
+      },
+      "status": "corrected",
+      "complexNo": "830",
+      "complexName": "현대2차",
+      "sourceUrl": "https://fin.land.naver.com/complexes/830"
+    },
+    {
+      "region": "강동구",
+      "legalDong": "상일동",
+      "jibun": "36-3",
+      "aliases": [
+        "강동리엔파크11단지",
+        "상일동 강동리엔파크11",
+        "상일동 강동리엔파크11단지"
+      ],
+      "rejectedComplexNos": [
+        "134513"
+      ],
+      "verifiedAt": "2026-10-19",
+      "status": "unresolved",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    },
+    {
+      "region": "강동구",
+      "legalDong": "상일동",
+      "jibun": "산2-3",
+      "aliases": [
+        "강동 리엔파크 13단지",
+        "상일동 강동 리엔파크 13",
+        "상일동 강동 리엔파크 13단지"
+      ],
+      "rejectedComplexNos": [
+        "134513"
+      ],
+      "verifiedAt": "2026-10-19",
+      "status": "unresolved",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    },
+    {
+      "region": "강서구",
+      "legalDong": "가양동",
+      "jibun": "1490",
+      "aliases": [
+        "가양9단지아파트",
+        "가양도시개발9-2단지"
+      ],
+      "rejectedComplexNos": [],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 강서구 가양동 1490",
+        "latitude": 37.5587212796979,
+        "longitude": 126.863532908859
+      },
+      "status": "verified_name_difference",
+      "complexNo": "1348",
+      "complexName": "가양9단지",
+      "sourceUrl": "https://fin.land.naver.com/complexes/1348"
+    },
+    {
+      "region": "강서구",
+      "legalDong": "등촌동",
+      "jibun": "633-28",
+      "aliases": [
+        "등촌5차보람쉬움",
+        "등촌5차보람쉬움아파트"
+      ],
+      "rejectedComplexNos": [
+        "10255"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 강서구 등촌동 633-28",
+        "latitude": 37.5529409893324,
+        "longitude": 126.86602016355
+      },
+      "status": "corrected",
+      "complexNo": "13847",
+      "complexName": "등촌보람쉬움5차(더하임)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/13847"
+    },
+    {
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "1154",
+      "aliases": [
+        "화곡6차보람쉬움",
+        "화곡6차보람쉬움아파트"
+      ],
+      "rejectedComplexNos": [
+        "11671"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 강서구 화곡동 1154",
+        "latitude": 37.5553049123389,
+        "longitude": 126.850893634869
+      },
+      "status": "corrected",
+      "complexNo": "19505",
+      "complexName": "화곡보람쉬움6차(더하임)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/19505"
+    },
+    {
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1703-1",
+      "aliases": [
+        "LIG대학마을(건영아파트3차)",
+        "건영아파트",
+        "건영아파트(3차)",
+        "신림동 LIG대학마을(건영아파트3차)",
+        "신림동 건영",
+        "신림동 건영아파트",
+        "신림동 건영아파트(3차)"
+      ],
+      "rejectedComplexNos": [
+        "3168"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 관악구 신림동 1703-1",
+        "latitude": 37.4668458417824,
+        "longitude": 126.942587158553
+      },
+      "status": "corrected",
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "sourceUrl": "https://fin.land.naver.com/complexes/55"
+    },
+    {
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1705",
+      "aliases": [
+        "금호(1차)",
+        "금호타운",
+        "신림동 금호(1차)",
+        "신림동 금호타운"
+      ],
+      "rejectedComplexNos": [
+        "3169"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 관악구 신림동 1705",
+        "latitude": 37.4651611978444,
+        "longitude": 126.937736894087
+      },
+      "status": "corrected",
+      "complexNo": "56",
+      "complexName": "금호타운1차",
+      "sourceUrl": "https://fin.land.naver.com/complexes/56"
+    },
+    {
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "1713",
+      "aliases": [
+        "신림2단지 주공아파트",
+        "신림2단지주공(임대)"
+      ],
+      "rejectedComplexNos": [
+        "1263"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 관악구 신림동 1713",
+        "latitude": 37.4640458881738,
+        "longitude": 126.926531939083
+      },
+      "status": "unresolved",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    },
+    {
+      "region": "노원구",
+      "legalDong": "공릉동",
+      "jibun": "492-1",
+      "aliases": [
+        "공릉동 대아",
+        "공릉동 대아2차",
+        "공릉동 대아2차아파트",
+        "공릉동 대아아파트",
+        "공릉동 대아아파트1차",
+        "대아2차아파트",
+        "대아아파트",
+        "대아아파트1차"
+      ],
+      "rejectedComplexNos": [
+        "1086"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 노원구 공릉동 492-1",
+        "latitude": 37.6232989371836,
+        "longitude": 127.071430685227
+      },
+      "status": "corrected",
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/8663"
+    },
+    {
+      "region": "노원구",
+      "legalDong": "중계동",
+      "jibun": "578",
+      "aliases": [
+        "중계동 현대2(4차)",
+        "중계동 현대그룹중계동주택조합2차(아)",
+        "현대2(4차)",
+        "현대그룹중계동주택조합2차(아)"
+      ],
+      "rejectedComplexNos": [],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 노원구 중계동 578",
+        "latitude": 37.6478441137209,
+        "longitude": 127.084646922951
+      },
+      "status": "verified_name_difference",
+      "complexNo": "8415",
+      "complexName": "중계현대2차",
+      "sourceUrl": "https://fin.land.naver.com/complexes/8415"
+    },
+    {
+      "region": "동대문구",
+      "legalDong": "이문동",
+      "jibun": "149-8",
+      "aliases": [
+        "이문동 이문아이파크자이",
+        "이문아이파크자이"
+      ],
+      "rejectedComplexNos": [
+        "26159"
+      ],
+      "verifiedAt": "2026-10-19",
+      "status": "split_into_sections",
+      "reason": "원본과 다른 단지 연결을 제거함. 개별 단지 확인 전 자동 연결 금지."
+    },
+    {
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "334-5",
+      "aliases": [
+        "공감대 4차 아파트",
+        "공감대5차(334-5)",
+        "장안동 공감대 4차",
+        "장안동 공감대 4차 아파트",
+        "장안동 공감대5차(334-5)"
+      ],
+      "rejectedComplexNos": [],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 동대문구 장안동 334-5",
+        "latitude": 37.5715642666009,
+        "longitude": 127.075540356842
+      },
+      "status": "verified_name_difference",
+      "complexNo": "104432",
+      "complexName": "공감대4차",
+      "sourceUrl": "https://fin.land.naver.com/complexes/104432"
+    },
+    {
+      "region": "마포구",
+      "legalDong": "망원동",
+      "jibun": "495",
+      "aliases": [
+        "망원동 신부3차파스카",
+        "신부3차파스카"
+      ],
+      "rejectedComplexNos": [
+        "25326"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 마포구 망원동 495",
+        "latitude": 37.5600001970412,
+        "longitude": 126.898016237916
+      },
+      "status": "corrected",
+      "reason": "네이버 단지정보의 지번까지 대조함",
+      "complexNo": "105595",
+      "complexName": "신부파스카빌",
+      "sourceUrl": "https://fin.land.naver.com/complexes/105595"
+    },
+    {
+      "region": "성남분당구",
+      "legalDong": "삼평동",
+      "jibun": "742",
+      "aliases": [
+        "봇들마을",
+        "봇들마을8단지",
+        "삼평동 봇들마을",
+        "삼평동 봇들마을8",
+        "삼평동 봇들마을8단지"
+      ],
+      "rejectedComplexNos": [
+        "27371"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "경기 성남시 분당구 삼평동 742",
+        "latitude": 37.3955223613027,
+        "longitude": 127.115378332274
+      },
+      "status": "corrected",
+      "complexNo": "27497",
+      "complexName": "봇들8단지한신휴플러스",
+      "sourceUrl": "https://fin.land.naver.com/complexes/27497"
+    },
+    {
+      "region": "송파구",
+      "legalDong": "거여동",
+      "jibun": "27-5",
+      "aliases": [
+        "거여동 쌍용스윗닷홈2차",
+        "거여역2차 쌍용아파트",
+        "쌍용스윗닷홈2차"
+      ],
+      "rejectedComplexNos": [
+        "18973"
+      ],
+      "verifiedAt": "2026-10-19",
+      "addressEvidence": {
+        "address": "서울 송파구 거여동 27-5",
+        "latitude": 37.4926161372875,
+        "longitude": 127.145535704066
+      },
+      "status": "corrected",
+      "reason": "네이버 단지정보의 지번까지 대조함",
+      "complexNo": "18990",
+      "complexName": "거여역쌍용2차(주상복합)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/18990"
+    },
+    {
+      "region": "동작구",
+      "legalDong": "사당동",
+      "jibun": "1135",
+      "aliases": [
+        "경남아너스빌2차",
+        "대아아파트",
+        "사당동 경남아너스빌2차",
+        "사당동 대아",
+        "사당동 대아아파트"
+      ],
+      "rejectedComplexNos": [
+        "376"
+      ],
+      "status": "corrected",
+      "complexNo": "1139",
+      "complexName": "대아2차(경남아너스빌)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/1139",
+      "verifiedAt": "2026-10-19",
+      "reason": "네이버 단지정보의 지번 및 세대수 대조"
+    },
+    {
+      "region": "동작구",
+      "legalDong": "사당동",
+      "jibun": "1136",
+      "aliases": [
+        "경남아너스빌(대아3)",
+        "대아아파트",
+        "사당동 경남아너스빌(대아3)",
+        "사당동 대아",
+        "사당동 대아아파트"
+      ],
+      "rejectedComplexNos": [
+        "376"
+      ],
+      "status": "corrected",
+      "complexNo": "1135",
+      "complexName": "대아3차(경남아너스빌)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/1135",
+      "verifiedAt": "2026-10-19",
+      "reason": "네이버 단지정보의 지번 및 세대수 대조"
+    },
+    {
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "440-7",
+      "aliases": [
+        "상록파라브아파트",
+        "상록파라브아파트105동",
+        "장안동 상록파라브",
+        "장안동 상록파라브아파트",
+        "장안동 상록파라브아파트105동"
+      ],
+      "rejectedComplexNos": [
+        "103467"
+      ],
+      "status": "corrected",
+      "complexNo": "103492",
+      "complexName": "상록파라브(105동,주상복합)",
+      "sourceUrl": "https://fin.land.naver.com/complexes/103492",
+      "verifiedAt": "2026-10-19",
+      "reason": "네이버 단지정보 지번 440-7, 19세대 대조"
+    }
+  ],
+  "sharedPages": [
+    {
+      "complexNo": "65",
+      "complexName": "개포우성1,2차",
+      "naverHouseholds": 1140,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/65",
+      "members": [
+        {
+          "region": "강남구",
+          "legalDong": "대치동",
+          "jibun": "500"
+        },
+        {
+          "region": "강남구",
+          "legalDong": "대치동",
+          "jibun": "503"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "114809",
+      "complexName": "e편한세상서울대입구",
+      "naverHouseholds": 1531,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/114809",
+      "members": [
+        {
+          "region": "관악구",
+          "legalDong": "봉천동",
+          "jibun": "1730"
+        },
+        {
+          "region": "관악구",
+          "legalDong": "봉천동",
+          "jibun": "1730-1"
+        },
+        {
+          "region": "관악구",
+          "legalDong": "봉천동",
+          "jibun": "1730-2"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "25305",
+      "complexName": "신화아트벨리",
+      "naverHouseholds": 30,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/25305",
+      "members": [
+        {
+          "region": "관악구",
+          "legalDong": "신림동",
+          "jibun": "587-97"
+        },
+        {
+          "region": "관악구",
+          "legalDong": "신림동",
+          "jibun": "587-98"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "169598",
+      "complexName": "트리우스광명",
+      "naverHouseholds": 3344,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/169598",
+      "members": [
+        {
+          "region": "광명시",
+          "legalDong": "광명동",
+          "jibun": "12-2"
+        },
+        {
+          "region": "광명시",
+          "legalDong": "광명동",
+          "jibun": "18-1"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "10312",
+      "complexName": "고척LIG리가",
+      "naverHouseholds": 421,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/10312",
+      "members": [
+        {
+          "region": "구로구",
+          "legalDong": "고척동",
+          "jibun": "340"
+        },
+        {
+          "region": "구로구",
+          "legalDong": "고척동",
+          "jibun": "340-1"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "104744",
+      "complexName": "동은",
+      "naverHouseholds": 42,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/104744",
+      "members": [
+        {
+          "region": "금천구",
+          "legalDong": "독산동",
+          "jibun": "883-10"
+        },
+        {
+          "region": "금천구",
+          "legalDong": "독산동",
+          "jibun": "883-21"
+        },
+        {
+          "region": "금천구",
+          "legalDong": "독산동",
+          "jibun": "883-22"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "103467",
+      "complexName": "장안상록파라브",
+      "naverHouseholds": 45,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/103467",
+      "members": [
+        {
+          "region": "동대문구",
+          "legalDong": "장안동",
+          "jibun": "440-1"
+        },
+        {
+          "region": "동대문구",
+          "legalDong": "장안동",
+          "jibun": "440-2"
+        },
+        {
+          "region": "동대문구",
+          "legalDong": "장안동",
+          "jibun": "440-3"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "110632",
+      "complexName": "위례역푸르지오",
+      "naverHouseholds": 620,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/110632",
+      "members": [
+        {
+          "region": "성남수정구",
+          "legalDong": "창곡동",
+          "jibun": "563"
+        },
+        {
+          "region": "성남수정구",
+          "legalDong": "창곡동",
+          "jibun": "564"
+        },
+        {
+          "region": "성남수정구",
+          "legalDong": "창곡동",
+          "jibun": "565"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "9797",
+      "complexName": "목동대원칸타빌",
+      "naverHouseholds": 511,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/9797",
+      "members": [
+        {
+          "region": "양천구",
+          "legalDong": "목동",
+          "jibun": "941"
+        },
+        {
+          "region": "양천구",
+          "legalDong": "목동",
+          "jibun": "944"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    },
+    {
+      "complexNo": "117329",
+      "complexName": "목동센트럴아이파크위브",
+      "naverHouseholds": 3045,
+      "verifiedAt": "2026-10-19",
+      "sourceUrl": "https://fin.land.naver.com/complexes/117329",
+      "members": [
+        {
+          "region": "양천구",
+          "legalDong": "신월동",
+          "jibun": "1075"
+        },
+        {
+          "region": "양천구",
+          "legalDong": "신월동",
+          "jibun": "1076"
+        },
+        {
+          "region": "양천구",
+          "legalDong": "신월동",
+          "jibun": "1077"
+        },
+        {
+          "region": "양천구",
+          "legalDong": "신월동",
+          "jibun": "1078"
+        }
+      ],
+      "note": "네이버는 통합 페이지로 관리함. 집픽 단지명·주소·고유값은 개별 유지."
+    }
+  ]
+}

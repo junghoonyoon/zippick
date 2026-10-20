@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-19T13:27:32.177667+09:00",
+  "server": "http://127.0.0.1:8766",
+  "apartmentId": "41131120411567",
+  "reportZones": 19,
+  "viewportZones": 2779,
+  "mismatches": 0,
+  "stageConflicts": 43,
+  "classificationVersion": "2026-10-19.1"
+}

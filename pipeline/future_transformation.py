@@ -532,10 +532,10 @@ def public_facts(result):
     if result.get('livingArea'):
         return result['livingArea']
     day = _date(result.get('asOfDate')) or dt.date.today()
-    public = living_area.empty_report(result.get('apartmentId', ''), day)
     if result.get('status') == 'error':
-        public.update(status='error', errorReason=result.get('errorReason'))
-    return public
+        reason = result.get('errorReason') or '생활권 자료를 불러오지 못했어요. 잠시 뒤 리포트를 다시 열어 주세요.'
+        return living_area.empty_report(result.get('apartmentId', ''), day, reason)
+    return living_area.empty_report(result.get('apartmentId', ''), day)
 
 
 def data_revision():

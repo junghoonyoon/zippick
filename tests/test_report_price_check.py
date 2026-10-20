@@ -27,6 +27,70 @@ class ReportPriceCheckTest(unittest.TestCase):
         self.assertNotIn("zippickPriceCheckHtml(item)", report)
         self.assertNotIn('data-zpr-asking-price', html)
 
+
+    def test_all_report_shapes_keep_latest_trade_marker_for_matching_area(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        functions = html[html.index("    function zippickPriceCheckBasis(item) {"):
+                         html.index("    function zippickReportFinance(item) {")]
+        report_renderer = html[html.index("    function candidateZippickReportHtml(item) {"):
+                               html.index("    function candidateDisplayName(item) {")]
+        decision_renderer = html[html.index("    function zippickDecisionHtml(item, verdict) {"):
+                                 html.index("    function zippickLocationEvidenceText(item, verdict) {")]
+        self.assertIn("${zippickDecisionHtml(item, verdict)}", report_renderer)
+        self.assertIn("${zippickBuyBandHtml(item, verdict)}", decision_renderer)
+        script = """
+          function zpNum(value) { return value == null || value === '' ? NaN : Number(value); }
+          function transactionMoney(value) { return `${value}억`; }
+          function esc(value) { return String(value); }
+          function candidateTrendPanelHtml() { return ''; }
+          const base = {valuation:{status:'ready',fairPrice:{lowEok:8.35,centerEok:9.52,highEok:10},
+            floorComparison:{status:'matched'},dataQuality:{sampleCount:6,level:'medium'}}};
+        """ + functions + """
+          const samho = {...base, name:'삼호4', areaLabel:'전용 50~59㎡', displayAreaLabel:'전용 50㎡',
+            areaMin:50, areaMax:59, latestDealPriceEok:9.8, latestDealDate:'2026-08-31',
+            latestDealExclusiveArea:59.49, latestDealFloor:'14',
+            valuation:{...base.valuation, areaLabel:'전용 50㎡',
+              fairPrice:{lowEok:8.35,centerEok:9.52,highEok:10}}};
+          const samhoBand = zippickBuyBandHtml(samho, {});
+          if (!samhoBand.includes('zpr-buy-band-marker') || !samhoBand.includes('최근 실거래 9.8억')) process.exit(100);
+          if (!samhoBand.includes('2026-08-31 · 14층') || !samhoBand.includes('최근 실거래는 적정가격 안에 있어요')) process.exit(101);
+          if (samhoBand.includes('위치를 확인할 수 없어요') || samhoBand.includes('zpr-buy-band-limit')) process.exit(102);
+          for (const area of [50,59,59.49,59.99]) {
+            if (!zippickBuyBandTradeMatchesArea({...samho,latestDealExclusiveArea:area})) process.exit(103);
+          }
+          for (const area of [49.99,60,84]) {
+            const different = zippickBuyBandHtml({...samho,latestDealExclusiveArea:area}, {});
+            if (different.includes('zpr-buy-band-marker') || !different.includes('선택한 면적 범위와 달라')) process.exit(104);
+          }
+          const numericRange={...samho,areaLabel:'',displayAreaLabel:'50㎡',latestDealPriceEok:null,
+            latestDealDate:'',latestDealExclusiveArea:null,latestDealFloor:'',
+            latestTrade:{dealAmountEok:9.8,dealDate:'2026-08-31',exclusiveArea:59.49,floor:'14'},
+            valuation:{...samho.valuation,areaLabel:''}};
+          const numericRangeBand=zippickBuyBandHtml(numericRange,{});
+          if (!numericRangeBand.includes('최근 실거래 9.8억') || !numericRangeBand.includes('2026-08-31 · 전용 59.49㎡ · 14층')) process.exit(105);
+          const exactArea={...samho,areaLabel:'전용 84㎡',displayAreaLabel:'84㎡',areaMin:84,areaMax:84,
+            valuation:{...samho.valuation,areaLabel:'84㎡'}};
+          if (zippickBuyBandHtml(exactArea,{}).includes('zpr-buy-band-marker')) process.exit(106);
+
+          const noPrice = zippickBuyBandHtml({...samho, latestDealPriceEok:null}, {});
+          if (noPrice.includes('zpr-buy-band-marker') || noPrice.includes('NaN%')) process.exit(107);
+
+          // 직접 단지 리포트와 R-ONE 보강 리포트는 최신 거래가 중첩 객체로 올 수 있다.
+          const directReport={...base,areaLabel:'전용 59㎡',displayAreaLabel:'전용 59㎡',
+            latestTrade:{dealAmountEok:9.8,dealDate:'2026-08-31',exclusiveArea:59.49,floor:'14'},
+            valuation:{...base.valuation,areaLabel:'전용 59㎡'}};
+          const directBand=zippickBuyBandHtml(directReport,{});
+          if (!directBand.includes('최근 실거래 9.8억') || !directBand.includes('2026-08-31 · 전용 59.49㎡ · 14층')) process.exit(108);
+          const roneReport={...base,areaLabel:'전용 84㎡',displayAreaLabel:'전용 84㎡',
+            roneEstimate:{latestTrade:{dealAmountEok:11.2,dealDate:'2026-09-12',exclusiveArea:84.89,floor:'8'}},
+            valuation:{...base.valuation,areaLabel:'전용 84㎡'}};
+          const roneBand=zippickBuyBandHtml(roneReport,{});
+          if (!roneBand.includes('최근 실거래 11.2억') || !roneBand.includes('2026-09-12 · 전용 84.89㎡ · 8층')) process.exit(109);
+
+        """
+        result = subprocess.run(["node", "-e", script], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_read_only_band_uses_fresh_same_area_trade_basis(self):
         html = APP_HTML.read_text(encoding="utf-8")
         start = html.index("    function zippickPriceCheckBasis(item) {")

@@ -1,0 +1,110 @@
+{
+  "status": "ok",
+  "model": "jev-1.13.0",
+  "reviews": [
+    {
+      "zoneId": "11000UQ120PS202411014102",
+      "zoneName": "방배5",
+      "choice": "supported",
+      "confidence": 0.86,
+      "probabilities": {
+        "supported": 0.91,
+        "ongoing": 0.01,
+        "insufficient": 0.08
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014432",
+      "zoneName": "보문5",
+      "choice": "supported",
+      "confidence": 0.89,
+      "probabilities": {
+        "supported": 0.93,
+        "ongoing": 0.01,
+        "insufficient": 0.06
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202505310169",
+      "zoneName": "한양연립 일대 가로주택정비사업",
+      "choice": "supported",
+      "confidence": 0.85,
+      "probabilities": {
+        "supported": 0.9,
+        "ongoing": 0.01,
+        "insufficient": 0.09
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014422",
+      "zoneName": "영천",
+      "choice": "supported",
+      "confidence": 0.79,
+      "probabilities": {
+        "supported": 0.86,
+        "ongoing": 0.02,
+        "insufficient": 0.12
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014220",
+      "zoneName": "신반포21차",
+      "choice": "supported",
+      "confidence": 0.66,
+      "probabilities": {
+        "supported": 0.77,
+        "ongoing": 0.03,
+        "insufficient": 0.2
+      }
+    },
+    {
+      "zoneId": "11650UQ120PS202607210001",
+      "zoneName": "신반포18차337동",
+      "choice": "supported",
+      "confidence": 0.48,
+      "probabilities": {
+        "supported": 0.65,
+        "ongoing": 0.05,
+        "insufficient": 0.3
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202407010612",
+      "zoneName": "이문3-2구역",
+      "choice": "supported",
+      "confidence": 0.66,
+      "probabilities": {
+        "supported": 0.77,
+        "ongoing": 0.03,
+        "insufficient": 0.2
+      }
+    },
+    {
+      "zoneId": "11000UQ120PS202411014428",
+      "zoneName": "행당7",
+      "choice": "supported",
+      "confidence": 0.91,
+      "probabilities": {
+        "supported": 0.9400000000000001,
+        "ongoing": 0.03,
+        "insufficient": 0.03
+      }
+    },
+    {
+      "zoneId": "11440UQ120PS202607240001",
+      "zoneName": "신수동 91-90",
+      "choice": "supported",
+      "confidence": 0.98,
+      "probabilities": {
+        "supported": 0.99,
+        "ongoing": 0.0,
+        "insufficient": 0.01
+      }
+    }
+  ],
+  "usage": {
+    "input_tokens": 3209,
+    "output_tokens": 372
+  },
+  "automaticRemovalAllowed": false
+}

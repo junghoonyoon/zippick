@@ -26,8 +26,10 @@ DAY = dt.date.today().isoformat()
 
 def stage(label):
     text = re.sub(r'\s+', '', str(label or ''))
-    if any(x in text for x in ('해제','취소','청산','해산','준공','사업완료','개통')): return 'completed'
-    if text=='입주':return 'completed'
+    from redevelopment_occupancy import completed_stage
+    if completed_stage(text) or text in ('취소','청산','해산','개통'):return 'completed'
+    if re.search(r'준공|사용승인|입주|해제|취소|해산|청산',text) and re.search(r'예정|신청|심사|부분|일부|미준공|미완료|계획',text):
+        return 'unknown'
     if '입주자모집' in text or '분양공고' in text:return 'construction'
     if '예정' in text or '검토' in text or '추진위' in text or '추진중' in text: return 'planning'
     for keys, value in [(('착공','공사중'),'construction'),(('관리처분','철거','이주'),'disposal'),
@@ -79,7 +81,8 @@ def gg_projects(rows):
         output.append({'id':pid,'sourceId':'gg-quarter','sourceRecordId':str(int(row[0])),
             'name':name,'region':district,'city':city,'province':'경기도','address':f'경기도 {city} {address}',
             'legalDong':match[1] if match else '', 'jibun':match[2] if match else '',
-            'projectType':'reconstruction' if '재건축' in kind else 'redevelopment' if '재개발' in kind or '주거환경' in kind else 'other',
+            'projectTypeLabel':kind,
+            'projectType':'reconstruction' if '재건축' in kind else 'redevelopment' if '재개발' in kind else 'housing_environment' if '주거환경' in kind else 'other',
             'stage':stage(label),'stageLabel':label,'siteAreaM2':number(row[6]),
             'plannedHouseholds':int(number(row[19])) if number(row[19]) else None,
             'existingHouseholds':int(number(row[9])) if number(row[9]) else None,
@@ -147,7 +150,8 @@ def main():
     def locate(p):
         previous=known.get(p['id'],{}).get('point')
         if previous and all(known[p['id']].get(k)==p.get(k) for k in ('region','legalDong','jibun')) and previous.get('checkedAt')==DAY:p['point']=previous
-        elif p['stage'] not in ('completed','unknown'):
+        # Completed projects still need coordinates to retire stale map boundaries.
+        elif p['stage'] != 'unknown':
             try:p['point']=exact_point(p)
             except Exception:p['point']=None
         return p

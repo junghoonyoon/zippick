@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "apartmentId": "11230120446536",
+      "name": "청량리역 한양수자인 그라시엘",
+      "lawdCd": "11230",
+      "legalDong": "용두동",
+      "sourceJibun": "39-1",
+      "transactionJibun": "798",
+      "verifiedAt": "2026-10-18",
+      "source": "한국부동산원 단지 기본정보와 국토교통부 실거래 주소 대조; 네이버 단지 125441의 1,152세대·2023-06-02 사용승인 정보 일치",
+      "sourceUrl": "https://fin.land.naver.com/articles/2531875875"
+    }
+  ]
+}

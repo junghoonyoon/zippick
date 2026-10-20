@@ -286,7 +286,8 @@
     .apt-affordability-decision.up { color:#147a55 }
     .apt-affordability-decision.wait { color:#b26b00 }
     .apt-affordability-decision.risk { color:#d92d20 }
-    .apt-affordability-note { color:#8b95a1; font-size:11px; font-weight:650; line-height:1.5; word-break:keep-all }
+    .apt-affordability-note { color:#6b7684; font-size:13px; font-weight:500; line-height:1.6; word-break:keep-all; overflow-wrap:anywhere }
+    .apt-price-retry { justify-self:start; min-height:44px; padding:10px 14px; border:1px solid #dbe3ef; border-radius:10px; background:#fff; color:#1d4ed8; font:inherit; cursor:pointer }
     .apt-affordability-summary { color:#4e5968; font-size:13px; font-weight:750; line-height:1.5 }
     .apt-affordability-summary strong { color:#191f28; font-weight:900 }
     .apt-affordability-profile { justify-self:start; border:0; padding:0; background:transparent; color:#1d4ed8; font-family:inherit; font-size:12px; font-weight:850; cursor:pointer }
@@ -304,7 +305,8 @@
       font-size:13px; font-weight:800; white-space:nowrap;
     }
     .budget-candidate-naver,
-    .apt-result-naver-wrap { display:flex; justify-content:center; margin-top:8px }
+    .apt-result-naver-wrap { display:flex; flex-wrap:wrap; justify-content:center; margin-top:8px }
+    .naver-land-mapping-note { flex-basis:100%; max-width:520px; margin:2px auto 0; color:#6b7684; font-size:12px; font-weight:650; line-height:1.5; text-align:center; word-break:keep-all }
     .apt-result-report {
       display:inline-flex; align-items:center; justify-content:center; gap:7px; width:100%;
       border:1px solid #d8dee8; border-radius:11px; padding:12px 14px; background:#fff;
@@ -1204,7 +1206,7 @@
     .candidate-map-marker-compact-label { color:inherit; font-size:14px; font-weight:950 }
     .candidate-map-marker-compact-line strong { color:inherit; font-size:inherit; font-weight:950 }
     .candidate-map-marker.is-selected {
-      z-index:2; display:grid; overflow:visible; width:144px; min-width:144px; max-width:144px;
+      z-index:2; display:grid; overflow:visible; width:176px; min-width:176px; max-width:176px;
       --candidate-map-selected-tone:#3182f6;
       border-color:var(--candidate-map-selected-tone); border-radius:12px;
       padding:0 0 8px; background:var(--candidate-map-selected-tone); box-shadow:0 0 0 3px rgba(49,130,246,.16),0 8px 19px rgba(49,130,246,.28);
@@ -1212,16 +1214,16 @@
     }
     .candidate-map-marker.is-selected::after { border-color:var(--candidate-map-selected-tone); background:var(--candidate-map-selected-tone) }
     .candidate-map-marker-head {
-      display:flex; align-items:center; justify-content:space-between; gap:6px; overflow:hidden; width:100%;
+      display:flex; flex-direction:column; align-items:stretch; gap:5px; width:100%;
       border-radius:9px 9px 0 0; padding:7px 8px; background:#3182f6; color:#fff;
     }
     .candidate-map-marker-area {
-      flex:0 0 auto; overflow:hidden; font-size:13px; font-weight:900; line-height:1.15; text-align:left;
-      text-overflow:ellipsis; white-space:nowrap;
+      order:1; font-size:13px; font-weight:500; line-height:1.3; text-align:left;
+      white-space:normal; overflow-wrap:anywhere;
     }
     .candidate-map-marker-name {
-      overflow:hidden; color:#fff; font-size:13px; font-weight:900; line-height:1.15; text-align:right;
-      text-overflow:ellipsis; white-space:nowrap;
+      color:#fff; font-size:14px; font-weight:900; line-height:1.4; text-align:left;
+      white-space:normal; overflow-wrap:anywhere; word-break:keep-all;
     }
     .candidate-map-marker-row {
       display:grid; grid-template-columns:minmax(66px,1fr) max-content; align-items:baseline; gap:6px; min-width:0; padding:7px 8px 0;
@@ -1448,6 +1450,7 @@
     .zpr-section-top { display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:7px 10px }
     .zpr-section-rating { display:inline-flex; align-items:center; gap:7px; color:#6b7684; font-size:13px; font-weight:750; line-height:1.3 }
     .zpr-section-rating.is-missing { color:#8b95a1; font-weight:650 }
+    .zpr-section-rating.is-error { color:#9a6700; font-weight:800 }
     .zpr-section-stars { position:relative; display:inline-block; color:#e1e5ea; font-size:15px; letter-spacing:1px; line-height:1; white-space:nowrap }
     .zpr-section-stars::before { position:absolute; inset:0 auto 0 0; width:var(--zpr-rating-fill); overflow:hidden; color:#f0a51b; content:"★★★★★"; white-space:nowrap }
     .zippick-report .zpr-section[aria-label="가격과 계산 근거"],
@@ -1734,6 +1737,8 @@
     }
     .candidate-map-layer-toggle input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none }
     .candidate-map-layer-toggle:has(input:checked) { background:#3182f6; color:#fff }
+    .candidate-map-layer-toggle + .candidate-map-layer-toggle { border-top:1px solid #edf0f4 }
+    .candidate-map-layer-toggle .candidate-map-tool-text { font-size:13px; line-height:1.3; white-space:normal; text-align:center }
     .candidate-map-measure-toggle {
       pointer-events:auto; display:grid; justify-items:center; align-content:center; gap:4px; min-height:62px;
       border:0; border-top:1px solid #edf0f4; border-radius:0; padding:7px 4px; background:transparent;
@@ -1786,6 +1791,7 @@
     }
     .redevelopment-zone-label strong { font-size:13px; font-weight:900; line-height:1.35 }
     .redevelopment-zone-label span { color:#667085; font-size:12px; font-weight:750; line-height:1.35 }
+    .redevelopment-zone-label small { color:#526078; font-size:13px; font-weight:400; line-height:1.5; white-space:normal; overflow-wrap:anywhere; }
     .redevelopment-zone-name-label {
       display:grid; gap:1px; max-width:190px; border:1.5px solid rgba(255,255,255,.92); border-radius:7px;
       padding:3px 8px 4px; background:#f05a28; box-shadow:0 4px 10px rgba(24,35,52,.2);
@@ -1793,6 +1799,8 @@
       word-break:keep-all; overflow-wrap:anywhere; pointer-events:none;
     }
     .redevelopment-zone-name-label small { color:rgba(255,255,255,.88); font-size:10px; font-weight:800; line-height:1.2 }
+    .redevelopment-zone-name-label .map-zone-development { display:block; font-size:13px; font-weight:500; line-height:1.45; white-space:normal; }
+    .map-zone-development { font-size:13px; font-weight:500; line-height:1.5; overflow-wrap:anywhere; }
     .candidate-map-caption {
       display:flex; align-items:center; min-height:34px; margin:0; border:1px solid rgba(224,230,238,.9);
       border-radius:999px; padding:7px 11px; background:rgba(255,255,255,.94);
@@ -1803,6 +1811,13 @@
       line-height:1.35; text-overflow:ellipsis; white-space:nowrap;
     }
     .candidate-map-caption[hidden] { display:none }
+    .candidate-map-zone-legend {
+      margin:0; padding:7px 11px; border:1px solid #e5e8eb; border-radius:12px;
+      background:rgba(255,255,255,.96); font-size:13px; line-height:1.5; pointer-events:none;
+      white-space:normal; word-break:keep-all;
+    }
+    .candidate-map-zone-legend[hidden] { display:none }
+
     @keyframes candidateMapEnter {
       from { opacity:0; transform:translateY(10px) }
       to { opacity:1; transform:translateY(0) }
@@ -4770,7 +4785,7 @@
     /* 브라우저 인쇄창 없이 PDF를 만들 때 쓰는 임시 리포트 캔버스입니다. */
     .pdf-export-root {
       position:static !important; z-index:auto !important;
-      display:block !important; width:794px !important; max-width:none !important; min-height:1123px !important;
+      display:block !important; width:194mm !important; max-width:none !important; min-height:1123px !important;
       height:auto !important; max-height:none !important; overflow:visible !important;
       margin:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important;
       background:#fff !important; transform:none !important; opacity:1 !important; pointer-events:none !important;
@@ -4849,6 +4864,22 @@
     .zpr-living-heading { margin-bottom:0; }
     .zpr-living-heading .zpr-map-insight { margin:0 0 8px;font-size:23px;line-height:1.45; }
     .zpr-living-heading .zpr-lead { margin:0; font-size:15px;font-weight:400;line-height:1.65;color:#5c6675; }
+    .zpr-living-verdict { display:inline-block; margin-right:6px; padding:2px 10px; border-radius:999px; font-size:15px; font-weight:850; line-height:1.6; vertical-align:3px; background:#eef2f7; color:#3d4a5c; }
+    .zpr-living-verdict.is-good { background:#e6f6ec; color:#0f7a3d; }
+    .zpr-living-verdict.is-weak { background:#fff1e6; color:#b45309; }
+    .zpr-living-verdict.is-pending { background:#f2f4f6; color:#6b7684; }
+    .zpr-living-brief-group { margin:14px 0 0; }
+    .zpr-future-section .zpr-living-brief-group h6 { margin:0 0 4px; font-size:14px; font-weight:800; line-height:1.5; color:#191f28; }
+    .zpr-living-brief-group.is-good h6 { color:#0f7a3d; }
+    .zpr-living-brief-group.is-weak h6 { color:#b45309; }
+    .zpr-living-brief-group.is-unknown h6 { color:#6b7684; }
+    .zpr-living-brief-group ul { margin:0; padding-left:18px; font-size:15px; line-height:1.65; color:#4e5968; }
+    .zpr-living-brief-group li + li { margin-top:4px; }
+    .zpr-living-brief-group strong { color:#191f28; font-weight:800; }
+    .zpr-living-advice { margin:16px 0 0; padding:12px 14px; border-radius:10px; background:#f7f8fa; font-size:15px; line-height:1.7; color:#333d4b; }
+    .zpr-living-advice strong { display:block; margin-bottom:2px; font-size:13px; font-weight:800; color:#2469d2; }
+    .zpr-living-advice mark { padding:0 2px; background:linear-gradient(transparent 58%, #ffef9e 58%); color:#191f28; font-weight:750; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+    .zpr-living-caveats { margin:10px 0 0; padding-left:16px; font-size:13px; line-height:1.6; color:#8b95a1; }
     .zpr-living-subs small { display:block;font-size:13px;line-height:1.5;color:#667085; }
     .zpr-living-subs .zpr-living-sub-number { display:block; margin:3px 0; font-size:23px;line-height:1.25;color:#192334; }
     .zpr-living-plan-note { margin:8px 0 20px;font-size:13px;line-height:1.6;color:#667085; }
@@ -4856,13 +4887,25 @@
     .zpr-living-subs details { font-size:13px;line-height:1.6; }
     .zpr-living-subs summary { cursor:pointer;color:#2469d2;padding-top:6px; }
     .zpr-living-subs details p { margin:8px 0;color:#5c6675; }
+    .zpr-living-score-inputs { margin:8px 0 0;padding-left:18px;color:#5c6675;overflow-wrap:anywhere; }
+    .zpr-living-score-inputs li + li { margin-top:5px; }
     .zpr-living-map-column .zpr-map { margin:0; }
     .zpr-living-map-column .zpr-map-canvas { height:520px; }
+    .zpr-living-reference-toggle { display:inline-flex; align-items:center; gap:8px; min-height:44px; margin-bottom:8px; padding:0 12px; border:1px solid #e1e6ed; border-radius:10px; background:#fff; color:#4e5968; font-size:14px; cursor:pointer; }
+    .zpr-living-reference-toggle input { width:18px; height:18px; margin:0; accent-color:#3182f6; }
+    .zpr-living-reference-toggle:has(input:checked) { border-color:#bcd9ff; background:#eff6ff; color:#1767c5; }
     .zpr-living-map-reference { position:relative;margin-top:10px;padding:14px 46px 14px 16px;border:1px solid #e1e6ed;border-radius:12px;background:#fff;color:#52617a;font-size:13px;line-height:1.6; }
     .zpr-living-map-reference strong { display:block;color:#253148;font-size:15px; }
     .zpr-living-map-reference p { margin:5px 0; }
     .zpr-living-map-reference a { color:#2368d5; }
-    .zpr-living-map-reference button { position:absolute;right:10px;top:10px;border:0;background:transparent;color:#52617a;font:inherit;cursor:pointer; }
+    .zpr-living-map-reference-close { position:absolute;right:8px;top:8px;min-width:44px;min-height:44px;border:0;background:transparent;color:#52617a;font:inherit;cursor:pointer; }
+    .zpr-living-map-reference-back { display:block;margin:0 0 8px;padding:8px 0;border:0;background:transparent;color:#2368d5;font:inherit;cursor:pointer; }
+    .zpr-living-dong-projects { display:grid;gap:8px;margin:12px 0 0;padding:0;list-style:none; }
+    .zpr-living-dong-project { display:grid;gap:4px;box-sizing:border-box;width:100%;min-height:54px;padding:12px;border:1px solid #e1e6ed;border-radius:10px;background:#f8fafc;color:#253148;font:inherit;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere; }
+    a.zpr-living-dong-project { cursor:pointer; }
+    .zpr-living-dong-project span { color:#52617a;font-size:13px;font-weight:400; }
+    .zpr-living-dong-project small { color:#2368d5;font-size:13px; }
+    .zpr-living-map-reference { overflow-wrap:anywhere; }
     .zpr-living-summary { padding:0; }
     .zpr-living-transport { margin:12px 0; }
     .zpr-living-summary h6 { margin:0 0 10px;font-size:19px;line-height:1.5;color:#192334; }
@@ -4892,7 +4935,7 @@
     .zpr-living-map-dialog > button { padding:12px 18px;border:0;border-radius:9px;color:#2368d5;background:#eaf2ff;font:inherit;cursor:pointer;margin-bottom:12px; }
     .zpr-living-map-dialog .zpr-map-expand { display:none; }
     .zpr-living-map-dialog .zpr-map-canvas { height:calc(100dvh - 160px); }
-    .zpr-living-map-dialog .zpr-living-map-reference { position:sticky;bottom:0;z-index:11;box-shadow:0 -3px 12px #243c4b1c; }
+    .zpr-living-map-dialog .zpr-living-map-reference { position:absolute;bottom:16px;left:16px;right:16px;z-index:11;max-height:40vh;margin:0;overflow-y:auto;box-shadow:0 -3px 12px #243c4b1c; }
     .zpr-living-map-legend { display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.96);font-size:13px;line-height:1.6;color:#52617a;pointer-events:none; }
     .zpr-living-map-legend i { display:inline-block;width:9px;height:9px;border-radius:50%;background:#1185d8;margin-right:6px; }.zpr-living-map-legend i.rail { background:#18a1ac; }
     .zpr-living-map-legend i.point { background:#3179e9; }
@@ -4901,14 +4944,24 @@
     .zpr-living-project-dot { width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#3179e9;box-shadow:0 1px 5px #68758a;cursor:pointer; }
     .zpr-living-project-dot.is-zone,.zpr-living-project-dot.is-renewal { background:#f05a28; }
     .zpr-living-featured-tag { display:flex;flex-direction:column;align-items:center;gap:2px;box-sizing:border-box;width:180px;min-height:76px;border:2px solid #fff;border-radius:14px;padding:7px 10px;background:#f05a28;color:#fff;box-shadow:0 3px 10px #243c4b3d;font:inherit;text-align:center;line-height:1.3;white-space:normal;word-break:keep-all;cursor:pointer; }
+    .zpr-living-featured-tag.is-reference { background:#1185d8; }
+    .zpr-living-featured-tag.is-unknown { background:#6b7280; }
     .zpr-living-featured-tag strong { font-size:13px;font-weight:800;overflow-wrap:anywhere; }
     .zpr-living-featured-tag small { color:#fff;font-size:11px;font-weight:650; }
     .zpr-living-featured-tag.is-compact { min-width:72px;max-width:126px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800;overflow-wrap:anywhere; }
     .zpr-living-featured-tag.is-compact b { display:none; }
     .zpr-living-selected-tag { pointer-events:none;cursor:default; }
-    .zpr-living-map-top-tags { display:none; }
+    .zpr-living-map-summary { margin:0 0 10px;padding:11px 14px;border:1px solid #dce7f5;border-radius:12px;background:#f6f9ff;color:#24334a;line-height:1.5; }
+    .zpr-living-map-summary strong { display:block;font-size:15px; }
+    .zpr-living-map-summary span { display:block;margin-top:3px;font-size:13px;color:#52617a; }
+    .zpr-living-dong-card { box-sizing:border-box;width:126px;padding:8px 10px;border:1.5px solid #727b87;border-radius:14px;background:#fff;color:#202b3d;box-shadow:0 3px 10px #243c4b24;font:inherit;font-size:13px;line-height:1.35;text-align:left;white-space:normal;word-break:keep-all;pointer-events:auto;cursor:pointer; }
+    .zpr-living-dong-card:hover { border-color:#2368d5; }
+    .zpr-living-dong-card:focus-visible,.zpr-living-dong-project:focus-visible { outline:3px solid #2368d5;outline-offset:3px; }
+    .zpr-living-dong-card strong { display:block;margin-bottom:3px;font-size:15px;font-weight:800; }
+    .zpr-living-dong-card > span { display:flex;justify-content:space-between;gap:9px; }
+    .zpr-living-dong-card b { color:#07964b;font-weight:800; }
     .zpr-map--redevelopment .zpr-map-station-distance { width:max-content;min-width:165px;max-width:205px;white-space:normal;border-radius:14px;text-align:center;font-size:13px;line-height:1.5; }
-    .zpr-map--redevelopment .zpr-map-station-distance small { display:block;font-size:12px;font-weight:500; }
+    .zpr-map--redevelopment .zpr-map-station-distance small { display:block;font-size:13px;font-weight:500; }
     .zpr-map--redevelopment .is-zone { color:#b93047;border-color:#f3a4ae;background:#fff5f6; }
     .zpr-map--redevelopment .zpr-living-project-dot.is-zone,.zpr-map--redevelopment .zpr-living-project-dot.is-renewal { background:#f05a28;border-color:#fff; }
     .zpr-living-rail-dot { width:16px;height:16px;border:3px solid white;border-radius:50%;background:#18a1ac;box-shadow:0 1px 5px #68758a;cursor:pointer; }
@@ -4928,22 +4981,18 @@
       .zpr-living-featured-tag { width:140px;padding:5px 7px; }
       .zpr-living-featured-tag strong { font-size:12px; }
       .zpr-living-featured-tag small { font-size:10px; }
-      .zpr-living-map-top-tags { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 10px; }
-      .zpr-living-map-top-tags button { min-width:0;border:1px solid #f7c3ae;border-radius:10px;padding:7px 9px;background:#fff7f2;color:#bd4b21;font:inherit;text-align:left;cursor:pointer; }
-      .zpr-living-map-top-tags button:last-child:nth-child(odd) { grid-column:1/-1; }
-      .zpr-living-map-top-tags strong,.zpr-living-map-top-tags small { display:block;line-height:1.35;overflow-wrap:anywhere; }
-      .zpr-living-map-top-tags strong { font-size:12px;font-weight:800; }
-      .zpr-living-map-top-tags small { margin-top:2px;font-size:11px; }
-      .zpr-living-featured-tag.is-compact { display:grid;place-items:center;width:28px;min-width:28px;height:28px;border-radius:50%;padding:0;font-size:12px; }
-      .zpr-living-featured-tag.is-compact span { display:none; }
-      .zpr-living-featured-tag.is-compact b { display:block; }
-      .zpr-living-map-dialog:has(.zpr-living-map-top-tags) .zpr-map-canvas { height:calc(100dvh - 290px); }
+      .zpr-living-map-dialog:has(.zpr-living-map-summary) .zpr-map-canvas { height:calc(100dvh - 260px); }
       .zpr-living-project-heading { align-items:flex-start; }
       .zpr-living-project-kind { margin-top:3px; }
       .zpr-living-project-meta > span:last-child { flex-basis:100%; }
       .zpr-living-project-meta > span:last-child::before { display:none; }
     }
-    .pdf-export-root .zpr-living-map-column { display:none; }
+    .pdf-export-root .zpr-living-map-column { display:block; }
+    .pdf-export-root .zpr-map { break-inside:avoid; page-break-inside:avoid; }
+    .pdf-export-root .zpr-map-canvas { height:260px; }
+    .pdf-export-root .zpr-living-map-column .zpr-map-canvas { height:430px; }
+    .pdf-export-root .zpr-map-expand,
+    .pdf-export-root .zpr-living-reference-toggle { display:none; }
     .pdf-export-root .zpr-living-project,.pdf-export-root .zpr-living-summary-row { break-inside:avoid; }
   </style>
 </head>
@@ -5797,8 +5846,10 @@
     let areaDisplayUnit = "sqm";
     // 점수 공식 버전. pipeline/momentum_signals.py의 SCORE_FORMULA_VERSION과 맞춘다.
     // 브라우저 캐시에 구버전 공식으로 계산된 결과가 남아 재사용되는 것을 막는다.
-    const SIGNAL_FORMULA_VERSION = 21;
+    const SIGNAL_FORMULA_VERSION = 22;
     const MARKET_INSIGHT_TIMEOUT_MS = 12000;
+    // 가격 조회는 거래·면적·자금 계산을 함께 수행하므로 보조 분석보다 오래 걸릴 수 있다.
+    const APARTMENT_PRICE_TIMEOUT_MS = 60000;
     const LEADER_COMPARISON_RETRY_DELAYS_MS = [1500, 3000, 6000, 10000, 15000, 30000];
     // v10부터 참고 가격·집계형 행까지 인접 지역 탐색 신호로 사용한다.
     // 이전 응답은 같은 조건에서도 추천이 비어 있을 수 있어 재사용하지 않는다.
@@ -5808,20 +5859,20 @@
     // v25부터 화면의 최대 구매가와 후보 가격 상한을 같은 값으로 쓴다.
     // v11부터 매수 판단 밴드 계산값이 없는 예전 후보 응답은 다시 불러온다.
     // 지금 v12: 주간 가격지수 보정용 거래 목록이 없는 예전 후보 응답은 다시 불러온다.
-    const CANDIDATE_RESULT_SCHEMA_VERSION = 12;
+    const CANDIDATE_RESULT_SCHEMA_VERSION = 14;
     const LOCATION_SCORE_FORMULA_VERSION = "purchase-judgment-v7";
-    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v30.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
+    const budgetBrowserCachePrefix = `realEstateSearch.budgetCandidates.v31.f${SIGNAL_FORMULA_VERSION}.l${LOCATION_SCORE_FORMULA_VERSION}:`;
     const budgetBrowserCacheTtlMs = 10 * 60 * 1000;
     try {
       Object.keys(localStorage)
         .filter(key => key.startsWith("realEstateSearch.budgetCandidates.") && !key.startsWith(budgetBrowserCachePrefix))
         .forEach(key => localStorage.removeItem(key));
     } catch (_) {}
-    const naverReturnStateKey = "realEstateSearch.naverReturn.v1";
-    const naverReturnBackupKey = "realEstateSearch.naverReturn.backup.v1";
-    const naverReturnHistoryStateKey = "realEstateSearchNaverReturn";
+    const naverReturnStateKey = "realEstateSearch.naverReturn.v2";
+    const naverReturnBackupKey = "realEstateSearch.naverReturn.backup.v2";
+    const naverReturnHistoryStateKey = "realEstateSearchNaverReturnV2";
     const naverReturnStateTtlMs = 30 * 60 * 1000;
-    const refreshPageStateKey = "realEstateSearch.refreshPage.v1";
+    const refreshPageStateKey = "realEstateSearch.refreshPage.v2";
     const refreshPageStateTtlMs = 30 * 60 * 1000;
     const enhancedMortgageRateUx = true; // false로 바꾸면 기존 금리 입력 UI로 복구됩니다.
     const mortgageStressRatePercent = 3.0;
@@ -6636,6 +6687,7 @@
     let candidateMapRenderGeneration = 0;
     let candidateMapKakao = null;
     let candidateMapRedevelopmentEnabled = true;
+    let candidateMapReferenceEnabled = false;
     let candidateMapRedevelopmentLayers = [];
     let candidateMapRedevelopmentLastBbox = "";
     let candidateMapRedevelopmentRequestSeq = 0;
@@ -11439,7 +11491,7 @@
         if (detailSheet) {
           detailSheet.innerHTML = candidateMapDetailSheetHtml(item);
           detailSheet.dataset.candidateKey = candidateIdentityKey(item);
-          if (!detailSheet.hidden) requestAnimationFrame(() => syncSparkAxisLabelSizes(detailSheet));
+          if (!detailSheet.hidden) scheduleZippickReportMaps(detailSheet);
         }
       }
     }
@@ -11842,6 +11894,11 @@
       return query ? `https://fin.land.naver.com/search?q=${encodeURIComponent(query)}` : "";
     }
 
+    function candidateNaverMappingNoteHtml(item) {
+      const note = String(item?.naverMappingNote || "").trim();
+      return note ? `<p class="naver-land-mapping-note">${esc(note)}</p>` : "";
+    }
+
     function candidateNaverPropertyActionHtml(item, label, extraClass = "", ariaLabel = "") {
       const url = candidateNaverPropertyUrl(item) || candidateNaverPropertyFallbackUrl(item);
       if (!url) return "";
@@ -11860,8 +11917,9 @@
     function candidateSharedActionsHtml(item, naverExtraClass = "") {
       return `<div class="candidate-primary-actions candidate-shared-actions">
         ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기", naverExtraClass, `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
-        ${candidateCompareActionHtml(item)}
-      </div>`;
+          ${candidateCompareActionHtml(item)}
+        </div>
+        ${candidateNaverMappingNoteHtml(item)}`;
     }
 
     function budgetCandidateActionsHtml(item) {
@@ -11871,6 +11929,7 @@
         </div>
         <div class="budget-candidate-naver">
           ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기", "budget-candidate-naver-link", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
+          ${candidateNaverMappingNoteHtml(item)}
         </div>`;
     }
 
@@ -11882,6 +11941,7 @@
         </div>
         <div class="budget-candidate-naver">
           ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기", "budget-candidate-naver-link", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
+          ${candidateNaverMappingNoteHtml(item)}
         </div>`;
     }
 
@@ -11892,6 +11952,7 @@
         </div>
         <div class="budget-candidate-naver">
           ${candidateNaverPropertyActionHtml(item, "네이버 부동산에서 시세보기", "budget-candidate-naver-link", `${candidateDisplayName(item)} 네이버 부동산에서 시세보기`)}
+          ${candidateNaverMappingNoteHtml(item)}
         </div>`;
     }
 
@@ -11959,9 +12020,9 @@
 
     function candidateFlowScoreBadgeHtml(item) {
       const signals = item?.signals || {};
-      const score = Number(signals.score);
+      const score = zpNum(signals.score);
       if (!Number.isFinite(score) && !signals.status) return "";
-      const measurable = Number.isFinite(score) && score > 0;
+      const measurable = Number.isFinite(score);
       const label = measurable ? `${Math.round(score)}점` : "측정 불가";
       const title = measurable ? "최근 시장 신호표 보기" : "최근 시장 신호 측정 불가";
       return `<button class="flow-score-badge" type="button" data-flow-score-open title="${esc(title)}">최근 시장 신호 ${esc(label)}</button>`;
@@ -11975,9 +12036,9 @@
 
     function candidateReadonlyFlowScoreBadgeHtml(item) {
       const signals = item?.signals || {};
-      const score = Number(signals.score);
+      const score = zpNum(signals.score);
       if (!Number.isFinite(score) && !signals.status) return "";
-      const measurable = Number.isFinite(score) && score > 0;
+      const measurable = Number.isFinite(score);
       const label = measurable ? `${Math.round(score)}점` : "측정 불가";
       return `<span class="candidate-score-badge">최근 시장 신호 ${esc(label)}</span>`;
     }
@@ -12290,21 +12351,40 @@
       return [...unique.values()];
     }
 
+    function parcelIdentityKey(value, legalDong = "") {
+      let text = String(value ?? "").normalize("NFKC").trim();
+      const dong = String(legalDong || "").normalize("NFKC").trim();
+      if (dong && text.startsWith(dong + " ")) text = text.slice(dong.length).trim();
+      text = text.replace(/[‐‑‒–—−]/g, "-").replace(/\s+/g, "");
+      const match = text.match(/^(산?)(\d+)(?:-(\d+))?$/);
+      return match
+        ? match[1] + String(Number(match[2])) + (Number(match[3]) ? "-" + String(Number(match[3])) : "")
+        : text.toLowerCase();
+    }
+
     function sameCandidateIdentity(left, right) {
       if (!left?.name || !right?.name) return false;
-      const leftName = compactText(candidateDisplayName(left));
-      const rightName = compactText(candidateDisplayName(right));
-      if (!leftName || leftName !== rightName) return false;
+      let sameId = false;
+      for (const field of ["apartmentId", "kaptCode", "complexNo"]) {
+        const a = String(left[field] || "").trim(), b = String(right[field] || "").trim();
+        if (a && b && a !== b) return false;
+        if (a && b) sameId = true;
+      }
       const leftDong = compactText(left.legalDong || left.dong || "");
       const rightDong = compactText(right.legalDong || right.dong || "");
       if (leftDong && rightDong && leftDong !== rightDong) return false;
-      const leftJibun = compactText(left.jibun || "");
-      const rightJibun = compactText(right.jibun || "");
+      const leftJibun = parcelIdentityKey(left.jibun, left.legalDong || left.dong);
+      const rightJibun = parcelIdentityKey(right.jibun, right.legalDong || right.dong);
       if (leftJibun && rightJibun && leftJibun !== rightJibun) return false;
-      const leftRegion = compactText(left.region || left.displayRegion || left.address || "");
-      const rightRegion = compactText(right.region || right.displayRegion || right.address || "");
-      if (!leftRegion || !rightRegion) return true;
-      return leftRegion.includes(rightRegion) || rightRegion.includes(leftRegion);
+      const regionKey = value => compactText(String(value || "").replace(/특별자치도|특별자치시|특별시|광역시|[시도](?=\s|$)/g, ""));
+      const leftRegion = regionKey(left.region || left.displayRegion || left.address);
+      const rightRegion = regionKey(right.region || right.displayRegion || right.address);
+      if (leftRegion && rightRegion && !leftRegion.includes(rightRegion) && !rightRegion.includes(leftRegion)) return false;
+      if (sameId) return true;
+      const leftName = compactText(candidateDisplayName(left));
+      const rightName = compactText(candidateDisplayName(right));
+      return Boolean(leftName && leftName === rightName && leftRegion && rightRegion
+        && leftDong && rightDong);
     }
 
     function syncAptSearchCandidateData(index, candidate) {
@@ -12406,6 +12486,12 @@
         </svg>
         <span>지도</span>
       </button>`;
+    }
+
+    function aptSearchMapSelectionKey(button) {
+      const card = button.closest("[data-apt-card-index]");
+      const item = card ? currentAptSearchItems[Number(card.dataset.aptCardIndex)] : null;
+      return item ? candidateIdentityKey(item) : button.dataset.candidateMapKey || "";
     }
 
     function candidateLoadMoreHtml(visibleCount, totalCount) {
@@ -12751,6 +12837,10 @@
                 <span class="candidate-map-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6.5 9 3l6 3.5 6-3.5v14l-6 3.5-6-3.5-6 3.5z"></path><path d="M9 3v14"></path><path d="M15 6.5v14"></path></svg></span>
                 <span class="candidate-map-tool-text">정비</span>
               </label>
+              <label class="candidate-map-layer-toggle" title="주변 개발계획의 참고구역 보기">
+                <input type="checkbox" data-candidate-map-reference-toggle aria-label="주변 개발계획"${candidateMapReferenceEnabled ? " checked" : ""}>
+                <span class="candidate-map-tool-text">주변<br>개발계획</span>
+              </label>
               <button class="candidate-map-measure-toggle" type="button" data-candidate-map-measure-toggle aria-pressed="${candidateMapMeasurementEnabled ? "true" : "false"}" aria-label="${candidateMapMeasurementEnabled ? "거리 측정 중" : "거리 측정"}" title="거리 측정">
                 <span class="candidate-map-tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20 20 4"></path><path d="m8 16 2 2"></path><path d="m11 13 2 2"></path><path d="m14 10 2 2"></path></svg></span>
                 <span class="candidate-map-tool-text">측정</span>
@@ -12758,6 +12848,7 @@
             </div>
             <p class="candidate-map-measure-status" data-candidate-map-measure-status hidden></p>
             <p class="candidate-map-caption" data-candidate-map-caption hidden></p>
+            <p class="candidate-map-zone-legend"${candidateMapRedevelopmentEnabled || candidateMapReferenceEnabled ? "" : " hidden"}>${redevelopmentZoneLegendHtml({ renewal:candidateMapRedevelopmentEnabled, reference:candidateMapReferenceEnabled })}</p>
           </div>
         </div>
         <div class="result-info-sheet candidate-detail-sheet candidate-map-detail-sheet" data-candidate-map-detail-sheet role="dialog" aria-modal="true" aria-labelledby="candidateMapDetailTitle" aria-hidden="true" hidden></div>
@@ -12810,11 +12901,11 @@
         item.legalDong || item.dong || "",
         item.jibun || "",
         address || "",
-      ].map(value => compactText(value)).filter(Boolean).join("|");
+      ].map((value, index) => index === 4 ? parcelIdentityKey(value) : compactText(value)).filter(Boolean).join("|");
     }
 
     function candidateMapCacheKey(item, address = candidateMapAddress(item)) {
-      return `realEstateSearch.mapGeocode.v2:${candidateMapLocationKey(item, address)}`;
+      return `realEstateSearch.mapGeocode.v3:${candidateMapLocationKey(item, address)}`;
     }
 
     function cachedCandidateCoordinates(item, address = candidateMapAddress(item)) {
@@ -13028,9 +13119,9 @@
         setLevel(level) { this._map.setZoom(leafletZoomFromKakaoLevel(level)); }
         setCenter(position) { this._map.setView([position.latitude, position.longitude], this._map.getZoom()); }
         panTo(position) { this._map.panTo([position.latitude, position.longitude]); }
-        setBounds(bounds) {
+        setBounds(bounds, top = 42, right = top, bottom = top, left = right) {
           if (!bounds?.points?.length) return;
-          this._map.fitBounds(bounds.toLeafletBounds(), { padding:[42, 42], maxZoom:16 });
+          this._map.fitBounds(bounds.toLeafletBounds(), { paddingTopLeft:[left, top], paddingBottomRight:[right, bottom], maxZoom:16 });
         }
       }
       class Polyline {
@@ -13196,7 +13287,7 @@
 
     function candidateMapRedevelopmentBbox() {
       const level = Number(candidateMap?.getLevel?.() || 99);
-      if (!candidateMapRedevelopmentEnabled || candidateMapPresentationMode !== "markers" || level > CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL) return "";
+      if ((!candidateMapRedevelopmentEnabled && !candidateMapReferenceEnabled) || candidateMapPresentationMode !== "markers" || level > CANDIDATE_MAP_REDEVELOPMENT_LABEL_LEVEL) return "";
       return candidateMapBoundsBbox();
     }
 
@@ -13270,6 +13361,53 @@
       return value.replace(/\(.+?\)/g, "").trim();
     }
 
+    function redevelopmentZoneIsRenewal(zone = {}) {
+      if (zone.zoneKind) return zone.zoneKind === "renewal";
+      // Non-boundary project points still use their explicit project type.
+      return !zone.geometry && ["redevelopment", "reconstruction"].includes(zone.projectTypeCode || zone.projectType);
+    }
+
+    function redevelopmentZonePolygonStyle(zone = {}) {
+      const renewal = redevelopmentZoneIsRenewal(zone);
+      const reference = zone.zoneKind === "reference";
+      return { strokeWeight:renewal ? 2.5 : 2,
+        strokeColor:renewal ? "#e86a32" : reference ? "#1185d8" : "#6b7280",
+        strokeOpacity:.8, strokeStyle:!renewal && !reference ? "shortdash" : "solid",
+        fillColor:renewal ? "#f05a28" : reference ? "#1185d8" : "#6b7280",
+        fillOpacity:renewal ? .13 : .06, clickable:false, zIndex:renewal ? 3 : reference ? 1 : 2 };
+    }
+
+    function mapZoneIsVisible(zone, { renewal = true, reference = false } = {}) {
+      return zone.zoneKind === "reference" ? reference : renewal;
+    }
+
+    function redevelopmentZoneLegendHtml({ renewal = true, reference = false } = {}) {
+      return [
+        renewal ? '<span style="color:#b74718">주황: 정비사업</span>' : "",
+        reference ? '<span style="color:#1185d8">파랑: 참고 구역</span>' : "",
+        renewal ? '<span style="color:#6b7280">회색: 확인 중</span>' : "",
+      ].filter(Boolean).join(" · ");
+    }
+
+    function setCandidateMapZoneVisibility({ renewal = candidateMapRedevelopmentEnabled, reference = candidateMapReferenceEnabled } = {}) {
+      candidateMapRedevelopmentEnabled = renewal;
+      candidateMapReferenceEnabled = reference;
+      candidateMapRedevelopmentRequestSeq += 1;
+      candidateMapRedevelopmentLastBbox = "";
+      clearTimeout(candidateMapRedevelopmentTimer);
+      clearCandidateMapRedevelopmentLayers();
+      const legend = candidateMapQuery(".candidate-map-zone-legend");
+      if (legend) {
+        legend.hidden = !renewal && !reference;
+        legend.innerHTML = redevelopmentZoneLegendHtml({ renewal, reference });
+      }
+      const renewalToggle = candidateMapQuery("[data-candidate-map-redevelopment-toggle]");
+      const referenceToggle = candidateMapQuery("[data-candidate-map-reference-toggle]");
+      if (renewalToggle) renewalToggle.checked = renewal;
+      if (referenceToggle) referenceToggle.checked = reference;
+      if (candidateMapKakao) scheduleCandidateMapRedevelopmentZones(candidateMapKakao, 0);
+    }
+
     function isPriceRelevantRedevelopmentZone(zone = {}) {
       const text = `${zone.name || ""} ${zone.projectType || ""} ${zone.stage || ""} ${zone.sourceNote || ""}`;
       // Reviewed occupancy corrections are applied by the shared map API.
@@ -13278,6 +13416,7 @@
     }
 
     function redevelopmentZoneAlias(zone = {}) {
+      if (zone.sourceId) return null; // Shared official names apply on both maps.
       const id = String(zone.id || "");
       const name = String(zone.name || "").replace(/\s+/g, " ").trim();
       const type = String(zone.projectType || "");
@@ -13293,6 +13432,7 @@
     function redevelopmentZoneTitle(zone) {
       const alias = redevelopmentZoneAlias(zone);
       if (alias?.title) return alias.title;
+      if (zone?.sourceId) return zone.name || "정비구역";
       const name = String(zone?.name || "정비구역").replace(/\s+/g, " ").trim();
       const type = redevelopmentZoneTypeLabel(zone?.projectType);
       if (!type || name.includes(type)) return name;
@@ -13303,20 +13443,36 @@
       return String(stage || "단계 확인 필요").replace(/\s+/g, " ").replace(/\(연번부여\)/g, "").trim();
     }
 
+    function mapZoneDevelopmentLabelHtml(zone) {
+      const label = zone?.developmentContext?.displayLabel;
+      return label ? `<span class="map-zone-development">${esc(label)}</span>` : "";
+    }
+
+    function mapZoneDevelopmentDetailHtml(zone) {
+      const context = zone?.developmentContext;
+      if (!context?.displayLabel) return "";
+      return `<p class="map-zone-development">${esc(context.displayLabel)}<br>${esc(context.description || "")}</p>
+        <p>${zippickFutureSourceLink(context.sourceUrl, "아파트 자료")}
+        · ${zippickFutureSourceLink(context.statusSourceUrl, "공사 진행 자료")}
+        · 확인 ${esc(context.checkedAt || "미확인")}</p>`;
+    }
+
     function redevelopmentZoneLabel(zone) {
       const title = redevelopmentZoneTitle(zone);
       const alias = redevelopmentZoneAlias(zone);
       const stage = alias?.stage || redevelopmentZoneStageLabel(zone?.stage);
-      return `<span class="redevelopment-zone-label"><strong>${esc(title)}</strong><span>${esc(stage)}</span></span>`;
+      const reason = ["unverified", "conflict"].includes(zone?.stageStatus) ? zone.stageReason : "";
+      return `<span class="redevelopment-zone-label"><strong>${esc(title)}</strong>${mapZoneDevelopmentLabelHtml(zone)}<span>${esc(stage)}</span>${reason ? `<small>${esc(reason)}</small>` : ""}</span>`;
     }
 
     function redevelopmentZoneNameLabel(zone) {
       const alias = redevelopmentZoneAlias(zone);
       const stage = alias?.stage || redevelopmentZoneStageLabel(zone?.stage);
-      return `<span class="redevelopment-zone-name-label"><span>${esc(redevelopmentZoneTitle(zone))}</span><small>${esc(stage)}</small></span>`;
+      return `<span class="redevelopment-zone-name-label" style="background:${redevelopmentZonePolygonStyle(zone).fillColor}"><span>${esc(redevelopmentZoneTitle(zone))}</span>${mapZoneDevelopmentLabelHtml(zone)}<small>${esc(stage)}</small></span>`;
     }
 
     function redevelopmentZonePriority(zone = {}) {
+      if (zone.zoneKind) return zone.zoneKind === "renewal" ? 1 : zone.zoneKind === "unknown" ? 5 : 8;
       const text = `${zone.projectType || ""} ${zone.name || ""}`;
       if (/재개발|재건축/.test(text)) return 1;
       if (/신속통합기획|모아타운|가로주택|소규모/.test(text)) return 2;
@@ -13382,8 +13538,13 @@
       });
       const selectedPoint = candidateMapSelectedLatLng(kakao);
       const limit = candidateMapRedevelopmentNameLabelLimit();
+      const labeledZones = new Set();
       candidateMapRedevelopmentLayers
-        .slice()
+        .filter(layer => {
+          if (labeledZones.has(layer.zone.id)) return false;
+          labeledZones.add(layer.zone.id);
+          return true;
+        })
         .sort((left, right) => redevelopmentZoneLabelRank(left, selectedPoint) - redevelopmentZoneLabelRank(right, selectedPoint))
         .slice(0, limit)
         .forEach(layer => {
@@ -13394,7 +13555,7 @@
     function showCandidateMapRedevelopmentLabel(kakao, layer, zone, polygon, event = null) {
       if (!candidateMap || !layer) return;
       clearCandidateMapRedevelopmentLabels();
-      const position = redevelopmentZoneCenter(kakao, polygon) || event?.latLng;
+      const position = event?.latLng || redevelopmentZoneCenter(kakao, polygon);
       if (!position) return;
       const element = document.createElement("span");
       element.innerHTML = redevelopmentZoneLabel(zone);
@@ -13415,7 +13576,7 @@
         : compactText(entry.zone?.name || "") === compactText(target.name)
           && compactText(entry.zone?.projectType || "") === compactText(target.projectType));
       if (!layer) return false;
-      layer.polygon?.setOptions?.({ strokeWeight:4, strokeColor:"#1b64da", fillOpacity:.16 });
+      layer.polygon?.setOptions?.({ ...redevelopmentZonePolygonStyle(layer.zone), strokeWeight:4, fillOpacity:.16 });
       showCandidateMapRedevelopmentLabel(kakao, layer, layer.zone, layer.polygonPath);
       const preview = candidateMapQuery("[data-candidate-map-preview]");
       if (preview) preview.hidden = true;
@@ -13441,7 +13602,8 @@
     function showCandidateMapRedevelopmentLabelAt(kakao, position) {
       if (!position) return false;
       const layer = candidateMapRedevelopmentLayers
-        .filter(item => mapPointInRing(position, item.path))
+        .filter(item => mapPointInRing(position, item.path)
+          && !item.polygonPath.slice(1).some(hole => mapPointInRing(position, hole)))
         .sort((left, right) => {
           const priorityDiff = redevelopmentZonePriority(left.zone) - redevelopmentZonePriority(right.zone);
           if (priorityDiff) return priorityDiff;
@@ -13458,9 +13620,9 @@
     async function renderCandidateMapRedevelopmentZones(kakao) {
       if (!candidateMap) return;
       const bbox = candidateMapRedevelopmentBbox();
-      candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", bbox ? "loading" : "hidden");
-      if (bbox) setCandidateMapCaption("주변 정비구역을 불러오고 있어요.");
       if (!bbox) {
+        candidateMapRedevelopmentRequestSeq += 1;
+        candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", "hidden");
         candidateMapRedevelopmentLastBbox = "";
         clearCandidateMapRedevelopmentLayers();
         return;
@@ -13469,6 +13631,8 @@
         syncCandidateMapRedevelopmentNameLabels(kakao);
         return;
       }
+      candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", "loading");
+      setCandidateMapCaption("주변 정비구역을 불러오고 있어요.");
       const requestSeq = ++candidateMapRedevelopmentRequestSeq;
       candidateMapRedevelopmentLastBbox = bbox;
       try {
@@ -13476,25 +13640,18 @@
         if (requestSeq !== candidateMapRedevelopmentRequestSeq || !candidateMap) return;
         clearCandidateMapRedevelopmentLayers();
         const zones = (Array.isArray(payload?.zones) ? payload.zones : [])
-          .filter(isPriceRelevantRedevelopmentZone);
+          .filter(zone => mapZoneIsVisible(zone, { renewal:candidateMapRedevelopmentEnabled, reference:candidateMapReferenceEnabled }));
         zones.forEach(zone => {
           const polygons = redevelopmentZoneRings(kakao, zone.geometry);
           polygons.forEach(polygon => {
             const path = polygon[0] || [];
             if (path.length < 3) return;
-            const isPublic = /공공|도심/.test(`${zone.projectType || ""} ${zone.name || ""}`);
-            const strokeColor = isPublic ? "#00b894" : "#1185d8";
             const polygonLayer = new kakao.maps.Polygon({
               map:candidateMap,
-              path,
-              strokeWeight:2,
-              strokeColor,
-              strokeOpacity:.72,
-              fillColor:strokeColor,
-              fillOpacity:.06,
-              clickable:false,
+              path:polygon,
+              ...redevelopmentZonePolygonStyle(zone),
             });
-            polygonLayer.setZIndex?.(1);
+            polygonLayer.setZIndex?.(redevelopmentZonePolygonStyle(zone).zIndex);
             candidateMapRedevelopmentLayers.push({ polygon:polygonLayer, label:null, nameLabel:null, path, polygonPath:polygon, zone });
           });
         });
@@ -13509,13 +13666,16 @@
             : candidateMapRedevelopmentFocus
             ? `${zoneFocusName} 경계를 찾지 못했어요. 지도를 움직여 다시 확인해 주세요.`
             : candidateMapRedevelopmentLayers.length
-            ? `주변 정비구역 ${candidateMapRedevelopmentLayers.length.toLocaleString("ko-KR")}곳 표시 중`
+            ? `주변 구역 ${new Set(candidateMapRedevelopmentLayers.map(layer => layer.zone.id)).size.toLocaleString("ko-KR")}곳 표시 중`
+            : payload?.zones?.length
+            ? candidateMapReferenceEnabled ? "선택한 표시 조건에 맞는 구역이 없어요." : "이 범위에 표시할 구역이 없어요. 주변 개발계획을 켜면 참고구역도 볼 수 있어요."
             : payload?.mapStatus === "no_licensed_boundaries"
             ? "정비구역 경계 자료가 없어 지도에는 단지만 보여요. 사업 위치는 리포트에서 확인하세요."
-            : "현재 지도 범위에 표시할 정비구역이 없어요."
+            : "이 범위는 경계 자료를 확인 중이에요. 정비사업이 없다는 뜻은 아니에요."
         );
       } catch (_) {
         if (requestSeq !== candidateMapRedevelopmentRequestSeq) return;
+        candidateMapRedevelopmentLastBbox = "";
         clearCandidateMapRedevelopmentLayers();
         candidateMapContainer?.setAttribute?.("data-redevelopment-zone-state", "error");
         setCandidateMapCaption("정비구역을 지금 불러오지 못했어요.");
@@ -14261,9 +14421,24 @@
         const bounds = new candidateMapKakao.maps.LatLngBounds();
         bounds.extend(selectedEntry.position);
         bounds.extend(stationPosition);
-        candidateMap.setBounds(bounds);
-        selectCandidateMapItem(item, { pan:false });
+        // Keep the complete apartment name visible beside the route and above
+        // the mobile detail card, including when the apartment is at an edge.
+        const sheet = candidateMapQuery("[data-candidate-map-preview]");
+        const sheetPadding = window.matchMedia("(max-width: 760px)").matches
+          ? Math.min(320, Math.round(sheet?.getBoundingClientRect().height || 240)) + 24
+          : 48;
         setCandidateMapCaption("가까운 역을 표시했어요. 연결선은 직선 거리 참고용이에요.");
+        const canvasRect = candidateMapQuery(".candidate-map-canvas")?.getBoundingClientRect();
+        const toolsRect = candidateMapQuery(".candidate-map-map-tools")?.getBoundingClientRect();
+        const markerHeight = selectedEntry.element?.getBoundingClientRect().height || 110;
+        const topPadding = canvasRect && toolsRect
+          ? Math.max(170, Math.min(
+            Math.ceil(toolsRect.bottom - canvasRect.top + markerHeight * 1.2 + 12),
+            canvasRect.height - sheetPadding - 100,
+          ))
+          : 170;
+        candidateMap.setBounds(bounds, topPadding, 112, sheetPadding, 112);
+        selectCandidateMapItem(item, { pan:false });
       } catch (error) {
         if (candidateMapSelectedKey !== key) return;
         candidateMapStationRouteLoadingKey = "";
@@ -14423,6 +14598,10 @@
 
     function selectCandidateMapItem(item, options = {}) {
       const key = candidateIdentityKey(item);
+      if (candidateMapOrigin === "aptSearch") {
+        const summary = candidateMapQuery(".candidate-map-condition-copy");
+        if (summary) summary.innerHTML = candidateMapConditionItems([item], true).map(candidateMapConditionShortcutHtml).join("");
+      }
       if (candidateMapStationGuide?.candidateKey && candidateMapStationGuide.candidateKey !== key) {
         clearCandidateMapStationGuide();
       }
@@ -14453,6 +14632,7 @@
         detailSheet.innerHTML = candidateMapDetailSheetHtml(item);
         detailSheet.dataset.candidateKey = key;
         if (wasOpen) {
+          scheduleZippickReportMaps(detailSheet);
           requestAnimationFrame(() => {
             detailSheet.querySelector("[data-candidate-map-detail-close]")?.focus();
             syncSparkAxisLabelSizes(detailSheet);
@@ -14759,9 +14939,7 @@
         longitude,
         candidate:selected || reportItem || null,
       };
-      candidateMapRedevelopmentEnabled = true;
-      const toggle = candidateMapQuery("[data-candidate-map-redevelopment-toggle]");
-      if (toggle) toggle.checked = true;
+      setCandidateMapZoneVisibility({ renewal:true });
       if (button.closest("[data-candidate-map-detail-sheet]")) setCandidateMapDetailOpen(false);
       setCandidateViewMode("map");
     }
@@ -16165,7 +16343,7 @@
           </div>
         </div>`;
       }
-      const hasScore = signals.score !== null && Number.isFinite(Number(signals.score));
+      const hasScore = Number.isFinite(zpNum(signals.score));
       const badgeList = signals.badges || [];
       const badges = badgeList.map(badge => `<span class="badge ${esc(badge.tone || "wait")}">${esc(badge.label)}</span>`).join("");
       const leaderRegion = signals.leaderRegion || item.region || "해당 지역";
@@ -16197,17 +16375,6 @@
           ${badges ? `<div class="signal-panel-badges">${badges}</div>` : ""}
         </div>`;
       }
-      const scoreIsMeasurable = Number(signals.score) > 0;
-      if (!scoreIsMeasurable) {
-        const statusCaption = "확인된 자료로는 최근 시장 신호를 측정할 수 없어요";
-        return `<div class="signal-panel" aria-label="최근 시장 신호 산정 상태">
-          <div class="signal-panel-head">
-            <span class="signal-score">최근 시장 신호 측정 불가</span>
-            <span class="signal-panel-caption">${statusCaption}</span>
-          </div>
-          ${badges ? `<div class="signal-panel-badges">${badges}</div>` : ""}
-        </div>`;
-      }
       return `<div class="signal-panel" aria-label="최근 시장 신호와 산정 근거">
         <div class="signal-panel-head">
           <span class="signal-score">최근 시장 신호 ${esc(signals.score)}점 · ${esc(signalTierLabel(signals.score))}</span>
@@ -16231,11 +16398,13 @@
 
     function candidateIdentityKey(item) {
       return encodeURIComponent([
-        item.apartmentId || item.kaptCode || item.complexNo || "",
+        item.apartmentId || "",
+        item.kaptCode || "",
+        item.complexNo || "",
         item.region || "",
         item.name || candidateDisplayName(item),
         item.legalDong || item.dong || "",
-        item.jibun || "",
+        parcelIdentityKey(item.jibun, item.legalDong || item.dong),
         item.areaLabel || item.displayAreaLabel || "",
       ].join("\u001f"));
     }
@@ -16791,6 +16960,53 @@
       return row.bands.find(band => sig >= band.min) || row.bands[row.bands.length - 1];
     }
 
+    function zippickPartialVerdict(item, matrixVerdict) {
+      // 최근 흐름 점수는 충분한 거래가 있어야만 계산한다. 거래가 적다는
+      // 이유만으로 단지·입지 판단까지 숨기지 않는다. 다만 최신 공식 거래가
+      // 확인된 경우에만, 가격·흐름을 추가 확인하는 조건부 결론을 낸다.
+      if (matrixVerdict?.tone !== "missing") return matrixVerdict;
+      const locationValue = item?.locationScore?.score;
+      const signalValue = item?.signals?.score;
+      const location = locationValue === null || locationValue === undefined || locationValue === ""
+        ? NaN : Number(locationValue);
+      const hasSignal = signalValue !== null && signalValue !== undefined && signalValue !== ""
+        && Number.isFinite(Number(signalValue));
+      const latestPrice = Number(item?.latestDealPriceEok);
+      const latestDate = String(item?.latestDealDate || "").slice(0, 10);
+      const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(latestDate) ? new Date(`${latestDate}T00:00:00`) : null;
+      const latestAgeDays = parsedDate && Number.isFinite(parsedDate.getTime())
+        ? Math.max(0, Math.floor((Date.now() - parsedDate.getTime()) / 86400000)) : NaN;
+      const verifiedRecentTrade = item?.priceIdentityVerified === true
+        && Number.isFinite(latestPrice) && latestPrice > 0
+        && Number.isFinite(latestAgeDays) && latestAgeDays <= 120;
+      if (!Number.isFinite(location) || hasSignal || !verifiedRecentTrade) return matrixVerdict;
+      if (location >= 65) {
+        return {
+          label: "조건부 검토",
+          short: "조건부",
+          tone: "conditional",
+          partial: true,
+          title: "단지 조건은 좋아요. 거래가 적어 가격과 최근 흐름은 더 확인해야 해요.",
+        };
+      }
+      if (location >= 50) {
+        return {
+          label: "관망",
+          short: "관망",
+          tone: "hold",
+          partial: true,
+          title: "단지 조건은 보통이에요. 거래가 적어 지금은 가격을 더 확인하세요.",
+        };
+      }
+      return {
+        label: "다른 단지 우선",
+        short: "다른 단지",
+        tone: "risk",
+        partial: true,
+        title: "단지 조건이 약해요. 거래가 더 쌓인 다른 단지를 먼저 보세요.",
+      };
+    }
+
     // ── 고점 매수 방지 ──────────────────────────────────────────────────
     // 신호 점수는 '최근 6개월 가격 변화'에 40점이 걸려 있다. 구조상 많이
     // 오른 단지일수록 점수가 높다. 그대로 두면 2년 고점 부근에서 '적극
@@ -17257,9 +17473,10 @@
     }
 
     function zippickDevelopmentCompletedOfficialZone(zone) {
-      const stage = String(zone?.stage || "").replace(/\s+/g, "");
-      if (/예정|계획|부분|일부|임시|미준공|미완료|미승인|신청|심사|모집|입주중|입주시작|입주개시|입주진행/.test(stage)) return false;
-      return /^(입주|입주완료|준공|준공인가|준공완료|사용승인|사용승인완료|사업완료|해제|폐지)$/.test(stage);
+      if (zone?.stage === "completed" || zone?.completed === true) return true;
+      const stage = String(zone?.stageLabel || zone?.stage || "").replace(/\s+/g, "");
+      if (/예정|계획|부분|일부|임시|미준공|미완료|미승인|신청|심사|모집/.test(stage)) return false;
+      return /^(입주|입주완료|입주중|입주진행중|입주개시|입주시작|준공|준공인가|준공완료|사용승인|사용승인완료|사업완료|해제|폐지)$/.test(stage);
     }
 
     function zippickActiveOfficialDevelopmentZones(zones = []) {
@@ -17449,6 +17666,7 @@
               id:zone.id,
               name:zone.name || "정비구역",
               projectType:zone.projectType || "정비사업",
+              districtCode:zone.districtCode || "",
               stage:zone.stage || "단계 확인 필요",
 	              source:zone.source || "",
 	              sourceNote:zone.sourceNote || "",
@@ -17522,11 +17740,25 @@
 
     function zippickDevelopmentOfficialZoneSelfMatch(item, zone) {
       const zoneType = `${zone?.projectType || ""} ${zone?.name || ""}`;
-      if (!/(재개발|재건축|리모델링)/.test(zoneType)) return false;
+      if (!/(재개발|재건축|리모델링|신속통합기획)/.test(zoneType)) return false;
+      const districtCode = String(item?.apartmentId || "").match(/^\d{5}/)?.[0];
+      if (districtCode && zone?.districtCode && districtCode !== String(zone.districtCode)) return false;
       const zoneName = compactText(zone?.name || "");
       if (zoneName.length < 3) return false;
       const keys = zippickDevelopmentIdentityKeys(item);
       if (keys.some(key => zoneName.includes(key) || (zoneName.length >= 4 && key.includes(zoneName)))) return true;
+      // '미성'처럼 짧은 이름은 단독으로 비교하지 않는다. 법정동을 붙인
+      // 공식 구역명과 정확히 맞고 실제 경계 안(또는 50m 이내)일 때만 연결한다.
+      const dong = compactText(item?.legalDong || item?.dong || "");
+      const closeToBoundary = zone?.inside === true || (Number.isFinite(zone?.distanceMeters)
+        && zone.distanceMeters >= 0 && zone.distanceMeters <= ZIPPICK_OWN_DEVELOPMENT_BOUNDARY_TOLERANCE_METERS);
+      if (dong && closeToBoundary) {
+        const prefixes = [dong, dong.replace(/동$/, "")];
+        const names = [candidateDisplayName(item), item?.name, item?.apartmentName]
+          .map(value => compactText(value).replace(/아파트$/, "")).filter(name => name.length >= 2);
+        if (names.some(name => prefixes.some(prefix => prefix &&
+          [prefix + name, prefix + name + "아파트"].includes(zoneName)))) return true;
+      }
       // 공식 구역은 '목동7', 단지명은 '목동신시가지아파트7단지'처럼
       // 적힐 수 있다. 구역 안에 실제로 들어온 경우에만 짧은 별칭을 허용한다.
       const aliases = keys.map(key => /^(.+?)신시가지(?:아파트)?(\d+)단지$/.exec(key))
@@ -17833,17 +18065,32 @@
       return { complexes, dropped:all.filter(row => zippickLifestyleComplexScale(row) < ZP_LIFESTYLE_MIN_HOUSEHOLDS).length };
     }
 
+    function zippickLifestylePlanRating(analysis) {
+      const plan = analysis?.planRating;
+      return ["living-area-plan-v3-beta", "living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan?.version) ? plan : null;
+    }
+
     function zippickLifestyleChangeRatingData(item) {
       const analysis = item?.futureTransformation;
+      if (analysis?.status === "error") return null;
+      if (analysis?.status === "stale") return null;
       if (analysis?.modelVersion !== "living-area-v2-beta") return null;
-      const rated = analysis.planRating?.version === "living-area-plan-v3-beta" ? analysis.planRating
-        : analysis.status === "ready" ? analysis : null;
+      const rated = zippickLifestylePlanRating(analysis)
+        || (analysis.status === "ready" ? analysis : null);
       return rated?.status === "ready" && typeof rated.score === "number" && Number.isFinite(rated.score)
         && rated.score >= 0 && rated.score <= 5 ? rated.score : null;
     }
 
     function zippickLifestyleChangeRatingView(item) {
       const analysis = item?.futureTransformation;
+      if (analysis?.status === "error") {
+        return {
+          points:0,
+          title:"생활권 변화 · 불러오기 실패",
+          scoreText:"불러오기 실패",
+          state:"error",
+        };
+      }
       const score = zippickLifestyleChangeRatingData(item);
       if (Number.isFinite(score)) {
         return {
@@ -17855,36 +18102,65 @@
           state:"scored",
         };
       }
-      const plan = analysis?.planRating?.version === "living-area-plan-v3-beta" ? analysis.planRating : null;
+      const plan = zippickLifestylePlanRating(analysis);
       const available = [plan?.subScores?.housing, plan?.subScores?.transport]
         .filter(value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 5);
       if (available.length) {
-        const points = available.reduce((sum, value) => sum + value, 0) / available.length;
         const housingOnly = Number.isFinite(plan?.subScores?.housing) && !Number.isFinite(plan?.subScores?.transport);
         const transportOnly = Number.isFinite(plan?.subScores?.transport) && !Number.isFinite(plan?.subScores?.housing);
+        if (!housingOnly && !transportOnly) {
+          return {
+            points:0,
+            title:"항목별 점수는 확인했지만 종합점수 계산이 필요해요",
+            scoreText:"종합점수 확인 필요",
+            state:"partial",
+          };
+        }
+        const points = housingOnly ? plan.subScores.housing : plan.subScores.transport;
         return {
           points,
-          title:housingOnly ? "주거환경 개선 점수 · 교통 평가 보류"
-            : transportOnly ? "교통 개선 점수 · 주거환경 평가 보류" : "생활권 변화 · 확인된 항목 참고",
-          scoreText:`${housingOnly ? "주거 " : transportOnly ? "교통 " : ""}${points.toFixed(1)}/5`,
+          title:housingOnly ? (plan.transportCoverage?.status === "station_mapping_incomplete" ? "주거환경 점수 · 새 철도 확인 중" : "주거환경 개선 점수 · 교통 평가 보류")
+            : transportOnly ? (points === 0 ? "새 철도 가점 없음 · 주거환경 평가 보류" : "교통 개선 점수 · 주거환경 평가 보류") : "생활권 변화 · 확인된 항목 참고",
+          scoreText:`${housingOnly ? "주거 " : transportOnly ? "새 철도 " : ""}${points.toFixed(1)}/5`,
           state:"partial",
         };
       }
       return {
         points:0,
-        title:"생활권 변화 · 자료 부족",
-        scoreText:"자료 부족",
+        title:analysis?.status === "stale" || plan?.status === "stale"
+          ? "생활권 변화 · 최신 자료 확인 필요" : "생활권 변화 · 평가 자료 부족",
+        scoreText:analysis?.status === "stale" || plan?.status === "stale"
+          ? "최신 자료 확인 필요" : "평가 자료 부족",
         state:"missing",
       };
     }
 
-    function zippickFutureSourceLink(url, label = "공식 자료") {
+    function zippickFutureSourceIsOfficial(url) {
       try {
         const parsed = new URL(url);
         const officialHost = parsed.hostname.endsWith(".go.kr") || ["ms.smc.seoul.kr", "www.kr.or.kr"].includes(parsed.hostname);
-        if (parsed.protocol !== "https:" || parsed.username || parsed.password || !officialHost) return "";
-        return `<a href="${esc(parsed.href)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`;
+        return parsed.protocol === "https:" && !parsed.username && !parsed.password && officialHost;
+      } catch (_) { return false; }
+    }
+
+    function zippickOfficialDetailUrl(url) {
+      try {
+        if (!zippickFutureSourceIsOfficial(url)) return "";
+        const parsed = new URL(url), query = parsed.searchParams;
+        if (parsed.port && parsed.port !== "443") return "";
+        if (["data.seoul.go.kr", "www.data.go.kr", "data.go.kr", "gris.gg.go.kr"].includes(parsed.hostname)
+          || /\/rest\/|mapserver|datasetview|\/opendata\//i.test(parsed.pathname)) return "";
+        if (parsed.hostname === "cleanup.seoul.go.kr")
+          return ["cafeUrl", "cafeId", "othbcListSn"].some(key => query.get(key)) ? parsed.href : "";
+        if (/\/archives\/\d+|\.(pdf|hwp|hwpx|jpg|png)$/i.test(parsed.pathname)) return parsed.href;
+        if (parsed.pathname.endsWith("/recordView.do") && query.get("key")) return parsed.href;
+        return ["seq", "id", "idx", "bIdx", "nttNo", "nttSn", "pcode", "articleId"].some(key => query.get(key)) ? parsed.href : "";
       } catch (_) { return ""; }
+    }
+
+    function zippickFutureSourceLink(url, label = "공식 자료") {
+      const detailUrl = zippickOfficialDetailUrl(url);
+      return detailUrl ? `<a href="${esc(detailUrl)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>` : "";
     }
 
     function zippickFutureReferenceProjects(item) {
@@ -17902,6 +18178,7 @@
           relation:"같은 지역 참고 · 실제 동선 미확인", timing:project.plannedCompletion || "완료 일정 미확인" });
       }
       for (const project of item?.plannedRail || []) {
+        if (zippickRailUnderReview(project)) continue;
         rows.push({ ...project, name:project.stations?.length === 1 ? `${project.stations[0]}역 ${project.name}` : project.name,
           kind:"계획 교통", relation:project.regionalReference
             ? "같은 지역의 철도사업 · 역 위치와 이용 경로 미확인"
@@ -17918,7 +18195,7 @@
       const seen = new Set();
       return rows.filter(row => {
         const key = `${row.id || row.name}|${row.region || ""}|${row.legalDong || ""}`;
-        if (seen.has(key) || !zippickFutureSourceLink(row.sourceUrl)) return false;
+        if (seen.has(key) || !zippickFutureSourceIsOfficial(row.sourceUrl)) return false;
         seen.add(key);
         return true;
       });
@@ -17936,9 +18213,9 @@
       const districtDongs = new Set(projects.filter(project => project.region === district
         && project.legalDong && ["redevelopment", "reconstruction"].includes(project.projectType)
         && !["completed", "cancelled"].includes(project.stage)
-        && zippickFutureSourceLink(project.sourceUrl)).map(project => project.legalDong));
+        && zippickFutureSourceIsOfficial(project.sourceUrl)).map(project => project.legalDong));
       const cheongnyangniGtx = (item?.plannedRail || []).filter(line => ["gtx-b", "gtx-c"].includes(line.id)
-        && line.stations?.includes("청량리") && zippickFutureSourceLink(line.sourceUrl));
+        && line.stations?.includes("청량리") && zippickFutureSourceIsOfficial(line.sourceUrl));
       if (district === "동대문구" && districtDongs.size >= 2 && cheongnyangniGtx.length) {
         const lines = cheongnyangniGtx.map(line => line.name).join("·").replace("GTX-B·GTX-C", "GTX-B·C");
         return `동대문구 여러 동의 재개발과 청량리역 ${lines} 계획으로, 새 주거지와 광역 교통 선택지가 장기적으로 늘어날 수 있어요.`;
@@ -17951,7 +18228,7 @@
         && ["redevelopment", "reconstruction"].includes(project.projectType)
         && ["planning", "designated", "association", "approved", "disposal", "construction"].includes(project.stage)
         && !project.stale
-        && zippickFutureSourceLink(project.sourceUrl));
+        && zippickFutureSourceIsOfficial(project.sourceUrl));
       if (sameDong) {
         const progress = {
           planning:"계획이 나와", designated:"정비구역으로 지정돼", association:"조합이 설립돼",
@@ -17964,45 +18241,122 @@
         return `${sameDong.name} ${kind}이 ${progress} ${outlook}`;
       }
       return projects.some(project => ["redevelopment", "reconstruction"].includes(project.projectType)
-        && !["completed", "cancelled"].includes(project.stage) && zippickFutureSourceLink(project.sourceUrl))
+        && !["completed", "cancelled"].includes(project.stage) && zippickFutureSourceIsOfficial(project.sourceUrl))
         ? "이 지역에 정비사업이 있지만, 이 단지 주변의 변화인지는 아직 확인되지 않았어요."
         : "이 단지 주변의 정비사업 자료를 아직 확인하지 못했어요.";
+    }
+
+    function zippickRailUnderReview(project = {}) {
+      if (["construction", "completed", "cancelled"].includes(project.stageCode || project.stage)) return false;
+      return project.railReviewStatus === "reconsidering"
+        || /재추진|재검토/.test(project.stageLabel || project.stage || "");
+    }
+
+    function zippickLivingRailVisible(project, reviewEnabled = false) {
+      return reviewEnabled || !zippickRailUnderReview(project);
+    }
+
+    function zippickReviewRailReferences(item, analysis) {
+      const seen = new Set();
+      return [...(analysis.displayProjects || []), ...(analysis.capitalTransport?.matchedPlans || []),
+        ...(item?.plannedRail || []), ...(analysis.transportRoutes || [])].filter(project => {
+        if (!zippickRailUnderReview(project) || !zippickFutureSourceIsOfficial(project.sourceUrl)) return false;
+        const key = project.lineId || project.stationCoverage?.lineId || String(project.id || project.name).replace(/^metro-rail:/, "");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     }
 
     function zippickLivingTransportHtml(analysis, title = "확인된 교통 자료") {
       const stations = (analysis.displayProjects || []).filter(p => p.projectType === "transport");
       const routes = analysis.transportRoutes || [];
-      const rows = [...stations, ...routes].filter(p => zippickFutureSourceLink(p.sourceUrl));
+      const rows = [...stations, ...routes].filter(p => zippickFutureSourceIsOfficial(p.sourceUrl)
+        && (analysis.includeReviewRail || !zippickRailUnderReview(p)));
       if (!rows.length) return "";
       return `<div class="zpr-living-summary zpr-living-transport" aria-label="${esc(title)}"><h6>${esc(title)}</h6>${rows.map(p => {
         const route = p.geometryBasis === "official_reference_alignment";
-        return `<div class="zpr-living-summary-row"><span class="zpr-living-icon" aria-hidden="true">↗</span><div><strong>${esc(p.name)}</strong><p>${esc(route ? `지도 자료 표기: ${p.stageLabel || "단계 미확인"}` : p.factSummary || p.stageLabel || "단계 미확인")}</p>${Number.isFinite(p.distanceMeters) ? `<p>${route ? "노선까지" : "기존 역 대표점까지"} 직선 ${p.distanceMeters.toLocaleString("ko-KR")}m · ${route ? "역까지 거리 아님" : "도보거리 아님"}</p>` : ""}<small>${route ? "이미 개통한 구간이 포함될 수 있어요. 노선과 가깝다는 이유로 새 역세권 점수를 더하지 않아요." : esc(p.planningNote || "계획 경유역 자료예요. 실제 출입구와 도보시간은 별도로 확인해야 해요.")}</small><p>${zippickFutureSourceLink(p.sourceUrl)} · ${p.regionalReference && p.publishedAt ? `발표 ${esc(p.publishedAt)} · 확인 ${esc(p.checkedAt || p.sourceDate || "미확인")}` : `${route ? "조회" : "자료 기준"} ${esc(p.sourceDate || "미확인")}`}</p></div></div>`;
+        if (zippickRailUnderReview(p)) return `<div class="zpr-living-summary-row"><span class="zpr-living-icon" aria-hidden="true">↗</span><div><strong>${esc(p.name)}</strong><p>${esc(p.reviewLabel || "재추진 중 · 일정 미정")}</p><p>자료 표기: ${esc(p.stageLabel || p.stage || "진행 단계 확인 중")}</p><small>교통 가점과 매수 이유에서 제외한 참고 자료예요.</small><p>${zippickFutureSourceLink(zippickLivingProjectSourceUrl(p))} · 자료 기준 ${esc(p.sourceDate || "미확인")}</p></div></div>`;
+        return `<div class="zpr-living-summary-row"><span class="zpr-living-icon" aria-hidden="true">↗</span><div><strong>${esc(p.name)}</strong><p>${esc(route ? `지도 자료 표기: ${p.stageLabel || "단계 미확인"}` : p.factSummary || p.stageLabel || "단계 미확인")}</p>${Number.isFinite(p.distanceMeters) ? `<p>${route ? "노선까지" : "기존 역 대표점까지"} 직선 ${p.distanceMeters.toLocaleString("ko-KR")}m · ${route ? "역까지 거리 아님" : "도보거리 아님"}</p>` : ""}<small>${route ? "이미 개통한 구간이 포함될 수 있어요. 노선과 가깝다는 이유로 새 역세권 점수를 더하지 않아요." : esc(p.planningNote || "계획 경유역 자료예요. 실제 출입구와 도보시간은 별도로 확인해야 해요.")}</small><p>${zippickFutureSourceLink(zippickLivingProjectSourceUrl(p))} · ${p.regionalReference && p.publishedAt ? `발표 ${esc(p.publishedAt)} · 확인 ${esc(p.checkedAt || p.sourceDate || "미확인")}` : `${route ? "조회" : "자료 기준"} ${esc(p.sourceDate || "미확인")}`}</p></div></div>`;
       }).join("")}</div>`;
     }
 
     function zippickLifestyleChangeHtml(item) {
       const input = item?.futureTransformation;
-      const analysis = input?.modelVersion === "living-area-v2-beta" ? input : {};
+      const analysis = input?.modelVersion === "living-area-v2-beta" || input?.status === "error" ? input : {};
+      const analysisError = analysis.status === "error";
       const score = zippickLifestyleChangeRatingData(item);
-      const plan = analysis.planRating?.version === "living-area-plan-v3-beta" ? analysis.planRating : null;
-      const projects = analysis.displayProjects || [...(analysis.projects || []), ...(analysis.referenceProjects || [])];
+      const plan = zippickLifestylePlanRating(analysis);
+      const projects = analysisError ? [] : analysis.displayProjects || [...(analysis.projects || []), ...(analysis.referenceProjects || [])];
+      const mapItem = analysisError ? {...item, futureTransformation:{...analysis, projects:[], referenceProjects:[], displayProjects:[]}} : item;
       const scoreText = value => typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(1)} / 5` : "— / 5";
+      const weightText = key => Number.isFinite(plan?.weights?.[key]) ? `${Math.round(plan.weights[key]*100)}%` : "가중치 미확인";
+      const componentScores = plan?.subScores || analysis.subScores || {};
+      const housingScoreKnown = Number.isFinite(componentScores.housing);
+      const transportScoreKnown = Number.isFinite(componentScores.transport);
+      const partialScore = score === null && (housingScoreKnown !== transportScoreKnown);
+      const partialHeadline = housingScoreKnown
+        ? "주거환경은 확인했지만, 교통은 평가를 보류했어요."
+        : "교통은 확인했지만, 주거환경은 평가를 보류했어요.";
+      const rawHeadline = analysisError ? "생활권 자료를 불러오지 못했어요."
+        : partialScore && /평가할 자료가 부족|확인된 변화 자료가 부족|생활권 전체를 평가할 자료는 부족/.test(analysis.headline || "")
+          ? partialHeadline
+          : analysis.headline || "이 단지 주변의 변화 자료를 확인하고 있어요.";
+      const rawIntro = analysisError ? "잠시 후 리포트를 다시 열어 주세요."
+        : partialScore && /평가할 자료가 부족|확인된 변화 자료가 부족|생활권 전체를 평가할 자료는 부족/.test(analysis.headline || "")
+          ? (plan?.missingReasons?.[housingScoreKnown ? "transport" : "housing"] || "확인된 항목의 점수와 보류한 이유를 아래에서 따로 볼 수 있어요.")
+          : analysis.intro || "사업 위치와 진행 단계를 확인한 뒤 단지에 미치는 영향을 설명해요.";
+      // Verdict -> reason -> strengths/weaknesses -> briefing. "**" marks the one bold phrase per line.
+      const briefing = !analysisError && analysis.briefing?.reason ? analysis.briefing : null;
+      const briefText = text => esc(text).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      const briefGroup = (items, tone, title) => Array.isArray(items) && items.length
+        ? `<div class="zpr-living-brief-group is-${tone}"><h6>${title}</h6><ul>${items.map(text => `<li>${briefText(text)}</li>`).join("")}</ul></div>` : "";
+      const livingBriefingHtml = brief => {
+        const [first, ...rest] = brief.advice || [];
+        return `<div class="zpr-living-heading zpr-living-briefing" data-living-verdict="${esc(brief.verdict)}">
+          <h5 class="zpr-map-insight"><span class="zpr-living-verdict is-${esc(brief.verdict)}">${esc(brief.label)}</span> ${esc(brief.reason)}</h5>
+          ${briefGroup(brief.strengths, "good", "좋은 점")}${briefGroup(brief.weaknesses, "weak", "아쉬운 점")}${briefGroup(brief.unknowns, "unknown", "아직 확인 중")}
+          ${first ? `<p class="zpr-living-advice"><strong>집픽 브리핑</strong><mark>${esc(first)}</mark>${rest.length ? ` ${esc(rest.join(" "))}` : ""}</p>` : ""}
+          ${Array.isArray(brief.caveats) && brief.caveats.length ? `<ul class="zpr-living-caveats">${brief.caveats.map(text => `<li>${esc(text)}</li>`).join("")}</ul>` : ""}
+        </div>`;
+      };
       const scoreGroups = [
         ["housing", "주거환경 개선", ["housing_conversion","new_build_belt","amenity_improvement","project_feasibility"], "개선되는 면적·생활시설·사업 단계를 함께 봐요."],
-        ["transport", "교통 개선", ["transport_improvement"], "예정역 출입구와 실제 이동시간 단축을 확인해요."]
+        ["transport", "새 철도 가점", ["transport_improvement"], "예정역 출입구와 실제 이동시간 단축을 확인해요."]
       ];
       const stages = { planning:"계획", designated:"구역 지정", association:"조합 설립", approved:"사업 인가", disposal:"관리처분", construction:"착공", completed:"완료" };
-      const verifiedProjects = projects.filter(project => zippickFutureSourceLink(project.sourceUrl)
+      const housingScoreInputsHtml = component => {
+        if (!["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
+        return `<ul class="zpr-living-score-inputs" aria-label="점수에 반영한 정비사업">${component.inputs.map(project => {
+          const distance = Number.isFinite(project.distanceMeters) ? `직선 ${project.distanceMeters.toLocaleString("ko-KR")}m` : "거리 확인 중";
+          const contribution = Number.isFinite(project.contributionScore) ? `${project.contributionScore.toFixed(2)}점 반영` : "반영 점수 확인 중";
+          return `<li><b>${esc(project.name)}</b> · ${esc(project.scaleLabel)} · ${distance} · ${esc(stages[project.stage] || project.stageLabel || "진행 단계 확인 중")} · ${contribution}</li>`;
+        }).join("")}</ul>`;
+      };
+      const transportScoreInputsHtml = component => {
+        if (!["living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
+        const used = component.inputs.filter(line => Number.isFinite(line.contributionScore));
+        return `<ul class="zpr-living-score-inputs" aria-label="점수에 반영한 철도 노선">${used.map(line => {
+          const distance = Number.isFinite(line.distanceMeters) ? `참고 위치까지 직선 ${line.distanceMeters.toLocaleString("ko-KR")}m` : "위치 확인 중";
+          const bonus = line.lineId === component.secondLineId ? "추가 노선 " : "기본 노선 ";
+          const source = zippickFutureSourceLink(zippickLivingProjectSourceUrl(line));
+          return `<li><b>${esc(line.lineName)}</b> · ${esc(line.impactLabel)} · ${esc(line.maturityLabel)} · ${esc(distance)} · ${bonus}${line.contributionScore.toFixed(2)}점${source ? ` · ${source}` : ""}</li>`;
+        }).join("")}</ul>${component.inputs.length > used.length ? `<p>그 밖의 ${component.inputs.length-used.length}개 노선은 점수에 더하지 않았어요.</p>` : ""}${component.unscoredLineCount ? `<p>${component.unscoredLineCount}개 노선은 진행 단계가 미확인됐거나 점수 대상이 아니어서 보류했어요.</p>` : ""}`;
+      };
+      const verifiedProjects = projects.filter(project => zippickFutureSourceIsOfficial(project.sourceUrl)
         && project.licenseVerifiedAt && project.sourceRecordId);
       const byDistance = (a,b) => (Number.isFinite(a.distanceMeters) ? a.distanceMeters : Infinity)
         -(Number.isFinite(b.distanceMeters) ? b.distanceMeters : Infinity);
       const housingProjects = verifiedProjects.filter(project => project.projectType !== "transport").sort(byDistance);
-      const transportProjects = verifiedProjects.filter(project => project.projectType === "transport").sort(byDistance);
+      const transportProjects = verifiedProjects.filter(project => project.projectType === "transport"
+        && !zippickRailUnderReview(project)).sort(byDistance);
+      const reviewRailReferences = zippickReviewRailReferences(item, analysis);
       const regionalRail = transportProjects.filter(project => project.regionalReference && !Number.isFinite(project.distanceMeters));
       const capitalTransport = analysis.capitalTransport || {};
       const alreadyShownRail = new Set(transportProjects.map(project => String(project.name || "").replace(/\s+/g, "")));
       const verifiedCapitalPlans = (capitalTransport.matchedPlans || []).filter(project =>
-        zippickFutureSourceLink(project.sourceUrl) && !alreadyShownRail.has(String(project.name || "").replace(/\s+/g, "")));
+        !zippickRailUnderReview(project) && zippickFutureSourceIsOfficial(project.sourceUrl)
+        && !alreadyShownRail.has(String(project.name || "").replace(/\s+/g, "")));
       const capitalRailPlans = verifiedCapitalPlans.filter(project => project.category === "rail");
       const otherCapitalPlans = verifiedCapitalPlans.filter(project => project.category !== "rail");
       const otherCapitalTitle = capitalRailPlans.length || regionalRail.length
@@ -18011,8 +18365,8 @@
       const visibleProjects = [...housingProjects.slice(0,3), ...localTransportProjects.slice(0,2),
         ...housingProjects.slice(3), ...localTransportProjects.slice(2)];
       const projectHtml = project => {
-        const source = zippickFutureSourceLink(project.sourceUrl);
-        if (!source || !project.licenseVerifiedAt || !project.sourceRecordId) return "";
+        const source = zippickFutureSourceLink(zippickLivingProjectSourceUrl(project));
+        if (!zippickFutureSourceIsOfficial(project.sourceUrl) || !project.licenseVerifiedAt || !project.sourceRecordId) return "";
         const rail = project.projectType === "transport";
         const distance = Number.isFinite(project.distanceMeters) ? `${project.distanceMeters.toLocaleString("ko-KR")}m` : "위치 확인 중";
         const households = Number.isFinite(project.plannedHouseholds) && project.plannedHouseholds > 0
@@ -18037,7 +18391,7 @@
             ${(project.negativeFactors || []).map(text => `<p><strong>함께 볼 점</strong> ${esc(text)}</p>`).join("")}
             ${project.nextCheck ? `<p><strong>다음 확인</strong> ${esc(project.nextCheck)}</p>` : ""}
             ${scaleSource ? `<p>${esc(project.reportedHouseholdsSourceNote || "과거 계획 규모이며 변경될 수 있어요.")} · ${scaleSource}</p>` : ""}
-            <p>${source}${project.publishedAt ? ` · 발표 ${esc(project.publishedAt)}` : ` · 자료 기준 ${esc(project.sourceDate || "미확인")}`} · 확인 ${esc(project.checkedAt || String(project.collectedAt || "미확인").slice(0,10))}</p>
+            <p>${source || "개별 공식 자료 확인 중"}${project.publishedAt ? ` · 발표 ${esc(project.publishedAt)}` : ` · 자료 기준 ${esc(project.officialDetailSourceDate || project.sourceDate || "미확인")}`} · 확인 ${esc(project.checkedAt || String(project.collectedAt || "미확인").slice(0,10))}</p>
             <p class="zpr-development-meta">원본 ID ${esc(project.sourceRecordId)} · 출처 확인 ${esc(project.checkedAt || project.licenseVerifiedAt)}</p>
           </details>
         </article>`;
@@ -18045,46 +18399,72 @@
       let planNote = "";
       if (plan?.score === null && Number.isFinite(plan.subScores?.housing)
           && !Number.isFinite(plan.subScores?.transport)) {
-        planNote = "주거환경 점수는 확인된 사업 중 가장 높은 1곳을 기준으로 해요. 다른 사업을 더해 점수를 높이지 않아요. 새 철도 이용 위치가 확인되지 않아 전체 점수는 보류했어요.";
+        planNote = (["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan.version)
+          ? "주거환경 점수는 직선 2km 안의 사업을 규모·거리·진행 단계별로 계산해 더해요. "
+          : "주거환경 점수는 확인된 사업 중 가장 높은 1곳을 기준으로 해요. 다른 사업을 더해 점수를 높이지 않아요. ")
+          + (plan.transportCoverage?.status === "map_reference_only"
+            ? "지도에 보이는 예정역은 참고점이라 교통 점수에 넣지 않았어요. 전체 점수도 보류했어요."
+            : plan.transportCoverage?.status === "mapped_stations_outside_2km"
+            ? "역 위치는 확인했지만 직선 2km 안에 평가할 신규 예정역이 없어 전체 점수는 보류했어요."
+            : plan.transportCoverage?.status === "station_mapping_incomplete"
+            ? "다른 노선의 예정역을 확인 중이라 전체 점수는 보류했어요."
+            : "새 철도 이용 위치가 확인되지 않아 전체 점수는 보류했어요.");
       } else if (plan?.score === null && Number.isFinite(plan.subScores?.transport)
           && !Number.isFinite(plan.subScores?.housing)) {
-        planNote = "교통 점수는 확인된 새 철도 계획을 기준으로 해요. 주거환경 변화 자료가 부족해 전체 점수는 보류했어요.";
+        planNote = plan.subScores.transport === 0 && plan.components?.transport?.noPlannedStationWithinRadius
+          ? "직선 2km 안에 신규 예정역이 없어 교통 개선 가점은 0점이에요. 주거환경 변화 자료가 부족해 전체 점수는 보류했어요."
+          : "교통 점수는 확인된 새 철도 계획을 기준으로 해요. 주거환경 변화 자료가 부족해 전체 점수는 보류했어요.";
+      } else if (plan?.score === null && Number.isFinite(plan.subScores?.housing)
+          && Number.isFinite(plan.subScores?.transport)) {
+        planNote = "주거환경과 교통 점수는 각각 확인했지만, 종합점수를 계산하지 못했어요. 점수 계산 상태를 확인해야 해요.";
       } else if (plan) {
-        planNote = "두 점수는 확인된 사업 계획을 비교해요. 주거는 거리·규모·단계, 교통은 참고 위치까지 거리·단계를 봐요. 실제 도보시간이나 집값 변화를 뜻하지 않아요.";
+        planNote = "두 점수는 확인된 사업 계획을 비교해요. 주거는 거리·규모·단계, 교통은 예정역 위치·노선 종류·진행 단계를 봐요. 실제 도보시간이나 집값 변화를 뜻하지 않아요.";
+      }
+      if (plan?.transportCoverage?.status === "rail_under_review") {
+        planNote = "재추진·재검토 노선은 일정이 정해지지 않아 교통 가점에서 제외했어요.";
       }
       return `<section class="zpr-section zpr-future-section" data-future-status="${esc(analysis.status || "insufficient_data")}" data-living-snapshot="${esc(analysis.snapshotId || "")}">
         <span class="zpr-kicker" data-zpr-step="생활권 변화"></span>
-        <div class="zpr-living-heading"><h5 class="zpr-map-insight">${esc(analysis.headline || "이 단지 주변의 변화 자료를 확인하고 있어요.")}</h5><p class="zpr-lead">${esc(analysis.intro || "사업 위치와 진행 단계를 확인한 뒤 단지에 미치는 영향을 설명해요.")}</p></div>
-        <div class="zpr-living-map-column">${zippickReportMapHtml(item, { redevelopment:true })}</div>
-        <p class="zpr-living-print-note">아래에서 사업 위치·거리와 공식 근거를 확인해 주세요. 직선거리는 도보거리와 달라요.</p>
-        <div class="zpr-living-subs" aria-label="생활권 변화 항목별 점수">${scoreGroups.map(([key,label,keys,reason]) => {
+        ${briefing ? livingBriefingHtml(briefing) : `<div class="zpr-living-heading"><h5 class="zpr-map-insight">${esc(rawHeadline)}</h5><p class="zpr-lead">${esc(rawIntro)}</p></div>`}
+        <div class="zpr-living-map-column">${zippickReportMapHtml(mapItem, { redevelopment:true })}</div>
+        ${analysisError ? "" : '<p class="zpr-living-print-note">아래에서 사업 위치·거리와 공식 근거를 확인해 주세요. 직선거리는 도보거리와 달라요.</p>'}
+        ${analysisError ? "" : `<div class="zpr-living-subs" aria-label="생활권 변화 항목별 점수">${scoreGroups.map(([key,label,keys,reason]) => {
           const value = plan ? plan.subScores?.[key] : analysis.subScores?.[key];
           const component = plan?.components?.[key];
           const metrics = (analysis.metrics || []).filter(metric => keys.includes(metric.key));
-          return `<div><span>${label}</span><strong class="zpr-living-sub-number">${scoreText(value)}</strong><small>${Number.isFinite(value) ? "계획 기준 · 베타" : "판단 보류"}</small>${!Number.isFinite(value) && plan?.missingReasons?.[key] ? `<small class="zpr-living-missing-reason">${esc(plan.missingReasons[key])}</small>` : ""}<details><summary>점수 근거 보기</summary><p>${esc(component?.summary || plan?.missingReasons?.[key] || analysis.categoryFacts?.[key]?.detail || reason)}</p>${component ? `<p>${esc(component.formula)}</p><p>${esc(component.policy)}</p>` : metrics.map(metric => `<p>${esc(metric.label)} <b>${Number.isFinite(metric.value) ? `${esc(metric.value)} / 100` : "추가 자료 필요"}</b></p>`).join("")}<p>자료가 없는 항목은 0점으로 계산하지 않아요. 가격 상승률을 뜻하지 않아요.</p></details></div>`;
-        }).join("")}</div>
-        ${planNote ? `<p class="zpr-living-plan-note">${esc(planNote)}</p>` : ""}
-        ${analysis.status === "error" ? '<p role="status" class="zpr-lead">자료를 불러오지 못했어요. 잠시 뒤 리포트를 다시 열어 주세요.</p>' : ""}
-        ${regionalRail.length ? zippickLivingTransportHtml({displayProjects:regionalRail}, regionalRail.length === 1
+          const missingState = analysis.status === "stale" || plan?.status === "stale" ? "최신 자료 확인 필요"
+            : (housingScoreKnown || transportScoreKnown) ? "평가 보류" : "평가 자료 부족";
+          return `<div><span>${label}</span><strong class="zpr-living-sub-number">${scoreText(value)}</strong><small>${value === 0 && component?.noPlannedStationWithinRadius ? "신규 예정역 없음 · 가점 없음" : Number.isFinite(value) ? (component?.coverageIncomplete ? "확인한 예정역 기준 · 추가 확인 중" : "계획 기준 · 베타") : key === "transport" && plan?.transportCoverage?.status === "station_mapping_incomplete" ? "다른 노선의 예정역 확인 중" : missingState}</small>${!Number.isFinite(value) && plan?.missingReasons?.[key] ? `<small class="zpr-living-missing-reason">${esc(plan.missingReasons[key])}</small>` : ""}<details><summary>점수 근거 보기</summary><p>${esc(component?.summary || plan?.missingReasons?.[key] || analysis.categoryFacts?.[key]?.detail || reason)}</p>${component ? `<p>${esc(component.formula)}</p><p>${esc(component.policy)}</p>${key === "housing" ? housingScoreInputsHtml(component) : `${transportScoreInputsHtml(component)}${[component.impactPolicy,component.maturityPolicy,component.accessPolicy].filter(Boolean).map(text => `<p>${esc(text)}</p>`).join("")}`}` : metrics.map(metric => `<p>${esc(metric.label)} <b>${Number.isFinite(metric.value) ? `${esc(metric.value)} / 100` : "추가 자료 필요"}</p>`).join("")}<p>자료가 없는 항목은 0점으로 계산하지 않아요. 가격 상승률을 뜻하지 않아요.</p></details></div>`;
+        }).join("")}</div>`}
+        ${analysisError || !planNote ? "" : `<p class="zpr-living-plan-note">${esc(planNote)}</p>`}
+        ${!analysisError && plan?.transportCoverage?.nearbyOperatingStations?.length ? `<p class="zpr-living-plan-note"><strong>현재 이용 가능한 철도</strong> ${plan.transportCoverage.nearbyOperatingStations.map(station => `${esc(station.name)} · 직선 ${Number(station.distanceMeters).toLocaleString("ko-KR")}m`).join(" / ")}<br>이미 개통한 역이에요. 새 철도 가점과 구분해요.</p>` : ""}
+        ${!analysisError && plan?.transportCoverage?.lineCount ? `<details class="zpr-future-details zpr-living-methods"><summary>철도 예정역 확인 현황 · ${esc(plan.transportCoverage.completeLineCount)} / ${esc(plan.transportCoverage.lineCount)}개 노선 확인</summary>
+          <p>등록된 역 연결 ${esc(plan.transportCoverage.listedStations)}건 중 역 위치 ${esc(plan.transportCoverage.stationLocationCount)}건을 확인했어요. 같은 역도 노선별로 따로 세요.</p>
+          <p>${plan.transportCoverage.scopeComplete ? "등록한 노선의 역 목록과 위치를 모두 확인했어요." : "다른 노선의 역 목록과 위치를 확인 중이에요. 확인한 역만 점수에 반영하며, 아직 못 찾았다는 이유로 0점을 주지 않아요."}</p>
+          <ul>${(plan.transportCoverage.incompleteLines || []).map(line => `<li>${esc(line.name)} · 역 위치 ${esc(line.stationLocationCount ?? 0)} / ${esc(line.listedStations ?? 0)}곳${line.stationListComplete ? "" : " · 전체 역 목록 확인 중"} · ${zippickFutureSourceLink(line.stationsSourceUrl || line.sourceUrl)}</li>`).join("")}</ul>
+          <p>${esc(plan.transportCoverage.scope || "")} · 확인 ${esc(plan.transportCoverage.checkedAt || "미확인")}</p>
+        </details>` : ""}
+        ${!analysisError && reviewRailReferences.length ? `<details class="zpr-future-details zpr-living-extra" data-rail-review-reference><summary>재추진·재검토 철도 참고 ${reviewRailReferences.length}건</summary><p>사업을 다시 검토하고 있어요. 일정이 정해지지 않아 교통 가점과 매수 이유에서 제외했어요.</p>${zippickLivingTransportHtml({displayProjects:reviewRailReferences.map(project => ({...project,projectType:"transport"})),includeReviewRail:true}, "검토 중인 노선")}</details>` : ""}
+        ${!analysisError && regionalRail.length ? zippickLivingTransportHtml({displayProjects:regionalRail}, regionalRail.length === 1
           ? `${regionalRail[0].name} · ${regionalRail[0].stageLabel || "진행 단계 확인 중"}`
           : "같은 지역의 광역철도 계획") : ""}
-        ${capitalRailPlans.length ? zippickLivingTransportHtml({displayProjects:capitalRailPlans.map(project => ({
+        ${!analysisError && capitalRailPlans.length ? zippickLivingTransportHtml({displayProjects:capitalRailPlans.map(project => ({
           ...project,
           projectType:"transport",
           factSummary:`${project.stage || "진행 단계 확인 중"}${project.stations?.length ? ` · ${project.stations.join(", ")}역` : ""}`,
           planningNote:project.note
         }))}, "같은 지역의 공식 철도사업") : ""}
-        ${capitalTransport.status === "partial" && (otherCapitalPlans.length || !capitalRailPlans.length) ? `<details class="zpr-future-details zpr-living-extra"><summary>${esc(otherCapitalTitle)} ${otherCapitalPlans.length ? `${otherCapitalPlans.length}건` : "확인 중"}</summary>
+        ${!analysisError && capitalTransport.status === "partial" && (otherCapitalPlans.length || !capitalRailPlans.length) ? `<details class="zpr-future-details zpr-living-extra"><summary>${esc(otherCapitalTitle)} ${otherCapitalPlans.length ? `${otherCapitalPlans.length}건` : "확인 중"}</summary>
           <p>공식 자료에서 이 단지와 같은 시·구에 있는 계획을 모았어요.</p>
           ${otherCapitalPlans.map(project => `<p><strong>${esc(project.name)}</strong> · ${esc(project.stage || "단계 미확인")} · ${esc(project.route || "지명 기준 참고")} · ${zippickFutureSourceLink(project.sourceUrl)}</p>`).join("") || "<p>현재 연결된 사업이 없어요.</p>"}
           <p>${esc(capitalTransport.limitation || "")}</p>
         </details>` : ""}
-        <h6 class="zpr-living-project-title">확인한 주변 사업 <span>${visibleProjects.length}곳</span></h6>
+        ${analysisError ? "" : `<h6 class="zpr-living-project-title">확인한 주변 사업 <span>${visibleProjects.length}곳</span></h6>
         <div class="zpr-living-projects">${visibleProjects.slice(0,5).map(projectHtml).join("") || '<p class="zpr-lead">위치와 규모가 확인된 주변 사업 자료가 아직 없어요.</p>'}</div>
         ${visibleProjects.length > 5 ? `<details class="zpr-future-details"><summary>사업 ${visibleProjects.length-5}곳 더 보기</summary>${visibleProjects.slice(5).map(projectHtml).join("")}</details>` : ""}
         ${analysis.transportRoutes?.length ? `<details class="zpr-future-details zpr-living-extra"><summary>철도 노선 참고 자료</summary>${zippickLivingTransportHtml({...analysis,displayProjects:[]})}</details>` : ""}
-        ${plan ? `<details class="zpr-future-details zpr-living-methods"><summary>${score === null ? "생활권 변화 · 점수 산출 현황" : `생활권 변화 ${scoreText(score)} · 별점 계산 근거`}</summary><p>주거환경 개선 60% + 교통 개선 40%를 합산해요.</p><p>${scoreGroups.map(([key,label]) => `${label} ${scoreText(plan.subScores?.[key])} × ${Math.round(plan.weights[key]*100)}%`).join(" + ")} = ${scoreText(score)}</p><p>${esc(plan.stagePolicy)}</p><p>${esc(plan.distancePolicy)}</p><p>기준과 가중치는 집픽의 비교 정책이에요. 실제 성과로 검증된 예측 모형은 아니에요. 미확인 항목이 있으면 합산하지 않아요.</p><p>${esc(plan.version)} · 기준일 ${esc(plan.asOfDate)}</p></details>` : `<details class="zpr-future-details zpr-living-methods"><summary>종합점수 ${scoreText(score)} · 계산 근거 보기</summary><p class="zpr-development-meta">지역의 변화 60%와 이 단지의 직접 수혜 40%를 함께 봐요. 확인되지 않은 항목을 0점으로 처리하거나 임의로 채우지 않아요.</p><p class="zpr-development-meta">${esc(analysis.modelVersion || "living-area-v2-beta")} · 800m 이내 근거리, 2km 이내 인접 후보. 2~5km는 연결 근거가 있는 사업만 봐요. 같은 구라는 이유로 수혜 점수를 더하지 않아요.</p>${(analysis.metrics || []).map(metric => `<p class="zpr-development-meta">${esc(metric.label)} · ${metric.group === "regional" ? "지역 변화" : "직접 수혜"} 내 ${esc(metric.weight)}% · ${metric.value === null ? "추가 자료 필요" : `${esc(metric.value)} / 100`}</p>`).join("")}${(analysis.limitations || []).map(text => `<p class="zpr-development-meta">${esc(text)}</p>`).join("")}</details>`}
-        <p class="zpr-development-meta">${esc(plan?.disclaimer || analysis.disclaimer || "생활환경 변화의 참고값이며 가격 상승률을 예측하지 않아요.")}${analysis.metroCoverage ? ` · 자료 확인 ${esc(analysis.metroCoverage.checkedAt || "미확인")}` : ""}</p>
+        ${plan ? `<details class="zpr-future-details zpr-living-methods"><summary>${score === null ? "생활권 변화 · 점수 산출 현황" : `생활권 변화 ${scoreText(score)} · 별점 계산 근거`}</summary><p>주거환경 개선 60% + 교통 개선 40%를 합산해요.</p><p>${scoreGroups.map(([key,label]) => `${label} ${scoreText(plan.subScores?.[key])} × ${weightText(key)}`).join(" + ")} = ${scoreText(score)}</p><p>${esc(plan.stagePolicy)}</p><p>${esc(plan.distancePolicy)}</p><p>기준과 가중치는 집픽의 비교 정책이에요. 실제 성과로 검증된 예측 모형은 아니에요. 미확인 항목이 있으면 합산하지 않아요.</p><p>${esc(plan.version)} · 기준일 ${esc(plan.asOfDate)}</p></details>` : `<details class="zpr-future-details zpr-living-methods"><summary>종합점수 ${scoreText(score)} · 계산 근거 보기</summary><p class="zpr-development-meta">지역의 변화 60%와 이 단지의 직접 수혜 40%를 함께 봐요. 확인되지 않은 항목을 0점으로 처리하거나 임의로 채우지 않아요.</p><p class="zpr-development-meta">${esc(analysis.modelVersion || "living-area-v2-beta")} · 800m 이내 근거리, 2km 이내 인접 후보. 2~5km는 연결 근거가 있는 사업만 봐요. 같은 구라는 이유로 수혜 점수를 더하지 않아요.</p>${(analysis.metrics || []).map(metric => `<p class="zpr-development-meta">${esc(metric.label)} · ${metric.group === "regional" ? "지역 변화" : "직접 수혜"} 내 ${esc(metric.weight)}% · ${metric.value === null ? "추가 자료 필요" : `${esc(metric.value)} / 100`}</p>`).join("")}${(analysis.limitations || []).map(text => `<p class="zpr-development-meta">${esc(text)}</p>`).join("")}</details>`}
+        <p class="zpr-development-meta">${esc(plan?.disclaimer || analysis.disclaimer || "생활환경 변화의 참고값이며 가격 상승률을 예측하지 않아요.")}${analysis.metroCoverage ? ` · 정비사업 확인 ${esc(analysis.metroCoverage.checkedAt || "미확인")}${analysis.metroCoverage.railStationCheckedAt ? ` · 예정역 확인 ${esc(analysis.metroCoverage.railStationCheckedAt)}` : ""}` : ""}</p>`}
       </section>`;
     }
 
@@ -18793,6 +19173,11 @@
       const priceCopy = priceText ? ` ${priceText}` : "";
       const tone = String(verdict?.tone || "");
       const label = String(verdict?.label || "");
+      if (verdict?.partial) {
+        const count = Number(item?.transactionCount || item?.signals?.dealCount || 0);
+        const tradeText = count > 0 ? `최근 공식 거래 ${count}건` : "최근 공식 거래";
+        return `단지·입지 ${Number.isFinite(locationScore) ? `<b>${esc(Math.round(locationScore))}점</b>` : "점수"}은 확인됐어요. 다만 ${tradeText}이라 <b>가격과 최근 흐름은 더 확인해야 해요.</b>`;
+      }
       // 고점 보정이 걸린 단지에 "약점을 받아들일 수 있을 때만" 같은 일반
       // 문장을 붙이면 안 된다. 약점이 아니라 가격 위치가 이유다.
       // 가격 얘기는 바로 아래 경고 블록이 이어받는다. 여기서 또 쓰면
@@ -18829,6 +19214,7 @@
           : Number.isFinite(signalScore) ? `최근 시장 신호 ${Math.round(signalScore)}점은 확인됐어요.` : "";
         return `<p class="zpr-sub">${esc(known)} 빠진 자료가 있어 매수 판단은 보류합니다.</p>`;
       }
+      if (verdict?.partial) return `<p class="zpr-sub">${zippickVerdictReasonBody(item, verdict)}</p>`;
       if (verdict && Number.isFinite(locationScore) && Number.isFinite(signalScore)) {
         return `<p class="zpr-sub">${zippickVerdictReasonBody(item, verdict)}</p>`;
       }
@@ -18854,10 +19240,8 @@
       const signal = zpNum(item?.signals?.score);
       const market = zippickMarketVerdict(item);
       const basis = zippickPriceCheckBasis(item);
-      const latestPrice = zpNum(item?.latestDealPriceEok);
-      const latestArea = zpNum(item?.latestDealExclusiveArea);
-      const shownArea = zpNum(String(item?.displayAreaLabel || item?.areaLabel || "").match(/\d+(?:\.\d+)?/)?.[0]);
-      const comparableArea = !Number.isFinite(latestArea) || !Number.isFinite(shownArea) || Math.abs(latestArea - shownArea) <= 5;
+      const latestPrice = zippickLatestTradeDetails(item).price;
+      const comparableArea = zippickBuyBandTradeMatchesArea(item);
       const priceTier = item?.valuation?.floorComparison?.status === "matched" && comparableArea && basis?.low > 0 && basis?.high > 0
         ? zippickBuyBandTier(latestPrice, basis.low, basis.high)
         : -1;
@@ -18913,6 +19297,11 @@
             ? priceGood ? "가격과 최근 흐름은 좋지만," : "최근 흐름은 좋지만,"
             : priceGood ? "가격은 적정하지만," : "볼 만한 근거는 있지만,";
 
+      if (verdict?.partial) {
+        if (tone === "conditional") return "조건부로 매수 검토할 만해요. 단지 조건은 좋지만 가격과 최근 흐름은 더 확인하세요";
+        if (tone === "hold") return "지금은 관망하세요. 단지 조건은 보통이고 거래가 더 필요해요";
+        return "다른 단지를 먼저 검토하세요. 단지 조건이 약하고 거래도 적어요";
+      }
       if (verdict?.peakGuard) {
         return verdict.peakGuard.atPeak
           ? "매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격은 2년 고점권이에요"
@@ -19757,6 +20146,35 @@
       };
     }
 
+    function zippickBuyBandTradeMatchesArea(item) {
+      const latestArea = zippickLatestTradeDetails(item).area;
+      if (!Number.isFinite(latestArea) || latestArea <= 0) return true;
+      // 예산 후보의 50~59㎡는 59.49㎡도 포함한다. 축약된 화면의 50㎡와 비교하지 않는다.
+      const rangeLabel = [item?.valuation?.areaLabel, item?.areaLabel, item?.displayAreaLabel]
+        .map(label => String(label || "").match(/(\d+(?:\.\d+)?)\s*[~〜–-]\s*(\d+(?:\.\d+)?)/))
+        .find(Boolean);
+      const low = rangeLabel ? Number(rangeLabel[1]) : zpNum(item?.areaMin);
+      const high = rangeLabel ? Number(rangeLabel[2]) : zpNum(item?.areaMax);
+      if (Number.isFinite(low) && low > 0 && Number.isFinite(high) && high > low) {
+        const upper = Number.isInteger(low) && Number.isInteger(high) ? high + 1 : high;
+        return latestArea >= low && (upper === high ? latestArea <= high : latestArea < upper);
+      }
+      const area = zpNum(String(item?.valuation?.areaLabel || item?.displayAreaLabel || item?.areaLabel || "").match(/\d+(?:\.\d+)?/)?.[0]);
+      return !Number.isFinite(area) || Math.abs(latestArea - area) <= 5;
+    }
+
+    function zippickLatestTradeDetails(item) {
+      const nested = [item?.latestTrade, item?.roneEstimate?.latestTrade].filter(row => row && typeof row === "object");
+      const firstPositive = values => values.map(zpNum).find(value => Number.isFinite(value) && value > 0) || 0;
+      const firstText = values => values.map(value => String(value || "").trim()).find(Boolean) || "";
+      return {
+        price:firstPositive([item?.latestDealPriceEok, ...nested.map(row => row.dealAmountEok)]),
+        area:firstPositive([item?.latestDealExclusiveArea, ...nested.map(row => row.exclusiveArea)]),
+        date:firstText([item?.latestDealDate, ...nested.map(row => row.dealDate)]),
+        floor:firstText([item?.latestDealFloor, ...nested.map(row => row.floor)]),
+      };
+    }
+
     function zippickBuyBandTier(price, low, high) {
       if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(low) || low <= 0 || !Number.isFinite(high) || high <= 0) return -1;
       if (price < low) return 0;
@@ -19772,7 +20190,7 @@
         : null;
     }
 
-    function zippickBuyBandResultHtml(low, high, latestPrice, showLatest, peak = "", latestDate = "", latestFloor = "", floorComparison = null) {
+    function zippickBuyBandResultHtml(low, high, latestPrice, showLatest, peak = "", latestDate = "", latestFloor = "", floorComparison = null, hiddenReason = "") {
       const floorLimited = floorComparison && floorComparison.status !== "matched";
       const latestTier = showLatest ? zippickBuyBandTier(latestPrice, low, high) : -1;
       const bandWidth = Math.max(high - low, high * 0.05);
@@ -19793,7 +20211,7 @@
           ? `요즘 시세대로 사도 ${peakText.buying} 사는 거예요. 다음 거래를 지켜보세요.`
           : "같은 층과 상태의 다른 거래도 확인하면 더 안전해요."
         : latestTier === 2 ? "같은 층·향·상태라면 비싼 편이에요. 차이가 없다면 협상하세요."
-        : "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
+        : hiddenReason || "비슷한 면적의 최근 실거래 위치를 확인할 수 없어요.";
       const chartLabel = `${floorLimited ? "여러 층 거래 기준 참고 가격대. " : ""}${cells.map(([label, range]) => `${label} ${range}`).join(", ")}.${showLatest ? ` 최근 실거래 ${transactionMoney(latestPrice)}.` : ""}`;
       return `<div class="zpr-buy-band-chart${floorLimited ? " is-reference" : ""}${showLatest && latestTradeMeta ? " has-latest-meta" : ""}" role="img" aria-label="${esc(chartLabel)}${showLatest && latestTradeMeta ? ` 거래 정보 ${esc(latestTradeMeta)}.` : ""}">
           ${showLatest ? `<div class="zpr-buy-band-marker${markerClass(latestPosition)}${latestTradeMeta ? " has-meta" : ""}" style="--zpr-band-position:${latestPosition.toFixed(2)}%"><span>최근 실거래 ${esc(transactionMoney(latestPrice))}${latestTradeMeta ? `<small>${esc(latestTradeMeta)}</small>` : ""}</span></div>` : ""}
@@ -19806,12 +20224,13 @@
     function zippickBuyBandHtml(item, verdict) {
       const basis = zippickPriceCheckBasis(item);
       const valuation = item?.valuation || {};
-      const latestPrice = zpNum(item?.latestDealPriceEok);
-      const latestArea = zpNum(item?.latestDealExclusiveArea);
+      const latestTrade = zippickLatestTradeDetails(item);
+      const latestPrice = latestTrade.price;
+      const latestArea = latestTrade.area;
       const floorComparable = valuation?.floorComparison?.status === "matched";
-      const latestMeta = [item?.latestDealDate,
+      const latestMeta = [latestTrade.date,
         Number.isFinite(latestArea) && latestArea > 0 ? `전용 ${latestArea}㎡` : "",
-        item?.latestDealFloor ? `${item.latestDealFloor}층` : ""].filter(Boolean).join(" · ");
+        latestTrade.floor ? `${latestTrade.floor}층` : ""].filter(Boolean).join(" · ");
       const latestDetail = `${Number.isFinite(latestPrice) && latestPrice > 0 ? esc(transactionMoney(latestPrice)) : "가격 확인 중"} · ${esc(latestMeta || "거래 날짜·면적 확인 중")} · 국토교통부 신고 거래 · ${floorComparable ? "비슷한 층 거래를 사용했지만 동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요." : "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격은 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."}`;
       if (valuation.status !== "ready" || !basis?.low || !basis?.high) return `<div class="zpr-buy-band">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">집픽 밴드</span><h4>지금은 가격 판단을 보류해요</h4></div><span class="zpr-buy-band-quality">판단 보류</span></div>
@@ -19819,9 +20238,11 @@
         <p>집픽은 자료가 부족할 때 <b>억지로 답을 만들지 않아요.</b></p>
         <p class="zpr-buy-band-meta">가장 최근 실거래 · ${latestDetail}</p>
       </div>`;
-      const shownArea = zpNum(String(item?.displayAreaLabel || item?.areaLabel || "").match(/\d+(?:\.\d+)?/)?.[0]);
       const showLatest = Number.isFinite(latestPrice) && latestPrice > 0
-        && (!Number.isFinite(latestArea) || !Number.isFinite(shownArea) || Math.abs(latestArea - shownArea) <= 5);
+        && zippickBuyBandTradeMatchesArea(item);
+      const hiddenReason = showLatest ? "" : Number.isFinite(latestPrice) && latestPrice > 0
+        ? "최근 실거래는 선택한 면적 범위와 달라 이 밴드에 표시하지 않았어요."
+        : "최근 실거래 가격을 확인할 수 없어 밴드에 표시하지 않았어요.";
       const latestTier = showLatest ? zippickBuyBandTier(latestPrice, basis.low, basis.high) : -1;
       // '적정'은 요즘 거래와 비슷하다는 뜻이다. 타이틀이 고점권·급등을 경고하는데
       // 밴드가 '적정'이라고만 하면 서로 반대로 읽히므로 두 사실을 이어서 말한다.
@@ -19867,7 +20288,7 @@
       return `<div class="zpr-buy-band">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">집픽 밴드</span><h4>${esc(headline)}</h4></div><span class="zpr-buy-band-quality">${esc(qualityLabel)}</span></div>
         ${leadHtml}
-        <div class="zpr-buy-band-result">${zippickBuyBandResultHtml(basis.low, basis.high, latestPrice, showLatest, peak, item?.latestDealDate, item?.latestDealFloor, valuation.floorComparison || {status:"unknown"})}</div>
+        <div class="zpr-buy-band-result">${zippickBuyBandResultHtml(basis.low, basis.high, latestPrice, showLatest, peak, latestTrade.date, latestTrade.floor, valuation.floorComparison || {status:"unknown"}, hiddenReason)}</div>
         <p class="zpr-buy-band-meta">최근 실거래 · ${latestDetail}</p>
         ${trendChartHtml ? `<section class="zpr-buy-band-flow budget-sparkline" data-sparkline aria-label="최근 2년 가격 흐름"><strong class="zpr-buy-band-flow-title">최근 2년 가격 흐름</strong>${trendChartHtml}</section>` : ""}
         <details class="zpr-buy-band-basis"><summary><strong class="zpr-buy-band-basis-title">이 가격은 어떻게 계산했나요?</strong></summary>
@@ -19875,7 +20296,7 @@
           <strong class="zpr-buy-band-promise">집픽이 지키는 ${promises.length}가지</strong>
           <ul>${promises.map(promise => `<li>${promise}</li>`).join("")}</ul>
         </details>
-        ${showLatest ? "" : `<p class="zpr-buy-band-limit">가장 최근 거래는 면적을 확인할 수 없어 밴드에 표시하지 않았어요.</p>`}
+        ${showLatest ? "" : `<p class="zpr-buy-band-limit">${esc(hiddenReason)}</p>`}
       </div>`;
     }
 
@@ -20150,6 +20571,7 @@
     // 리포트 안의 지도도 후보 지도와 똑같은 엔진·주소 보정·좌표 캐시를 쓴다.
     // 이름만 겹치는 단지를 잘못 찍지 않도록 고유값과 법정동·지번을 함께 넘긴다.
     const zippickReportMapInstances = new WeakMap();
+    const zippickLivingDongRegionCache = new Map();
     function zippickReportMapItem(mapElement) {
       const data = mapElement?.dataset || {};
       return {
@@ -20244,6 +20666,17 @@
       return ["redevelopment", "reconstruction"].includes(project.projectType);
     }
 
+    function zippickLivingStationBasis(station) {
+      if (station.serviceStatus === "operating") return "운행 중";
+      if (zippickRailUnderReview(station)) return "재추진 중 · 일정 미정 · 점수 미반영";
+      return station.scoringEligible === false ? "지도 참고점 · 점수 미반영" : "예정역 참고 위치";
+    }
+
+    function zippickLivingProjectSourceUrl(project) {
+      return [project.officialDetailUrl, project.stageSourceUrl, project.nameSourceUrl, project.sourceUrl]
+        .map(zippickOfficialDetailUrl).find(Boolean) || "";
+    }
+
     async function mountZippickReportRedevelopmentZones(mapElement, map, kakao) {
       let points = [];
       try { points = JSON.parse(mapElement.dataset.zprMapProjects || "[]"); } catch (_) { /* 단지 위치만 표시 */ }
@@ -20263,28 +20696,25 @@
         } catch (_) { failed = true; }
       }
       if (!mapElement.isConnected || mapElement.dataset.zprMapState !== "ready") return;
-      const featuredDevelopments = Array.isArray(data.featuredDevelopments)
-        ? data.featuredDevelopments : data.featuredDevelopment ? [data.featuredDevelopment] : [];
-      const featuredById = new Map(featuredDevelopments.map(project => [project.projectId, project]));
       const zones = (data.zones || []).filter(zone => ["Polygon", "MultiPolygon"].includes(zone.geometry?.type));
-      const stations = data.stations || [];
+      let referenceEnabled = false;
+      let reviewRailEnabled = false;
+      const stations = (data.stations || []).filter(station =>
+        Number.isFinite(station.distanceMeters) && station.distanceMeters >= 0 && station.distanceMeters <= 2000);
       const routes = data.routes || [];
+      [...stations, ...routes].forEach(project => {
+        if (zippickRailUnderReview(project)) project.railReviewStatus = "reconsidering";
+      });
       const linkedRouteIds = new Set(stations.map(station => station.routeId).filter(Boolean));
       const routesByStation = [...routes].sort((a,b) => Number(linkedRouteIds.has(b.id)) - Number(linkedRouteIds.has(a.id)) || a.distanceMeters-b.distanceMeters);
-      const visibleZones = zones;
-      points = points.filter(point => featuredById.has(point.id) && !zones.some(zone => zone.projectId === point.id));
+      const visibleZones = () => zones.filter(zone => mapZoneIsVisible(zone, { reference:referenceEnabled }));
+      points = points.filter(point => ["redevelopment", "reconstruction"].includes(point.projectType)
+        && Number.isFinite(point.distanceMeters) && point.distanceMeters <= 2000
+        && !zones.some(zone => zone.projectId === point.id));
       const validPoint = point => Number.isFinite(point.latitude) && Number.isFinite(point.longitude)
         && point.latitude > 33 && point.latitude < 39 && point.longitude > 124 && point.longitude < 132;
-      const featuredIds = new Set();
-      const featuredSites = [...zones.filter(zone => featuredById.has(zone.projectId)), ...points]
-        .filter(validPoint).filter(project => {
-          const id = project.projectId || project.id;
-          if (featuredIds.has(id)) return false;
-          featuredIds.add(id);
-          return true;
-        });
-      const all = [...featuredSites, ...stations].filter(validPoint);
-      const closestPlannedStation = stations.filter(validPoint)
+      const all = [...points, ...stations].filter(validPoint);
+      const closestRailStation = stations.filter(station => validPoint(station) && !zippickRailUnderReview(station))
         .sort((a,b) => a.distanceMeters-b.distanceMeters)[0] || null;
       const distanceText = meters => Number.isFinite(meters) ? `직선 약 ${meters.toLocaleString("ko-KR")}m` : "거리 미확인";
       const stageText = project => project.stageLabel?.trim() || "진행 단계 미확인";
@@ -20293,31 +20723,87 @@
         selectedZoneTag?.setMap(null);
         selectedZoneTag = null;
       };
-      const showReference = (project, { preserveSelectedTag = false } = {}) => {
-        if (!preserveSelectedTag) clearSelectedZoneTag();
+      const createReferencePanel = (name, { onBack = null, returnFocus = null } = {}) => {
         const panelHome = mapElement.closest("dialog") || mapHome;
-        if (!panelHome) return;
+        if (!panelHome) return null;
         let panel = panelHome.querySelector(".zpr-living-map-reference");
         if (!panel) {
           panel = document.createElement("aside");
           panel.className = "zpr-living-map-reference";
-          panel.setAttribute("aria-label", "지도 표시 위치의 근거");
           panelHome.appendChild(panel);
         }
         panel.replaceChildren();
+        panel.setAttribute("aria-label", name);
+        panel.tabIndex = -1;
         const title = document.createElement("strong");
-        title.textContent = project.name;
+        title.textContent = name;
         const close = document.createElement("button");
         close.type = "button";
+        close.className = "zpr-living-map-reference-close";
         close.textContent = "닫기";
-        close.addEventListener("click", () => { panel.remove(); clearSelectedZoneTag(); });
+        close.addEventListener("click", () => {
+          panel.remove(); clearSelectedZoneTag(); returnFocus?.focus({ preventScroll:true });
+        });
+        panel.append(title, close);
+        if (onBack) {
+          const back = document.createElement("button");
+          back.type = "button";
+          back.className = "zpr-living-map-reference-back";
+          back.textContent = "‹ 동네 사업 목록";
+          back.addEventListener("click", onBack);
+          panel.appendChild(back);
+        }
+        return panel;
+      };
+      const showReference = (project, { preserveSelectedTag = false, onBack = null, returnFocus = null } = {}) => {
+        if (!preserveSelectedTag) clearSelectedZoneTag();
+        const panel = createReferencePanel(project.name, { onBack, returnFocus });
+        if (!panel) return;
+        const development = mapZoneDevelopmentDetailHtml(project);
+        if (development) panel.insertAdjacentHTML("beforeend", development);
         const detail = document.createElement("p");
         detail.textContent = `${distanceText(project.distanceMeters)} · ${project.positionLabel || project.distanceLabel || (zones.includes(project) ? "구역 경계 기준" : "사업 대표점 기준")}`;
-        panel.append(title, close, detail);
+        panel.appendChild(detail);
         if (project.stageLabel) {
           const stage = document.createElement("p");
-          stage.textContent = `진행 단계: ${project.stageLabel}`;
+          stage.textContent = `${project.zoneKindLabel ? project.zoneKindLabel + " · " : ""}진행 단계: ${project.stageLabel}`;
           panel.appendChild(stage);
+        }
+        if (project.stageReason && project.stageStatus !== "conflict") {
+          const reason = document.createElement("p");
+          reason.textContent = project.stageReason;
+          panel.appendChild(reason);
+        }
+        if (project.stageSourceDate) {
+          const source = document.createElement("p");
+          source.textContent = `단계 자료 기준 ${project.stageSourceDate} `;
+          if (zippickOfficialDetailUrl(project.stageSourceUrl)) {
+            const link = document.createElement("a");
+            link.href = project.stageSourceUrl; link.target = "_blank"; link.rel = "noopener noreferrer";
+            link.textContent = "단계 출처 보기"; source.appendChild(link);
+          }
+          panel.appendChild(source);
+        }
+        if (project.stageDefinition?.pageUrl) {
+          const source = document.createElement("a");
+          source.href = project.stageDefinition.pageUrl; source.target = "_blank"; source.rel = "noopener noreferrer";
+          source.textContent = "단계 코드 설명 출처: 서울플랜";
+          panel.appendChild(source);
+        }
+        if (project.stageStatus === "conflict") {
+          const note = document.createElement("p");
+          note.textContent = "공식 자료의 단계가 서로 달라 확인 중이에요.";
+          panel.appendChild(note);
+          (project.stageEvidence || []).forEach(evidence => {
+            const line = document.createElement("p");
+            line.textContent = `${evidence.label} · ${evidence.sourceDate || "기준일 미확인"} `;
+            if (zippickOfficialDetailUrl(evidence.sourceUrl)) {
+              const link = document.createElement("a");
+              link.href = evidence.sourceUrl; link.target = "_blank"; link.rel = "noopener noreferrer";
+              link.textContent = "출처 보기"; line.appendChild(link);
+            }
+            panel.appendChild(line);
+          });
         }
         const households = project.plannedHouseholds || project.reportedHouseholds;
         if (Number.isFinite(households) && households > 0) {
@@ -20342,7 +20828,9 @@
         }
         if (stations.includes(project)) {
           const note = document.createElement("p");
-          note.textContent = Number.isFinite(project.routeLinkMeters)
+          note.textContent = project.serviceStatus === "operating"
+            ? "현재 운행 중인 역이에요. 단지와 역을 잇는 파란 점선은 직선거리이며, 실제 도보 경로와 달라요. 새 철도 가점과는 구분해요."
+            : Number.isFinite(project.routeLinkMeters)
             ? `예정역 지도점과 계획 노선이 약 ${project.routeLinkMeters.toLocaleString("ko-KR")}m 떨어져 있어요. 청록 점선은 두 자료를 잇는 참고 표시예요. 실제 철도 선형·출입구·도보시간은 확정하지 않았어요.`
             : "실제 철도 선형·출입구·도보시간은 확정하지 않았어요.";
           panel.appendChild(note);
@@ -20351,18 +20839,25 @@
             coordinateLink.href = project.coordinateSourceUrl;
             coordinateLink.target = "_blank";
             coordinateLink.rel = "noopener noreferrer";
-            coordinateLink.textContent = "예정역 지도점 출처 ↗";
+            coordinateLink.textContent = project.serviceStatus === "operating" ? "역 위치 출처 ↗" : "예정역 지도점 출처 ↗";
             panel.appendChild(coordinateLink);
           }
         }
-        const source = zippickFutureSourceLink(project.sourceUrl);
+        const source = zippickFutureSourceLink(zippickLivingProjectSourceUrl(project));
         if (source) {
           const citation = document.createElement("p");
           citation.innerHTML = source;
-          citation.append(document.createTextNode(` · 자료 기준 ${project.sourceDate || "미확인"}`));
+          citation.append(document.createTextNode(` · 자료 기준 ${project.officialDetailSourceDate || project.sourceDate || "미확인"}`));
           panel.appendChild(citation);
         }
-        panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+        if (project.nameCorrected && zippickOfficialDetailUrl(project.nameSourceUrl)) {
+          const nameSource = document.createElement("p");
+          nameSource.innerHTML = `사업명·진행 단계: ${zippickFutureSourceLink(project.nameSourceUrl)}`;
+          nameSource.append(document.createTextNode(` · 자료 기준 ${project.nameSourceDate || "미확인"}`));
+          panel.appendChild(nameSource);
+        }
+        if (!mapElement.closest("dialog")) panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+        panel.focus({ preventScroll:true });
       };
       const openProject = project => {
         const showProject = () => {
@@ -20391,12 +20886,12 @@
       // This is a 2 km straight-line search boundary, not a walking catchment.
       new kakao.maps.Circle({ map, center, radius:2000, strokeWeight:3, strokeColor:"#8b5cf6",
         strokeOpacity:.9, strokeStyle:"dash", fillColor:"#c4b5fd", fillOpacity:.025, clickable:false, zIndex:1 });
+      const zonePolygons = [];
       zones.forEach(zone => {
         const polygons = zone.geometry.type === "MultiPolygon" ? zone.geometry.coordinates : [zone.geometry.coordinates];
-        polygons.forEach(rings => new kakao.maps.Polygon({ map,
+        polygons.forEach(rings => zonePolygons.push({ zone, polygon:new kakao.maps.Polygon({ map:mapZoneIsVisible(zone) ? map : null,
           path:rings.map(ring => ring.map(([lng,lat]) => new kakao.maps.LatLng(lat,lng))),
-          strokeWeight:2, strokeColor:"#1185d8", strokeOpacity:.72, strokeStyle:"solid",
-          fillColor:"#1185d8", fillOpacity:.10, clickable:false, zIndex:2 }));
+          ...redevelopmentZonePolygonStyle(zone) }) }));
       });
       const insideRing = (ring, longitude, latitude) => {
         let inside = false;
@@ -20412,36 +20907,49 @@
         return polygons.some(rings => rings.length && insideRing(rings[0], longitude, latitude)
           && !rings.slice(1).some(hole => insideRing(hole, longitude, latitude)));
       };
-      const directProject = zone => ["redevelopment", "reconstruction"].includes(zone.projectType)
-        || /재개발|재건축|가로주택|소규모|신속통합기획/.test(zone.projectTypeLabel || "");
-      const selectZone = (zone, position) => {
+      const directProject = redevelopmentZoneIsRenewal;
+      const nearbyRenewal = new Map();
+      [...zones, ...points].filter(project => directProject(project) && !project.containsSubject
+        && Number.isFinite(project.distanceMeters) && project.distanceMeters <= 2000)
+        .forEach(project => nearbyRenewal.set(project.projectId || project.id, project));
+      const renewalCount = nearbyRenewal.size;
+      const closeRenewalCount = [...nearbyRenewal.values()].filter(project => project.distanceMeters <= 800).length;
+      const dongOverlays = [];
+      const selectZone = (zone, position, options = {}) => {
         clearSelectedZoneTag();
-        showReference(zone, { preserveSelectedTag:true });
-        if (featuredById.has(zone.projectId)) return;
+        showReference(zone, { ...options, preserveSelectedTag:true });
         const tag = document.createElement("div");
-        tag.className = "zpr-living-featured-tag zpr-living-selected-tag";
+        tag.className = `zpr-living-featured-tag zpr-living-selected-tag${directProject(zone) ? "" : zone.zoneKind === "reference" ? " is-reference" : " is-unknown"}`;
         const name = document.createElement("strong");
         name.textContent = zone.name;
         const detail = document.createElement("small");
-        detail.textContent = [zone.stageLabel, distanceText(zone.distanceMeters)].filter(Boolean).join(" · ");
+        detail.textContent = [zone.zoneKindLabel, zone.stageLabel, distanceText(zone.distanceMeters)].filter(Boolean).join(" · ");
         tag.append(name, detail);
+        const development = mapZoneDevelopmentLabelHtml(zone);
+        if (development) name.insertAdjacentHTML("afterend", development);
         const xy = map.getProjection?.()?.containerPointFromCoords(position);
         const xAnchor = xy?.x < 115 ? 0 : xy?.x > mapElement.clientWidth - 115 ? 1 : .5;
-        const yAnchor = xy?.y < 75 ? 0 : 1.2;
+        const yAnchor = xy?.y < (development ? 120 : 75) ? 0 : 1.2;
         selectedZoneTag = new kakao.maps.CustomOverlay({ map, position, content:tag,
           xAnchor, yAnchor, clickable:false });
         selectedZoneTag.setZIndex?.(25);
       };
       kakao.maps.event.addListener(map, "click", event => {
-        const hit = zones.filter(zone => insideZone(zone, event.latLng.getLng(), event.latLng.getLat()))
+        const hit = visibleZones().filter(zone => insideZone(zone, event.latLng.getLng(), event.latLng.getLat()))
           .sort((a,b) => Number(directProject(b))-Number(directProject(a))
             || (a.siteAreaM2 || Infinity)-(b.siteAreaM2 || Infinity)
             || a.distanceMeters-b.distanceMeters)[0];
         if (hit) selectZone(hit, event.latLng);
       });
+      const railPolylines = [];
+      const addRailPolyline = (projects, options) => {
+        const line = new kakao.maps.Polyline({...options,
+          map:projects.every(project => zippickLivingRailVisible(project, reviewRailEnabled)) ? map : null});
+        railPolylines.push({projects, line});
+      };
       routes.forEach(route => {
         const paths = route.geometry.type === "MultiLineString" ? route.geometry.coordinates : [route.geometry.coordinates];
-        paths.forEach(path => new kakao.maps.Polyline({ map,
+        paths.forEach(path => addRailPolyline([route], {
           path:path.map(([lon,lat]) => new kakao.maps.LatLng(lat,lon)),
           strokeWeight:5, strokeColor:"#18a1ac", strokeOpacity:.85, strokeStyle:"solid", zIndex:3 }));
       });
@@ -20451,7 +20959,7 @@
           // Different source maps disagree on exact positions. This short dashed
           // guide links a planned-station place point to the official alignment;
           // it is not a claim about the tunnel or entrance location.
-          new kakao.maps.Polyline({ map, path:[
+          addRailPolyline([station], { path:[
             new kakao.maps.LatLng(station.routeAnchor.latitude,station.routeAnchor.longitude),
             new kakao.maps.LatLng(station.latitude,station.longitude)],
             strokeWeight:3, strokeColor:"#18a1ac", strokeOpacity:.8,
@@ -20461,74 +20969,40 @@
         const stops = connection.stationIds.map(id => stations.find(station => station.id === id));
         if (stops.some(stop => !stop || !validPoint(stop))) return;
         // These lines connect named planning landmarks, never a claimed tunnel alignment.
-        new kakao.maps.Polyline({ map, path:stops.map(stop => new kakao.maps.LatLng(stop.latitude,stop.longitude)),
+        addRailPolyline(stops, { path:stops.map(stop => new kakao.maps.LatLng(stop.latitude,stop.longitude)),
           strokeWeight:4, strokeColor:"#18a1ac", strokeOpacity:.7, strokeStyle:"dash", zIndex:3 });
       });
       const mapPriority = project => zones.includes(project) || zippickLivingIsRenewalPoint(project) ? 0 : stations.includes(project) ? 1 : 2;
       all.sort((a,b) => mapPriority(a)-mapPriority(b) || a.distanceMeters-b.distanceMeters).forEach(project => {
         const isZone = zones.includes(project), isRail = stations.includes(project);
-        const featured = featuredById.get(project.projectId || project.id);
         const sitePoint = new kakao.maps.LatLng(project.latitude, project.longitude);
         const target = isZone ? new kakao.maps.LatLng(project.targetLatitude, project.targetLongitude) : sitePoint;
-        const distanceLine = new kakao.maps.Polyline({ map, path:[center,target],
-          strokeWeight:isRail && project === closestPlannedStation ? 4 : 3,
+        const distanceLine = isRail ? new kakao.maps.Polyline({ map, path:[center,target],
+          strokeWeight:isRail && project === closestRailStation ? 4 : 3,
           strokeColor:isRail ? "#3179e9" : "#1185d8",
-          strokeOpacity:isRail && project === closestPlannedStation ? .9 : .7,
-          strokeStyle:"shortdash", zIndex:4 });
+          strokeOpacity:isRail && project === closestRailStation ? .9 : .7,
+          strokeStyle:"shortdash", clickable:false, zIndex:4 }) : null;
         const label = document.createElement("button");
         label.type = "button";
-        label.className = featured ? "zpr-living-featured-tag" : isRail ? "zpr-map-station-distance" : "zpr-map-project-pin";
+        label.className = isRail ? "zpr-map-station-distance" : "zpr-living-project-dot is-renewal";
         const name = document.createElement("strong");
         name.textContent = project.name;
-        label.appendChild(name);
-        if (featured) {
-          const stage = document.createElement("small");
-          stage.textContent = stageText(project);
-          label.appendChild(stage);
-        }
+        if (isRail) label.appendChild(name);
         const basis = document.createElement("small");
-        basis.textContent = featured
-          ? `${Math.round(featured.scaleValue).toLocaleString("ko-KR")}${featured.scaleBasis === "siteAreaM2" ? "㎡" : "세대"} · ${distanceText(project.distanceMeters)}`
-          : `${isRail ? "참고 위치 · " : "대표점 · "}${distanceText(project.distanceMeters)}`;
-        label.appendChild(basis);
+        basis.textContent = `${isRail ? zippickLivingStationBasis(project) + " · " : "사업 대표점 · "}${distanceText(project.distanceMeters)}`;
+        if (isRail) label.appendChild(basis);
+        else label.setAttribute("aria-label", `${project.name} · ${stageText(project)} · ${basis.textContent} · 사업 정보 보기`);
         label.addEventListener("click", event => {
           event.stopPropagation();
-          if (featured) showReference(project);
-          else openProject(project);
+          openProject(project);
         });
-        if (project.id === "myeonmok-jeonnong-reference") {
-          label.setAttribute("aria-label", `${project.name} · ${distanceText(project.distanceMeters)}`);
-          label.title = label.getAttribute("aria-label");
-          label.replaceChildren(); label.className = "zpr-living-rail-dot";
-        }
         const item = overlay(sitePoint,label,1.2,true,.5);
-        let compactItem = null;
-        if (isRail && project.id !== "myeonmok-jeonnong-reference") {
-          const dot = document.createElement("button");
-          dot.type = "button";
-          dot.className = "zpr-living-rail-dot";
-          dot.setAttribute("aria-label", `${project.name} · ${distanceText(project.distanceMeters)}`);
-          dot.addEventListener("click", event => { event.stopPropagation(); openProject(project); });
-          compactItem = overlay(sitePoint,dot,.5,true,.5);
-          compactItem.setMap(null);
-        } else if (featured) {
-          const tag = document.createElement("button");
-          tag.type = "button";
-          tag.className = "zpr-living-featured-tag is-compact";
-          const rank = document.createElement("b");
-          rank.textContent = String(featuredDevelopments.indexOf(featured) + 1);
-          const compactName = document.createElement("span");
-          compactName.textContent = `${project.name} · ${stageText(project)}`;
-          tag.append(rank, compactName);
-          tag.setAttribute("aria-label", `${project.name} · ${stageText(project)} · ${basis.textContent} · 사업 정보 보기`);
-          tag.addEventListener("click", event => { event.stopPropagation(); showReference(project); });
-          compactItem = overlay(sitePoint,tag,.5,true,.5);
-          compactItem.setMap(null);
-        }
-        overlays.push({ item, label, project, distanceLine, compactItem,
-          keepDistanceLine:isRail && project === closestPlannedStation });
+        if (isRail) item.setZIndex?.(9);
+        overlays.push({ item, label, project, distanceLine,
+          keepDistanceLine:isRail && project === closestRailStation });
       });
-      routesByStation.filter(validPoint).filter(route => !linkedRouteIds.size || linkedRouteIds.has(route.id)).forEach(route => {
+      routesByStation.filter(validPoint).filter(route => !linkedRouteIds.size || linkedRouteIds.has(route.id)
+        || zippickRailUnderReview(route)).forEach(route => {
         const label = document.createElement("button");
         label.type = "button";
         label.className = "zpr-living-route-label";
@@ -20538,7 +21012,7 @@
         const item = overlay(new kakao.maps.LatLng(route.latitude,route.longitude),label,1.2,true,0);
         overlays.push({ item, project:route, distanceLine:null, compactItem:null });
       });
-      [...visibleZones, ...stations, ...points].filter(project => project.projectId)
+      [...zones, ...stations, ...points].filter(project => project.projectId)
         .sort((a,b) => a.distanceMeters-b.distanceMeters).forEach(project => {
         const card = [...(section?.querySelectorAll("[data-living-project-id]") || [])].find(node => node.dataset.livingProjectId === project.projectId);
         const cell = card?.querySelector("[data-living-distance-fact]");
@@ -20554,35 +21028,177 @@
       });
       const legend = document.createElement("div");
       legend.className = "zpr-living-map-legend";
-      const closestStation = closestPlannedStation;
+      const closestStation = closestRailStation;
       const linkedRail = stations.some(station => station.routeAnchor);
-      legend.innerHTML = `<div>직선 2km 안의 큰 사업 ${featuredDevelopments.length}곳은 항상 표시해요.</div>${visibleZones.length ? '<div><i></i>다른 파란 구역을 누르면 이름표와 정보를 볼 수 있어요.</div>' : ''}${closestStation ? `<div><i class="rail"></i>${esc(closestStation.name)} · ${esc(distanceText(closestStation.distanceMeters))}</div>` : routes.length ? '<div><i class="rail"></i>철도 계획 노선</div>' : ''}<div>보라색 점선 원: 직선 2km · 선: 단지에서의 직선거리${linkedRail ? ' · 청록 점선: 예정역과 계획선 연결' : ''}</div>${failed ? '<div>추가 지도 자료를 불러오지 못했어요. 리포트를 다시 열어 주세요.</div>' : ''}`;
+      const syncLegend = () => {
+        legend.innerHTML = `${data.zoneCoverage?.scopeComplete === false ? '<div>공개 자료 기준 · 인천 경계 확인 중</div>' : ''}${visibleZones().length ? `<div>${redevelopmentZoneLegendHtml({ reference:referenceEnabled })} · 구역을 눌러 자세히 보기</div>` : ''}${closestStation ? `<div><i class="rail"></i>${esc(closestStation.name)} · ${esc(zippickLivingStationBasis(closestStation))} · ${esc(distanceText(closestStation.distanceMeters))}</div>` : routes.length ? '<div><i class="rail"></i>철도 계획 노선</div>' : ''}<div>보라색 점선 원: 직선 2km${linkedRail ? ' · 청록 점선: 예정역과 계획선 연결' : ''}</div>${failed ? '<div>추가 지도 자료를 불러오지 못했어요. 리포트를 다시 열어 주세요.</div>' : ''}`;
+      };
+      const syncReviewRailLegend = () => {
+        syncLegend();
+        if (reviewRailEnabled) legend.insertAdjacentHTML("beforeend", "<div>검토 중인 노선 · 일정 미정 · 점수 미반영</div>");
+      };
+      syncReviewRailLegend();
+      const referenceControl = document.createElement("label");
+      referenceControl.className = "zpr-living-reference-toggle";
+      referenceControl.innerHTML = '<input type="checkbox" data-zpr-map-reference-toggle><span>주변 개발계획</span>';
+      referenceControl.querySelector("input").addEventListener("change", event => {
+        referenceEnabled = event.target.checked;
+        zonePolygons.forEach(({zone, polygon}) => polygon.setMap(mapZoneIsVisible(zone, { reference:referenceEnabled }) ? map : null));
+        clearSelectedZoneTag();
+        (mapElement.closest("dialog") || mapHome)?.querySelector(".zpr-living-map-reference")?.remove();
+        syncLegend();
+      });
+      mapElement.before(referenceControl);
+      if ([...stations, ...routes].some(zippickRailUnderReview)) {
+        const reviewControl = document.createElement("label");
+        reviewControl.className = "zpr-living-reference-toggle";
+        reviewControl.innerHTML = '<input type="checkbox" data-zpr-map-review-rail><span>검토 중인 노선 보기</span>';
+        reviewControl.querySelector("input").addEventListener("change", event => {
+          reviewRailEnabled = event.target.checked;
+          railPolylines.forEach(({projects, line}) => line.setMap(
+            projects.every(project => zippickLivingRailVisible(project, reviewRailEnabled)) ? map : null));
+          syncReviewRailLegend();
+          if (!reviewRailEnabled) (mapElement.closest("dialog") || mapHome)?.querySelector(".zpr-living-map-reference")?.remove();
+          declutter();
+        });
+        mapElement.before(reviewControl);
+      }
       if (mapHome) mapHome.prepend(legend);
       else mapElement.parentElement.before(legend);
-      if (mapHome && featuredDevelopments.length) {
-        const topTags = document.createElement("div");
-        topTags.className = "zpr-living-map-top-tags";
-        topTags.setAttribute("aria-label", `규모가 큰 주변 사업 ${featuredDevelopments.length}곳`);
-        featuredDevelopments.forEach((featured, index) => {
-          const project = featuredSites.find(site => (site.projectId || site.id) === featured.projectId);
-          if (!project) return;
-          const button = document.createElement("button");
-          button.type = "button";
-          const title = document.createElement("strong");
-          title.textContent = `${index + 1}. ${project.name}`;
-          const stage = document.createElement("small");
-          stage.textContent = stageText(project);
-          const scale = document.createElement("small");
-          scale.textContent = `${Math.round(featured.scaleValue).toLocaleString("ko-KR")}${featured.scaleBasis === "siteAreaM2" ? "㎡" : "세대"} · ${distanceText(project.distanceMeters)}`;
-          button.append(title, stage, scale);
-          button.addEventListener("click", () => {
-            map.panTo(new kakao.maps.LatLng(project.latitude, project.longitude));
-            showReference(project);
-          });
-          topTags.appendChild(button);
-        });
-        legend.after(topTags);
+      if (mapHome && !failed) {
+        const summary = document.createElement("div");
+        summary.className = "zpr-living-map-summary";
+        summary.setAttribute("aria-label", "주변 정비사업 요약");
+        const title = document.createElement("strong");
+        title.textContent = renewalCount >= 3
+          ? "주변에 정비사업 구역이 여러 곳 모여 있어요."
+          : renewalCount ? "주변에 정비사업 구역이 확인돼요."
+          : "현재 지도 자료에서 직선 2km 안의 정비사업 구역을 찾지 못했어요.";
+        const note = document.createElement("span");
+        note.textContent = renewalCount >= 3
+          ? `직선 2km 안에 정비사업 표시 ${renewalCount.toLocaleString("ko-KR")}개${closeRenewalCount ? `, 800m 안에 ${closeRenewalCount.toLocaleString("ko-KR")}개` : ""}가 있어요. 일부는 같은 사업의 여러 경계예요. 사업이 진행되면 생활권이 달라질 수 있어요.`
+          : renewalCount ? "구역을 누르면 사업 단계와 위치를 볼 수 있어요. 변화 시점은 더 확인해야 해요."
+          : "현재 확인한 지도 자료 기준이에요. 계획이 전혀 없다는 뜻은 아니에요.";
+        summary.append(title, note);
+        mapHome.prepend(summary);
       }
+      const mountDongCards = async () => {
+        if (!renewalCount || !kakao.maps.services?.Geocoder) return;
+        const geocoder = new kakao.maps.services.Geocoder();
+        const projects = [...nearbyRenewal.values()].filter(validPoint);
+        const located = [];
+        const findLegalDong = project => {
+          const pointKey = `${project.latitude.toFixed(6)}|${project.longitude.toFixed(6)}`;
+          if (!zippickLivingDongRegionCache.has(pointKey)) {
+            const pending = new Promise(resolve => {
+              const timer = setTimeout(() => resolve(null), 5000);
+              try {
+                geocoder.coord2RegionCode(project.longitude, project.latitude, (rows, status) => {
+                  clearTimeout(timer);
+                  if (status !== kakao.maps.services.Status.OK) return resolve(null);
+                  const region = (Array.isArray(rows) ? rows : []).find(row => row.region_type === "B");
+                  resolve(region?.region_3depth_name ? {
+                    key:region.code || region.address_name,
+                    name:region.region_3depth_name,
+                  } : null);
+                });
+              } catch (_) { clearTimeout(timer); resolve(null); }
+            });
+            zippickLivingDongRegionCache.set(pointKey, pending);
+          }
+          return zippickLivingDongRegionCache.get(pointKey).then(region => {
+            if (!region) zippickLivingDongRegionCache.delete(pointKey);
+            return region ? { project, ...region } : null;
+          });
+        };
+        // 좌표를 법정동으로 바꾸는 요청을 조금씩 나눠 지도 로딩을 막지 않는다.
+        for (let index = 0; index < projects.length; index += 5) {
+          located.push(...await Promise.all(projects.slice(index, index + 5).map(findLegalDong)));
+          if (!mapElement.isConnected) return;
+        }
+        const groups = new Map();
+        located.filter(Boolean).forEach(({ project, key, name }) => {
+          if (!groups.has(key)) groups.set(key, { key, name, projects:[] });
+          groups.get(key).projects.push(project);
+        });
+        mapElement.dataset.zprDongGroupCount = String(groups.size);
+        mapElement.dataset.zprDongLocatedCount = String(located.filter(Boolean).length);
+        const kindOf = project => {
+          const label = `${project.projectType || ""} ${project.projectTypeLabel || ""}`;
+          if (/redevelopment|재개발/.test(label)) return "재개발";
+          if (/reconstruction|재건축/.test(label)) return "재건축";
+          return "그 밖의 정비";
+        };
+        const showDongProjects = (group, card) => {
+          clearSelectedZoneTag();
+          const panel = createReferencePanel(`${group.name} 정비사업`, { returnFocus:card });
+          if (!panel) return;
+          const intro = document.createElement("p");
+          intro.textContent = `지도에 표시한 ${group.projects.length.toLocaleString("ko-KR")}개 구역이에요. 사업을 누르면 외부 공식 자료가 새 창에서 열려요.`;
+          const note = document.createElement("p");
+          note.textContent = "직선 2km 안에서 확인한 자료예요. 같은 사업의 경계가 여러 개일 수 있어요.";
+          const list = document.createElement("ul");
+          list.className = "zpr-living-dong-projects";
+          group.projects.slice().sort((a,b) => a.distanceMeters-b.distanceMeters).forEach(project => {
+            const row = document.createElement("li");
+            const sourceUrl = zippickLivingProjectSourceUrl(project);
+            const entry = document.createElement(sourceUrl ? "a" : "div");
+            if (sourceUrl) {
+              entry.href = sourceUrl;
+              entry.target = "_blank";
+              entry.rel = "noopener noreferrer";
+            }
+            entry.className = "zpr-living-dong-project";
+            const name = document.createElement("strong");
+            name.textContent = project.name;
+            const detail = document.createElement("span");
+            detail.textContent = `${kindOf(project)} · ${stageText(project)} · ${distanceText(project.distanceMeters)}`;
+            const action = document.createElement("small");
+            action.textContent = sourceUrl ? "사업 상세 보기 ↗" : "개별 공식 자료 확인 중";
+            entry.append(name, detail, action);
+            row.appendChild(entry); list.appendChild(row);
+          });
+          panel.append(intro, list, note);
+          if (!mapElement.closest("dialog")) panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+          panel.focus({ preventScroll:true });
+        };
+        [...groups.values()].sort((a,b) => b.projects.length-a.projects.length).slice(0, 12).forEach(group => {
+          const counts = new Map();
+          group.projects.forEach(project => {
+            const kind = kindOf(project);
+            counts.set(kind, (counts.get(kind) || 0) + 1);
+          });
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "zpr-living-dong-card";
+          card.setAttribute("aria-label", `${group.name} 정비사업 표시 ${group.projects.length}개 · 상세 보기`);
+          card.addEventListener("click", event => {
+            event.stopPropagation();
+            showDongProjects(group, card);
+          });
+          const title = document.createElement("strong");
+          title.textContent = group.name;
+          card.append(title);
+          ["재개발", "재건축", "그 밖의 정비"].forEach(kind => {
+            if (!counts.has(kind)) return;
+            const row = document.createElement("span");
+            const label = document.createElement("span"); label.textContent = kind;
+            const number = document.createElement("b"); number.textContent = counts.get(kind).toLocaleString("ko-KR");
+            row.append(label, number); card.append(row);
+          });
+          const latitude = group.projects.reduce((sum, project) => sum + project.latitude, 0) / group.projects.length;
+          const longitude = group.projects.reduce((sum, project) => sum + project.longitude, 0) / group.projects.length;
+          const distanceFromMean = project => (project.latitude-latitude)**2 + (project.longitude-longitude)**2;
+          const positions = group.projects.slice()
+            .sort((a,b) => distanceFromMean(a)-distanceFromMean(b))
+            .map(project => new kakao.maps.LatLng(project.latitude, project.longitude));
+          const item = overlay(positions[0], card, 1.1, true, .5);
+          item.setZIndex?.(6);
+          dongOverlays.push({ item, card, positions, rowCount:counts.size });
+        });
+        if (dongOverlays.length) legend.insertAdjacentHTML("afterbegin", "<div>흰 카드: 동네별 정비사업 수 · 눌러서 상세 보기</div>");
+        declutter();
+      };
       const declutter = () => {
         const projection = map.getProjection?.();
         const origin = projection?.containerPointFromCoords(center);
@@ -20592,55 +21208,72 @@
           w:pinRect.width+16,h:pinRect.height+16}]
           : origin ? [{x:origin.x-70,y:origin.y-48,w:140,h:56}] : [];
         const width=mapElement.clientWidth, height=mapElement.clientHeight;
-        overlays.forEach(({item,label,project,distanceLine,compactItem,keepDistanceLine}) => {
-          const mobileFeatured = width < 500 && featuredById.has(project.projectId || project.id);
-          const xy=projection?.containerPointFromCoords(new kakao.maps.LatLng(project.latitude,project.longitude));
-          const featured = featuredById.has(project.projectId || project.id);
-          if (featured && !mobileFeatured && xy) {
-            // Keep the three largest projects in one full format. Move a badge
-            // around its actual map point when nearby projects would cover it.
-            const tagWidth = label?.offsetWidth || 180;
-            const tagHeight = label?.offsetHeight || 76;
-            const gaps = [
-              [0,0],[-96,0],[96,0],[0,-88],[0,88],
-              [-96,-88],[96,-88],[-96,88],[96,88],
-              [-192,0],[192,0],[-192,-88],[192,-88],
-              [-192,88],[192,88],[0,-176],[0,176],
-            ];
-            const placement = gaps.map(([dx,dy]) => ({
-              dx,dy,x:xy.x-tagWidth/2+dx,y:xy.y-tagHeight*1.2+dy,
-              w:tagWidth,h:tagHeight,
-            })).find(box => box.x>=8 && box.y>=8 && box.x+box.w<=width-8 && box.y+box.h<=height-8
-              && !occupied.some(other => box.x < other.x+other.w+8 && box.x+box.w+8 > other.x
-                && box.y < other.y+other.h+8 && box.y+box.h+8 > other.y));
-            if (placement) {
-              label.style.transform = `translate(${placement.dx}px, ${placement.dy}px)`;
-              item.setMap(map);
-              compactItem?.setMap(null);
-              distanceLine?.setMap(map);
-              occupied.push(placement);
-            } else {
-              item.setMap(null);
-              const pointVisible=xy.x>=12 && xy.x<=width-12 && xy.y>=12 && xy.y<=height-12;
-              compactItem?.setMap(pointVisible ? map : null);
-              distanceLine?.setMap(pointVisible ? map : null);
-            }
-            return;
+        const railOverlays = overlays.filter(entry => stations.includes(entry.project));
+        const placeOverlay = ({item,label,project,distanceLine,keepDistanceLine}) => {
+          if (project.railReviewStatus === "reconsidering" && !reviewRailEnabled) {
+            item.setMap(null); distanceLine?.setMap(null); return;
           }
-          const box=xy ? featuredById.has(project.projectId || project.id)
-            ? {x:xy.x-90,y:xy.y-84,w:180,h:76}
+          const xy=projection?.containerPointFromCoords(new kakao.maps.LatLng(project.latitude,project.longitude));
+          const pointProject = points.includes(project);
+          const isRail = stations.includes(project);
+          let box=xy ? pointProject ? {x:xy.x-12,y:xy.y-12,w:24,h:24}
             : routes.includes(project) ? {x:xy.x+6,y:xy.y-40,w:155,h:36}
             : {x:xy.x-100,y:xy.y-90,w:200,h:85} : null;
-          const overlap=box && occupied.some(b => box.x < b.x+b.w && box.x+box.w > b.x && box.y < b.y+b.h && box.y+box.h > b.y);
-          const visible=!mobileFeatured && !overlap && (!box || (box.x>=8 && box.y>=8 && box.x+box.w<=width-8 && box.y+box.h<=height-8));
-          const compactVisible=Boolean(compactItem && !visible && xy && xy.x>=12 && xy.x<=width-12 && xy.y>=12 && xy.y<=height-12);
+          const fits = candidate => candidate.x>=8 && candidate.y>=8
+            && candidate.x+candidate.w<=width-8 && candidate.y+candidate.h<=height-8
+            && !occupied.some(b => candidate.x < b.x+b.w && candidate.x+candidate.w > b.x
+              && candidate.y < b.y+b.h && candidate.y+candidate.h > b.y);
+          // 모든 철도 태그를 먼저 배치한다. 겹쳐도 역 이름을 작은 점으로 바꾸지 않는다.
+          const stationInView = xy && xy.x>=0 && xy.x<=width && xy.y>=0 && xy.y<=height;
+          if (isRail && stationInView && label) {
+            const w=label.offsetWidth || 200, h=label.offsetHeight || 60;
+            const base={x:xy.x-w/2,y:xy.y-h*1.2,w,h};
+            const offsets=[0,-1,1,-2,2,-3,3].flatMap(row => [0,-1,1].map(col => [col*(w+12),row*(h+12)]));
+            const candidates=offsets.map(([dx,dy]) => ({...base,
+              x:Math.max(8,Math.min(width-w-8,base.x+dx)),
+              y:Math.max(8,Math.min(height-h-8,base.y+dy))}))
+              .sort((a,b)=>(a.x-base.x)**2+(a.y-base.y)**2-(b.x-base.x)**2-(b.y-base.y)**2);
+            const overlap = candidate => occupied.reduce((sum,b) => sum
+              + Math.max(0,Math.min(candidate.x+w,b.x+b.w)-Math.max(candidate.x,b.x))
+              * Math.max(0,Math.min(candidate.y+h,b.y+b.h)-Math.max(candidate.y,b.y)),0);
+            box=candidates.find(fits) || candidates.sort((a,b)=>overlap(a)-overlap(b))[0];
+            label.style.transform=`translate(${box.x-base.x}px,${box.y-base.y}px)`;
+          }
+          const visible=isRail ? Boolean(stationInView) : !box || fits(box);
           item.setMap(visible ? map : null);
-          distanceLine?.setMap(visible || compactVisible || keepDistanceLine ? map : null);
-          if (compactItem) compactItem.setMap(compactVisible ? map : null);
+          distanceLine?.setMap(visible || keepDistanceLine ? map : null);
           if (visible && box) occupied.push(box);
+        };
+        railOverlays.forEach(placeOverlay);
+        dongOverlays.forEach(({item,card,positions,rowCount}) => {
+          const cardHeight=35+rowCount*21;
+          const offsets=[[0,0],[-55,0],[55,0],[0,-50],[0,50],[-55,-50],[55,-50],[-55,50],[55,50]];
+          let choice=null;
+          if (Number(map.getLevel?.() || 99)>=4) {
+            for (const position of positions) {
+              const xy=projection?.containerPointFromCoords(position);
+              if (!xy) continue;
+              for (const [dx,dy] of offsets) {
+                const box={x:xy.x-63+dx,y:xy.y-cardHeight-9+dy,w:126,h:cardHeight};
+                if (box.x<8 || box.y<8 || box.x+box.w>width-8 || box.y+box.h>height-8) continue;
+                if (occupied.some(b => box.x < b.x+b.w && box.x+box.w > b.x && box.y < b.y+b.h && box.y+box.h > b.y)) continue;
+                choice={position,box,dx,dy};
+                break;
+              }
+              if (choice) break;
+            }
+          }
+          if (choice) {
+            item.setPosition(choice.position);
+            card.style.transform=`translate(${choice.dx}px,${choice.dy}px)`;
+          }
+          item.setMap(choice ? map : null);
+          if (choice) occupied.push(choice.box);
         });
+        overlays.filter(entry => !railOverlays.includes(entry)).forEach(placeOverlay);
       };
       kakao.maps.event.addListener(map,"idle",declutter);
+      mapElement.addEventListener("zpr-map-relayout", () => requestAnimationFrame(declutter));
       const frame = () => {
         mapElement.scrollTop = 0; mapElement.scrollLeft = 0;
         const bounds = new kakao.maps.LatLngBounds();
@@ -20651,7 +21284,7 @@
         const longitudeRadius = latitudeRadius / Math.cos(centerLat * Math.PI / 180);
         bounds.extend(new kakao.maps.LatLng(centerLat + latitudeRadius, centerLon + longitudeRadius));
         bounds.extend(new kakao.maps.LatLng(centerLat - latitudeRadius, centerLon - longitudeRadius));
-        const initialProjects = [...featuredSites, ...(closestPlannedStation ? [closestPlannedStation] : [])];
+        const initialProjects = closestRailStation ? [closestRailStation] : [];
         initialProjects.forEach(project => {
           bounds.extend(new kakao.maps.LatLng(project.latitude,project.longitude));
         });
@@ -20661,6 +21294,7 @@
         declutter();
       };
       requestAnimationFrame(frame);
+      await mountDongCards();
     }
 
     async function mountZippickReportMap(mapElement) {
@@ -20714,9 +21348,9 @@
             const savedCenter = map.getCenter();
             const shell = mapElement.parentElement;
             const placeholder = document.createComment("living-map-position");
-            const topTags = shell.parentElement?.querySelector(".zpr-living-map-top-tags");
-            const tagsPlaceholder = topTags ? document.createComment("living-map-tags-position") : null;
-            if (tagsPlaceholder) topTags.before(tagsPlaceholder);
+            const summary = shell.parentElement?.querySelector(".zpr-living-map-summary");
+            const summaryPlaceholder = summary ? document.createComment("living-map-summary-position") : null;
+            if (summaryPlaceholder) summary.before(summaryPlaceholder);
             shell.before(placeholder);
             const dialog = document.createElement("dialog");
             dialog.className = "zpr-living-map-dialog";
@@ -20724,7 +21358,7 @@
             const close = document.createElement("button"); close.type = "button"; close.textContent = "지도 닫기";
             close.addEventListener("click", () => dialog.close());
             dialog.append(close);
-            if (topTags) dialog.append(topTags);
+            if (summary) dialog.append(summary);
             dialog.append(shell); document.body.appendChild(dialog); dialog.showModal();
             map.setZoomable?.(true);
             expandButton.hidden = true;
@@ -20732,11 +21366,15 @@
               const currentCenter = map.getCenter();
               map.setZoomable?.(false);
               placeholder.replaceWith(shell); dialog.remove(); expandButton.hidden = false;
-              if (tagsPlaceholder && topTags) tagsPlaceholder.replaceWith(topTags);
+              if (summaryPlaceholder && summary) summaryPlaceholder.replaceWith(summary);
               map.relayout?.(); map.setCenter(currentCenter);
+              mapElement.dispatchEvent(new Event("zpr-map-relayout"));
               if (dialog.returnValue !== "project") expandButton.focus();
             }, { once:true });
-            requestAnimationFrame(() => { map.relayout?.(); map.setCenter(savedCenter); });
+            requestAnimationFrame(() => {
+              map.relayout?.(); map.setCenter(savedCenter);
+              mapElement.dispatchEvent(new Event("zpr-map-relayout"));
+            });
           });
         }
         expandButton.setAttribute("aria-label", redevelopment ? "단지 지도 크게보기" : "지도 크게보기");
@@ -20746,8 +21384,8 @@
         mapElement.dataset.zprMapState = "ready";
         mapElement.setAttribute("aria-busy", "false");
         if (kakao.maps.ZoomControl && map.addControl) map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-        if (redevelopment) mountZippickReportRedevelopmentZones(mapElement, map, kakao);
-        if (!redevelopment) void mountZippickReportStationDistance(mapElement, map, kakao, item, position);
+        if (redevelopment) await mountZippickReportRedevelopmentZones(mapElement, map, kakao);
+        if (!redevelopment) await mountZippickReportStationDistance(mapElement, map, kakao, item, position);
         requestAnimationFrame(() => map.relayout?.());
       } catch (_) {
         if (!mapElement.isConnected) return;
@@ -20798,10 +21436,7 @@
       const mapElement = button.closest("[data-zpr-report-map]") || sheet?.querySelector("[data-zpr-report-map]");
       if (!mapElement || !sheet) return;
       if (button.matches("[data-zpr-lifestyle-map]")) {
-        candidateMapRedevelopmentEnabled = true;
-        candidateMapRedevelopmentLastBbox = "";
-        const toggle = candidateMapQuery("[data-candidate-map-redevelopment-toggle]");
-        if (toggle) toggle.checked = true;
+        setCandidateMapZoneVisibility({ renewal:true });
       }
       // 전체 지도 위의 상세 리포트에서는 뒤에 있는 전체 지도를 바로 보여 준다.
       if (candidateViewMode === "map") {
@@ -20859,11 +21494,14 @@
       const locationScore = zpNum(item?.locationScore?.score);
       const signalScore = zpNum(item?.signals?.score);
       const hasLocation = Number.isFinite(locationScore);
-      const hasSignal = Number.isFinite(signalScore) && signalScore > 0;
+      const hasSignal = Number.isFinite(signalScore);
       // 고점 보정은 점수를 바꾸지 않는다. 이 리포트의 판정 문구만 낮춘다.
       const verdict = zippickGuardVerdict(
         item,
-        zippickMatrixVerdict(hasLocation ? locationScore : null, hasSignal ? signalScore : null),
+        zippickPartialVerdict(
+          item,
+          zippickMatrixVerdict(hasLocation ? locationScore : null, hasSignal ? signalScore : null),
+        ),
       );
       const locationBars = zippickLocationBarsHtml(item);
       const signalBars = zippickSignalBarsHtml(item);
@@ -23247,10 +23885,12 @@
       }
       const redevelopmentToggle = event.target.closest("[data-candidate-map-redevelopment-toggle]");
       if (redevelopmentToggle) {
-        candidateMapRedevelopmentEnabled = Boolean(redevelopmentToggle.checked);
-        candidateMapRedevelopmentLastBbox = "";
-        if (!candidateMapRedevelopmentEnabled) clearCandidateMapRedevelopmentLayers();
-        else if (candidateMapKakao) scheduleCandidateMapRedevelopmentZones(candidateMapKakao, 0);
+        setCandidateMapZoneVisibility({ renewal:Boolean(redevelopmentToggle.checked) });
+        return;
+      }
+      const referenceToggle = event.target.closest("[data-candidate-map-reference-toggle]");
+      if (referenceToggle) {
+        setCandidateMapZoneVisibility({ reference:Boolean(referenceToggle.checked) });
         return;
       }
       const fundingFilter = event.target.closest("[data-candidate-map-funding-filter]");
@@ -23926,8 +24566,8 @@
         hideAptSuggest();
         return;
       }
-      aptSearchSuggest.innerHTML = items.map(item => `<button class="apt-suggest-item" type="button" role="option" data-apt-suggest-name="${esc(item.name)}" data-apt-suggest-region="${esc(item.region || "")}" data-apt-suggest-address="${esc(item.address || "")}" data-apt-suggest-legal-dong="${esc(item.legalDong || "")}" data-apt-suggest-jibun="${esc(item.jibun || "")}" data-apt-suggest-cortar-no="${esc(item.cortarNo || "")}" data-apt-suggest-lawd-cd="${esc(item.lawdCd || "")}" data-apt-suggest-households="${esc(item.households || "")}" data-apt-suggest-status="${esc(item.status || "")}">
-        <span class="apt-suggest-row"><span class="apt-suggest-chip">아파트</span><span class="apt-suggest-name">${esc(item.name)}</span>${apartmentStatusBadgeHtml(item.status)}</span>
+      aptSearchSuggest.innerHTML = items.map(item => `<button class="apt-suggest-item" type="button" role="option" data-apt-suggest-name="${esc(item.name)}" data-apt-suggest-display-name="${esc(candidateDisplayName(item))}" data-apt-suggest-region="${esc(item.region || "")}" data-apt-suggest-address="${esc(item.address || "")}" data-apt-suggest-legal-dong="${esc(item.legalDong || "")}" data-apt-suggest-jibun="${esc(item.jibun || "")}" data-apt-suggest-apartment-id="${esc(item.apartmentId || "")}" data-apt-suggest-kapt-code="${esc(item.kaptCode || "")}" data-apt-suggest-complex-no="${esc(item.complexNo || "")}" data-apt-suggest-cortar-no="${esc(item.cortarNo || "")}" data-apt-suggest-lawd-cd="${esc(item.lawdCd || "")}" data-apt-suggest-households="${esc(item.households || "")}" data-apt-suggest-status="${esc(item.status || "")}">
+        <span class="apt-suggest-row"><span class="apt-suggest-chip">아파트</span><span class="apt-suggest-name">${esc(candidateDisplayName(item))}</span>${apartmentStatusBadgeHtml(item.status)}</span>
         ${item.address ? `<span class="apt-suggest-address">${esc(item.address)}</span>` : ""}
       </button>`).join("");
       aptSearchSuggest.hidden = false;
@@ -24082,7 +24722,7 @@
       aptSearchResults.innerHTML = items.map((item, index) => `<article class="apt-result-card budget-candidate" data-apt-card-index="${index}" data-candidate-name="${esc(item.name)}">
         <div class="candidate-top has-map-action">
           <div class="budget-main">
-            <span class="apartment-name-row" data-apt-result-name>${candidateTitleHtml(item, item.name, apartmentStatusBadgeHtml(item.status))}</span>
+            <span class="apartment-name-row" data-apt-result-name>${candidateTitleHtml(item, candidateDisplayName(item), apartmentStatusBadgeHtml(item.status))}</span>
             <span class="budget-meta" data-apt-result-meta>${candidateListMetaHtml(item)}</span>
             <span data-apt-score-badges>${candidateTopScoreBadgesHtml(item)}</span>
           </div>
@@ -24179,26 +24819,10 @@
 
     function candidateMapEntryForApartment(target = {}) {
       const targetKey = candidateIdentityKey(target);
-      if (targetKey) {
-        const exact = candidateMapEntries.find(entry => candidateIdentityKey(entry.item) === targetKey);
-        if (exact) return exact;
-      }
-      const targetName = compactText(target.name || candidateDisplayName(target));
-      const targetRegion = compactText(target.region || target.displayRegion || target.address || "");
-      const targetDong = compactText(target.legalDong || target.dong || "");
-      const targetJibun = compactText(target.jibun || "");
-      const nameMatches = candidateMapEntries.filter(entry => {
-        const item = entry.item || {};
-        if (compactText(candidateDisplayName(item)) !== targetName) return false;
-        if (targetDong && compactText(item.legalDong || item.dong || "") !== targetDong) return false;
-        if (targetJibun && compactText(item.jibun || "") !== targetJibun) return false;
-        return true;
-      });
-      if (!targetRegion || nameMatches.length < 2) return nameMatches[0] || null;
-      return nameMatches.find(entry => {
-        const itemRegion = compactText(entry.item.region || entry.item.displayRegion || entry.item.address || "");
-        return itemRegion.includes(targetRegion) || targetRegion.includes(itemRegion);
-      }) || nameMatches[0] || null;
+      const exact = candidateMapEntries.find(entry => candidateIdentityKey(entry.item) === targetKey);
+      if (exact) return exact;
+      const matches = candidateMapEntries.filter(entry => sameCandidateIdentity(entry.item, target));
+      return matches.length === 1 ? matches[0] : null;
     }
 
     function setCandidateMapCaption(message = "") {
@@ -24223,14 +24847,14 @@
         const suggestions = Array.isArray(suggestionData?.suggestions) ? suggestionData.suggestions : [];
         const exactNameMatches = suggestions.filter(item => compactText(item.name) === compactText(name));
         const targetRegion = compactText(region);
-        const resolved = (
-          exactNameMatches.find(item => {
-            const itemRegion = compactText([item.region, item.address, item.legalDong].filter(Boolean).join(" "));
-            return targetRegion && (itemRegion.includes(targetRegion) || targetRegion.includes(itemRegion));
-          })
-          || exactNameMatches[0]
-          || suggestions[0]
-        );
+        const eligible = exactNameMatches.filter(item => {
+          const itemRegion = compactText([item.region, item.address].filter(Boolean).join(" "));
+          if (targetRegion && !itemRegion.includes(targetRegion)) return false;
+          if (target.legalDong && compactText(item.legalDong) !== compactText(target.legalDong)) return false;
+          if (target.jibun && parcelIdentityKey(item.jibun, item.legalDong) !== parcelIdentityKey(target.jibun, target.legalDong)) return false;
+          return ["apartmentId", "kaptCode", "complexNo"].every(field => !target[field] || String(item[field] || "") === String(target[field]));
+        });
+        const resolved = eligible.length === 1 ? eligible[0] : null;
         if (!resolved) throw new Error("대장 단지를 찾지 못했어요.");
 
         let mapItem = {
@@ -24500,12 +25124,88 @@
         .forEach(element => element.remove());
       content?.querySelectorAll(".result-info-backdrop, .apt-report-head-actions")
         .forEach(element => element.remove());
-      content?.querySelectorAll(".zpr-map").forEach(element => element.remove());
+      content?.querySelectorAll(".zpr-living-map-summary, .zpr-living-map-legend, .zpr-living-reference-toggle, .zpr-living-map-reference")
+        .forEach(element => element.remove());
+      // 현재 보이는 지도 프레임을 고정한다. 저장을 위해 지도를 다시 불러오지 않는다.
+      const sourceMaps = sheet.querySelectorAll(".candidate-detail-sheet-content [data-zpr-report-map], .listing-review-content [data-zpr-report-map]");
+      content?.querySelectorAll("[data-zpr-report-map]").forEach((element, index) => {
+        const source = sourceMaps[index];
+        element.removeAttribute("data-zpr-report-map");
+        element.setAttribute("data-pdf-report-map", "");
+        element.setAttribute("aria-busy", "false");
+        const frame = document.createElement("div");
+        const width = source?.clientWidth;
+        const height = source?.clientHeight;
+        if (!width || !height) return;
+        frame.style.cssText = `position:relative;width:${width}px;height:${height}px;transform-origin:top left;overflow:hidden`;
+        frame.append(...element.childNodes);
+        element.appendChild(frame);
+        // cloneNode는 canvas에 그려진 선과 도형을 복사하지 않는다.
+        const sourceCanvases = source.querySelectorAll("canvas");
+        frame.querySelectorAll("canvas").forEach((canvas, canvasIndex) => {
+          try { canvas.getContext("2d")?.drawImage(sourceCanvases[canvasIndex], 0, 0); } catch (_) {}
+        });
+        element.dataset.pdfFrameWidth = String(width);
+        element.dataset.pdfFrameHeight = String(height);
+      });
       content?.querySelectorAll("details").forEach(element => { element.open = true; });
       if (heading) root.appendChild(heading);
       if (content) root.appendChild(content);
       document.body.appendChild(root);
+      root.querySelectorAll("[data-pdf-report-map]").forEach(element => {
+        const width = Number(element.dataset.pdfFrameWidth);
+        const height = Number(element.dataset.pdfFrameHeight);
+        if (!width || !height) return;
+        const scale = element.clientWidth / width;
+        element.firstElementChild.style.transform = `scale(${scale})`;
+        element.style.height = `${height * scale}px`;
+      });
       return root;
+    }
+
+    async function preparePdfReportMaps(root) {
+      const maps = [...root.querySelectorAll("[data-pdf-report-map]")];
+      const images = new Map();
+      const inlineImage = url => {
+        if (!url || url.startsWith("data:")) return Promise.resolve(url);
+        if (!images.has(url)) images.set(url, (async () => {
+          const response = await fetch(`/api/report-map-image?url=${encodeURIComponent(new URL(url, location.href).href)}`,
+            { signal:AbortSignal.timeout(3000) });
+          if (!response.ok) throw new Error("지도 이미지를 불러오지 못했어요.");
+          const blob = await response.blob();
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        })().catch(() => null));
+        return images.get(url);
+      };
+      await Promise.all(maps.flatMap(map => [...map.querySelectorAll("*")].map(async element => {
+        if (element.tagName === "IMG") {
+          const source = element.currentSrc || element.src;
+          element.removeAttribute("srcset");
+          const inlined = await inlineImage(source);
+          if (inlined) {
+            element.src = inlined;
+            try { await element.decode(); } catch (_) { element.style.visibility = "hidden"; }
+          } else {
+            element.removeAttribute("src");
+            element.style.visibility = "hidden";
+          }
+        }
+        const background = getComputedStyle(element).backgroundImage;
+        const urls = [...background.matchAll(/url\(["']?([^"')]+)["']?\)/g)];
+        if (urls.length) {
+          let inlined = background;
+          for (const [match, url] of urls) {
+            const image = await inlineImage(url);
+            inlined = inlined.replace(match, image ? `url("${image}")` : "none");
+          }
+          element.style.backgroundImage = inlined;
+        }
+      })));
     }
 
     function setPdfButtonBusy(button, busy) {
@@ -24513,7 +25213,7 @@
       if (busy) {
         button.dataset.pdfOriginalText = button.textContent;
         button.disabled = true;
-        button.textContent = "PDF 만드는 중…";
+        button.innerHTML = `${spinnerHtml("small")} PDF 만드는 중…`;
       } else {
         button.disabled = false;
         if (button.dataset.pdfOriginalText) {
@@ -24531,9 +25231,12 @@
       }
       pdfExportInProgress = true;
       setPdfButtonBusy(trigger, true);
-      const root = preparePdfExportRoot(sheet);
-      document.body.classList.add("pdf-exporting");
+      let root = null;
       try {
+        root = preparePdfExportRoot(sheet);
+        document.body.classList.add("pdf-exporting");
+        await document.fonts?.ready;
+        await preparePdfReportMaps(root);
         await globalThis.html2pdf()
           .set({
             margin:[8, 8, 8, 8],
@@ -24541,7 +25244,7 @@
             image:{ type:"jpeg", quality:0.97 },
             html2canvas:{
               scale:2, backgroundColor:"#fff", useCORS:true, logging:false,
-              scrollX:0, scrollY:0,
+              scrollX:0, scrollY:0, imageTimeout:3000,
             },
             jsPDF:{ unit:"mm", format:"a4", orientation:"portrait", compress:true },
             pagebreak:{ mode:["css"] },
@@ -24551,9 +25254,9 @@
         showAppToast("PDF를 저장했습니다");
       } catch (error) {
         console.error("PDF 다운로드 실패", error);
-        showAppToast("PDF를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.");
+        showAppToast("PDF를 저장하지 못했어요. 다시 눌러 주세요.");
       } finally {
-        root.remove();
+        root?.remove();
         document.body.classList.remove("pdf-exporting");
         setPdfButtonBusy(trigger, false);
         pdfExportInProgress = false;
@@ -24935,7 +25638,8 @@
 	        minPriceEok:estimateLow || canonical.minPriceEok || item.minPriceEok || 0,
 	        maxPriceEok:estimateHigh || canonical.maxPriceEok || item.maxPriceEok || 0,
 	        transactionCount:estimateCount || canonical.transactionCount || item.transactionCount || 0,
-	        displayName:canonical.displayName || item.name,
+	        tradeLookbackMonths:Number(data?.tradeLookbackMonths || canonical.tradeLookbackMonths || item.tradeLookbackMonths || 6),
+        displayName:canonical.displayName || item.displayName || item.name,
 	        displayRegion:canonical.displayRegion || item.address || item.region || "",
 	        households:Number(canonical.households || item.households || 0),
 	        policyImpact:canonical.policyImpact || data?.policyImpact || null,
@@ -25011,11 +25715,35 @@
     }
 
     function aptAffordabilityHtml(data, item = {}, report = {}, preparedCandidate = null) {
+      const naverListing = data?.naverListingReference;
+      const naverListingHtml = Number(naverListing?.saleMinPriceEok) > 0
+        ? `<div class="apt-affordability-note">네이버 매물 호가 ${esc(aptMoneyRange(naverListing.saleMinPriceEok, naverListing.saleMaxPriceEok))} · 매매 ${esc(Number(naverListing.saleListingCount || 0).toLocaleString("ko-KR"))}건${naverListing.asOf ? ` · ${esc(naverListing.asOf)} 확인` : ""}<br>매물 호가는 실제 계약 가격이 아니에요.</div>`
+        : "";
       if (!data || data.state !== "ready" || !data.estimate?.minPriceEok) {
+        const naverMarket = data?.naverMarketReference;
+        const naverMarketHtml = Number(naverMarket?.minPriceEok) > 0
+          ? `<div class="apt-affordability-note">네이버 시세 ${esc(aptMoneyRange(naverMarket.minPriceEok, naverMarket.maxPriceEok))} · ${esc(naverMarket.provider || "시세 제공처")} 기준${naverMarket.asOf ? ` · ${esc(naverMarket.asOf)}` : ""}<br>네이버 시세는 국토부 실거래와 다른 참고값이에요.</div>`
+          : "";
+        const statusLabel = data?.priceStatus === "lookup_timeout" ? "실거래 조회 지연"
+          : data?.priceStatus === "lookup_failed" ? "실거래 조회 실패"
+          : ["no_recent_official_trades", "no_recent_trade"].includes(data?.priceStatus) ? "최근 공식 거래 없음"
+          : data?.priceStatus === "no_selected_area_trade" ? "선택 면적 거래 없음"
+          : data?.priceStatus === "identity_unverified" ? "단지 연결 확인 중"
+          : "공식 거래 확인 중";
+        const known = data?.candidate || {};
+        const lastPrice = Number(known.lastObservedDealPriceEok || known.latestDealPriceEok || 0);
+        const lastDate = String(known.lastObservedDealDate || known.latestDealDate || "");
+        const lastTrade = lastPrice > 0 && lastDate
+          ? `<div class="apt-affordability-note">마지막 확인 거래 <b>${esc(policyMoney(lastPrice))}</b> · ${esc(lastDate)} · 현재 가격과 다를 수 있어요.</div>`
+          : "";
         return `<div class="apt-affordability-list">
-            <div class="apt-affordability-row"><span>가격 확인 필요</span><strong class="apt-affordability-decision wait">매물가 확인</strong></div>
+            <div class="apt-affordability-row"><span>실거래 가격</span><strong class="apt-affordability-decision wait">${statusLabel}</strong></div>
           </div>
-          <div class="apt-affordability-note">${esc(data?.error || "현재 가격을 추정할 거래 자료가 부족해요. 네이버에서 나온 매물가를 확인해 주세요.")}</div>`;
+          ${lastTrade}
+          <div class="apt-affordability-note">${esc(data?.error || "공식 거래 자료를 불러오는 중이에요. 잠시 뒤 다시 조회해 주세요.")}</div>
+          ${naverMarketHtml}
+          ${naverListingHtml}
+          <button class="apt-price-retry" type="button" data-apt-price-retry>실거래 다시 조회</button>`;
       }
 
       const estimate = data.estimate;
@@ -25034,12 +25762,29 @@
         ? ` · 요청 ${Number(data.requestedMinArea)}㎡와 가장 가까운 실제 거래 평형 자동 선택`
         : "";
       const basis = `${sampleText} · ${estimateMethod} · 신뢰도 ${estimate.confidence || "보통"} · ${data.areaBasis || "단지 거래 기준"}${fallbackNote}${ageWarning}`;
+      const naverReference = data?.naverMarketReference;
+      const naverReferenceHtml = Number(naverReference?.minPriceEok) > 0
+        ? `<div class="apt-affordability-note">네이버 시세 ${esc(aptMoneyRange(naverReference.minPriceEok, naverReference.maxPriceEok))} · ${esc(naverReference.provider || "시세 제공처")} 기준${naverReference.asOf ? ` · ${esc(naverReference.asOf)}` : ""}</div>`
+        : "";
       return `<div class="budget-side">
           ${candidatePriceComparisonHtml(candidate)}
         </div>
         ${aptPolicyImpactHtml(data, priceText)}
         <div class="candidate-verdict">${candidateVerdictHtml(candidate, { trendExpanded:candidate.aptSearchTrendExpanded === true })}</div>
-        <div class="apt-price-basis">예상 매수가 ${esc(priceText)} · ${esc(basis)} · 대출 한도는 금융회사 심사 전 참고값</div>`;
+        <div class="apt-price-basis">예상 매수가 ${esc(priceText)} · ${esc(basis)} · 대출 한도는 금융회사 심사 전 참고값</div>
+        ${naverReferenceHtml}
+        ${naverListingHtml}`;
+    }
+
+    function aptPriceLookupFailure(error) {
+      const timedOut = error?.name === "AbortError" || error?.name === "TimeoutError";
+      return {
+        state:"unavailable",
+        priceStatus:timedOut ? "lookup_timeout" : "lookup_failed",
+        error:timedOut
+          ? "실거래 조회가 오래 걸리고 있어요. 다시 조회해 주세요."
+          : (error?.error || "실거래를 불러오지 못했어요. 다시 조회해 주세요."),
+      };
     }
 
     async function fetchAptAffordability(item, area = "") {
@@ -25048,6 +25793,9 @@
         region:item.region || "",
         legal_dong:item.legalDong || "",
         jibun:item.jibun || "",
+        apartment_id:item.apartmentId || "",
+        kapt_code:item.kaptCode || "",
+        complex_no:item.complexNo || "",
         // 직접 단지 검색에는 이전 스텝 검색의 지역 선택값을 섞지 않는다.
         // 검색한 단지의 실제 지역을 기준으로 대장·정책·시그널을 계산해야
         // 같은 단지의 공통 결과 모델이 어느 진입 경로에서도 동일해진다.
@@ -25067,7 +25815,7 @@
       const cacheKey = JSON.stringify(requestBody);
       if (aptAffordabilityCache.has(cacheKey)) return aptAffordabilityCache.get(cacheKey);
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);
+      const timeout = setTimeout(() => controller.abort(), APARTMENT_PRICE_TIMEOUT_MS);
       const pending = getJson("/api/apartment-affordability", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
@@ -25076,7 +25824,12 @@
       }).finally(() => clearTimeout(timeout));
       aptAffordabilityCache.set(cacheKey, pending);
       try {
-        return await pending;
+        const data = await pending;
+        // HTTP 200도 거래 없음·일시 장애일 수 있다. 실패 결과를 계속 재사용하지 않는다.
+        if (data?.state !== "ready" || !(Number(data?.estimate?.minPriceEok) > 0)) {
+          aptAffordabilityCache.delete(cacheKey);
+        }
+        return data;
       } catch (error) {
         aptAffordabilityCache.delete(cacheKey);
         throw error;
@@ -25085,7 +25838,8 @@
 
     async function fetchAptAreaOptions(item) {
       const cacheKey = `${item.name}${item.region || ""}${item.legalDong || ""}${item.jibun || ""}`;
-      if (aptAreaOptionsCache.has(cacheKey)) return aptAreaOptionsCache.get(cacheKey);
+      const identityCacheKey = cacheKey + JSON.stringify([item.apartmentId, item.kaptCode, item.complexNo]);
+      if (aptAreaOptionsCache.has(identityCacheKey)) return aptAreaOptionsCache.get(identityCacheKey);
       const params = new URLSearchParams({
         name:item.name,
         region:item.region || "",
@@ -25093,18 +25847,21 @@
       });
       if (item.legalDong) params.set("legal_dong", item.legalDong);
       if (item.jibun) params.set("jibun", item.jibun);
+      if (item.apartmentId) params.set("apartment_id", item.apartmentId);
+      if (item.kaptCode) params.set("kapt_code", item.kaptCode);
+      if (item.complexNo) params.set("complex_no", item.complexNo);
       const pending = getJson(`/api/apartment-areas?${params.toString()}`);
-      aptAreaOptionsCache.set(cacheKey, pending);
+      aptAreaOptionsCache.set(identityCacheKey, pending);
       try {
         const data = await pending;
         // 빈 응답은 일시적인 공공데이터 조회 실패일 수도 있으므로 영구 캐시하지 않는다.
         // 시트를 다시 열거나 같은 단지를 다시 검색하면 실제로 재조회할 수 있어야 한다.
         if (!Array.isArray(data?.areas) || !data.areas.length) {
-          aptAreaOptionsCache.delete(cacheKey);
+          aptAreaOptionsCache.delete(identityCacheKey);
         }
         return data;
       } catch (error) {
-        aptAreaOptionsCache.delete(cacheKey);
+        aptAreaOptionsCache.delete(identityCacheKey);
         throw error;
       }
     }
@@ -25362,6 +26119,8 @@
         signalEl.innerHTML = state.text;
         signalEl.dataset.signalTone = state.tone;
       }
+      const mapButton = card.querySelector("[data-candidate-map-key]");
+      if (mapButton) mapButton.dataset.candidateMapKey = candidateIdentityKey(candidate);
       if (slot) {
         const trendExpanded = card.dataset.aptTrendExpanded === "true";
         candidate.aptSearchTrendExpanded = trendExpanded;
@@ -25444,10 +26203,7 @@
         });
       } catch (error) {
         if (card.dataset.aptAreaRequest !== requestToken) return;
-        slot.innerHTML = aptAffordabilityHtml({
-          state:"unavailable",
-          error:error.error || "선택한 면적의 결과를 계산하지 못했어요. 잠시 후 다시 확인해 주세요.",
-        }, item);
+        slot.innerHTML = aptAffordabilityHtml(aptPriceLookupFailure(error), item);
         slot.classList.remove("is-loading");
       }
     }
@@ -25478,10 +26234,7 @@
             await areaOptionsPromise;
           } catch (error) {
             if (String(card.dataset.aptAreaRequest || "0") !== requestToken) continue;
-            slot.innerHTML = aptAffordabilityHtml({
-              state:"unavailable",
-              error:error.error || "필요 자금을 계산하지 못했어요. 잠시 후 다시 확인해 주세요.",
-            }, item);
+            slot.innerHTML = aptAffordabilityHtml(aptPriceLookupFailure(error), item);
             slot.classList.remove("is-loading");
           }
         }
@@ -25642,10 +26395,14 @@
       if (!item) return;
       const selectedItem = {
         name:item.dataset.aptSuggestName || "",
+        displayName:item.dataset.aptSuggestDisplayName || "",
         region:item.dataset.aptSuggestRegion || "",
         address:item.dataset.aptSuggestAddress || "",
         legalDong:item.dataset.aptSuggestLegalDong || "",
         jibun:item.dataset.aptSuggestJibun || "",
+        apartmentId:item.dataset.aptSuggestApartmentId || "",
+        kaptCode:item.dataset.aptSuggestKaptCode || "",
+        complexNo:item.dataset.aptSuggestComplexNo || "",
         cortarNo:item.dataset.aptSuggestCortarNo || "",
         lawdCd:item.dataset.aptSuggestLawdCd || "",
         households:Number(item.dataset.aptSuggestHouseholds || 0),
@@ -25689,6 +26446,7 @@
       const candidateViewButton = event.target.closest("[data-candidate-view]");
       if (candidateViewButton) {
         candidateMapOrigin = "aptSearch";
+        candidateMapSelectedKey = aptSearchMapSelectionKey(candidateViewButton);
         trackDailyActiveUser();
         trackEvent("candidate_view_changed", {
           mode:candidateViewButton.dataset.candidateView,
@@ -25756,6 +26514,17 @@
           panel.hidden = expanded;
           if (expanded) panel.querySelector("[data-spark-tooltip]")?.setAttribute("hidden", "");
           else syncSparkAxisLabelSizes(panel);
+        }
+        return;
+      }
+      const priceRetry = event.target.closest("[data-apt-price-retry]");
+      if (priceRetry) {
+        const card = priceRetry.closest("[data-apt-card-index]");
+        const index = Number(card?.dataset.aptCardIndex);
+        const item = currentAptSearchItems[index];
+        if (card && item) {
+          await selectAptArea(card, card.dataset.selectedAptArea || "", card.dataset.selectedAptAreaLabel || "");
+          void enrichAptAreaOptions(item, index);
         }
         return;
       }

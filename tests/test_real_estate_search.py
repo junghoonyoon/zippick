@@ -113,17 +113,19 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
                 suggestions = real_estate_search.suggest_apartments(entity["name"])
                 self.assertTrue(all(row["region"] for row in suggestions))
 
-    def test_riversen_manual_and_presale_source_are_one_search_result(self):
+    def test_riversen_conflicting_current_and_presale_parcels_are_not_merged(self):
         suggestions = real_estate_search.suggest_apartments("리버센")
         jungnang_rows = [
             row for row in suggestions
             if row["region"] == "중랑구" and row["legalDong"] == "중화동"
         ]
 
-        self.assertEqual(len(jungnang_rows), 1)
-        self.assertEqual(jungnang_rows[0]["name"], "리버센SK뷰롯데캐슬")
-        self.assertEqual(jungnang_rows[0]["households"], 1055)
-        self.assertEqual(jungnang_rows[0]["status"], "분양권")
+        # An old presale parcel must not overwrite the completed complex's identity/status.
+        self.assertEqual({row["jibun"] for row in jungnang_rows}, {"462", "331-1"})
+        current = next(row for row in jungnang_rows if row["jibun"] == "462")
+        self.assertEqual(current["name"], "리버센SK뷰롯데캐슬")
+        self.assertEqual(current["households"], 1055)
+        self.assertEqual(current["status"], "")
 
     def test_presale_source_typo_uses_consistent_official_name(self):
         for query in ("선샤인힐스", "션샤인힐스"):

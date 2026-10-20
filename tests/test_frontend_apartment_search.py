@@ -201,6 +201,12 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         functions = "    function zippickHasVerifiedMixedCorridor" + html.split(
             "    function zippickHasVerifiedMixedCorridor", 1,
         )[1].split("    // ── 해석 문장 생성", 1)[0]
+        functions += "\n" + re.search(
+            r"    function zippickBuyBandTradeMatchesArea\([^\n]*\) \{.*?\n    \}", html, re.S,
+        ).group()
+        functions += "\n" + re.search(
+            r"    function zippickLatestTradeDetails\([^\n]*\) \{.*?\n    \}", html, re.S,
+        ).group()
         evidence_function = "    function zippickLocationEvidenceText" + html.split(
             "    function zippickLocationEvidenceText", 1,
         )[1].split("    function zippickReportTable", 1)[0]
@@ -673,7 +679,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         html = APP_HTML.read_text(encoding="utf-8")
         functions = "\n".join(re.search(
             r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
-        ).group() for name in ("zippickFutureSourceLink", "zippickLivingTransportHtml"))
+        ).group() for name in ("zippickFutureSourceIsOfficial", "zippickOfficialDetailUrl", "zippickLivingProjectSourceUrl", "zippickFutureSourceLink", "zippickLivingTransportHtml"))
         result = subprocess.run(["node"], input="const esc = value => String(value);\n" + functions + """
           const assert = require('node:assert/strict');
           const route = {name:'광역급행철도 A노선', stageLabel:'우선개통', distanceMeters:2021,
@@ -683,6 +689,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
           assert.ok(output.includes('광역급행철도 A노선') && output.includes('우선개통'));
           assert.ok(output.includes('2,021m') && output.includes('역까지 거리 아님'));
           assert.ok(!output.includes('<details'));
+          assert.ok(!output.includes('href=\"https://gris.gg.go.kr'));
           assert.equal(zippickLivingTransportHtml({}), '');
           assert.equal(zippickLivingTransportHtml({transportRoutes:[{...route,sourceUrl:'https://example.com'}]}),'');
           const plan={projectType:'transport',name:'강북횡단선',factSummary:'홍제 경유 · 재추진 계획',distanceMeters:491,
@@ -695,7 +702,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
           assert.ok(!regional.includes('직선 '));
           assert.ok(planned.includes('https://ms.smc.seoul.kr/record/recordView.do'));
           assert.equal(zippickFutureSourceLink('https://ms.smc.seoul.kr.evil.example/'), '');
-          assert.ok(zippickFutureSourceLink('https://www.kr.or.kr/sub/info.do?m=05010302').includes('<a '));
+          assert.equal(zippickFutureSourceLink('https://www.kr.or.kr/sub/info.do?m=05010302'), '');
           assert.equal(zippickFutureSourceLink('https://www.kr.or.kr.evil.example/'), '');
         """, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -705,7 +712,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         html = APP_HTML.read_text(encoding="utf-8")
         functions = "\n".join(re.search(
             r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
-        ).group() for name in ("zippickFutureSourceLink", "zippickLivingTransportHtml",
+        ).group() for name in ("zippickFutureSourceIsOfficial", "zippickOfficialDetailUrl", "zippickLivingProjectSourceUrl", "zippickFutureSourceLink", "zippickLifestylePlanRating",
+                                "zippickLivingTransportHtml",
                                 "zippickLifestyleChangeHtml"))
         result = subprocess.run(["node"], input="""
           const assert = require('node:assert/strict');
@@ -732,13 +740,14 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
     def test_lifestyle_report_shows_facts_without_radius_or_future_score(self):
         html = APP_HTML.read_text(encoding="utf-8")
-        body = html.split("    function zippickLifestyleChangeHtml(item) {", 1)[1].split("    // 매수 후보는", 1)[0]
+        body = html.split("    function zippickLifestyleChangeHtml(item) {", 1)[1].split("    function zippickCommuteHtml(item) {", 1)[0]
         self.assertIn('item?.futureTransformation', body)
         self.assertNotIn('buildingRegister', body)
         self.assertNotIn('건축물대장', body)
         self.assertNotIn('30년 이상', body)
         self.assertIn('analysis.headline', body)
-        self.assertIn('판단 보류', body)
+        self.assertIn('평가 보류', body)
+        self.assertIn('평가 자료 부족', body)
         self.assertIn('plan?.missingReasons?.[key]', body)
         self.assertIn('zpr-living-missing-reason', body)
         self.assertIn('두 점수는 확인된 사업 계획', body)
@@ -753,8 +762,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
     def test_lifestyle_report_keeps_map_first_and_removes_duplicate_summary_cards(self):
         html = APP_HTML.read_text(encoding="utf-8")
-        body = html.split("    function zippickLifestyleChangeHtml(item) {", 1)[1].split("    // 매수 후보는", 1)[0]
-        self.assertLess(body.index('zippickReportMapHtml(item, { redevelopment:true })'),
+        body = html.split("    function zippickLifestyleChangeHtml(item) {", 1)[1].split("    function zippickCommuteHtml(item) {", 1)[0]
+        self.assertLess(body.index('zippickReportMapHtml(mapItem, { redevelopment:true })'),
                         body.index('확인한 주변 사업'))
         self.assertNotIn('<h6>핵심 요약</h6>', body)
         self.assertNotIn('zpr-living-overview', body)
@@ -764,8 +773,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
     def test_lifestyle_map_frame_reuses_report_apartment_and_redevelopment_layer(self):
         html = APP_HTML.read_text(encoding="utf-8")
-        self.assertIn('esc(analysis.headline', html)
-        self.assertIn('zippickReportMapHtml(item, { redevelopment:true })', html)
+        self.assertIn('esc(rawHeadline)', html)
+        self.assertIn('zippickReportMapHtml(mapItem, { redevelopment:true })', html)
         self.assertIn('data-zpr-map-redevelopment="true"', html)
         self.assertIn('mountZippickReportRedevelopmentZones(mapElement, map, kakao)', html)
         self.assertIn('expandButton.dataset.zprLifestyleMap = "true"', html)
@@ -788,24 +797,27 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('path:[center,target]', report_map)
         self.assertIn('const latitudeRadius = 2000 / 111320;', report_map)
         self.assertIn('const longitudeRadius = latitudeRadius / Math.cos(centerLat * Math.PI / 180);', report_map)
-        self.assertIn('const initialProjects = [...featuredSites, ...(closestPlannedStation ? [closestPlannedStation] : [])]', report_map)
-        self.assertIn('keepDistanceLine:isRail && project === closestPlannedStation', report_map)
+        self.assertIn('const initialProjects = closestRailStation ? [closestRailStation] : []', report_map)
+        self.assertIn('keepDistanceLine:isRail && project === closestRailStation', report_map)
         self.assertIn('insideZone(zone, event.latLng.getLng(), event.latLng.getLat())', report_map)
-        self.assertIn('featuredById.has(zone.projectId)', report_map)
+        self.assertIn('const nearbyRenewal = new Map();', report_map)
+        self.assertIn('summary.className = "zpr-living-map-summary"', report_map)
+        self.assertIn('주변에 정비사업 구역이 여러 곳 모여 있어요.', report_map)
+        self.assertNotIn('featuredDevelopments', report_map)
         self.assertIn('strokeColor:"#18a1ac", strokeOpacity:.85, strokeStyle:"solid"', report_map)
-        self.assertIn('const visibleZones = zones;', report_map)
+        self.assertIn('const visibleZones = () => zones.filter(zone => mapZoneIsVisible(zone, { reference:referenceEnabled }));', report_map)
         self.assertIn('closestStation.name', report_map)
         self.assertIn('distanceText(closestStation.distanceMeters)', report_map)
         self.assertNotIn('zpr-living-map-controls', report_map)
         self.assertNotIn('project.distanceMeters<=800', report_map)
         mounted_map = html.split('    async function mountZippickReportMap(', 1)[1].split('    function mountZippickReportMaps(', 1)[0]
         self.assertIn('level:4,', mounted_map)
-        self.assertIn('void mountZippickReportStationDistance(mapElement, map, kakao, item, position);', mounted_map)
+        self.assertIn('await mountZippickReportStationDistance(mapElement, map, kakao, item, position);', mounted_map)
         self.assertNotIn('level:redevelopment ?', mounted_map)
         self.assertIn('pointer-events:none;', html)
         open_map = html.split('    function openZippickReportMap(button) {', 1)[1].split('    function restoreZippickReportFromMap', 1)[0]
         self.assertIn('button.closest("[data-zpr-report-map]")', open_map)
-        self.assertIn('candidateMapRedevelopmentEnabled = true;', open_map)
+        self.assertIn('setCandidateMapZoneVisibility({ renewal:true });', open_map)
         self.assertIn('candidateMapSelectedKey = candidateIdentityKey(item);', open_map)
         self.assertIn('candidateMapReturnToReport = {', open_map)
         self.assertIn('setCandidateViewMode("map", { mapOnly:true });', open_map)
@@ -817,7 +829,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         functions = "\n".join(re.search(
             r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
         ).group() for name in (
-            "zippickFutureSourceLink", "zippickLifestyleChangeRatingData",
+            "zippickFutureSourceIsOfficial", "zippickOfficialDetailUrl", "zippickLivingProjectSourceUrl", "zippickFutureSourceLink", "zippickLifestylePlanRating",
+            "zippickLifestyleChangeRatingData",
             "zippickLifestyleChangeRatingView",
             "zippickSectionRatingData", "zippickSectionRatingHtml",
         ))
@@ -841,18 +854,106 @@ class FrontendApartmentSearchTest(unittest.TestCase):
           const model={modelVersion:'living-area-v2-beta',status:'ready',score:4.1};
           assert.equal(zippickLifestyleChangeRatingData({...area,futureTransformation:model}),4.1);
           assert.match(zippickSectionRatingHtml({...area,futureTransformation:model},'생활권 변화'),/단지별 생활권 변화 · 베타/);
-          assert.match(zippickSectionRatingHtml({},'생활권 변화'),/생활권 변화 · 자료 부족/);
+          assert.match(zippickSectionRatingHtml({},'생활권 변화'),/생활권 변화 · 평가 자료 부족/);
           assert.match(zippickSectionRatingHtml({},'생활권 변화'),/★★★★★/);
           const partial={futureTransformation:{modelVersion:'living-area-v2-beta',status:'insufficient_data',planRating:{version:'living-area-plan-v3-beta',status:'insufficient_data',score:null,subScores:{housing:2.9,transport:null}}}};
           assert.match(zippickSectionRatingHtml(partial,'생활권 변화'),/주거환경 개선 점수 · 교통 평가 보류/);
           assert.match(zippickSectionRatingHtml(partial,'생활권 변화'),/주거 2.9\\/5/);
+          const failed={futureTransformation:{modelVersion:'living-area-v2-beta',status:'error',
+            planRating:{version:'living-area-plan-v5-beta',status:'ready',score:4.2,subScores:{housing:4.1,transport:4.3}}}};
+          assert.equal(zippickLifestyleChangeRatingData(failed),null);
+          assert.match(zippickSectionRatingHtml(failed,'생활권 변화'),/is-error/);
+          assert.match(zippickSectionRatingHtml(failed,'생활권 변화'),/불러오기 실패/);
+          assert.doesNotMatch(zippickSectionRatingHtml(failed,'생활권 변화'),/자료 부족/);
+          const stale={futureTransformation:{modelVersion:'living-area-v2-beta',status:'stale',
+            planRating:{version:'living-area-plan-v5-beta',status:'stale',score:null,subScores:{housing:null,transport:null}}}};
+          assert.equal(zippickLifestyleChangeRatingData(stale),null);
+          assert.match(zippickSectionRatingHtml(stale,'생활권 변화'),/최신 자료 확인 필요/);
+          const noAggregate={futureTransformation:{modelVersion:'living-area-v2-beta',status:'insufficient_data',
+            planRating:{version:'living-area-plan-v5-beta',status:'insufficient_data',score:null,subScores:{housing:3,transport:4}}}};
+          assert.match(zippickSectionRatingHtml(noAggregate,'생활권 변화'),/종합점수 확인 필요/);
+          assert.doesNotMatch(zippickSectionRatingHtml(noAggregate,'생활권 변화'),/3.5\\/5/);
           const planItem={futureTransformation:{modelVersion:'living-area-v2-beta',status:'insufficient_data',planRating:{version:'living-area-plan-v3-beta',status:'ready',score:3.1}}};
           assert.ok(zippickSectionRatingHtml(planItem,'생활권 변화').includes('3.1/5'));
           assert.match(zippickSectionRatingHtml(planItem,'생활권 변화'), /--zpr-rating-fill:62%/);
+          const additiveItem={futureTransformation:{modelVersion:'living-area-v2-beta',status:'insufficient_data',planRating:{version:'living-area-plan-v4-beta',status:'ready',score:3.9}}};
+          assert.ok(zippickSectionRatingHtml(additiveItem,'생활권 변화').includes('3.9/5'));
           assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,score:null}}),null);
           assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,status:'insufficient_data'}}),null);
           assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,score:0}}),0);
         """, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js required")
+    def test_lifestyle_housing_score_explains_each_nearby_project(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        functions = "\n".join(re.search(
+            r"    function " + name + r"\([^\n]*\) \{.*?\n    \}", html, re.S,
+        ).group() for name in (
+            "zippickLifestylePlanRating", "zippickLifestyleChangeRatingData",
+            "zippickFutureSourceIsOfficial", "zippickOfficialDetailUrl", "zippickLivingProjectSourceUrl", "zippickFutureSourceLink", "zippickLivingTransportHtml",
+            "zippickLifestyleChangeHtml",
+        ))
+        script = """
+          const assert = require('node:assert/strict');
+          const esc = value => String(value ?? '');
+          const zippickReportMapHtml = () => '<div>지도</div>';
+        """ + functions + """
+          const plan = {version:'living-area-plan-v4-beta',status:'insufficient_data',score:null,
+            subScores:{housing:3.9,transport:null},weights:{housing:.6,transport:.4},
+            asOfDate:'2026-10-19',stagePolicy:'단계별 배점',distancePolicy:'거리별 배점',
+            components:{housing:{summary:'직선 2km 안 정비사업 3곳 · 계획 세대수 합계 6,000세대',
+              formula:'구역별로 점수를 더해요.',policy:'계획 세대수는 입주 완료가 아니에요.',
+              inputs:[{name:'정비구역 1',scaleLabel:'3,000세대 계획',distanceMeters:1000,
+                stage:'construction',contributionScore:1.96}]}}};
+          const item={futureTransformation:{modelVersion:'living-area-v2-beta',
+            status:'insufficient_data',planRating:plan,displayProjects:[]}};
+          const output=zippickLifestyleChangeHtml(item);
+          assert.match(output,/정비사업 3곳/);
+          assert.match(output,/계획 세대수 합계 6,000세대/);
+          assert.match(output,/정비구역 1/);
+          assert.match(output,/3,000세대 계획 · 직선 1,000m · 착공 · 1.96점 반영/);
+          assert.match(output,/직선 2km 안의 사업을 규모·거리·진행 단계별로 계산해 더해요/);
+          const railPlan = {...plan,version:'living-area-plan-v5-beta',status:'ready',score:3.2,
+            subScores:{housing:3.9,transport:2.2},components:{...plan.components,
+              transport:{summary:'GTX-B 참고 위치',formula:'거리 × 종류 × 단계',
+                policy:'도보거리 아님',impactPolicy:'GTX 100% · 트램 55%',
+                maturityPolicy:'공사 85%',accessPolicy:'800m 76%',secondLineId:'wirye',
+                inputs:[{lineId:'gtx-b',lineName:'GTX-B',impactLabel:'GTX',maturityLabel:'공사 중',
+                  distanceMeters:800,contributionScore:3.23},
+                  {lineId:'wirye',lineName:'위례선 트램',impactLabel:'트램',maturityLabel:'시운전',
+                  distanceMeters:1200,contributionScore:0.31}]}}};
+          const railOutput=zippickLifestyleChangeHtml({futureTransformation:{modelVersion:'living-area-v2-beta',
+            status:'ready',planRating:railPlan,displayProjects:[]}});
+          assert.match(railOutput,/<b>GTX-B<\\/b> · GTX · 공사 중 · 참고 위치까지 직선 800m · 기본 노선 3.23점/);
+          assert.match(railOutput,/<b>위례선 트램<\\/b> · 트램 · 시운전 · 참고 위치까지 직선 1,200m · 추가 노선 0.31점/);
+          assert.match(railOutput,/GTX 100% · 트램 55%/);
+          const zeroPlan = {...railPlan,version:'living-area-plan-v6-beta',status:'insufficient_data',score:null,
+            subScores:{housing:null,transport:0},components:{transport:{
+              summary:'직선 2km 안에 신규 예정역이 없어 교통 개선 가점은 0점이에요.',
+              noPlannedStationWithinRadius:true,inputs:[]}}};
+          const zeroOutput=zippickLifestyleChangeHtml({futureTransformation:{modelVersion:'living-area-v2-beta',
+            status:'insufficient_data',planRating:zeroPlan,displayProjects:[]}});
+          assert.match(zeroOutput,/새 철도 가점<\\/span><strong class="zpr-living-sub-number">0.0 \\/ 5/);
+          assert.match(zeroOutput,/신규 예정역 없음 · 가점 없음/);
+          assert.match(zeroOutput,/교통 개선 가점은 0점이에요/);
+          assert.doesNotMatch(zeroOutput,/교통 점수는.*보류/);
+          const incompletePlan={...plan,version:'living-area-plan-v6-beta',transportCoverage:{
+            status:'station_mapping_incomplete',scopeComplete:false,lineCount:50,completeLineCount:8,
+            listedStations:288,stationLocationCount:191,
+            nearbyOperatingStations:[{name:'연신내역 · GTX-A',distanceMeters:798}],
+            incompleteLines:[{name:'고양은평선',stationLocationCount:3,listedStations:9,
+              stationListComplete:true,stationsSourceUrl:'https://www.kr.or.kr/sub/info.do?m=05010402'}]}};
+          const incompleteOutput=zippickLifestyleChangeHtml({futureTransformation:{modelVersion:'living-area-v2-beta',
+            status:'insufficient_data',planRating:incompletePlan,displayProjects:[]}});
+          assert.match(incompleteOutput,/현재 이용 가능한 철도/);
+          assert.match(incompleteOutput,/연신내역 · GTX-A · 직선 798m/);
+          assert.match(incompleteOutput,/다른 노선의 예정역 확인 중/);
+          assert.match(incompleteOutput,/8 \\/ 50개 노선 확인/);
+          assert.match(incompleteOutput,/고양은평선 · 역 위치 3 \\/ 9곳/);
+          assert.doesNotMatch(incompleteOutput,/신규 예정역 없음 · 가점 없음/);
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_zippick_report_measures_liquidity_in_falling_months(self):
@@ -2353,6 +2454,21 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("policyImpact:canonical.policyImpact || data?.policyImpact || null", body)
         self.assertIn("signals:{ ...(item.signals || {}), ...canonicalSignals }", body)
         self.assertIn("locationScore:canonical.locationScore || report?.locationScore || item?.locationScore || null", body)
+        self.assertIn("displayName:canonical.displayName || item.displayName || item.name", body)
+
+    def test_missing_trade_state_is_specific_and_keeps_naver_reference(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        body = re.search(
+            r"function aptAffordabilityHtml\b(?P<body>.*?)\n    function aptPriceLookupFailure",
+            html,
+            re.DOTALL,
+        ).group("body")
+
+        self.assertNotIn('"거래 자료 확인 필요"', body)
+        self.assertIn('"단지 연결 확인 중"', body)
+        self.assertIn('"선택 면적 거래 없음"', body)
+        self.assertIn("naverMarketReference", body)
+        self.assertIn("네이버 시세는 국토부 실거래와 다른 참고값이에요.", body)
 
     def test_condition_stepper_is_hidden_on_candidate_results(self):
         html = APP_HTML.read_text(encoding="utf-8")
@@ -2853,7 +2969,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertIsNotNone(identity_match)
         identity_body = identity_match.group("body")
-        self.assertIn("item.apartmentId || item.kaptCode || item.complexNo", identity_body)
+        for field in ("apartmentId", "kaptCode", "complexNo"):
+            self.assertIn(f'item.{field} || ""', identity_body)
         self.assertIn("item.legalDong || item.dong", identity_body)
         self.assertIn("item.jibun", identity_body)
         same_match = re.search(
@@ -3457,7 +3574,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('? (isSelected ? "담김" : "비교 담기")', html)
         self.assertIn(': (isSelected ? "담기 해제" : "비교 담기");', html)
         self.assertIn('if (!Number.isFinite(score) && !signals.status) return "";', html)
-        self.assertIn('const measurable = Number.isFinite(score) && score > 0;', html)
+        self.assertIn('const measurable = Number.isFinite(score);', html)
         self.assertIn('const label = measurable ? `${Math.round(score)}점` : "측정 불가";', html)
         self.assertIn('grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)', html)
         self.assertIn('padding:8px 12px !important; color:#475467; background:#fff', html)
@@ -4629,7 +4746,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("background:#f1f7ff; color:#1767c5; font-size:13px; font-weight:850;", html)
         self.assertIn("box-shadow:0 1px 2px rgba(49,130,246,.13)", html)
         self.assertIn("transform:translateY(-1px)", html)
-        self.assertIn('const measurable = Number.isFinite(score) && score > 0;', readonly_flow_match.group("body"))
+        self.assertIn('const measurable = Number.isFinite(score);', readonly_flow_match.group("body"))
         self.assertIn('const label = measurable ? `${Math.round(score)}점` : "측정 불가";', readonly_flow_match.group("body"))
         self.assertIn('최근 시장 신호 ${esc(label)}', readonly_flow_match.group("body"))
         self.assertIn("function candidateTopScoreBadgesHtml(item)", html)
@@ -4767,7 +4884,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("if (redevelopment) map.setZoomable?.(false);", map_match.group("body"))
         self.assertRegex(map_match.group("body"), r"dialog\.showModal\(\);\s*map\.setZoomable\?\.\(true\)")
         self.assertRegex(map_match.group("body"), r'dialog\.addEventListener\("close",[\s\S]*?map\.setZoomable\?\.\(false\)')
-        self.assertIn("void mountZippickReportStationDistance(mapElement, map, kakao, item, position);", map_match.group("body"))
+        self.assertIn("await mountZippickReportStationDistance(mapElement, map, kakao, item, position);", map_match.group("body"))
         self.assertNotIn("renderCandidateMapRedevelopmentZones", map_match.group("body"))
 
     def test_report_map_expand_uses_map_only_layout(self):
@@ -4944,7 +5061,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("const CANDIDATE_MAP_REDEVELOPMENT_REQUEST_LIMIT = 3000;", html)
         self.assertIn("limit=${CANDIDATE_MAP_REDEVELOPMENT_REQUEST_LIMIT}", body)
         self.assertNotIn("payload.zones.slice(0, 20)", body)
-        self.assertIn("주변 정비구역 ${candidateMapRedevelopmentLayers.length.toLocaleString(\"ko-KR\")}곳 표시 중", body)
+        self.assertIn("주변 구역 ${new Set(candidateMapRedevelopmentLayers.map(layer => layer.zone.id)).size.toLocaleString(\"ko-KR\")}곳 표시 중", body)
 
     def test_candidate_map_preview_puts_rank_reason_above_apartment_name(self):
         html = APP_HTML.read_text(encoding="utf-8")

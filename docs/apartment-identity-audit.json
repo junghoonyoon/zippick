@@ -1,0 +1,345 @@
+{
+  "masterCount": 20097,
+  "collisionGroupCount": 12,
+  "checkedEntityCount": 24,
+  "failureCount": 0,
+  "groups": [
+    {
+      "province": "서울특별시",
+      "district": "강남구",
+      "legalDong": "삼성동",
+      "parcels": [
+        "4-3",
+        "43"
+      ],
+      "checks": [
+        {
+          "name": "삼성동 롯데캐슬 킹덤",
+          "requestedParcel": "43",
+          "matchedParcels": [
+            "43"
+          ],
+          "passed": true
+        },
+        {
+          "name": "푸른솔아파트",
+          "requestedParcel": "4-3",
+          "matchedParcels": [
+            "4-3"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "서울특별시",
+      "district": "강동구",
+      "legalDong": "둔촌동",
+      "parcels": [
+        "65-4",
+        "654"
+      ],
+      "checks": [
+        {
+          "name": "더샵파크솔레이유",
+          "requestedParcel": "654",
+          "matchedParcels": [
+            "654"
+          ],
+          "passed": true
+        },
+        {
+          "name": "둔촌늘푸른",
+          "requestedParcel": "65-4",
+          "matchedParcels": [
+            "65-4"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "서울특별시",
+      "district": "구로구",
+      "legalDong": "개봉동",
+      "parcels": [
+        "47-1",
+        "471"
+      ],
+      "checks": [
+        {
+          "name": "건영",
+          "requestedParcel": "47-1",
+          "matchedParcels": [
+            "47-1"
+          ],
+          "passed": true
+        },
+        {
+          "name": "삼호",
+          "requestedParcel": "471",
+          "matchedParcels": [
+            "471"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "서울특별시",
+      "district": "서초구",
+      "legalDong": "방배동",
+      "parcels": [
+        "1-21",
+        "12-1"
+      ],
+      "checks": [
+        {
+          "name": "UPPER HOUSE",
+          "requestedParcel": "12-1",
+          "matchedParcels": [
+            "12-1"
+          ],
+          "passed": true
+        },
+        {
+          "name": "방배롯데캐슬OSCAR",
+          "requestedParcel": "1-21",
+          "matchedParcels": [
+            "1-21"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "서울특별시",
+      "district": "송파구",
+      "legalDong": "가락동",
+      "parcels": [
+        "16-12",
+        "161-2"
+      ],
+      "checks": [
+        {
+          "name": "동일씨티빌",
+          "requestedParcel": "16-12",
+          "matchedParcels": [
+            "16-12"
+          ],
+          "passed": true
+        },
+        {
+          "name": "현대(5차)",
+          "requestedParcel": "161-2",
+          "matchedParcels": [
+            "161-2"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "서울특별시",
+      "district": "은평구",
+      "legalDong": "응암동",
+      "parcels": [
+        "76-2",
+        "762"
+      ],
+      "checks": [
+        {
+          "name": "녹번역센트레빌",
+          "requestedParcel": "762",
+          "matchedParcels": [
+            "762"
+          ],
+          "passed": true
+        },
+        {
+          "name": "삼영빌딩",
+          "requestedParcel": "76-2",
+          "matchedParcels": [
+            "76-2"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "서울특별시",
+      "district": "중랑구",
+      "legalDong": "면목동",
+      "parcels": [
+        "151-4",
+        "1514"
+      ],
+      "checks": [
+        {
+          "name": "승일카이저",
+          "requestedParcel": "151-4",
+          "matchedParcels": [
+            "151-4"
+          ],
+          "passed": true
+        },
+        {
+          "name": "풍림",
+          "requestedParcel": "1514",
+          "matchedParcels": [
+            "1514"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "경기도",
+      "district": "부천원미구",
+      "legalDong": "역곡동",
+      "parcels": [
+        "21-3",
+        "213"
+      ],
+      "checks": [
+        {
+          "name": "역곡1동 e편한세상",
+          "requestedParcel": "213",
+          "matchedParcels": [
+            "213"
+          ],
+          "passed": true
+        },
+        {
+          "name": "장미A.P.T",
+          "requestedParcel": "21-3",
+          "matchedParcels": [
+            "21-3"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "경기도",
+      "district": "부천원미구",
+      "legalDong": "역곡동",
+      "parcels": [
+        "20-2",
+        "202"
+      ],
+      "checks": [
+        {
+          "name": "우림루미아트",
+          "requestedParcel": "202",
+          "matchedParcels": [
+            "202"
+          ],
+          "passed": true
+        },
+        {
+          "name": "현진리더빌",
+          "requestedParcel": "20-2",
+          "matchedParcels": [
+            "20-2"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "경기도",
+      "district": "안양만안구",
+      "legalDong": "박달동",
+      "parcels": [
+        "15-2",
+        "152"
+      ],
+      "checks": [
+        {
+          "name": "박달동 동원베네스트",
+          "requestedParcel": "15-2",
+          "matchedParcels": [
+            "15-2"
+          ],
+          "passed": true
+        },
+        {
+          "name": "신안",
+          "requestedParcel": "152",
+          "matchedParcels": [
+            "152"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "경기도",
+      "district": "용인수지구",
+      "legalDong": "상현동",
+      "parcels": [
+        "85-6",
+        "856"
+      ],
+      "checks": [
+        {
+          "name": "만현마을2단지 아이파크",
+          "requestedParcel": "856",
+          "matchedParcels": [
+            "856"
+          ],
+          "passed": true
+        },
+        {
+          "name": "성복역현대홈타운",
+          "requestedParcel": "85-6",
+          "matchedParcels": [
+            "85-6"
+          ],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "province": "경기도",
+      "district": "용인수지구",
+      "legalDong": "죽전동",
+      "parcels": [
+        "94-1",
+        "941"
+      ],
+      "checks": [
+        {
+          "name": "벽산타운3단지",
+          "requestedParcel": "941",
+          "matchedParcels": [
+            "941"
+          ],
+          "passed": true
+        },
+        {
+          "name": "현대홈타운",
+          "requestedParcel": "94-1",
+          "matchedParcels": [
+            "94-1"
+          ],
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "jevCheck": {
+    "status": "matched",
+    "selectedIndex": 1,
+    "selectionProbability": 0.94,
+    "confidence": 0.88,
+    "probabilities": {
+      "candidate_0": 0.94,
+      "no_match": 0.06
+    },
+    "reason": "typesafe_jev"
+  },
+  "jevExpectedIndex": 1,
+  "jevPassed": true
+}

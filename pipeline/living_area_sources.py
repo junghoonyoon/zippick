@@ -120,7 +120,12 @@ def normalize(source_id, raw, *, as_of, collected_at, snapshot_id):
         raise SourceError('사업 고유값·이름·지역을 확인할 수 없어요.')
     match = re.search(r'([가-힣0-9]+동)\s+(\d+(?:-\d+)?)', address)
     source = REGISTRY[source_id]
-    return {'id': f'{source_id}:{record_id}', 'sourceId': source_id, 'sourceRecordId': record_id,
+    import project_official_links
+    detail_url = project_official_links.individual_url(raw.get('CLEANUP_BSNS_URL')) if source_id == 'seoul-plan-renewal' else None
+    return {**({'officialDetailUrl': detail_url, 'officialDetailBasis': 'official_record_homepage',
+                'officialDetailTitle': str(name), 'officialDetailCheckedAt': collected_at[:10],
+                'officialDetailSourceUrl': source['url'], 'officialDetailSourceDate': as_of} if detail_url else {}),
+            'id': f'{source_id}:{record_id}', 'sourceId': source_id, 'sourceRecordId': record_id,
             'recordIdMethod': 'source_pk' if source_id == 'seoul-plan-renewal' else 'composite_fields',
             'snapshotId': snapshot_id, 'name': str(name), 'region': str(region),
             'address': address, 'legalDong': match[1] if match else '', 'jibun': match[2] if match else '',
@@ -269,14 +274,16 @@ def revision():
     context_paths = [config.ROOT / 'data' / name for name in (
         'living_area_apartment_points.json', 'living_area_official_context.json',
         'living_area_reference_points.json', 'living_area_map_references.json',
-        'living_area_metro_catalog.json', 'planned_rail_metro.json',
+        'living_area_metro_catalog.json', 'planned_rail_metro.json', 'rail_station_mapping.json', 'rail_impact_policy.json',
+        'project_official_links.json', 'living_area_seoul_snapshot.json',
         'capital_transport_plan_inventory.json', 'capital_transport_transfer_2026.json',
         'capital_transport_brt_2026.json', 'capital_transport_road_projects.json', 'redevelopment_zones.geojson',
-        'redevelopment_project_scales.json')]
+        'redevelopment_project_scales.json', 'redevelopment_occupancy_overrides.json', 'map_zone_stage_codes.json')]
     context_paths.extend(config.ROOT / 'pipeline' / name for name in (
-        'living_area_context.py', 'living_area_metro.py', 'living_area_plan_rating.py',
-        'capital_transport.py',
-        'living_area_map.py', 'living_area_reference_points.py'))
+        'living_area_context.py', 'living_area_metro.py', 'living_area_plan_rating.py', 'living_area_rail_policy.py',
+        'project_official_links.py',
+        'capital_transport.py', 'rail_station_mapping.py', 'map_zone_policy.py', 'map_zone_stage.py',
+        'living_area_map.py', 'living_area_reference_points.py', 'redevelopment_occupancy.py', 'redevelopment_completion.py'))
     context_paths.append(config.ROOT / 'pipeline/cache/living_area_audited_centers.json')
     return digest({'registry': REGISTRY, 'bundle': BUNDLED_PATH.stat().st_mtime_ns if BUNDLED_PATH.exists() else None, 'store': path.stat().st_mtime_ns if path.exists() else None,
                    'context': {p.name: p.stat().st_mtime_ns if p.exists() else None for p in context_paths}})

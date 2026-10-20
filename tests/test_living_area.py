@@ -299,11 +299,34 @@ def test_real_report_headline_is_about_the_selected_apartment(tmp_path, apartmen
     assert not any(p['benefitClass'] == 'direct' for p in result['displayProjects'])
     selected_id = result['planRating']['components']['housing']['selectedProjectId']
     selected = next(p for p in result['displayProjects'] if p['id'] == selected_id)
-    assert_apartment_focused_judgment(result, apartment_name, selected['name'])
-    assert result['headline'].startswith('생활권 변화는 보통이에요.')
-    assert ('GTX-C' if apartment_name == '개포 래미안 포레스트' else '면목선') in result['headline']
-    assert '교통 가점은 작아요' in result['headline']
-    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in result['intro']
+    briefing = result['briefing']
+    assert_safe_briefing(result)
+    assert briefing['verdict'] == 'normal'
+    assert result['headline'] == '생활권 변화는 보통이에요. ' + briefing['reason']
+    assert briefing['reason'].endswith('새 교통 호재는 약해요.')
+    assert briefing['advice'][0].startswith(apartment_name)
+    assert selected['name'] in ' '.join(briefing['strengths'])
+    rail_text = ' '.join(briefing['weaknesses'])
+    assert ('GTX-C' if apartment_name == '개포 래미안 포레스트' else '면목선') in rail_text
+    assert '새 교통 가점은 작아요' in rail_text
+    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in ' '.join(briefing['caveats'])
+    rail = next(p for p in result['displayProjects'] if p['id'] == 'metro-rail:wirye')
+    assert '남위례역' in rail['factSummary']
+    assert rail['checkedAt'] == '2026-10-19'
+
+
+def briefing_text(result):
+    briefing = result['briefing']
+    return ' '.join([briefing['reason'], *briefing['strengths'], *briefing['weaknesses'],
+                     *briefing['unknowns'], *briefing['advice'], *briefing['caveats']])
+
+
+def assert_safe_briefing(result):
+    text = briefing_text(result)
+    assert result['judgment']['headline'] == result['headline']
+    # Nearby official plans alone do not establish a direct benefit or a price rise.
+    assert not re.search(r'직접\s*수혜(?:예요|를\s*받아요|가\s*확실)', text)
+    assert not re.search(r'가격(?:이|은)?\s*(?:반드시|확실히)\s*(?:오르|상승)', text)
 
 
 def test_living_area_verdict_requires_balanced_plans_or_direct_benefit_for_positive_label():
@@ -319,10 +342,97 @@ def test_living_area_verdict_requires_balanced_plans_or_direct_benefit_for_posit
     report['displayProjects'][0]['benefitClass'] = 'unverified'
     report['planRating']['score'] = 2.2
     low = context.conclude(copy.deepcopy(report), identity)
-    assert low['headline'].startswith('생활권 변화는 아쉬워요.')
-    assert '지금 살기 나쁘거나 집값이 내려간다는 뜻이 아니에요' in low['intro']
+    assert low['headline'].startswith('생활권 변화는 약해요.')
+    assert low['briefing']['label'] == '약해요'
+    assert "'약해요'는 지금 살기 나쁘다는 뜻이 아니에요" in ' '.join(low['briefing']['caveats'])
     report['planRating']['score'] = None
-    assert context.conclude(report, identity)['headline'].startswith('생활권 변화는 판단할 수 없어요.')
+    pending = context.conclude(report, identity)
+    assert pending['headline'].startswith('생활권 변화는 판단을 보류했어요.')
+    assert pending['briefing']['label'] == '판단 보류'
+
+
+def test_living_area_verdict_describes_nearby_housing_cluster_and_planned_station():
+    import living_area_context as context
+
+    report = {'displayProjects': [
+        {'id': f'zone-{i}', 'name': f'가상구역{i}', 'projectType': 'redevelopment',
+         'stage': 'association', 'distanceMeters': distance}
+        for i, distance in enumerate((400, 1000, 1800))
+    ] + [{'id': 'rail', 'name': '가상철도', 'projectType': 'transport'}],
+        'planRating': {'score': 3.9, 'subScores': {'housing': 4.4, 'transport': 3.1},
+                       'components': {'housing': {'selectedProjectId': 'zone-0',
+                                                  'inputs': [{'projectId': f'zone-{i}', 'distanceMeters': distance}
+                                                             for i, distance in enumerate((400, 1000, 1800))]},
+                                      'transport': {'selectedProjectId': 'rail', 'inputs': [
+                                          {'projectId': 'rail', 'name': '가상역', 'distanceMeters': 1300,
+                                           'rawScore': 3.1}]}}}, 'judgment': {}}
+    identity = {**IDENTITY, 'name': '가상단지'}
+
+    good = context.conclude(copy.deepcopy(report), identity)
+    assert good['headline'] == '생활권 변화는 좋아요. 정비사업이 몰려 있고, 예정역도 가까워요.'
+    assert good['briefing']['verdict'] == 'good'
+    assert '실제로 누릴 이점이나 집값 상승을 뜻하지 않아요' in ' '.join(good['briefing']['caveats'])
+
+    far_station = copy.deepcopy(report)
+    far_station['planRating']['components']['transport']['inputs'][0]['distanceMeters'] = 1800
+    assert context.conclude(far_station, identity)['headline'].startswith('생활권 변화는 보통이에요.')
+
+    one_project = copy.deepcopy(report)
+    one_project['planRating']['components']['housing']['inputs'] = one_project['planRating']['components']['housing']['inputs'][:1]
+    assert context.conclude(one_project, identity)['headline'].startswith('생활권 변화는 보통이에요.')
+
+
+def test_living_area_headline_says_multiple_projects_contributed_to_housing_score():
+    import living_area_context as context
+
+    report = {'displayProjects': [
+        {'id':'zone-1', 'name':'첫 구역', 'projectType':'redevelopment', 'stage':'construction',
+         'distanceMeters':1000},
+        {'id':'rail', 'name':'가상철도', 'projectType':'transport'},
+    ], 'planRating':{'score':4.2, 'subScores':{'housing':5.0, 'transport':2.9},
+                     'components':{'housing':{'selectedProjectId':'zone-1', 'projectCount':3},
+                                   'transport':{'selectedProjectId':'rail', 'inputs':[
+                                       {'projectId':'rail', 'name':'가상역', 'distanceMeters':1500,
+                                        'rawScore':2.9}]}}}, 'judgment':{}}
+    result = context.conclude(report, {**IDENTITY, 'name':'가상단지'})
+
+    assert result['headline'] == '생활권 변화는 보통이에요. 정비사업은 많지만, 새 교통 호재는 약해요.'
+    assert result['briefing']['strengths'][0].startswith('직선 2km 안에 정비사업이 3곳이에요.')
+    assert '**공사 중인 단계**' in result['briefing']['strengths'][0]
+    assert '매일 걸어서 타기엔 조금 먼 거리예요' in result['briefing']['weaknesses'][0]
+    assert result['intro'] == ' '.join(result['briefing']['advice'])
+
+
+def test_forestia_report_leads_with_nearby_housing_and_station_plan(tmp_path):
+    import future_transformation as transformation
+    import real_estate_search
+
+    entity = next(e for e in real_estate_search._search_entities()
+                  if e.get('name') == '산성역 포레스티아' and e.get('district') == '성남수정구')
+    identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
+    result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 19))
+
+    assert result['headline'] == '생활권 변화는 좋아요. 정비사업이 몰려 있고, 예정역도 가까워요.'
+    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in ' '.join(result['briefing']['caveats'])
+
+
+def test_pangyo_valley_xi_2_route_is_not_described_as_a_new_station(tmp_path):
+    import future_transformation as transformation
+    import real_estate_search
+
+    entity = next(e for e in real_estate_search._search_entities()
+                  if e.get('name') == '판교밸리자이 2단지' and e.get('jibun') == '585')
+    identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
+    result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 19))
+
+    assert result['planRating']['transportCoverage']['status'] == 'station_mapping_incomplete'
+    assert result['planRating']['subScores'] == {'housing': None, 'transport': None}
+    unknowns = ' '.join(result['briefing']['unknowns'])
+    assert result['briefing']['verdict'] == 'pending'
+    assert '직선 2km 안의 정비사업을 찾지 못했어요' in unknowns
+    assert '신규 예정역이 없어요' not in briefing_text(result)
+    assert '다른 철도 노선의 예정역 목록·위치를 아직 확인 중' in unknowns
+    assert '0점을 주지 않아요' in result['planRating']['missingReasons']['transport']
 
 
 def test_miseong_reports_strong_housing_change_when_rail_score_is_missing(tmp_path):
@@ -337,10 +447,10 @@ def test_miseong_reports_strong_housing_change_when_rail_score_is_missing(tmp_pa
 
     assert result['planRating']['score'] is None
     assert result['planRating']['subScores'] == {'housing': 4.5, 'transport': None}
-    assert '대조1' in result['headline']
-    assert '주변 주거환경이 크게 바뀔 수 있어요' in result['headline']
-    assert '새 철도 수혜는 아직 확인되지 않았어요' in result['headline']
-    assert '생활권 변화는 판단할 수 없어요' not in result['headline']
+    assert result['headline'] == '생활권 변화는 판단을 보류했어요. 정비사업은 기대되지만, 교통 자료가 아직 없어요.'
+    assert '대조1' in ' '.join(result['briefing']['strengths'])
+    assert result['planRating']['missingReasons']['transport'] in result['briefing']['unknowns']
+    assert '주거환경만 보면 기대할 만해요' in result['intro']
 
 
 def test_living_area_headline_uses_korean_particles_for_numbered_complexes_and_projects():
@@ -364,13 +474,13 @@ def test_transport_only_report_uses_middle_judgment_for_middle_score(tmp_path):
 
     assert result['planRating']['subScores'] == {'housing': None, 'transport': 3.1}
     assert result['planRating']['score'] is None
-    assert '교통 가점은 보통이에요' in result['headline']
-    assert '주거환경 변화는 아직 평가하지 못했어요' in result['headline']
+    assert result['headline'] == '생활권 변화는 판단을 보류했어요. 새 철도는 기대되지만, 주거환경 자료가 아직 없어요.'
+    assert '신안산선' in ' '.join(result['briefing']['strengths'])
 
 
 @pytest.mark.parametrize('name,district,label,rail', [
     ('신주아파트', '동대문구', '좋아요.', '동북선'),
-    ('남가좌동현대', '서대문구', '아쉬워요.', '서부선'),
+    ('남가좌동현대', '서대문구', '약해요.', '서부선'),
 ])
 def test_real_report_shows_good_and_bad_plan_judgments_without_invented_direct_benefit(
         tmp_path, name, district, label, rail):
@@ -383,12 +493,20 @@ def test_real_report_shows_good_and_bad_plan_judgments_without_invented_direct_b
     result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 18))
 
     assert result['status'] != 'error'
+    if rail == '서부선':
+        assert rail not in result['headline']
+        assert not any(row.get('lineId') == 'seobu'
+            for row in result['planRating']['components'].get('transport', {}).get('inputs', []))
+        return
     assert result['headline'].startswith(f'생활권 변화는 {label}')
-    assert name in result['headline'] and rail in result['headline']
+    assert_safe_briefing(result)
+    assert result['briefing']['advice'][0].startswith(name)
+    assert rail in ' '.join(result['briefing']['strengths'] + result['briefing']['weaknesses'])
     assert not any(p.get('benefitClass') == 'direct' for p in result['displayProjects'])
-    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in result['intro']
+    caveats = ' '.join(result['briefing']['caveats'])
+    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in caveats
     if label == '좋아요.':
-        assert '계획 점수는 실제로 누릴 이점이나 집값 상승을 뜻하지 않아요' in result['intro']
+        assert '계획 점수는 실제로 누릴 이점이나 집값 상승을 뜻하지 않아요' in caveats
 
 
 def test_living_area_verdict_uses_highest_scored_station_on_shared_rail_project():
@@ -400,8 +518,8 @@ def test_living_area_verdict_uses_highest_scored_station_on_shared_rail_project(
                       {'projectId':'rail','name':'가까운역','distanceMeters':400,'rawScore':3.0},
                   ]}}}, 'judgment':{}}
     result = context.conclude(report, {**IDENTITY, 'name':'가상단지'})
-    assert '가까운역의 참고 위치는 직선 400m' in result['intro']
-    assert '먼역' not in result['intro']
+    assert '가까운역 예정 위치가 직선 400m예요. **걸어서 다닐 만한 거리예요**.' in briefing_text(result)
+    assert '먼역' not in briefing_text(result)
 
 
 def test_living_area_headline_explains_the_housing_project_used_for_the_score():
@@ -418,21 +536,28 @@ def test_living_area_headline_explains_the_housing_project_used_for_the_score():
                                       {'projectId':'rail','name':'가상역','distanceMeters':1800,'rawScore':0.9}]}}},
         'judgment':{}}
     result = context.conclude(report, {**IDENTITY,'name':'가상단지'})
-    assert '점수반영구역' in result['headline']
-    assert '가까운구역' not in result['headline']
-    assert '교통 가점은 작아요' in result['headline']
+    assert result['headline'] == '생활권 변화는 약해요. 정비사업은 기대되지만, 새 교통 호재는 약해요.'
+    assert '점수반영구역' in result['briefing']['strengths'][0]
+    assert '가까운구역' not in briefing_text(result)
+    assert '새 교통 가점은 작아요' in result['briefing']['weaknesses'][0]
 
 
 def test_unlicensed_legacy_public_report_is_blocked():
     import future_transformation as f
     r = f.public_facts({'apartmentId':'x', 'asOfDate':DAY.isoformat(), 'projects':[{'name':'blocked'}], 'futureTransformationScore':100})
     assert r['score'] is None and r['projects'] == []
+    failed = f.public_facts({'apartmentId':'x', 'asOfDate':DAY.isoformat(), 'status':'error'})
+    assert failed['status'] == 'error'
+    assert failed['headline'] == '생활권 자료를 불러오지 못했어요.'
 
 
 def test_corrupt_database_falls_back(tmp_path):
     path=tmp_path/'corrupt.db'
     path.write_bytes(b'broken database')
-    assert living.analyze(IDENTITY, path=path, day=DAY)['status'] == 'error'
+    result = living.analyze(IDENTITY, path=path, day=DAY)
+    assert result['status'] == 'error'
+    assert result['headline'] == '생활권 자료를 불러오지 못했어요.'
+    assert result['judgment']['shortTerm'] == '자료를 불러오지 못해 평가하지 않았어요.'
 
 
 def test_official_context_does_not_make_direct_benefit_or_rail_walk_time(tmp_path):

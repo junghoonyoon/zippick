@@ -1,0 +1,21 @@
+{
+  "url": "http://127.0.0.1:8766/api/redevelopment-zones?limit=3000",
+  "visibleCount": 2614,
+  "excludedBoundaryLeaks": 0,
+  "verifiedExamples": {
+    "방배5": "absent",
+    "중화1구역": "absent",
+    "래미안길음센터피스(6차공급)": "absent",
+    "이문3-1구역": "absent",
+    "보문5": "absent",
+    "이문3-2구역": "absent",
+    "행당7": "absent",
+    "신흥 주택재건축 정비구역": "absent"
+  },
+  "reportMap": {
+    "url": "http://127.0.0.1:8766/api/apartments/41131120411567/living-area-map",
+    "zoneCount": 15,
+    "occupiedForrestiaBoundaryAbsent": true,
+    "activeSanseongPresent": true
+  }
+}

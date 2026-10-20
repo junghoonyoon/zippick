@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
-  "checkedAt": "2026-10-16",
-  "scope": "수도권 주요 예정 노선의 공식 발표 역 중 지역을 확인한 곳",
-  "note": "역 출입구 위치와 개통일은 달라질 수 있습니다. 같은 시·구의 계획역이라는 뜻이며 단지에서 걸어갈 수 있다는 뜻이 아닙니다.",
+  "schemaVersion": 2,
+  "checkedAt": "2026-10-19",
+  "scope": "집픽 수도권 노선 자료 전체(경기도 공간정보 24개 노선·수도권 교통계획 29개 항목·기존 예정철도 목록) 및 서울시 2026 승인계획에서 추가 확인한 난곡선·목동선. 전국 철도망 전수 자료는 아님.",
+  "note": "노선별 역 목록의 완전성·역별 개통 여부·공식 근거·좌표 근거를 따로 관리합니다. 미확인 위치는 추정 좌표로 채우지 않습니다.",
   "lines": [
     {
       "id": "gtx-b",
@@ -12,50 +12,162 @@
       "sourceDate": "2025-12-12",
       "source": "국토교통부 2026년 업무계획·GTX 노선 안내",
       "sourceUrl": "https://www.molit.go.kr/2026plan/sub5_public.html",
-      "stationsSourceUrl": "https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf",
+      "stationsSourceUrl": "https://www.kr.or.kr/images/template/krhome/sub/05/img_05010402_13.jpg",
       "stations": [
         {
-          "name": "청량리",
-          "sido": "서울특별시",
-          "sigungu": "동대문구"
+          "name": "인천대입구",
+          "sido": "인천광역시",
+          "sigungu": "연수구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
-          "name": "상봉",
-          "sido": "서울특별시",
-          "sigungu": "중랑구"
+          "name": "인천시청",
+          "sido": "인천광역시",
+          "sigungu": "남동구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
-          "name": "용산",
-          "sido": "서울특별시",
-          "sigungu": "용산구"
+          "name": "부평",
+          "sido": "인천광역시",
+          "sigungu": "부평구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
-          "name": "여의도",
-          "sido": "서울특별시",
-          "sigungu": "영등포구"
+          "name": "부천종합운동장",
+          "sido": "경기도",
+          "sigungu": "부천시",
+          "existingInterchange": true,
+          "stationId": "gtx-b:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "신도림",
           "sido": "서울특별시",
-          "sigungu": "구로구"
+          "sigungu": "구로구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
-          "name": "구리",
-          "sido": "경기도",
-          "sigungu": "구리시"
+          "name": "여의도",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "용산",
+          "sido": "서울특별시",
+          "sigungu": "용산구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "서울",
+          "sido": "서울특별시",
+          "sigungu": "중구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:009",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "상봉",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "existingInterchange": true,
+          "stationId": "gtx-b:010",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "별내",
           "sido": "경기도",
-          "sigungu": "남양주시"
+          "sigungu": "남양주시",
+          "existingInterchange": true,
+          "stationId": "gtx-b:011",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "왕숙",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "stationId": "gtx-b:012",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "평내호평",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": true,
+          "stationId": "gtx-b:013",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "마석",
           "sido": "경기도",
-          "sigungu": "남양주시"
+          "sigungu": "남양주시",
+          "existingInterchange": true,
+          "stationId": "gtx-b:014",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         }
       ],
-      "stageCode": "construction"
+      "stageCode": "construction",
+      "stationListComplete": true,
+      "routeIds": [
+        "gg-rail:702",
+        "gg-rail:651"
+      ],
+      "expectedStationCount": 14,
+      "excludedClaims": [
+        {
+          "name": "구리역",
+          "reason": "공식 GTX-B 정차역 목록에 없음. 배경 노선을 정차역으로 읽은 기존 연결 제거."
+        },
+        {
+          "name": "갈매역",
+          "reason": "정차 건의 단계",
+          "sourceUrl": "https://www.guri.go.kr/www/selectBbsNttView.do?bbsNo=42&key=393&nttNo=147376"
+        }
+      ],
+      "routeAliases": [
+        "광역급행철도B노선",
+        "광역급행철도 B노선"
+      ],
+      "inventoryKeys": [
+        "수도권 광역급행철도|송도~마석"
+      ],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null
     },
     {
       "id": "gtx-c",
@@ -65,45 +177,149 @@
       "sourceDate": "2026-09-14",
       "source": "국토교통부 2026년 9월 14일 보도자료·GTX 노선 안내",
       "sourceUrl": "https://www.molit.go.kr/USR/NEWS/dtl.jsp?id=95092420",
-      "stationsSourceUrl": "https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf",
+      "stationsSourceUrl": "https://www.gccity.go.kr/portal/contents.do?mId=0305020300",
       "stations": [
         {
-          "name": "청량리",
-          "sido": "서울특별시",
-          "sigungu": "동대문구"
-        },
-        {
-          "name": "창동",
-          "sido": "서울특별시",
-          "sigungu": "도봉구"
-        },
-        {
-          "name": "삼성",
-          "sido": "서울특별시",
-          "sigungu": "강남구"
-        },
-        {
-          "name": "양재",
-          "sido": "서울특별시",
-          "sigungu": "서초구"
+          "name": "덕정",
+          "sido": "경기도",
+          "sigungu": "양주시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "의정부",
           "sido": "경기도",
-          "sigungu": "의정부시"
+          "sigungu": "의정부시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "창동",
+          "sido": "서울특별시",
+          "sigungu": "도봉구",
+          "existingInterchange": true,
+          "stationId": "gtx-c:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "광운대",
+          "sido": "서울특별시",
+          "sigungu": "노원구",
+          "existingInterchange": true,
+          "stationId": "gtx-c:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구",
+          "existingInterchange": true,
+          "stationId": "gtx-c:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "왕십리",
+          "sido": "서울특별시",
+          "sigungu": "성동구",
+          "existingInterchange": true,
+          "stationId": "gtx-c:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "삼성",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "existingInterchange": true,
+          "stationId": "gtx-c:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "양재",
+          "sido": "서울특별시",
+          "sigungu": "서초구",
+          "existingInterchange": true,
+          "stationId": "gtx-c:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "정부과천청사",
           "sido": "경기도",
-          "sigungu": "과천시"
+          "sigungu": "과천시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:009",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "인덕원",
+          "sido": "경기도",
+          "sigungu": "안양시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:010",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "금정",
           "sido": "경기도",
-          "sigungu": "군포시"
+          "sigungu": "군포시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:011",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "의왕",
+          "sido": "경기도",
+          "sigungu": "의왕시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:012",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "수원",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:013",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "상록수",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "gtx-c:014",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         }
       ],
-      "stageCode": "construction"
+      "stageCode": "construction",
+      "stationListComplete": true,
+      "routeIds": [
+        "gg-rail:652"
+      ],
+      "expectedStationCount": 14,
+      "routeAliases": [
+        "광역급행철도 C노선"
+      ],
+      "inventoryKeys": [
+        "수도권 광역급행철도|수원~덕정"
+      ],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null
     },
     {
       "id": "dongbuk",
@@ -112,46 +328,224 @@
       "targetOpening": "2027년 목표",
       "source": "서울시 동북선 공사 안내·강북권 교통계획",
       "sourceUrl": "https://cis.seoul.go.kr/TotalAlimi_new/PopInfo.action?cmd=info1&pjt_cd=1112018081799",
-      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/1166904",
+      "stationsSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
       "stations": [
         {
           "name": "왕십리",
           "sido": "서울특별시",
-          "sigungu": "성동구"
+          "sigungu": "성동구",
+          "existingInterchange": false,
+          "address": "서울특별시 성동구 행당동 192-40",
+          "stationNumber": "101",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "성동구",
+          "existingInterchange": false,
+          "address": "서울특별시 성동구 마장동 474-28",
+          "stationNumber": "102",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "제기동",
           "sido": "서울특별시",
-          "sigungu": "동대문구"
+          "sigungu": "동대문구",
+          "existingInterchange": false,
+          "address": "서울특별시 동대문구 용두동 47-1",
+          "stationNumber": "103",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "고려대",
           "sido": "서울특별시",
-          "sigungu": "성북구"
+          "sigungu": "동대문구",
+          "existingInterchange": false,
+          "address": "서울특별시 동대문구 제기동 136-11",
+          "stationNumber": "104",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "105정거장",
+          "sido": "서울특별시",
+          "sigungu": "성북구",
+          "existingInterchange": false,
+          "address": "서울특별시 성북구 종암동 12-23",
+          "stationNumber": "105",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "106정거장",
+          "sido": "서울특별시",
+          "sigungu": "성북구",
+          "existingInterchange": false,
+          "address": "서울특별시 성북구 종암동 3-70",
+          "stationNumber": "106",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "미아사거리",
           "sido": "서울특별시",
-          "sigungu": "강북구"
+          "sigungu": "성북구",
+          "existingInterchange": false,
+          "address": "서울특별시 성북구 하월곡동 200",
+          "stationNumber": "107",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "108정거장",
+          "sido": "서울특별시",
+          "sigungu": "성북구",
+          "existingInterchange": false,
+          "address": "서울특별시 성북구 하월곡동 산1-1",
+          "stationNumber": "108",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "109정거장",
+          "sido": "서울특별시",
+          "sigungu": "성북구",
+          "existingInterchange": false,
+          "address": "서울특별시 성북구 장위동 310-22",
+          "stationNumber": "109",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:009",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "110정거장",
+          "sido": "서울특별시",
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 월계동 860-7",
+          "stationNumber": "110",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:010",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "월계",
           "sido": "서울특별시",
-          "sigungu": "노원구"
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 월계동 313",
+          "stationNumber": "111",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:011",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "하계",
           "sido": "서울특별시",
-          "sigungu": "노원구"
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 하계동 284-2",
+          "stationNumber": "112",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번. 112·113은 같은 표의 중복결정 비고에 적힌 하계동을 사용.",
+          "stationId": "dongbuk:012",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "113정거장",
+          "sido": "서울특별시",
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 하계동 266",
+          "stationNumber": "113",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번. 112·113은 같은 표의 중복결정 비고에 적힌 하계동을 사용.",
+          "stationId": "dongbuk:013",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "114정거장",
+          "sido": "서울특별시",
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 중계동 391",
+          "stationNumber": "114",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:014",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "115정거장",
+          "sido": "서울특별시",
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 중계동 371",
+          "stationNumber": "115",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:015",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "상계",
           "sido": "서울특별시",
-          "sigungu": "노원구"
+          "sigungu": "노원구",
+          "existingInterchange": false,
+          "address": "서울특별시 노원구 중계동 606-3",
+          "stationNumber": "116",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=562664",
+          "addressNote": "고시 정거장 부지 대표 지번",
+          "stationId": "dongbuk:016",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         }
       ],
       "stageCode": "construction",
-      "sourceDate": "2026-10-14"
+      "sourceDate": "2026-10-14",
+      "stationListComplete": true,
+      "routeIds": [],
+      "expectedStationCount": 16,
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null
     },
     {
       "id": "gangbuk-cross",
@@ -162,30 +556,233 @@
       "sourceDate": "2026-06-15",
       "source": "서울시의회 제3차 도시철도망 구축계획안 검토보고서·서울시 홍제 경유 안내",
       "sourceUrl": "https://ms.smc.seoul.kr/record/recordView.do?key=a66fee32d18c7e8a1ea511f3236da896c20c1e83ea372900adcdde6ef463a1f0baa291bc61d02aef",
-      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/2018271",
-      "planningNote": "2024년 예비타당성조사를 통과하지 못해 다시 추진하는 계획이에요. 역 수와 노선 조정이 검토 중이며, 경유역·출입구와 개통일은 바뀔 수 있어요.",
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
+      "planningNote": "제2차 승인계획 기준. 제3차 계획안에서 역 조정을 검토 중이며 최종 설계 위치는 미확정이에요.",
       "stations": [
         {
-          "name": "목동",
+          "name": "청량리",
           "sido": "서울특별시",
-          "sigungu": "양천구"
+          "sigungu": "동대문구",
+          "stationId": "gangbuk-cross:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
         },
         {
-          "name": "홍제",
+          "name": "102정거장",
           "sido": "서울특별시",
-          "sigungu": "서대문구"
+          "sigungu": "동대문구",
+          "stationId": "gangbuk-cross:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "KAIST 서울캠퍼스",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "월곡",
+          "sido": "서울특별시",
+          "sigungu": "성북구",
+          "stationId": "gangbuk-cross:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "성북구",
+          "stationId": "gangbuk-cross:104",
+          "stationNumber": "104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "종암사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
         },
         {
           "name": "길음",
           "sido": "서울특별시",
-          "sigungu": "성북구"
+          "sigungu": "성북구",
+          "stationId": "gangbuk-cross:105",
+          "stationNumber": "105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
         },
         {
-          "name": "청량리",
+          "name": "정릉",
           "sido": "서울특별시",
-          "sigungu": "동대문구"
+          "sigungu": "성북구",
+          "stationId": "gangbuk-cross:106",
+          "stationNumber": "106",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "107정거장",
+          "sido": "서울특별시",
+          "sigungu": "종로구",
+          "stationId": "gangbuk-cross:107",
+          "stationNumber": "107",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "108정거장",
+          "sido": "서울특별시",
+          "sigungu": "종로구",
+          "stationId": "gangbuk-cross:108",
+          "stationNumber": "108",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "109정거장",
+          "sido": "서울특별시",
+          "sigungu": "종로구",
+          "stationId": "gangbuk-cross:109",
+          "stationNumber": "109",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "상명대학교 서울캠퍼스",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "홍제",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "gangbuk-cross:110",
+          "stationNumber": "110",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "111정거장",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "gangbuk-cross:111",
+          "stationNumber": "111",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서대문구청앞교차로",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "112정거장",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "gangbuk-cross:112",
+          "stationNumber": "112",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "남가좌동사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "113정거장",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "gangbuk-cross:113",
+          "stationNumber": "113",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "가재울사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "디지털미디어시티",
+          "sido": "서울특별시",
+          "sigungu": "은평구",
+          "stationId": "gangbuk-cross:114",
+          "stationNumber": "114",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "115정거장",
+          "sido": "서울특별시",
+          "sigungu": "마포구",
+          "stationId": "gangbuk-cross:115",
+          "stationNumber": "115",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "월드컵경기장교차로",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "등촌",
+          "sido": "서울특별시",
+          "sigungu": "강서구",
+          "stationId": "gangbuk-cross:116",
+          "stationNumber": "116",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "117정거장",
+          "sido": "서울특별시",
+          "sigungu": "강서구",
+          "stationId": "gangbuk-cross:117",
+          "stationNumber": "117",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울등마초등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "118정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "gangbuk-cross:118",
+          "stationNumber": "118",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "목동사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "목동",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "gangbuk-cross:119",
+          "stationNumber": "119",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null,
+      "expectedStationCount": 19,
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-7~8. 후속 설계에서 변경 가능."
     },
     {
       "id": "wirye",
@@ -196,25 +793,303 @@
       "source": "서울시·국가철도공단 공식 사업 안내",
       "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453106",
       "stationsSourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453106",
-      "targetOpening": "사업 일정은 공식 자료 참고",
-      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "targetOpening": "2026년 12월 목표",
+      "planningNote": "정거장 부지나 역의 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
       "stations": [
         {
           "name": "마천",
           "sido": "서울특별시",
-          "sigungu": "송파구"
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "stationNumber": "101",
+          "placeId": "1053546142",
+          "stationId": "wirye:101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 송파구 거여동 696-1",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1053546142",
+            "phone": "",
+            "place_name": "마천역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1053546142",
+            "road_address_name": "",
+            "x": "127.151735432774",
+            "y": "37.4937241435142"
+          }
         },
         {
-          "name": "복정",
+          "name": "북위례",
           "sido": "서울특별시",
-          "sigungu": "송파구"
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "stationNumber": "102",
+          "placeId": "55320464",
+          "stationId": "wirye:102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 송파구 거여동 산 64",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "55320464",
+            "phone": "",
+            "place_name": "북위례역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/55320464",
+            "road_address_name": "",
+            "x": "127.153593684086",
+            "y": "37.4900276154702"
+          }
+        },
+        {
+          "name": "위례솔",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "103",
+          "stationId": "wirye:103",
+          "address": "서울특별시 송파구 거여동 산50",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=622685",
+          "addressSourceDate": "2025-11-12"
+        },
+        {
+          "name": "덕수고등학교",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "stationNumber": "104",
+          "placeId": "851241653",
+          "stationId": "wirye:104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 송파구 거여동 산 40",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "851241653",
+            "phone": "",
+            "place_name": "덕수고등학교역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/851241653",
+            "road_address_name": "",
+            "x": "127.145748332274",
+            "y": "37.4852459978559"
+          }
+        },
+        {
+          "name": "위례호수공원",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "stationNumber": "105",
+          "placeId": "1340221201",
+          "stationId": "wirye:105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 송파구 장지동 881-4",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1340221201",
+            "phone": "",
+            "place_name": "위례호수공원역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1340221201",
+            "road_address_name": "",
+            "x": "127.143170209044",
+            "y": "37.4809990955133"
+          }
+        },
+        {
+          "name": "위례별",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "stationNumber": "106",
+          "placeId": "1350432825",
+          "stationId": "wirye:106",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 송파구 장지동 917-20",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1350432825",
+            "phone": "",
+            "place_name": "위례별역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1350432825",
+            "road_address_name": "",
+            "x": "127.142971803701",
+            "y": "37.4777439918903"
+          }
+        },
+        {
+          "name": "위례중앙광장",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "existingInterchange": false,
+          "stationNumber": "107",
+          "placeId": "430321501",
+          "stationId": "wirye:107",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 성남시 수정구 창곡동 506-1",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "430321501",
+            "phone": "",
+            "place_name": "위례중앙광장역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/430321501",
+            "road_address_name": "",
+            "x": "127.142113380644",
+            "y": "37.4733913513416"
+          }
+        },
+        {
+          "name": "위례역사공원",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "existingInterchange": false,
+          "stationNumber": "108",
+          "placeId": "1443096258",
+          "stationId": "wirye:108",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 성남시 수정구 창곡동 530-3",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1443096258",
+            "phone": "",
+            "place_name": "위례역사공원역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1443096258",
+            "road_address_name": "",
+            "x": "127.141955391576",
+            "y": "37.4705506577119"
+          }
+        },
+        {
+          "name": "위례트램스퀘어",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "existingInterchange": false,
+          "stationNumber": "109",
+          "placeId": "1035961956",
+          "stationId": "wirye:109",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 성남시 수정구 창곡동 565-3",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1035961956",
+            "phone": "",
+            "place_name": "위례트램스퀘어역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1035961956",
+            "road_address_name": "",
+            "x": "127.141757639633",
+            "y": "37.4675982849168"
+          }
         },
         {
           "name": "남위례",
           "sido": "경기도",
-          "sigungu": "성남시"
+          "sigungu": "성남시",
+          "existingInterchange": false,
+          "stationNumber": "110",
+          "placeId": "153678182",
+          "stationId": "wirye:110",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 성남시 수정구 창곡동 559-17",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "153678182",
+            "phone": "",
+            "place_name": "남위례역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/153678182",
+            "road_address_name": "",
+            "x": "127.13973808189145",
+            "y": "37.46421198938074"
+          }
+        },
+        {
+          "name": "위례스마트시티",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "existingInterchange": false,
+          "stationNumber": "111",
+          "placeId": "536016099",
+          "stationId": "wirye:111",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 성남시 수정구 창곡동 499-165",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "536016099",
+            "phone": "",
+            "place_name": "위례스마트시티역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/536016099",
+            "road_address_name": "",
+            "x": "127.135446662223",
+            "y": "37.4688986370232"
+          }
+        },
+        {
+          "name": "복정",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "stationNumber": "112",
+          "placeId": "492086478",
+          "stationId": "wirye:112",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 송파구 장지동 602-9",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "492086478",
+            "phone": "",
+            "place_name": "복정역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/492086478",
+            "road_address_name": "",
+            "x": "127.127888020526",
+            "y": "37.4711956249449"
+          }
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "expectedStationCount": 12,
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null
     },
     {
       "id": "ui-extension",
@@ -224,21 +1099,53 @@
       "sourceDate": "2025-11-24",
       "source": "서울시·국가철도공단 공식 사업 안내",
       "sourceUrl": "https://mayor.seoul.go.kr/oh/seoul/newsView.do?photoGallerySn=4086",
-      "stationsSourceUrl": "https://mayor.seoul.go.kr/oh/seoul/newsView.do?photoGallerySn=4086",
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
       "targetOpening": "사업 일정은 공식 자료 참고",
-      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "planningNote": "정거장 부지나 역의 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
       "stations": [
         {
-          "name": "솔밭공원",
+          "name": "101정거장",
           "sido": "서울특별시",
-          "sigungu": "강북구"
+          "sigungu": "도봉구",
+          "stationId": "ui-extension:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "선덕고교입구사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "도봉구",
+          "stationId": "ui-extension:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "성원아파트사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
         },
         {
           "name": "방학",
           "sido": "서울특별시",
-          "sigungu": "도봉구"
+          "sigungu": "도봉구",
+          "stationId": "ui-extension:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null,
+      "expectedStationCount": 3,
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-23~24. 후속 설계에서 변경 가능."
     },
     {
       "id": "myeonmok",
@@ -248,21 +1155,164 @@
       "sourceDate": "2026-09-29",
       "source": "서울시·국가철도공단 공식 사업 안내",
       "sourceUrl": "https://www.seoul.go.kr/news/news_notice.do?nttNo=467266",
-      "stationsSourceUrl": "https://www.seoul.go.kr/news/news_notice.do?nttNo=463192",
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
       "targetOpening": "사업 일정은 공식 자료 참고",
-      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "planningNote": "정거장 부지나 역의 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
       "stations": [
         {
           "name": "청량리",
           "sido": "서울특별시",
-          "sigungu": "동대문구"
+          "sigungu": "동대문구",
+          "stationId": "myeonmok:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "동대문구",
+          "stationId": "myeonmok:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울시립대앞사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "103정거장",
+          "sido": "서울특별시",
+          "sigungu": "동대문구",
+          "stationId": "myeonmok:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "전농동사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "동대문구",
+          "stationId": "myeonmok:104",
+          "stationNumber": "104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "장안동삼거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "105정거장",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:105",
+          "stationNumber": "105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "장안교사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "면목",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:106",
+          "stationNumber": "106",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "107정거장",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:107",
+          "stationNumber": "107",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "겸재삼거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "108정거장",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:108",
+          "stationNumber": "108",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "우림시장오거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "109정거장",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:109",
+          "stationNumber": "109",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "신내지하차도사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "110정거장",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:110",
+          "stationNumber": "110",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "중랑구청사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "111정거장",
+          "sido": "서울특별시",
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:111",
+          "stationNumber": "111",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "능산삼거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
         },
         {
           "name": "신내",
           "sido": "서울특별시",
-          "sigungu": "중랑구"
+          "sigungu": "중랑구",
+          "stationId": "myeonmok:112",
+          "stationNumber": "112",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null,
+      "expectedStationCount": 12,
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-53~54. 후속 설계에서 변경 가능."
     },
     {
       "id": "seobu",
@@ -272,26 +1322,208 @@
       "sourceDate": "2026-04-01",
       "source": "서울시·국가철도공단 공식 사업 안내",
       "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=455351",
-      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/2018271",
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
       "targetOpening": "사업 일정은 공식 자료 참고",
       "planningNote": "사업자 확보에 어려움이 있어 민간사업 재공고와 재정사업 전환을 준비 중이에요. 착공·개통 시점은 미확정이에요.",
       "stations": [
         {
           "name": "새절",
           "sido": "서울특별시",
-          "sigungu": "은평구"
+          "sigungu": "은평구",
+          "stationId": "seobu:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "은평구",
+          "stationId": "seobu:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울응암초등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "103정거장",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "seobu:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "명지대학교 인문캠퍼스 정문",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "seobu:104",
+          "stationNumber": "104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "연희삼거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "105정거장",
+          "sido": "서울특별시",
+          "sigungu": "서대문구",
+          "stationId": "seobu:105",
+          "stationNumber": "105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "연세대앞교차로",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "신촌",
+          "sido": "서울특별시",
+          "sigungu": "마포구",
+          "stationId": "seobu:106",
+          "stationNumber": "106",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true,
+          "query": "신촌역 2호선"
+        },
+        {
+          "name": "광흥창",
+          "sido": "서울특별시",
+          "sigungu": "마포구",
+          "stationId": "seobu:107",
+          "stationNumber": "107",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "108정거장",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "stationId": "seobu:108",
+          "stationNumber": "108",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "여의도순복음교회",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "109정거장",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "stationId": "seobu:109",
+          "stationNumber": "109",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "MBC앞교차로",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "110정거장",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "stationId": "seobu:110",
+          "stationNumber": "110",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "삼익아파트",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
         },
         {
           "name": "노량진",
           "sido": "서울특별시",
-          "sigungu": "동작구"
+          "sigungu": "동작구",
+          "stationId": "seobu:111",
+          "stationNumber": "111",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "장승배기",
+          "sido": "서울특별시",
+          "sigungu": "동작구",
+          "stationId": "seobu:112",
+          "stationNumber": "112",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "113정거장",
+          "sido": "서울특별시",
+          "sigungu": "동작구",
+          "stationId": "seobu:113",
+          "stationNumber": "113",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "건영약수아파트",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "114정거장",
+          "sido": "서울특별시",
+          "sigungu": "관악구",
+          "stationId": "seobu:114",
+          "stationNumber": "114",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울구암초등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "115정거장",
+          "sido": "서울특별시",
+          "sigungu": "관악구",
+          "stationId": "seobu:115",
+          "stationNumber": "115",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "관악동부센트레빌아파트",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
         },
         {
           "name": "서울대입구",
           "sido": "서울특별시",
-          "sigungu": "관악구"
+          "sigungu": "관악구",
+          "stationId": "seobu:116",
+          "stationNumber": "116",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null,
+      "expectedStationCount": 16,
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-83~84. 후속 설계에서 변경 가능."
     },
     {
       "id": "indeogwon-dongtan",
@@ -303,24 +1535,271 @@
       "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010302",
       "stationsSourceUrl": "https://www.kr.or.kr/images/template/krhome/sub/05/img_05010302_26_2025.jpg",
       "targetOpening": "사업 일정은 공식 자료 참고",
-      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "planningNote": "정거장 부지나 역의 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
       "stations": [
         {
           "name": "인덕원",
           "sido": "경기도",
-          "sigungu": "안양시"
+          "sigungu": "안양시",
+          "existingInterchange": true,
+          "stationId": "indeogwon-dongtan:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "101",
+          "address": "경기도 안양시 동안구 관양동 143-3",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "안양농수산물시장",
+          "sido": "경기도",
+          "sigungu": "안양시",
+          "existingInterchange": false,
+          "referenceQuery": "안양농수산물도매시장",
+          "stationId": "indeogwon-dongtan:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "102",
+          "address": "경기도 안양시 동안구 평촌동 987",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "호계사거리",
+          "sido": "경기도",
+          "sigungu": "안양시",
+          "existingInterchange": false,
+          "referenceQuery": "호계사거리",
+          "stationId": "indeogwon-dongtan:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "103",
+          "address": "경기도 안양시 동안구 호계동 1023",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "모락로사거리",
+          "sido": "경기도",
+          "sigungu": "의왕시",
+          "existingInterchange": false,
+          "referenceQuery": "모락로사거리",
+          "stationId": "indeogwon-dongtan:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "104",
+          "address": "경기도 의왕시 오전동 45-4",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "의왕시청",
+          "sido": "경기도",
+          "sigungu": "의왕시",
+          "existingInterchange": false,
+          "referenceQuery": "의왕시청",
+          "stationId": "indeogwon-dongtan:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "105",
+          "address": "경기도 의왕시 고천동 293",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "북수원삼거리",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "referenceQuery": "북수원삼거리",
+          "stationId": "indeogwon-dongtan:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "106",
+          "address": "경기도 수원시 장안구 파장동 128-10",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "장안구청",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "referenceQuery": "장안구청",
+          "stationId": "indeogwon-dongtan:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "107",
+          "address": "경기도 수원시 장안구 조원동 826",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "수원월드컵경기장",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "referenceQuery": "수원월드컵경기장",
+          "stationId": "indeogwon-dongtan:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "108",
+          "address": "경기도 수원시 팔달구 우만동 357-15",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점. 108 정거장 우만동은 팔달구이며 고시의 장안구 표기를 보정."
+        },
+        {
+          "name": "아주대삼거리",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "referenceQuery": "아주대삼거리",
+          "stationId": "indeogwon-dongtan:009",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "109",
+          "address": "경기도 수원시 팔달구 우만동 447",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "원천동",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "stationId": "indeogwon-dongtan:010",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "110",
+          "address": "경기도 수원시 영통구 원천동 452-69",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "흥덕지구",
+          "sido": "경기도",
+          "sigungu": "용인시",
+          "existingInterchange": false,
+          "stationId": "indeogwon-dongtan:011",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "111",
+          "address": "경기도 용인시 기흥구 영덕동 1142",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
         },
         {
           "name": "영통",
           "sido": "경기도",
-          "sigungu": "수원시"
+          "sigungu": "수원시",
+          "existingInterchange": true,
+          "stationId": "indeogwon-dongtan:012",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "112"
+        },
+        {
+          "name": "서천동",
+          "sido": "경기도",
+          "sigungu": "용인시",
+          "existingInterchange": false,
+          "stationId": "indeogwon-dongtan:013",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "113",
+          "address": "경기도 용인시 기흥구 서천동 753",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "반월동",
+          "sido": "경기도",
+          "sigungu": "화성시",
+          "existingInterchange": false,
+          "stationId": "indeogwon-dongtan:014",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "114",
+          "address": "경기도 화성시 반월동 944-7",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "능동",
+          "sido": "경기도",
+          "sigungu": "화성시",
+          "existingInterchange": false,
+          "stationId": "indeogwon-dongtan:015",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "115",
+          "address": "경기도 화성시 능동 444-4",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
+        },
+        {
+          "name": "반송동",
+          "sido": "경기도",
+          "sigungu": "화성시",
+          "existingInterchange": false,
+          "stationId": "indeogwon-dongtan:016",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "116",
+          "address": "경기도 화성시 반송동 233-2",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님"
         },
         {
           "name": "동탄",
           "sido": "경기도",
-          "sigungu": "화성시"
+          "sigungu": "화성시",
+          "existingInterchange": true,
+          "stationId": "indeogwon-dongtan:017",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "117",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "정거장 부지 기점 지번의 대표점 · 출입구 아님",
+          "query": "동탄역 SRT",
+          "coordinateNote": "공식 부지 지번은 지도 주소에서 확인되지 않아 기존 환승역 대표점 사용"
+        },
+        {
+          "name": "서동탄",
+          "sido": "경기도",
+          "sigungu": "오산시",
+          "existingInterchange": true,
+          "stationId": "indeogwon-dongtan:018",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "서동탄 지선"
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [
+        "gg-rail:664"
+      ],
+      "expectedStationCount": 18,
+      "routeAliases": [
+        "인덕원~동탄 복선전철"
+      ],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null
     },
     {
       "id": "wolgot-pangyo",
@@ -330,41 +1809,166 @@
       "sourceDate": "2026-06-30",
       "source": "서울시·국가철도공단 공식 사업 안내",
       "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010302",
-      "stationsSourceUrl": "https://www.kr.or.kr/images/template/krhome/sub/05/img_05010302_24_2025.jpg",
+      "stationsSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=638094",
       "targetOpening": "사업 일정은 공식 자료 참고",
-      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "planningNote": "정거장 부지나 역의 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
       "stations": [
         {
           "name": "월곶",
           "sido": "경기도",
-          "sigungu": "시흥시"
+          "sigungu": "시흥시",
+          "existingInterchange": true,
+          "stationId": "wolgot-pangyo:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "장곡",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "시흥시청",
           "sido": "경기도",
-          "sigungu": "시흥시"
+          "sigungu": "시흥시",
+          "existingInterchange": true,
+          "stationId": "wolgot-pangyo:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "매화",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "학온",
+          "sido": "경기도",
+          "sigungu": "광명시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "광명",
           "sido": "경기도",
-          "sigungu": "광명시"
+          "sigungu": "광명시",
+          "existingInterchange": true,
+          "stationId": "wolgot-pangyo:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "만안",
+          "sido": "경기도",
+          "sigungu": "안양시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "안양",
           "sido": "경기도",
-          "sigungu": "안양시"
+          "sigungu": "안양시",
+          "existingInterchange": true,
+          "stationId": "wolgot-pangyo:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "안양운동장",
+          "sido": "경기도",
+          "sigungu": "안양시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:009",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "인덕원",
           "sido": "경기도",
-          "sigungu": "안양시"
+          "sigungu": "안양시",
+          "existingInterchange": true,
+          "stationId": "wolgot-pangyo:010",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "청계",
+          "sido": "경기도",
+          "sigungu": "의왕시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:011",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "서판교",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "existingInterchange": false,
+          "stationId": "wolgot-pangyo:012",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "판교",
           "sido": "경기도",
-          "sigungu": "성남시"
+          "sigungu": "성남시",
+          "existingInterchange": true,
+          "stationId": "wolgot-pangyo:013",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "송도",
+          "sido": "인천광역시",
+          "sigungu": "연수구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationId": "wolgot-pangyo:송도"
+        },
+        {
+          "name": "연수",
+          "sido": "인천광역시",
+          "sigungu": "연수구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationId": "wolgot-pangyo:연수"
+        },
+        {
+          "name": "남동인더스파크",
+          "sido": "인천광역시",
+          "sigungu": "남동구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationId": "wolgot-pangyo:남동인더스파크"
         }
-      ]
+      ],
+      "stationListComplete": false,
+      "routeIds": [
+        "gg-rail:648"
+      ],
+      "expectedStationCount": null,
+      "routeAliases": [
+        "월곶~판교 복선전철"
+      ],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요.",
+      "stationListNote": "본선 및 공용구간의 역 목록. 2026년 실시계획의 송도·연수·남동인더스파크 개량역을 포함하며 최종 운행 정차표와는 구분."
     },
     {
       "id": "shinbundang-homaesil",
@@ -374,21 +1978,91 @@
       "sourceDate": "2025-06-04",
       "source": "서울시·국가철도공단 공식 사업 안내",
       "sourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1120903",
-      "stationsSourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1120903",
+      "stationsSourceUrl": "https://www.suwon.go.kr/webcontent/ckeditor/2025/11/6/0c13a223-99ad-4140-8aca-524f8b37f587.pdf",
       "targetOpening": "사업 일정은 공식 자료 참고",
-      "planningNote": "계획 경유역의 기존 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
+      "planningNote": "정거장 부지나 역의 대표점을 기준으로 비교해요. 새 출입구와 실제 도보시간은 별도로 확인해야 해요.",
       "stations": [
         {
           "name": "광교중앙",
           "sido": "경기도",
-          "sigungu": "수원시"
+          "sigungu": "수원시",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "기존 시점",
+          "stationId": "shinbundang-homaesil:001"
+        },
+        {
+          "name": "수원월드컵경기장",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "SB06",
+          "stationId": "shinbundang-homaesil:002",
+          "address": "경기도 수원시 팔달구 우만동 357-15",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=579341",
+          "addressSourceDate": "2023-12-29",
+          "addressNote": "인덕원~동탄 108 정거장과 통합 부지"
+        },
+        {
+          "name": "수성중사거리",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "SB07",
+          "stationId": "shinbundang-homaesil:003"
         },
         {
           "name": "화서",
           "sido": "경기도",
-          "sigungu": "수원시"
+          "sigungu": "수원시",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "SB08",
+          "stationId": "shinbundang-homaesil:004"
+        },
+        {
+          "name": "구운",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "추가역",
+          "stationId": "shinbundang-homaesil:005",
+          "stageCode": "planning",
+          "stageLabel": "신설 추진",
+          "planningNote": "구운 추가역은 본선 공사 단계와 구분"
+        },
+        {
+          "name": "호매실",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "SB09",
+          "stationId": "shinbundang-homaesil:006"
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [
+        "gg-rail:704"
+      ],
+      "routeAliases": [
+        "신분당선 광교호매실"
+      ],
+      "inventoryKeys": [
+        "신분당선|광교~호매실"
+      ],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null,
+      "expectedStationCount": 6
     },
     {
       "id": "line9-phase4",
@@ -398,21 +2072,66 @@
       "sourceDate": "2025-11-18",
       "source": "지자체·국토교통부 공식 철도계획 안내",
       "sourceUrl": "https://www.gangdong.go.kr/web/newportal/contents/gdp_005_005_012_003",
-      "stationsSourceUrl": "https://ms.smc.seoul.kr/attach/record/SEOUL/appendix/a11/A0064260.pdf",
+      "stationsSourceUrl": "https://ms.smc.seoul.kr/attach/record/SEOUL/appendix/a11/A0071025.pdf?time=20260610094408",
       "targetOpening": "공식 일정 참고",
       "planningNote": "새 구간과의 연결 계획을 비교해요. 기존 노선의 편의 점수가 아니며 새 출입구와 개통 시점은 달라질 수 있어요.",
       "stations": [
         {
           "name": "중앙보훈병원",
           "sido": "서울특별시",
-          "sigungu": "강동구"
+          "sigungu": "강동구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "938",
+          "stationId": "line9-phase4:001"
+        },
+        {
+          "name": "939정거장",
+          "sido": "서울특별시",
+          "sigungu": "강동구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "939",
+          "stationId": "line9-phase4:002"
+        },
+        {
+          "name": "940정거장",
+          "sido": "서울특별시",
+          "sigungu": "강동구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "940",
+          "stationId": "line9-phase4:003"
         },
         {
           "name": "고덕",
           "sido": "서울특별시",
-          "sigungu": "강동구"
+          "sigungu": "강동구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "941",
+          "stationId": "line9-phase4:004"
+        },
+        {
+          "name": "942정거장",
+          "sido": "서울특별시",
+          "sigungu": "강동구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "942",
+          "stationId": "line9-phase4:005"
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": null,
+      "expectedStationCount": 5
     },
     {
       "id": "goyang-eunpyeong",
@@ -422,21 +2141,125 @@
       "sourceDate": "2026-06-11",
       "source": "지자체·국토교통부 공식 철도계획 안내",
       "sourceUrl": "https://gits.gg.go.kr/web/newboard/3386.do?idx=199392861&mode=view",
-      "stationsSourceUrl": "https://mediahub.seoul.go.kr/archives/2018271",
+      "stationsSourceUrl": "https://m.korea.kr/news/policyNewsView.do?newsId=148936986",
       "targetOpening": "공식 일정 참고",
       "planningNote": "새 구간과의 연결 계획을 비교해요. 기존 노선의 편의 점수가 아니며 새 출입구와 개통 시점은 달라질 수 있어요.",
       "stations": [
         {
           "name": "새절",
           "sido": "서울특별시",
-          "sigungu": "은평구"
+          "sigungu": "은평구",
+          "existingInterchange": true,
+          "stationNumber": "연결점",
+          "stationId": "goyang-eunpyeong:000",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "G01정거장",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G01",
+          "stationId": "goyang-eunpyeong:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "G02정거장",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G02",
+          "stationId": "goyang-eunpyeong:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "창릉",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G03",
+          "stationId": "goyang-eunpyeong:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeId": "944174336",
+          "placeReference": {
+            "address_name": "경기 고양시 덕양구 용두동 792-3",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "944174336",
+            "phone": "",
+            "place_name": "창릉역 (2030년예정)",
+            "place_url": "http://place.map.kakao.com/944174336",
+            "road_address_name": "",
+            "x": "126.879842860088",
+            "y": "37.6222804580226"
+          }
+        },
+        {
+          "name": "G04정거장",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G04",
+          "stationId": "goyang-eunpyeong:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "G05정거장",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G05",
+          "stationId": "goyang-eunpyeong:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "G06정거장",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G06",
+          "stationId": "goyang-eunpyeong:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         },
         {
           "name": "화정",
           "sido": "경기도",
-          "sigungu": "고양시"
+          "sigungu": "고양시",
+          "existingInterchange": true,
+          "stationNumber": "G07",
+          "stationId": "goyang-eunpyeong:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "G08정거장",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "stationNumber": "G08",
+          "stationId": "goyang-eunpyeong:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true
         }
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "inventoryKeys": [
+        "고양은평선|새절~고양시청"
+      ],
+      "verifiedAt": "2026-10-19",
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요.",
+      "expectedStationCount": 9,
+      "stationListNote": "2024년 기본계획: G01~G08 신설 8개와 새절 연결점. 개통 구간·역 위치는 후속 설계 확인 필요."
     },
     {
       "id": "wirye-sinsa",
@@ -445,21 +2268,2346 @@
       "stageCode": "planning",
       "targetOpening": "착공·개통일 미확정",
       "sourceDate": "2026-03-10",
-      "verifiedAt": "2026-10-18",
+      "verifiedAt": "2026-10-19",
       "source": "서울시 도시철도망 변경 승인·위례신사선 예비타당성조사 통과 발표",
       "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453805",
-      "stationsSourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453805",
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
       "regionalScopeSourceUrls": [
         "https://mediahub.seoul.go.kr/archives/2015024",
         "https://snvision.seongnam.go.kr/22484"
       ],
       "planningNote": "위례에서 서울 송파·강남으로 이어지는 계획이에요. 역 위치와 이 단지에서 가는 길은 아직 확인되지 않았어요. 착공·개통일도 정해지지 않았어요.",
-      "stations": [],
+      "stations": [
+        {
+          "name": "101정거장",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "stationId": "wirye-sinsa:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "stationId": "wirye-sinsa:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "가락시장",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "stationId": "wirye-sinsa:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "stationId": "wirye-sinsa:104",
+          "stationNumber": "104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "학여울",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:105",
+          "stationNumber": "105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "삼성",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:106",
+          "stationNumber": "106",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "봉은사",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:107",
+          "stationNumber": "107",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "청담",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:108",
+          "stationNumber": "108",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "109정거장",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:109",
+          "stationNumber": "109",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "110정거장",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:110",
+          "stationNumber": "110",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "신사",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "stationId": "wirye-sinsa:111",
+          "stationNumber": "111",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        }
+      ],
       "regionalScopes": [
         "서울특별시:송파구",
         "서울특별시:강남구",
         "경기도:성남시:성남수정구"
-      ]
+      ],
+      "stationListComplete": true,
+      "routeIds": [],
+      "unresolvedReason": null,
+      "expectedStationCount": 11,
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-148·그림 6-23. 후속 설계에서 변경 가능."
+    },
+    {
+      "id": "gtx-a",
+      "name": "GTX-A",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010402",
+      "stationsSourceUrl": "https://www.molit.go.kr/2024plan_traffic/news/bodo_2.pdf",
+      "sourceDate": "2026-06-30",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "운정중앙",
+          "sido": "경기도",
+          "sigungu": "파주시",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:001",
+          "membershipVerified": true
+        },
+        {
+          "name": "킨텍스",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:002",
+          "membershipVerified": true
+        },
+        {
+          "name": "대곡",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:003",
+          "membershipVerified": true
+        },
+        {
+          "name": "연신내",
+          "sido": "서울특별시",
+          "sigungu": "은평구",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:004",
+          "membershipVerified": true
+        },
+        {
+          "name": "서울",
+          "sido": "서울특별시",
+          "sigungu": "중구",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:005",
+          "membershipVerified": true
+        },
+        {
+          "name": "수서",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:006",
+          "membershipVerified": true,
+          "query": "수서역 GTX-A"
+        },
+        {
+          "name": "성남",
+          "sido": "경기도",
+          "sigungu": "성남시",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:007",
+          "membershipVerified": true,
+          "query": "성남역 GTX-A"
+        },
+        {
+          "name": "구성",
+          "sido": "경기도",
+          "sigungu": "용인시",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:008",
+          "membershipVerified": true
+        },
+        {
+          "name": "동탄",
+          "sido": "경기도",
+          "sigungu": "화성시",
+          "existingInterchange": true,
+          "serviceStatus": "operating",
+          "stationId": "gtx-a:009",
+          "membershipVerified": true
+        },
+        {
+          "name": "삼성",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "stationId": "gtx-a:010",
+          "membershipVerified": true
+        },
+        {
+          "name": "창릉",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "placeId": "944174336",
+          "serviceStatus": "planned",
+          "stationId": "gtx-a:011",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 고양시 덕양구 용두동 792-3",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "944174336",
+            "phone": "",
+            "place_name": "창릉역 (2030년예정)",
+            "place_url": "http://place.map.kakao.com/944174336",
+            "road_address_name": "",
+            "x": "126.879842860088",
+            "y": "37.6222804580226"
+          }
+        }
+      ],
+      "routeIds": [
+        "gg-rail:650",
+        "gg-rail:665"
+      ],
+      "stationListComplete": true,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "expectedStationCount": 11,
+      "operationSourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1122164&page=2",
+      "routeAliases": [
+        "광역급행철도 A노선"
+      ],
+      "inventoryKeys": [
+        "수도권 광역급행철도|파주~삼성",
+        "수도권 광역급행철도|삼성~동탄"
+      ],
+      "unresolvedReason": null
+    },
+    {
+      "id": "sinansan",
+      "name": "신안산선",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010402",
+      "stationsSourceUrl": "https://www.kr.or.kr/images/template/krhome/sub/05/img_05010402_05_2024.jpg",
+      "sourceDate": "2026-06-30",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "여의도",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "existingInterchange": true,
+          "stationId": "sinansan:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "preferExistingInterchange": true,
+          "query": "서울 영등포구 여의도역 5호선"
+        },
+        {
+          "name": "영등포",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "existingInterchange": true,
+          "placeId": "448772359",
+          "stationId": "sinansan:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 영등포구 영등포동4가 423-98",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "448772359",
+            "phone": "",
+            "place_name": "영등포역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/448772359",
+            "road_address_name": "",
+            "x": "126.904982416519",
+            "y": "37.5158210586035"
+          }
+        },
+        {
+          "name": "도림사거리",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "existingInterchange": false,
+          "placeId": "1475703139",
+          "stationId": "sinansan:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 영등포구 신길동 362-1",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1475703139",
+            "phone": "",
+            "place_name": "도림사거리역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1475703139",
+            "road_address_name": "",
+            "x": "126.901416664776",
+            "y": "37.5066774501587"
+          }
+        },
+        {
+          "name": "신풍",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "existingInterchange": true,
+          "placeId": "50912990",
+          "stationId": "sinansan:004",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 영등포구 신길동 399",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "50912990",
+            "phone": "",
+            "place_name": "신풍역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/50912990",
+            "road_address_name": "",
+            "x": "126.905654592116",
+            "y": "37.5003198137481"
+          }
+        },
+        {
+          "name": "대림삼거리",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "existingInterchange": false,
+          "placeId": "1620840820",
+          "stationId": "sinansan:005",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 영등포구 대림동 980-1",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1620840820",
+            "phone": "",
+            "place_name": "대림삼거리역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1620840820",
+            "road_address_name": "",
+            "x": "126.907278867959",
+            "y": "37.4900135847942"
+          }
+        },
+        {
+          "name": "구로디지털단지",
+          "sido": "서울특별시",
+          "sigungu": "구로구",
+          "existingInterchange": true,
+          "placeId": "188249978",
+          "stationId": "sinansan:006",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 구로구 구로동 1119",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "188249978",
+            "phone": "",
+            "place_name": "구로디지털단지역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/188249978",
+            "road_address_name": "",
+            "x": "126.902766431082",
+            "y": "37.4844957898426"
+          }
+        },
+        {
+          "name": "신독산",
+          "sido": "서울특별시",
+          "sigungu": "금천구",
+          "existingInterchange": false,
+          "placeId": "155510731",
+          "stationId": "sinansan:007",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 금천구 독산동 291-4",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "155510731",
+            "phone": "",
+            "place_name": "신독산역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/155510731",
+            "road_address_name": "",
+            "x": "126.897883655057",
+            "y": "37.4683023344046"
+          }
+        },
+        {
+          "name": "시흥사거리",
+          "sido": "서울특별시",
+          "sigungu": "금천구",
+          "existingInterchange": false,
+          "placeId": "454414763",
+          "stationId": "sinansan:008",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "서울 금천구 시흥동 1000-48",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "454414763",
+            "phone": "",
+            "place_name": "시흥사거리역 (2026년 12월 예정)",
+            "place_url": "http://place.map.kakao.com/454414763",
+            "road_address_name": "",
+            "x": "126.900799733562",
+            "y": "37.4540598233408"
+          }
+        },
+        {
+          "name": "석수",
+          "sido": "경기도",
+          "sigungu": "안양시",
+          "existingInterchange": true,
+          "placeId": "154704370",
+          "stationId": "sinansan:009",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 안양시 만안구 석수동 702-13",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "154704370",
+            "phone": "",
+            "place_name": "석수역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/154704370",
+            "road_address_name": "",
+            "x": "126.901998348186",
+            "y": "37.4362730017876"
+          }
+        },
+        {
+          "name": "광명",
+          "sido": "경기도",
+          "sigungu": "광명시",
+          "existingInterchange": true,
+          "placeId": "2133762980",
+          "stationId": "sinansan:010",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 광명시 일직동 544",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "2133762980",
+            "phone": "",
+            "place_name": "광명역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/2133762980",
+            "road_address_name": "",
+            "x": "126.882894662953",
+            "y": "37.4173207507166"
+          }
+        },
+        {
+          "name": "목감",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": false,
+          "placeId": "1345598166",
+          "stationId": "sinansan:011",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 시흥시 조남동 744",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1345598166",
+            "phone": "",
+            "place_name": "목감역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1345598166",
+            "road_address_name": "",
+            "x": "126.861619719766",
+            "y": "37.3812028683482"
+          }
+        },
+        {
+          "name": "장하",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": false,
+          "stationId": "sinansan:012",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "성포",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": false,
+          "placeId": "1265446762",
+          "stationId": "sinansan:013",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 안산시 상록구 성포동 593-38",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1265446762",
+            "phone": "",
+            "place_name": "성포역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1265446762",
+            "road_address_name": "",
+            "x": "126.846250756489",
+            "y": "37.327847564062"
+          }
+        },
+        {
+          "name": "중앙",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "placeId": "1190230566",
+          "stationId": "sinansan:014",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 안산시 단원구 고잔동 554-2",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "1190230566",
+            "phone": "",
+            "place_name": "중앙역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/1190230566",
+            "road_address_name": "",
+            "x": "126.83978540343043",
+            "y": "37.31622017385478"
+          }
+        },
+        {
+          "name": "호수",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": false,
+          "placeId": "2104634968",
+          "stationId": "sinansan:015",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 안산시 단원구 고잔동 784",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "2104634968",
+            "phone": "",
+            "place_name": "호수역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/2104634968",
+            "road_address_name": "",
+            "x": "126.82947639740907",
+            "y": "37.30777389336706"
+          }
+        },
+        {
+          "name": "한양대에리카캠퍼스",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": false,
+          "placeId": "359134528",
+          "stationId": "sinansan:016",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "placeReference": {
+            "address_name": "경기 안산시 상록구 사동 1636",
+            "category_group_code": "",
+            "category_group_name": "",
+            "category_name": "교통,수송 > 지하철,전철",
+            "distance": "",
+            "id": "359134528",
+            "phone": "",
+            "place_name": "한양대에리카캠퍼스역 (2026년12월예정)",
+            "place_url": "http://place.map.kakao.com/359134528",
+            "road_address_name": "",
+            "x": "126.826540024373",
+            "y": "37.2970409997457"
+          }
+        },
+        {
+          "name": "학온",
+          "sido": "경기도",
+          "sigungu": "광명시",
+          "existingInterchange": false,
+          "stationId": "sinansan:017",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "매화",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": false,
+          "stationId": "sinansan:018",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "시흥시청",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": true,
+          "stationId": "sinansan:019",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "시흥능곡",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": true,
+          "stationId": "sinansan:020",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "달미",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "sinansan:021",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "선부",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "sinansan:022",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "초지",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "sinansan:023",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "시우",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "sinansan:024",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "원시",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "sinansan:025",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "국제테마파크",
+          "sido": "경기도",
+          "sigungu": "화성시",
+          "existingInterchange": false,
+          "stationId": "sinansan:026",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        }
+      ],
+      "routeIds": [
+        "gg-rail:646"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "expectedStationCount": null,
+      "stationListNote": "1단계 신설·공용구간. 공용 서해선 중간 정차 여부와 추가역의 최신 실시계획 검수 필요.",
+      "routeAliases": [
+        "신안산선"
+      ],
+      "inventoryKeys": [
+        "신안산선|안산~여의도, 여의도~서울"
+      ],
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "munsan-dorasan",
+      "name": "경의선 전철화",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "문산",
+          "sido": "경기도",
+          "sigungu": "파주시",
+          "existingInterchange": true,
+          "stationId": "munsan-dorasan:001",
+          "serviceStatus": "operating",
+          "membershipVerified": true
+        },
+        {
+          "name": "임진강",
+          "sido": "경기도",
+          "sigungu": "파주시",
+          "existingInterchange": true,
+          "stationId": "munsan-dorasan:002",
+          "serviceStatus": "operating",
+          "membershipVerified": true
+        },
+        {
+          "name": "운천",
+          "sido": "경기도",
+          "sigungu": "파주시",
+          "existingInterchange": true,
+          "stationId": "munsan-dorasan:003",
+          "serviceStatus": "operating",
+          "membershipVerified": true
+        },
+        {
+          "name": "도라산",
+          "sido": "경기도",
+          "sigungu": "파주시",
+          "existingInterchange": true,
+          "stationId": "munsan-dorasan:004",
+          "serviceStatus": "operating",
+          "membershipVerified": true
+        }
+      ],
+      "routeIds": [
+        "gg-rail:647"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "경의선 전철화"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "sosa-wonsi",
+      "name": "소사~원시 복선전철",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:641"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "소사~원시 복선전철"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "dongducheon-yeoncheon",
+      "name": "경원선 전철화",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:642"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "경원선 전철화"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "jinjeop",
+      "name": "진접선",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:643"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "진접선"
+      ],
+      "inventoryKeys": [
+        "진접선|당고개~진접"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "byeollae",
+      "name": "별내선",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:644"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "별내선"
+      ],
+      "inventoryKeys": [
+        "별내선|암사~별내"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "daegok-sosa",
+      "name": "대곡~소사 복선전철",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:645"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "대곡~소사 복선전철"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "dobongsan-okjeong",
+      "name": "도봉산~옥정 광역철도",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "도봉산",
+          "sido": "서울특별시",
+          "sigungu": "도봉구",
+          "existingInterchange": true,
+          "stationId": "dobongsan-okjeong:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "탑석",
+          "sido": "경기도",
+          "sigungu": "의정부시",
+          "existingInterchange": true,
+          "stationId": "dobongsan-okjeong:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        }
+      ],
+      "routeIds": [
+        "gg-rail:649"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "도봉산~옥정 광역철도"
+      ],
+      "inventoryKeys": [
+        "도봉산~포천선|도봉산~옥정"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "suwon-ktx",
+      "name": "수원발 KTX직결사업",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "수원",
+          "sido": "경기도",
+          "sigungu": "수원시",
+          "existingInterchange": true,
+          "stationId": "suwon-ktx:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "평택지제",
+          "sido": "경기도",
+          "sigungu": "평택시",
+          "existingInterchange": true,
+          "stationId": "suwon-ktx:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        }
+      ],
+      "routeIds": [
+        "gg-rail:653"
+      ],
+      "stationListComplete": true,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "수원발 KTX직결사업"
+      ],
+      "expectedStationCount": 2,
+      "unresolvedReason": null,
+      "stationListNote": "수도권 내 승하차역 목록. 기존 고속선의 지방 정차역은 이 범위에 포함하지 않음."
+    },
+    {
+      "id": "incheon-ktx",
+      "name": "인천발 KTX직결사업",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "송도",
+          "sido": "인천광역시",
+          "sigungu": "연수구",
+          "existingInterchange": true,
+          "stationId": "incheon-ktx:001",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "초지",
+          "sido": "경기도",
+          "sigungu": "안산시",
+          "existingInterchange": true,
+          "stationId": "incheon-ktx:002",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        },
+        {
+          "name": "어천",
+          "sido": "경기도",
+          "sigungu": "화성시",
+          "existingInterchange": true,
+          "stationId": "incheon-ktx:003",
+          "serviceStatus": "planned",
+          "membershipVerified": true
+        }
+      ],
+      "routeIds": [
+        "gg-rail:654"
+      ],
+      "stationListComplete": true,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "인천발 KTX직결사업"
+      ],
+      "expectedStationCount": 3,
+      "unresolvedReason": null,
+      "stationListNote": "수도권 내 승하차역 목록. 기존 고속선의 지방 정차역은 이 범위에 포함하지 않음."
+    },
+    {
+      "id": "gimpo-gold",
+      "name": "김포 도시철도",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:656"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "김포 도시철도"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "icheon-mungyeong",
+      "name": "이천~문경 단선전철",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:659"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "이천~문경 단선전철"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "seohae",
+      "name": "서해선 복선전철",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:660"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "서해선 복선전철"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "suin",
+      "name": "수인선",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:661"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "수인선"
+      ],
+      "inventoryKeys": [
+        "수인선|수원~인천"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "hanam",
+      "name": "하남선",
+      "stage": "개통",
+      "stageCode": "completed",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:662"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "하남선"
+      ],
+      "inventoryKeys": [
+        "하남선|상일~검단산"
+      ],
+      "unresolvedReason": "이미 개통한 구간으로 향후 교통 변화 평가에서 제외해요."
+    },
+    {
+      "id": "poseung-pyeongtaek",
+      "name": "포승~평택 단선철도",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "stationsSourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7",
+      "sourceDate": "2026-10-16",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [
+        "gg-rail:663"
+      ],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "routeAliases": [
+        "포승~평택 단선철도"
+      ],
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "daejang-hongdae",
+      "name": "대장홍대선 · 부천대장~홍대입구",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010401",
+      "stationsSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=625657",
+      "sourceDate": "2026-06-30",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "100정거장",
+          "sido": "경기도",
+          "sigungu": "부천시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "100",
+          "stationId": "daejang-hongdae:001"
+        },
+        {
+          "name": "101정거장",
+          "sido": "경기도",
+          "sigungu": "부천시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "101",
+          "stationId": "daejang-hongdae:002"
+        },
+        {
+          "name": "원종",
+          "sido": "경기도",
+          "sigungu": "부천시",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "102",
+          "stationId": "daejang-hongdae:003"
+        },
+        {
+          "name": "103정거장",
+          "sido": "경기도",
+          "sigungu": "부천시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "103",
+          "stationId": "daejang-hongdae:004"
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "104",
+          "stationId": "daejang-hongdae:005"
+        },
+        {
+          "name": "화곡",
+          "sido": "서울특별시",
+          "sigungu": "강서구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "105",
+          "stationId": "daejang-hongdae:006"
+        },
+        {
+          "name": "106정거장",
+          "sido": "서울특별시",
+          "sigungu": "강서구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "106",
+          "stationId": "daejang-hongdae:007"
+        },
+        {
+          "name": "가양",
+          "sido": "서울특별시",
+          "sigungu": "강서구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "107",
+          "stationId": "daejang-hongdae:008"
+        },
+        {
+          "name": "덕은",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "108",
+          "stationId": "daejang-hongdae:009",
+          "address": "경기도 고양시 덕양구 덕은동 721",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=615588",
+          "addressSourceDate": "2025-07-18"
+        },
+        {
+          "name": "109정거장",
+          "sido": "서울특별시",
+          "sigungu": "마포구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "109",
+          "stationId": "daejang-hongdae:010"
+        },
+        {
+          "name": "110정거장",
+          "sido": "서울특별시",
+          "sigungu": "마포구",
+          "existingInterchange": false,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "110",
+          "stationId": "daejang-hongdae:011"
+        },
+        {
+          "name": "홍대입구",
+          "sido": "서울특별시",
+          "sigungu": "마포구",
+          "existingInterchange": true,
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "stationNumber": "111",
+          "stationId": "daejang-hongdae:012"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": true,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "대장홍대선|부천대장~홍대입구"
+      ],
+      "expectedStationCount": 12,
+      "unresolvedReason": null
+    },
+    {
+      "id": "wirye-gwacheon",
+      "name": "위례과천선 · 복정~정부과천청사",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "복정",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": true,
+          "stationId": "wirye-gwacheon:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "정부과천청사",
+          "sido": "경기도",
+          "sigungu": "과천시",
+          "existingInterchange": true,
+          "stationId": "wirye-gwacheon:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "위례과천선|복정~정부과천청사"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "singuro",
+      "name": "신구로선 · 시흥대야~목동",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "시흥대야",
+          "sido": "경기도",
+          "sigungu": "시흥시",
+          "existingInterchange": true,
+          "stationId": "singuro:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "목동",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "existingInterchange": true,
+          "stationId": "singuro:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "신구로선|시흥대야~목동"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "second-gyeongin",
+      "name": "제2경인선 · 청학~노온사",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "제2경인선|청학~노온사"
+      ],
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "byeollae-extension",
+      "name": "별내선 연장 · 별내역~별가람역",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "별내",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": true,
+          "stationId": "byeollae-extension:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "별내별가람",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": true,
+          "stationId": "byeollae-extension:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "별내선 연장|별내역~별가람역"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "gangdong-hanam-namyangju",
+      "name": "강동하남남양주선",
+      "stage": "기본계획 승인",
+      "stageCode": "planning",
+      "source": "국토교통부 기본계획 승인 보도자료",
+      "sourceUrl": "https://www.korea.kr/briefing/pressReleaseView.do?newsId=156667215",
+      "stationsSourceUrl": "https://www.korea.kr/common/download.do?fileId=197997607&tblKey=GMN",
+      "sourceDate": "2024-12-24",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "stationId": "gangdong-hanam-namyangju:943",
+          "stationNumber": "943",
+          "name": "943정거장",
+          "sido": "서울특별시",
+          "sigungu": "강동구",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:944",
+          "stationNumber": "944",
+          "name": "944정거장",
+          "sido": "경기도",
+          "sigungu": "하남시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:945",
+          "stationNumber": "945",
+          "name": "945정거장",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:946",
+          "stationNumber": "946",
+          "name": "946정거장",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:947",
+          "stationNumber": "947",
+          "name": "947정거장",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:948",
+          "stationNumber": "948",
+          "name": "948정거장",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:949",
+          "stationNumber": "949",
+          "name": "949정거장",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "gangdong-hanam-namyangju:950",
+          "stationNumber": "950",
+          "name": "950정거장",
+          "sido": "경기도",
+          "sigungu": "남양주시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": true,
+      "planningNote": "기본계획 기준. 정거장 부지의 상세 위치는 추가 확인이 필요해요.",
+      "inventoryKeys": [
+        "강동하남남양주선|강동~하남~남양주"
+      ],
+      "unresolvedReason": null,
+      "expectedStationCount": 8,
+      "stationListNote": "국토교통부 2024년 12월 기본계획 승인 노선도 943~950. 9호선 4단계 942정거장은 별도 사업."
+    },
+    {
+      "id": "incheon2-goyang",
+      "name": "인천2호선 고양 연장 · 인천 서구~고양 일산서구",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "인천2호선 고양 연장|인천 서구~고양 일산서구"
+      ],
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "west-gtx",
+      "name": "서부권 광역급행철도 · 장기~부천종합운동장",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "장기",
+          "sido": "경기도",
+          "sigungu": "김포시",
+          "existingInterchange": true,
+          "stationId": "west-gtx:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "부천종합운동장",
+          "sido": "경기도",
+          "sigungu": "부천시",
+          "existingInterchange": true,
+          "stationId": "west-gtx:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "서부권 광역급행철도|장기~부천종합운동장"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "songpa-hanam",
+      "name": "송파하남선",
+      "stage": "기본계획 승인",
+      "stageCode": "planning",
+      "source": "하남시 기본계획 승인 보도자료",
+      "sourceUrl": "https://www.hanam.go.kr/www/selectBbsNttView.do?bbsNo=1164&key=10221&nttNo=492224",
+      "stationsSourceUrl": "https://www.hanam.go.kr/www/selectBbsNttView.do?bbsNo=1164&key=10221&nttNo=492224",
+      "sourceDate": "2025-07-22",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "stationId": "songpa-hanam:연결점",
+          "stationNumber": "연결점",
+          "name": "오금",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": true,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "songpa-hanam:100",
+          "stationNumber": "100",
+          "name": "100정거장",
+          "sido": "서울특별시",
+          "sigungu": "송파구",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "songpa-hanam:101",
+          "stationNumber": "101",
+          "name": "101정거장",
+          "sido": "경기도",
+          "sigungu": "하남시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned",
+          "referenceOnly": true,
+          "referenceQuery": "단샘초등학교",
+          "addressSourceUrl": "https://www.hanam.go.kr/www/selectBbsNttView.do?bbsNo=1164&integrDeptCode=&key=10221&nttNo=502273&pageIndex=7&searchCnd=all&searchCtgry=&searchKrwd=&selectPageUnit="
+        },
+        {
+          "stationId": "songpa-hanam:102",
+          "stationNumber": "102",
+          "name": "102정거장",
+          "sido": "경기도",
+          "sigungu": "하남시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "songpa-hanam:103",
+          "stationNumber": "103",
+          "name": "103정거장",
+          "sido": "경기도",
+          "sigungu": "하남시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "songpa-hanam:104",
+          "stationNumber": "104",
+          "name": "104정거장",
+          "sido": "경기도",
+          "sigungu": "하남시",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "stationId": "songpa-hanam:105",
+          "stationNumber": "105",
+          "name": "하남시청",
+          "sido": "경기도",
+          "sigungu": "하남시",
+          "existingInterchange": true,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": true,
+      "planningNote": "기본계획 기준. 역 부지와 출입구는 후속 설계에서 바뀔 수 있어요.",
+      "inventoryKeys": [
+        "송파하남선|오금~하남시청"
+      ],
+      "expectedStationCount": 7,
+      "unresolvedReason": null,
+      "stationListNote": "신설 6곳(100~105) 및 오금 연결점. 하남시 2025년 승인 보도자료 기준."
+    },
+    {
+      "id": "wirye-samdong",
+      "name": "위례삼동선 · 위례~삼동",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "삼동",
+          "sido": "경기도",
+          "sigungu": "광주시",
+          "existingInterchange": true,
+          "stationId": "wirye-samdong:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "위례삼동선|위례~삼동"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "bundang-cheongnyangni",
+      "name": "분당선 · 왕십리~청량리",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "왕십리",
+          "sido": "서울특별시",
+          "sigungu": "성동구",
+          "existingInterchange": true,
+          "stationId": "bundang-cheongnyangni:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "청량리",
+          "sido": "서울특별시",
+          "sigungu": "동대문구",
+          "existingInterchange": true,
+          "stationId": "bundang-cheongnyangni:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "분당선|왕십리~청량리"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "bundang-osan",
+      "name": "분당선 연장 · 기흥~오산",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "기흥",
+          "sido": "경기도",
+          "sigungu": "용인시",
+          "existingInterchange": true,
+          "stationId": "bundang-osan:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "오산",
+          "sido": "경기도",
+          "sigungu": "오산시",
+          "existingInterchange": true,
+          "stationId": "bundang-osan:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "분당선 연장|기흥~오산"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "ilsan-geumneung",
+      "name": "일산선 연장 · 대화~금릉",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "대화",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": true,
+          "stationId": "ilsan-geumneung:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "금릉",
+          "sido": "경기도",
+          "sigungu": "파주시",
+          "existingInterchange": true,
+          "stationId": "ilsan-geumneung:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "일산선 연장|대화~금릉"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "shinbundang-bongdam",
+      "name": "신분당선 · 호매실~봉담",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "신분당선|호매실~봉담"
+      ],
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "shinbundang-yongsan",
+      "name": "신분당선 · 용산~강남",
+      "stage": "설계 단계",
+      "stageCode": "planning",
+      "source": "국가철도공단 수도권 철도건설 사업현황",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010401",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2026-06-30",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "용산",
+          "sido": "서울특별시",
+          "sigungu": "용산구",
+          "existingInterchange": true,
+          "stationId": "shinbundang-yongsan:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "국립중앙박물관",
+          "sido": "서울특별시",
+          "sigungu": "용산구",
+          "existingInterchange": false,
+          "stationId": "shinbundang-yongsan:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "동빙고",
+          "sido": "서울특별시",
+          "sigungu": "용산구",
+          "existingInterchange": false,
+          "stationId": "shinbundang-yongsan:003",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "신사",
+          "sido": "서울특별시",
+          "sigungu": "강남구",
+          "existingInterchange": true,
+          "stationId": "shinbundang-yongsan:004",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "용산~강남 사업 중 미개통 구간. 세부 정거장과 위치는 후속 설계 확인이 필요해요.",
+      "inventoryKeys": [
+        "신분당선|용산~강남"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "okjeong-pocheon",
+      "name": "옥정~포천 광역철도",
+      "stage": "공사 중",
+      "stageCode": "construction",
+      "source": "경기도의회 공사 착공 현황 · 토지이음 사업계획 승인",
+      "sourceUrl": "https://www.ggc.go.kr/site/cmt/xb/lwmkr/lawmakerpressrelease/284671",
+      "stationsSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=615534",
+      "sourceDate": "2025-03-27",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "201정거장",
+          "stationNumber": "201",
+          "stationId": "okjeong-pocheon:201",
+          "sido": "경기도",
+          "sigungu": "양주시",
+          "address": "경기도 양주시 옥정동 955-5",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=615534",
+          "addressSourceDate": "2025-07-04",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "202정거장",
+          "stationNumber": "202",
+          "stationId": "okjeong-pocheon:202",
+          "sido": "경기도",
+          "sigungu": "포천시",
+          "address": "경기도 포천시 소흘읍 송우리 641-152",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=615534",
+          "addressSourceDate": "2025-07-04",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "203정거장",
+          "stationNumber": "203",
+          "stationId": "okjeong-pocheon:203",
+          "sido": "경기도",
+          "sigungu": "포천시",
+          "address": "경기도 포천시 선단동 50-2",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=615534",
+          "addressSourceDate": "2025-07-04",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "204정거장",
+          "stationNumber": "204",
+          "stationId": "okjeong-pocheon:204",
+          "sido": "경기도",
+          "sigungu": "포천시",
+          "address": "경기도 포천시 군내면 구읍리 737-13",
+          "addressSourceUrl": "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?seq=615534",
+          "addressSourceDate": "2025-07-04",
+          "existingInterchange": false,
+          "membershipVerified": true,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": true,
+      "planningNote": "정거장 번호는 고시 기준이며 역명과 개통 일정은 변경될 수 있어요.",
+      "inventoryKeys": [
+        "도봉산~포천선|옥정~포천"
+      ],
+      "unresolvedReason": null,
+      "expectedStationCount": 4
+    },
+    {
+      "id": "shinbundang-northwest",
+      "name": "신분당선 서북부연장 · 용산~삼송",
+      "stage": "현재 진행 단계 확인 중",
+      "stageCode": "unknown",
+      "source": "국가·지자체 공식 철도 사업 자료",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "stationsSourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp",
+      "sourceDate": "2021-07-09",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "공식 일정 참고",
+      "stations": [
+        {
+          "name": "용산",
+          "sido": "서울특별시",
+          "sigungu": "용산구",
+          "existingInterchange": true,
+          "stationId": "shinbundang-northwest:001",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        },
+        {
+          "name": "삼송",
+          "sido": "경기도",
+          "sigungu": "고양시",
+          "existingInterchange": true,
+          "stationId": "shinbundang-northwest:002",
+          "membershipVerified": false,
+          "serviceStatus": "planned"
+        }
+      ],
+      "routeIds": [],
+      "stationListComplete": false,
+      "planningNote": "역 위치는 참고 위치예요. 새 출입구와 실제 걸어가는 시간은 별도로 확인해야 해요.",
+      "inventoryKeys": [
+        "신분당선 서북부연장|용산~삼송"
+      ],
+      "expectedStationCount": null,
+      "unresolvedReason": "전체 정거장 목록 또는 위치를 추가 확인해야 해요."
+    },
+    {
+      "id": "nangok",
+      "name": "난곡선",
+      "stage": "계획 단계",
+      "stageCode": "planning",
+      "source": "서울시 도시철도망 구축계획 변경",
+      "sourceUrl": "https://news.seoul.go.kr/traffic/archives/519066",
+      "sourceDate": "2026-02-13",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "미확정",
+      "routeIds": [],
+      "inventoryKeys": [],
+      "planningNote": "계획 단계로 역 위치와 일정이 바뀔 수 있어요.",
+      "stationListComplete": true,
+      "expectedStationCount": 5,
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-38~39. 후속 설계에서 변경 가능.",
+      "stations": [
+        {
+          "name": "신대방",
+          "sido": "서울특별시",
+          "sigungu": "동작구",
+          "stationId": "nangok:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "관악구",
+          "stationId": "nangok:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "난곡사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "103정거장",
+          "sido": "서울특별시",
+          "sigungu": "관악구",
+          "stationId": "nangok:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "난곡우체국사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "관악구",
+          "stationId": "nangok:104",
+          "stationNumber": "104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울난곡초등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "105정거장",
+          "sido": "서울특별시",
+          "sigungu": "관악구",
+          "stationId": "nangok:105",
+          "stationNumber": "105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울난향초등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        }
+      ],
+      "unresolvedReason": null
+    },
+    {
+      "id": "mokdong",
+      "name": "목동선",
+      "stage": "계획 단계",
+      "stageCode": "planning",
+      "source": "서울시 도시철도망 구축계획 변경",
+      "sourceUrl": "https://news.seoul.go.kr/traffic/archives/519066",
+      "sourceDate": "2026-02-13",
+      "verifiedAt": "2026-10-19",
+      "targetOpening": "미확정",
+      "routeIds": [],
+      "inventoryKeys": [],
+      "planningNote": "계획 단계로 역 위치와 일정이 바뀔 수 있어요.",
+      "stationListComplete": true,
+      "expectedStationCount": 12,
+      "stationsSourceUrl": "https://news.seoul.go.kr/traffic/files/2026/10/6ac5d49f047316.40329483.pdf",
+      "stationListNote": "2026년 2월 승인된 제2차 도시철도망 변경 요약보고서 표 6-68~69. 후속 설계에서 변경 가능.",
+      "stations": [
+        {
+          "name": "101정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:101",
+          "stationNumber": "101",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "광영여자고등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "102정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:102",
+          "stationNumber": "102",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "신월사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "103정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:103",
+          "stationNumber": "103",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "서울신원초등학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "104정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:104",
+          "stationNumber": "104",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "105정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:105",
+          "stationNumber": "105",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "강월초교입구사거리",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "106정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:106",
+          "stationNumber": "106",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "금옥중학교",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "107정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:107",
+          "stationNumber": "107",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "신트리공원",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "108정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:108",
+          "stationNumber": "108",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "양천구청",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "오목교",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:109",
+          "stationNumber": "109",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        },
+        {
+          "name": "110정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:110",
+          "stationNumber": "110",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false,
+          "referenceOnly": true,
+          "referenceQuery": "SBS방송센터",
+          "planningNote": "공식 계획서의 주변 시설을 표시한 것으로 역 부지나 출입구 위치는 아니에요."
+        },
+        {
+          "name": "111정거장",
+          "sido": "서울특별시",
+          "sigungu": "양천구",
+          "stationId": "mokdong:111",
+          "stationNumber": "111",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": false
+        },
+        {
+          "name": "당산",
+          "sido": "서울특별시",
+          "sigungu": "영등포구",
+          "stationId": "mokdong:112",
+          "stationNumber": "112",
+          "serviceStatus": "planned",
+          "membershipVerified": true,
+          "existingInterchange": true
+        }
+      ],
+      "unresolvedReason": null
     }
   ]
 }

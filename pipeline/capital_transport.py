@@ -122,6 +122,10 @@ def for_complex(identity):
             'verifiedAt': road['reviewedAt'],
             'note': '같은 시·구의 도로 계획이에요. 단지에서 가까운 도로나 차량 이동시간 개선을 뜻하지 않아요.',
         })
+    import project_official_links
+    from living_area_rail_policy import annotate
+    projects = [{**(annotate(p) if p['category'] == 'rail' else p),
+                 **project_official_links.for_project(p)} for p in projects]
     return {
         'status': 'partial' if in_scope else 'out_of_scope',
         'scope': '서울·경기·인천',

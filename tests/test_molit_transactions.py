@@ -475,6 +475,32 @@ class MolitTransactionsTest(unittest.TestCase):
 
         self.assertEqual(result, items)
 
+    def test_official_api_uses_system_tls_client_after_python_certificate_failure(self):
+        xml = "<response><header><resultCode>000</resultCode></header><body><totalCount>0</totalCount></body></response>"
+        completed = mock.Mock(stdout=xml.encode("utf-8"))
+        with mock.patch.object(
+            molit_transactions.requests,
+            "get",
+            side_effect=molit_transactions.requests.exceptions.SSLError("certificate chain"),
+        ), mock.patch.object(
+            molit_transactions.subprocess,
+            "run",
+            return_value=completed,
+        ) as run:
+            response = molit_transactions._official_api_xml(
+                molit_transactions.APARTMENT_ENDPOINT,
+                {"serviceKey": "test-key", "LAWD_CD": "11230", "DEAL_YMD": "202610"},
+                5,
+            )
+
+        command = run.call_args.args[0]
+        self.assertEqual(response, xml)
+        self.assertIn("--proto", command)
+        self.assertIn("=https", command)
+        self.assertNotIn("--insecure", command)
+        self.assertNotIn("-k", command)
+        self.assertTrue(command[-1].startswith("https://"))
+
     def test_fetch_month_reads_every_api_page(self):
         def response_for(name, total_count):
             response = mock.Mock()

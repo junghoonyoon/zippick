@@ -1213,8 +1213,9 @@ class BudgetCandidatesTest(unittest.TestCase):
         parent = budget_candidates._find_entity("산성역 자이푸르지오", "성남수정구")
         alias_keys = budget_candidates._entity_alias_keys(parent)
         self.assertNotIn("산성역자이푸르지오2단지", alias_keys)
-
-        matches = budget_candidates._find_entities("산성역자이푸르지오2단지", "성남수정구")
+        matches = budget_candidates._find_entities(
+            "산성역자이푸르지오2단지", "성남수정구", "신흥동", "6963",
+        )
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0]["name"], "산성역자이푸르지오 2단지")
         self.assertEqual(matches[0]["jibun"], "6963")
@@ -1252,6 +1253,29 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(result["budgetSource"], "input")
         self.assertEqual(result["budgetEok"], 8.9)
         self.assertEqual(result["policySnapshot"]["estimatedPurchaseCeilingEok"], result["budgetEok"])
+
+    def test_candidate_price_uses_exact_older_trade_when_recent_window_is_empty(self):
+        row = {"name": "검증단지", "region": "동대문구", "areaLabel": "전용 84㎡"}
+        entity = {"apartmentId": "verified", "legalDong": "용두동", "jibun": "1"}
+        stale_band = {"lookbackMonths": 36, "transactionCount": 1}
+        lookbacks = []
+
+        def price_band(*_args, **kwargs):
+            lookbacks.append(kwargs.get("lookback_months"))
+            return stale_band if kwargs.get("lookback_months") == 36 else None
+
+        with mock.patch.object(budget_candidates, "_price_lookup_entity", return_value=entity), \
+             mock.patch.object(
+                 budget_candidates.molit_transactions,
+                 "price_band_for_apartment",
+                 side_effect=price_band,
+             ), \
+             mock.patch.object(budget_candidates, "_apply_live_band", return_value=row) as apply:
+            result = budget_candidates._apply_live_price(row)
+
+        self.assertIs(result, row)
+        self.assertEqual(lookbacks, [None, 36])
+        self.assertEqual(apply.call_args.args[1], stale_band)
 
 
 class RegionMatchTest(unittest.TestCase):

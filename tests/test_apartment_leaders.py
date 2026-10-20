@@ -48,7 +48,7 @@ class ApartmentLeadersTest(unittest.TestCase):
         self.assertEqual(rachel.get("status"), "분양권")
         self.assertEqual(rachel.get("lawdCd"), "11440")
 
-    def test_jungnang_leaders_keep_riversen_as_one_presale_complex(self):
+    def test_jungnang_leaders_keep_riversen_parcels_separate(self):
         jungnang = apartment_leaders.matching_entities("서울특별시", "중랑구")
         riversen = [
             entity for entity in jungnang
@@ -56,10 +56,13 @@ class ApartmentLeadersTest(unittest.TestCase):
             or any("리버센" in alias for alias in entity.get("aliases") or [])
         ]
 
-        self.assertEqual(len(riversen), 1)
-        self.assertEqual(riversen[0]["name"], "리버센SK뷰롯데캐슬")
-        self.assertEqual(riversen[0]["households"], 1055)
-        self.assertEqual(riversen[0]["status"], "분양권")
+        self.assertEqual(len(riversen), 2)
+        by_parcel = {entity["jibun"]: entity for entity in riversen}
+        self.assertEqual(set(by_parcel), {"462", "331-1"})
+        self.assertEqual(by_parcel["462"]["name"], "리버센SK뷰롯데캐슬")
+        self.assertEqual(by_parcel["462"]["households"], 1055)
+        self.assertEqual(by_parcel["462"]["status"], "")
+        self.assertEqual(by_parcel["331-1"]["status"], "분양권")
 
     def test_region_prefetches_apartment_and_presale_feeds_separately(self):
         entities = [

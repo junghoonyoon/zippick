@@ -13,6 +13,8 @@ from zoneinfo import ZoneInfo
 import requests
 
 import config
+import apartment_identity
+import apartment_sections
 
 if str(config.PARENT_PIPELINE_DIR) not in sys.path:
     sys.path.append(str(config.PARENT_PIPELINE_DIR))
@@ -252,6 +254,7 @@ def _is_rental_row(row):
     return (
         any(marker in key for marker in rental_markers)
         or any(marker in key for marker in public_housing_markers)
+        or bool(re.search(r"\(\s*임대\s*\)", text))
     )
 
 
@@ -314,17 +317,29 @@ def _apartment_display_name(row):
     name = _clean_entity_name(row.get("대표단지명") or row.get("단지명_도로명주소") or row.get("단지명_건축물대장") or row.get("단지명_공시가격"))
     official = _clean_entity_name(row.get("단지명_공시가격"))
     building_name = _clean_entity_name(row.get("단지명_건축물대장"))
+    # Preserve the official phase before merging source records.
+    if not apartment_identity.phase_numbers(name) and apartment_identity.phase_numbers(official):
+        return _strip_building_dong_suffix(official)
+    if not apartment_identity.phase_numbers(name):
+        numbered = [value for value in (building_name, row.get('단지명_도로명주소'),
+                    *str(row.get('별칭') or '').split('|')) if apartment_identity.phase_numbers(value)]
+        signatures = {tuple((k, tuple(sorted(v))) for k, v in sorted(apartment_identity.phase_numbers(value).items()))
+                      for value in numbered}
+        if len(signatures) == 1:
+            return _strip_building_dong_suffix(numbered[0])
     if _has_building_dong_suffix(name):
         if _is_usable_apartment_name(official) and _is_specific_numbered_variant(
             _strip_building_dong_suffix(name), official,
         ):
             return official
         for candidate in (building_name, official, _strip_building_dong_suffix(name)):
-            if _is_usable_apartment_name(candidate) and not _has_building_dong_suffix(candidate):
+            if (_is_usable_apartment_name(candidate) and not _has_building_dong_suffix(candidate)
+                    and (not apartment_identity.phase_numbers(name) or apartment_identity.phase_numbers(candidate))):
                 return candidate
     if _is_usable_apartment_name(official) and _is_specific_numbered_variant(name, official):
         return official
-    if name.endswith("아파트") and _is_usable_apartment_name(official):
+    if (name.endswith("아파트") and _is_usable_apartment_name(official)
+            and (not apartment_identity.phase_numbers(name) or apartment_identity.phase_numbers(official))):
         official_key = compact(official)
         name_key = compact(name)
         if name_key.startswith(official_key) and len(official_key) < len(name_key):
@@ -334,6 +349,7 @@ def _apartment_display_name(row):
         and _is_usable_apartment_name(building_name)
         and compact(official) == compact(building_name)
         and compact(official) != compact(name)
+        and (not apartment_identity.phase_numbers(name) or apartment_identity.phase_numbers(official))
     ):
         return official
     return _strip_building_dong_suffix(name)
@@ -422,7 +438,7 @@ def _load_apartment_csv_entities(limit=None):
             continue
         with path.open(encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
-            for row in reader:
+            for row in (replacement for original in reader for replacement in apartment_sections.source_rows(original)):
                 if row.get("단지종류명") and row.get("단지종류명") != "아파트":
                     continue
                 if _is_rental_row(row):
@@ -431,7 +447,7 @@ def _load_apartment_csv_entities(limit=None):
                 if not _is_usable_apartment_name(name):
                     continue
                 aliases = []
-                for column in ("단지명_공시가격", "단지명_건축물대장", "단지명_도로명주소"):
+                for column in ("대표단지명", "단지명_공시가격", "단지명_건축물대장", "단지명_도로명주소"):
                     alias = _clean_entity_name(row.get(column))
                     if (
                         _is_usable_apartment_name(alias)
@@ -456,6 +472,10 @@ def _load_apartment_csv_entities(limit=None):
                 if not lawd_cd and len(pnu) >= 5:
                     lawd_cd = pnu[:5]
                 entities.append({
+                    "sectionIdentity": row.get("sectionIdentity"),
+                    "apartmentId": str(row.get("단지고유번호") or row.get("apartmentId") or "").strip(),
+                    "kaptCode": str(row.get("kaptCode") or "").strip(),
+                    "complexNo": str(row.get("complexNo") or "").strip(),
                     "name": name,
                     "category": f"{district} 아파트".strip(),
                     "aliases": aliases,
@@ -480,7 +500,7 @@ def _load_apartment_csv_entities(limit=None):
                 })
                 base = _numbered_complex_base(name)
                 if base:
-                    group = numbered_groups.setdefault(compact(base), {
+                    group = numbered_groups.setdefault((compact(base), row.get("시도"), district, legal_dong), {
                         "name": base,
                         "category": f"{district} 아파트".strip(),
                         "aggregate": True,
@@ -518,14 +538,35 @@ def _load_apartment_csv_entities(limit=None):
 
 
 def _merge_entities(*groups):
+    groups = [list(group) for group in groups]
+    def location_key(entity):
+        return (entity.get("dedupeKey") or compact(entity.get("name", "")),
+                tuple(str(entity.get(field) or "") for field in ("province", "district", "legalDong")),
+                apartment_identity.entity_parcel(entity))
+    # Some supplements omit ids. Fill a missing id only when the exact physical
+    # identity has one consistent set of ids; conflicting known ids stay apart.
+    known_ids = {}
+    for group in groups:
+        for entity in group:
+            bucket = known_ids.setdefault(location_key(entity), {field: set() for field in apartment_identity.ID_FIELDS})
+            for field in apartment_identity.ID_FIELDS:
+                if entity.get(field):
+                    bucket[field].add(str(entity[field]))
     merged = {}
     for group in groups:
         for entity in group:
-            key = entity.get("dedupeKey") or compact(entity.get("name", ""))
-            if not key:
+            bucket = known_ids[location_key(entity)]
+            if all(len(values) <= 1 for values in bucket.values()):
+                entity = {**entity, **{field: next(iter(values)) for field, values in bucket.items() if values and not entity.get(field)}}
+            key = (entity.get("dedupeKey") or compact(entity.get("name", "")),
+                   tuple(str(entity.get(field) or "") for field in ("province", "district", "legalDong")),
+                   apartment_identity.entity_parcel(entity),
+                   tuple(str(entity.get(field) or "") for field in apartment_identity.ID_FIELDS))
+            if not key[0]:
                 continue
             if key not in merged:
                 merged[key] = {
+                    **{field: entity.get(field, "") for field in apartment_identity.ID_FIELDS},
                     "name": entity["name"],
                     "category": entity.get("category", ""),
                     "aliases": [],
@@ -543,6 +584,7 @@ def _merge_entities(*groups):
                     "aggregate": bool(entity.get("aggregate")),
                     "lawdCd": entity.get("lawdCd", ""),
                     "status": entity.get("status", ""),
+                    "sectionIdentity": entity.get("sectionIdentity"),
                 }
             else:
                 for field in ("province", "city", "district", "legalDong", "jibun", "cortarNo", "address", "lawdCd", "status"):
@@ -597,7 +639,7 @@ def _link_manual_apartments_to_source(manual_entities, source_entities):
     for source in source_entities:
         if source.get("aggregate"):
             continue
-        identity = source.get("dedupeKey") or compact(source.get("name", ""))
+        identity = (source.get("dedupeKey") or compact(source.get("name", "")), apartment_identity.entity_parcel(source))
         if not identity:
             continue
         for key in _entity_identity_keys(source):
@@ -607,15 +649,31 @@ def _link_manual_apartments_to_source(manual_entities, source_entities):
     for original in manual_entities:
         entity = dict(original)
         source = None
-        # A long official alias is more discriminating than a short nickname.
-        # Use the most specific exact key that resolves to one source identity.
+        # Prefer the most specific matching aliases, but consider all ties.
+        # A short shared brand cannot defeat a full name, and equally specific
+        # numbered siblings cannot select an arbitrary child by iteration order.
+        targets = {}
+        specificity = -1
         for key in sorted(_entity_identity_keys(entity), key=len, reverse=True):
-            targets = key_targets.get(key, {})
-            if len(targets) == 1:
-                source = next(iter(targets.values()))
+            if len(key) < specificity:
                 break
+            compatible = {identity: candidate for identity, candidate in key_targets.get(key, {}).items()
+                          if not apartment_identity.conflicts(entity, candidate)}
+            if compatible:
+                specificity = len(key)
+                targets.update(compatible)
+        if len(targets) == 1:
+            source = next(iter(targets.values()))
         if source is not None:
+            if apartment_identity.phase_numbers(source['name']) and not apartment_identity.phase_numbers(entity['name']):
+                entity['aliases'] = [entity['name'], *(entity.get('aliases') or [])]
+                entity['name'] = source['name']
             entity["dedupeKey"] = source.get("dedupeKey") or compact(source.get("name", ""))
+            for field in ("province", "district", "legalDong", "jibun", *apartment_identity.ID_FIELDS):
+                if not entity.get(field) and source.get(field):
+                    entity[field] = source[field]
+            if source.get('sectionIdentity'):
+                entity['sectionIdentity'] = source['sectionIdentity']
             entity["aliases"] = [
                 *(entity.get("aliases") or []),
                 source.get("name", ""),
@@ -849,6 +907,8 @@ def suggest_apartments(query, limit=20):
         if entity.get("aggregate"):
             continue
         aliases = entity.get("aliases") or []
+        if apartment_identity.phase_conflicts(query, entity['name']):
+            continue
         unit_aliases = []
         base_aliases = []
         seen_units = set()
@@ -914,6 +974,8 @@ def suggest_apartments(query, limit=20):
     # 서로 충돌하지 않으면(비어 있으면 호환) 같은 단지로 본다. 세대수는 둘 다
     # 있고 30% 넘게 차이날 때만 다른 단지로 판정한다.
     def _cluster_compatible(entity, cluster):
+        if apartment_identity.conflicts(entity, cluster):
+            return False
         for field in ("province", "city", "legalDong"):
             value_a = compact(entity.get(field, ""))
             value_b = compact(cluster.get(field, ""))
@@ -984,6 +1046,12 @@ def suggest_apartments(query, limit=20):
         jibun = str(entity.get("jibun") or "").strip()
         map_address = full_address or " ".join([*address_parts, jibun]).strip()
         suggestions.append({
+            **({"latitude": entity['sectionIdentity']['latitude'],
+                "longitude": entity['sectionIdentity']['longitude']} if entity.get('sectionIdentity') else {}),
+            **({"naverScope": entity['sectionIdentity'].get('naverScope', ''),
+                "naverMappingNote": entity['sectionIdentity'].get('naverMappingNote', '')}
+               if entity.get('sectionIdentity') else {}),
+            **{field: str(entity.get(field) or "") for field in apartment_identity.ID_FIELDS},
             "name": _unit_alias_display(entity_name) if _UNIT_ALIAS_RE.search(entity_name) else entity_name,
             # 일부 공공 원본은 자치구가 비어 있고 시·법정동만 있다. 검색 결과가
             # 빈 지역으로 넘어가면 전용면적 API가 단지를 식별하지 못하므로 가장
@@ -995,6 +1063,7 @@ def suggest_apartments(query, limit=20):
             "cortarNo": str(entity.get("cortarNo") or "").strip(),
             "lawdCd": str(entity.get("lawdCd") or "").strip(),
             "households": _int_value(entity.get("households")),
+            "approvedAt": str(entity.get("approvedAt") or "").strip(),
             "status": str(entity.get("status") or "").strip(),
             "category": "아파트",
         })
@@ -1031,6 +1100,8 @@ def suggest_apartments(query, limit=20):
             if len(siblings) >= 2:
                 continue
         filtered.append(item)
+    if filtered and all(compact(_numbered_complex_base(item['name'])) == key for item in filtered):
+        filtered.sort(key=lambda item: int(re.search(r'(\d+)\s*단지$', item['name']).group(1)))
     return filtered[:limit]
 
 

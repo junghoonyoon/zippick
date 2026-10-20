@@ -8,6 +8,7 @@ import math
 import os
 import re
 import statistics
+import subprocess
 import threading
 import time
 import urllib.parse
@@ -17,6 +18,9 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 
 import config
+import apartment_identity
+import apartment_sections
+import apartment_transaction_addresses
 import real_estate_search
 
 APARTMENT_ENDPOINT = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade"
@@ -33,7 +37,8 @@ MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
 SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
-PRICE_BAND_CACHE_SCHEMA_VERSION = 14
+PRICE_BAND_EMPTY_CACHE_TTL_SECONDS = 30
+PRICE_BAND_CACHE_SCHEMA_VERSION = 18
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 # 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
 # 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
@@ -255,6 +260,7 @@ def _read_cached_month_memory(
 def _entity_cache_identity(entity):
     entity = entity or {}
     return {
+        **{field: str(entity.get(field) or "").strip() for field in apartment_identity.ID_FIELDS},
         "name": str(entity.get("name") or "").strip(),
         "province": str(entity.get("province") or "").strip(),
         "district": str(entity.get("district") or entity.get("city") or "").strip(),
@@ -290,6 +296,7 @@ def _price_band_cache_key(name, region, area_label, lookback_months, entity=None
         "dealMonths": _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS)),
         # 릴리스마다 바뀌는 mtime 대신 원본 단지 데이터 내용으로만 무효화한다.
         "sourceRevision": _PRICE_BAND_SOURCE_SIGNATURE,
+        "transactionAddressRevision": apartment_transaction_addresses.entries(),
     }
     encoded = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -305,7 +312,8 @@ def _read_cached_price_band(cache_key):
     memory_cached = _PRICE_BAND_MEMORY_CACHE.get(memory_key)
     if memory_cached:
         fetched_at, band = memory_cached
-        if time.time() - fetched_at <= PRICE_BAND_CACHE_TTL_SECONDS:
+        ttl = PRICE_BAND_CACHE_TTL_SECONDS if band else PRICE_BAND_EMPTY_CACHE_TTL_SECONDS
+        if time.time() - fetched_at <= ttl:
             return True, band
         _PRICE_BAND_MEMORY_CACHE.pop(memory_key, None)
     if not path.exists():
@@ -315,7 +323,9 @@ def _read_cached_price_band(cache_key):
     except (OSError, ValueError):
         return False, None
     fetched_at = float(cached.get("fetchedAt") or 0)
-    if time.time() - fetched_at > PRICE_BAND_CACHE_TTL_SECONDS:
+    band = cached.get("band")
+    ttl = PRICE_BAND_CACHE_TTL_SECONDS if band else PRICE_BAND_EMPTY_CACHE_TTL_SECONDS
+    if time.time() - fetched_at > ttl:
         try:
             path.unlink()
         except OSError:
@@ -327,6 +337,9 @@ def _read_cached_price_band(cache_key):
 
 
 def _write_cached_price_band(cache_key, band):
+    # A provider outage is not proof that the apartment has no transactions.
+    if band is None and last_error():
+        return
     PRICE_BAND_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path = _price_band_cache_path(cache_key)
     fetched_at = time.time()
@@ -368,6 +381,7 @@ def _parse_items(xml_text, transaction_kind=TRANSACTION_KIND_APARTMENT):
                 deal_date = f"{year}-{int(month):02d}-{int(day):02d}"
             rows.append({
                 "apartment": _xml_text(item, ["아파트", "aptNm"]),
+                "buildingDong": _xml_text(item, ["아파트동", "aptDong"]),
                 "legalDong": _xml_text(item, ["법정동", "umdNm"]),
                 "jibun": _xml_text(item, ["지번", "jibun"]),
                 "exclusiveArea": _float_value(_xml_text(item, ["전용면적", "excluUseAr"])),
@@ -396,6 +410,7 @@ def _parse_items(xml_text, transaction_kind=TRANSACTION_KIND_APARTMENT):
             deal_date = f"{year}-{int(month):02d}-{int(day):02d}"
         rows.append({
             "apartment": _xml_text(item, ["아파트", "aptNm"]),
+            "buildingDong": _xml_text(item, ["아파트동", "aptDong"]),
             "legalDong": _xml_text(item, ["법정동", "umdNm"]),
             "jibun": _xml_text(item, ["지번", "jibun"]),
             "exclusiveArea": _float_value(_xml_text(item, ["전용면적", "excluUseAr"])),
@@ -434,6 +449,39 @@ def fetch_month(
             deal_ymd,
             transaction_kind=transaction_kind,
         )
+
+
+def _official_api_xml(endpoint, params, timeout):
+    """Read one official API page without weakening TLS verification.
+
+    Some desktop Python builds cannot validate the public certificate chain
+    used by data.go.kr even though the operating system can.  Keep requests as
+    the usual client, then use the system curl client only for that certificate
+    store mismatch.  Curl is invoked without ``--insecure`` and receives the
+    service key only as an in-memory process argument; it is never logged.
+    """
+    try:
+        response = requests.get(endpoint, params=params, timeout=timeout)
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.SSLError as ssl_error:
+        query = urllib.parse.urlencode(params)
+        url = f"{endpoint}?{query}"
+        try:
+            completed = subprocess.run(
+                [
+                    "curl", "--fail", "--silent", "--show-error",
+                    "--proto", "=https", "--max-time", str(max(1, int(math.ceil(timeout)))),
+                    url,
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=max(2, int(math.ceil(timeout)) + 2),
+            )
+        except (OSError, subprocess.SubprocessError) as curl_error:
+            raise ssl_error from curl_error
+        return completed.stdout.decode("utf-8")
 
 
 def _fetch_month_singleflight(
@@ -485,23 +533,21 @@ def _fetch_month_singleflight(
                 "numOfRows": 1000,
                 "pageNo": 1,
         }
-        response = requests.get(
+        response_text = _official_api_xml(
             endpoint,
-            params=request_params,
-            timeout=config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
+            request_params,
+            config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
         )
-        response.raise_for_status()
-        items = _parse_items(response.text, transaction_kind)
-        total_count = _parse_total_count(response.text)
+        items = _parse_items(response_text, transaction_kind)
+        total_count = _parse_total_count(response_text)
         page_count = max(1, math.ceil(total_count / request_params["numOfRows"]))
         for page_number in range(2, page_count + 1):
-            page_response = requests.get(
+            page_response_text = _official_api_xml(
                 endpoint,
-                params={**request_params, "pageNo": page_number},
-                timeout=config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
+                {**request_params, "pageNo": page_number},
+                config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
             )
-            page_response.raise_for_status()
-            items.extend(_parse_items(page_response.text, transaction_kind))
+            items.extend(_parse_items(page_response_text, transaction_kind))
     except requests.HTTPError as exc:
         status = getattr(exc.response, "status_code", None)
         if status in {401, 403}:
@@ -604,13 +650,13 @@ def _items_for_source_row(lawd_cd, deal_ymd, items, row, dong_only=False):
         if cached_index is None or cached_index[0] != id(items):
             address_index = {}
             for item in items:
-                key = (_legal_dong_leaf(item.get("legalDong")), compact(item.get("jibun")))
+                key = (_legal_dong_leaf(item.get("legalDong")), apartment_identity.parcel_key(item.get("jibun")))
                 address_index.setdefault(key, []).append(item)
             _MONTH_ADDRESS_INDEX[memory_key] = (id(items), address_index)
         else:
             address_index = cached_index[1]
     dong = _legal_dong_leaf(_source_legal_dong(row))
-    jibun = compact(_source_jibun(row))
+    jibun = apartment_identity.parcel_key(_source_jibun(row))
     if dong and jibun and not dong_only:
         return address_index.get((dong, jibun), [])
     if dong:
@@ -797,24 +843,99 @@ def transaction_kind_for_apartment(name, region=""):
     )
 
 
+def transaction_scope_for_entity(entity):
+    """Return a reviewed shared-trade scope only for one of its member sections."""
+    entity = entity or {}
+    scope = entity.get("transactionScope")
+    if not isinstance(scope, dict):
+        scope = (entity.get("sectionIdentity") or {}).get("transactionScope")
+    # Price payloads expose only the scope label and source. Candidate signal
+    # loaders must recover the reviewed feed rules rather than treating that
+    # public summary as the complete configuration and dropping presale trades.
+    scope = apartment_sections.transaction_scope(entity) or scope
+    if not isinstance(scope, dict):
+        return None
+    apartment_id = str(entity.get("apartmentId") or "").strip()
+    members = {str(value or "").strip() for value in scope.get("memberApartmentIds") or []}
+    if not apartment_id or apartment_id not in members:
+        return None
+    if not str(scope.get("sourceName") or "").strip():
+        return None
+    if apartment_identity.entity_parcel(entity) != apartment_identity.parcel_key(scope.get("jibun")):
+        return None
+    if _legal_dong_leaf(entity.get("legalDong")) != _legal_dong_leaf(scope.get("legalDong")):
+        return None
+    return scope
+
+
+def _transaction_scope_for_row(row):
+    scope = row.get("transactionScope")
+    return scope if isinstance(scope, dict) else None
+
+
+def _scope_allows_unnumbered_transaction(row):
+    scope = _transaction_scope_for_row(row)
+    return bool(scope and scope.get("allowUnnumberedTransactions"))
+
+
+def _transaction_kinds_for_apartment(name, region="", entity=None):
+    """Use both verified official feeds only where a reviewed scope requests it."""
+    scope = transaction_scope_for_entity(entity)
+    if scope:
+        valid = {
+            TRANSACTION_KIND_APARTMENT,
+            TRANSACTION_KIND_PRESALE,
+        }
+        kinds = [str(value or "").strip() for value in scope.get("transactionKinds") or []]
+        kinds = [kind for kind in kinds if kind in valid]
+        if kinds:
+            return tuple(dict.fromkeys(kinds))
+    return (transaction_kind_for_apartment(name, region),)
+
+
+def _public_transaction_scope(scope):
+    if not scope:
+        return None
+    return {
+        "id": scope.get("id", ""),
+        "label": scope.get("label", "통합 거래"),
+        "sourceName": scope.get("sourceName", ""),
+        "sourceNote": scope.get("sourceNote", ""),
+    }
+
+
+def _with_transaction_scope(band, entity):
+    if not band:
+        return band
+    scope = transaction_scope_for_entity(entity)
+    if not scope:
+        return band
+    public_scope = _public_transaction_scope(scope)
+    source_note = str(band.get("sourceNote") or "")
+    return {
+        **band,
+        "transactionScope": public_scope,
+        "sourceNote": " · ".join(
+            value for value in (source_note, public_scope["label"]) if value
+        ),
+    }
+
+
 def _row_matches_entity(row, entity):
-    # 공통 후보 응답은 주소가 확인되지 않은 단지에 ``address: null``을
-    # 담을 수 있다. compact(None)은 "none"이 되므로 빈 주소를 실제 주소로
-    # 오인하면 모든 지번이 불일치해 가격 흐름 거래가 0건으로 사라진다.
+    source_id = str(row.get("단지고유번호") or "").strip()
+    entity_id = str(entity.get("apartmentId") or "").strip()
+    if source_id and entity_id and source_id != entity_id:
+        return False
     dong_key = _legal_dong_leaf(entity.get("legalDong"))
-    address_key = compact(entity.get("address") or "")
-    entity_jibun_text = str(entity.get("jibun") or "").strip()
-    entity_dong_text = str(entity.get("legalDong") or "").strip()
-    if entity_dong_text and entity_jibun_text.startswith(f"{entity_dong_text} "):
-        entity_jibun_text = entity_jibun_text[len(entity_dong_text):].strip()
-    entity_jibun = compact(entity_jibun_text)
     row_dong = _legal_dong_leaf(_source_legal_dong(row))
-    row_jibun = compact(_source_jibun(row))
-    if dong_key and row_dong and dong_key != row_dong:
+    entity_jibun = apartment_identity.entity_parcel(entity)
+    row_jibun = apartment_identity.parcel_key(_source_jibun(row))
+    if dong_key and row_dong != dong_key:
         return False
-    if entity_jibun and row_jibun and entity_jibun != row_jibun:
+    if entity_jibun and row_jibun != entity_jibun:
         return False
-    if not entity_jibun and address_key and row_jibun and not address_key.endswith(row_jibun):
+    lawd_cd = str(entity.get("lawdCd") or "").strip()[:5]
+    if lawd_cd and _row_lawd_cd(row) != lawd_cd:
         return False
     return True
 
@@ -826,8 +947,9 @@ def _dedupe_rows(rows):
         key = (
             _row_lawd_cd(row),
             compact(_source_legal_dong(row)),
-            compact(row.get("지번")),
+            apartment_identity.parcel_key(_source_jibun(row)),
             compact(row.get("대표단지명")),
+            str(row.get("단지고유번호") or ""),
         )
         if key in seen:
             continue
@@ -851,7 +973,7 @@ def _source_row_index():
             if not path.exists():
                 continue
             with path.open(encoding="utf-8-sig", newline="") as handle:
-                for row in csv.DictReader(handle):
+                for row in (replacement for original in csv.DictReader(handle) for replacement in apartment_sections.source_rows(original)):
                     if row.get("단지종류명") and row.get("단지종류명") != "아파트":
                         continue
                     lawd_cd = _row_lawd_cd(row)
@@ -860,8 +982,9 @@ def _source_row_index():
                     key = (
                         lawd_cd,
                         compact(_source_legal_dong(row)),
-                        compact(row.get("지번")),
+                        apartment_identity.parcel_key(_source_jibun(row)),
                         compact(row.get("대표단지명")),
+                        str(row.get("단지고유번호") or ""),
                     )
                     if key in seen:
                         continue
@@ -893,7 +1016,7 @@ def _source_row_index():
                 "지번": jibun,
                 "필지고유번호": f"{lawd_cd}{'0' * 14}",
             }
-            key = (lawd_cd, compact(dong), compact(jibun), compact(row["대표단지명"]))
+            key = (lawd_cd, compact(dong), apartment_identity.parcel_key(jibun), compact(row["대표단지명"]))
             if key in seen:
                 continue
             seen.add(key)
@@ -916,7 +1039,7 @@ def source_rows(name, region=""):
             compact(entity.get("province")),
             compact(entity.get("district") or entity.get("city")),
             _legal_dong_leaf(entity.get("legalDong")),
-            compact(entity.get("jibun") or ""),
+            apartment_identity.entity_parcel(entity),
         )
         unique_entities.setdefault(identity, entity)
     entities = list(unique_entities.values())
@@ -944,7 +1067,7 @@ def source_rows(name, region=""):
     if exact_rows:
         exact_rows = _dedupe_rows(exact_rows)
         identities = {
-            (_row_lawd_cd(row), _legal_dong_leaf(_source_legal_dong(row)), compact(_source_jibun(row)))
+            (_row_lawd_cd(row), _legal_dong_leaf(_source_legal_dong(row)), apartment_identity.parcel_key(_source_jibun(row)))
             for row in exact_rows
         }
         return exact_rows if len(identities) == 1 else []
@@ -963,7 +1086,7 @@ def source_rows(name, region=""):
     # public-data alias, do not mix those fuzzy matches into its transactions.
     rows = _dedupe_rows(rows)
     identities = {
-        (_row_lawd_cd(row), _legal_dong_leaf(_source_legal_dong(row)), compact(_source_jibun(row)))
+        (_row_lawd_cd(row), _legal_dong_leaf(_source_legal_dong(row)), apartment_identity.parcel_key(_source_jibun(row)))
         for row in rows
     }
     return rows if len(identities) == 1 else []
@@ -990,7 +1113,7 @@ def source_rows_for_entity(entity, region=""):
         if _matches_region(row, region) and _row_matches_entity(row, entity)
     ]
     if exact_rows:
-        return _dedupe_rows(exact_rows)
+        return apartment_transaction_addresses.expand_source_rows(_dedupe_rows(exact_rows))
     rows = [
         row
         for row in all_rows
@@ -998,7 +1121,7 @@ def source_rows_for_entity(entity, region=""):
         and _matches_region(row, region)
         and _row_matches_entity(row, entity)
     ]
-    return _dedupe_rows(rows)
+    return apartment_transaction_addresses.expand_source_rows(_dedupe_rows(rows))
 
 
 def _minimum_area_transactions(transactions, min_area):
@@ -1329,29 +1452,48 @@ def _matches_transaction(row, item, name, allow_relocated=False):
     item_name = compact(item.get("apartment"))
     if not item_name:
         return False
-    names = [name, *_row_name_values(row)]
+    scope = _transaction_scope_for_row(row)
+    names = [
+        name,
+        *_row_name_values(row),
+        *([scope.get("sourceName")] if scope and scope.get("sourceName") else []),
+    ]
     exact_name_match = any(compact(value) == item_name for value in names)
     name_match = any(compact(value) and (compact(value) == item_name or compact(value) in item_name or item_name in compact(value)) for value in names)
     if not name_match:
         return False
+    if apartment_identity.phase_conflicts(name, item.get('apartment')):
+        return False
+    # A shared parcel alone cannot attribute an unnumbered trade to a section.
+    # The sole exception is an explicit reviewed scope whose public source
+    # declares that its unnumbered records cover the listed sections together.
+    buildings = row.get('transactionBuildingNumbers') or []
+    if buildings:
+        building = re.sub(r'[^0-9]', '', str(item.get('buildingDong') or ''))
+        if building and building not in buildings:
+            return False
+        if (
+            not building
+            and not _unit_number(item.get('apartment'))
+            and not _scope_allows_unnumbered_transaction(row)
+        ):
+            return False
     # 행정구역 분리와 함께 법정동·지번이 바뀐 단지는 구 코드가 달라진
     # 거래에서 긴 고유 단지명이 정확히 일치할 때만 주소 불일치를 허용한다.
     if allow_relocated:
         return bool(exact_name_match and len(item_name) >= 6)
     row_dong = _legal_dong_leaf(_source_legal_dong(row))
     item_dong = _legal_dong_leaf(item.get("legalDong"))
-    if row_dong and item_dong and row_dong not in item_dong and item_dong not in row_dong:
+    if row_dong and item_dong != row_dong:
         return False
-    # 'N단지'가 조회명과 실거래명 양쪽에 있으면 번호 일치가 최우선 기준이다.
-    # 마스터의 지번 표기 오류가 있어도 다른 단지 거래가 섞이지 않도록,
-    # 번호가 다르면 제외하고 번호가 같으면 지번 검사 없이 인정한다.
+    # Unit numbers can reject a different complex, never override a parcel mismatch.
     query_unit = _unit_number(name)
     item_unit = _unit_number(item.get("apartment"))
-    if query_unit and item_unit:
-        return query_unit == item_unit
-    row_jibun = compact(_source_jibun(row))
-    item_jibun = compact(item.get("jibun"))
-    if row_jibun and item_jibun and row_jibun != item_jibun:
+    if query_unit and item_unit and query_unit != item_unit:
+        return False
+    row_jibun = apartment_identity.parcel_key(_source_jibun(row))
+    item_jibun = apartment_identity.parcel_key(item.get("jibun"))
+    if row_jibun and row_jibun != item_jibun:
         return False
     return True
 
@@ -1359,7 +1501,6 @@ def _matches_transaction(row, item, name, allow_relocated=False):
 def _matching_transactions(rows, name, area_label, lookback_months, monthly):
     matches = []
     seen = set()
-    unit_query = bool(_unit_number(name))
     for row in rows:
         source_lawd_cd = _row_lawd_cd(row)
         for lawd_cd in related_lawd_codes(source_lawd_cd):
@@ -1379,7 +1520,10 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
                         deal_ymd,
                         items,
                         row,
-                        dong_only=unit_query,
+                        dong_only=(
+                            bool(_unit_number(name))
+                            and not _scope_allows_unnumbered_transaction(row)
+                        ),
                     )
                 )
                 for item in candidates:
@@ -1404,7 +1548,8 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
                     if key in seen:
                         continue
                     seen.add(key)
-                    matches.append(item)
+                    correction = row.get("transactionAddressCorrection")
+                    matches.append({**item, "transactionAddressCorrection": correction} if correction else item)
     matches.sort(key=lambda row: row.get("dealDate", ""), reverse=True)
     return matches
 
@@ -1439,6 +1584,15 @@ def transactions_for_apartment(
     rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
     if not rows:
         return []
+    transaction_kinds = _transaction_kinds_for_apartment(name, region, entity)
+    if len(transaction_kinds) > 1:
+        return _dedupe_transactions([
+            transaction
+            for transaction_kind in transaction_kinds
+            for transaction in _transactions_for_apartment_kind(
+                rows, name, area_label, lookback_months, transaction_kind,
+            )
+        ])
     transaction_kind = transaction_kind_for_apartment(name, region)
     transactions = _transactions_for_apartment_kind(
         rows,
@@ -1522,24 +1676,28 @@ def transactions_for_apartment_cached(
     rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
     if not rows:
         return []
-    transaction_kind = transaction_kind_for_apartment(name, region)
-    monthly = {}
     month_values = _deal_months(lookback_months)
     lawd_cds = sorted({
         code
         for row in rows
         for code in related_lawd_codes(_row_lawd_cd(row))
     })
-    for lawd_cd in lawd_cds:
-        for deal_ymd in month_values:
-            items = _read_cached_month_memory(
-                lawd_cd,
-                deal_ymd,
-                transaction_kind=transaction_kind,
-            )
-            if items is not None:
-                monthly[(lawd_cd, deal_ymd)] = items
-    return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+    transactions = []
+    for transaction_kind in _transaction_kinds_for_apartment(name, region, entity):
+        monthly = {}
+        for lawd_cd in lawd_cds:
+            for deal_ymd in month_values:
+                items = _read_cached_month_memory(
+                    lawd_cd,
+                    deal_ymd,
+                    transaction_kind=transaction_kind,
+                )
+                if items is not None:
+                    monthly[(lawd_cd, deal_ymd)] = items
+        transactions.extend(_matching_transactions(
+            rows, name, area_label, lookback_months, monthly,
+        ))
+    return _dedupe_transactions(transactions)
 
 
 def rent_transactions_for_apartment(
@@ -1658,7 +1816,7 @@ def _bundled_jeonse_index():
     for entry in payload.get("entries") or []:
         lawd_cd = str(entry.get("lawdCd") or "").strip()
         dong_key = str(entry.get("legalDongKey") or compact(entry.get("legalDong"))).strip()
-        jibun_key = str(entry.get("jibunKey") or compact(entry.get("jibun"))).strip()
+        jibun_key = apartment_identity.parcel_key(entry.get("jibun") or entry.get("jibunKey"))
         if not (lawd_cd and dong_key and jibun_key):
             continue
         index.setdefault((lawd_cd, dong_key, jibun_key), []).append(entry)
@@ -1687,7 +1845,7 @@ def bundled_jeonse_ratio_for_apartment(
         identity = (
             _row_lawd_cd(row),
             compact(_source_legal_dong(row)),
-            compact(_source_jibun(row)),
+            apartment_identity.parcel_key(_source_jibun(row)),
         )
         for entry in index.get(identity, []):
             area = _float_value(entry.get("latestJeonseExclusiveArea")) or _float_value(entry.get("areaBucket"))
@@ -1893,20 +2051,20 @@ def cached_market_bundle_for_apartment(
         RECENT_LOOKBACK_MONTHS,
     )
     comparison = _transactions_in_recent_months(selected, 12)
-    band = _price_band_payload(
+    band = _with_transaction_scope(_price_band_payload(
         name,
         region,
         selected_area_label,
         RECENT_LOOKBACK_MONTHS,
         recent,
-    )
-    comparison_band = _price_band_payload(
+    ), entity)
+    comparison_band = _with_transaction_scope(_price_band_payload(
         name,
         region,
         selected_area_label,
         12,
         comparison,
-    )
+    ), entity)
     latest_observed = selected[0] if selected else {}
     return {
         "band": band,
@@ -2143,6 +2301,7 @@ def _price_band_payload(name, region, area_label, lookback_months, transactions)
         "transactionCount": len(prices),
         "latestDealDate": latest.get("dealDate", ""),
         "sourceNote": f"국토부 실거래가 최근 {lookback_months}개월",
+        "transactionAddressCorrection": latest.get("transactionAddressCorrection"),
         "currentEstimateMinPriceEok": (estimate or {}).get("minPriceEok"),
         "currentEstimateMidPriceEok": (estimate or {}).get("midPriceEok"),
         "currentEstimateMaxPriceEok": (estimate or {}).get("maxPriceEok"),
@@ -2180,7 +2339,7 @@ def price_band_for_apartment(
     if cache_hit:
         return cached_band
 
-    band = _price_band_payload(
+    band = _with_transaction_scope(_price_band_payload(
         name,
         region,
         area_label,
@@ -2192,7 +2351,7 @@ def price_band_for_apartment(
             lookback_months=lookback_months,
             entity=entity,
         ),
-    )
+    ), entity)
     with _PRICE_BAND_CACHE_LOCK:
         _write_cached_price_band(cache_key, band)
     return band
@@ -2214,7 +2373,7 @@ def cached_price_band_for_apartment(
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     if cache_hit:
         return cached_band
-    return _price_band_payload(
+    return _with_transaction_scope(_price_band_payload(
         name,
         region,
         area_label,
@@ -2226,7 +2385,7 @@ def cached_price_band_for_apartment(
             lookback_months=lookback_months,
             entity=entity,
         ),
-    )
+    ), entity)
 
 
 def stored_price_band_for_apartment(
@@ -2319,7 +2478,7 @@ def price_band_for_apartment_min_area(
     if cache_hit:
         return cached_band
 
-    band = _minimum_area_price_band_payload(
+    band = _with_transaction_scope(_minimum_area_price_band_payload(
         name,
         region,
         minimum,
@@ -2331,7 +2490,7 @@ def price_band_for_apartment_min_area(
             lookback_months=lookback_months,
             entity=entity,
         ),
-    )
+    ), entity)
     with _PRICE_BAND_CACHE_LOCK:
         _write_cached_price_band(cache_key, band)
     return band
@@ -2355,7 +2514,7 @@ def cached_price_band_for_apartment_min_area(
         cache_hit, cached_band = _read_cached_price_band(cache_key)
     if cache_hit:
         return cached_band
-    return _minimum_area_price_band_payload(
+    return _with_transaction_scope(_minimum_area_price_band_payload(
         name,
         region,
         minimum,
@@ -2367,7 +2526,7 @@ def cached_price_band_for_apartment_min_area(
             lookback_months=lookback_months,
             entity=entity,
         ),
-    )
+    ), entity)
 
 
 def stored_price_band_for_apartment_min_area(

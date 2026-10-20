@@ -13,18 +13,22 @@ import re
 import time
 import threading
 from collections import Counter
+from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
 import config
+import apartment_identity
+import apartment_sections
 import real_estate_search
 
 SEARCH_ENDPOINT = "https://fin.land.naver.com/front-api/v1/search/autocomplete/complexes"
 MOBILE_COMPLEX_LIST_ENDPOINT = "https://m.land.naver.com/complex/ajax/complexListByCortarNo"
 CACHE_DIR = config.CACHE_DIR / "naver_complex"
 STATIC_OVERRIDES_PATH = config.ROOT / "data" / "naver_complex_overrides.json"
-CACHE_VERSION = "v6"
+REVIEWS_PATH = config.ROOT / "data" / "naver_complex_reviews.json"
+CACHE_VERSION = "v8"
 NEGATIVE_TTL_SECONDS = 60 * 60 * 24 * 7  # 못 찾은 단지는 7일 후 재시도
 TIMEOUT_SECONDS = float(getattr(config, "NAVER_COMPLEX_TIMEOUT_SECONDS", 2))
 MAX_WORKERS = int(getattr(config, "NAVER_COMPLEX_MAX_WORKERS", 2))
@@ -101,8 +105,28 @@ def _override_key(name, legal_dong="", jibun=""):
     return (
         real_estate_search.compact(name),
         real_estate_search.compact(legal_dong),
-        real_estate_search.compact(jibun),
+        apartment_identity.parcel_key(jibun, legal_dong),
     )
+
+
+@lru_cache(maxsize=1)
+def mapping_reviews():
+    return json.loads(REVIEWS_PATH.read_text(encoding="utf-8"))["entries"]
+
+
+def rejected_mapping(complex_no, legal_dong, jibun, region=""):
+    return any(str(complex_no) in review.get("rejectedComplexNos", [])
+               and legal_dong == review["legalDong"]
+               and apartment_identity.parcel_key(jibun) == apartment_identity.parcel_key(review["jibun"])
+               and (not region or apartment_identity.region_matches(region, {"district": review["region"]}))
+               for review in mapping_reviews())
+
+
+def verified_phase_alias(name, entry):
+    # Explicit, address-reviewed naming exceptions only. A different numbered
+    # query must not borrow the exception through a generic alternate name.
+    return (entry.get("phaseAliasVerified") is True
+            and not apartment_identity.phase_conflicts(name, entry.get("name")))
 
 
 def _static_complex_overrides():
@@ -133,15 +157,19 @@ def _static_complex_overrides():
                 entry.get("legalDong", ""),
                 entry.get("jibun", ""),
             )
-            overrides[key] = {
+            value = {
+                "name": name,
+                "phaseAliasVerified": entry.get("phaseAliasVerified", False),
                 "complexNo": complex_no,
                 "complexName": str(entry.get("complexName") or "").strip(),
+                "region": str(entry.get("region") or "").strip(),
             }
+            overrides.setdefault(key, []).append(value)
         _STATIC_COMPLEX_OVERRIDES = overrides
         return overrides
 
 
-def _verified_override(name, legal_dong="", jibun="", alternate_names=()):
+def _verified_override(name, legal_dong="", jibun="", alternate_names=(), region=""):
     names = []
     seen = set()
     for value in (name, *alternate_names):
@@ -153,24 +181,48 @@ def _verified_override(name, legal_dong="", jibun="", alternate_names=()):
         override = VERIFIED_COMPLEX_OVERRIDES.get(
             _override_key(value, legal_dong, jibun)
         )
-        if override:
-            return dict(override)
+        if override and not apartment_identity.phase_conflicts(name, override.get('complexName')):
+            return {
+                **override,
+                # 화면의 단지명은 검수된 네이버 단지명으로 통일한다. 원본명은
+                # row["name"]에 그대로 남아 실거래 조회 식별값으로 사용한다.
+                "displayName": str(override.get("complexName") or "").strip(),
+                "displayNameSource": "naver_verified_mapping",
+            }
     static_overrides = _static_complex_overrides()
     for value in names:
-        override = static_overrides.get(_override_key(value, legal_dong, jibun))
-        if override:
-            return dict(override)
+        candidates = static_overrides.get(_override_key(value, legal_dong, jibun), [])
+        candidates = [entry for entry in candidates
+                      if (not apartment_identity.phase_conflicts(name, entry.get('complexName'))
+                          or verified_phase_alias(name, entry))
+                      and not rejected_mapping(entry['complexNo'], legal_dong, jibun, region)
+                      and (not region or not entry.get('region') or
+                           apartment_identity.region_matches(region, {'district': entry['region'], 'legalDong': legal_dong}))]
+        if len({entry['complexNo'] for entry in candidates}) == 1:
+            selected = candidates[0]
+            return {
+                "complexNo": selected["complexNo"],
+                "complexName": selected["complexName"],
+                "displayName": selected["complexName"],
+                "displayNameSource": "naver_verified_mapping",
+            }
     return None
 
 
-def resolve_static(name, legal_dong="", jibun="", alternate_names=()):
+def resolve_static(name, legal_dong="", jibun="", alternate_names=(), region=""):
     """Return only a bundled, address-verified Naver mapping without I/O."""
-    return _verified_override(name, legal_dong, jibun, alternate_names)
+    section = apartment_sections.resolve(name, legal_dong, jibun, region)
+    if section:
+        return {'complexNo': section['naverComplexNo'], 'complexName': section['naverComplexName'],
+                'displayName': section['naverComplexName'],
+                'displayNameSource': 'naver_verified_mapping',
+                'scope': section['naverScope']}
+    return _verified_override(name, legal_dong, jibun, alternate_names, region)
 
 
-def _cache_key(name, legal_dong, jibun):
+def _cache_key(name, legal_dong, jibun, region=""):
     compact = real_estate_search.compact
-    identity = f"{compact(name)}_{compact(legal_dong)}_{compact(jibun)}" or "unknown"
+    identity = f"{compact(region)}_{compact(name)}_{compact(legal_dong)}_{apartment_identity.parcel_key(jibun, legal_dong)}" or "unknown"
     return f"{CACHE_VERSION}_{identity}"
 
 
@@ -364,7 +416,10 @@ def _name_match_score(query, entry_name, legal_dong=""):
     return best
 
 
-def _pick(complexes, name, legal_dong, alternate_names=()):
+def _pick(complexes, name, legal_dong, alternate_names=(), jibun="", region=""):
+    known_section = apartment_sections.resolve(name)
+    if known_section and not apartment_sections.resolve(name, legal_dong, jibun, region):
+        return None
     compact = real_estate_search.compact
     query_names = []
     seen_names = set()
@@ -379,18 +434,41 @@ def _pick(complexes, name, legal_dong, alternate_names=()):
         complex_no = _entry_complex_no(entry)
         if not complex_no:
             continue
+        if known_section and complex_no != known_section['naverComplexNo']:
+            continue
         entry_name = compact(_entry_name(entry))
         if not entry_name:
+            continue
+        if entry.get('hscpTypeCd') and entry['hscpTypeCd'] not in {'A01', 'A03', 'A04'}:
+            continue
+        if rejected_mapping(complex_no, legal_dong, jibun, region):
+            continue
+        if apartment_identity.phase_conflicts(name, _entry_name(entry)):
+            continue
+        entry_address = _entry_address(entry)
+        if legal_dong and entry_address and compact(legal_dong) not in compact(entry_address):
+            continue
+        if region and entry_address and not apartment_identity.region_matches(region, {'address': entry_address}):
+            continue
+        entry_parcel = apartment_identity.entity_parcel({'address': entry_address, 'legalDong': legal_dong,
+                                                       'jibun': entry.get('jibun', '')})
+        if jibun and entry_parcel and apartment_identity.parcel_key(jibun) != entry_parcel:
             continue
         name_score = max(
             (
                 _name_match_score(query, entry_name, legal_dong)
-                for query in query_names
+                for query in query_names if not apartment_identity.phase_conflicts(query, _entry_name(entry))
             ),
             default=0,
         )
         dong_match = bool(dong_key) and dong_key in compact(_entry_address(entry))
-        if not name_score and not dong_match:
+        if not name_score:
+            continue
+        # A numbered child cannot be selected just because it is the only
+        # partial family-name hit. Exact aliases or a parcel must corroborate it.
+        if (apartment_identity.phase_numbers(_entry_name(entry))
+                and not any(apartment_identity.phase_numbers(query) for query in query_names)
+                and not (jibun and entry_parcel == apartment_identity.parcel_key(jibun))):
             continue
         scored.append((
             name_score + (1 if dong_match else 0),
@@ -420,18 +498,21 @@ def resolve(
     name = str(name or "").strip()
     if not name:
         return None
+    if apartment_sections.resolve(name) and not apartment_sections.resolve(name, legal_dong, jibun, region):
+        return None
     override = resolve_static(
         name,
         legal_dong,
         jibun,
         alternate_names=alternate_names,
+        region=region,
     )
     if override:
         return dict(override)
-    key = _cache_key(name, legal_dong, jibun)
+    key = _cache_key(name, legal_dong, jibun, region)
     with _CACHE_LOCK:
         cached = _read_cache(key)
-    if cached is not None:
+    if cached is not None and not rejected_mapping(cached.get('complexNo'), legal_dong, jibun, region):
         return cached if cached.get("complexNo") else None
     cortar_complexes = _search_by_cortar(cortar_no)
     if cortar_complexes is not None:
@@ -440,6 +521,7 @@ def resolve(
             name,
             legal_dong,
             alternate_names=alternate_names,
+            jibun=jibun, region=region,
         )
         if result:
             with _CACHE_LOCK:
@@ -463,6 +545,7 @@ def resolve(
             name,
             legal_dong,
             alternate_names=alternate_names,
+            jibun=jibun, region=region,
         )
         if picked:
             result = picked
@@ -490,6 +573,56 @@ def search_url(query):
     return f"https://fin.land.naver.com/search?q={quote(str(query or '').strip(), safe='')}"
 
 
+def _apply_resolved_mapping(row, resolved, update_display_name=True):
+    """Apply one already-verified mapping without touching search identity."""
+    row["naverComplexNo"] = resolved["complexNo"]
+    row["naverPropertyUrl"] = complex_url(resolved["complexNo"])
+    row["naverLinkKind"] = "complex"
+    complex_name = str(resolved.get("complexName") or "").strip()
+    if not complex_name:
+        return
+    row["naverComplexName"] = complex_name
+    if not update_display_name:
+        return
+    source_name = row.get("displayName") or row.get("name") or ""
+    # A bundled mapping has passed the address/parcel check, so its exact
+    # NAVER label is safe even when the public source name has a phase number.
+    verified_display_name = str(resolved.get("displayName") or "").strip()
+    if verified_display_name:
+        row["displayName"] = verified_display_name
+        row["displayNameSource"] = resolved.get("displayNameSource") or "naver_verified_mapping"
+        return
+    # A live lookup has no durable display-name review. Preserve a numbered
+    # public source name rather than making 1·2단지 look like one guessed row.
+    preserve_source = bool(apartment_identity.phase_numbers(source_name))
+    row["displayName"] = source_name if preserve_source else complex_name
+    row["displayNameSource"] = "apartment_identity" if preserve_source else "naver_complex"
+
+
+def attach_static_links(rows, update_display_name=True):
+    """Apply bundled address-verified NAVER labels without a network lookup.
+
+    This is used on every first paint. A timeout or a changed autocomplete
+    response must never make a card name or a price card disappear.
+    """
+    for row in rows:
+        if not row.get("name"):
+            continue
+        resolved = resolve_static(
+            row.get("name", ""),
+            legal_dong=row.get("legalDong", ""),
+            jibun=row.get("jibun", ""),
+            region=row.get("region", ""),
+            alternate_names=(
+                row.get("displayName", ""),
+                row.get("searchQuery", ""),
+                row.get("naverPropertyQuery", ""),
+            ),
+        )
+        if resolved and resolved.get("complexNo"):
+            _apply_resolved_mapping(row, resolved, update_display_name)
+
+
 def attach_links(rows, update_display_name=True):
     """확정된 네이버 단지의 링크와 표시명을 후보 카드에 적용한다."""
     def _one(row):
@@ -509,15 +642,7 @@ def attach_links(rows, update_display_name=True):
         except Exception:
             resolved = None
         if resolved and resolved.get("complexNo"):
-            row["naverComplexNo"] = resolved["complexNo"]
-            row["naverPropertyUrl"] = complex_url(resolved["complexNo"])
-            row["naverLinkKind"] = "complex"
-            complex_name = str(resolved.get("complexName") or "").strip()
-            if complex_name:
-                row["naverComplexName"] = complex_name
-                if update_display_name:
-                    row["displayName"] = complex_name
-                    row["displayNameSource"] = "naver_complex"
+            _apply_resolved_mapping(row, resolved, update_display_name)
             return
         # 확정되지 않은 단지를 검색 화면으로 보내면 네이버페이 오류 화면이
         # 열리거나 동명이인 단지로 연결될 수 있으므로 링크를 비활성화한다.

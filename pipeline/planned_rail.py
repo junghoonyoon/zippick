@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from living_area_rail_policy import annotate
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "planned_rail_metro.json"
 _DATA = None
@@ -58,8 +59,11 @@ def planned_rail_for_candidate(row):
     regional_scope = f"{sido}:{sigungu}:{full_district}" if sido == "경기도" else f"{sido}:{sigungu}"
     result = []
     for line in _load()["lines"]:
+        if line.get('stageCode') in ('completed','unknown'):continue
         stations = [station["name"] for station in line["stations"]
-                    if station["sido"] == sido and station["sigungu"] == sigungu]
+                    if station["sido"] == sido and station["sigungu"] == sigungu
+                    and station.get('serviceStatus') != 'operating'
+                    and station.get('membershipVerified',True)]
         regional_reference = regional_scope in line.get("regionalScopes", [])
         if stations or regional_reference:
             result.append({key: line[key] for key in (
@@ -71,4 +75,4 @@ def planned_rail_for_candidate(row):
                  "planningNote": line.get("planningNote"),
                  "sourceDate": line.get("sourceDate"),
                  "verifiedAt": line.get("verifiedAt") or _load().get("checkedAt")})
-    return result
+    return [annotate(line) for line in result]

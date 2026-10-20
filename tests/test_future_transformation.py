@@ -181,7 +181,10 @@ def test_storage_idempotency_history_cache_and_error_isolation(tmp_path):
     with pytest.raises(ValueError): f.import_document(doc, **args)
     broken = tmp_path / 'broken.sqlite3'
     broken.write_text('invalid database')
-    assert f.analyze(row, path=broken)['status'] == 'error'
+    failed = f.analyze(row, path=broken)
+    assert failed['status'] == 'error'
+    assert failed['livingArea']['status'] == 'error'
+    assert failed['livingArea']['headline'] == '생활권 자료를 불러오지 못했어요.'
 
 
 def test_projects_scope_and_missing_location_suppress_scores(tmp_path):
@@ -216,13 +219,13 @@ def test_pilot_facts_are_real_registry_entities_and_have_no_fake_measurements():
 @pytest.mark.skipif(not shutil.which('node'), reason='Node required')
 def test_frontend_states_links_and_no_null_coercion():
     html = (f.config.ROOT / '앱화면/real-estate-search.html').read_text()
-    names = ['zippickFutureSourceLink', 'zippickFutureReferenceProjects', 'zippickLifestyleProjectInsight', 'zippickLivingTransportHtml', 'zippickLifestyleChangeHtml', 'zippickLifestyleChangeRatingData', 'zippickReportMapHtml']
+    names = ['zippickFutureSourceLink', 'zippickFutureReferenceProjects', 'zippickLifestyleProjectInsight', 'zippickLivingTransportHtml', 'zippickLifestylePlanRating', 'zippickLifestyleChangeHtml', 'zippickLifestyleChangeRatingData', 'zippickReportMapHtml']
     functions = '\n'.join(re.search(r'    function '+n+r'\([^\n]*\) \{.*?\n    \}', html, re.S).group() for n in names)
     sites = re.search(r'    const ZIPPICK_REPORT_PROJECT_SITES = \{.*?\n    \};', html, re.S).group()
     script = "const assert = require('node:assert/strict'); const esc = v => String(v).replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('\"','&quot;'); const candidateDisplayName = item => item.name || '이 단지'; const candidateMapAddress = item => item.address || '';\n" + sites + '\n' + functions
     script += '\nconst result = ' + json.dumps(f.evaluate('fixture-only', dossier(), as_of=DAY)) + ';\n'
     script += r'''
-assert.match(zippickLifestyleChangeHtml({futureTransformation:result}), /판단 보류/);
+assert.match(zippickLifestyleChangeHtml({futureTransformation:result}), /평가 자료 부족/);
 assert.doesNotMatch(zippickLifestyleChangeHtml({futureTransformation:result}), /100 \/ 5/);
 const model = {modelVersion:'living-area-v2-beta',status:'ready',score:3.7,
  subScores:{housing:4,transport:null,competitiveness:3},projects:[],referenceProjects:[]};
@@ -231,7 +234,7 @@ assert.match(zippickLifestyleChangeHtml({futureTransformation:model}),/3.7 \/ 5/
 assert.match(zippickLifestyleChangeHtml({futureTransformation:model}),/4.0 \/ 5/);
 assert.match(zippickLifestyleChangeHtml({futureTransformation:model}),/— \/ 5/);
 assert.match(zippickLifestyleChangeHtml({futureTransformation:model}),/점수 근거 보기/);
-assert.match(zippickLifestyleChangeHtml({futureTransformation:model}),/판단 보류/);
+assert.match(zippickLifestyleChangeHtml({futureTransformation:model}),/평가 보류/);
 assert.doesNotMatch(zippickLifestyleChangeHtml({futureTransformation:model}),/신축 대비 경쟁력/);
 const project={name:'<script>',stage:'approved',sourceUrl:'https://www.seoul.go.kr/notice',
  sourceRecordId:'p',licenseVerifiedAt:'2026-10-15',sourceDate:'2026-10-13',distanceMeters:430,distanceLabel:'대표점 직선거리'};
@@ -259,10 +262,27 @@ assert.doesNotMatch(rendered,/<script>/);
 assert.doesNotMatch(zippickLifestyleChangeHtml({futureTransformation:{...model,projects:[{...project,licenseVerifiedAt:null}]}}),/&lt;script&gt;/);
 for (const status of ['insufficient_data','stale','error']) {
  const html=zippickLifestyleChangeHtml({futureTransformation:{...model,status,score:null}});
- assert.match(html,/판단 보류/);
  assert.match(html,/data-zpr-map-redevelopment="true"/);
  assert.doesNotMatch(html,/0.0 \/ 5/);
+ if (status === 'error') {
+   assert.match(html,/생활권 자료를 불러오지 못했어요/);
+   assert.match(html,/다시 열어 주세요/);
+   assert.doesNotMatch(html,/zpr-living-subs/);
+   assert.doesNotMatch(html,/확인한 주변 사업/);
+ } else if (status === 'stale') {
+   assert.match(html,/최신 자료 확인 필요/);
+ } else {
+   assert.match(html,/평가 보류/);
+ }
 }
+const noScores={modelVersion:'living-area-v2-beta',status:'insufficient_data',
+ planRating:{version:'living-area-plan-v5-beta',status:'insufficient_data',score:null,
+   subScores:{housing:null,transport:null}}};
+assert.match(zippickLifestyleChangeHtml({futureTransformation:noScores}),/평가 자료 부족/);
+const failedWithOldProjects={modelVersion:'living-area-v2-beta',status:'error',
+ displayProjects:[{id:'old-project',name:'오래된 구역',projectType:'redevelopment',latitude:37.5,longitude:127.0}],
+ projects:[],referenceProjects:[]};
+assert.doesNotMatch(zippickLifestyleChangeHtml({futureTransformation:failedWithOldProjects}),/오래된 구역/);
 assert.equal(zippickFutureSourceLink('javascript:alert(1)'), '');
 assert.equal(zippickFutureSourceLink('https://seoul.go.kr.evil.example/'), '');
 assert.match(zippickFutureSourceLink('https://www.seoul.go.kr/notice'), /noopener/);

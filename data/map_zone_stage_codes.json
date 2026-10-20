@@ -1,0 +1,1163 @@
+{
+  "checkedAt": "2026-10-19",
+  "sourceUrl": "https://urban.seoul.go.kr/bsns/getPropelCdByCd.json",
+  "pageUrl": "https://urban.seoul.go.kr/view/html/PMNU1100000001?bsnsCd=BZ101",
+  "request": {
+    "method": "POST",
+    "json": {
+      "propelCd": ""
+    }
+  },
+  "recordsSha256": "a161a4757498d24c020f551d576ef5ac94807d946021675bf155c0fa734cbd2c",
+  "note": "Official code descriptions only; does not update individual project status dates.",
+  "codes": [
+    {
+      "propelCd": "PP2101",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ403;BZ404",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1902",
+      "propelCdNm": "입주자 모집공고 완료",
+      "bsnsTypeLList": "BZ306",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP2201",
+      "propelCdNm": "대상지 선정",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0101",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ101",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0201",
+      "propelCdNm": "입안제안",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0301",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0401",
+      "propelCdNm": "수립범위 자문",
+      "bsnsTypeLList": "BZ201",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0500",
+      "propelCdNm": "조합설립인가 추진중(연번부여)",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0601",
+      "propelCdNm": "주민합의체 구성",
+      "bsnsTypeLList": "BZ203",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0701",
+      "propelCdNm": "조합설립추진중",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0801",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0901",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1001",
+      "propelCdNm": "지구지정",
+      "bsnsTypeLList": "BZ401",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1101",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1201",
+      "propelCdNm": "예정지구지정",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1301",
+      "propelCdNm": "입안제안",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1401",
+      "propelCdNm": "조합설립인가",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1501",
+      "propelCdNm": "추진계획수립중",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1601",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ604",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1701",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ605",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1801",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1901",
+      "propelCdNm": "입주자 모집공고 중",
+      "bsnsTypeLList": "BZ306",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2001",
+      "propelCdNm": "입안제안",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2102",
+      "propelCdNm": "구역변경",
+      "bsnsTypeLList": "BZ403;BZ404",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2202",
+      "propelCdNm": "제안서접수",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0202",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0302",
+      "propelCdNm": "정비계획수립",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0402",
+      "propelCdNm": "대상지선정",
+      "bsnsTypeLList": "BZ201",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0501",
+      "propelCdNm": "조합설립인가",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0602",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ203",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0702",
+      "propelCdNm": "조합설립인가",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0802",
+      "propelCdNm": "사전검토",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0902",
+      "propelCdNm": "통심위 사전자문",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1002",
+      "propelCdNm": "지구변경",
+      "bsnsTypeLList": "BZ401",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1102",
+      "propelCdNm": "촉진계획수립(변경)",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1202",
+      "propelCdNm": "후보지선정",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1302",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1402",
+      "propelCdNm": "1차 안전진단",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1502",
+      "propelCdNm": "추진계획승인",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1602",
+      "propelCdNm": "활성화계획수립",
+      "bsnsTypeLList": "BZ604",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1702",
+      "propelCdNm": "구역해제",
+      "bsnsTypeLList": "BZ605",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1802",
+      "propelCdNm": "통심위 사전자문",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2002",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1003",
+      "propelCdNm": "지구해제",
+      "bsnsTypeLList": "BZ401",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP2103",
+      "propelCdNm": "구역해제",
+      "bsnsTypeLList": "BZ403;BZ404",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP2203",
+      "propelCdNm": "협상조정협의회 운영",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0103",
+      "propelCdNm": "기획완료",
+      "bsnsTypeLList": "BZ101",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0203",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0303",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0502",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0603",
+      "propelCdNm": "사업시행인가",
+      "bsnsTypeLList": "BZ203",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0703",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0803",
+      "propelCdNm": "입안제안",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0903",
+      "propelCdNm": "입안제안",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1103",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1203",
+      "propelCdNm": "지구지정",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1303",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1403",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1503",
+      "propelCdNm": "조합설립인가",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1603",
+      "propelCdNm": "마중물사업(추진중)",
+      "bsnsTypeLList": "BZ604",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1803",
+      "propelCdNm": "입안제안",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2003",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2204",
+      "propelCdNm": "협상완료",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0204",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0304",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0404",
+      "propelCdNm": "사전자문",
+      "bsnsTypeLList": "BZ201",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0503",
+      "propelCdNm": "사업시행인가",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0604",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ203",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0704",
+      "propelCdNm": "사업시행계획인가",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0804",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0904",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1104",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1204",
+      "propelCdNm": "설계공모완료",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1304",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1404",
+      "propelCdNm": "리모델링허가승인",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1504",
+      "propelCdNm": "사업시행계획인가",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1604",
+      "propelCdNm": "사업완료",
+      "bsnsTypeLList": "BZ604",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP1804",
+      "propelCdNm": "열람공고",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2004",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2205",
+      "propelCdNm": "입안절차 진행",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0105",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ101",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0205",
+      "propelCdNm": "추진위구성",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0305",
+      "propelCdNm": "사업시행인가",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0405",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ201",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0504",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0605",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ203",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0705",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0805",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0905",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1105",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1205",
+      "propelCdNm": "사업계획승인",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1305",
+      "propelCdNm": "실시계획인가",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1405",
+      "propelCdNm": "2차 안전진단",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1505",
+      "propelCdNm": "관리처분계획인가",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1605",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ604",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1805",
+      "propelCdNm": "위원회심의",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2005",
+      "propelCdNm": "지구계획승인(변경)",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0406",
+      "propelCdNm": "관리지역고시",
+      "bsnsTypeLList": "BZ201",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2206",
+      "propelCdNm": "도시건축공동위 심의",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0206",
+      "propelCdNm": "조합설립인가",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0306",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0505",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0606",
+      "propelCdNm": "중단",
+      "bsnsTypeLList": "BZ203",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0706",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0806",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0906",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1106",
+      "propelCdNm": "구역취소",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1206",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1306",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP1406",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1506",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1806",
+      "propelCdNm": "구역지정",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2006",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1507",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0407",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ201",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP2207",
+      "propelCdNm": "결정고시",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0207",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0307",
+      "propelCdNm": "준공(일부)",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0506",
+      "propelCdNm": "중단",
+      "bsnsTypeLList": "BZ202",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0707",
+      "propelCdNm": "중단",
+      "bsnsTypeLList": "BZ204;BZ205",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0807",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0907",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1107",
+      "propelCdNm": "추진위구성",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1207",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP1307",
+      "propelCdNm": "구역지정해제",
+      "bsnsTypeLList": "BZ601",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1407",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP1807",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2007",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP1208",
+      "propelCdNm": "입주중",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1108",
+      "propelCdNm": "조합설립인가",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP2208",
+      "propelCdNm": "인허가 절차",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0908",
+      "propelCdNm": "사업계획승인",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0808",
+      "propelCdNm": "사업계획승인",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1408",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ602",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0308",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ107;BZ108",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP2008",
+      "propelCdNm": "구역지정해제",
+      "bsnsTypeLList": "BZ501",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0208",
+      "propelCdNm": "사업시행인가",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1508",
+      "propelCdNm": "중단(실효)",
+      "bsnsTypeLList": "BZ603",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1808",
+      "propelCdNm": "사업계획승인",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1809",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0809",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP2209",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1209",
+      "propelCdNm": "후보지철회",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0209",
+      "propelCdNm": "관리처분계획인가",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0909",
+      "propelCdNm": "건축허가",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1109",
+      "propelCdNm": "건축심의",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1110",
+      "propelCdNm": "사업시행인가",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP1210",
+      "propelCdNm": "해제",
+      "bsnsTypeLList": "BZ502",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0210",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP2210",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP1810",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0810",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0910",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP1111",
+      "propelCdNm": "관리처분계획인가",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG01",
+      "propelGrpNm": "추진중"
+    },
+    {
+      "propelCd": "PP0911",
+      "propelCdNm": "사용승인",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0811",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ301",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0211",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP2211",
+      "propelCdNm": "제외",
+      "bsnsTypeLList": "BZ606",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1811",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ302",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1112",
+      "propelCdNm": "착공",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG02",
+      "propelGrpNm": "공사중"
+    },
+    {
+      "propelCd": "PP0912",
+      "propelCdNm": "입주",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    },
+    {
+      "propelCd": "PP0212",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ102;BZ103;BZ104;BZ105;BZ106",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP0913",
+      "propelCdNm": "취소",
+      "bsnsTypeLList": "BZ303;BZ304;BZ305",
+      "propelGrpCd": "PG04",
+      "propelGrpNm": "기타"
+    },
+    {
+      "propelCd": "PP1113",
+      "propelCdNm": "준공",
+      "bsnsTypeLList": "BZ402",
+      "propelGrpCd": "PG03",
+      "propelGrpNm": "완료"
+    }
+  ]
+}

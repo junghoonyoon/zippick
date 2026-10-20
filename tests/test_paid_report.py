@@ -15,6 +15,74 @@ import momentum_signals
 
 class PaidReportTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node required')
+    def test_report_distinguishes_a_measured_zero_from_a_missing_signal(self):
+        html = (ROOT / '앱화면/real-estate-search.html').read_text()
+        matrix = re.search(r'    const ZIPPICK_MATRIX = \[.*?\n    \];', html, re.S).group()
+        names = ['zpNum', 'zippickMatrixVerdict', 'zippickPartialVerdict',
+                 'candidateFlowScoreBadgeHtml', 'candidateReadonlyFlowScoreBadgeHtml',
+                 'signalBadgesHtml', 'candidateZippickReportHtml']
+        functions = '\n'.join(re.search(
+            r'    function ' + name + r'\([^\n]*\) \{.*?\n    \}', html, re.S,
+        ).group() for name in names)
+        stubs = ['zippickLocationBarsHtml', 'zippickSignalBarsHtml', 'zippickReportMapHtml',
+                 'zippickPriceEvidenceHtml', 'zippickCommuteHtml', 'zippickLiquidityHtml',
+                 'zippickLifestyleChangeHtml', 'zippickFundingHtml', 'zippickDevelopmentHtml',
+                 'zippickAlternativesHtml', 'zippickBreakevenHtml', 'zippickSignalLabel',
+                 'zippickEvidenceHtml', 'zippickMatrixTableHtml', 'zippickViewingChecklistHtml']
+        script = matrix + functions + '\n' + '\n'.join(
+            f'function {name}() {{ return ""; }}' for name in stubs
+        ) + r'''
+const assert = require('node:assert/strict');
+const esc = String;
+const candidateDisplayName = item => item.name;
+const candidateShouldWaitForScores = () => false;
+const zippickGuardVerdict = (_item, verdict) => verdict;
+const zippickNumberSteps = html => html;
+const zippickDecisionHtml = (_item, verdict) => `verdict:${verdict.tone}`;
+const signalTierLabel = () => '신호 적음';
+const base = {name:'테스트',locationScore:{score:78}};
+const zero = {...base,signals:{status:'ok',score:0}};
+assert.match(candidateZippickReportHtml(zero),/verdict:hold/);
+assert.match(candidateZippickReportHtml(zero),/>0점</);
+assert.match(signalBadgesHtml(zero),/최근 시장 신호 0점/);
+assert.match(signalBadgesHtml({...base,signals:{status:'insufficient',score:''}}),/표본 부족/);
+for (const badge of [candidateFlowScoreBadgeHtml, candidateReadonlyFlowScoreBadgeHtml]) {
+  assert.match(badge(zero),/최근 시장 신호 0점/);
+  for (const score of [null,undefined,'']) {
+    assert.match(badge({...base,signals:{status:'insufficient',score}}),/측정 불가/);
+  }
+}
+assert.match(candidateZippickReportHtml({...base,signals:{status:'insufficient',score:null}}),/verdict:missing/);
+'''
+        result = subprocess.run(['node'], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node required')
+    def test_report_keeps_a_cautious_verdict_when_only_market_score_is_missing(self):
+        html = (ROOT / '앱화면/real-estate-search.html').read_text()
+        matrix = re.search(r'    function zippickMatrixVerdict\([^\n]*\) \{.*?\n    \}', html, re.S)
+        partial = re.search(r'    function zippickPartialVerdict\([^\n]*\) \{.*?\n    \}', html, re.S)
+        self.assertIsNotNone(matrix)
+        self.assertIsNotNone(partial)
+        script = matrix.group() + partial.group() + r'''
+const assert = require('node:assert/strict');
+const latest = new Date().toISOString().slice(0, 10);
+const incompleteMarket = zippickPartialVerdict({
+  locationScore:{score:78}, signals:{score:null}, priceIdentityVerified:true,
+  latestDealPriceEok:20.6, latestDealDate:latest, transactionCount:2,
+}, zippickMatrixVerdict(78, null));
+assert.equal(incompleteMarket.tone, 'conditional');
+assert.equal(incompleteMarket.partial, true);
+const noVerifiedTrade = zippickPartialVerdict({
+  locationScore:{score:78}, signals:{score:null}, priceIdentityVerified:false,
+  latestDealPriceEok:20.6, latestDealDate:latest,
+}, zippickMatrixVerdict(78, null));
+assert.equal(noVerifiedTrade.tone, 'missing');
+'''
+        result = subprocess.run(['node'], input=script, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node required')
     def test_report_peer_lookup_finishes_loading(self):
         html = (ROOT / '앱화면/real-estate-search.html').read_text()
         lookup = re.search(

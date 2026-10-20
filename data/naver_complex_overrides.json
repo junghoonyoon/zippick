@@ -7,7 +7,7 @@
     "resolved": 2726,
     "unresolved": 15887,
     "missingCortarNo": 73,
-    "entries": 12829,
+    "entries": 12824,
     "retainedExistingEntries": 4794
   },
   "entries": [
@@ -5587,45 +5587,45 @@
       "legalDong": "둔촌동",
       "jibun": "70-5",
       "region": "강동구",
-      "complexNo": "1301",
-      "complexName": "둔촌현대4차",
-      "source": "cortar_list"
+      "complexNo": "830",
+      "complexName": "현대2차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "둔촌동 2차현대",
       "legalDong": "둔촌동",
       "jibun": "70-5",
       "region": "강동구",
-      "complexNo": "1301",
-      "complexName": "둔촌현대4차",
-      "source": "cortar_list"
+      "complexNo": "830",
+      "complexName": "현대2차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "둔촌동 2차현대아파트",
       "legalDong": "둔촌동",
       "jibun": "70-5",
       "region": "강동구",
-      "complexNo": "1301",
-      "complexName": "둔촌현대4차",
-      "source": "cortar_list"
+      "complexNo": "830",
+      "complexName": "현대2차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "둔촌동 현대2",
       "legalDong": "둔촌동",
       "jibun": "70-5",
       "region": "강동구",
-      "complexNo": "1301",
-      "complexName": "둔촌현대4차",
-      "source": "cortar_list"
+      "complexNo": "830",
+      "complexName": "현대2차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "현대2",
       "legalDong": "둔촌동",
       "jibun": "70-5",
       "region": "강동구",
-      "complexNo": "1301",
-      "complexName": "둔촌현대4차",
-      "source": "cortar_list"
+      "complexNo": "830",
+      "complexName": "현대2차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "둔촌동 현대4",
@@ -5739,33 +5739,6 @@
       "name": "상일동 강동리엔파크14단지",
       "legalDong": "상일동",
       "jibun": "28",
-      "region": "강동구",
-      "complexNo": "134513",
-      "complexName": "강동리엔파크14단지",
-      "source": "cortar_list"
-    },
-    {
-      "name": "강동리엔파크11단지",
-      "legalDong": "상일동",
-      "jibun": "36-3",
-      "region": "강동구",
-      "complexNo": "134513",
-      "complexName": "강동리엔파크14단지",
-      "source": "cortar_list"
-    },
-    {
-      "name": "상일동 강동리엔파크11",
-      "legalDong": "상일동",
-      "jibun": "36-3",
-      "region": "강동구",
-      "complexNo": "134513",
-      "complexName": "강동리엔파크14단지",
-      "source": "cortar_list"
-    },
-    {
-      "name": "상일동 강동리엔파크11단지",
-      "legalDong": "상일동",
-      "jibun": "36-3",
       "region": "강동구",
       "complexNo": "134513",
       "complexName": "강동리엔파크14단지",
@@ -5976,33 +5949,6 @@
       "region": "강동구",
       "complexNo": "137668",
       "complexName": "고덕아르테스미소지움",
-      "source": "cortar_list"
-    },
-    {
-      "name": "강동 리엔파크 13단지",
-      "legalDong": "상일동",
-      "jibun": "산2-3",
-      "region": "강동구",
-      "complexNo": "134513",
-      "complexName": "강동리엔파크14단지",
-      "source": "cortar_list"
-    },
-    {
-      "name": "상일동 강동 리엔파크 13",
-      "legalDong": "상일동",
-      "jibun": "산2-3",
-      "region": "강동구",
-      "complexNo": "134513",
-      "complexName": "강동리엔파크14단지",
-      "source": "cortar_list"
-    },
-    {
-      "name": "상일동 강동 리엔파크 13단지",
-      "legalDong": "상일동",
-      "jibun": "산2-3",
-      "region": "강동구",
-      "complexNo": "134513",
-      "complexName": "강동리엔파크14단지",
       "source": "cortar_list"
     },
     {
@@ -14616,7 +14562,8 @@
       "region": "강서구",
       "complexNo": "1348",
       "complexName": "가양9단지",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "가양도시개발9-2단지",
@@ -14625,7 +14572,8 @@
       "region": "강서구",
       "complexNo": "1348",
       "complexName": "가양9단지",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "가양동 한보구암마을",
@@ -15748,18 +15696,18 @@
       "legalDong": "등촌동",
       "jibun": "633-28",
       "region": "강서구",
-      "complexNo": "10255",
-      "complexName": "등촌3차보람쉬움",
-      "source": "cortar_list"
+      "complexNo": "13847",
+      "complexName": "등촌보람쉬움5차(더하임)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "등촌5차보람쉬움아파트",
       "legalDong": "등촌동",
       "jibun": "633-28",
       "region": "강서구",
-      "complexNo": "10255",
-      "complexName": "등촌3차보람쉬움",
-      "source": "cortar_list"
+      "complexNo": "13847",
+      "complexName": "등촌보람쉬움5차(더하임)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "등촌동 심미에셈빌",
@@ -22327,18 +22275,18 @@
       "legalDong": "화곡동",
       "jibun": "1154",
       "region": "강서구",
-      "complexNo": "11671",
-      "complexName": "화곡보람쉬움1차",
-      "source": "cortar_list"
+      "complexNo": "19505",
+      "complexName": "화곡보람쉬움6차(더하임)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "화곡6차보람쉬움아파트",
       "legalDong": "화곡동",
       "jibun": "1154",
       "region": "강서구",
-      "complexNo": "11671",
-      "complexName": "화곡보람쉬움1차",
-      "source": "cortar_list"
+      "complexNo": "19505",
+      "complexName": "화곡보람쉬움6차(더하임)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "우장산휴먼빌",
@@ -31750,63 +31698,63 @@
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "건영아파트",
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "건영아파트(3차)",
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림동 LIG대학마을(건영아파트3차)",
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림동 건영",
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림동 건영아파트",
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림동 건영아파트(3차)",
       "legalDong": "신림동",
       "jibun": "1703-1",
       "region": "관악구",
-      "complexNo": "3168",
-      "complexName": "신림건영5차",
-      "source": "cortar_list"
+      "complexNo": "55",
+      "complexName": "건영3차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림1단지주공아파트",
@@ -31840,36 +31788,36 @@
       "legalDong": "신림동",
       "jibun": "1705",
       "region": "관악구",
-      "complexNo": "3169",
-      "complexName": "신림금호타운2차",
-      "source": "cortar_list"
+      "complexNo": "56",
+      "complexName": "금호타운1차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "금호타운",
       "legalDong": "신림동",
       "jibun": "1705",
       "region": "관악구",
-      "complexNo": "3169",
-      "complexName": "신림금호타운2차",
-      "source": "cortar_list"
+      "complexNo": "56",
+      "complexName": "금호타운1차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림동 금호(1차)",
       "legalDong": "신림동",
       "jibun": "1705",
       "region": "관악구",
-      "complexNo": "3169",
-      "complexName": "신림금호타운2차",
-      "source": "cortar_list"
+      "complexNo": "56",
+      "complexName": "금호타운1차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "신림동 금호타운",
       "legalDong": "신림동",
       "jibun": "1705",
       "region": "관악구",
-      "complexNo": "3169",
-      "complexName": "신림금호타운2차",
-      "source": "cortar_list"
+      "complexNo": "56",
+      "complexName": "금호타운1차",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "금호2",
@@ -31914,24 +31862,6 @@
       "region": "관악구",
       "complexNo": "3176",
       "complexName": "초원",
-      "source": "cortar_list"
-    },
-    {
-      "name": "신림2단지 주공아파트",
-      "legalDong": "신림동",
-      "jibun": "1713",
-      "region": "관악구",
-      "complexNo": "1263",
-      "complexName": "신림주공1단지",
-      "source": "cortar_list"
-    },
-    {
-      "name": "신림2단지주공(임대)",
-      "legalDong": "신림동",
-      "jibun": "1713",
-      "region": "관악구",
-      "complexNo": "1263",
-      "complexName": "신림주공1단지",
       "source": "cortar_list"
     },
     {
@@ -49660,72 +49590,72 @@
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "공릉동 대아2차",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "공릉동 대아2차아파트",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "공릉동 대아아파트",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "공릉동 대아아파트1차",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "대아2차아파트",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "대아아파트",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "대아아파트1차",
       "legalDong": "공릉동",
       "jibun": "492-1",
       "region": "노원구",
-      "complexNo": "1086",
-      "complexName": "공릉대동2차",
-      "source": "cortar_list"
+      "complexNo": "8663",
+      "complexName": "대아(492-1)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "공릉동 서진프라자",
@@ -55755,7 +55685,8 @@
       "region": "노원구",
       "complexNo": "8415",
       "complexName": "중계현대2차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "중계동 현대그룹중계동주택조합2차(아)",
@@ -55764,7 +55695,8 @@
       "region": "노원구",
       "complexNo": "8415",
       "complexName": "중계현대2차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "현대2(4차)",
@@ -55773,7 +55705,8 @@
       "region": "노원구",
       "complexNo": "8415",
       "complexName": "중계현대2차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "현대그룹중계동주택조합2차(아)",
@@ -55782,7 +55715,8 @@
       "region": "노원구",
       "complexNo": "8415",
       "complexName": "중계현대2차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "성원1",
@@ -62751,24 +62685,6 @@
       "source": "cortar_list"
     },
     {
-      "name": "이문동 이문아이파크자이",
-      "legalDong": "이문동",
-      "jibun": "149-8",
-      "region": "동대문구",
-      "complexNo": "26159",
-      "complexName": "이문아이파크자이3단지",
-      "source": "manual_verified_web"
-    },
-    {
-      "name": "이문아이파크자이",
-      "legalDong": "이문동",
-      "jibun": "149-8",
-      "region": "동대문구",
-      "complexNo": "26159",
-      "complexName": "이문아이파크자이3단지",
-      "source": "manual_verified_web"
-    },
-    {
       "name": "대림e-편한세상",
       "legalDong": "이문동",
       "jibun": "225",
@@ -63666,7 +63582,8 @@
       "region": "동대문구",
       "complexNo": "104432",
       "complexName": "공감대4차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "공감대5차(334-5)",
@@ -63675,7 +63592,8 @@
       "region": "동대문구",
       "complexNo": "104432",
       "complexName": "공감대4차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "장안동 공감대 4차",
@@ -63684,7 +63602,8 @@
       "region": "동대문구",
       "complexNo": "104432",
       "complexName": "공감대4차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "장안동 공감대 4차 아파트",
@@ -63693,7 +63612,8 @@
       "region": "동대문구",
       "complexNo": "104432",
       "complexName": "공감대4차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "장안동 공감대5차(334-5)",
@@ -63702,7 +63622,8 @@
       "region": "동대문구",
       "complexNo": "104432",
       "complexName": "공감대4차",
-      "source": "cortar_list"
+      "source": "address_review_2026_10_19",
+      "phaseAliasVerified": true
     },
     {
       "name": "우성2차아파트",
@@ -65653,45 +65574,45 @@
       "legalDong": "장안동",
       "jibun": "440-7",
       "region": "동대문구",
-      "complexNo": "103467",
-      "complexName": "장안상록파라브",
-      "source": "cortar_list"
+      "complexNo": "103492",
+      "complexName": "상록파라브(105동,주상복합)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "상록파라브아파트105동",
       "legalDong": "장안동",
       "jibun": "440-7",
       "region": "동대문구",
-      "complexNo": "103467",
-      "complexName": "장안상록파라브",
-      "source": "cortar_list"
+      "complexNo": "103492",
+      "complexName": "상록파라브(105동,주상복합)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "장안동 상록파라브",
       "legalDong": "장안동",
       "jibun": "440-7",
       "region": "동대문구",
-      "complexNo": "103467",
-      "complexName": "장안상록파라브",
-      "source": "cortar_list"
+      "complexNo": "103492",
+      "complexName": "상록파라브(105동,주상복합)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "장안동 상록파라브아파트",
       "legalDong": "장안동",
       "jibun": "440-7",
       "region": "동대문구",
-      "complexNo": "103467",
-      "complexName": "장안상록파라브",
-      "source": "cortar_list"
+      "complexNo": "103492",
+      "complexName": "상록파라브(105동,주상복합)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "장안동 상록파라브아파트105동",
       "legalDong": "장안동",
       "jibun": "440-7",
       "region": "동대문구",
-      "complexNo": "103467",
-      "complexName": "장안상록파라브",
-      "source": "cortar_list"
+      "complexNo": "103492",
+      "complexName": "상록파라브(105동,주상복합)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "금호(444-9)",
@@ -69163,90 +69084,90 @@
       "legalDong": "사당동",
       "jibun": "1135",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1139",
+      "complexName": "대아2차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "대아아파트",
       "legalDong": "사당동",
       "jibun": "1135",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1139",
+      "complexName": "대아2차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 경남아너스빌2차",
       "legalDong": "사당동",
       "jibun": "1135",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1139",
+      "complexName": "대아2차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 대아",
       "legalDong": "사당동",
       "jibun": "1135",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1139",
+      "complexName": "대아2차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 대아아파트",
       "legalDong": "사당동",
       "jibun": "1135",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1139",
+      "complexName": "대아2차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "경남아너스빌(대아3)",
       "legalDong": "사당동",
       "jibun": "1136",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1135",
+      "complexName": "대아3차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "대아아파트",
       "legalDong": "사당동",
       "jibun": "1136",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1135",
+      "complexName": "대아3차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 경남아너스빌(대아3)",
       "legalDong": "사당동",
       "jibun": "1136",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1135",
+      "complexName": "대아3차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 대아",
       "legalDong": "사당동",
       "jibun": "1136",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1135",
+      "complexName": "대아3차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 대아아파트",
       "legalDong": "사당동",
       "jibun": "1136",
       "region": "동작구",
-      "complexNo": "376",
-      "complexName": "경남아너스빌",
-      "source": "cortar_list"
+      "complexNo": "1135",
+      "complexName": "대아3차(경남아너스빌)",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "사당동 신동아",
@@ -74034,24 +73955,6 @@
       "region": "마포구",
       "complexNo": "11469",
       "complexName": "삼성화원",
-      "source": "cortar_list"
-    },
-    {
-      "name": "망원동 신부3차파스카",
-      "legalDong": "망원동",
-      "jibun": "495",
-      "region": "마포구",
-      "complexNo": "25326",
-      "complexName": "신부파스카4차",
-      "source": "cortar_list"
-    },
-    {
-      "name": "신부3차파스카",
-      "legalDong": "망원동",
-      "jibun": "495",
-      "region": "마포구",
-      "complexNo": "25326",
-      "complexName": "신부파스카4차",
       "source": "cortar_list"
     },
     {
@@ -83329,45 +83232,45 @@
       "legalDong": "삼평동",
       "jibun": "742",
       "region": "성남분당구",
-      "complexNo": "27371",
-      "complexName": "봇들마을4단지",
-      "source": "local_cache"
+      "complexNo": "27497",
+      "complexName": "봇들8단지한신휴플러스",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "봇들마을8단지",
       "legalDong": "삼평동",
       "jibun": "742",
       "region": "성남분당구",
-      "complexNo": "27371",
-      "complexName": "봇들마을4단지",
-      "source": "local_cache"
+      "complexNo": "27497",
+      "complexName": "봇들8단지한신휴플러스",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "삼평동 봇들마을",
       "legalDong": "삼평동",
       "jibun": "742",
       "region": "성남분당구",
-      "complexNo": "27371",
-      "complexName": "봇들마을4단지",
-      "source": "local_cache"
+      "complexNo": "27497",
+      "complexName": "봇들8단지한신휴플러스",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "삼평동 봇들마을8",
       "legalDong": "삼평동",
       "jibun": "742",
       "region": "성남분당구",
-      "complexNo": "27371",
-      "complexName": "봇들마을4단지",
-      "source": "local_cache"
+      "complexNo": "27497",
+      "complexName": "봇들8단지한신휴플러스",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "삼평동 봇들마을8단지",
       "legalDong": "삼평동",
       "jibun": "742",
       "region": "성남분당구",
-      "complexNo": "27371",
-      "complexName": "봇들마을4단지",
-      "source": "local_cache"
+      "complexNo": "27497",
+      "complexName": "봇들8단지한신휴플러스",
+      "source": "address_review_2026_10_19"
     },
     {
       "name": "서현동 시범한양",
@@ -92205,33 +92108,6 @@
       "region": "송파구",
       "complexNo": "3543",
       "complexName": "보화2차",
-      "source": "cortar_list"
-    },
-    {
-      "name": "거여동 쌍용스윗닷홈2차",
-      "legalDong": "거여동",
-      "jibun": "27-5",
-      "region": "송파구",
-      "complexNo": "18973",
-      "complexName": "쌍용스윗닷홈거여역1차",
-      "source": "cortar_list"
-    },
-    {
-      "name": "거여역2차 쌍용아파트",
-      "legalDong": "거여동",
-      "jibun": "27-5",
-      "region": "송파구",
-      "complexNo": "18973",
-      "complexName": "쌍용스윗닷홈거여역1차",
-      "source": "cortar_list"
-    },
-    {
-      "name": "쌍용스윗닷홈2차",
-      "legalDong": "거여동",
-      "jibun": "27-5",
-      "region": "송파구",
-      "complexNo": "18973",
-      "complexName": "쌍용스윗닷홈거여역1차",
       "source": "cortar_list"
     },
     {
@@ -115489,6 +115365,84 @@
       "complexNo": "116776",
       "complexName": "동탄역시범더샵센트럴시티",
       "source": "manual_verified_web"
+    },
+    {
+      "name": "이문아이파크자이 1단지",
+      "legalDong": "이문동",
+      "jibun": "149-8",
+      "region": "동대문구",
+      "complexNo": "174562",
+      "complexName": "이문아이파크자이(3-1BL)",
+      "source": "apartment_sections"
+    },
+    {
+      "name": "이문아이파크자이 2단지",
+      "legalDong": "이문동",
+      "jibun": "149-8",
+      "region": "동대문구",
+      "complexNo": "174562",
+      "complexName": "이문아이파크자이(3-1BL)",
+      "source": "apartment_sections"
+    },
+    {
+      "name": "이문아이파크자이 3단지",
+      "legalDong": "이문동",
+      "jibun": "419-1",
+      "region": "동대문구",
+      "complexNo": "184737",
+      "complexName": "이문아이파크자이(3-2BL)",
+      "source": "apartment_sections"
+    },
+    {
+      "name": "망원동 신부3차파스카",
+      "legalDong": "망원동",
+      "jibun": "495",
+      "region": "마포구",
+      "complexNo": "105595",
+      "complexName": "신부파스카빌",
+      "source": "address_review_2026_10_19"
+    },
+    {
+      "name": "신부3차파스카",
+      "legalDong": "망원동",
+      "jibun": "495",
+      "region": "마포구",
+      "complexNo": "105595",
+      "complexName": "신부파스카빌",
+      "source": "address_review_2026_10_19"
+    },
+    {
+      "name": "거여동 쌍용스윗닷홈2차",
+      "legalDong": "거여동",
+      "jibun": "27-5",
+      "region": "송파구",
+      "complexNo": "18990",
+      "complexName": "거여역쌍용2차(주상복합)",
+      "source": "address_review_2026_10_19"
+    },
+    {
+      "name": "거여역2차 쌍용아파트",
+      "legalDong": "거여동",
+      "jibun": "27-5",
+      "region": "송파구",
+      "complexNo": "18990",
+      "complexName": "거여역쌍용2차(주상복합)",
+      "source": "address_review_2026_10_19"
+    },
+    {
+      "name": "쌍용스윗닷홈2차",
+      "legalDong": "거여동",
+      "jibun": "27-5",
+      "region": "송파구",
+      "complexNo": "18990",
+      "complexName": "거여역쌍용2차(주상복합)",
+      "source": "address_review_2026_10_19"
     }
-  ]
+  ],
+  "sectionReview": {
+    "verifiedAt": "2026-10-19",
+    "correctedAliasRows": 53,
+    "removedIncorrectAliasRows": 10,
+    "report": "data/naver_complex_reviews.json"
+  }
 }

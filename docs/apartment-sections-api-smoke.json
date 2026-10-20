@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8766",
+  "sections": [
+    {
+      "name": "이문아이파크자이 1단지",
+      "apartmentId": "zippick:1123011000:imun-ipark-xi:1",
+      "address": "서울특별시 동대문구 이문로 120",
+      "latitude": 37.5984702182265,
+      "longitude": 127.062682937358,
+      "naverComplexNo": "174562",
+      "naverPropertyUrl": "https://fin.land.naver.com/complexes/174562",
+      "exactSearchPassed": true
+    },
+    {
+      "name": "이문아이파크자이 2단지",
+      "apartmentId": "zippick:1123011000:imun-ipark-xi:2",
+      "address": "서울특별시 동대문구 이문로 150",
+      "latitude": 37.6000627788581,
+      "longitude": 127.062400831493,
+      "naverComplexNo": "174562",
+      "naverPropertyUrl": "https://fin.land.naver.com/complexes/174562",
+      "exactSearchPassed": true
+    },
+    {
+      "name": "이문아이파크자이 3단지",
+      "apartmentId": "zippick:1123011000:imun-ipark-xi:3",
+      "address": "서울특별시 동대문구 천장산로13길 15",
+      "latitude": 37.6012018118991,
+      "longitude": 127.057058429998,
+      "naverComplexNo": "184737",
+      "naverPropertyUrl": "https://fin.land.naver.com/complexes/184737",
+      "exactSearchPassed": true
+    }
+  ],
+  "passed": true
+}

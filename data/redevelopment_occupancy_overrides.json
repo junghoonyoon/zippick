@@ -1,6 +1,6 @@
 {
-  "asOfDate": "2026-10-16",
-  "policy": "실제 입주가 확인된 개별 사업만 지도에서 제외. 예정일 경과, 주변 신축, 이름 유사성으로 자동 제외하지 않음. 입주기간 진행·완료 미확인·부분 준공은 유지. 전체 세대의 전입률을 뜻하지 않음.",
+  "asOfDate": "2026-10-19",
+  "policy": "개별 사업의 준공·정식 사용승인 또는 실제 입주 시작이 확인되면 지도 경계·사업 목록·생활권 점수에서 제외. 입주지정기간 종료나 전 세대 전입을 기다리지 않음. 예정일 경과·이름 유사성·부분/임시 사용승인만으로는 제외하지 않음. 원본과 제외 근거는 보관.",
   "apartmentSource": {
     "url": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
     "checkedAt": "2026-10-15"
@@ -24,6 +24,15 @@
       "evidence": "서울플랜 최신 사업현황 준공 및 서울시 공동주택 등록 확인; 2026.01~06 K-apt 관리비와 주거 전기·가스 사용내역 공개로 실제 주거 운영 확인",
       "additionalSourceUrls": [
         "https://aptsonpoom.com/danji/A10020307"
+      ],
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7730",
+          "name": "신사1",
+          "region": "은평구",
+          "legalDong": "신사동",
+          "jibun": "170-12"
+        }
       ]
     },
     {
@@ -41,7 +50,16 @@
       "longitude": 126.9147472,
       "useApprovalDate": "2025-11-26",
       "sourceUrl": "https://www.i-park.com/project/view?seq=4408",
-      "evidence": "시공사 실제 입주단지 안내(2025.11), 최신 사업현황 준공 확인"
+      "evidence": "시공사 실제 입주단지 안내(2025.11), 최신 사업현황 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7253",
+          "name": "가재울8",
+          "region": "서대문구",
+          "legalDong": "남가좌동",
+          "jibun": "289-54"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014308",
@@ -58,7 +76,16 @@
       "longitude": 126.9147472,
       "useApprovalDate": "2025-11-26",
       "sourceUrl": "https://www.i-park.com/project/view?seq=4408",
-      "evidence": "시공사 실제 입주단지 안내(2025.11), 최신 사업현황 준공 확인"
+      "evidence": "시공사 실제 입주단지 안내(2025.11), 최신 사업현황 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7253",
+          "name": "가재울8",
+          "region": "서대문구",
+          "legalDong": "남가좌동",
+          "jibun": "289-54"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014338",
@@ -75,7 +102,16 @@
       "longitude": 127.1289403,
       "useApprovalDate": "2025-11-28",
       "sourceUrl": "https://www.thesharp.co.kr/pages/cs/rounge.aspx",
-      "evidence": "시공사 입주단지 A/S 운영 및 최신 사업현황 준공 확인"
+      "evidence": "시공사 입주단지 A/S 운영 및 최신 사업현황 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7184",
+          "name": "천호4",
+          "region": "강동구",
+          "legalDong": "천호동",
+          "jibun": "410-100"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202407010725",
@@ -92,7 +128,16 @@
       "longitude": 127.1289403,
       "useApprovalDate": "2025-11-28",
       "sourceUrl": "https://www.thesharp.co.kr/pages/cs/rounge.aspx",
-      "evidence": "시공사 입주단지 A/S 운영 및 최신 사업현황 준공 확인"
+      "evidence": "시공사 입주단지 A/S 운영 및 최신 사업현황 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7184",
+          "name": "천호4",
+          "region": "강동구",
+          "legalDong": "천호동",
+          "jibun": "410-100"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202407010577",
@@ -112,6 +157,15 @@
       "evidence": "2026.10.13 서울플랜 휘경3 준공 및 공동주택 등록 확인; 2026.01~06 K-apt 관리비와 주거 전기·가스 사용내역 공개로 실제 주거 운영 확인",
       "additionalSourceUrls": [
         "https://aptsonpoom.com/danji/A10020570"
+      ],
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7605",
+          "name": "휘경3",
+          "region": "동대문구",
+          "legalDong": "휘경동",
+          "jibun": "172"
+        }
       ]
     },
     {
@@ -129,7 +183,16 @@
       "longitude": 127.0590791,
       "useApprovalDate": "2025-10-31",
       "sourceUrl": "https://www.lottecastle.co.kr/",
-      "evidence": "시공사 공사완료 및 2025.11 입주단지 확인, 서울플랜 준공 확인"
+      "evidence": "시공사 공사완료 및 2025.11 입주단지 확인, 서울플랜 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7770",
+          "name": "청담삼익아파트",
+          "region": "강남구",
+          "legalDong": "청담동",
+          "jibun": "134-18"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014462",
@@ -146,7 +209,16 @@
       "longitude": 127.0627196,
       "useApprovalDate": "2025-11-27",
       "sourceUrl": "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeId=230100006042a35",
-      "evidence": "서울플랜 준공 및 2025.11 입주단지 확인. 3-2구역은 별도로 유지"
+      "evidence": "서울플랜 준공 및 2025.11 입주단지 확인. 3-2구역은 별도 단지의 사용승인 자료로 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7595",
+          "name": "이문3",
+          "region": "동대문구",
+          "legalDong": "이문동",
+          "jibun": "149-8"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202407010571",
@@ -163,7 +235,7 @@
       "longitude": 127.0627196,
       "useApprovalDate": "2025-11-27",
       "sourceUrl": "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeId=230100006042a35",
-      "evidence": "서울플랜 준공 및 2025.11 입주단지 확인. 3-2구역은 별도로 유지"
+      "evidence": "서울플랜 준공 및 2025.11 입주단지 확인. 3-2구역은 별도 단지의 사용승인 자료로 확인"
     },
     {
       "zoneId": "11000UQ120PS202411014097",
@@ -180,7 +252,16 @@
       "longitude": 126.9875792,
       "useApprovalDate": "2025-11-25",
       "sourceUrl": "https://raemian.co.kr/community/times/raemianHomeStyling/view.do?pg=1&searchStr=&searchType=&seq=104",
-      "evidence": "시공사 2025.12 실제 입주탐방 및 서울플랜 준공 확인"
+      "evidence": "시공사 2025.12 실제 입주탐방 및 서울플랜 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7722",
+          "name": "방배6",
+          "region": "서초구",
+          "legalDong": "방배동",
+          "jibun": "818-14"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202407010716",
@@ -248,7 +329,16 @@
       "longitude": 127.075833,
       "useApprovalDate": "2025-06-12",
       "sourceUrl": "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeId=260100003045D40",
-      "evidence": "서울플랜 중화1 준공 및 2025.06 사용승인 후 공동주택 운영 확인"
+      "evidence": "서울플랜 중화1 준공 및 2025.06 사용승인 후 공동주택 운영 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7698",
+          "name": "중화1",
+          "region": "중랑구",
+          "legalDong": "중화동",
+          "jibun": "331-1"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202407010580",
@@ -303,7 +393,7 @@
     },
     {
       "zoneId": "11000UQ120PS202411014436",
-      "zoneName": "도봉2",
+      "zoneName": "도봉제2",
       "districtCode": "11320",
       "projectType": "재개발(주택정비형)",
       "status": "occupied",
@@ -316,7 +406,16 @@
       "longitude": 127.0473076,
       "useApprovalDate": "2025-12-31",
       "sourceUrl": "https://m.richgo.ai/realty/danji/a7hTyOv?priceType=meme&pyeongType=32",
-      "evidence": "준공인가 및 2026.03 실제 입주단지 확인"
+      "evidence": "준공인가 및 2026.03 실제 입주단지 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7592",
+          "name": "도봉제2",
+          "region": "도봉구",
+          "legalDong": "도봉동",
+          "jibun": "95"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014420",
@@ -333,7 +432,16 @@
       "longitude": 127.0444551,
       "useApprovalDate": "2026-04-29",
       "sourceUrl": "https://v.daum.net/v/KYkZuEztaC",
-      "evidence": "2026.04 실제 입주 사실 보도 및 서울플랜 준공 확인"
+      "evidence": "2026.04 실제 입주 사실 보도 및 서울플랜 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7603",
+          "name": "청량리7",
+          "region": "동대문구",
+          "legalDong": "청량리동",
+          "jibun": "199"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202407010695",
@@ -350,7 +458,16 @@
       "longitude": 127.1270466,
       "useApprovalDate": "2026-01-22",
       "sourceUrl": "https://www.namu.moe/w/e편한세상%20강동%20프레스티지원",
-      "evidence": "2026.01 실제 입주와 서울시 사용승인·공동주택 운영 확인"
+      "evidence": "2026.01 실제 입주와 서울시 사용승인·공동주택 운영 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7701",
+          "name": "천호3",
+          "region": "강동구",
+          "legalDong": "천호동",
+          "jibun": "423-76"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014115",
@@ -367,7 +484,16 @@
       "longitude": 127.1270466,
       "useApprovalDate": "2026-01-22",
       "sourceUrl": "https://www.namu.moe/w/e편한세상%20강동%20프레스티지원",
-      "evidence": "2026.01 실제 입주와 서울시 사용승인·공동주택 운영 확인"
+      "evidence": "2026.01 실제 입주와 서울시 사용승인·공동주택 운영 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7701",
+          "name": "천호3",
+          "region": "강동구",
+          "legalDong": "천호동",
+          "jibun": "423-76"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014235",
@@ -384,7 +510,16 @@
       "longitude": 127.1113465,
       "useApprovalDate": "2025-12-30",
       "sourceUrl": "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeId=710100002003J19",
-      "evidence": "서울플랜 준공 및 2025.12 사용승인 후 입주단지 확인"
+      "evidence": "서울플랜 준공 및 2025.12 사용승인 후 입주단지 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7877",
+          "name": "잠실진주",
+          "region": "송파구",
+          "legalDong": "신천동",
+          "jibun": "20-4"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202408313210",
@@ -401,7 +536,16 @@
       "longitude": 127.107059,
       "useApprovalDate": "2025-12-30",
       "sourceUrl": "https://www.lottecon.co.kr/Medias/notice_list?keyword=롯데건설&noticetypecd=000&pageno=7&searchtype=001",
-      "evidence": "시공사 2026.01 입주 보도 및 서울플랜 준공 확인"
+      "evidence": "시공사 2026.01 입주 보도 및 서울플랜 준공 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7864",
+          "name": "미성크로바",
+          "region": "송파구",
+          "legalDong": "신천동",
+          "jibun": "17-6"
+        }
+      ]
     },
     {
       "zoneId": "11000UQ120PS202411014044",
@@ -435,45 +579,315 @@
       "longitude": 126.988495,
       "useApprovalDate": "2026-07-23",
       "sourceUrl": "https://5959949.neonet.co.kr/novo-cyber-mobile/view/offerings/OfferingsDetail.neo?gbn=&offer_gbn=P&offerings_cd=144639320&offerings_gbn=AT&region_cd=",
-      "evidence": "2026.07 사용승인 및 입주지정기간 2026.08.07~10.11 종료 확인"
+      "evidence": "2026.07 사용승인 및 입주지정기간 2026.08.07~10.11 종료 확인",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7825",
+          "name": "반포주공1단지(3주구)",
+          "region": "서초구",
+          "legalDong": "반포동",
+          "jibun": "1109"
+        }
+      ]
+    },
+    {
+      "zoneId": "11000UQ120PS202411014102",
+      "zoneName": "방배5",
+      "districtCode": "11650",
+      "projectType": "재건축(단독)",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10019911",
+      "apartmentName": "디에이치방배",
+      "legalDong": "방배동",
+      "roadAddress": "서울특별시 서초구 서초대로 50",
+      "latitude": 37.4858812,
+      "longitude": 126.9888828,
+      "useApprovalDate": "2026-08-14",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외.",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7721",
+          "name": "방배5",
+          "region": "서초구",
+          "legalDong": "방배동",
+          "jibun": "946-8"
+        }
+      ]
+    },
+    {
+      "zoneId": "11000UQ120PS202411014432",
+      "zoneName": "보문5",
+      "districtCode": "11290",
+      "projectType": "재개발(주택정비형)",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10019919",
+      "apartmentName": "보문센트럴아이파크아파트",
+      "legalDong": "보문동1가",
+      "roadAddress": "서울특별시 성북구 고려대로6길 8",
+      "latitude": 37.5846563,
+      "longitude": 127.0201713,
+      "useApprovalDate": "2026-09-08",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외.",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7644",
+          "name": "보문5",
+          "region": "성북구",
+          "legalDong": "",
+          "jibun": ""
+        }
+      ]
+    },
+    {
+      "zoneId": "11000UQ120PS202505310169",
+      "zoneName": "한양연립 일대 가로주택정비사업",
+      "districtCode": "11215",
+      "projectType": "가로주택정비사업",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10019921",
+      "apartmentName": "강변역센트럴아이파크",
+      "legalDong": "구의동",
+      "roadAddress": "서울특별시 광진구 뚝섬로67길 13",
+      "latitude": 37.5345834,
+      "longitude": 127.0900545,
+      "useApprovalDate": "2026-08-25",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외."
+    },
+    {
+      "zoneId": "11000UQ120PS202411014422",
+      "zoneName": "영천",
+      "districtCode": "11410",
+      "projectType": "재개발(주택정비형)",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10019979",
+      "apartmentName": "경희궁 유보라",
+      "legalDong": "영천동",
+      "roadAddress": "서울특별시 서대문구 독립문로 11",
+      "latitude": 37.5710148,
+      "longitude": 126.9602815,
+      "useApprovalDate": "2026-06-25",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외.",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7628",
+          "name": "영천",
+          "region": "서대문구",
+          "legalDong": "영천동",
+          "jibun": "69-20"
+        }
+      ]
+    },
+    {
+      "zoneId": "11000UQ120PS202411014220",
+      "zoneName": "신반포21차",
+      "districtCode": "11650",
+      "projectType": "재건축(공동)",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10020044",
+      "apartmentName": "오티에르반포",
+      "legalDong": "잠원동",
+      "roadAddress": "서울특별시 서초구 신반포로 267",
+      "latitude": 37.5089967,
+      "longitude": 127.0133694,
+      "useApprovalDate": "2026-06-05",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외.",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7839",
+          "name": "신반포21차",
+          "region": "서초구",
+          "legalDong": "잠원동",
+          "jibun": "59-10"
+        }
+      ]
+    },
+    {
+      "zoneId": "11650UQ120PS202607210001",
+      "zoneName": "신반포18차337동",
+      "districtCode": "11650",
+      "projectType": "재건축(공동)",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10020027",
+      "apartmentName": "오티에르신반포",
+      "legalDong": "잠원동",
+      "roadAddress": "서울특별시 서초구 잠원로 195",
+      "latitude": 37.5199647,
+      "longitude": 127.0131595,
+      "useApprovalDate": "2026-06-24",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외.",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7836",
+          "name": "신반포18차337동",
+          "region": "서초구",
+          "legalDong": "잠원동",
+          "jibun": "49-17"
+        }
+      ]
+    },
+    {
+      "zoneId": "11000UQ120PS202407010612",
+      "zoneName": "이문3-2구역",
+      "districtCode": "11230",
+      "projectType": "재정비촉진구역",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10020006",
+      "apartmentName": "이문아이파크자이3단지",
+      "legalDong": "이문동",
+      "roadAddress": "서울특별시 동대문구 천장산로13길 15",
+      "latitude": 37.6007171,
+      "longitude": 127.055751,
+      "useApprovalDate": "2026-06-25",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소·사용승인일 확인. 해당 단지 좌표가 개별 사업 경계 안에 있음. 사용승인이 확인된 완공 단지는 입주기간 종료를 기다리지 않고 제외."
+    },
+    {
+      "zoneId": "11000UQ120PS202411014428",
+      "zoneName": "행당7",
+      "districtCode": "11200",
+      "projectType": "재개발(주택정비형)",
+      "status": "occupied",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10020503",
+      "apartmentName": "라체르보푸르지오써밋",
+      "legalDong": "행당동",
+      "roadAddress": "서울특별시 성동구 고산자로2길 71",
+      "latitude": 37.5576522,
+      "longitude": 127.037622,
+      "useApprovalDate": "2025-07-28",
+      "sourceUrl": "https://www.newspim.com/news/view/20260206000978",
+      "evidence": "2026.02.09 현장 보도에서 입주 6개월 차 및 주민 이용 시설 운영 확인. 사업 준공·등기 지연과 이미 시작된 실제 입주는 구분.",
+      "projectIdentities": [
+        {
+          "id": "seoul-plan-renewal:7639",
+          "name": "행당7",
+          "region": "성동구",
+          "legalDong": "행당동",
+          "jibun": "128"
+        }
+      ]
+    },
+    {
+      "zoneId": "11440UQ120PS202607240001",
+      "zoneName": "신수동 91-90",
+      "districtCode": "11440",
+      "projectType": "장기전세주택",
+      "status": "completed",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "A10019978",
+      "apartmentName": "힐스테이트 마포더퍼스트 아파트",
+      "legalDong": "신수동",
+      "roadAddress": "서울특별시 마포구 신수로6길 12",
+      "latitude": 37.5476904,
+      "longitude": 126.935218,
+      "useApprovalDate": "2026-07-29",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-15818/A/1/datasetView.do",
+      "evidence": "서울시 공동주택 고유번호·도로명주소와 2026.07.29 사용승인 확인. 단지 주소 대표점이 해당 사업 경계 안에 있음."
+    },
+    {
+      "zoneId": "gg-zone:13:5678",
+      "zoneName": "정비구역",
+      "districtCode": "41280",
+      "projectType": "정비구역",
+      "status": "occupied",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "41281120452747",
+      "apartmentId": "41281120452747",
+      "apartmentName": "대곡역 롯데캐슬 엘클라씨",
+      "legalDong": "토당동",
+      "jibun": "930",
+      "legalAddress": "경기도 고양시 덕양구 토당동 930",
+      "useApprovalDate": "2022-12-30",
+      "sourceUrl": "https://www.goyang.go.kr/www/www03/www03_10/www03_10_19/www03_10_19_tab9.jsp",
+      "additionalSourceUrls": [
+        "https://www.mygoyang.com/news/articleView.html?idxno=71294"
+      ],
+      "evidence": "고양시 공식 사업현황에서 능곡연합주택재건축정비사업의 위치(토당동 251-12 등), 면적 33,263.1㎡, 834세대와 2022.12.30 부분 준공인가(건축물), 2024.08.06 부분 준공인가(획지)를 확인. 같은 사업의 대곡역 롯데캐슬 엘클라씨 834세대는 2022.12.30 입주가 시작된 보도와 공동주택 단지 고유번호·지번·사용승인 자료로 확인. 이 구역 경계의 면적 33,263.06㎡가 공식 사업 면적과 일치해 해당 사업 경계로 연결.",
+      "projectIdentities": [
+        {
+          "id": "gg-quarter:6d1643de7f68622871ec",
+          "name": "능곡 2-1\n(능곡연합)",
+          "region": "고양덕양구",
+          "legalDong": "토당동",
+          "jibun": "251-12"
+        }
+      ]
+    },
+    {
+      "zoneId": "gg-zone:13:5472",
+      "zoneName": "정비구역",
+      "districtCode": "41110",
+      "projectType": "정비구역",
+      "status": "occupied",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "41113120445920",
+      "apartmentId": "41113120445920",
+      "apartmentName": "쌍용더플래티넘오목천역",
+      "legalDong": "오목천동",
+      "jibun": "1192",
+      "legalAddress": "경기도 수원시 권선구 오목천동 1192",
+      "useApprovalDate": "2023-11-30",
+      "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+      "additionalSourceUrls": [
+        "https://www.suwon.go.kr/web/saeallOfr/BD_ofrView.do?notAncmtMgtNo=131668&q_currPage=156&q_searchKey=SJ&q_searchVal=",
+        "https://www.gg.go.kr/opendata/openDataContent.do?gg_content_idx=11673&decodeIdx=5318",
+        "https://www.ssyapt.com/complex/construction/view/P2011014",
+        "https://partnexa.com/local/applyhome-pblanc-strategy-report.asp?HOUSE_MANAGE_NO=2020000214&PBLANC_NO=2020000214&PblancNo=4760"
+      ],
+      "evidence": "한국부동산원 공동주택 단지 식별정보에서 단지 고유번호 41113120445920, 오목천동 1192, 930세대, 2023.11.30 사용승인을 확인. 경기도 2026년 2분기 정비사업 통계에서 수원 113-12구역은 오목천동 482-2 일원, 사업면적 44,759㎡, 930세대, 준공으로 확인되고 수원시 고시와 시공사 사업정보도 같은 주소와 준공을 확인. 지도 경계 5472는 면적 44,995㎡이며 공식 사업주소 인근에 있고, 같은 면적 후보 중 주소에서 6km 넘게 떨어진 5469 경계와 구분됨.",
+      "projectIdentities": [
+        {
+          "id": "gg-quarter:6fa868ebc3a7e1e1ba98",
+          "name": "113-12",
+          "region": "수원권선구",
+          "legalDong": "오목천동",
+          "jibun": "482-2"
+        }
+      ]
+    },
+    {
+      "zoneId": "gg-zone:13:5632",
+      "zoneName": "정비구역",
+      "districtCode": "41210",
+      "projectType": "정비구역",
+      "status": "occupied",
+      "verifiedAt": "2026-10-19",
+      "kaptCode": "41210120124114",
+      "apartmentId": "41210120124114",
+      "apartmentName": "광명 두산위브 트레지움",
+      "legalDong": "하안동",
+      "jibun": "863",
+      "legalAddress": "경기도 광명시 하안동 863",
+      "useApprovalDate": "2009-11-02",
+      "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+      "additionalSourceUrls": [
+        "https://www.eum.go.kr/web/gs/gv/gvGosiDet.jsp?chrgorg=&enddt=&geul_yn=&gihyung_yn=Y&gosino=&mobile_yn=&pageNo=16090&prj_cat_cd=&prj_nm=&selSggCd=&select2=&select_3=&seq=282410&silsi_yn=&startdt=&zonenm=",
+        "https://www.gg.go.kr/opendata/openDataContent.do?gg_content_idx=11673&decodeIdx=5318"
+      ],
+      "evidence": "한국부동산원 공동주택 단지 식별정보에서 단지 고유번호 41210120124114, 하안동 863, 1,248세대, 2009.11.02 사용승인을 확인. 경기도 고시 제2009-431호는 하안동 769의 하안주공본2단지 재건축 구역을 지정했고, 경기도 2026년 2분기 정비사업 통계는 해당 사업을 1,248세대 준공으로 표시. 지도 경계 5632는 같은 시의 유일한 준공 주택정비사업과 면적·지역이 맞아 입주 완료 단지 경계로 연결됨.",
+      "projectIdentities": [
+        {
+          "id": "gg-quarter:1e0ca37fc7e032bbd2bc",
+          "name": "하안주공본2단지아파트",
+          "region": "광명시",
+          "legalDong": "하안동",
+          "jibun": "769"
+        }
+      ]
     }
   ],
-  "retainedForReview": [
-    {
-      "zoneName": "방배5",
-      "apartmentName": "디에이치방배",
-      "reason": "입주지정기간 2026.09.01~11.14 진행 중",
-      "sourceUrl": "https://www.zigbang.com/home/apt/item-catalog?areaHoId=18707583&tranType=rental"
-    },
-    {
-      "zoneName": "보문5",
-      "apartmentName": "보문센트럴아이파크",
-      "reason": "최근 사용승인(2026.09.08), 입주 종료 미확인"
-    },
-    {
-      "zoneName": "한양연립 일대 가로주택정비사업",
-      "apartmentName": "강변역센트럴아이파크",
-      "reason": "최근 사용승인(2026.08.25), 입주 종료 미확인"
-    },
-    {
-      "zoneName": "영천",
-      "apartmentName": "경희궁 유보라",
-      "reason": "사용승인은 확인, 실제 입주 종료 미확인"
-    },
-    {
-      "zoneName": "신반포21차",
-      "apartmentName": "오티에르반포",
-      "reason": "준공은 확인, 실제 입주 종료 미확인"
-    },
-    {
-      "zoneName": "신반포18차(337동)",
-      "apartmentName": "오티에르신반포",
-      "reason": "준공은 확인, 실제 입주 종료 미확인"
-    },
-    {
-      "zoneName": "이문3-2구역",
-      "apartmentName": "이문아이파크자이3단지",
-      "reason": "입주 일정 변경 이력이 있어 1·2단지와 별도 판단. 실제 입주 종료 미확인"
-    }
-  ]
+  "retainedForReview": []
 }

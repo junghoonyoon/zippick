@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "verifiedAt": "2026-10-19",
+  "groups": [
+    {
+      "name": "이문아이파크자이",
+      "province": "서울특별시",
+      "district": "동대문구",
+      "legalDong": "이문동",
+      "sourceJibun": "149-8",
+      "cortarNo": "1123011000",
+      "sources": [
+        "https://www.i-park.com/imun/",
+        "https://www.nocktown.com/web-front/imx03/",
+        "https://fin.land.naver.com/complexes/174562",
+        "https://fin.land.naver.com/complexes/184737",
+        "https://dapi.kakao.com/v2/local/search/address.json",
+        "https://files-scs.pstatic.net/2023/10/20/uOXqLtJysh/%EC%9D%B4%EB%AC%B83%EA%B5%AC%EC%97%AD_%EC%9E%85%EC%A3%BC%EC%9E%90%EB%AA%A8%EC%A7%91%EA%B3%B5%EA%B3%A0_20231020_2023000548%20%EC%9D%B4%EB%AC%B8%20%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%20%EC%9E%90%EC%9D%B4%20%EC%9E%85%EC%A3%BC%EC%9E%90%EB%AA%A8%EC%A7%91%EA%B3%B5%EA%B3%A0%EB%AC%B8.pdf"
+      ],
+      "note": "1·2단지는 같은 지번과 네이버 페이지를 공유한다. 도로명주소와 집픽 고유번호로 나눈다. 동번호 없는 공통 거래는 개별 단지 거래로 사용하지 않고, 확인된 1·2단지 통합 거래로만 표시한다. 1·2단지 개별 세대수는 미확인이다.",
+      "transactionScopes": [
+        {
+          "id": "imun-ipark-xi-3-1bl",
+          "label": "이문아이파크자이 1·2단지 통합 거래",
+          "sourceName": "이문아이파크자이",
+          "legalDong": "이문동",
+          "jibun": "149-8",
+          "memberApartmentIds": [
+            "zippick:1123011000:imun-ipark-xi:1",
+            "zippick:1123011000:imun-ipark-xi:2"
+          ],
+          "allowUnnumberedTransactions": true,
+          "transactionKinds": [
+            "apartment",
+            "presale"
+          ],
+          "sourceNote": "국토부 원본은 1·2단지를 이문아이파크자이로 함께 표기하며 동번호를 제공하지 않습니다.",
+          "naverMarketReference": {
+            "provider": "KB부동산",
+            "asOf": "2026-10-12",
+            "areaSqm": 84.95,
+            "minPriceEok": 18.5,
+            "midPriceEok": 19.5,
+            "maxPriceEok": 20.3,
+            "sourceUrl": "https://fin.land.naver.com/complexes/174562"
+          }
+        }
+      ],
+      "sections": [
+        {
+          "apartmentId": "zippick:1123011000:imun-ipark-xi:1",
+          "name": "이문아이파크자이 1단지",
+          "jibun": "149-8",
+          "address": "서울특별시 동대문구 이문로 120",
+          "latitude": 37.5984702182265,
+          "longitude": 127.062682937358,
+          "households": 0,
+          "approvedAt": "2025-11",
+          "buildingNumbers": [
+            "101",
+            "102",
+            "103",
+            "104",
+            "105",
+            "106",
+            "107",
+            "108"
+          ],
+          "naverComplexNo": "174562",
+          "naverComplexName": "이문아이파크자이(3-1BL)",
+          "naverScope": "shared_sections",
+          "naverMappingNote": "네이버 부동산은 1·2단지를 이문아이파크자이(3-1BL)로 함께 표시해요."
+        },
+        {
+          "apartmentId": "zippick:1123011000:imun-ipark-xi:2",
+          "name": "이문아이파크자이 2단지",
+          "jibun": "149-8",
+          "address": "서울특별시 동대문구 이문로 150",
+          "latitude": 37.6000627788581,
+          "longitude": 127.062400831493,
+          "households": 0,
+          "approvedAt": "2025-11",
+          "buildingNumbers": [
+            "201",
+            "202",
+            "203",
+            "204",
+            "205",
+            "206",
+            "207",
+            "208",
+            "209",
+            "210"
+          ],
+          "naverComplexNo": "174562",
+          "naverComplexName": "이문아이파크자이(3-1BL)",
+          "naverScope": "shared_sections",
+          "naverMappingNote": "네이버 부동산은 1·2단지를 이문아이파크자이(3-1BL)로 함께 표시해요."
+        },
+        {
+          "apartmentId": "zippick:1123011000:imun-ipark-xi:3",
+          "kaptCode": "A10020006",
+          "name": "이문아이파크자이 3단지",
+          "jibun": "419-1",
+          "address": "서울특별시 동대문구 천장산로13길 15",
+          "latitude": 37.6012018118991,
+          "longitude": 127.057058429998,
+          "coordinateSource": "카카오 로컬 주소 검색: 서울특별시 동대문구 천장산로13길 15",
+          "coordinateVerifiedAt": "2026-10-19",
+          "households": 152,
+          "approvedAt": "2026-06-25",
+          "naverComplexNo": "184737",
+          "naverComplexName": "이문아이파크자이(3-2BL)",
+          "naverScope": "single_section",
+          "naverMappingNote": "네이버 부동산의 이문아이파크자이(3-2BL)는 집픽의 3단지예요.",
+          "naverListingReference": {
+            "provider": "네이버 부동산",
+            "asOf": "2026-10-19",
+            "saleListingCount": 8,
+            "saleMinPriceEok": 12.7,
+            "saleMaxPriceEok": 18.0,
+            "leaseListingCount": 12,
+            "leaseMinPriceEok": 7.0,
+            "leaseMaxPriceEok": 11.0,
+            "sourceUrl": "https://fin.land.naver.com/complexes/184737"
+          }
+        }
+      ],
+      "buildingNumberEvidence": "2023-10-20 입주자모집공고 6쪽: 1단지 101~108동, 2단지 201~210동, 3단지 301~307동."
+    }
+  ]
+}

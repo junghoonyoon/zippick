@@ -39,7 +39,7 @@ def classify(point, stations, day):
     if not point:return {'status':'location_unresolved','score':None}
     valid=[]
     for s in stations:
-        if not metro.station_active(s,day):continue
+        if not metro.station_active(s,day) or s.get('scoringEligible') is False:continue
         meters=distance(point,s)
         if meters is not None and meters<=2000:
             meters=round(meters)
@@ -81,7 +81,7 @@ def run(collect=False, workers=6, retry_unmatched=False):
                     print(json.dumps({'processed':index,'totalPending':len(pending),
                                      'states':dict(Counter(x.get('status','located') for x in points.values()))}),flush=True)
         save(POINTS,points)
-    stations=metro.catalog().get('railStations',[])
+    stations=metro.station_references(day)
     rows=[];baseline_scored=0
     baseline=[s for s in stations if s['projectId'] in {'metro-rail:gtx-b','metro-rail:gtx-c','metro-rail:dongbuk','metro-rail:gangbuk-cross'}]
     for e in entities:

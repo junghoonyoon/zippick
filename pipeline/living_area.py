@@ -134,17 +134,19 @@ def project_impact(project, center, observation, evidence, day):
 
 def empty_report(apartment_id, day, reason=None):
     values = {k: None for k in [*policy.REGIONAL, *policy.DIRECT]}
+    failed = bool(reason)
     return {'apartmentId': apartment_id, 'modelVersion': policy.VERSION, 'beta': True,
-            'asOfDate': day.isoformat(), 'sourceAsOf': None, 'status': 'insufficient_data',
+            'asOfDate': day.isoformat(), 'sourceAsOf': None,
+            'status': 'error' if failed else 'insufficient_data',
             'confidence': 'insufficient', **policy.aggregate(values), 'projects': [], 'referenceProjects': [],
             'sources': [], 'metrics': [], 'missingMetrics': list(values),
-            'headline': '이 단지의 생활권 변화는 아직 평가할 자료가 부족해요.',
+            'headline': '생활권 자료를 불러오지 못했어요.' if failed else '이 단지의 생활권 변화는 아직 평가할 자료가 부족해요.',
             'limitations': [reason] if reason else ['확인된 위치·보행 경로·새집 공급 자료가 더 필요해요.'],
             'findings': ['직접 개선: 단지에서 사업지까지 연결되는 길을 확인해야 해요.',
                          '교통 변화: 공식 역 출입구와 이동시간을 확인해야 해요.',
                          '공급 경쟁: 예정 공급과 주변 수요를 함께 확인해야 해요.',
                          '일정 위험: 사업 일정은 바뀔 수 있어요.'],
-            'judgment': {'shortTerm': '공사 불편과 새집 공급의 영향을 확인하기 전에는 판단을 보류해요.',
+            'judgment': {'shortTerm': '자료를 불러오지 못해 평가하지 않았어요.' if failed else '공사 불편과 새집 공급의 영향을 확인하기 전에는 판단을 보류해요.',
                          'longTerm': '확인된 사업도 이 단지의 직접 수혜나 가격 상승을 보장하지 않아요.'},
             'disclaimer': '베타 점수는 생활환경 변화의 참고값이에요. 가격 상승률을 예측하지 않아요.'}
 

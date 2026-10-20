@@ -1,0 +1,270 @@
+[
+  {
+    "url": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Public/MapServer/12?f=pjson",
+    "name": "재개발구역",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "OBJECTID",
+        "domain": null
+      },
+      {
+        "name": "MNUM",
+        "alias": "MNUM",
+        "domain": null
+      },
+      {
+        "name": "ALIAS",
+        "alias": "ALIAS",
+        "domain": null
+      },
+      {
+        "name": "REMARK",
+        "alias": "REMARK",
+        "domain": null
+      },
+      {
+        "name": "NTFDATE",
+        "alias": "NTFDATE",
+        "domain": null
+      },
+      {
+        "name": "SGG_OID",
+        "alias": "SGG_OID",
+        "domain": null
+      },
+      {
+        "name": "COL_ADM_SECT_CD",
+        "alias": "COL_ADM_SECT_CD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE",
+        "alias": "SHAPE",
+        "domain": null
+      },
+      {
+        "name": "USE_CD",
+        "alias": "USE_CD",
+        "domain": null
+      },
+      {
+        "name": "STD_SGGCD",
+        "alias": "STD_SGGCD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.AREA",
+        "alias": "SHAPE.AREA",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.LEN",
+        "alias": "SHAPE.LEN",
+        "domain": null
+      }
+    ],
+    "error": null
+  },
+  {
+    "url": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Public/MapServer/13?f=pjson",
+    "name": "정비구역",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "OBJECTID",
+        "domain": null
+      },
+      {
+        "name": "MNUM",
+        "alias": "MNUM",
+        "domain": null
+      },
+      {
+        "name": "ALIAS",
+        "alias": "ALIAS",
+        "domain": null
+      },
+      {
+        "name": "REMARK",
+        "alias": "REMARK",
+        "domain": null
+      },
+      {
+        "name": "NTFDATE",
+        "alias": "NTFDATE",
+        "domain": null
+      },
+      {
+        "name": "SGG_OID",
+        "alias": "SGG_OID",
+        "domain": null
+      },
+      {
+        "name": "COL_ADM_SECT_CD",
+        "alias": "COL_ADM_SECT_CD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE",
+        "alias": "SHAPE",
+        "domain": null
+      },
+      {
+        "name": "USE_CD",
+        "alias": "USE_CD",
+        "domain": null
+      },
+      {
+        "name": "STD_SGGCD",
+        "alias": "STD_SGGCD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.AREA",
+        "alias": "SHAPE.AREA",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.LEN",
+        "alias": "SHAPE.LEN",
+        "domain": null
+      }
+    ],
+    "error": null
+  },
+  {
+    "url": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Public/MapServer/14?f=pjson",
+    "name": "재정비촉진지구",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "OBJECTID",
+        "domain": null
+      },
+      {
+        "name": "MNUM",
+        "alias": "MNUM",
+        "domain": null
+      },
+      {
+        "name": "ALIAS",
+        "alias": "ALIAS",
+        "domain": null
+      },
+      {
+        "name": "REMARK",
+        "alias": "REMARK",
+        "domain": null
+      },
+      {
+        "name": "NTFDATE",
+        "alias": "NTFDATE",
+        "domain": null
+      },
+      {
+        "name": "SGG_OID",
+        "alias": "SGG_OID",
+        "domain": null
+      },
+      {
+        "name": "COL_ADM_SECT_CD",
+        "alias": "COL_ADM_SECT_CD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE",
+        "alias": "SHAPE",
+        "domain": null
+      },
+      {
+        "name": "USE_CD",
+        "alias": "USE_CD",
+        "domain": null
+      },
+      {
+        "name": "STD_SGGCD",
+        "alias": "STD_SGGCD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.AREA",
+        "alias": "SHAPE.AREA",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.LEN",
+        "alias": "SHAPE.LEN",
+        "domain": null
+      }
+    ],
+    "error": null
+  },
+  {
+    "url": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Public/MapServer/15?f=pjson",
+    "name": "주거환경개선지구",
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "alias": "OBJECTID",
+        "domain": null
+      },
+      {
+        "name": "MNUM",
+        "alias": "MNUM",
+        "domain": null
+      },
+      {
+        "name": "ALIAS",
+        "alias": "ALIAS",
+        "domain": null
+      },
+      {
+        "name": "REMARK",
+        "alias": "REMARK",
+        "domain": null
+      },
+      {
+        "name": "NTFDATE",
+        "alias": "NTFDATE",
+        "domain": null
+      },
+      {
+        "name": "SGG_OID",
+        "alias": "SGG_OID",
+        "domain": null
+      },
+      {
+        "name": "COL_ADM_SECT_CD",
+        "alias": "COL_ADM_SECT_CD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE",
+        "alias": "SHAPE",
+        "domain": null
+      },
+      {
+        "name": "USE_CD",
+        "alias": "USE_CD",
+        "domain": null
+      },
+      {
+        "name": "STD_SGGCD",
+        "alias": "STD_SGGCD",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.AREA",
+        "alias": "SHAPE.AREA",
+        "domain": null
+      },
+      {
+        "name": "SHAPE.LEN",
+        "alias": "SHAPE.LEN",
+        "domain": null
+      }
+    ],
+    "error": null
+  }
+]

@@ -208,6 +208,31 @@ class NaverComplexTest(unittest.TestCase):
         self.assertEqual(row["displayName"], "돈암삼부(삼부컨비니언)")
         self.assertEqual(row["naverComplexName"], "돈암삼부(삼부컨비니언)")
 
+    def test_static_mapping_updates_the_first_painted_card_without_network(self):
+        row = {
+            "name": "이문아이파크자이 1단지",
+            "displayName": "이문아이파크자이 1단지",
+            "region": "동대문구",
+            "legalDong": "이문동",
+            "jibun": "149-8",
+        }
+        with mock.patch.object(
+            naver_complex,
+            "resolve_static",
+            return_value={
+                "complexNo": "174562",
+                "complexName": "이문아이파크자이(3-1BL)",
+                "displayName": "이문아이파크자이(3-1BL)",
+                "displayNameSource": "naver_verified_mapping",
+            },
+        ) as resolve:
+            naver_complex.attach_static_links([row])
+
+        resolve.assert_called_once()
+        self.assertEqual(row["displayName"], "이문아이파크자이(3-1BL)")
+        self.assertEqual(row["displayNameSource"], "naver_verified_mapping")
+        self.assertEqual(row["naverPropertyUrl"], "https://fin.land.naver.com/complexes/174562")
+
     def test_verified_duplicate_name_uses_apartment_complex_override(self):
         resolved = naver_complex.resolve(
             "마포 한화 오벨리스크",

@@ -7,6 +7,7 @@ import re
 import threading
 
 import config
+import apartment_identity
 import education_environment
 import kakao_station_distances
 import location_scores
@@ -33,7 +34,7 @@ SHORTLIST_EXTENSION_MAX_RATIO = 1.10
 SHORTLIST_EXTENSION_LIMIT = 3
 # v11: 최근 거래를 제외한 매수 판단 밴드 가격대가 모든 후보 응답에 포함된다.
 # v12: 주간 가격지수 보정에 쓰는 거래 목록(valuationTrades)이 후보 응답에 포함된다.
-CANDIDATE_RESULT_SCHEMA_VERSION = 12
+CANDIDATE_RESULT_SCHEMA_VERSION = 14
 _ENTITY_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
@@ -390,7 +391,8 @@ def _display_area_label(area_label):
     low, high = _area_range(area_label)
     if not low:
         return str(area_label or "").strip()
-    value = int(low) if low == int(low) else round(low, 1)
+    # 84.97㎡를 85.0㎡로 올려 표시하면 선택한 84㎡ 평형과 달라 보인다.
+    value = f"{low:.2f}".rstrip("0").rstrip(".")
     return f"전용 {value}㎡"
 
 
@@ -455,14 +457,7 @@ def _is_rental_apartment(row, entity=None):
 
 
 def _entity_jibun(entity):
-    direct = str((entity or {}).get("jibun") or "").strip()
-    if direct:
-        return direct
-    address = str((entity or {}).get("address") or "").strip()
-    if not address:
-        return ""
-    tail = address.split()[-1]
-    return tail if re.search(r"\d", tail) else ""
+    return apartment_identity.entity_parcel(entity)
 
 
 def _candidate_display_name(row, entity=None):
@@ -501,13 +496,16 @@ def _candidate_identity_key(row):
     )
     entity_key = str((entity or {}).get("dedupeKey") or "").strip()
     if entity_key:
-        return ("entity", entity_key)
+        return ("entity", entity_key, _entity_jibun(entity),
+                tuple(str(entity.get(field) or "") for field in apartment_identity.ID_FIELDS))
 
-    address_key = tuple(
-        real_estate_search.compact(row.get(field, ""))
-        for field in ("region", "legalDong", "jibun")
+    address_key = (
+        real_estate_search.compact(row.get("region") or ""),
+        real_estate_search.compact(row.get("legalDong") or ""),
+        apartment_identity.entity_parcel(row),
+        tuple(str(row.get(field) or "") for field in apartment_identity.ID_FIELDS),
     )
-    if any(address_key[1:]):
+    if any(address_key[1:3]) or any(address_key[3]):
         return ("address", *address_key)
     return (
         "name",
@@ -535,6 +533,11 @@ def _candidate_identity_fields(row, entity=None):
             seen.add(key)
             aliases.append(value)
     return {
+        **({"latitude": entity['sectionIdentity']['latitude'],
+            "longitude": entity['sectionIdentity']['longitude']} if entity.get('sectionIdentity') else {}),
+        **({"naverScope": entity['sectionIdentity'].get('naverScope', ''),
+            "naverMappingNote": entity['sectionIdentity'].get('naverMappingNote', '')}
+           if entity.get('sectionIdentity') else {}),
         "apartmentId": str(entity.get("apartmentId") or "").strip(),
         "kaptCode": str(entity.get("kaptCode") or "").strip(),
         "complexNo": str(entity.get("complexNo") or "").strip(),
@@ -609,6 +612,7 @@ def _naver_property_link(row, entity):
             str(entity.get("name") or "").strip(),
             *(entity.get("aliases") or []),
         ),
+        region=entity.get('district') or row.get('region') or '',
     )
     if resolved:
         complex_name = str(resolved.get("complexName") or "").strip()
@@ -787,11 +791,21 @@ def _price_lookup_entity(row):
     legal_dong = str(row.get("legalDong") or "").strip()
     jibun = str(row.get("jibun") or "").strip()
     matches = _find_entities(name, region, legal_dong, jibun)
+    named_matches = _find_entities(name, region)
+    # A verified name and an address for a different known complex are a
+    # contradiction, not permission to silently switch to the address result.
+    if named_matches:
+        matches = [entity for entity in matches if any(
+            not apartment_identity.conflicts(named, entity) for named in named_matches
+        )]
+    identities = {field: row.get(field) for field in apartment_identity.ID_FIELDS if row.get(field)}
+    if identities:
+        matches = [entity for entity in matches if apartment_identity.satisfies(identities, entity)]
     if len(matches) == 1:
         entity = matches[0]
-        if entity.get("legalDong") and (entity.get("jibun") or entity.get("address")):
+        if not entity.get("aggregate") and entity.get("legalDong") and _entity_jibun(entity):
             return entity
-    if not matches and legal_dong and jibun:
+    if not identities and not matches and legal_dong and jibun and not named_matches:
         return {
             "name": name,
             "aliases": [],
@@ -872,6 +886,10 @@ def _apply_live_price(row, preferred_min_area=0):
         extended = price_band(12)
         if extended and _int_value(extended.get("transactionCount")) >= _int_value(live.get("transactionCount")):
             live = extended
+    # 최근 6·12개월에 거래가 없다고 가격 칸을 비우지 않는다. 같은 단지·같은
+    # 평형으로 확인되는 공식 거래만, 제한된 과거 범위에서 한 번 더 찾는다.
+    if not live:
+        live = price_band(config.MOLIT_STALE_TRANSACTION_LOOKBACK_MONTHS)
     if not live:
         return row
     comparison = live
@@ -888,11 +906,29 @@ def _apply_live_price(row, preferred_min_area=0):
 def _apply_live_band(row, live, comparison=None):
     """Apply an already-fetched or cached MOLIT price-band payload."""
     if not live:
+        if minimum:
+            live = molit_transactions.stored_price_band_for_apartment_min_area(
+                row["name"],
+                region=row.get("region", ""),
+                min_area=minimum,
+                lookback_months=config.MOLIT_STALE_TRANSACTION_LOOKBACK_MONTHS,
+                entity=entity,
+            )
+        else:
+            live = molit_transactions.stored_price_band_for_apartment(
+                row["name"],
+                region=row.get("region", ""),
+                area_label=row.get("areaLabel", ""),
+                lookback_months=config.MOLIT_STALE_TRANSACTION_LOOKBACK_MONTHS,
+                entity=entity,
+            )
+    if not live:
         return row
     comparison = comparison or live
     latest_price = _float_value(live.get("latestDealPriceEok")) or _float_value(live.get("midPriceEok"))
     row.update({
         "areaLabel": live.get("areaLabel") or row.get("areaLabel", ""),
+        "transactionAddressCorrection": live.get("transactionAddressCorrection"),
         "recentMinPriceEok": live.get("minPriceEok"),
         "recentMedianPriceEok": live.get("midPriceEok"),
         "recentAveragePriceEok": live.get("averagePriceEok"),
@@ -938,6 +974,7 @@ def _apply_live_band(row, live, comparison=None):
         "previous6AveragePriceEok": comparison.get("previous6AveragePriceEok"),
         "previous6TradeCount": comparison.get("previous6TradeCount", 0),
         "sourceNote": live.get("sourceNote", ""),
+        "transactionScope": live.get("transactionScope"),
         "priceSource": "molit",
         "priceIdentityVerified": True,
         "marketDataStatus": "verified",
@@ -1076,6 +1113,7 @@ def _candidate_from_entity(entity, region, min_area, budget_eok, purpose, priori
     area_min, area_max = _area_range(area_label)
     scope = region or entity.get("district") or entity.get("city") or seed_region
     candidate = {
+        **{field: entity.get(field, "") for field in apartment_identity.ID_FIELDS},
         "name": name,
         "region": seed_region,
         "legalDong": entity.get("legalDong", ""),
@@ -1460,17 +1498,12 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         # 이름부터 거르는 기존 순서는 `현대` ↔ `현대(1,2차)` 같은 경우에
         # 정확한 지번이 있는데도 지도·역 정보를 누락시켰다.
         dong_key = real_estate_search.compact(legal_dong)
-        jibun_key = real_estate_search.compact(jibun)
+        jibun_key = apartment_identity.parcel_key(jibun, legal_dong)
         matches = [
             entity for entity in real_estate_search.APARTMENT_MASTER
-            if real_estate_search.compact(entity.get("legalDong")) == dong_key
-            and (
-                real_estate_search.compact(entity.get("jibun")) == jibun_key
-                # 주소 문자열의 단순 suffix 비교는 지번 `1`이 `18-1`, `1341`
-                # 같은 다른 필지까지 잡는 오류를 만든다. 주소에서 얻은
-                # 마지막 필지 토큰도 완전히 같을 때만 같은 단지로 본다.
-                or real_estate_search.compact(_entity_jibun(entity)) == jibun_key
-            )
+            if not entity.get("aggregate")
+            and real_estate_search.compact(entity.get("legalDong")) == dong_key
+            and _entity_jibun(entity) == jibun_key
         ]
     if region:
         region_key = real_estate_search.compact(region)
@@ -1509,7 +1542,7 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
                 )
             ):
                 regional_matches.append(entity)
-        matches = regional_matches
+        matches = [entity for entity in regional_matches if apartment_identity.region_matches(region, entity)]
     if legal_dong:
         dong_key = real_estate_search.compact(legal_dong)
         matches = [
@@ -1517,19 +1550,26 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
             if real_estate_search.compact(entity.get("legalDong")) == dong_key
         ]
     if jibun:
-        jibun_key = real_estate_search.compact(jibun)
+        jibun_key = apartment_identity.parcel_key(jibun, legal_dong)
         matches = [
             entity for entity in matches
-            if real_estate_search.compact(_entity_jibun(entity)) == jibun_key
-            or real_estate_search.compact(entity.get("jibun")) == jibun_key
+            if _entity_jibun(entity) == jibun_key
         ]
+    # A known numbered name must also agree when siblings share one parcel.
+    matches = [entity for entity in matches
+               if not apartment_identity.phase_conflicts(name, entity.get('name'))]
+    exact_named = [entity for entity in matches if key in _entity_alias_keys(entity)]
+    if exact_named:
+        matches = exact_named
     unique = {}
     for entity in matches:
         physical_key = (
             real_estate_search.compact(entity.get("province")),
             real_estate_search.compact(entity.get("district") or entity.get("city")),
             real_estate_search.compact(entity.get("legalDong")),
-            real_estate_search.compact(entity.get("jibun") or _entity_jibun(entity)),
+            _entity_jibun(entity),
+            tuple(str(entity.get(field) or "") for field in apartment_identity.ID_FIELDS),
+            real_estate_search.compact(entity.get("name")),
         )
         unique.setdefault(physical_key, entity)
     return list(unique.values())
@@ -1588,11 +1628,19 @@ def resolve_apartment_identity(
         for key, value in (identities or {}).items()
         if str(value or "").strip()
     }
+    query_identity = {"name": name, "region": region, "legalDong": legal_dong, "jibun": jibun, **identities}
+    named_matches = _find_entities(name, region)
+    if (named_matches and real_estate_search.compact(name) not in GENERIC_APARTMENT_NAMES
+            and not any(apartment_identity.satisfies(query_identity, entity) for entity in named_matches)):
+        return {
+            "status": "unmatched", "method": "identity_conflict", "entity": None,
+            "candidateCount": 0, "confidence": 0.0, "selectionProbability": 0.0,
+        }
     id_matches = []
     if identities:
         id_matches = [
             entity for entity in real_estate_search.APARTMENT_MASTER
-            if all(
+            if apartment_identity.satisfies(query_identity, entity) and all(
                 str(entity.get(field) or "").strip() == value
                 for field, value in identities.items()
             )
@@ -1634,6 +1682,7 @@ def resolve_apartment_identity(
     candidates = matches or id_matches
     if not candidates and allow_semantic:
         candidates = _semantic_identity_shortlist(name, region, legal_dong)
+    candidates = [entity for entity in candidates if apartment_identity.satisfies(query_identity, entity)]
     if allow_semantic and candidates:
         judgment = typesafe_jev.choose_apartment_identity(
             {
@@ -1646,7 +1695,9 @@ def resolve_apartment_identity(
             candidates,
         )
         selected_index = judgment.get("selectedIndex")
-        if judgment.get("status") == "matched" and isinstance(selected_index, int):
+        if (judgment.get("status") == "matched" and type(selected_index) is int
+                and 0 <= selected_index < len(candidates)
+                and apartment_identity.satisfies(query_identity, candidates[selected_index])):
             return {
                 "status": "matched",
                 "method": "typesafe_jev",
@@ -1669,7 +1720,7 @@ def resolve_apartment_identity(
 
 def _find_entity(name, region="", legal_dong="", jibun=""):
     matches = _find_entities(name, region, legal_dong, jibun)
-    return matches[0] if matches else None
+    return matches[0] if len(matches) == 1 else None
 
 
 def _matches_region(row, entity, region):
@@ -2170,7 +2221,7 @@ def _collect_nearby_candidate(bucket, nearby_keys, row, entity, min_area, min_ho
             "address",
             real_estate_search.compact(raw_region),
             real_estate_search.compact(legal_dong),
-            real_estate_search.compact(jibun),
+            apartment_identity.parcel_key(jibun, legal_dong),
         )
     else:
         key = ("name", _apartment_name_base(row.get("name", "")), real_estate_search.compact(raw_region))
@@ -2444,13 +2495,20 @@ def _finalize_candidate_rows(
         row["resultSchemaVersion"] = CANDIDATE_RESULT_SCHEMA_VERSION
         row.update(_candidate_identity_fields(row, entity))
         row["displayName"] = _candidate_display_name(row, entity)
-        if row.get("naverComplexName"):
+        # 첫 화면부터 검수된 네이버 단지명·직링크를 쓴다. 이 작업은 로컬
+        # 연결표만 읽으므로 외부 조회 실패가 후보 이름이나 시세 표시를 바꾸지
+        # 않는다.
+        try:
+            naver_complex.attach_static_links([row])
+        except Exception:
+            pass
+        if row.get("naverComplexName") and not apartment_identity.phase_numbers(row["displayName"]):
             row["displayName"] = row["naverComplexName"]
             row["displayNameSource"] = "naver_complex"
         row["displayRegion"] = _display_region(row, entity)
         row["mapAddress"] = _map_address(row, map_entity)
         cached_location = kakao_station_distances.cached_station(entity) if entity else None
-        if cached_location:
+        if cached_location and not entity.get('sectionIdentity'):
             latitude = _float_value(cached_location.get("latitude"))
             longitude = _float_value(cached_location.get("longitude"))
             if latitude and longitude:
@@ -2552,7 +2610,7 @@ def _finalize_candidate_rows(
 
 
 def _same_apartment_entity(left, right):
-    if not left or not right:
+    if not left or not right or apartment_identity.conflicts(left, right):
         return False
     left_key = str(left.get("dedupeKey") or "").strip()
     right_key = str(right.get("dedupeKey") or "").strip()
@@ -2594,6 +2652,9 @@ def apartment_candidate_result(
     loan_term_years=30,
     purchase_cost_rate=0,
     mortgage_rate_type="",
+    apartment_id="",
+    kapt_code="",
+    complex_no="",
 ):
     """Build one apartment through the exact same candidate result pipeline."""
     name = str(name or "").strip()
@@ -2645,6 +2706,11 @@ def apartment_candidate_result(
     policy_profile = context["profile"]
     budget_eok = context["budgetEok"]
     entity_matches = _find_entities(name, region, legal_dong, jibun)
+    requested_ids = {field: value for field, value in (
+        ("apartmentId", apartment_id), ("kaptCode", kapt_code), ("complexNo", complex_no),
+    ) if value}
+    if requested_ids:
+        entity_matches = [entity for entity in entity_matches if apartment_identity.satisfies(requested_ids, entity)]
     entity = entity_matches[0] if len(entity_matches) == 1 else None
     if not entity or entity.get("aggregate"):
         return None

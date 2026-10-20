@@ -1,0 +1,37 @@
+[
+  {
+    "apartmentId": "41131120442910",
+    "headline": "생활권 변화는 판단할 수 없어요. 현재 자료에서 직선 2km 안의 정비사업을 찾지 못했어요. 주변 철도의 역 위치는 확인했지만, 직선 2km 안에 신규 예정역이 없어요.",
+    "intro": "주변 노선의 역 위치는 확인했지만, 직선 2km 안에 평가할 신규 예정역이 없어요. 가장 가까운 신규 예정역은 삼성역 · GTX-A, 직선 9,667m예요. 성남역 · GTX-A: 이미 개통해 새 역 계획 점수에서 제외해요.",
+    "transportCoverage": {
+      "status": "mapped_stations_outside_2km",
+      "radiusMeters": 2000,
+      "checkedAt": "2026-10-19",
+      "stationReferences": 218,
+      "scopeComplete": false
+    },
+    "stationCount": 0,
+    "railProjects": []
+  },
+  {
+    "apartmentId": "41131120411567",
+    "headline": "생활권 변화는 좋아요. 직선 2km 안에 정비사업이 여러 곳이고, 계획역의 참고 위치도 가까워요.",
+    "intro": "산성은 공사 단계예요. 단지에서 주소 대표점 직선거리 430m예요. 실제 이용할 길과 완공 시점은 더 확인해야 해요. 남위례역 · 위례선 트램의 참고 위치는 직선 1,394m예요. 새 노선 출입구와 걸어가는 시간은 확인되지 않았어요. 계획 점수는 실제로 누릴 이점이나 집값 상승을 뜻하지 않아요.",
+    "transportCoverage": {
+      "status": "scored",
+      "radiusMeters": 2000,
+      "checkedAt": "2026-10-19",
+      "stationReferences": 218,
+      "scopeComplete": false
+    },
+    "stationCount": 7,
+    "railProjects": [
+      {
+        "id": "metro-rail:wirye",
+        "factSummary": "남위례역 · 위례선 트램 경유 계획 · 시운전 중 · 개통 전",
+        "checkedAt": "2026-10-19",
+        "nearestStationId": "wirye:110"
+      }
+    ]
+  }
+]

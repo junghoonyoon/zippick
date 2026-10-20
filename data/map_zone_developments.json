@@ -1,0 +1,24 @@
+{
+  "note": "공식 구역명과 경계는 그대로 두고, 그 안에서 짓는 아파트를 별도 설명으로 연결합니다.",
+  "developments": [
+    {
+      "boundaryId": "11000UQ120PS202603260007",
+      "boundaryName": "광운대역 물류부지",
+      "districtCode": "11350",
+      "projectId": "applyhome:2024000659",
+      "name": "서울원 아이파크",
+      "province": "서울특별시",
+      "region": "노원구",
+      "legalDong": "월계동",
+      "jibun": "85-7",
+      "statusLabel": "건설 중",
+      "relationship": "included_apartment",
+      "description": "광운대역 물류부지 복합개발 안에 서울원 아이파크를 짓고 있어요.",
+      "sourceUrl": "https://www.seoulone-ipark.co.kr/images/seoulone_recruitment_full.pdf?ver=2",
+      "sourceDate": "2024-11-15",
+      "statusSourceUrl": "https://news.seoul.go.kr/citybuild/archives/536769",
+      "statusSourceDate": "2026-04-17",
+      "checkedAt": "2026-10-19"
+    }
+  ]
+}

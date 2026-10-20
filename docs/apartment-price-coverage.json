@@ -1,0 +1,1156 @@
+{
+  "scope": "검색 마스터 전체·로컬 매매 캐시 최근 24개월; 미수집 지역과 분양권은 가격 미확보로 집계",
+  "cachedMonthCount": 1800,
+  "checkedEntityCount": 19643,
+  "counts": {
+    "available": 12934,
+    "address_review": 86,
+    "no_cached_trades": 6623
+  },
+  "verifiedAt": "2026-10-19",
+  "examples": [
+    {
+      "name": "청량리역 한양수자인 그라시엘",
+      "apartmentId": "11230120446536",
+      "region": "동대문구",
+      "legalDong": "용두동",
+      "jibun": "39-1",
+      "status": "available",
+      "transactionCount": 60,
+      "latestDealDate": "2026-09-13",
+      "otherTransactionParcels": []
+    }
+  ],
+  "addressReview": [
+    {
+      "name": "디에이치퍼스티어아이파크",
+      "apartmentId": "",
+      "region": "강남구",
+      "legalDong": "개포동",
+      "jibun": "660-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "660-4"
+      ]
+    },
+    {
+      "name": "풍림 아이원 아파트",
+      "apartmentId": "11680100050479",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "910-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "910-4"
+      ]
+    },
+    {
+      "name": "풍림 아이원 아파트",
+      "apartmentId": "11680100050482",
+      "region": "강남구",
+      "legalDong": "대치동",
+      "jibun": "910-5",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "910-4"
+      ]
+    },
+    {
+      "name": "다성이즈빌(387-2)",
+      "apartmentId": "11740120391768",
+      "region": "강동구",
+      "legalDong": "길동",
+      "jibun": "387-2",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "348-4",
+        "371-9",
+        "416-17",
+        "456-4",
+        "481"
+      ]
+    },
+    {
+      "name": "다성이즈빌",
+      "apartmentId": "11740120054578",
+      "region": "강동구",
+      "legalDong": "길동",
+      "jibun": "357-7",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "324-6",
+        "348-4",
+        "371-9",
+        "416-17",
+        "456-4",
+        "481"
+      ]
+    },
+    {
+      "name": "시가오똠",
+      "apartmentId": "11740100249571",
+      "region": "강동구",
+      "legalDong": "길동",
+      "jibun": "334-6",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "334-3"
+      ]
+    },
+    {
+      "name": "한솔애리즈",
+      "apartmentId": "11740100249619",
+      "region": "강동구",
+      "legalDong": "성내동",
+      "jibun": "417-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "405-9"
+      ]
+    },
+    {
+      "name": "가양9단지아파트",
+      "apartmentId": "11500100001893",
+      "region": "강서구",
+      "legalDong": "가양동",
+      "jibun": "1490",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1490"
+      ]
+    },
+    {
+      "name": "천우네오젠6차",
+      "apartmentId": "11500120070132",
+      "region": "강서구",
+      "legalDong": "내발산동",
+      "jibun": "670-17",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "665-17"
+      ]
+    },
+    {
+      "name": "마곡 힐스테이트",
+      "apartmentId": "11500120330992",
+      "region": "강서구",
+      "legalDong": "마곡동",
+      "jibun": "725-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1589"
+      ]
+    },
+    {
+      "name": "근상프리즘(1076-2)",
+      "apartmentId": "11500100249012",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "1076-2",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "24-90"
+      ]
+    },
+    {
+      "name": "남광아파트",
+      "apartmentId": "11500100249014",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "1131-11",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "917-5",
+        "920-15"
+      ]
+    },
+    {
+      "name": "리치아파트",
+      "apartmentId": "11500120401877",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "924-22",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "924-1"
+      ]
+    },
+    {
+      "name": "리치아파트",
+      "apartmentId": "11500120401569",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "924-21",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "924-1"
+      ]
+    },
+    {
+      "name": "블루힐(343-56)",
+      "apartmentId": "11500120136073",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "343-56",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "392-57"
+      ]
+    },
+    {
+      "name": "혜성오피아파트",
+      "apartmentId": "11500120383524",
+      "region": "강서구",
+      "legalDong": "화곡동",
+      "jibun": "343-50",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "343-49"
+      ]
+    },
+    {
+      "name": "대영빌라",
+      "apartmentId": "11530100604484",
+      "region": "구로구",
+      "legalDong": "구로동",
+      "jibun": "799-6",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "796-37"
+      ]
+    },
+    {
+      "name": "성원아파트",
+      "apartmentId": "11320100248511",
+      "region": "도봉구",
+      "legalDong": "방학동",
+      "jibun": "266-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "735"
+      ]
+    },
+    {
+      "name": "SM해그린(362-7)",
+      "apartmentId": "11230100248396",
+      "region": "동대문구",
+      "legalDong": "장안동",
+      "jibun": "362-7",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "309-6"
+      ]
+    },
+    {
+      "name": "마포지구시범아파트",
+      "apartmentId": "11440120360265",
+      "region": "마포구",
+      "legalDong": "용강동",
+      "jibun": "495-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "495-1"
+      ]
+    },
+    {
+      "name": "삼호3",
+      "apartmentId": "11650100002982",
+      "region": "서초구",
+      "legalDong": "방배동",
+      "jibun": "757-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "759-3"
+      ]
+    },
+    {
+      "name": "경남 아너스빌",
+      "apartmentId": "11650120056175",
+      "region": "서초구",
+      "legalDong": "서초동",
+      "jibun": "1608-28",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1455-9"
+      ]
+    },
+    {
+      "name": "서초 자연인 아파트",
+      "apartmentId": "11650120170618",
+      "region": "서초구",
+      "legalDong": "서초동",
+      "jibun": "1344-22",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1344-23"
+      ]
+    },
+    {
+      "name": "카나피아Ⅱ",
+      "apartmentId": "11710100051259",
+      "region": "송파구",
+      "legalDong": "가락동",
+      "jibun": "34-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "46-3"
+      ]
+    },
+    {
+      "name": "상진지오벨리(548)",
+      "apartmentId": "11470100248855",
+      "region": "양천구",
+      "legalDong": "목동",
+      "jibun": "548",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "713-5"
+      ]
+    },
+    {
+      "name": "상진지오벨리",
+      "apartmentId": "11470120043173",
+      "region": "양천구",
+      "legalDong": "목동",
+      "jibun": "743-20",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "713-5"
+      ]
+    },
+    {
+      "name": "삼익플라주(81-10)",
+      "apartmentId": "11470120035177",
+      "region": "양천구",
+      "legalDong": "신월동",
+      "jibun": "81-10",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1042"
+      ]
+    },
+    {
+      "name": "한우리아파트",
+      "apartmentId": "11470120008500",
+      "region": "양천구",
+      "legalDong": "신월동",
+      "jibun": "467-12",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "467-2"
+      ]
+    },
+    {
+      "name": "홍익아파트",
+      "apartmentId": "11470100248917",
+      "region": "양천구",
+      "legalDong": "신월동",
+      "jibun": "494-6",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "494-1"
+      ]
+    },
+    {
+      "name": "목동삼성",
+      "apartmentId": "11470120033386",
+      "region": "양천구",
+      "legalDong": "신정동",
+      "jibun": "1278-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1278"
+      ]
+    },
+    {
+      "name": "현대플라티앙 II",
+      "apartmentId": "11170100257013",
+      "region": "용산구",
+      "legalDong": "동빙고동",
+      "jibun": "1-14",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1-67"
+      ]
+    },
+    {
+      "name": "명남뉴",
+      "apartmentId": "11380120008239",
+      "region": "은평구",
+      "legalDong": "역촌동",
+      "jibun": "83-26",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "72-4"
+      ]
+    },
+    {
+      "name": "거장메카",
+      "apartmentId": "11380120450041",
+      "region": "은평구",
+      "legalDong": "응암동",
+      "jibun": "91-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "577-28"
+      ]
+    },
+    {
+      "name": "방산(5-102)",
+      "apartmentId": "11110100600225",
+      "region": "종로구",
+      "legalDong": "명륜1가",
+      "jibun": "5-102",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "5-89"
+      ]
+    },
+    {
+      "name": "에비뉴 청계 Ⅰ",
+      "apartmentId": "11110120448200",
+      "region": "종로구",
+      "legalDong": "숭인동",
+      "jibun": "1419-2",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1420"
+      ]
+    },
+    {
+      "name": "미래한건아파트",
+      "apartmentId": "11260120007957",
+      "region": "중랑구",
+      "legalDong": "면목동",
+      "jibun": "136-77",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "136-96"
+      ]
+    },
+    {
+      "name": "킴스아파트",
+      "apartmentId": "11260120444106",
+      "region": "중랑구",
+      "legalDong": "면목동",
+      "jibun": "1547",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "126-1"
+      ]
+    },
+    {
+      "name": "일산자이 더 헤리티지",
+      "apartmentId": "41285120432633",
+      "region": "고양일산동구",
+      "legalDong": "식사동",
+      "jibun": "621-17",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "가-"
+      ]
+    },
+    {
+      "name": "일산푸르지오더센트럴",
+      "apartmentId": "41287120452443",
+      "region": "고양일산서구",
+      "legalDong": "덕이동",
+      "jibun": "205",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1672"
+      ]
+    },
+    {
+      "name": "광명",
+      "apartmentId": "41310120278987",
+      "region": "구리시",
+      "legalDong": "수택동",
+      "jibun": "374-9",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "546"
+      ]
+    },
+    {
+      "name": "고촌역 양우내안애",
+      "apartmentId": "41570120450073",
+      "region": "김포시",
+      "legalDong": "신곡리",
+      "jibun": "신곡리 474",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1296"
+      ]
+    },
+    {
+      "name": "진접삼부르네상스 더퍼스트",
+      "apartmentId": "41360120443504",
+      "region": "남양주시",
+      "legalDong": "금곡리",
+      "jibun": "금곡리 527-4",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "3352"
+      ]
+    },
+    {
+      "name": "벨라루체Ⅱ",
+      "apartmentId": "41194120394477",
+      "region": "부천소사구",
+      "legalDong": "소사본동",
+      "jibun": "278-5",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "209-20"
+      ]
+    },
+    {
+      "name": "주공",
+      "apartmentId": "41194120050439",
+      "region": "부천소사구",
+      "legalDong": "소사본동",
+      "jibun": "408-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "400-8",
+        "407-1"
+      ]
+    },
+    {
+      "name": "한울펠리스",
+      "apartmentId": "41194120340667",
+      "region": "부천소사구",
+      "legalDong": "소사본동",
+      "jibun": "75-13",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "75-16"
+      ]
+    },
+    {
+      "name": "더 로얄 아파트",
+      "apartmentId": "41192120428953",
+      "region": "부천원미구",
+      "legalDong": "심곡동",
+      "jibun": "110-2",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "456-11"
+      ]
+    },
+    {
+      "name": "엠제이팰리스",
+      "apartmentId": "41192120442388",
+      "region": "부천원미구",
+      "legalDong": "심곡동",
+      "jibun": "133-6",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "146-5"
+      ]
+    },
+    {
+      "name": "부천위브트레지움2단지아파트",
+      "apartmentId": "41192120154036",
+      "region": "부천원미구",
+      "legalDong": "약대동",
+      "jibun": "204",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "204"
+      ]
+    },
+    {
+      "name": "엘리하임",
+      "apartmentId": "41192120438608",
+      "region": "부천원미구",
+      "legalDong": "중동",
+      "jibun": "873",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "872-5"
+      ]
+    },
+    {
+      "name": "월드 에스클래스",
+      "apartmentId": "41192120151575",
+      "region": "부천원미구",
+      "legalDong": "중동",
+      "jibun": "775-27",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "775-3"
+      ]
+    },
+    {
+      "name": "더샵 판교포레스트 11단지",
+      "apartmentId": "41135120420617",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 11",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "638"
+      ]
+    },
+    {
+      "name": "더샵 판교포레스트 12단지",
+      "apartmentId": "41135120420612",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 12",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "641"
+      ]
+    },
+    {
+      "name": "판교 퍼스트힐 푸르지오 1단지",
+      "apartmentId": "41135120420495",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "592"
+      ]
+    },
+    {
+      "name": "판교 퍼스트힐 푸르지오 2단지",
+      "apartmentId": "41135120420505",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 2",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "591"
+      ]
+    },
+    {
+      "name": "판교 풍경채 어바니티 5단지",
+      "apartmentId": "41135120430027",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 5",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "642"
+      ]
+    },
+    {
+      "name": "판교 풍경채 어바니티 7단지",
+      "apartmentId": "41135120430310",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 7",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "623"
+      ]
+    },
+    {
+      "name": "힐스테이트 판교 엘포레 A3BL",
+      "apartmentId": "41135120423963",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "621"
+      ]
+    },
+    {
+      "name": "힐스테이트 판교 엘포레 A4BL",
+      "apartmentId": "41135120423964",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 4",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "634"
+      ]
+    },
+    {
+      "name": "힐스테이트 판교 엘포레 A6BL",
+      "apartmentId": "41135120427893",
+      "region": "성남분당구",
+      "legalDong": "대장동",
+      "jibun": "지구BL 6",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "595"
+      ]
+    },
+    {
+      "name": "라 포리엘",
+      "apartmentId": "41113120446718",
+      "region": "수원권선구",
+      "legalDong": "당수동",
+      "jibun": "가-",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "336-1"
+      ]
+    },
+    {
+      "name": "힐스테이트 수원파크포레",
+      "apartmentId": "41113120453810",
+      "region": "수원권선구",
+      "legalDong": "서둔동",
+      "jibun": "213-10",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "465"
+      ]
+    },
+    {
+      "name": "화서4단지주공아파트",
+      "apartmentId": "41115100005882",
+      "region": "수원팔달구",
+      "legalDong": "화서동",
+      "jibun": "650",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "650"
+      ]
+    },
+    {
+      "name": "쌍용더플래티넘프리미어",
+      "apartmentId": "41550120449430",
+      "region": "안성시",
+      "legalDong": "승두리",
+      "jibun": "승두리 73",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "898"
+      ]
+    },
+    {
+      "name": "관악",
+      "apartmentId": "41173112153289",
+      "region": "안양동안구",
+      "legalDong": "비산동",
+      "jibun": "1102-9",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1102"
+      ]
+    },
+    {
+      "name": "개성하이뷰",
+      "apartmentId": "41171120356671",
+      "region": "안양만안구",
+      "legalDong": "안양동",
+      "jibun": "847-20",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "435-3",
+        "542-4"
+      ]
+    },
+    {
+      "name": "여주역 휴먼빌 아트라움",
+      "apartmentId": "41670120445952",
+      "region": "여주시",
+      "legalDong": "교동",
+      "jibun": "412",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "662-1"
+      ]
+    },
+    {
+      "name": "오산 라온프라이빗 스위트",
+      "apartmentId": "41370120451931",
+      "region": "오산시",
+      "legalDong": "고현동",
+      "jibun": "16",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "276"
+      ]
+    },
+    {
+      "name": "광교마을46단지 광교스타클래스",
+      "apartmentId": "41465120146725",
+      "region": "용인수지구",
+      "legalDong": "상현동",
+      "jibun": "1107",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1107"
+      ]
+    },
+    {
+      "name": "광교마을46단지 광교스타클래스",
+      "apartmentId": "41465120146883",
+      "region": "용인수지구",
+      "legalDong": "상현동",
+      "jibun": "1108",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1108"
+      ]
+    },
+    {
+      "name": "진흥",
+      "apartmentId": "41461120009687",
+      "region": "용인처인구",
+      "legalDong": "고림동",
+      "jibun": "796-2",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "794-15"
+      ]
+    },
+    {
+      "name": "서희스타힐스 포레스트",
+      "apartmentId": "41461120443462",
+      "region": "용인처인구",
+      "legalDong": "역북동",
+      "jibun": "233",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "826"
+      ]
+    },
+    {
+      "name": "e편한세상 고천 파크루체",
+      "apartmentId": "41430120447802",
+      "region": "의왕시",
+      "legalDong": "고천동",
+      "jibun": "가-",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "522"
+      ]
+    },
+    {
+      "name": "엘리프 의왕역",
+      "apartmentId": "41430120448708",
+      "region": "의왕시",
+      "legalDong": "초평동",
+      "jibun": "가-",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "636"
+      ]
+    },
+    {
+      "name": "의정부역스카이자이",
+      "apartmentId": "41150120452446",
+      "region": "의정부시",
+      "legalDong": "의정부동",
+      "jibun": "238-10",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "770"
+      ]
+    },
+    {
+      "name": "태봉공원푸르지오파크몬트",
+      "apartmentId": "41650120453752",
+      "region": "포천시",
+      "legalDong": "송우리",
+      "jibun": "송우리 225-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "738"
+      ]
+    },
+    {
+      "name": "한화 포레나 미아",
+      "apartmentId": "",
+      "region": "강북구",
+      "legalDong": "미아동",
+      "jibun": "705-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1379"
+      ]
+    },
+    {
+      "name": "서울대벤처타운역 푸르지오",
+      "apartmentId": "",
+      "region": "관악구",
+      "legalDong": "신림동",
+      "jibun": "316-62",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "316-55"
+      ]
+    },
+    {
+      "name": "천왕역 모아엘가 트레뷰",
+      "apartmentId": "",
+      "region": "구로구",
+      "legalDong": "오류동",
+      "jibun": "213",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "362"
+      ]
+    },
+    {
+      "name": "리버센 SK VIEW 롯데캐슬",
+      "apartmentId": "",
+      "region": "중랑구",
+      "legalDong": "중화동",
+      "jibun": "331-1",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "462"
+      ]
+    },
+    {
+      "name": "광명 소하 신원아침도시1",
+      "apartmentId": "",
+      "region": "광명시",
+      "legalDong": "소하동",
+      "jibun": "893-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1410-1"
+      ]
+    },
+    {
+      "name": "고촌센트럴자이",
+      "apartmentId": "",
+      "region": "김포시",
+      "legalDong": "고촌읍 신곡리",
+      "jibun": "6지구BL A3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "가-"
+      ]
+    },
+    {
+      "name": "평촌 트리지아",
+      "apartmentId": "",
+      "region": "안양동안구",
+      "legalDong": "호계동",
+      "jibun": "929",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1338"
+      ]
+    },
+    {
+      "name": "안양역 푸르지오 더샵",
+      "apartmentId": "",
+      "region": "안양만안구",
+      "legalDong": "안양동",
+      "jibun": "97-3",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "1459"
+      ]
+    },
+    {
+      "name": "힐스테이트 탑석",
+      "apartmentId": "",
+      "region": "의정부시",
+      "legalDong": "용현동",
+      "jibun": "산32",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "576"
+      ]
+    },
+    {
+      "name": "힐스테이트 이천역 1단지",
+      "apartmentId": "",
+      "region": "이천시",
+      "legalDong": "증일동",
+      "jibun": "79-4",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "393"
+      ]
+    },
+    {
+      "name": "힐스테이트 이천역 2단지",
+      "apartmentId": "",
+      "region": "이천시",
+      "legalDong": "증일동",
+      "jibun": "60-5",
+      "status": "address_review",
+      "transactionCount": 0,
+      "latestDealDate": null,
+      "otherTransactionParcels": [
+        "394"
+      ]
+    }
+  ]
+}

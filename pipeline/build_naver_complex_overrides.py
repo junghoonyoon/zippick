@@ -19,6 +19,7 @@ import budget_candidates
 import config
 import naver_complex
 import real_estate_search
+import apartment_identity
 
 DEFAULT_OUTPUT = config.ROOT / "data" / "naver_complex_overrides.json"
 COMPLEX_URL_RE = re.compile(r"/complexes/(\d+)")
@@ -85,18 +86,12 @@ def _entry_by_complex_no(entries, complex_no):
                 "complexNo": str(complex_no),
                 "complexName": naver_complex._entry_name(entry),
             }
-    return {"complexNo": str(complex_no), "complexName": ""}
+    return None
 
 
-def _cache_file_stems(name, legal_dong, jibun):
-    identity = "{name}_{dong}_{jibun}".format(
-        name=_compact(name),
-        dong=_compact(legal_dong),
-        jibun=_compact(jibun),
-    )
-    for version in ("v6", "v5", "v4", "v3", ""):
-        stem = f"{version}_{identity}" if version else identity
-        yield re.sub(r"[^0-9a-zA-Z가-힣_-]", "", stem)[:120]
+def _cache_file_stems(name, legal_dong, jibun, region=""):
+    # Old versions collapsed parcel punctuation and may point to a sibling.
+    yield naver_complex._cache_path(naver_complex._cache_key(name, legal_dong, jibun, region)).stem
 
 
 def _cached_resolved_complex(candidate):
@@ -105,6 +100,7 @@ def _cached_resolved_complex(candidate):
             name,
             candidate["legalDong"],
             candidate["jibun"],
+            candidate.get('region', ''),
         ):
             path = naver_complex.CACHE_DIR / f"{stem}.json"
             if not path.exists():
@@ -114,7 +110,7 @@ def _cached_resolved_complex(candidate):
             except (OSError, ValueError):
                 continue
             complex_no = str(payload.get("complexNo") or "").strip()
-            if complex_no.isdigit():
+            if complex_no.isdigit() and not apartment_identity.phase_conflicts(candidate['name'], payload.get('complexName')):
                 return {
                     "complexNo": complex_no,
                     "complexName": str(payload.get("complexName") or "").strip(),
@@ -227,7 +223,8 @@ def _candidate_identity(candidate):
     return (
         _compact(candidate.get("name")),
         _compact(candidate.get("legalDong")),
-        _compact(candidate.get("jibun")),
+        apartment_identity.parcel_key(candidate.get("jibun")),
+        _compact(candidate.get("region")),
     )
 
 
@@ -236,7 +233,8 @@ def _entry_identity(entry):
     return (
         _compact(entry.get("name")),
         _compact(entry.get("legalDong")),
-        _compact(entry.get("jibun")),
+        apartment_identity.parcel_key(entry.get("jibun")),
+        _compact(entry.get("region")),
     )
 
 
@@ -252,6 +250,9 @@ def _load_existing_entries(path):
         if isinstance(entry, dict)
         and str(entry.get("complexNo") or "").isdigit()
         and str(entry.get("name") or "").strip()
+        and (not apartment_identity.phase_conflicts(entry.get('name'), entry.get('complexName'))
+             or naver_complex.verified_phase_alias(entry.get('name'), entry))
+        and not naver_complex.rejected_mapping(entry['complexNo'], entry.get('legalDong'), entry.get('jibun'), entry.get('region'))
     ]
 
 
@@ -291,7 +292,11 @@ def build_overrides(
         cortar_no = _candidate_cortar_no(candidate)
         resolved = None
         source = "local_cache"
-        resolved = _cached_resolved_complex(candidate)
+        resolved = naver_complex.resolve_static(candidate['name'], candidate['legalDong'],
+                                                candidate['jibun'], region=candidate['region'])
+        resolved = resolved or _cached_resolved_complex(candidate)
+        if resolved and naver_complex.rejected_mapping(resolved['complexNo'], candidate['legalDong'], candidate['jibun'], candidate['region']):
+            resolved = None
         if candidate.get("cacheOnly") and not resolve_master_live and not resolved:
             stats["unresolved"] += 1
             continue
@@ -300,6 +305,8 @@ def build_overrides(
             source_no = _source_complex_no(row)
             if complexes is not None and source_no and not resolved:
                 resolved = _entry_by_complex_no(complexes, source_no)
+                if resolved and apartment_identity.phase_conflicts(candidate['name'], resolved.get('complexName')):
+                    resolved = None
                 source = "source_url"
             if complexes is not None and not resolved:
                 primary, *alternates = candidate["aliases"] or [candidate["name"]]
@@ -308,11 +315,13 @@ def build_overrides(
                     primary,
                     candidate["legalDong"],
                     alternate_names=alternates,
+                    jibun=candidate['jibun'], region=candidate['region'],
                 )
                 source = "cortar_list"
         else:
             stats["missingCortarNo"] += 1
-        if not resolved or not resolved.get("complexNo"):
+        if (not resolved or not resolved.get("complexNo")
+                or naver_complex.rejected_mapping(resolved['complexNo'], candidate['legalDong'], candidate['jibun'], candidate['region'])):
             stats["unresolved"] += 1
             continue
         stats["resolved"] += 1
@@ -321,8 +330,13 @@ def build_overrides(
                 "name": name,
                 "legalDong": candidate["legalDong"],
                 "jibun": candidate["jibun"],
+                "region": candidate["region"],
             })
+            if (apartment_identity.phase_conflicts(name, resolved.get('complexName'))
+                    and not naver_complex.verified_phase_alias(name, entries_by_key.get(key, {}))):
+                continue
             entries_by_key[key] = {
+                **entries_by_key.get(key, {}),
                 "name": name,
                 "legalDong": candidate["legalDong"],
                 "jibun": candidate["jibun"],

@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "note": "집픽의 비교용 가중치. 완료·단계 미확인·일반 통근용이 아닌 노선은 점수 보류. 단계 문구가 바뀌면 이 표를 재검토한다.",
+  "lines": {
+    "gtx-b": {
+      "name": "GTX-B",
+      "impactClass": "gtx",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "착공",
+      "sourceUrl": "https://www.molit.go.kr/2026plan/sub5_public.html"
+    },
+    "gtx-c": {
+      "name": "GTX-C",
+      "impactClass": "gtx",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "2026년 9월 착공",
+      "sourceUrl": "https://www.molit.go.kr/USR/NEWS/dtl.jsp?id=95092420"
+    },
+    "dongbuk": {
+      "name": "동북선",
+      "impactClass": "light",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://cis.seoul.go.kr/TotalAlimi_new/PopInfo.action?cmd=info1&pjt_cd=1112018081799"
+    },
+    "gangbuk-cross": {
+      "name": "강북횡단선",
+      "reviewStatus": "reconsidering",
+      "impactClass": "light",
+      "maturity": "concept",
+      "stageCode": "planning",
+      "stageLabel": "재추진 계획 · 착공 전",
+      "sourceUrl": "https://ms.smc.seoul.kr/record/recordView.do?key=a66fee32d18c7e8a1ea511f3236da896c20c1e83ea372900adcdde6ef463a1f0baa291bc61d02aef"
+    },
+    "wirye": {
+      "name": "위례선 트램",
+      "impactClass": "tram",
+      "maturity": "commissioning",
+      "stageCode": "construction",
+      "stageLabel": "시운전 중 · 개통 전",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453106"
+    },
+    "ui-extension": {
+      "name": "우이신설 방학 연장",
+      "impactClass": "light",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://mayor.seoul.go.kr/oh/seoul/newsView.do?photoGallerySn=4086"
+    },
+    "myeonmok": {
+      "name": "면목선",
+      "impactClass": "light",
+      "maturity": "basic_plan",
+      "stageCode": "planning",
+      "stageLabel": "기본계획안 의견 수렴",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_notice.do?nttNo=467266"
+    },
+    "seobu": {
+      "name": "서부선",
+      "reviewStatus": "reconsidering",
+      "impactClass": "light",
+      "maturity": "concept",
+      "stageCode": "planning",
+      "stageLabel": "사업 방식 재검토 · 착공 전",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=455351"
+    },
+    "indeogwon-dongtan": {
+      "name": "인덕원~동탄 복선전철",
+      "impactClass": "regional",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010302"
+    },
+    "wolgot-pangyo": {
+      "name": "월곶~판교 복선전철",
+      "impactClass": "regional",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010302"
+    },
+    "shinbundang-homaesil": {
+      "name": "신분당선 광교~호매실",
+      "impactClass": "regional",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.kr.or.kr/boardCnts/view.do?boardID=52&boardSeq=1120903"
+    },
+    "line9-phase4": {
+      "name": "9호선 4단계 연장",
+      "impactClass": "metro",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.gangdong.go.kr/web/newportal/contents/gdp_005_005_012_003"
+    },
+    "goyang-eunpyeong": {
+      "name": "고양은평선",
+      "impactClass": "metro",
+      "maturity": "design",
+      "stageCode": "planning",
+      "stageLabel": "기본·실시설계 중",
+      "sourceUrl": "https://gits.gg.go.kr/web/newboard/3386.do?idx=199392861&mode=view"
+    },
+    "wirye-sinsa": {
+      "name": "위례신사선",
+      "impactClass": "light",
+      "maturity": "feasibility",
+      "stageCode": "planning",
+      "stageLabel": "예비타당성조사 통과 · 기본계획 수립 전",
+      "sourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=453805"
+    },
+    "gtx-a": {
+      "name": "GTX-A",
+      "impactClass": "gtx",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010402"
+    },
+    "sinansan": {
+      "name": "신안산선",
+      "impactClass": "regional",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010402"
+    },
+    "munsan-dorasan": {
+      "name": "경의선 전철화",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "sosa-wonsi": {
+      "name": "소사~원시 복선전철",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "dongducheon-yeoncheon": {
+      "name": "경원선 전철화",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "jinjeop": {
+      "name": "진접선",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "byeollae": {
+      "name": "별내선",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "daegok-sosa": {
+      "name": "대곡~소사 복선전철",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "dobongsan-okjeong": {
+      "name": "도봉산~옥정 광역철도",
+      "impactClass": "metro",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "suwon-ktx": {
+      "name": "수원발 KTX직결사업",
+      "impactClass": "intercity",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "incheon-ktx": {
+      "name": "인천발 KTX직결사업",
+      "impactClass": "intercity",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "gimpo-gold": {
+      "name": "김포 도시철도",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "icheon-mungyeong": {
+      "name": "이천~문경 단선전철",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "seohae": {
+      "name": "서해선 복선전철",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "suin": {
+      "name": "수인선",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "hanam": {
+      "name": "하남선",
+      "impactClass": "metro",
+      "maturity": "completed",
+      "stageCode": "completed",
+      "stageLabel": "개통",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "poseung-pyeongtaek": {
+      "name": "포승~평택 단선철도",
+      "impactClass": "freight",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://gris.gg.go.kr:8888/grisgis/rest/services/bdsMap_Monitoring/MapServer/7"
+    },
+    "daejang-hongdae": {
+      "name": "대장홍대선 · 부천대장~홍대입구",
+      "impactClass": "regional",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010401"
+    },
+    "wirye-gwacheon": {
+      "name": "위례과천선 · 복정~정부과천청사",
+      "impactClass": "regional",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "singuro": {
+      "name": "신구로선 · 시흥대야~목동",
+      "impactClass": "metro",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "second-gyeongin": {
+      "name": "제2경인선 · 청학~노온사",
+      "impactClass": "regional",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "byeollae-extension": {
+      "name": "별내선 연장 · 별내역~별가람역",
+      "impactClass": "metro",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "gangdong-hanam-namyangju": {
+      "name": "강동하남남양주선",
+      "impactClass": "metro",
+      "maturity": "basic_plan",
+      "stageCode": "planning",
+      "stageLabel": "기본계획 승인",
+      "sourceUrl": "https://www.korea.kr/briefing/pressReleaseView.do?newsId=156667215"
+    },
+    "incheon2-goyang": {
+      "name": "인천2호선 고양 연장 · 인천 서구~고양 일산서구",
+      "impactClass": "metro",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "west-gtx": {
+      "name": "서부권 광역급행철도 · 장기~부천종합운동장",
+      "impactClass": "gtx",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "songpa-hanam": {
+      "name": "송파하남선",
+      "impactClass": "metro",
+      "maturity": "basic_plan",
+      "stageCode": "planning",
+      "stageLabel": "기본계획 승인",
+      "sourceUrl": "https://www.hanam.go.kr/www/selectBbsNttView.do?bbsNo=1164&key=10221&nttNo=492224"
+    },
+    "wirye-samdong": {
+      "name": "위례삼동선 · 위례~삼동",
+      "impactClass": "light",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "bundang-cheongnyangni": {
+      "name": "분당선 · 왕십리~청량리",
+      "impactClass": "metro",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "bundang-osan": {
+      "name": "분당선 연장 · 기흥~오산",
+      "impactClass": "metro",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "ilsan-geumneung": {
+      "name": "일산선 연장 · 대화~금릉",
+      "impactClass": "metro",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "shinbundang-bongdam": {
+      "name": "신분당선 · 호매실~봉담",
+      "impactClass": "regional",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "shinbundang-yongsan": {
+      "name": "신분당선 · 용산~강남",
+      "impactClass": "regional",
+      "maturity": "design",
+      "stageCode": "planning",
+      "stageLabel": "설계 단계",
+      "sourceUrl": "https://www.kr.or.kr/sub/info.do?m=05010401"
+    },
+    "okjeong-pocheon": {
+      "name": "옥정~포천 광역철도",
+      "impactClass": "metro",
+      "maturity": "construction",
+      "stageCode": "construction",
+      "stageLabel": "공사 중",
+      "sourceUrl": "https://www.ggc.go.kr/site/cmt/xb/lwmkr/lawmakerpressrelease/284671"
+    },
+    "shinbundang-northwest": {
+      "name": "신분당선 서북부연장 · 용산~삼송",
+      "impactClass": "regional",
+      "maturity": "unknown",
+      "stageCode": "unknown",
+      "stageLabel": "현재 진행 단계 확인 중",
+      "sourceUrl": "https://www.molit.go.kr/mtc/USR/WPGE0201/m_37121/DTL.jsp"
+    },
+    "nangok": {
+      "name": "난곡선",
+      "impactClass": "light",
+      "maturity": "concept",
+      "stageCode": "planning",
+      "stageLabel": "계획 단계",
+      "sourceUrl": "https://news.seoul.go.kr/traffic/archives/519066"
+    },
+    "mokdong": {
+      "name": "목동선",
+      "impactClass": "light",
+      "maturity": "concept",
+      "stageCode": "planning",
+      "stageLabel": "계획 단계",
+      "sourceUrl": "https://news.seoul.go.kr/traffic/archives/519066"
+    }
+  }
+}
