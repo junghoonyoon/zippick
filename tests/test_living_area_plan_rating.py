@@ -244,20 +244,24 @@ def test_map_station_reference_is_explained_without_inventing_a_transport_score(
     assert '참고 위치' in plan['missingReasons']['transport']
 
 
+@pytest.mark.parametrize('scope_complete', [True, False])
 @pytest.mark.parametrize('nearest', [None, {'name':'먼 예정역', 'distanceMeters':2001}])
-def test_confirmed_absence_of_nearby_planned_station_is_zero(monkeypatch, nearest):
+def test_confirmed_absence_of_nearby_planned_station_is_zero(monkeypatch, nearest, scope_complete):
     import living_area_map
     import rail_station_mapping
     projects, _ = inputs()
     spatial = {'zones':[], 'stations':[], 'routes':[{'name':'확인한 노선', 'stationCoverage':{
         'mappingComplete':True, 'stationListComplete':True, 'nearestPlannedStation':nearest}}]}
     monkeypatch.setattr(living_area_map, 'map_context', lambda identity, result: spatial)
+    # Unlocated stops on lines elsewhere (scope incomplete) do not withhold a zero.
     monkeypatch.setattr(rail_station_mapping, 'complex_coverage', lambda *args: {
-        'scopeComplete':True, 'nearbyPlannedStations':[], 'nearbyReferenceStations':[]})
+        'status':'ready' if scope_complete else 'partial', 'scopeComplete':scope_complete,
+        'nearbyPlannedStations':[], 'nearbyReferenceStations':[]})
     result = {'displayProjects':projects[:1], 'center':{'latitude':37.46,'longitude':126.88},
               'metroCoverage':{'checkedAt':DAY.isoformat()}, 'snapshotId':'test'}
     plan = policy.attach(result, {}, DAY)['planRating']
     assert plan['subScores']['transport'] == 0
+    assert plan['components']['transport'].get('coverageIncomplete', False) is (not scope_complete)
     assert plan['subScores']['housing'] > 0
     assert plan['score'] == policy.aggregate(plan['subScores'])
     assert plan['status'] == 'ready'
@@ -268,7 +272,7 @@ def test_confirmed_absence_of_nearby_planned_station_is_zero(monkeypatch, neares
 
 @pytest.mark.parametrize('change', ['incomplete_list', 'incomplete_mapping', 'no_center',
                                     'no_catalogue', 'unknown_distance', 'within_radius',
-                                    'map_reference', 'unknown_stage', 'other_lines_incomplete'])
+                                    'map_reference', 'unknown_stage'])
 def test_unknown_station_evidence_does_not_become_zero(monkeypatch, change):
     import living_area_map
     import rail_station_mapping

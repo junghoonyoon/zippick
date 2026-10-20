@@ -425,14 +425,15 @@ def test_pangyo_valley_xi_2_route_is_not_described_as_a_new_station(tmp_path):
     identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
     result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 19))
 
-    assert result['planRating']['transportCoverage']['status'] == 'station_mapping_incomplete'
-    assert result['planRating']['subScores'] == {'housing': None, 'transport': None}
-    unknowns = ' '.join(result['briefing']['unknowns'])
+    # GTX-A passes nearby but every GTX-A stop is located; unlocated stops elsewhere
+    # in the capital region no longer withhold a zero.
+    assert result['planRating']['transportCoverage']['status'] == 'mapped_stations_outside_2km'
+    assert result['planRating']['subScores'] == {'housing': None, 'transport': 0}
     assert result['briefing']['verdict'] == 'pending'
-    assert '직선 2km 안의 정비사업을 찾지 못했어요' in unknowns
-    assert '신규 예정역이 없어요' not in briefing_text(result)
-    assert '다른 철도 노선의 예정역 목록·위치를 아직 확인 중' in unknowns
-    assert '0점을 주지 않아요' in result['planRating']['missingReasons']['transport']
+    assert '직선 2km 안의 정비사업을 찾지 못했어요' in ' '.join(result['briefing']['unknowns'])
+    assert '새 역' not in ' '.join(result['briefing']['strengths'])
+    assert result['briefing']['weaknesses'] == ['직선 2km 안에 새로 생길 예정역이 없어요.']
+    assert '서판교역' in ' '.join(result['briefing']['caveats'])
 
 
 def test_living_area_headline_uses_korean_particles_for_numbered_complexes_and_projects():
@@ -734,3 +735,22 @@ def test_miseong_counts_gtx_a_extension_instead_of_withholding_transport(tmp_pat
     text = briefing_text(result)
     assert '이미 운행 중인 연신내역 · GTX-A' in text and '삼성역' in text
     assert '이미 있는 교통이라 변화 점수에는 넣지 않았어요' not in text
+
+
+def test_no_planned_stop_within_2km_scores_zero_even_while_other_regions_are_unmapped(tmp_path):
+    import future_transformation as transformation
+    import real_estate_search
+
+    entity = next(e for e in real_estate_search._search_entities()
+                  if e.get('name') == '해링턴 스퀘어 신흥역' and e.get('legalDong') == '중앙동' and e.get('jibun') == '912')
+    identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
+    result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 20))
+    rating = result['planRating']
+
+    assert rating['transportCoverage']['scopeComplete'] is False
+    assert rating['subScores']['transport'] == 0
+    assert rating['components']['transport']['summary'].startswith('위치를 확인한 예정역 기준이에요.')
+    assert 'transport' not in rating['missingReasons']
+    assert result['briefing']['verdict'] != 'pending'
+    assert result['briefing']['weaknesses'] == ['직선 2km 안에 새로 생길 예정역이 없어요.']
+    assert not any('확인 중' in text for text in result['briefing']['unknowns'])

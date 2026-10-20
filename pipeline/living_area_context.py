@@ -312,7 +312,7 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v16'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v17'
 VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
                   'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
 STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
@@ -473,6 +473,11 @@ def conclude(result, identity):
         caveats.append('지도에 보이는 예정역은 지금 걸어서 타는 역보다 멀어서 새 교통 변화로 보지 않았어요.')
     elif transport_score == 0 and stations_outside:
         weaknesses.append('직선 2km 안에 새로 생길 예정역이 없어요.')
+        unlocated = rail_component.get('unlocatedLocalStations') or []
+        if unlocated:
+            caveats.append('·'.join(name.split(' · ')[0] for name in unlocated[:3])
+                           + (f' 등 {len(unlocated)}곳' if len(unlocated) > 3 else '')
+                           + '은 위치가 아직 정해지지 않아 거리 판단에서 빠졌어요.')
     elif map_station_only or stations_outside or station_mapping_incomplete or not route:
         unknowns.append(transport_reason)
     else:

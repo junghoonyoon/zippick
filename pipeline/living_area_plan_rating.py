@@ -278,6 +278,17 @@ def split_useful_stations(stations, current):
     return kept, excluded
 
 
+def unlocated_local_stations(places):
+    """Planned stops in the same city or district whose location is not decided yet."""
+    import rail_station_mapping
+    try:
+        stations = [rail_station_mapping.annotate(row) for row in rail_station_mapping.load().get('stations', [])]
+    except (OSError, ValueError, KeyError):
+        return []
+    return [row for row in stations if row.get('sigungu') in places and row.get('serviceStatus') != 'operating'
+            and row.get('locationStatus') != 'located' and not under_review(row)]
+
+
 def attach(result, identity, day):
     from living_area_map import map_context
     # Each map source checks its own review date. An old pilot file must not
@@ -357,23 +368,28 @@ def attach(result, identity, day):
             and not coverage.get('nearbyPlannedStations') and not map_references and not visible_routes):
         transport_status = 'rail_under_review'
         rating['missingReasons']['transport'] = '재추진 중인 노선은 일정이 정해지지 않아 교통 가점에서 제외했어요.'
-    # A single fully mapped nearby route is not an exhaustive station search.
-    # Check the entire shared registry before asserting absence or assigning zero.
-    if (rating['subScores']['transport'] is None
-            and transport_status in ('mapped_stations_outside_2km','route_only','no_verified_station_within_2km')
+    # Only a nearby route with unlocated stops can still hide a new station here.
+    # Unlocated stops elsewhere in the capital region do not withhold the score.
+    if (rating['subScores']['transport'] is None and transport_status == 'route_only'
             and coverage.get('status') == 'partial'):
         transport_status = 'station_mapping_incomplete'
         rating['missingReasons']['transport'] = (
             '다른 철도 노선의 예정역 목록·위치를 아직 확인 중이라 새 철도 가점을 보류했어요. '
             '현재 연결된 역이 없다는 이유로 0점을 주지 않아요.')
-    if (rating['subScores']['transport'] is None and coverage['scopeComplete']
-            and not coverage['nearbyPlannedStations'] and not coverage['nearbyReferenceStations']
+    if (rating['subScores']['transport'] is None
+            and coverage.get('status') != 'unavailable'
+            and not coverage.get('nearbyPlannedStations') and not coverage.get('nearbyReferenceStations')
             and not coverage.get('nearbyReviewStations')
-            and transport_status not in ('catalogue_unavailable','location_unresolved','line_stage_unverified','map_reference_only')):
+            and transport_status not in ('catalogue_unavailable','location_unresolved','line_stage_unverified',
+                                         'map_reference_only','station_mapping_incomplete')):
         transport_status = 'mapped_stations_outside_2km'
         rating['subScores']['transport'] = 0
+        places = {identity.get('city'), identity.get('district')} - {None, ''}
+        unlocated = [row['name'] for row in unlocated_local_stations(places)]
         rating['components']['transport'] = {
-            'summary':'등록된 철도 노선의 역 목록과 위치를 모두 확인했어요. 직선 2km 안에 신규 예정역이 없어 새 철도 가점은 0점이에요.',
+            'summary':('등록된 철도 노선의 역 목록과 위치를 모두 확인했어요. ' if coverage.get('scopeComplete') else '위치를 확인한 예정역 기준이에요. ')
+                      + '직선 2km 안에 신규 예정역이 없어 새 철도 가점은 0점이에요.',
+            'unlocatedLocalStations':unlocated,
             'formula':'직선 2km 안에 신규 예정역이 없으면 교통 개선 가점은 0점이에요.',
             'policy':'확인한 주변 노선의 역 목록과 위치를 기준으로 해요. 이미 개통한 역은 새 역 가점에서 제외해요. 현재 교통이 불편하다는 뜻은 아니에요.',
             'inputs':[], 'noPlannedStationWithinRadius':True}
@@ -396,7 +412,7 @@ def attach(result, identity, day):
         rating['status'] = 'ready' if rating['score'] is not None else 'insufficient_data'
     elif farther and rating['components'].get('transport'):
         rating['components']['transport']['excludedStations'] = farther
-    if rating['subScores']['transport'] is not None and not coverage['scopeComplete']:
+    if rating['subScores']['transport'] is not None and not coverage.get('scopeComplete'):
         rating['components']['transport']['coverageIncomplete'] = True
     rating['transportCoverage']={**coverage, 'status':transport_status,'radiusMeters':2000,
                                 'checkedAt':result.get('metroCoverage',{}).get('railStationCheckedAt') or result.get('metroCoverage',{}).get('checkedAt'),
