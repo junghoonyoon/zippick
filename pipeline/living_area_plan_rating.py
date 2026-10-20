@@ -9,10 +9,17 @@ from living_area_scoring_policy import STAGES, distance_decay, rounded
 from living_area_rail_policy import line_policy, under_review
 import living_area_sources as sources
 
-VERSION = 'living-area-plan-v7-beta'
-WEIGHTS = {'housing': .6, 'transport': .4}
+VERSION = 'living-area-plan-v8-beta'
+# Housing change is the base score. New rail adds at most one point on top
+# (5 rail points x .2), so a complex without new rail is not pulled down.
+WEIGHTS = {'housing': 1.0, 'transport': .2}
+# Area-only projects are converted with the old full-scale pair (6,000 homes ~ 400,000㎡).
 HOUSING_HOUSEHOLDS_FULL_SCALE = 6000
 HOUSING_AREA_FULL_SCALE_M2 = 400000
+AREA_PER_HOUSEHOLD_M2 = HOUSING_AREA_FULL_SCALE_M2 / HOUSING_HOUSEHOLDS_FULL_SCALE
+# Log scale anchors for expected households: 1,000 -> 2 points, 20,000 -> 5 points.
+HOUSING_SCORE_LOW, HOUSING_SCORE_HIGH = 1000, 20000
+FIRM_STAGES = ('disposal', 'construction')
 
 
 def valid(value):
@@ -22,7 +29,15 @@ def valid(value):
 def aggregate(scores):
     if not all(valid(scores.get(k)) and 0 <= scores[k] <= 5 for k in WEIGHTS):
         return None
-    return rounded(sum(scores[k]*weight for k,weight in WEIGHTS.items()))
+    return rounded(min(5, sum(scores[k]*weight for k,weight in WEIGHTS.items())))
+
+
+def expected_households_score(expected):
+    """Diminishing returns: each tenfold rise in expected homes adds the same points."""
+    if not valid(expected) or expected <= 0:
+        return 0
+    points = 2 + 3*math.log10(expected/HOUSING_SCORE_LOW)/math.log10(HOUSING_SCORE_HIGH/HOUSING_SCORE_LOW)
+    return rounded(max(0, min(5, points)))
 
 
 def calculate(projects, spatial, day, extra_rail=()):
@@ -59,63 +74,61 @@ def calculate(projects, spatial, day, extra_rail=()):
         area = p.get('siteAreaM2')
         if not valid(distance) or not 0 <= distance <= 2000:continue
         if valid(size) and size > 0:
-            scale, scale_label, scale_basis = min(size/HOUSING_HOUSEHOLDS_FULL_SCALE,1), f'{size:,.0f}세대 계획', 'planned_households'
+            homes, scale_label, scale_basis = size, f'{size:,.0f}세대 계획', 'planned_households'
         elif valid(area) and area > 0:
-            scale, scale_label, scale_basis = min(area/HOUSING_AREA_FULL_SCALE_M2,1), f'공식 구역면적 {area:,.0f}㎡', 'official_area'
+            homes, scale_label, scale_basis = area/AREA_PER_HOUSEHOLD_M2, f'공식 구역면적 {area:,.0f}㎡', 'official_area'
         else:
             housing_without_scale += 1
             continue
         proximity, stage = distance_decay(distance), STAGES[project_stage]
-        # Each distinct project adds a nonnegative, distance- and stage-adjusted
-        # share of the 5-point scale. Later projects cannot lower the total.
-        score = 5*scale*(.3 + .4*proximity + .3*stage)
+        # Expected homes discount planned homes by how likely the project is to
+        # be built (stage) and how much this complex feels it (distance).
+        expected = homes*stage*proximity
         housing.append({'projectId':p['id'], 'name':p['name'], 'distanceMeters':distance,
                         'distanceBasis':'단지 대표점→참고 구역 경계' if z else p.get('distanceLabel', '사업 대표점 직선거리'),
                         'coordinateSourceUrl':p.get('coordinateSourceUrl'),
                         'plannedHouseholds':size if scale_basis == 'planned_households' else None,
                         'siteAreaM2':area, 'scaleLabel':scale_label, 'scaleBasis':scale_basis,
-                        'scaleFraction':scale, 'stage':project_stage,
+                        'householdEquivalent':round(homes), 'expectedHouseholds':round(expected, 1),
+                        'stage':project_stage,
                         'stageLabel':(z or {}).get('stageLabel') or p.get('stageLabel'),
-                        'stageCoefficient':stage, 'proximityCoefficient':proximity, 'rawScore':score,
+                        'stageCoefficient':stage, 'proximityCoefficient':proximity,
                         'sourceUrl':p.get('sourceUrl'), 'geometrySourceUrl':z.get('sourceUrl') if z else None})
     if housing:
-        scale_total = sum(p['scaleFraction'] for p in housing)
-        distance_total = sum(p['scaleFraction'] * p['proximityCoefficient'] for p in housing)
-        stage_total = sum(p['scaleFraction'] * p['stageCoefficient'] for p in housing)
+        expected_total = sum(p['expectedHouseholds'] for p in housing)
+        housing_score = expected_households_score(expected_total)
         for p in housing:
-            # Divide each capped part among its projects. The displayed project
-            # contributions then add up to the actual housing score.
-            p['contributionScore'] = 5 * p['scaleFraction'] * (
-                .3 / max(1, scale_total)
-                + .4 * p['proximityCoefficient'] / max(1, distance_total)
-                + .3 * p['stageCoefficient'] / max(1, stage_total))
+            # Displayed project contributions add up to the housing score.
+            p['contributionScore'] = housing_score*p['expectedHouseholds']/expected_total if expected_total else 0
+            p['rawScore'] = p['contributionScore']
         housing.sort(key=lambda p:(-p['contributionScore'], p['distanceMeters'], p['projectId']))
         best = housing[0]
         households = [p for p in housing if p['scaleBasis'] == 'planned_households']
         area_only = [p for p in housing if p['scaleBasis'] == 'official_area']
         households_total = sum(p['plannedHouseholds'] for p in households)
         area_only_total = sum(p['siteAreaM2'] for p in area_only)
-        uncapped_score = sum(p['rawScore'] for p in housing)
-        output['subScores']['housing'] = rounded(sum(p['contributionScore'] for p in housing))
+        firm_total = sum(p['plannedHouseholds'] for p in households if p['stage'] in FIRM_STAGES)
+        output['subScores']['housing'] = housing_score
         scale_summary = []
         if households:
             scale_summary.append(f'계획 세대수 합계 {households_total:,.0f}세대')
         if area_only:
             scale_summary.append(f'세대수 없는 {len(area_only)}곳은 공식 면적 {area_only_total:,.0f}㎡로 계산')
         output['components']['housing'] = {
-            'summary':f'직선 2km 안 정비사업 {len(housing)}곳 · ' + ' · '.join(scale_summary),
-            'formula':'직선 2km 안 사업을 모두 더해요. 규모 30% + 거리 40% + 진행 단계 30%예요. 각 부분은 최대 5점 기준으로 계산해요.',
-            'policy':('계획 세대수 6,000세대 또는 공식 구역면적 40만㎡를 규모 100%로 봐요. '
-                      '세대수가 있으면 면적을 중복해 넣지 않아요. 계획 세대수는 입주 완료나 새로 늘어나는 세대수가 아니에요.'
+            'summary':f'직선 2km 안 정비사업 {len(housing)}곳 · ' + ' · '.join(scale_summary)
+                      + f' · 기대 세대수 {expected_total:,.0f}세대',
+            'formula':('사업마다 계획 세대수 × 진행 단계 × 거리 계수로 기대 세대수를 구해 모두 더해요. '
+                       '기대 세대수 1,000세대는 2점, 20,000세대는 5점이에요. 10배 늘 때마다 같은 점수만 올라요.'),
+            'policy':('세대수가 없으면 공식 구역면적 약 67㎡를 1세대로 바꿔 계산해요. '
+                      '계획 세대수는 입주 완료나 새로 늘어나는 세대수가 아니에요.'
                       + (f' 규모를 확인하지 못한 {housing_without_scale}곳은 계산에서 제외했어요.'
                          if housing_without_scale else '')),
             'inputs':housing, 'selectedProjectId':best['projectId'],
             'projectCount':len(housing), 'plannedHouseholdsTotal':households_total,
+            'expectedHouseholdsTotal':round(expected_total), 'firmHouseholdsTotal':firm_total,
             'areaOnlyProjectCount':len(area_only), 'areaOnlyTotalM2':area_only_total,
-            'unscoredProjectCount':housing_without_scale,
-            'uncappedScore':rounded(uncapped_score, 2), 'scoreCap':5,
-            'fullScaleHouseholds':HOUSING_HOUSEHOLDS_FULL_SCALE,
-            'fullScaleAreaM2':HOUSING_AREA_FULL_SCALE_M2}
+            'unscoredProjectCount':housing_without_scale, 'scoreCap':5,
+            'scoreAnchors':{'households':[HOUSING_SCORE_LOW, HOUSING_SCORE_HIGH], 'points':[2, 5]}}
     rail_by_line = {}
     unscored_rail_lines = set()
     for station in spatial.get('stations', []):
@@ -185,7 +198,8 @@ def calculate(projects, spatial, day, extra_rail=()):
     if unscored_rail_lines and output['subScores']['transport'] is None:
         output['missingReasons']['transport'] = (
             f'직선 2km 안에 예정역 참고 위치가 있지만, {len(unscored_rail_lines)}개 노선은 단계가 미확인됐거나 이 점수의 대상이 아니어서 보류했어요.')
-    output['stagePolicy'] = '주거 사업 단계: 계획 10% · 구역 지정 20% · 조합 설립 35% · 사업 인가 55% · 관리처분 70% · 착공 90%'
+    output['stagePolicy'] = '주거 사업 실현 가능성: 계획 10% · 구역 지정 20% · 조합 설립 35% · 사업 인가 55% · 관리처분 70% · 착공 90%'
+    output['aggregationPolicy'] = '주거환경 점수에 새 철도 가점(최대 +1점)을 더해요. 종합점수는 5점을 넘지 않아요.'
     output['distancePolicy'] = '주거 거리 계수: 직선 0m 100% · 800m 60% · 2km 20%. 철도는 이 계수를 바탕으로 참고 위치 접근성을 계산해요.'
     return output
 

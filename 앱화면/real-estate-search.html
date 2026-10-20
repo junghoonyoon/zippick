@@ -18068,7 +18068,7 @@
 
     function zippickLifestylePlanRating(analysis) {
       const plan = analysis?.planRating;
-      return ["living-area-plan-v3-beta", "living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan?.version) ? plan : null;
+      return ["living-area-plan-v3-beta", "living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan?.version) ? plan : null;
     }
 
     function zippickLifestyleChangeRatingData(item) {
@@ -18327,7 +18327,7 @@
       ];
       const stages = { planning:"계획", designated:"구역 지정", association:"조합 설립", approved:"사업 인가", disposal:"관리처분", construction:"착공", completed:"완료" };
       const housingScoreInputsHtml = component => {
-        if (!["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
+        if (!["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
         return `<ul class="zpr-living-score-inputs" aria-label="점수에 반영한 정비사업">${component.inputs.map(project => {
           const distance = Number.isFinite(project.distanceMeters) ? `직선 ${project.distanceMeters.toLocaleString("ko-KR")}m` : "거리 확인 중";
           const contribution = Number.isFinite(project.contributionScore) ? `${project.contributionScore.toFixed(2)}점 반영` : "반영 점수 확인 중";
@@ -18335,7 +18335,7 @@
         }).join("")}</ul>`;
       };
       const transportScoreInputsHtml = component => {
-        if (!["living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
+        if (!["living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
         const used = component.inputs.filter(line => Number.isFinite(line.contributionScore));
         return `<ul class="zpr-living-score-inputs" aria-label="점수에 반영한 철도 노선">${used.map(line => {
           const distance = Number.isFinite(line.distanceMeters) ? `참고 위치까지 직선 ${line.distanceMeters.toLocaleString("ko-KR")}m` : "위치 확인 중";
@@ -18400,7 +18400,7 @@
       let planNote = "";
       if (plan?.score === null && Number.isFinite(plan.subScores?.housing)
           && !Number.isFinite(plan.subScores?.transport)) {
-        planNote = (["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta"].includes(plan.version)
+        planNote = (["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan.version)
           ? "주거환경 점수는 직선 2km 안의 사업을 규모·거리·진행 단계별로 계산해 더해요. "
           : "주거환경 점수는 확인된 사업 중 가장 높은 1곳을 기준으로 해요. 다른 사업을 더해 점수를 높이지 않아요. ")
           + (plan.transportCoverage?.status === "map_reference_only"
@@ -18441,7 +18441,7 @@
         ${!analysisError && plan?.transportCoverage?.nearbyOperatingStations?.length ? `<p class="zpr-living-plan-note"><strong>현재 이용 가능한 철도</strong> ${plan.transportCoverage.nearbyOperatingStations.map(station => `${esc(station.name)} · 직선 ${Number(station.distanceMeters).toLocaleString("ko-KR")}m`).join(" / ")}<br>이미 개통한 역이에요. 새 철도 가점과 구분해요.</p>` : ""}
         ${!analysisError && plan?.transportCoverage?.lineCount ? `<details class="zpr-future-details zpr-living-methods"><summary>철도 예정역 확인 현황 · ${esc(plan.transportCoverage.completeLineCount)} / ${esc(plan.transportCoverage.lineCount)}개 노선 확인</summary>
           <p>등록된 역 연결 ${esc(plan.transportCoverage.listedStations)}건 중 역 위치 ${esc(plan.transportCoverage.stationLocationCount)}건을 확인했어요. 같은 역도 노선별로 따로 세요.</p>
-          <p>${plan.transportCoverage.scopeComplete ? "등록한 노선의 역 목록과 위치를 모두 확인했어요." : "다른 노선의 역 목록과 위치를 확인 중이에요. 확인한 역만 점수에 반영하며, 아직 못 찾았다는 이유로 0점을 주지 않아요."}</p>
+          <p>${plan.transportCoverage.scopeComplete ? "등록한 노선의 역 목록과 위치를 모두 확인했어요." : "다른 노선의 역 목록과 위치를 확인 중이에요. 위치를 확인한 역만 거리 판단에 써요. 단지 근처 2km 안을 지나는 노선의 역 위치를 모를 때만 점수를 보류해요."}</p>
           <ul>${(plan.transportCoverage.incompleteLines || []).map(line => `<li>${esc(line.name)} · 역 위치 ${esc(line.stationLocationCount ?? 0)} / ${esc(line.listedStations ?? 0)}곳${line.stationListComplete ? "" : " · 전체 역 목록 확인 중"} · ${zippickFutureSourceLink(line.stationsSourceUrl || line.sourceUrl)}</li>`).join("")}</ul>
           <p>${esc(plan.transportCoverage.scope || "")} · 확인 ${esc(plan.transportCoverage.checkedAt || "미확인")}</p>
         </details>` : ""}
@@ -18464,7 +18464,7 @@
         <div class="zpr-living-projects">${visibleProjects.slice(0,5).map(projectHtml).join("") || '<p class="zpr-lead">위치와 규모가 확인된 주변 사업 자료가 아직 없어요.</p>'}</div>
         ${visibleProjects.length > 5 ? `<details class="zpr-future-details"><summary>사업 ${visibleProjects.length-5}곳 더 보기</summary>${visibleProjects.slice(5).map(projectHtml).join("")}</details>` : ""}
         ${analysis.transportRoutes?.length ? `<details class="zpr-future-details zpr-living-extra"><summary>철도 노선 참고 자료</summary>${zippickLivingTransportHtml({...analysis,displayProjects:[]})}</details>` : ""}
-        ${plan ? `<details class="zpr-future-details zpr-living-methods"><summary>${score === null ? "생활권 변화 · 점수 산출 현황" : `생활권 변화 ${scoreText(score)} · 별점 계산 근거`}</summary><p>주거환경 개선 60% + 교통 개선 40%를 합산해요.</p><p>${scoreGroups.map(([key,label]) => `${label} ${scoreText(plan.subScores?.[key])} × ${weightText(key)}`).join(" + ")} = ${scoreText(score)}</p><p>${esc(plan.stagePolicy)}</p><p>${esc(plan.distancePolicy)}</p><p>기준과 가중치는 집픽의 비교 정책이에요. 실제 성과로 검증된 예측 모형은 아니에요. 미확인 항목이 있으면 합산하지 않아요.</p><p>${esc(plan.version)} · 기준일 ${esc(plan.asOfDate)}</p></details>` : `<details class="zpr-future-details zpr-living-methods"><summary>종합점수 ${scoreText(score)} · 계산 근거 보기</summary><p class="zpr-development-meta">지역의 변화 60%와 이 단지의 직접 수혜 40%를 함께 봐요. 확인되지 않은 항목을 0점으로 처리하거나 임의로 채우지 않아요.</p><p class="zpr-development-meta">${esc(analysis.modelVersion || "living-area-v2-beta")} · 800m 이내 근거리, 2km 이내 인접 후보. 2~5km는 연결 근거가 있는 사업만 봐요. 같은 구라는 이유로 수혜 점수를 더하지 않아요.</p>${(analysis.metrics || []).map(metric => `<p class="zpr-development-meta">${esc(metric.label)} · ${metric.group === "regional" ? "지역 변화" : "직접 수혜"} 내 ${esc(metric.weight)}% · ${metric.value === null ? "추가 자료 필요" : `${esc(metric.value)} / 100`}</p>`).join("")}${(analysis.limitations || []).map(text => `<p class="zpr-development-meta">${esc(text)}</p>`).join("")}</details>`}
+        ${plan ? `<details class="zpr-future-details zpr-living-methods"><summary>${score === null ? "생활권 변화 · 점수 산출 현황" : `생활권 변화 ${scoreText(score)} · 별점 계산 근거`}</summary><p>${esc(plan.aggregationPolicy || "주거환경 개선 60% + 교통 개선 40%를 합산해요.")}</p><p>${scoreGroups.map(([key,label]) => `${label} ${scoreText(plan.subScores?.[key])} × ${weightText(key)}`).join(" + ")} = ${scoreText(score)}</p><p>${esc(plan.stagePolicy)}</p><p>${esc(plan.distancePolicy)}</p><p>기준과 가중치는 집픽의 비교 정책이에요. 실제 성과로 검증된 예측 모형은 아니에요. 미확인 항목이 있으면 합산하지 않아요.</p><p>${esc(plan.version)} · 기준일 ${esc(plan.asOfDate)}</p></details>` : `<details class="zpr-future-details zpr-living-methods"><summary>종합점수 ${scoreText(score)} · 계산 근거 보기</summary><p class="zpr-development-meta">지역의 변화 60%와 이 단지의 직접 수혜 40%를 함께 봐요. 확인되지 않은 항목을 0점으로 처리하거나 임의로 채우지 않아요.</p><p class="zpr-development-meta">${esc(analysis.modelVersion || "living-area-v2-beta")} · 800m 이내 근거리, 2km 이내 인접 후보. 2~5km는 연결 근거가 있는 사업만 봐요. 같은 구라는 이유로 수혜 점수를 더하지 않아요.</p>${(analysis.metrics || []).map(metric => `<p class="zpr-development-meta">${esc(metric.label)} · ${metric.group === "regional" ? "지역 변화" : "직접 수혜"} 내 ${esc(metric.weight)}% · ${metric.value === null ? "추가 자료 필요" : `${esc(metric.value)} / 100`}</p>`).join("")}${(analysis.limitations || []).map(text => `<p class="zpr-development-meta">${esc(text)}</p>`).join("")}</details>`}
         <p class="zpr-development-meta">${esc(plan?.disclaimer || analysis.disclaimer || "생활환경 변화의 참고값이며 가격 상승률을 예측하지 않아요.")}${analysis.metroCoverage ? ` · 정비사업 확인 ${esc(analysis.metroCoverage.checkedAt || "미확인")}${analysis.metroCoverage.railStationCheckedAt ? ` · 예정역 확인 ${esc(analysis.metroCoverage.railStationCheckedAt)}` : ""}` : ""}</p>`}
       </section>`;
     }

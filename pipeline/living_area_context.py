@@ -312,7 +312,7 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v17'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v18'
 VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
                   'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
 STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
@@ -424,15 +424,18 @@ def conclude(result, identity):
         named_lead = brief_lead + _topic(brief_lead)
         stage_text = STAGE_MEANING.get(lead_stage) or ((lead.get('stageLabel') or '진행 단계 미확인') + ' 단계')
         if isinstance(lead_meters, (int, float)):
-            lead_text = (f'가장 영향이 큰 {named_lead} 직선 {lead_meters:,.0f}m 떨어져 있고, **{stage_text}**예요.'
+            lead_text = (f'가장 영향이 큰 {named_lead} 직선 {lead_meters:,.0f}m 떨어져 있고, {stage_text}예요.'
                          if housing_count > 1 else
                          f'{named_lead} 직선 {lead_meters:,.0f}m 떨어져 있고, **{stage_text}**예요.')
         else:
             lead_text = f'{named_lead} **{stage_text}**예요. 이 단지와의 거리는 확인 중이에요.'
         if housing_count > 1:
+            firm_total = housing_component.get('firmHouseholdsTotal') or 0
+            firm_text = (f'이 중 **공사 중이거나 착공 바로 전인 사업은 {firm_total:,.0f}세대**예요. ' if firm_total else
+                         '이 중 **공사 중이거나 착공 바로 전인 사업은 아직 없어요**. ')
             lead_text = (f'직선 2km 안에 정비사업이 {housing_count}곳이에요. '
                          + (('세대수가 확인된 곳의 ' if housing_component.get('areaOnlyProjectCount') else '')
-                            + f'계획 세대는 모두 {households_total:,.0f}세대예요. ' if households_total else '')
+                            + f'계획 세대는 모두 {households_total:,.0f}세대예요. ' + firm_text if households_total else '')
                          + lead_text)
         if direct:
             lead_text += f' 단지에서 {brief_lead}까지 걸어가는 길도 확인됐어요.'
@@ -523,6 +526,14 @@ def conclude(result, identity):
         advice = [f'{named_subject} 한두 곳이 아니라 동네 전체가 바뀌는 곳이에요.',
                   '사업마다 속도가 달라서 몇 년에 걸쳐 바뀐다고 보세요.',
                   '가장 빠른 사업의 진행 상황부터 확인하세요.']
+    elif score >= 3.8:
+        # Rail is only a bonus now, so a large, advanced housing change alone can be good.
+        verdict = 'good'
+        reason = ('정비사업과 새 철도 계획이 함께 있어요' if rail_input and (transport_score or 0) >= 3.0 else
+                  '정비사업 규모가 커서 동네가 크게 바뀔 곳이에요')
+        advice = [f'{named_subject} 한두 곳이 아니라 동네 전체가 새 아파트로 바뀌는 곳이에요.',
+                  '착공이 가까운 사업부터 순서대로 동네가 달라져요.',
+                  '입주가 몰리는 해에는 전세가와 새 아파트 가격 차이를 함께 확인하세요.']
     else:
         verdict = 'weak' if score < 3.0 else 'normal'
         if lead and housing_known and transport_known and housing_score >= 3.5 and transport_score < 3.0:

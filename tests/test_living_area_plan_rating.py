@@ -15,9 +15,12 @@ def inputs():
 
 
 def test_weighted_rating_and_missing_values():
-    assert policy.WEIGHTS == {'housing': .6, 'transport': .4}
-    assert policy.aggregate({'housing':3.8,'transport':2.6}) == 3.3
-    assert policy.aggregate({'housing':3.8,'transport':2.6,'competitiveness':0}) == 3.3
+    # Housing is the base; five rail points add one point; the total never exceeds 5.
+    assert policy.WEIGHTS == {'housing': 1.0, 'transport': .2}
+    assert policy.aggregate({'housing':3.8,'transport':2.6}) == 4.3
+    assert policy.aggregate({'housing':3.8,'transport':0}) == 3.8
+    assert policy.aggregate({'housing':4.6,'transport':5}) == 5
+    assert policy.aggregate({'housing':3.8,'transport':2.6,'competitiveness':0}) == 4.3
     assert policy.aggregate(dict.fromkeys(policy.WEIGHTS,0)) == 0
     for v in [None,True,float('nan'),-1,6]:
         assert policy.aggregate({'housing':v,'transport':3}) is None
@@ -44,28 +47,42 @@ def test_nearby_housing_projects_add_planned_units_with_stage_and_distance_weigh
     result = policy.calculate(projects, {'zones': [], 'stations': []}, DAY)
     housing = result['components']['housing']
 
-    assert result['subScores']['housing'] == 3.9
+    from living_area_scoring_policy import STAGES, distance_decay
+    expected = 6000 * STAGES['construction'] * distance_decay(1000)
+    score = policy.expected_households_score(expected)
+    assert result['subScores']['housing'] == score
     assert housing['projectCount'] == 3
     assert housing['plannedHouseholdsTotal'] == 6000
+    assert housing['expectedHouseholdsTotal'] == round(expected)
+    assert housing['firmHouseholdsTotal'] == 6000
     assert housing['areaOnlyProjectCount'] == 0
     assert housing['selectedProjectId'] == 'zone-1'
-    assert sum(row['rawScore'] for row in housing['inputs']) == pytest.approx(3.9166666667)
-    assert sum(row['contributionScore'] for row in housing['inputs']) == pytest.approx(3.9166666667)
+    assert sum(row['contributionScore'] for row in housing['inputs']) == pytest.approx(score)
     assert '6,000세대' in housing['summary']
 
     earlier = copy.deepcopy(projects)
     for project in earlier:
         project['stage'] = 'planning'
-    assert policy.calculate(earlier, {'zones': []}, DAY)['subScores']['housing'] == 2.7
+    assert policy.calculate(earlier, {'zones': []}, DAY)['subScores']['housing'] < score
+    assert policy.calculate(earlier, {'zones': []}, DAY)['components']['housing']['firmHouseholdsTotal'] == 0
     farther = copy.deepcopy(projects)
     for project in farther:
         project['distanceMeters'] = 2000
-    assert policy.calculate(farther, {'zones': []}, DAY)['subScores']['housing'] == 3.3
+    assert policy.calculate(farther, {'zones': []}, DAY)['subScores']['housing'] < score
 
-    assert policy.calculate(projects + [copy.deepcopy(projects[0])], {'zones': []}, DAY)['subScores']['housing'] == 3.9
+    assert policy.calculate(projects + [copy.deepcopy(projects[0])], {'zones': []}, DAY)['subScores']['housing'] == score
     assert policy.calculate(projects + [dict(id='zone-4', name='추가 구역', projectType='redevelopment',
                                             stage='construction', plannedHouseholds=1000, distanceMeters=1000)],
-                            {'zones': []}, DAY)['subScores']['housing'] > 3.9
+                            {'zones': []}, DAY)['subScores']['housing'] > score
+
+
+def test_expected_households_use_a_log_scale_without_early_saturation():
+    assert policy.expected_households_score(0) == 0
+    assert policy.expected_households_score(1000) == 2
+    assert policy.expected_households_score(20000) == 5
+    assert policy.expected_households_score(200000) == 5
+    # A 7,000-home and a 33,000-home neighborhood no longer share the top score.
+    assert policy.expected_households_score(7000) < policy.expected_households_score(20000)
 
 
 def test_stage_still_matters_after_many_projects_reach_the_scale_ceiling():
@@ -93,7 +110,10 @@ def test_area_only_projects_are_scored_separately_and_missing_scale_is_not_zero(
     result = policy.calculate(projects, {'zones': []}, DAY)
     housing = result['components']['housing']
 
-    assert result['subScores']['housing'] == 3.9
+    from living_area_scoring_policy import STAGES, distance_decay
+    homes = 3000 + 200000 / policy.AREA_PER_HOUSEHOLD_M2
+    assert result['subScores']['housing'] == policy.expected_households_score(
+        homes * STAGES['construction'] * distance_decay(1000))
     assert housing['plannedHouseholdsTotal'] == 3000
     assert housing['areaOnlyProjectCount'] == 1
     assert housing['areaOnlyTotalM2'] == 200000

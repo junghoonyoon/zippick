@@ -334,9 +334,13 @@ def test_living_area_verdict_requires_balanced_plans_or_direct_benefit_for_posit
     identity = {**IDENTITY, 'name':'가상단지'}
     project = {'id':'near', 'name':'가상구역', 'projectType':'redevelopment',
                'stage':'construction', 'distanceMeters':300, 'benefitClass':'unverified'}
-    report = {'displayProjects':[project], 'planRating':{'score':4.1,'components':{}},
+    report = {'displayProjects':[project], 'planRating':{'score':3.6,'components':{}},
               'judgment':{}}
     assert context.conclude(copy.deepcopy(report), identity)['headline'].startswith('생활권 변화는 보통이에요.')
+    # Rail is a bonus on top of housing, so a high total alone is a positive label.
+    report['planRating']['score'] = 4.1
+    assert context.conclude(copy.deepcopy(report), identity)['headline'].startswith('생활권 변화는 좋아요.')
+    report['planRating']['score'] = 3.6
     report['displayProjects'][0]['benefitClass'] = 'direct'
     assert context.conclude(copy.deepcopy(report), identity)['headline'].startswith('생활권 변화는 좋아요.')
     report['displayProjects'][0]['benefitClass'] = 'unverified'
@@ -373,12 +377,14 @@ def test_living_area_verdict_describes_nearby_housing_cluster_and_planned_statio
     assert good['briefing']['verdict'] == 'good'
     assert '실제로 누릴 이점이나 집값 상승을 뜻하지 않아요' in ' '.join(good['briefing']['caveats'])
 
+    # Without the cluster shape the total still decides; the reason no longer claims a cluster.
     far_station = copy.deepcopy(report)
     far_station['planRating']['components']['transport']['inputs'][0]['distanceMeters'] = 1800
-    assert context.conclude(far_station, identity)['headline'].startswith('생활권 변화는 보통이에요.')
+    assert context.conclude(far_station, identity)['headline'] == '생활권 변화는 좋아요. 정비사업과 새 철도 계획이 함께 있어요.'
 
     one_project = copy.deepcopy(report)
     one_project['planRating']['components']['housing']['inputs'] = one_project['planRating']['components']['housing']['inputs'][:1]
+    one_project['planRating']['score'] = 3.6
     assert context.conclude(one_project, identity)['headline'].startswith('생활권 변화는 보통이에요.')
 
 
@@ -396,9 +402,9 @@ def test_living_area_headline_says_multiple_projects_contributed_to_housing_scor
                                         'rawScore':2.9}]}}}, 'judgment':{}}
     result = context.conclude(report, {**IDENTITY, 'name':'가상단지'})
 
-    assert result['headline'] == '생활권 변화는 보통이에요. 정비사업은 많지만, 새 교통 호재는 약해요.'
+    assert result['headline'] == '생활권 변화는 좋아요. 정비사업 규모가 커서 동네가 크게 바뀔 곳이에요.'
     assert result['briefing']['strengths'][0].startswith('직선 2km 안에 정비사업이 3곳이에요.')
-    assert '**공사 중인 단계**' in result['briefing']['strengths'][0]
+    assert '공사 중인 단계' in result['briefing']['strengths'][0]
     assert '매일 걸어서 타기엔 조금 먼 거리예요' in result['briefing']['weaknesses'][0]
     assert result['intro'] == ' '.join(result['briefing']['advice'])
 
@@ -754,3 +760,22 @@ def test_no_planned_stop_within_2km_scores_zero_even_while_other_regions_are_unm
     assert result['briefing']['verdict'] != 'pending'
     assert result['briefing']['weaknesses'] == ['직선 2km 안에 새로 생길 예정역이 없어요.']
     assert not any('확인 중' in text for text in result['briefing']['unknowns'])
+
+
+def test_briefing_shows_households_already_under_or_near_construction():
+    import living_area_context as context
+
+    report = {'displayProjects': [
+        {'id':'zone-1', 'name':'첫 구역', 'projectType':'redevelopment', 'stage':'disposal', 'distanceMeters':500},
+    ], 'planRating':{'score':3.4, 'subScores':{'housing':3.4, 'transport':0},
+                     'components':{'housing':{'selectedProjectId':'zone-1', 'projectCount':5,
+                                              'plannedHouseholdsTotal':20000, 'firmHouseholdsTotal':7000},
+                                   'transport':{'inputs':[], 'noPlannedStationWithinRadius':True}},
+                     'transportCoverage':{'status':'mapped_stations_outside_2km'}}, 'judgment':{}}
+    strength = context.conclude(copy.deepcopy(report), {**IDENTITY, 'name':'가상단지'})['briefing']['strengths'][0]
+    assert '계획 세대는 모두 20,000세대예요.' in strength
+    assert '**공사 중이거나 착공 바로 전인 사업은 7,000세대**예요.' in strength
+
+    report['planRating']['components']['housing']['firmHouseholdsTotal'] = 0
+    strength = context.conclude(report, {**IDENTITY, 'name':'가상단지'})['briefing']['strengths'][0]
+    assert '**공사 중이거나 착공 바로 전인 사업은 아직 없어요**' in strength
