@@ -4881,6 +4881,23 @@
     .zpr-living-advice strong { display:block; margin-bottom:2px; font-size:13px; font-weight:800; color:#2469d2; }
     .zpr-living-advice mark { padding:0 2px; background:linear-gradient(transparent 58%, #ffef9e 58%); color:#191f28; font-weight:750; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
     .zpr-living-caveats { margin:10px 0 0; padding-left:16px; font-size:13px; line-height:1.6; color:#8b95a1; }
+    .zpr-living-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:14px 0 0; }
+    .zpr-living-fact { padding:12px 14px; border-radius:12px; background:#f7f8fa; min-width:0; }
+    .zpr-living-fact span { display:block; font-size:13px; color:#6b7684; }
+    .zpr-living-fact strong { display:block; margin:2px 0 4px; font-size:24px; font-weight:850; line-height:1.3; color:#191f28; }
+    .zpr-living-fact strong em { font-style:normal; font-size:13px; font-weight:600; color:#8b95a1; }
+    .zpr-living-fact small { display:block; font-size:13px; line-height:1.55; color:#4e5968; overflow-wrap:anywhere; }
+    .zpr-living-fact small b { color:#191f28; font-weight:800; }
+    .zpr-living-compact .zpr-living-advice { margin:12px 0 14px; }
+    .zpr-living-compact .zpr-living-map-summary { display:none; }
+    .zpr-living-compact .zpr-living-map-legend { font-size:12px; line-height:1.6; color:#6b7684; }
+    .zpr-living-news { margin:10px 0 0; font-size:14px; line-height:1.6; color:#4e5968; }
+    .zpr-living-news span { margin-right:4px; font-weight:800; color:#2469d2; }
+    .zpr-living-folds { margin-top:12px; border-top:1px solid #eef0f3; }
+    .zpr-living-folds > details { border-bottom:1px solid #eef0f3; }
+    .zpr-living-fold-note { font-size:13px; color:#6b7684; }
+    .zpr-living-footnote { margin:10px 0 0; font-size:12px; color:#8b95a1; }
+    @media(max-width:360px) { .zpr-living-facts { grid-template-columns:1fr; } }
     .zpr-living-subs small { display:block;font-size:13px;line-height:1.5;color:#667085; }
     .zpr-living-subs .zpr-living-sub-number { display:block; margin:3px 0; font-size:23px;line-height:1.25;color:#192334; }
     .zpr-living-plan-note { margin:8px 0 20px;font-size:13px;line-height:1.6;color:#667085; }
@@ -18423,6 +18440,78 @@
       }
       if (plan?.transportCoverage?.status === "rail_under_review") {
         planNote = "재추진·재검토 노선은 일정이 정해지지 않아 교통 가점에서 제외했어요.";
+      }
+      if (briefing) {
+        // Compact layout: verdict -> two evidence cards -> briefing -> map -> news -> two folds.
+        const housingComponent = plan?.components?.housing || {};
+        const railComponent = plan?.components?.transport || {};
+        const housingValue = plan?.subScores?.housing;
+        const railValue = plan?.subScores?.transport;
+        const number = value => Number(value).toLocaleString("ko-KR");
+        const leadInput = (housingComponent.inputs || []).find(row => row.projectId === housingComponent.selectedProjectId);
+        const housingFacts = Number.isFinite(housingValue)
+          ? [Number.isFinite(housingComponent.firmHouseholdsTotal) && housingComponent.plannedHouseholdsTotal
+              ? `착공권 <b>${number(housingComponent.firmHouseholdsTotal)}세대</b>` : "",
+             housingComponent.projectCount
+              ? `${housingComponent.plannedHouseholdsTotal ? `계획 ${number(housingComponent.plannedHouseholdsTotal)}세대 · ` : ""}정비사업 ${number(housingComponent.projectCount)}곳` : "",
+             leadInput && Number.isFinite(leadInput.distanceMeters)
+              ? `가장 영향 큰 곳 ${esc(leadInput.name)} · ${number(leadInput.distanceMeters)}m · ${esc(stages[leadInput.stage] || leadInput.stageLabel || "단계 확인 중")}` : ""]
+          : [esc(plan?.missingReasons?.housing || "주거환경 자료를 확인하고 있어요.")];
+        const railInput = (railComponent.inputs || []).find(row => Number.isFinite(row.contributionScore)) || (railComponent.inputs || [])[0];
+        const railFacts = Number.isFinite(railValue)
+          ? [railInput ? `${esc(railInput.name)} · 직선 ${number(railInput.distanceMeters)}m${railInput.kind === "line_extension" ? " · 이미 운행 중인 노선 연장" : ""}`
+             : railComponent.noUsefulPlannedStation ? "새로 탈 만한 예정역 없음"
+             : "2km 안 새 예정역 없음"]
+          : [esc(plan?.missingReasons?.transport || "새 철도 자료를 확인하고 있어요.")];
+        const factCard = (label, value, facts) => `<div class="zpr-living-fact"><span>${label}</span><strong>${value}</strong>${facts.filter(Boolean).map(text => `<small>${text}</small>`).join("")}</div>`;
+        const railBonus = Number.isFinite(railValue) && Number.isFinite(plan?.weights?.transport)
+          ? `+${(railValue * plan.weights.transport).toFixed(1)}` : Number.isFinite(railValue) ? scoreText(railValue) : "보류";
+        const [firstAdvice, ...restAdvice] = briefing.advice || [];
+        const newsLine = text => briefText(String(text).split(". ")[0]);
+        const railLists = [
+          plan?.transportCoverage?.nearbyOperatingStations?.length ? `<p><strong>지금 이용하는 철도</strong> ${plan.transportCoverage.nearbyOperatingStations.map(station => `${esc(station.name)} · 직선 ${number(station.distanceMeters)}m`).join(" / ")} · 이미 있는 역이라 변화 점수에 넣지 않아요.</p>` : "",
+          regionalRail.length ? zippickLivingTransportHtml({displayProjects:regionalRail}, "같은 지역의 광역철도 계획") : "",
+          capitalRailPlans.length ? zippickLivingTransportHtml({displayProjects:capitalRailPlans.map(project => ({...project, projectType:"transport",
+            factSummary:`${project.stage || "진행 단계 확인 중"}${project.stations?.length ? ` · ${project.stations.join(", ")}역` : ""}`, planningNote:project.note}))}, "같은 지역의 공식 철도사업") : "",
+          reviewRailReferences.length ? zippickLivingTransportHtml({displayProjects:reviewRailReferences.map(project => ({...project, projectType:"transport"})), includeReviewRail:true}, "재추진·재검토 노선 · 가점 제외") : "",
+          otherCapitalPlans.length ? `<h6>${esc(otherCapitalTitle)}</h6>${otherCapitalPlans.map(project => `<p><strong>${esc(project.name)}</strong> · ${esc(project.stage || "단계 미확인")} · ${esc(project.route || "지명 기준 참고")} · ${zippickFutureSourceLink(project.sourceUrl)}</p>`).join("")}` : ""
+        ].join("");
+        const methodBlocks = scoreGroups.map(([key,label]) => {
+          const component = plan?.components?.[key];
+          if (!component) return "";
+          return `<h6>${label} ${scoreText(plan.subScores?.[key])}</h6><p>${esc(component.summary || "")}</p><p>${esc(component.formula || "")}</p><p>${esc(component.policy || "")}</p>${key === "housing" ? housingScoreInputsHtml(component) : `${transportScoreInputsHtml(component)}${[component.impactPolicy,component.maturityPolicy,component.accessPolicy].filter(Boolean).map(text => `<p>${esc(text)}</p>`).join("")}`}`;
+        }).join("");
+        return `<section class="zpr-section zpr-future-section zpr-living-compact" data-future-status="${esc(analysis.status || "insufficient_data")}" data-living-snapshot="${esc(analysis.snapshotId || "")}">
+        <span class="zpr-kicker" data-zpr-step="생활권 변화"></span>
+        <div class="zpr-living-heading zpr-living-briefing" data-living-verdict="${esc(briefing.verdict)}">
+          <h5 class="zpr-map-insight"><span class="zpr-living-verdict is-${esc(briefing.verdict)}">${esc(briefing.label)}</span> ${esc(briefing.reason)}</h5>
+        </div>
+        <div class="zpr-living-facts" aria-label="생활권 변화 근거">
+          ${factCard("주거환경", Number.isFinite(housingValue) ? `${housingValue.toFixed(1)}<em> / 5</em>` : "보류", housingFacts)}
+          ${factCard("새 철도 가점", railBonus, railFacts)}
+        </div>
+        ${firstAdvice ? `<p class="zpr-living-advice"><strong>집픽 브리핑</strong><mark>${esc(firstAdvice)}</mark>${restAdvice.length ? ` ${esc(restAdvice.join(" "))}` : ""}</p>` : ""}
+        <div class="zpr-living-map-column">${zippickReportMapHtml(mapItem, { redevelopment:true })}</div>
+        <p class="zpr-living-print-note">사업 위치·거리와 공식 근거는 아래 자세히 보기에 있어요. 직선거리는 도보거리와 달라요.</p>
+        ${Array.isArray(briefing.news) && briefing.news.length ? `<p class="zpr-living-news"><span>지역 교통 소식</span> ${briefing.news.map(newsLine).join(" / ")}</p>` : ""}
+        <div class="zpr-living-folds">
+          <details class="zpr-future-details"><summary>주변 사업 자료 보기</summary>
+            <p class="zpr-living-fold-note">점수에는 직선 2km 안 정비사업 ${number(housingComponent.projectCount || 0)}곳을 넣었어요. 아래는 공식 자료로 확인한 주변 사업이에요.</p>
+            <div class="zpr-living-projects">${visibleProjects.map(projectHtml).join("") || '<p class="zpr-lead">위치와 규모가 확인된 주변 사업 자료가 아직 없어요.</p>'}</div>
+            ${railLists}
+          </details>
+          <details class="zpr-future-details zpr-living-methods"><summary>점수 계산 방법과 출처</summary>
+            ${briefGroup(briefing.strengths, "good", "좋은 점")}${briefGroup(briefing.weaknesses, "weak", "아쉬운 점")}${briefGroup(briefing.unknowns, "unknown", "아직 확인 중")}${briefGroup(briefing.news, "news", "지역 교통 소식")}
+            <p>${esc(plan?.aggregationPolicy || "")}</p>
+            ${methodBlocks}
+            ${Array.isArray(briefing.caveats) && briefing.caveats.length ? `<ul class="zpr-living-caveats">${briefing.caveats.map(text => `<li>${esc(text)}</li>`).join("")}</ul>` : ""}
+            <p>${esc(plan?.stagePolicy || "")}</p>
+            ${plan?.transportCoverage?.lineCount ? `<p>예정역 위치 확인 ${esc(plan.transportCoverage.completeLineCount)} / ${esc(plan.transportCoverage.lineCount)}개 노선 · 확인 ${esc(plan.transportCoverage.checkedAt || "미확인")}</p>` : ""}
+            <p>${esc(plan?.version || "")} · 기준일 ${esc(plan?.asOfDate || "")}${analysis.metroCoverage ? ` · 정비사업 확인 ${esc(analysis.metroCoverage.checkedAt || "미확인")}` : ""}</p>
+          </details>
+        </div>
+        <p class="zpr-living-footnote">직선거리 기준 참고 점수예요. 집값 변화를 예측하지 않아요.</p>
+      </section>`;
       }
       return `<section class="zpr-section zpr-future-section" data-future-status="${esc(analysis.status || "insufficient_data")}" data-living-snapshot="${esc(analysis.snapshotId || "")}">
         <span class="zpr-kicker" data-zpr-step="생활권 변화"></span>
