@@ -304,3 +304,22 @@ def test_unknown_station_evidence_does_not_become_zero(monkeypatch, change):
     assert plan['score'] is None
     if change == 'other_lines_incomplete':
         assert plan['transportCoverage']['status'] == 'station_mapping_incomplete'
+
+
+@pytest.mark.parametrize('route_meters,expected', [(2600, 0), (900, None)])
+def test_only_a_route_within_2km_with_unlocated_stops_withholds_the_score(monkeypatch, route_meters, expected):
+    import living_area_map
+    import rail_station_mapping
+    projects, _ = inputs()
+    spatial = {'zones':[], 'stations':[], 'routes':[{'name':'역 위치 미확인 노선', 'distanceMeters':route_meters,
+        'stationCoverage':{'mappingComplete':False, 'stationListComplete':True}}]}
+    monkeypatch.setattr(living_area_map, 'map_context', lambda identity, result: spatial)
+    monkeypatch.setattr(rail_station_mapping, 'complex_coverage', lambda *args: {
+        'status':'partial', 'scopeComplete':False, 'nearbyPlannedStations':[], 'nearbyReferenceStations':[]})
+    result = {'displayProjects':projects[:1], 'center':{'latitude':37.46,'longitude':126.88},
+              'metroCoverage':{'checkedAt':DAY.isoformat()}, 'snapshotId':'test'}
+    plan = policy.attach(result, {}, DAY)['planRating']
+    assert plan['subScores']['transport'] == expected
+    if expected is None:
+        assert plan['transportCoverage']['status'] == 'station_mapping_incomplete'
+        assert '근처를 지나는 역 위치 미확인 노선의 역 위치' in plan['missingReasons']['transport']

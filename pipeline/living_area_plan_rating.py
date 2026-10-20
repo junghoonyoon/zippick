@@ -316,7 +316,9 @@ def attach(result, identity, day):
     else:
         transport_status='no_verified_station_within_2km'
         rating['missingReasons']['transport']='현재 자료에서 직선 2km 안에 교통 점수를 계산할 수 있는 예정역을 찾지 못했어요. 새 역 계획이 없거나 위치·진행 단계 자료가 부족할 수 있어요. 기존 교통이 불편하다는 뜻은 아니에요.'
-    visible_routes = [route for route in spatial.get('routes', []) if not under_review(route)]
+    # A stop lies on its route, so a route known to be farther than 2km cannot add one.
+    visible_routes = [route for route in spatial.get('routes', []) if not under_review(route)
+                      and not (valid(route.get('distanceMeters')) and route['distanceMeters'] > 2000)]
     if (visible_routes and rating['subScores']['transport'] is None
             and result.get('metroCoverage') and (result.get('center') or result.get('mapCenter'))):
         transport_status='route_only'
@@ -368,14 +370,27 @@ def attach(result, identity, day):
             and not coverage.get('nearbyPlannedStations') and not map_references and not visible_routes):
         transport_status = 'rail_under_review'
         rating['missingReasons']['transport'] = '재추진 중인 노선은 일정이 정해지지 않아 교통 가점에서 제외했어요.'
-    # Only a nearby route with unlocated stops can still hide a new station here.
-    # Unlocated stops elsewhere in the capital region do not withhold the score.
-    if (rating['subScores']['transport'] is None and transport_status == 'route_only'
-            and coverage.get('status') == 'partial'):
+    # Only a route within 2km whose stops are not all located can still hide a
+    # new station here. A stop lies on its route, so a route farther than 2km
+    # cannot, and unlocated stops elsewhere in the region do not withhold the score.
+    def unresolved(route):
+        stops = route.get('stationCoverage') or {}
+        nearest = stops.get('nearestPlannedStation')
+        return (not (stops.get('mappingComplete') and stops.get('stationListComplete'))
+                or (nearest is not None and not valid(nearest.get('distanceMeters'))))
+    unmapped_near_routes = [route for route in visible_routes if unresolved(route)]
+    if rating['subScores']['transport'] is None and transport_status == 'route_only' and unmapped_near_routes:
         transport_status = 'station_mapping_incomplete'
+        names = '·'.join(route['name'] for route in unmapped_near_routes)
         rating['missingReasons']['transport'] = (
-            '다른 철도 노선의 예정역 목록·위치를 아직 확인 중이라 새 철도 가점을 보류했어요. '
-            '현재 연결된 역이 없다는 이유로 0점을 주지 않아요.')
+            f'근처를 지나는 {names}의 역 위치를 아직 다 확인하지 못해 새 철도 가점을 보류했어요. '
+            '역이 없다는 이유로 0점을 주지 않아요.')
+    references = coverage.get('nearbyReferenceStations') or []
+    if rating['subScores']['transport'] is None and transport_status == 'no_verified_station_within_2km' and references:
+        nearest = references[0]
+        rating['missingReasons']['transport'] = (
+            f'직선 2km 안에 {nearest["name"]} 계획이 있어요(직선 {nearest["distanceMeters"]:,}m). '
+            '이 노선의 진행 단계나 정차 여부를 더 확인해야 해서 새 철도 가점을 보류했어요.')
     if (rating['subScores']['transport'] is None
             and coverage.get('status') != 'unavailable'
             and not coverage.get('nearbyPlannedStations') and not coverage.get('nearbyReferenceStations')
