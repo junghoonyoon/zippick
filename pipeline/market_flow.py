@@ -38,7 +38,8 @@ WINDOW_MONTHS = FLOW_PERIOD_MONTHS
 # 이력이 필요하다. 최근 10년 안에서 3개월 간격의 완료된 순서를 검증한다.
 HISTORY_MONTHS = 120
 MIN_HISTORICAL_PATTERN_COUNT = 5
-SNAPSHOT_SCHEMA_VERSION = 8
+# 경로 추가 전 캐시는 인천 노드가 없으므로 새 스냅샷으로 계산한다.
+SNAPSHOT_SCHEMA_VERSION = 9
 MAX_DISPLAY_ROUTES = 30
 FLOW_STATUS_NEXT_CANDIDATE = "next_candidate"
 FLOW_STATUS_ALREADY_RISING = "already_rising"
@@ -121,9 +122,35 @@ FLOW_ROUTES = (
             ("파주시", ("41480",), 37.7599, 126.7800),
         ),
     },
+    # 인천 I-MAP 행정 경계로 인접성을 확인했다. 좌표는 Kakao Local 구청 대표점.
+    # https://imap.incheon.go.kr/sgp/rst/view.do?layer=prc (2026-10-26)
+    {
+        "id": "bucheon-bupyeong-gyeyang", "color": "#0ea5e9",
+        "nodes": (
+            ("부천시", ("41190",), 37.5034, 126.7660),
+            ("인천 부평구", ("28237",), 37.507042, 126.721864),
+            ("인천 계양구", ("28245",), 37.537496, 126.737705),
+        ),
+    },
+    {
+        "id": "yeonsu-namdong-michuhol", "color": "#84cc16",
+        "nodes": (
+            ("인천 연수구", ("28185",), 37.410100, 126.678273),
+            ("인천 남동구", ("28200",), 37.447349, 126.731488),
+            ("인천 미추홀구", ("28177",), 37.463586, 126.650565),
+        ),
+    },
 )
 
 FLOW_ADJACENT_REGION_PAIRS = (
+    ("부천시", "인천 부평구"),
+    ("부천시", "인천 계양구"),
+    ("인천 부평구", "인천 계양구"),
+    ("인천 부평구", "인천 남동구"),
+    ("인천 부평구", "인천 미추홀구"),
+    ("인천 연수구", "인천 남동구"),
+    ("인천 남동구", "인천 미추홀구"),
+    ("인천 연수구", "인천 미추홀구"),
     ("강남구", "성동구"),
     ("강남구", "서초구"),
     ("서초구", "동작구"),

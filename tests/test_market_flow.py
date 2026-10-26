@@ -28,6 +28,18 @@ def trade_rows(values):
 
 
 class MarketFlowTest(unittest.TestCase):
+    def test_incheon_routes_use_three_nodes_and_registered_adjacent_names(self):
+        routes = [r for r in market_flow.FLOW_ROUTES if any(
+            code.startswith("28") for node in r["nodes"] for code in node[1])]
+        self.assertEqual(len(routes), 2)
+        self.assertTrue(all(len(r["nodes"]) == 3 for r in routes))
+        names = {n[0] for r in market_flow.FLOW_ROUTES for n in r["nodes"]}
+        for pair in market_flow.FLOW_ADJACENT_REGION_PAIRS:
+            self.assertTrue(set(pair) <= names, pair)
+        self.assertTrue({"28237", "28245", "28185", "28200", "28177"}
+                        <= set(market_flow._all_region_codes()))
+
+
     def test_regional_signal_compares_price_per_area_and_ignores_cancelled_trades(self):
         rows = trade_rows({
             "2026-02": 100,
