@@ -77,9 +77,13 @@ RATE_LIMIT_HEAVY_PATHS = {
     "/api/budget-candidates",
     "/api/market-flow",
     "/api/apartment-areas",
-    "/api/rone-estimate",
     "/api/apartment-report",
     "/api/apartment-location-score",
+}
+# 한 후보 카드가 본 단지·동 대장·구 대장 실거래를 함께 부르므로
+# 정상 사용만으로도 호출이 많다. 서버 쪽 6시간 캐시로 가벼워 넓은 한도를 쓴다.
+RATE_LIMIT_ESTIMATE_PATHS = {
+    "/api/rone-estimate",
 }
 RATE_LIMIT_MEDIUM_PATHS = {
     "/api/apartment-station-route",
@@ -390,6 +394,8 @@ def _client_ip(handler):
 def _rate_limit_kind(path):
     if path in RATE_LIMIT_HEAVY_PATHS:
         return "heavy", config.PUBLIC_HEAVY_RATE_LIMIT
+    if path in RATE_LIMIT_ESTIMATE_PATHS:
+        return "estimate", config.PUBLIC_ESTIMATE_RATE_LIMIT
     if path in RATE_LIMIT_MEDIUM_PATHS:
         return "medium", config.PUBLIC_MEDIUM_RATE_LIMIT
     return None, None

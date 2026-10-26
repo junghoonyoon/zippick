@@ -9123,7 +9123,14 @@
     async function getJson(url, options = {}) {
       const response = await fetch(url, options);
       const data = await response.json();
-      if (!response.ok) throw data;
+      if (!response.ok) {
+        if (data && typeof data === "object") {
+          data.httpStatus = response.status;
+          const retryAfter = Number(response.headers.get("Retry-After") || 0);
+          if (retryAfter > 0) data.retryAfterSeconds = retryAfter;
+        }
+        throw data;
+      }
       return data;
     }
 
@@ -9709,7 +9716,16 @@
         if (item.legalDong) params.set("legal_dong", item.legalDong);
         if (item.jibun) params.set("jibun", item.jibun);
         if (requestedArea) params.set("area", requestedArea);
-        const payload = await getJson(`/api/rone-estimate?${params.toString()}`, { signal:controller.signal });
+        let payload;
+        try {
+          payload = await getJson(`/api/rone-estimate?${params.toString()}`, { signal:controller.signal });
+        } catch (error) {
+          // 요청이 잠시 몰려 한도에 걸리면 안내된 시간만큼 기다렸다 한 번 더 시도한다.
+          if (error?.httpStatus !== 429) throw error;
+          const waitMs = Math.min(Math.max(Number(error.retryAfterSeconds) || 2, 1), 5) * 1000;
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+          payload = await getJson(`/api/rone-estimate?${params.toString()}`, { signal:controller.signal });
+        }
         return {
           payload,
           areaBasis:requestedArea ? `전용 ${Number(requestedArea).toLocaleString("ko-KR", { maximumFractionDigits:2 })}㎡ 기준` : "단지 전체 거래 기준",
