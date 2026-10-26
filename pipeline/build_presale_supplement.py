@@ -769,6 +769,8 @@ def parse_args():
     parser.add_argument("--cache-dir", default=str(MOLIT_CACHE_DIR))
     parser.add_argument("--molit-json", action="append", default=[])
     parser.add_argument("--skip-lh", action="store_true")
+    parser.add_argument("--incheon-only", action="store_true",
+                        help="기존 서울·경기 행을 유지하고 인천 행만 갱신")
     parser.add_argument("--output", default=str(SUPPLEMENT_PATH))
     parser.add_argument("--as-of", default=dt.date.today().isoformat())
     parser.add_argument("--lookback-months", type=int, default=12)
@@ -792,6 +794,10 @@ def main():
         *molit_candidates(molit, cutoff, label_by_lawd),
     ]
     rows = finalize(merge_candidates(candidates))
+    if args.incheon_only:
+        rows = [row for row in read_csv_rows(args.existing) if row.get("시도") != "인천광역시"] + [
+            row for row in rows if row.get("시도") == "인천광역시"
+        ]
     write_csv(args.output, rows)
     status_counts = defaultdict(int)
     province_counts = defaultdict(int)
