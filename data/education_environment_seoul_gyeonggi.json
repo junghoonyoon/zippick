@@ -13848,6 +13848,98 @@
       "dataThrough": "2026-10-26",
       "source": "kakao-local-v2",
       "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "69d05c88a834ff4e": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "인천송일초등학교",
+        "인천예송초등학교",
+        "인천해송초등학교"
+      ],
+      "elementaryDistanceMeters": 230,
+      "middleSchoolNames": [
+        "인천예송중학교",
+        "인천해송중학교",
+        "인천현송중학교"
+      ],
+      "middleDistanceMeters": 748,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "20730109ad79776b": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "인천청람초등학교",
+        "인천청라초등학교",
+        "인천경명초등학교"
+      ],
+      "elementaryDistanceMeters": 190,
+      "middleSchoolNames": [
+        "인천청람중학교",
+        "인천청호초중학교",
+        "인천청라중학교"
+      ],
+      "middleDistanceMeters": 299,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "1ee12ac27fa18bb4": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "인천마곡초등학교",
+        "인천산곡북초등학교",
+        "인천산곡초등학교"
+      ],
+      "elementaryDistanceMeters": 204,
+      "middleSchoolNames": [
+        "청천중학교",
+        "산곡중학교",
+        "산곡남중학교"
+      ],
+      "middleDistanceMeters": 454,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "e1d98d781faabeb5": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "인천용학초등학교",
+        "인천용현남초등학교",
+        "인천용현초등학교"
+      ],
+      "elementaryDistanceMeters": 406,
+      "middleSchoolNames": [
+        "용현여자중학교",
+        "용현중학교",
+        "신흥여자중학교"
+      ],
+      "middleDistanceMeters": 490,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
     }
   },
   "zones": [],
