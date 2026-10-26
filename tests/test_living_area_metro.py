@@ -311,3 +311,27 @@ def test_transport_audit_does_not_turn_failed_or_missing_data_into_zero():
     assert classify(point,[{**station,'sourceDate':'2040-01-01'}],DAY)['score'] is None
     assert classify(point,[{**station,'checkedAt':'2020-01-01'}],DAY)['score'] is None
     assert classify(point,[station],DAY)['score']==4.8
+
+
+def test_incheon_supply_and_exact_lot_coordinates(monkeypatch):
+    import applyhome_supply as api
+    import kakao_station_distances as kakao
+    monkeypatch.setattr(api, 'fetch_all', lambda *a, **k: [{
+        'SUBSCRPT_AREA_CODE_NM':'인천', 'HSSPLY_ADRES':'인천광역시 연수구 송도동 102',
+        'HOUSE_NM':'인천검증단지', 'MVN_PREARNGE_YM':'202912',
+        'RCRIT_PBLANC_DE':'2026-10-01', 'PBLANC_NO':'test-incheon', 'TOT_SUPLY_HSHLDCO':'872'}])
+    monkeypatch.setattr(api, 'service_key', lambda: 'test')
+    address={'region_1depth_name':'인천','region_2depth_name':'연수구',
+             'region_3depth_name':'송도동','main_address_no':'102','sub_address_no':'0',
+             'mountain_yn':'N','y':'37.39','x':'126.64'}
+    monkeypatch.setattr(kakao, '_request_json', lambda *a, **k: {
+        'meta':{'total_count':1}, 'documents':[{'address':address}]})
+    projects=importer.fetch_supply()
+    assert len(projects)==1
+    assert projects[0]['province']=='인천광역시'
+    assert projects[0]['point']['latitude']==37.39
+    address['main_address_no']='103'
+    assert importer.exact_point(projects[0]) is None
+    address['main_address_no']='102'
+    address['region_2depth_name']='부평구'
+    assert importer.exact_point(projects[0]) is None

@@ -4,6 +4,7 @@ Usage: PYTHONPATH=pipeline python pipeline/import_living_area_metro.py
 Downloads public GG Q2 workbook, MOLIT catalogue and ArcGIS query exports;
 Kakao coordinates are accepted only when the complete lot address agrees.
 """
+import argparse
 import concurrent.futures
 import csv
 import datetime as dt
@@ -100,6 +101,7 @@ def exact_point(target):
     expected_lot=lot_match[1]
     province=target.get('province') or '서울특별시'
     district=target['region']
+    if province=='인천광역시':district=district.removeprefix('인천')
     readable=re.sub(r'^(수원|성남|안양|안산|고양|용인|부천)(?=.{1,3}구$)',r'\1시 ',district)
     query=f'{province} {readable} {dong} {expected_lot}'
     payload=kakao._request_json('search/address.json',{'query':query,'size':10})
@@ -114,7 +116,7 @@ def exact_point(target):
         city_ok=(district.endswith('시') and a.get('region_2depth_name','').split(' ')[0]==district)
         raw_dong=str(a.get('region_3depth_name') or '')
         dong_ok=raw_dong==dong or (dong.endswith('리') and ' ' not in dong and raw_dong.split(' ')[-1]==dong)
-        if (a.get('region_1depth_name') not in (('경기',) if province=='경기도' else ('서울',))
+        if (a.get('region_1depth_name') not in {'경기도':('경기',),'서울특별시':('서울',),'인천광역시':('인천',)}.get(province,())
             or not (rawdistrict==district or city_ok) or not dong_ok
             or lot!=expected_lot or a.get('mountain_yn')!='N'):continue
         latitude,longitude=float(a['y']),float(a['x'])
@@ -132,7 +134,31 @@ def fetch_features(path):
     return j['features']
 
 
+def refresh_incheon_supply(bundle, projects):
+    """인천 공급만 갱신해 기존 서울·경기와 철도 검토 자료를 보존한다."""
+    bundle['projects'] = [p for p in bundle.get('projects', [])
+                          if not (p.get('sourceId') == 'applyhome-apt'
+                                  and p.get('province') == '인천광역시')]
+    bundle['projects'] += [p for p in projects if p.get('province') == '인천광역시']
+    bundle['projectsDigest'] = sources.digest(bundle['projects'])
+    bundle['incheonSupplyCheckedAt'] = DAY
+    bundle['coverage']['locatedProjects'] = sum(bool(p.get('point')) for p in bundle['projects'])
+    bundle['coverage']['supplyNotices'] = sum(p.get('projectType') == 'new_supply' for p in bundle['projects'])
+    return bundle
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--incheon-supply-only', action='store_true',
+                        help='기존 검토 자료를 유지하고 인천 공급 공고만 갱신')
+    args = parser.parse_args()
+    if args.incheon_supply_only:
+        bundle = refresh_incheon_supply(json.loads(OUT.read_text()), fetch_supply())
+        tmp = OUT.with_suffix('.tmp')
+        tmp.write_text(json.dumps(bundle, ensure_ascii=False, indent=2)+'\n')
+        tmp.replace(OUT)
+        print(json.dumps(bundle['coverage'], ensure_ascii=False))
+        return
     content=requests.get('https://www.gg.go.kr/cmmn/download.do?idx=898836',timeout=45).content
     projects=gg_projects(workbook_rows(content))
     seoul=sources.load_projects()
@@ -183,7 +209,7 @@ def fetch_supply():
     for r in all_rows:
         province,region=api.normalize_region(api._pick(r,'address'),api._pick(r,'area'))
         month=api._month(api._pick(r,'moveIn')); published=api._pick(r,'noticeDate')
-        if province not in ('서울특별시','경기도') or not month or month<DAY[:7] or not published or published>DAY:continue
+        if province not in ('서울특별시','경기도','인천광역시') or not month or month<DAY[:7] or not published or published>DAY:continue
         address=api._pick(r,'address');match=re.search(r'([가-힣0-9]+(?:동|리))\s*(\d+(?:-\d+)?)',address)
         pid=api._pick(r,'noticeNo');n=number(api._pick(r,'households'))
         if not pid or not n:continue
