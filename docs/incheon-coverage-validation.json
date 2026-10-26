@@ -3,7 +3,7 @@
   "phase": "T1-T5, T9",
   "tests": {
     "unittestPassed": 224,
-    "pytestPassed": 297,
+    "pytestPassed": 298,
     "pytestSubtestsPassed": 3
   },
   "prewarm": {
@@ -24,24 +24,44 @@
     "freshAfter": 198,
     "completedFetchTasks": 199,
     "apiPageCalls": 77,
-    "elapsedSeconds": 1.67
+    "elapsedSeconds": 1.67,
+    "retry": {
+      "targetPairs": 41,
+      "apiPageCalls": 41,
+      "freshAfter": 240
+    },
+    "missingByCode": {
+      "28110": [],
+      "28140": [],
+      "28177": [],
+      "28185": [],
+      "28200": [],
+      "28237": [],
+      "28245": [],
+      "28260": [],
+      "28710": [],
+      "28720": []
+    },
+    "singleProbeApiPageCalls": 1,
+    "totalApiPageCalls": 119,
+    "cacheReuseCheck": "240 pairs reused with remote API mocked to fail on any call"
   },
   "priceAudit": {
     "scope": "검색 마스터 전체·로컬 매매 캐시 최근 24개월; 미수집 지역과 분양권은 가격 미확보로 집계",
-    "cachedMonthCount": 2469,
-    "checkedEntityCount": 19616,
+    "cachedMonthCount": 2542,
+    "checkedEntityCount": 19693,
     "counts": {
-      "available": 14426,
-      "no_cached_trades": 5093,
-      "address_review": 97
+      "available": 14470,
+      "no_cached_trades": 5117,
+      "address_review": 106
     }
   },
   "sectionAudit": {
     "status": "passed",
     "counts": {
-      "sourceRows": 20526,
-      "masterRecords": 20007,
-      "individualApartments": 19710,
+      "sourceRows": 20525,
+      "masterRecords": 20006,
+      "individualApartments": 19709,
       "numberedNamesRestoredFromSource": 1076,
       "naverAliasMappings": 12824,
       "remainingOmittedPhaseNames": 0,
