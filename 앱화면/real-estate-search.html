@@ -1383,6 +1383,10 @@
     .zpr-buy-band-quality { flex:none; padding:6px 9px; border-radius:999px; background:#f2f4f6; color:#4e5968; font-size:13px; font-weight:800; line-height:1.3 }
     .zpr-buy-band p { margin:0; color:#4e5968; font-size:13px; line-height:1.6 }
     .zpr-buy-band .zpr-buy-band-meta { color:#6b7684 }
+    /* 판정 근거 문단은 가격 비교 섹션의 부제(.zpr-price-subtitle)와 같은 크기로 맞춘다. */
+    .zpr-buy-band .zpr-buy-band-lead { color:#4e5968; font-size:15px; font-weight:500; line-height:1.6 }
+    .zpr-buy-band .zpr-buy-band-lead b, .zpr-buy-band .zpr-buy-band-lead mark { color:#2b3440; font-weight:750 }
+    .zpr-buy-band .zpr-buy-band-lead mark { white-space:nowrap }
     .zpr-buy-band-result { display:grid; gap:12px }
     .zpr-buy-band-chart { position:relative; min-width:0; padding:45px 0 4px }
     .zpr-buy-band-track { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); min-height:62px; overflow:hidden; border-radius:12px }
@@ -1422,8 +1426,6 @@
     .zpr-buy-band-basis p { margin-top:10px }
     .zpr-buy-band p b, .zpr-buy-band-basis li b { color:#191f28; font-weight:850 }
     .zpr-buy-band mark { padding:0 1px; background:linear-gradient(transparent 58%, #ffef9e 58%); color:#191f28; font-weight:850 }
-    .zpr-buy-band-promise { display:block; margin-top:14px; color:#333d4b; font-size:13px; font-weight:850; line-height:1.5 }
-    .zpr-buy-band-promise + ul { margin-top:6px }
     .zpr-buy-band-limit { padding-top:1px; color:#6b7684 !important }
     .zpr-matrix-note { margin:-14px 0 0; font-size:12.5px; font-weight:700; color:#8b95a1; line-height:1.6 }
     .zpr-matrix-note b { color:#4e5968; font-weight:900 }
@@ -1595,12 +1597,13 @@
     .zpr-head .zpr-summary.is-verdict small { color:#6b7684; font-size:13px }
     .zpr-head .zpr-buy-band { gap:12px; margin-top:28px }
     .zpr-head .zpr-buy-band-eyebrow { color:#6b7684; font-size:12px; font-weight:800 }
-    .zpr-head .zpr-buy-band h4 { font-size:17px; font-weight:850; line-height:1.5 }
+    /* 밴드 판정 문장은 가격 비교 섹션 제목(.zpr-section h5)과 같은 크기로 맞춘다. */
+    .zpr-head .zpr-buy-band h4 { font-size:20px; font-weight:900; letter-spacing:-.5px; line-height:1.42 }
     .zpr-head .zpr-buy-band-quality { padding:0; background:none; color:#6b7684; font-size:12px; font-weight:700 }
     .zpr-head .zpr-buy-band-conclusion { border-left-color:#d1d6db; color:#333d4b; font-size:14px; font-weight:700 }
     .zpr-head .zpr-buy-band .zpr-buy-band-meta { font-size:12px }
     .zpr-head .zpr-buy-band-basis { padding:12px 14px; background:#fafbfc }
-    .zpr-head .zpr-buy-band-basis-title, .zpr-head .zpr-buy-band-promise { color:#4e5968; font-size:13px; font-weight:800 }
+    .zpr-head .zpr-buy-band-basis-title { color:#4e5968; font-size:13px; font-weight:800 }
     .zpr-head .zpr-buy-band-basis ul { gap:4px; margin-top:8px; color:#6b7684; font-size:12.5px }
     /* 리포트 첫 화면에서 단지 위치를 바로 가늠할 수 있게 넣는 작은 지도다.
        본문보다 커 보이지 않도록 높이를 제한하되, 지도 이동과 확대·축소는 그대로 둔다. */
@@ -21719,7 +21722,7 @@
       const latestMeta = [latestTrade.date,
         Number.isFinite(latestArea) && latestArea > 0 ? `전용 ${latestArea}㎡` : "",
         latestTrade.floor ? `${latestTrade.floor}층` : ""].filter(Boolean).join(" · ");
-      const latestDetail = `${Number.isFinite(latestPrice) && latestPrice > 0 ? esc(transactionMoney(latestPrice)) : "가격 확인 중"} · ${esc(latestMeta || "거래 날짜·면적 확인 중")} · 국토교통부 신고 거래 · ${floorComparable ? "비슷한 층 거래를 사용했지만 동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요." : "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격은 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."}`;
+      const latestDetail = `${Number.isFinite(latestPrice) && latestPrice > 0 ? esc(transactionMoney(latestPrice)) : "가격 확인 중"} · ${esc(latestMeta || "거래 날짜·면적 확인 중")}`;
       if (valuation.status !== "ready" || !basis?.low || !basis?.high) return `<div class="zpr-buy-band">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">집픽 밴드</span><h4>지금은 가격 판단을 보류해요</h4></div><span class="zpr-buy-band-quality">판단 보류</span></div>
         <p>${esc(valuation.reason || "비슷한 조건의 거래가 부족해 가격을 판단하기 어려워요.")}</p>
@@ -21742,23 +21745,30 @@
         : latestTier === 2 ? "최근 실거래는 적정가격보다 비싸요"
         : "최근 실거래의 가격 위치를 확인해 주세요";
       const qualityLabel = !floorComparable ? "여러 층 기준" : basis.quality === "high" ? "자료 충분" : basis.quality === "medium" ? "자료 보통" : "자료 적음";
-      const reasons = Array.isArray(valuation.reasons) ? valuation.reasons.slice(0, 3) : [];
       const sampleCount = Math.round(zpNum(valuation?.dataQuality?.sampleCount) || basis.count || 0);
       const adjustment = zpNum(valuation.marketAdjustmentPct);
       const latestTradeAgeDays = zpNum(valuation?.dataQuality?.latestTradeAgeDays);
       const marketAvailable = valuation?.market?.status === "available";
       const indexAdjustment = valuation?.indexAdjustment?.status === "applied" ? valuation.indexAdjustment : null;
       const indexDate = String(indexAdjustment?.asOf || "").match(/^\d{4}-(\d{2})-(\d{2})$/);
-      const indexDateText = indexDate ? ` (${Number(indexDate[1])}월 ${Number(indexDate[2])}일 기준)` : "";
-      // 주간 시세 반영은 집픽 밴드의 강점이라 계산 근거보다 먼저, 한 문장으로 말한다.
+      const indexDateText = indexDate ? `${Number(indexDate[1])}월 ${Number(indexDate[2])}일` : "최근 주";
       const indexChanged = Number.isFinite(adjustment) && Math.abs(adjustment) >= .05;
-      const leadHtml = indexAdjustment
-        ? `<p>지난 실거래에 <b>한국부동산원 ${esc(indexAdjustment.region || "지역")} 주간 시세</b>를 반영해 ${indexChanged
-          ? `${floorComparable ? "적정가격을" : "참고 가격대를"} <mark>${Math.abs(adjustment).toFixed(1)}% ${adjustment > 0 ? "올렸어요" : "내렸어요"}</mark>.`
-          : `봤어요. 시세가 거의 그대로라 <mark>${floorComparable ? "적정가격" : "참고 가격대"}도 그대로예요</mark>.`}${esc(indexDateText)}</p>`
-        : `<p>부르는 값이 아니라 <b>실제 거래된 값</b>으로 봐요. 같은 단지의 비슷한 면적 거래와 주변 아파트의 최근 가격 변화를 함께 살펴요.</p>`;
-      // 주간 시세를 반영한 결과는 위 문장에서 이미 말했으므로 근거 목록에 다시 적지 않는다.
-      const adjustmentText = indexAdjustment ? ""
+      const rangeName = floorComparable ? "적정가격" : "참고 가격대";
+      // 판정 근거는 '무엇과 비교했고, 그 범위에서 최근 거래가 어디에 있는지'를 한 문단으로 먼저 말한다.
+      const compareGroup = floorComparable ? "같은 단지·비슷한 면적·비슷한 층" : "같은 단지·비슷한 면적(여러 층)";
+      const alignText = indexAdjustment ? `한국부동산원 ${esc(indexAdjustment.region || "지역")} 주간 시세로 오늘 기준에 맞춰 보니`
+        : indexChanged ? "최근 시장 흐름을 반영해 보니" : "살펴보니";
+      const gapPct = latestTier === 2 ? (latestPrice / basis.high - 1) * 100 : latestTier === 0 ? (1 - latestPrice / basis.low) * 100 : 0;
+      const gapText = `약 ${Math.max(1, Math.round(gapPct))}%`;
+      const positionText = !showLatest ? ""
+        : latestTier === 2 ? ` 최근 거래 <b>${esc(transactionMoney(latestPrice))}</b>은 이 범위보다 <mark>${gapText} 높아요</mark>.`
+        : latestTier === 0 ? ` 최근 거래 <b>${esc(transactionMoney(latestPrice))}</b>은 이 범위보다 <mark>${gapText} 낮아요</mark>.`
+        : ` 최근 거래 <b>${esc(transactionMoney(latestPrice))}</b>은 이 범위 <mark>안에 있어요</mark>.`;
+      const leadHtml = `<p class="zpr-buy-band-lead">${compareGroup}의 다른 실거래 <b>${sampleCount}건</b>을 ${alignText}, 가운데 50%가 <b>${esc(transactionMoney(basis.low))}~${esc(transactionMoney(basis.high))}</b>에 거래됐어요.${positionText}</p>`;
+      const adjustmentText = indexAdjustment
+        ? `지난 거래가는 <b>한국부동산원 ${esc(indexAdjustment.region || "지역")} 주간 시세</b>로 ${esc(indexDateText)} 기준에 맞췄어요. ${indexChanged
+          ? `그 결과 ${rangeName}${floorComparable ? "을" : "를"} ${Math.abs(adjustment).toFixed(1)}% ${adjustment > 0 ? "올렸어요" : "내렸어요"}.`
+          : "시세 변화가 거의 없어 그대로예요."}`
         : indexChanged
         ? `주변 시장 흐름을 ${adjustment > 0 ? "+" : ""}${adjustment.toFixed(1)}% 반영했어요.`
         : marketAvailable && Number.isFinite(latestTradeAgeDays) && latestTradeAgeDays <= 30
@@ -21766,23 +21776,24 @@
           : marketAvailable
             ? "최근 거래 뒤 시장 변화가 거의 없어 가격을 따로 바꾸지 않았어요."
             : "주변 시세 흐름 자료가 부족해 최근 실거래 가격을 그대로 사용했어요.";
-      const promises = [
-        `<b>실제 거래만</b> 써요. 부르는 값은 계산에 넣지 않아요.`,
-        indexAdjustment ? `지난 거래는 <b>한국부동산원 주간 시세</b>로 최근 기준에 맞춰요.` : "",
-        `<b>평가할 거래는 빼고</b> 기준가격을 계산해요.`,
-        `자료가 부족하면 <b>판단을 보류</b>해요.`,
-      ].filter(Boolean);
+      // 서버 계산 순서대로 적는다: 비교 대상 → 층 → 시세 보정 → 범위 → 한계.
+      const basisSteps = [
+        `<b>평가할 최근 거래는 빼고</b>, 같은 단지 비슷한 면적의 다른 실거래 ${sampleCount}건과 비교했어요. 부르는 값(호가)은 쓰지 않아요.`,
+        floorComparable
+          ? `최근 거래와 <b>층이 비슷한 거래</b>(${esc(valuation.floorComparison.rule || "앞뒤 3층")})만 골랐어요.`
+          : "층이 비슷한 거래가 부족해 여러 층 거래로 참고 가격대를 만들었어요.",
+        adjustmentText,
+        `너무 높거나 낮은 거래의 영향은 줄이고, <b>가운데 50% 가격대</b>를 ${rangeName}${floorComparable ? "으로" : "로"} 봤어요.`,
+        "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요.",
+      ];
       const trendChartHtml = candidateTrendPanelHtml(item, null, { compact:true, hideBasis:true });
       return `<div class="zpr-buy-band">
         <div class="zpr-buy-band-head"><div><span class="zpr-buy-band-eyebrow">집픽 밴드</span><h4>${esc(headline)}</h4></div><span class="zpr-buy-band-quality">${esc(qualityLabel)}</span></div>
         ${leadHtml}
         <div class="zpr-buy-band-result">${zippickBuyBandResultHtml(basis.low, basis.high, latestPrice, showLatest, peak, latestTrade.date, latestTrade.floor, valuation.floorComparison || {status:"unknown"}, hiddenReason)}</div>
-        <p class="zpr-buy-band-meta">최근 실거래 · ${latestDetail}</p>
         ${trendChartHtml ? `<section class="zpr-buy-band-flow budget-sparkline" data-sparkline aria-label="최근 2년 가격 흐름"><strong class="zpr-buy-band-flow-title">최근 2년 가격 흐름</strong>${trendChartHtml}</section>` : ""}
-        <details class="zpr-buy-band-basis"><summary><strong class="zpr-buy-band-basis-title">이 가격은 어떻게 계산했나요?</strong></summary>
-          <ul>${(reasons.length ? reasons : [`비슷한 면적의 이전 실거래 ${sampleCount}건을 사용했어요.`]).map(reason => `<li>${esc(reason)}</li>`).join("")}${adjustmentText ? `<li>${esc(adjustmentText)}</li>` : ""}</ul>
-          <strong class="zpr-buy-band-promise">집픽이 지키는 ${promises.length}가지</strong>
-          <ul>${promises.map(promise => `<li>${promise}</li>`).join("")}</ul>
+        <details class="zpr-buy-band-basis"><summary><strong class="zpr-buy-band-basis-title">왜 이렇게 판단했나요?</strong></summary>
+          <ul>${basisSteps.map(step => `<li>${step}</li>`).join("")}</ul>
         </details>
         ${showLatest ? "" : `<p class="zpr-buy-band-limit">${esc(hiddenReason)}</p>`}
       </div>`;
