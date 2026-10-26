@@ -229,9 +229,9 @@ class ReportPriceCheckTest(unittest.TestCase):
             ]};
           if (zippickPriceAssessment(item).heading !== '가격은 보통이에요. 시세가 도봉구 비교 단지 3곳보다 4.0% 낮아요.') process.exit(57);
           if (!zippickSectionRatingHtml(item, '가격 비교').includes('가격 비교 점수 3.0/5')) process.exit(67);
-          if (zippickPriceAssessment(item).subheading !== '최근 6개월 비슷한 면적의 평균 실거래가는 이 단지 9.6487억, 비교 단지 10.0469억이에요.') process.exit(58);
-          if (!zippickPriceAssessment(item).comparisonPeers[0].includes('동아청솔(창동 · 평균')) process.exit(59);
-          if (zippickPriceAssessment(item).peerReason !== '같은 구에서 면적·가격대·세대수가 비슷한 단지를 우선 골랐어요.') process.exit(63);
+          if (zippickPriceAssessment(item).subheading !== '최근 6개월 평균 실거래가 · 이 단지 9.6487억 · 비교 단지 10.0469억') process.exit(58);
+          if (JSON.stringify(zippickPriceAssessment(item).comparisonPeers[0]) !== JSON.stringify({name:'동아청솔',legalDong:'창동',averagePriceEok:10.727,transactionCount:10})) process.exit(59);
+          if (zippickPriceAssessment(item).peerReason !== '같은 구에서 비슷한 조건의 단지를 골랐어요.') process.exit(63);
           item.priceComparison.status = 'reference';
           item.priceComparison.reason = '비교 단지의 조건 차이가 있어 이번 가격 차이는 종합 점수에 넣지 않았어요.';
           if (!zippickPriceAssessment(item).heading.startsWith('가격은 보통이에요. 참고 비교에서 시세가 도봉구 비교 단지 3곳보다 4.0% 낮아요.')) process.exit(68);
@@ -262,7 +262,7 @@ class ReportPriceCheckTest(unittest.TestCase):
           const averagePriceTitle = zippickPriceAssessment(item).heading;
           if (averagePriceTitle !== '시세가 낮은 편이에요. 성남수정구의 다른 단지 3곳과 비교한 결과예요.') process.exit(48);
           if (zippickPriceAssessment(item).subheading !== '이 아파트의 최근 3개월 평균 실거래가는 10.2억이에요.') process.exit(64);
-          if (zippickPriceAssessment(item).comparisonPeers.join('|') !== '산성역 포레스티아(신흥동 · 전용 59.8㎡)|산성역자이푸르지오 1단지(신흥동 · 전용 60㎡)|삼부(수진동 · 전용 59.8㎡)') process.exit(54);
+          if (JSON.stringify(zippickPriceAssessment(item).comparisonPeers) !== JSON.stringify(rankDetail.comparisonPeers)) process.exit(54);
           item.latestDealPriceEok = 12;
           item.valuation.floorComparison = {status:'matched', targetFloor:14, sampleCount:8};
           item.latestDealFloor = '14';

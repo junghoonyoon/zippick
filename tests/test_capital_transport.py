@@ -63,11 +63,12 @@ def test_wirye_sinsa_is_shared_regional_reference_without_invented_station():
         line = next(p for p in capital_transport.for_complex(identity)['matchedPlans']
                     if p['id'] == 'wirye-sinsa')
         assert line['stageCode'] == 'planning'
-        assert line['regionalReference'] is True
-        assert line['stations'] == []
+        # Verified station names are regional context, never apartment distances.
+        assert line['regionalReference'] is (not bool(line['stations']))
+        assert all(isinstance(name, str) and name for name in line['stations'])
         assert '예비타당성조사 통과' in line['stage']
         assert 'distanceMeters' not in line
         assert line['sourceUrl'].startswith('https://www.seoul.go.kr/')
-    for identity in ({'province':'경기도', 'city':'성남시', 'district':'성남중원구'},
-                     {'province':'서울특별시', 'district':'서초구'}):
+    for identity in ({'province':'경기도', 'city':'용인시', 'district':'용인수지구'},
+                     {'province':'서울특별시', 'district':'서대문구'}):
         assert not any(p['id'] == 'wirye-sinsa' for p in capital_transport.for_complex(identity)['matchedPlans'])

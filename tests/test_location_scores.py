@@ -265,7 +265,11 @@ class LocationScoresTest(unittest.TestCase):
             "signals": {"status": "ok", "momentumPct": 2.0, "districtRelativePct": 0.5},
         }
 
-        result = location_scores.score_for_candidate(row, self.entity)
+        projects = [{"id": "fixture-renewal", "name": "가상정비사업", "type": "재개발",
+                     "stage": "사업시행인가", "distanceMeters": 500, "plannedHouseholds": None}]
+        with mock.patch.object(location_scores.redevelopment_analysis, "nearby_projects",
+                               return_value=(projects, "ok")):
+            result = location_scores.score_for_candidate(row, self.entity)
         details = {
             detail["label"]: detail
             for part in result["parts"] if part["label"] == "입지·실수요"

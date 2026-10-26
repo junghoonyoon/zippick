@@ -5050,7 +5050,7 @@
     .zpr-living-compact .zpr-living-map-legend { font-size:12px; line-height:1.6; color:#6b7684; }
     .zpr-living-news { margin:10px 0 0; font-size:14px; line-height:1.6; color:#4e5968; }
     .zpr-living-news span { margin-right:4px; font-weight:800; color:#2469d2; }
-    .zpr-living-keys { margin:0 0 14px; }
+    .zpr-living-keys { margin:14px 0 0; }
     .zpr-future-section .zpr-living-keys-title { margin:0 0 8px; font-size:15px; font-weight:800; color:#191f28; }
     .zpr-living-key { padding:12px 14px; border:1px solid #eef0f3; border-radius:12px; break-inside:avoid; }
     .zpr-living-key + .zpr-living-key { margin-top:8px; }
@@ -19815,8 +19815,8 @@
           ${factCard("새 철도 가점", railBonus, railFacts)}
         </div>
         ${firstAdvice ? `<p class="zpr-living-advice"><strong>집픽 브리핑</strong><mark>${esc(firstAdvice)}</mark>${restAdvice.length ? ` ${esc(restAdvice.join(" "))}` : ""}</p>` : ""}
-        ${keyProjectsHtml}
         <div class="zpr-living-map-column">${zippickReportMapHtml(mapItem, { redevelopment:true })}</div>
+        ${keyProjectsHtml}
         ${Array.isArray(briefing.news) && briefing.news.length ? `<p class="zpr-living-news"><span>지역 교통 소식</span> ${briefing.news.map(newsLine).join(" / ")}</p>` : ""}
         <div class="zpr-living-folds">
           <details class="zpr-future-details zpr-living-all-projects"><summary>주변 사업 자료 보기</summary>

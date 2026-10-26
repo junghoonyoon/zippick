@@ -7,7 +7,7 @@ import living_area_metro as metro
 
 
 def pilot():
-    entity = future.registry_entity('4ba5297e34906625')
+    entity = future.registry_entity('11230120400422')
     return entity, future.public_facts(future.analyze(entity, entity))
 
 
@@ -17,20 +17,20 @@ def test_actual_boundaries_and_reference_distances_never_change_scores():
     result = maps.map_context(entity, analysis)
     by_name = {p['name']: p for p in result['zones']}
     assert len(result['zones']) > 3
-    assert '장안1구역 재개발' in by_name
-    assert result['featuredDevelopment'] == {'projectId':'seoul-plan-renewal:7073',
-        'scaleBasis':'plannedHouseholds','scaleValue':1754,'selectionRadiusMeters':2000}
+    assert '장안동 134-15 일대' in by_name
+    assert result['featuredDevelopment'] == {'projectId':'seoul-plan-renewal:7638',
+        'scaleBasis':'plannedHouseholds','scaleValue':1670,'selectionRadiusMeters':2000}
     assert len(result['featuredDevelopments']) == 3
-    assert by_name['장안1구역 재개발']['distanceMeters'] == 27
-    assert by_name['장안1구역 재개발']['stageLabel'] == '정비구역 지정'
+    assert by_name['장안동 134-15 일대']['distanceMeters'] == 27
+    assert by_name['장안동 134-15 일대']['stageLabel'] == '기획완료'
     assert all(p['commercialAllowed'] is False and p['previewOnly'] is False and p['useContext'] == 'noncommercial' for p in result['zones'])
     assert all(p['geometry']['type'] in ('Polygon','MultiPolygon') for p in result['zones'])
     stations = {s['id']:s for s in result['stations']}
-    assert stations['myeonmok-jangan-reference']['distanceMeters'] == 378
-    assert stations['cheongnyangni-reference']['distanceMeters'] == 2330
+    assert stations['myeonmok:104']['distanceMeters'] == 456
+    assert stations['gtx-c:005']['distanceMeters'] == 2088
     assert all(s['walkingMinutes'] is None and not s['stationEntranceVerified'] for s in stations.values())
     assert analysis == before and analysis['score'] is None
-    assert result['connections'][0]['geometryBasis'] == 'landmark_connection_only'
+    assert all(c['geometryBasis']=='landmark_connection_only' for c in result['connections'])
 
 
 def test_noncommercial_boundaries_keep_identity_checks_and_unknown_location_empty():
@@ -40,7 +40,7 @@ def test_noncommercial_boundaries_keep_identity_checks_and_unknown_location_empt
 
 
 def test_map_keeps_all_boundaries_and_labels_three_large_projects_with_rail():
-    entity=future.registry_entity('7752a5eab231bc4c')
+    entity=future.registry_entity('11545100003489')
     project=next(p for p in metro.catalog()['projects'] if p['name']=='하안주공12단지')
     analysis={
         'modelVersion':'living-area-v2-beta','apartmentId':future.apartment_key(entity),
@@ -51,11 +51,11 @@ def test_map_keeps_all_boundaries_and_labels_three_large_projects_with_rail():
     }
     result=maps.map_context(entity,analysis)
     assert len(result['zones']) > 3
-    zone=next(zone for zone in result['zones'] if zone['name']=='하안주공10·11단지')
-    assert zone['name']=='하안주공10·11단지'
+    zone=next(zone for zone in result['zones'] if zone['id']=='gg-zone:13:5617')
+    assert zone['name']=='하안주공10,11단지'
     assert zone['plannedHouseholds']==4004
-    assert result['featuredDevelopment']['scaleValue']==4119
-    assert result['featuredDevelopments'][1]['projectId']==zone['projectId']
+    assert result['featuredDevelopment']['scaleValue']==4004
+    assert result['featuredDevelopments'][0]['projectId']==zone['projectId']
     assert len(result['featuredDevelopments']) == 3
     assert any(route['name']=='신안산선' and route['geometry']['type']=='LineString'
                for route in result['routes'])
@@ -96,12 +96,14 @@ def test_map_labels_three_largest_known_projects_and_uses_area_only_as_fallback(
     assert maps._featured_developments(zones,[]) == []
 
 
-def test_miseong_map_keeps_subject_boundary_but_labels_three_external_projects():
+def test_miseong_map_keeps_subject_boundary_but_labels_three_external_projects(monkeypatch):
     import real_estate_search
 
     entity=next(row for row in real_estate_search._search_entities()
                 if row.get('name')=='미성아파트' and row.get('district')=='은평구'
                 and row.get('jibun')=='248')
+    monkeypatch.setattr(metro,'center_for',lambda *args: {
+        'latitude':37.6148205101596,'longitude':126.928054602465})
     analysis=future.public_facts(future.analyze(entity,entity))
     result=maps.map_context(entity,analysis)
     assert len(result['zones']) > 3
@@ -149,7 +151,7 @@ def test_operating_station_visibility_is_separate_from_planned_bonus():
 
 
 def test_nearby_planned_stations_link_to_their_named_route_without_claiming_entrances():
-    entity=future.registry_entity('7752a5eab231bc4c')
+    entity=future.registry_entity('11545100003489')
     analysis={
         'modelVersion':'living-area-v2-beta','apartmentId':future.apartment_key(entity),
         'asOfDate':'2026-10-18','center':{'latitude':37.4600847128236,'longitude':126.886483831561},

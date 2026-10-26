@@ -283,7 +283,7 @@ def test_living_area_headline_uses_nearest_located_project():
 
 @pytest.mark.parametrize('apartment_name,neighboring_project', [
     ('개포 래미안 포레스트', '개포우성6차'),
-    ('동대문더퍼스트데시앙', '장안1구역 재개발'),
+    ('동대문더퍼스트데시앙', '장안현대'),
 ])
 def test_real_report_headline_is_about_the_selected_apartment(tmp_path, apartment_name, neighboring_project):
     import future_transformation as transformation
@@ -301,18 +301,13 @@ def test_real_report_headline_is_about_the_selected_apartment(tmp_path, apartmen
     selected = next(p for p in result['displayProjects'] if p['id'] == selected_id)
     briefing = result['briefing']
     assert_safe_briefing(result)
-    assert briefing['verdict'] == 'normal'
-    assert result['headline'] == '생활권 변화는 보통이에요. ' + briefing['reason']
-    assert briefing['reason'].endswith('새 교통 호재는 약해요.')
+    assert briefing['verdict'] == 'pending'
+    assert result['headline'] == '생활권 변화는 판단을 보류했어요. ' + briefing['reason']
+    assert result['planRating']['subScores']['transport'] is None
     assert briefing['advice'][0].startswith(apartment_name)
-    assert selected['name'] in ' '.join(briefing['strengths'])
-    rail_text = ' '.join(briefing['weaknesses'])
-    assert ('GTX-C' if apartment_name == '개포 래미안 포레스트' else '면목선') in rail_text
-    assert '새 교통 가점은 작아요' in rail_text
-    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in ' '.join(briefing['caveats'])
-    rail = next(p for p in result['displayProjects'] if p['id'] == 'metro-rail:wirye')
-    assert '남위례역' in rail['factSummary']
-    assert rail['checkedAt'] == '2026-10-19'
+    assert selected['name'] in ' '.join(briefing['strengths'] + briefing['weaknesses'])
+    assert '교통' in ' '.join(briefing['unknowns'])
+    assert not result['planRating']['components'].get('transport',{}).get('inputs')
 
 
 def briefing_text(result):
@@ -418,8 +413,8 @@ def test_forestia_report_leads_with_nearby_housing_and_station_plan(tmp_path):
     identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
     result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 19))
 
-    assert result['headline'] == '생활권 변화는 좋아요. 정비사업이 몰려 있고, 예정역도 가까워요.'
-    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in ' '.join(result['briefing']['caveats'])
+    assert result['headline'] == '생활권 변화는 좋아요. 정비사업 규모가 커서 동네가 크게 바뀔 곳이에요.'
+    assert '실제 걸어가는 길과 달라요' in ' '.join(result['briefing']['caveats'])
 
 
 def test_pangyo_valley_xi_2_route_is_not_described_as_a_new_station(tmp_path):
@@ -452,7 +447,7 @@ def test_living_area_headline_uses_korean_particles_for_numbered_complexes_and_p
     assert context._with('대조1 사업') == '과'
 
 
-def test_transport_only_report_uses_middle_judgment_for_middle_score(tmp_path):
+def test_transport_report_with_unmapped_stations_withholds_instead_of_inventing_score(tmp_path):
     import future_transformation as transformation
     import real_estate_search
 
@@ -461,10 +456,12 @@ def test_transport_only_report_uses_middle_judgment_for_middle_score(tmp_path):
     identity = {**entity, 'apartmentId': transformation.apartment_key(entity)}
     result = living.analyze(identity, path=tmp_path / 'empty.db', day=dt.date(2026, 10, 18))
 
-    assert result['planRating']['subScores'] == {'housing': None, 'transport': 3.1}
+    assert result['planRating']['subScores'] == {'housing': None, 'transport': None}
     assert result['planRating']['score'] is None
-    assert result['headline'] == '생활권 변화는 판단을 보류했어요. 새 철도는 기대되지만, 주거환경 자료가 아직 없어요.'
-    assert '신안산선' in ' '.join(result['briefing']['strengths'])
+    assert result['planRating']['transportCoverage']['status'] == 'station_mapping_incomplete'
+    assert result['briefing']['verdict'] == 'pending'
+    assert '역 위치를 아직 다 확인하지 못해' in ' '.join(result['briefing']['unknowns'])
+    assert not result['briefing']['strengths']
 
 
 @pytest.mark.parametrize('name,district,label,rail', [
@@ -487,15 +484,13 @@ def test_real_report_shows_good_and_bad_plan_judgments_without_invented_direct_b
         assert not any(row.get('lineId') == 'seobu'
             for row in result['planRating']['components'].get('transport', {}).get('inputs', []))
         return
-    assert result['headline'].startswith(f'생활권 변화는 {label}')
+    assert result['briefing']['verdict'] == 'pending'
+    assert result['planRating']['subScores']['transport'] is None
     assert_safe_briefing(result)
     assert result['briefing']['advice'][0].startswith(name)
-    assert rail in ' '.join(result['briefing']['strengths'] + result['briefing']['weaknesses'])
+    assert any(p['name']==rail for p in result['displayProjects'])
     assert not any(p.get('benefitClass') == 'direct' for p in result['displayProjects'])
-    caveats = ' '.join(result['briefing']['caveats'])
-    assert '출입구와 걸어가는 시간은 확인되지 않았어요' in caveats
-    if label == '좋아요.':
-        assert '계획 점수는 실제로 누릴 이점이나 집값 상승을 뜻하지 않아요' in caveats
+    assert '교통' in ' '.join(result['briefing']['unknowns'])
 
 
 def test_living_area_verdict_uses_highest_scored_station_on_shared_rail_project():
@@ -551,7 +546,7 @@ def test_corrupt_database_falls_back(tmp_path):
 
 def test_official_context_does_not_make_direct_benefit_or_rail_walk_time(tmp_path):
     import living_area_context as context
-    identity = {'apartmentId':'4ba5297e34906625','district':'동대문구','legalDong':'장안동','jibun':'587'}
+    identity = {'apartmentId':'11230120400422','district':'동대문구','legalDong':'장안동','jibun':'587'}
     result = living.analyze(identity, path=tmp_path/'new.db', day=DAY)
     assert result['center']['latitude'] == 37.575066938
     assert result['score'] is None
@@ -579,18 +574,19 @@ def test_wirye_sinsa_comes_from_shared_transport_catalog_for_every_matching_repo
         report = living.analyze(identity, path=tmp_path/'new.db', day=day)
         reference = next(p for p in report['capitalTransport']['matchedPlans'] if p['id'] == 'wirye-sinsa')
         assert reference['stageCode'] == 'planning'
-        assert reference['regionalReference'] is True
-        assert reference['stations'] == []
+        assert reference['regionalReference'] is (not bool(reference['stations']))
+        assert all(isinstance(name,str) and name for name in reference['stations'])
         assert 'distanceMeters' not in reference and 'walkingMinutes' not in reference
-        assert not any(p['name'] == '위례신사선' for p in report['displayProjects'])
-    for district in ('성남중원구', '성남분당구'):
-        report = living.analyze({**identities[0], 'district':district}, path=tmp_path/'new.db', day=day)
+        assert not any(p['name']=='위례신사선' and p.get('benefitClass')=='direct'
+                       for p in report['displayProjects'])
+    for district in ('용인수지구', '용인기흥구'):
+        report = living.analyze({**identities[0], 'city':'용인시', 'district':district}, path=tmp_path/'new.db', day=day)
         assert not any(p['id'] == 'wirye-sinsa' for p in report['capitalTransport']['matchedPlans'])
 
 
 def test_context_license_expiry_and_integrity_fail_closed(monkeypatch):
     import living_area_context as context
-    identity = {'apartmentId':'4ba5297e34906625','district':'동대문구','legalDong':'장안동','jibun':'587'}
+    identity = {'apartmentId':'11230120400422','district':'동대문구','legalDong':'장안동','jibun':'587'}
     monkeypatch.setitem(sources.REGISTRY, 'seoul-apartment-points', {**sources.REGISTRY['seoul-apartment-points'], 'licenseStatus':'blocked'})
     _, obs = context.prepare(identity, sources.bundled_projects(), None, DAY)
     assert not obs.get('center')

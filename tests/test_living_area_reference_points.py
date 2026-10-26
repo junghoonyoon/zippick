@@ -33,13 +33,16 @@ def test_heristone_has_nearby_plans_without_invented_direct_benefits():
     assert all(m['value'] is None for m in report['metrics'])
     rating = report['planRating']
     assert rating['subScores']['housing'] >= 3.4
-    assert rating['subScores']['transport'] == 3.0
-    assert rating['components']['transport']['selectedProjectId']=='metro-rail:wirye'
+    assert rating['subScores']['transport'] is None
+    assert rating['score'] is None
+    assert rating['transportCoverage']['status'] == 'no_verified_station_within_2km'
     assert set(rating['subScores']) == {'housing', 'transport'}
-    assert rating['score'] == round(rating['subScores']['housing'] * .6 + rating['subScores']['transport'] * .4, 1)
     assert 'competitiveness' not in rating['components']
-    assert x['name'].replace(' ', '') in report['headline'].replace(' ', '')
-    assert '새 아파트' in report['headline'] and '가격' in report['headline']
+    assert report['briefing']['verdict'] == 'pending'
+    assert x['name'] in ' '.join(report['briefing']['advice'])
+    assert report['briefing']['keyProjects']
+    assert all(card['impact'] and card['timing'] and card['check']
+               for card in report['briefing']['keyProjects'])
     assert not any(p.get('jibun') == x['jibun'] and p.get('legalDong') == x['legalDong'] for p in projects.values())
 
 

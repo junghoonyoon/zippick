@@ -13802,6 +13802,52 @@
       "dataThrough": "2026-10-26",
       "source": "kakao-local-v2",
       "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "f5ff852339672a72": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "단남초등학교",
+        "금상초등학교",
+        "성남동초등학교"
+      ],
+      "elementaryDistanceMeters": 168,
+      "middleSchoolNames": [
+        "성남동중학교",
+        "성남서중학교",
+        "금광중학교"
+      ],
+      "middleDistanceMeters": 666,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "0c8990f7bcf8655d": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 91,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울상현초등학교",
+        "서울은로초등학교",
+        "서울강남초등학교"
+      ],
+      "elementaryDistanceMeters": 523,
+      "middleSchoolNames": [
+        "중앙대학교 사범대학 부속중학교",
+        "상현중학교",
+        "구암중학교"
+      ],
+      "middleDistanceMeters": 788,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
     }
   },
   "zones": [],
@@ -13811,5 +13857,5 @@
     "records에 단지별 사전 계산값을 넣거나, zones와 schools에 변환된 학구도 도형·학교 위치를 넣으면 점수가 계산됩니다.",
     "초등학교와 중학교는 배정권역 기준입니다. 가까운 학교가 배정학교라는 뜻은 아닙니다."
   ],
-  "updatedAt": "2026-10-26T03:05:14.210226+00:00"
+  "updatedAt": "2026-10-26T08:12:59.831784+00:00"
 }

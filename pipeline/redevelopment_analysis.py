@@ -297,22 +297,22 @@ def _load_projects():
         _CACHE.update({"mtime": mtime, "projects": [], "loadOk": False})
         return []
     projects = []
+    eligible_source = False
     for feature in payload.get("features") or []:
         properties = feature.get("properties") or {}
         # This source is KOG-L type 4 and cannot feed commercial map or scores.
         if properties.get("sourceDataset") == "OA-22712":
             continue
         project_id = str(feature.get("id") or properties.get("id") or "")
-        if project_id in COMPLETED_PROJECT_IDS:
-            continue
         project_type = _project_type(properties.get("projectType") or properties.get("type"))
         if project_type not in PROJECT_TYPES:
             continue
         stage = _stage(properties.get("stage"))
-        if stage == "완료":
-            continue
         polygons = _geometry_polygons(feature.get("geometry") or {})
         if not polygons:
+            continue
+        eligible_source = True
+        if project_id in COMPLETED_PROJECT_IDS or stage == "완료":
             continue
         projects.append({
             "id": project_id,
@@ -330,7 +330,7 @@ def _load_projects():
             "confidence": "high" if project_type in {"재개발", "재건축", "뉴타운"} else "medium",
             "_polygons": polygons,
         })
-    _CACHE.update({"mtime": mtime, "projects": projects, "loadOk": bool(projects)})
+    _CACHE.update({"mtime": mtime, "projects": projects, "loadOk": eligible_source})
     return projects
 
 

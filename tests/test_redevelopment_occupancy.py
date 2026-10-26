@@ -77,7 +77,13 @@ class RedevelopmentOccupancyTest(unittest.TestCase):
                 if zone:
                     self.assertTrue(occupancy.occupancy_evidence(zone) == row or occupancy.completed_stage(zone.get("stage")))
                 self.assertNotIn(row["zoneId"], served)
-                lng, lat = row["longitude"], row["latitude"]
+                if 'longitude' in row:
+                    lng, lat = row['longitude'], row['latitude']
+                else:
+                    from shapely.geometry import shape
+                    raw = next(z for z in metro.catalog()['ggBoundaries'] if f"gg-zone:{z['properties']['sourceLayer']}:{z['id']}"==row['zoneId'])
+                    point = shape(raw['geometry']).representative_point()
+                    lng, lat = point.x, point.y
                 payload = search_server._redevelopment_zones_payload({
                     "bbox": [f"{lng-.005},{lat-.005},{lng+.005},{lat+.005}"], "limit": ["3000"],
                 })

@@ -1,4 +1,5 @@
 import sys
+import datetime as dt
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -148,6 +149,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
              mock.patch.object(budget_candidates.config, "MOLIT_TRANSACTION_ALL_MATCHES_ENRICH_LIMIT", 7), \
              mock.patch.object(budget_candidates.molit_transactions, "enabled", return_value=True), \
              mock.patch.object(budget_candidates.molit_transactions, "price_band_for_apartment", return_value=None) as lookup, \
+             mock.patch.object(budget_candidates.molit_transactions, "price_band_for_apartment_min_area", return_value=None), \
              mock.patch.object(budget_candidates.molit_transactions, "latest_transaction_for_apartment", return_value=None) as last_lookup, \
              mock.patch.object(budget_candidates.molit_transactions, "last_error", return_value=""):
             budget_candidates._ENTITY_LOOKUP = None
@@ -160,7 +162,8 @@ class BudgetLiveSeedTest(unittest.TestCase):
 
         self.assertEqual(result["candidates"], [])
         self.assertEqual(result["noLastDealCount"], 120)
-        self.assertEqual(lookup.call_count, 7)
+        self.assertEqual(lookup.call_count, 14)  # Recent and stale-trade fallback, seven complexes each.
+        self.assertEqual(sum(bool(call.kwargs.get("lookback_months")) for call in lookup.call_args_list), 7)
         self.assertEqual(last_lookup.call_count, 7)
 
     def test_rental_and_lh_complexes_are_excluded_before_live_price_lookup(self):
@@ -313,7 +316,7 @@ class BudgetLiveSeedTest(unittest.TestCase):
             "priceSource": "molit_csv",
             "priceIdentityVerified": True,
             "transactionCount": 10,
-            "latestDealDate": "2026-06-18",
+            "latestDealDate": (dt.date.today() - dt.timedelta(days=30)).isoformat(),
         }
 
         budget_candidates._apply_fit(row, 10)

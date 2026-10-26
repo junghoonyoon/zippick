@@ -214,9 +214,10 @@ class SupplyForecastTest(unittest.TestCase):
         self.assertEqual(set(gtx), {"gtx-b", "gtx-c"})
         self.assertTrue(all(line["stations"] == ["청량리"] for line in gtx.values()))
         self.assertTrue(all(line["region"] == "동대문구" for line in gtx.values()))
-        self.assertTrue(all(line["stationsSourceUrl"].startswith("https://www.molit.go.kr/") for line in gtx.values()))
+        self.assertTrue(gtx["gtx-b"]["stationsSourceUrl"].startswith("https://www.kr.or.kr/"))
+        self.assertTrue(gtx["gtx-c"]["stationsSourceUrl"].startswith("https://www.gccity.go.kr/"))
         self.assertEqual(gtx["gtx-c"]["sourceDate"], "2026-09-14")
-        self.assertEqual(gtx["gtx-c"]["verifiedAt"], "2026-10-16")
+        self.assertEqual(gtx["gtx-c"]["verifiedAt"], "2026-10-19")
         seongbuk = planned_rail.planned_rail_for_candidate({
             "province": "서울특별시", "district": "성북구", "legalDong": "석관동",
         })

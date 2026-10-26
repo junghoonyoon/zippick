@@ -207,7 +207,16 @@ def test_pilot_facts_are_real_registry_entities_and_have_no_fake_measurements():
     for doc in json.loads(f.PILOT_PATH.read_text()):
         f.validate_document(doc)
         entity = f.registry_entity(doc['apartmentId'])
-        assert entity and f.supported(entity)
+        if entity is None:
+            # The old aggregate was split into physical numbered complexes.
+            import real_estate_search
+            children = [e for e in real_estate_search._search_entities()
+                        if not e.get('aggregate') and all(e.get(k) == v for k, v in doc['identity'].items())]
+            assert len(children) > 1
+            assert len({f.apartment_key(e) for e in children}) == len(children)
+            assert all(f.supported(e) for e in children)
+        else:
+            assert f.supported(entity)
         assert not doc['measurements']
         assert f.evaluate(doc['apartmentId'], doc, as_of=DAY)['futureTransformationScore'] is None
     hwigyeong = next(d for d in json.loads(f.PILOT_PATH.read_text()) if d['identity']['legalDong'] == '이문동')
@@ -219,7 +228,7 @@ def test_pilot_facts_are_real_registry_entities_and_have_no_fake_measurements():
 @pytest.mark.skipif(not shutil.which('node'), reason='Node required')
 def test_frontend_states_links_and_no_null_coercion():
     html = (f.config.ROOT / '앱화면/real-estate-search.html').read_text()
-    names = ['zippickFutureSourceLink', 'zippickFutureReferenceProjects', 'zippickLifestyleProjectInsight', 'zippickLivingTransportHtml', 'zippickLifestylePlanRating', 'zippickLifestyleChangeHtml', 'zippickLifestyleChangeRatingData', 'zippickReportMapHtml']
+    names = ['zippickFutureSourceIsOfficial', 'zippickOfficialDetailUrl', 'zippickLivingProjectSourceUrl', 'zippickRailUnderReview', 'zippickLivingRailVisible', 'zippickReviewRailReferences', 'zippickFutureSourceLink', 'zippickFutureReferenceProjects', 'zippickLifestyleProjectInsight', 'zippickLivingTransportHtml', 'zippickLifestylePlanRating', 'zippickLifestyleChangeHtml', 'zippickLifestyleChangeRatingData', 'zippickReportMapHtml']
     functions = '\n'.join(re.search(r'    function '+n+r'\([^\n]*\) \{.*?\n    \}', html, re.S).group() for n in names)
     sites = re.search(r'    const ZIPPICK_REPORT_PROJECT_SITES = \{.*?\n    \};', html, re.S).group()
     script = "const assert = require('node:assert/strict'); const esc = v => String(v).replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('\"','&quot;'); const candidateDisplayName = item => item.name || '이 단지'; const candidateMapAddress = item => item.address || '';\n" + sites + '\n' + functions
@@ -285,7 +294,8 @@ const failedWithOldProjects={modelVersion:'living-area-v2-beta',status:'error',
 assert.doesNotMatch(zippickLifestyleChangeHtml({futureTransformation:failedWithOldProjects}),/오래된 구역/);
 assert.equal(zippickFutureSourceLink('javascript:alert(1)'), '');
 assert.equal(zippickFutureSourceLink('https://seoul.go.kr.evil.example/'), '');
-assert.match(zippickFutureSourceLink('https://www.seoul.go.kr/notice'), /noopener/);
+assert.equal(zippickFutureSourceLink('https://www.seoul.go.kr/notice'), '');
+assert.match(zippickFutureSourceLink('https://www.seoul.go.kr/news/news_report.do?nttNo=453805'), /noopener/);
 const districtOnly = zippickLifestyleChangeHtml({lifestyleChange:{redevelopmentProjects:[project]}});
 assert.doesNotMatch(districtOnly,/&lt;script&gt;/);
 assert.equal(zippickLifestyleChangeRatingData({futureTransformation:{...model,score:null}}),null);
@@ -327,9 +337,10 @@ assert.equal(zippickLivingIsRenewalPoint(points[1]),false);
     result = subprocess.run(['node'], input=script, text=True, capture_output=True)
     assert result.returncode == 0, result.stderr
     map_body = html.split('    async function mountZippickReportRedevelopmentZones(', 1)[1].split('    async function mountZippickReportMap(', 1)[0]
-    assert 'isRenewalPoint ? " is-renewal"' in map_body
-    assert 'isRenewalPoint ? "사업 대표점 · "' in map_body
-    assert '재개발·재건축 사업 대표점' in map_body
+    assert 'zpr-living-project-dot is-renewal' in map_body
+    assert '"사업 대표점 · "' in map_body
+    assert 'zippickLivingIsRenewalPoint(project)' in map_body
+    assert 'label.setAttribute("aria-label"' in map_body
 
 
 def test_public_report_payload_removes_radius_and_scores():
@@ -360,6 +371,11 @@ def test_http_endpoint_uses_exact_registry_id_and_preserves_unknown(tmp_path):
         base = f'http://127.0.0.1:{server.server_port}'
         with mock.patch.object(f, 'DB_PATH', tmp_path / 'api.sqlite3'):
             for doc in json.loads(f.PILOT_PATH.read_text()):
+                if f.registry_entity(doc['apartmentId']) is None:
+                    with pytest.raises(HTTPError) as obsolete:
+                        urlopen(base + '/api/apartments/' + doc['apartmentId'] + '/future-transformation')
+                    assert obsolete.value.code == 404
+                    continue
                 with urlopen(base + '/api/apartments/' + doc['apartmentId'] + '/future-transformation') as response:
                     payload = json.load(response)
                 assert payload['apartmentId'] == doc['apartmentId']
@@ -371,7 +387,7 @@ def test_http_endpoint_uses_exact_registry_id_and_preserves_unknown(tmp_path):
                 assert payload['status'] in ('partial', 'stale', 'insufficient_data')
                 assert all(p['licenseVerifiedAt'] and p['sourceRecordId'] for p in payload['referenceProjects'])
                 assert 'buildingRegister' not in payload
-            map_url = base + '/api/apartments/4ba5297e34906625/living-area-map'
+            map_url = base + '/api/apartments/11230120400422/living-area-map'
             with urlopen(map_url) as response:
                 map_payload = json.load(response)
             assert len(map_payload['zones']) > 2

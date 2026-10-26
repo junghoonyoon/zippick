@@ -76,23 +76,24 @@ def test_wondang_scale_is_an_attributed_reference_not_a_score_input():
     assert zone['stageLabel'] == '조합설립인가'
 
 
-def test_haan_official_boundary_remark_links_the_same_business_without_confusing_12_with_1_and_2():
+def test_haan_boundary_names_require_area_and_proximity_before_linking_business_facts():
     center={'latitude':37.4600847128236,'longitude':126.886483831561}
     zones=metro.spatial(center,metro.catalog()['projects'],DAY)['zones']
     by_id={z['id']:z for z in zones}
-    expected={
-        'gg-zone:13:5628':('하안주공12단지','gg-quarter:3a8e30c08a377883a4ec'),
-        'gg-zone:13:5612':('하안주공6·7단지','gg-quarter:5d5916c15644b037acf5'),
-        'gg-zone:13:5617':('하안주공10·11단지','gg-quarter:f369a61b1c96f7d431c7'),
-        'gg-zone:13:5621':('하안주공3·4단지','gg-quarter:7b92ec33001394db99d4'),
-    }
-    for boundary_id,(name,project_id) in expected.items():
+    linked=by_id['gg-zone:13:5617']
+    assert linked['name']=='하안주공10,11단지'
+    assert linked['projectId']=='gg-quarter:f369a61b1c96f7d431c7'
+    assert linked['plannedHouseholds']==4004
+    assert linked['matchMethod']=='official_name_district_area_and_proximity'
+    for boundary_id,name in [('gg-zone:13:5628','하안주공12단지'),
+                             ('gg-zone:13:5612','하안주공6,7단지'),
+                             ('gg-zone:13:5621','하안3,4단지')]:
         zone=by_id[boundary_id]
         assert zone['name']==name
-        assert zone['projectId']==project_id
-        assert zone['businessNameConfirmed'] is True
         assert zone['sourceNameField']=='REMARK'
-        assert zone['plannedHouseholds']>0
+        assert zone['projectId']=='boundary:'+boundary_id
+        assert zone['matchMethod']=='boundary_only'
+        assert zone['plannedHouseholds'] is None
     generic=by_id['gg-zone:13:5630']
     assert generic['businessNameConfirmed'] is False
     assert generic['matchMethod']=='boundary_only'
@@ -131,9 +132,9 @@ def test_exact_address_does_not_relax_an_explicit_district(monkeypatch):
 
 
 @pytest.mark.parametrize('apartment_id,point',[
-    ('9f52fd4776b153b6',{'latitude':37.5845,'longitude':126.9445}),
-    ('dffce49905593ace',{'latitude':37.281,'longitude':127.061}),
-    ('676a2d82a3acdf6b',{'latitude':37.561,'longitude':127.193}),
+    ('11410120383297',{'latitude':37.5845,'longitude':126.9445}),
+    ('41117120390525',{'latitude':37.281,'longitude':127.061}),
+    ('41450120305302',{'latitude':37.561,'longitude':127.193}),
 ])
 def test_nonpilot_regions_share_reports_and_never_claim_walking_benefit(monkeypatch,apartment_id,point):
     # Synthetic test positions exercise spatial plumbing; they are never shipped as data.
@@ -152,7 +153,7 @@ def test_nonpilot_regions_share_reports_and_never_claim_walking_benefit(monkeypa
 
 
 def test_missing_position_still_returns_regional_catalogue_without_fake_distance(monkeypatch):
-    entity={**future.registry_entity('676a2d82a3acdf6b'),'apartmentId':'676a2d82a3acdf6b'}
+    entity={**future.registry_entity('41450120305302'),'apartmentId':'41450120305302'}
     monkeypatch.setattr(metro,'center_for',lambda *args:None)
     result=living.analyze(entity,day=DAY)
     assert result['metroCoverage']['locationStatus']=='unresolved'
@@ -164,32 +165,31 @@ def test_missing_position_still_returns_regional_catalogue_without_fake_distance
 
 
 def test_future_catalogue_does_not_change_historical_report():
-    entity={**future.registry_entity('4ba5297e34906625'),'apartmentId':'4ba5297e34906625'}
+    entity={**future.registry_entity('11230120400422'),'apartmentId':'11230120400422'}
     result=living.analyze(entity,day=DAY-dt.timedelta(days=1))
     assert 'metroCoverage' not in result
     assert len(result['displayProjects'])==3
 
 
 def test_hongje_route_is_visible_without_claiming_new_station_benefit():
-    entity={**future.registry_entity('9f52fd4776b153b6'),'apartmentId':'9f52fd4776b153b6'}
+    entity={**future.registry_entity('11410120383297'),'apartmentId':'11410120383297'}
     result=living.analyze(entity,day=DAY)
     route=next(p for p in result['transportRoutes'] if p['id']=='gg-rail:650')
     assert route['name']=='광역급행철도 A노선'
     assert '우선개통' in route['stageLabel']
     assert 'geometry' not in route and route['scoringEligible'] is False
-    assert any(i['kind']=='transport' and '강북횡단선' in i['fact'] for i in result['insights'])
+    # A re-promoted route remains a reference, without a scored new-station benefit.
+    assert not any(i['kind']=='transport' and '강북횡단선' in i['fact'] for i in result['insights'])
     plan=result['planRating']
-    assert plan['subScores']=={'housing':3.2,'transport':2.5}
-    assert plan['score']==rating.aggregate(plan['subScores'])
-    assert plan['status']=='ready'
-    rail=plan['components']['transport']
-    assert rail['selectedProjectId']=='metro-rail:gangbuk-cross'
-    assert all(r['projectId']=='metro-rail:gangbuk-cross' and r['stage']=='planning' for r in rail['inputs'])
-    assert '재추진' in rail['summary']
-    assert '바뀔 수 있어요' in rail['policy']
-    assert result['score'] is None  # No fabricated measured travel-time score.
+    assert plan['subScores']['transport'] == 0
+    assert plan['score'] == rating.aggregate(plan['subScores'])
+    assert not any(r.get('lineId')=='gangbuk-cross'
+                   for r in plan['components'].get('transport',{}).get('inputs',[]))
+    assert result['score'] is None
     project=next(p for p in result['displayProjects'] if p['id']=='metro-rail:gangbuk-cross')
-    assert project['distanceMeters']>0 and project['benefitClass']=='unverified'
+    assert project['scoringEligible'] is False
+    assert '재추진' in project['stageLabel']
+    assert project['benefitClass']=='unverified'
 
 
 def test_route_facts_are_not_hidden_when_no_housing_projects_exist():
@@ -270,7 +270,7 @@ def test_old_pilot_review_does_not_erase_new_metro_station_scores(monkeypatch):
     original=maps.read
     stale=lambda path: {**original(path),'checkedAt':'2020-01-01'} if path.name=='living_area_map_references.json' else original(path)
     monkeypatch.setattr(maps,'read',stale)
-    entity={**future.registry_entity('9f52fd4776b153b6'),'apartmentId':'9f52fd4776b153b6'}
+    entity={**future.registry_entity('11410120383297'),'apartmentId':'11410120383297'}
     assert living.analyze(entity,day=DAY)['planRating']['subScores']['transport'] is not None
 
 
