@@ -75,6 +75,18 @@ class BuildPresaleSupplementTests(unittest.TestCase):
         self.assertEqual(candidates[0]["시도"], "인천광역시")
         self.assertEqual(candidates[0]["법정동코드"], "28185")
 
+    def test_multi_province_project_keeps_leading_province_and_block_is_not_lot(self):
+        labels, codes = supplement.build_region_index()
+        result = supplement.region_from_address(
+            "경기도 부천시 오정구 대장동 인천광역시 계양구 동양동 일원 A8블록", labels, codes)
+        self.assertEqual(result["시도"], "경기도")
+        self.assertEqual(result["법정동코드"], "41196")
+        result = supplement.region_from_address(
+            "인천광역시 서해구 가정동 인천가정2 공동지구내 B2블록", labels, codes)
+        self.assertEqual(result["시군구"], "서해구")
+        self.assertEqual(result["지번"], "")
+        self.assertEqual(result["법정동코드"], "")
+
     def test_applyhome_supply_size_becomes_households(self):
         rows = [{
             "공급지역명": "경기",

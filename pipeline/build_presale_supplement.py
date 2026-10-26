@@ -404,7 +404,13 @@ def region_from_address(address, label_by_lawd, lawd_by_label):
     lawd = ""
     labels = sorted(lawd_by_label, key=len, reverse=True)
     address_key = compact(address)
+    address_province = next((province for prefix, province in (
+        ("서울", "서울특별시"), ("경기", "경기도"), ("인천", "인천광역시")
+    ) if address.startswith(prefix)), "")
     for label in labels:
+        candidate = lawd_by_label[label]
+        if address_province and label_by_lawd.get(candidate, {}).get("시도") != address_province:
+            continue
         if label and label in address_key:
             lawd = lawd_by_label[label]
             break
@@ -424,7 +430,13 @@ def region_from_address(address, label_by_lawd, lawd_by_label):
         legal_dong = "대장동"
     if legal_dong.endswith(("읍", "면")) and len(place_names) > 1 and place_names[1].endswith("리"):
         legal_dong = place_names[1]
-    jibun_match = re.search(r"(?<![A-Za-z0-9])(\d+(?:-\d+)?)\s*(?:번지)?(?:\s|$|[,)])", address)
+    # 사업명·블록 번호를 지번으로 만들지 않는다. 법정동 바로 뒤 숫자만 받는다.
+    jibun_match = re.search(re.escape(legal_dong) + r"\s+(\d+(?:-\d+)?)\s*(?:번지)?(?:\s|$|[,)])", address) if legal_dong else None
+    if not region.get("시군구") and address_province == "인천광역시":
+        district_match = re.match(r"\S+\s+([가-힣]+(?:구|군))(?:\s|$)", address)
+        if district_match:
+            district = district_match[1]
+            region["시군구"] = "인천" + district if district in {"중구", "동구", "서구"} else district
     return {
         **region,
         "법정동": legal_dong,
