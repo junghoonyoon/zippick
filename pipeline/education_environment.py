@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""서울·경기 아파트 교육환경 점수.
+"""서울·경기·인천 아파트 교육환경 점수.
 
 공식 학구도 원자료를 앱에서 쓰기 쉬운 JSON으로 변환한 뒤 사용한다. 학구도
 원자료가 아직 비어 있으면 카카오 Local 장소 검색으로 주변 초·중학교와 학원
@@ -16,9 +16,10 @@ import config
 import kakao_station_distances
 
 
+# 기존 파일명과 달리 인천 교육 접근성 기록도 함께 담는다.
 DATA_PATH = config.ROOT / "data" / "education_environment_seoul_gyeonggi.json"
 SCORE_FORMULA_VERSION = "education-env-v1"
-SUPPORTED_REGIONS = {"서울특별시", "경기도"}
+SUPPORTED_REGIONS = {"서울특별시", "경기도", "인천광역시"}
 KAKAO_CATEGORY_RADIUS_METERS = 2000
 KAKAO_ACADEMY_RADIUS_METERS = 1000
 _DATASET = None
@@ -202,6 +203,8 @@ def _school_level(place):
 
 
 def _score_from_nearby_places(lat, lon):
+    if not kakao_station_distances.configured():
+        return None
     school_places = _kakao_category_places("SC4", lat, lon, KAKAO_CATEGORY_RADIUS_METERS, max_pages=3)
     academy_places = _kakao_category_places("AC5", lat, lon, KAKAO_ACADEMY_RADIUS_METERS, max_pages=3)
     elementary = [

@@ -186,6 +186,18 @@ class EducationEnvironmentTest(unittest.TestCase):
         self.assertEqual(len(cached), 1)
         self.assertEqual(next(iter(cached.values()))["basis"], "nearby_school_access")
 
+    def test_incheon_nearby_lookup_is_saved_and_missing_key_has_no_score(self):
+        self.entity.update(province="인천광역시", district="연수구",
+                           legalDong="송도동", jibun="102", dedupeKey="28185120358884")
+        self._write_station_cache(latitude=37.39, longitude=126.64)
+        with mock.patch.object(kakao_station_distances, "configured", return_value=False), \
+             mock.patch.object(kakao_station_distances, "_request_json") as request:
+            result = education_environment.education_environment_for_entity(self.entity)
+        self.assertEqual(result["status"], "no_zone_match")
+        self.assertIsNone(result["score"])
+        request.assert_not_called()
+        self.test_scores_nearby_school_access_when_school_zones_are_empty()
+
     def test_remote_lookup_can_be_disabled_for_fast_candidate_search(self):
         self._write_station_cache()
         self.data_path.write_text(json.dumps({
