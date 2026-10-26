@@ -1,4 +1,4 @@
-"""서울·경기 분양권/입주예정 단지 보강 CSV를 만든다.
+"""서울·경기·인천 분양권/입주예정 단지 보강 CSV를 만든다.
 
 청약홈의 APT 분양정보(입주예정)와 로컬에 저장된 국토부
 분양권/입주권 실거래 캐시(현재 거래)를 합친다. 원본 공동주택
@@ -27,6 +27,7 @@ SEOUL_MASTER = (
     / "seoul_apartments_20260703"
     / "서울시_아파트_단지_목록_한국부동산원_20250918.csv"
 )
+INCHEON_MASTER = ROOT / "data" / "인천광역시_아파트_단지_목록_한국부동산원_20250918.csv"
 GYEONGGI_MASTER = ROOT / "data" / "경기도_아파트_단지_목록_한국부동산원_20250918.csv"
 SUPPLEMENT_PATH = ROOT / "data" / "분양권_입주예정_아파트_보강.csv"
 MOLIT_CACHE_DIR = ROOT / "pipeline" / "cache" / "molit_transactions"
@@ -249,11 +250,11 @@ def read_applyhome_rows(path=None):
 
 
 def download_lh_rows(as_of, session=None):
-    """LH 청약플러스의 올해 서울·경기 분양 공고를 현재 시점까지 읽는다."""
+    """LH 청약플러스의 올해 서울·경기·인천 분양 공고를 현재 시점까지 읽는다."""
     session = session or requests.Session()
     start_date = f"{as_of.year}-01-01"
     entries = []
-    for region_code in ("11", "41"):
+    for region_code in ("11", "41", "28"):
         response = session.post(
             LH_LIST_URL,
             data={
@@ -286,7 +287,7 @@ def download_lh_rows(as_of, session=None):
                 strip_html(value)
                 for value in re.findall(r"<td[^>]*>(.*?)</td>", table_row, re.S)
             ]
-            if len(cells) < 4 or cells[3] not in {"서울특별시", "경기도"}:
+            if len(cells) < 4 or cells[3] not in {"서울특별시", "경기도", "인천광역시"}:
                 continue
             entries.append({
                 "ids": anchor.groups(),
@@ -359,7 +360,7 @@ def build_region_index():
     """기존 단지 PNU로 주소 표기와 5자리 법정동코드를 연결한다."""
     label_by_lawd = {}
     lawd_by_label = {}
-    for path in (SEOUL_MASTER, GYEONGGI_MASTER):
+    for path in (SEOUL_MASTER, GYEONGGI_MASTER, INCHEON_MASTER):
         for row in read_csv_rows(path):
             pnu = re.sub(r"\D", "", str(row.get("필지고유번호") or ""))
             if len(pnu) < 5:
@@ -382,6 +383,11 @@ def build_region_index():
                 if combined:
                     base_city, gu = combined.groups()
                     labels.extend([f"{base_city}시 {gu}", gu])
+            if province == "인천광역시":
+                district = "인천" + city if city in {"중구", "동구", "서구"} else city
+                labels = [district, f"인천광역시 {city}", f"인천 {city}"]
+                if city not in {"중구", "동구", "서구"}:
+                    labels.append(city)
             label_by_lawd.setdefault(lawd, {
                 "시도": province,
                 "자치구": borough if province == "서울특별시" else "",
@@ -405,7 +411,7 @@ def region_from_address(address, label_by_lawd, lawd_by_label):
     if not lawd and "부천대장" in address_key:
         lawd = "41196"
     region = dict(label_by_lawd.get(lawd) or {})
-    region.setdefault("시도", "서울특별시" if address.startswith("서울") else "경기도")
+    region.setdefault("시도", "서울특별시" if address.startswith("서울") else "인천광역시" if address.startswith("인천") else "경기도")
     region.setdefault("자치구", "")
     region.setdefault("시군구", "")
 
@@ -507,7 +513,7 @@ def applyhome_candidates(rows, as_of, label_by_lawd, lawd_by_label):
     current_month = as_of.strftime("%Y%m")
     deduped = {}
     for row in rows:
-        if row.get("공급지역명") not in {"서울", "경기"}:
+        if row.get("공급지역명") not in {"서울", "경기", "인천"}:
             continue
         planned_month = month_key(row.get("입주예정월"))
         if not planned_month or planned_month < current_month:

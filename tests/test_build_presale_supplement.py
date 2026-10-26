@@ -57,6 +57,24 @@ class BuildPresaleSupplementTests(unittest.TestCase):
             "고양창릉 S-4블록 공공분양주택",
         )
 
+    def test_incheon_address_keeps_province_and_ambiguous_district_identity(self):
+        labels, codes = supplement.build_region_index()
+        for district, expected, lawd in [("연수구", "연수구", "28185"),
+                                          ("중구", "인천중구", "28110"),
+                                          ("서구", "인천서구", "28260")]:
+            with self.subTest(district=district):
+                location = supplement.region_from_address(
+                    f"인천광역시 {district} 테스트동 102", labels, codes)
+                self.assertEqual(location["시도"], "인천광역시")
+                self.assertEqual(location["시군구"], expected)
+                self.assertEqual(location["법정동코드"], lawd)
+        candidates = supplement.applyhome_candidates([{
+            "공급지역명": "인천", "입주예정월": "2028-12", "주택명": "송도테스트",
+            "공급위치": "인천광역시 연수구 송도동 102", "공급규모": "872세대",
+        }], dt.date(2026, 10, 26), labels, codes)
+        self.assertEqual(candidates[0]["시도"], "인천광역시")
+        self.assertEqual(candidates[0]["법정동코드"], "28185")
+
     def test_applyhome_supply_size_becomes_households(self):
         rows = [{
             "공급지역명": "경기",
