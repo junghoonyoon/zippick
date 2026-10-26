@@ -47,9 +47,30 @@ def _retry(label, fn, attempts=3):
     raise AssertionError(f"{label} 확인 실패: {last_error}") from last_error
 
 
+def _completed_scores(payload, timeout_seconds=620):
+    deadline = time.monotonic() + timeout_seconds
+    while payload.get("enrichmentPending"):
+        job_id = payload.get("enrichmentJobId")
+        _assert(job_id, "점수 계산 작업 번호가 없어요.")
+        _assert(time.monotonic() < deadline, "종합 점수 계산이 제한 시간 안에 끝나지 않았어요.")
+        time.sleep(1)
+        next_payload = _open(_query("/api/budget-candidates/progress", {"id": job_id}))
+        payload = {**next_payload, "enrichmentJobId": job_id}
+    _assert(not payload.get("error"), payload.get("error") or "후보 분석 오류")
+    _assert(payload.get("candidateScoreDataReady") is not False, "종합 점수 계산이 완료되지 않았어요.")
+    return payload
+
+
 def verify():
     home = _retry("홈", lambda: _open("/"))
     _assert("real-estate-search" in home or "집픽" in home, "홈 HTML이 예상과 달라요.")
+    _assert(home.index('id="leaderEntry"') < home.index('id="flowEntry"'), "온기지도 탭 위치가 달라요.")
+    _assert('function candidateReadonlyScoreBadgeHtml' in home and 'function candidateReadonlyFlowScoreBadgeHtml' in home,
+            "클릭 없는 점수 표시 코드가 없어요.")
+    _assert('function getBudgetProgress' in home and 'page:"condition-results", budgetState:null' in home,
+            "점수 계산 복구 코드가 없어요.")
+    flow = _retry("온기지도 연결", lambda: _open("/api/market-flow"))
+    _assert(flow.get("pending") or isinstance(flow.get("routes"), list), "온기지도 응답 형식이 달라요.")
 
     status = _retry("상태", lambda: _open("/api/status"))
     _assert(status.get("ready") is True, "/api/status ready 값이 false예요.")
@@ -67,6 +88,7 @@ def verify():
     _assert(len(leader_regions.get("areaBuckets") or []) > 0, "면적 목록이 비어 있어요.")
 
     common_profile = {
+        "purchase_region": "seoul",
         "home_ownership": "no_home",
         "first_time": "true",
         "cash_eok": "5",
@@ -82,10 +104,19 @@ def verify():
 
     candidates = _retry(
         "예산 후보",
-        lambda: _open(_query("/api/budget-candidates", {**common_profile, "limit": "3"})),
+        lambda: _open(_query("/api/budget-candidates", {
+            **common_profile, "budget": purchase_power["budgetEok"], "limit": "3", "staged": "true",
+        })),
         attempts=2,
     )
+    candidates = _completed_scores(candidates)
     _assert(len(candidates.get("candidates") or []) > 0, "예산 후보가 비어 있어요.")
+
+    development = _retry("최신 단지 분석", lambda: _open("/api/apartments/11350100002611/future-transformation"))
+    _assert(development.get("modelVersion") == "living-area-v2-beta", "생활권 분석 모델이 달라요.")
+    own = development.get("ownDevelopment") or {}
+    _assert(own.get("status") == "confirmed" and own.get("apartmentId") == "11350100002611",
+            "단지 고유번호에 맞는 최신 정비사업 분석이 연결되지 않았어요.")
 
     apartment_suggest = _retry(
         "단지 추천",
