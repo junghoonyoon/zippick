@@ -12,6 +12,13 @@ REDEVELOPMENT_ZONES = ROOT / "data" / "redevelopment_zones.geojson"
 
 
 class FrontendApartmentSearchTest(unittest.TestCase):
+    def test_incheon_flow_scope_and_nearby_school_basis_are_visible(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        self.assertIn('aria-label="서울·경기·인천의 주택 가격 흐름 지도"', html)
+        self.assertNotIn('서울·경기 지도를 불러오고 있어요.', html)
+        self.assertIn('배정 학교가 아니라 주변 학교 접근성 기준이에요.', html)
+        self.assertIn('edu.basis === "nearby_school_access"', html)
+
 
     def run_ui_functions(self, names, script):
         html = APP_HTML.read_text(encoding="utf-8")

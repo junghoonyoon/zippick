@@ -5801,8 +5801,8 @@
         <div class="flow-live-grid">
           <div class="flow-map-column">
             <div class="flow-map-shell">
-              <div class="flow-map-canvas" id="flowMapCanvas" role="img" aria-label="서울과 경기의 주택 가격 흐름 지도"></div>
-              <div class="flow-map-state" id="flowMapState" role="status">서울·경기 지도를 불러오고 있어요.</div>
+              <div class="flow-map-canvas" id="flowMapCanvas" role="img" aria-label="서울·경기·인천의 주택 가격 흐름 지도"></div>
+              <div class="flow-map-state" id="flowMapState" role="status">서울·경기·인천 지도를 불러오고 있어요.</div>
             </div>
           </div>
           <aside class="flow-route-panel" aria-label="온기 확산 지역">
@@ -8339,7 +8339,7 @@
       }
       if (flowMapLoadingPromise) return flowMapLoadingPromise;
       flowMapState.hidden = false;
-      flowMapState.textContent = "서울·경기 지도를 불러오고 있어요.";
+      flowMapState.textContent = "서울·경기·인천 지도를 불러오고 있어요.";
       flowMapLoadingPromise = (async () => {
         try {
           // Kakao is preferred; an unregistered local origin can reject its SDK.
@@ -8522,7 +8522,7 @@
       const historyYears = historyMonths >= 12 ? Math.round(historyMonths / 12) : 0;
       const historyWindowText = historyYears ? `최근 ${historyYears}년` : "과거 실거래";
       const watchTargets = allTargets.filter(region => region.status === "watch");
-      flowExploreCaption.textContent = `서울·경기 ${Number(flowSnapshot?.regionCount || 0)}곳 분석 · 지금 볼 곳 ${watchTargets.length}곳`;
+      flowExploreCaption.textContent = `서울·경기·인천 ${Number(flowSnapshot?.regionCount || 0)}곳 분석 · 지금 볼 곳 ${watchTargets.length}곳`;
       flowExploreChoices.innerHTML = watchTargets.map(region => `
         <button class="flow-explore-choice" type="button" data-flow-explore="${esc(region.representativeRouteId)}" aria-pressed="${region.name === activeTargetRegion?.name}">${esc(region.name)}</button>
       `).join("");
@@ -8692,7 +8692,7 @@
           ${relatedRouteHtml}
         </details>`;
       flowDataBadge.textContent = flowDataCutoffText(flowSnapshot?.baseMonth);
-      flowNote.textContent = `국토부 실거래 기준 · 선정한 서울·경기 ${Number(flowSnapshot?.regionCount || 0)}곳 분석 · 미래 가격을 보장하지 않아요.`;
+      flowNote.textContent = `국토부 실거래 기준 · 선정한 서울·경기·인천 ${Number(flowSnapshot?.regionCount || 0)}곳 분석 · 미래 가격을 보장하지 않아요.`;
       void ensureFlowMap();
     }
 
@@ -21326,7 +21326,7 @@
         const academyText = Number.isFinite(academy) && academy > 0
           ? ` 반경 1km 안에 학원이 <b>${Math.round(academy)}곳</b> 있습니다.` : "";
         if (!bits.length) return `역·학교의 정확한 거리는 확인이 필요해요.${academyText}`;
-        return `${bits.join(", ")} 거리입니다.${academyText} 실제 이동 시간과 학교 배정은 따로 확인해 주세요.`;
+        return `${bits.join(", ")} 거리입니다.${academyText}${edu.basis === "nearby_school_access" ? " 배정 학교가 아니라 주변 학교 접근성 기준이에요." : ""} 실제 이동 시간과 학교 배정은 따로 확인해 주세요.`;
       }
       return esc(String(part?.reason || "").trim());
     }

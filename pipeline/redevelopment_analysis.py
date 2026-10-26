@@ -364,7 +364,10 @@ def influence_score(row, entity):
             "reason": status,
         }
     if status == "unsupported_region":
-        return None, "이 지역은 정비사업 공간자료 제공 범위 밖이라 점수에서 뺐어요", {
+        message = ("인천 정비구역 자료는 아직 연결하지 않았어요"
+                   if str((entity or {}).get("province") or "").startswith("인천")
+                   else "이 지역은 정비사업 공간자료 제공 범위 밖이라 점수에서 뺐어요")
+        return None, message, {
             "status": "missing",
             "projects": [],
             "reason": status,
