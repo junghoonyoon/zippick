@@ -73,7 +73,9 @@ def verify():
     _assert(flow.get("pending") or isinstance(flow.get("routes"), list), "온기지도 응답 형식이 달라요.")
 
     status = _retry("상태", lambda: _open("/api/status"))
-    _assert(status.get("ready") is True, "/api/status ready 값이 false예요.")
+    # ready는 유튜브 검색 인덱스 유무다. 아파트 API 준비 상태와 구분한다.
+    _assert(isinstance(status.get("ready"), bool), "/api/status 준비 상태 형식이 달라요.")
+    _assert(isinstance(status.get("videoCount"), int), "유튜브 인덱스 상태가 없어요.")
     _assert(status.get("molitConfigured") is True, "국토부 API 설정이 꺼져 있어요.")
     _assert(status.get("molitAvailable") is True, "국토부 API가 사용 가능 상태가 아니에요.")
 

@@ -3,6 +3,7 @@ set -euo pipefail
 
 readonly EXE_DEV_HOST="${EXE_DEV_HOST:-maesuhalkkayo.exe.xyz}"
 readonly EXE_DEV_DEPLOY_COMMAND="${EXE_DEV_DEPLOY_COMMAND:-/home/exedev/bin/deploy-zippick}"
+readonly EXE_DEV_PREPARE_RUNTIME_COMMAND="${EXE_DEV_PREPARE_RUNTIME_COMMAND:-/home/exedev/apps/zippick/current/deploy/exe-dev/prepare-runtime.sh}"
 readonly REQUIRED_BRANCH="${EXE_DEV_BRANCH:-main}"
 readonly EXE_DEV_PUBLIC_URL="${EXE_DEV_PUBLIC_URL:-https://maesuhalkkayo.exe.xyz}"
 
@@ -24,7 +25,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-echo "[1/3] GitHub origin/${REQUIRED_BRANCH} 확인"
+echo "[1/5] GitHub origin/${REQUIRED_BRANCH} 확인"
 git fetch --quiet origin "$REQUIRED_BRANCH"
 
 local_commit="$(git rev-parse HEAD)"
@@ -37,10 +38,13 @@ if [[ "$local_commit" != "$github_commit" ]]; then
   exit 1
 fi
 
-echo "[2/4] exe.dev에 GitHub 커밋 배포: ${local_commit:0:12}"
+echo "[2/5] exe.dev에 GitHub 커밋 배포: ${local_commit:0:12}"
 ssh -o BatchMode=yes "$EXE_DEV_HOST" "$EXE_DEV_DEPLOY_COMMAND" "$local_commit"
 
-echo "[3/4] 운영 API 확인"
+echo "[3/5] 공간 분석 실행 환경 준비"
+ssh -o BatchMode=yes "$EXE_DEV_HOST" "$EXE_DEV_PREPARE_RUNTIME_COMMAND" "$local_commit"
+
+echo "[4/5] 운영 API 확인"
 python3 scripts/verify-exe-dev-apis.py "$EXE_DEV_PUBLIC_URL"
 
-echo "[4/4] 배포 완료: ${local_commit:0:12}"
+echo "[5/5] 배포 완료: ${local_commit:0:12}"

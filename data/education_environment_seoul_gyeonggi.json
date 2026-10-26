@@ -13733,6 +13733,75 @@
       "dataThrough": "2026-10-26",
       "source": "kakao-local-v2",
       "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "3d20495653b7ee6e": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울행현초등학교",
+        "서울행당초등학교",
+        "서울금북초등학교"
+      ],
+      "elementaryDistanceMeters": 196,
+      "middleSchoolNames": [
+        "무학중학교",
+        "광희중학교",
+        "금호중학교"
+      ],
+      "middleDistanceMeters": 308,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "7affef8151b523fd": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울염리초등학교",
+        "서울신석초등학교",
+        "서울용강초등학교"
+      ],
+      "elementaryDistanceMeters": 384,
+      "middleSchoolNames": [
+        "동도중학교",
+        "서울여자중학교",
+        "광성중학교"
+      ],
+      "middleDistanceMeters": 418,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "5011d438ac80c0be": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울원효초등학교",
+        "서울마포초등학교",
+        "서울금양초등학교"
+      ],
+      "elementaryDistanceMeters": 419,
+      "middleSchoolNames": [
+        "성심여자중학교",
+        "선린중학교",
+        "동도중학교"
+      ],
+      "middleDistanceMeters": 416,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
     }
   },
   "zones": [],
@@ -13742,5 +13811,5 @@
     "records에 단지별 사전 계산값을 넣거나, zones와 schools에 변환된 학구도 도형·학교 위치를 넣으면 점수가 계산됩니다.",
     "초등학교와 중학교는 배정권역 기준입니다. 가까운 학교가 배정학교라는 뜻은 아닙니다."
   ],
-  "updatedAt": "2026-10-26T02:00:23.119258+00:00"
+  "updatedAt": "2026-10-26T03:05:14.210226+00:00"
 }
