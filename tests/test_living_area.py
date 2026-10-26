@@ -782,3 +782,27 @@ def test_briefing_shows_households_already_under_or_near_construction():
     report['planRating']['components']['housing']['firmHouseholdsTotal'] = 0
     strength = context.conclude(report, {**IDENTITY, 'name':'가상단지'})['briefing']['strengths'][0]
     assert '**공사 중이거나 착공 바로 전인 사업은 아직 없어요**' in strength
+
+
+def test_key_projects_explain_impact_and_timing_and_summarize_the_rest():
+    import living_area_context as context
+
+    inputs = [
+        {'projectId':'big', 'name':'큰구역', 'stage':'association', 'distanceMeters':1500, 'plannedHouseholds':9000, 'contributionScore':2.0},
+        {'projectId':'mid', 'name':'중간구역', 'stage':'construction', 'distanceMeters':1800, 'plannedHouseholds':3000, 'contributionScore':1.0},
+        {'projectId':'far', 'name':'먼구역', 'stage':'disposal', 'distanceMeters':1900, 'plannedHouseholds':2000, 'contributionScore':.8},
+        {'projectId':'near', 'name':'가까운구역', 'stage':'disposal', 'distanceMeters':300, 'plannedHouseholds':500, 'contributionScore':.3},
+        {'projectId':'tiny', 'name':'계획구역', 'stage':'planning', 'distanceMeters':900, 'contributionScore':.1},
+        {'projectId':'done', 'name':'완공구역', 'stage':'completed', 'distanceMeters':100, 'contributionScore':.0},
+    ]
+    projects = [{'id':'mid', 'plannedMoveInMonth':'2028-03'}]
+    cards, summary = context.key_projects({'inputs':inputs}, projects)
+
+    # Score drivers first; a project within 1km always makes the list.
+    assert [card['projectId'] for card in cards] == ['big', 'mid', 'near']
+    assert cards[0]['timingBasis'] == 'typical' and '공식 일정이 아니에요' in cards[0]['timing']
+    assert cards[1]['timingBasis'] == 'official' and cards[1]['timing'].startswith('입주 예정 2028년 3월')
+    assert '9,000세대 규모의 큰 사업이에요.' in cards[0]['impact']
+    assert '바로 옆 동네' in cards[2]['impact']
+    assert all(card['check'] for card in cards)
+    assert summary == '그 밖의 2곳: 관리처분 1곳(2,000세대) · 계획 1곳'

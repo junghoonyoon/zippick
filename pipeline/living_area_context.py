@@ -328,7 +328,7 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v19'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v20'
 VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
                   'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
 STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
@@ -336,6 +336,77 @@ STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구�
                  'disposal':'관리처분 인가를 받은 착공 바로 전 단계', 'construction':'공사 중인 단계',
                  'completed':'공사가 끝난 단계'}
 EARLY_STAGES = {'planning', 'designated'}
+
+
+# Typical durations are general practice for Korean redevelopment, not a schedule.
+TYPICAL_TIMING = {
+    'planning':'조합 설립·인가·관리처분을 모두 거쳐야 해서 입주까지 보통 10년 이상 걸려요.',
+    'designated':'조합 설립·인가·관리처분을 모두 거쳐야 해서 입주까지 보통 10년 이상 걸려요.',
+    'association':'사업 인가와 관리처분이 남아 있어 입주까지 보통 7~10년 걸려요.',
+    'approved':'관리처분과 이주를 거쳐 입주까지 보통 5~7년 걸려요.',
+    'disposal':'이주·철거 뒤 보통 1~2년 안에 착공하고, 착공 뒤 약 3년이면 입주해요.',
+    'construction':'보통 착공 뒤 약 3년이면 입주해요.',
+}
+PROJECT_CHECK = {
+    'planning':'아직 초기라 무산되거나 크게 늦어질 수 있어요.',
+    'designated':'아직 초기라 무산되거나 크게 늦어질 수 있어요.',
+    'association':'사업 인가가 언제 나는지 확인하세요. 조합 단계에서 오래 멈추는 사업도 있어요.',
+    'approved':'관리처분 인가 시기와 분담금 갈등이 있는지 확인하세요.',
+    'disposal':'이주가 시작되면 주변 전세 수요가 잠시 늘 수 있어요.',
+    'construction':'입주가 몰리는 해에는 주변 전세가가 흔들릴 수 있어요.',
+}
+STAGE_SHORT = {'planning':'계획', 'designated':'구역 지정', 'association':'조합 설립', 'approved':'사업 인가',
+               'disposal':'관리처분', 'construction':'공사 중', 'completed':'완공'}
+
+
+def _project_impact(meters, households):
+    scale = f'{households:,.0f}세대 규모의 큰 사업이에요. ' if households and households >= 3000 else ''
+    if meters <= 500:
+        return scale + '걸어서 오가는 바로 옆 동네가 새 아파트 단지로 바뀌어요.'
+    if meters <= 1000:
+        return scale + '걸어서 갈 수 있는 거리라 상권·학교 같은 생활시설 변화를 함께 누릴 수 있어요.'
+    return scale + '같은 생활권이지만 조금 떨어져 있어, 바로 옆 사업보다 체감은 작아요.'
+
+
+def key_projects(housing_component, projects, limit=3):
+    """The projects that drive the housing score, each explained by impact and timing."""
+    rows = [row for row in housing_component.get('inputs') or []
+            if row.get('stage') != 'completed' and isinstance(row.get('distanceMeters'), (int, float))]
+    rows.sort(key=lambda row:(-(row.get('contributionScore') or 0), row['distanceMeters']))
+    chosen = rows[:limit]
+    near = next((row for row in rows if row['distanceMeters'] <= 1000), None)
+    if near and near not in chosen and chosen:
+        chosen[-1] = near
+    by_id = {p.get('id'):p for p in projects}
+    cards = []
+    for row in chosen:
+        project = by_id.get(row.get('projectId'), {})
+        stage = row.get('stage')
+        households = row.get('plannedHouseholds')
+        move_in = project.get('plannedMoveInMonth')
+        if move_in:
+            year, _, month = str(move_in).partition('-')
+            timing = f'입주 예정 {year}년' + (f' {int(month[:2])}월' if month[:2].isdigit() else '') + '이에요. 공식 자료 기준이에요.'
+            basis = 'official'
+        else:
+            timing = (TYPICAL_TIMING.get(stage) or '진행 단계를 더 확인해야 해요.') + ' 일반적인 기간이며 공식 일정이 아니에요.'
+            basis = 'typical'
+        cards.append({'projectId':row.get('projectId'),
+                      'name':_project_label(row.get('name') or project.get('name') or '주변 사업'),
+                      'distanceMeters':round(row['distanceMeters']), 'stage':stage,
+                      'stageText':STAGE_MEANING.get(stage) or (row.get('stageLabel') or '진행 단계 확인 중'),
+                      'households':households, 'impact':_project_impact(row['distanceMeters'], households),
+                      'timing':timing, 'timingBasis':basis,
+                      'check':PROJECT_CHECK.get(stage) or '사업 진행 상황을 확인하세요.'})
+    others = [row for row in rows if row not in chosen]
+    groups = {}
+    for row in others:
+        count, homes = groups.get(row.get('stage'), (0, 0))
+        groups[row.get('stage')] = (count + 1, homes + (row.get('plannedHouseholds') or 0))
+    order = ['construction', 'disposal', 'approved', 'association', 'designated', 'planning']
+    parts = [f'{STAGE_SHORT[key]} {groups[key][0]}곳' + (f'({groups[key][1]:,.0f}세대)' if groups[key][1] else '')
+             for key in order if key in groups]
+    return cards, (f'그 밖의 {len(others)}곳: ' + ' · '.join(parts) if others else '')
 
 
 def _station_distance_meaning(meters):
@@ -621,7 +692,9 @@ def conclude(result, identity):
     label, sentence = VERDICT_LABELS[verdict]
     headline = f'생활권 변화는 {sentence} {reason}.'
     intro = ' '.join(advice)
+    cards, others_summary = key_projects(housing_component, projects)
     result['briefing'] = {'verdict':verdict, 'label':label, 'reason':reason + '.',
+                          'keyProjects':cards, 'otherProjectsSummary':others_summary,
                           'strengths':strengths, 'weaknesses':weaknesses, 'unknowns':unknowns, 'news':news,
                           'advice':advice, 'caveats':caveats}
     result['headline'] = headline

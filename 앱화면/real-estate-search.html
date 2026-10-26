@@ -5050,6 +5050,20 @@
     .zpr-living-compact .zpr-living-map-legend { font-size:12px; line-height:1.6; color:#6b7684; }
     .zpr-living-news { margin:10px 0 0; font-size:14px; line-height:1.6; color:#4e5968; }
     .zpr-living-news span { margin-right:4px; font-weight:800; color:#2469d2; }
+    .zpr-living-keys { margin:0 0 14px; }
+    .zpr-future-section .zpr-living-keys-title { margin:0 0 8px; font-size:15px; font-weight:800; color:#191f28; }
+    .zpr-living-key { padding:12px 14px; border:1px solid #eef0f3; border-radius:12px; break-inside:avoid; }
+    .zpr-living-key + .zpr-living-key { margin-top:8px; }
+    .zpr-future-section .zpr-living-key h6 { margin:0; font-size:15px; font-weight:800; line-height:1.4; color:#191f28; }
+    .zpr-living-key-meta { margin:2px 0 8px; font-size:13px; color:#6b7684; }
+    .zpr-living-key dl { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 10px; margin:0; font-size:14px; line-height:1.6; }
+    .zpr-living-key dt { font-weight:800; color:#4e5968; white-space:nowrap; }
+    .zpr-living-key dd { margin:0; color:#333d4b; overflow-wrap:anywhere; }
+    .zpr-living-key dd.is-typical { color:#4e5968; }
+    .zpr-living-others { margin:8px 0 0; font-size:13px; line-height:1.6; color:#6b7684; }
+    .pdf-export-root .zpr-living-all-projects { display:none !important; }
+    .pdf-export-root .zpr-living-compact .zpr-living-methods .zpr-living-score-inputs,
+    .pdf-export-root .zpr-living-compact .zpr-living-methods .zpr-living-brief-group { display:none !important; }
     .zpr-living-folds { margin-top:12px; border-top:1px solid #eef0f3; }
     .zpr-living-folds > details { border-bottom:1px solid #eef0f3; }
     .zpr-living-fold-note { font-size:13px; color:#6b7684; }
@@ -19767,6 +19781,17 @@
           ? `+${(railValue * plan.weights.transport).toFixed(1)}` : Number.isFinite(railValue) ? scoreText(railValue) : "보류";
         const [firstAdvice, ...restAdvice] = briefing.advice || [];
         const newsLine = text => briefText(String(text).split(". ")[0]);
+        const keyProjects = Array.isArray(briefing.keyProjects) ? briefing.keyProjects : [];
+        const keyProjectHtml = card => `<article class="zpr-living-key" data-living-key-project="${esc(card.projectId)}">
+          <h6>${esc(card.name)}</h6>
+          <p class="zpr-living-key-meta">${number(card.distanceMeters)}m · ${esc(card.stageText)}${Number.isFinite(card.households) ? ` · ${number(card.households)}세대` : ""}</p>
+          <dl><dt>영향</dt><dd>${esc(card.impact)}</dd><dt>시점</dt><dd${card.timingBasis === "typical" ? ' class="is-typical"' : ""}>${esc(card.timing)}</dd><dt>확인할 점</dt><dd>${esc(card.check)}</dd></dl>
+        </article>`;
+        const keyProjectsHtml = keyProjects.length ? `<div class="zpr-living-keys" aria-label="핵심 사업">
+          <h6 class="zpr-living-keys-title">핵심 사업 ${keyProjects.length}곳</h6>
+          ${keyProjects.map(keyProjectHtml).join("")}
+          ${briefing.otherProjectsSummary ? `<p class="zpr-living-others">${esc(briefing.otherProjectsSummary)}</p>` : ""}
+        </div>` : "";
         const railLists = [
           plan?.transportCoverage?.nearbyOperatingStations?.length ? `<p><strong>지금 이용하는 철도</strong> ${plan.transportCoverage.nearbyOperatingStations.map(station => `${esc(station.name)} · 직선 ${number(station.distanceMeters)}m`).join(" / ")} · 이미 있는 역이라 변화 점수에 넣지 않아요.</p>` : "",
           regionalRail.length ? zippickLivingTransportHtml({displayProjects:regionalRail}, "같은 지역의 광역철도 계획") : "",
@@ -19790,11 +19815,11 @@
           ${factCard("새 철도 가점", railBonus, railFacts)}
         </div>
         ${firstAdvice ? `<p class="zpr-living-advice"><strong>집픽 브리핑</strong><mark>${esc(firstAdvice)}</mark>${restAdvice.length ? ` ${esc(restAdvice.join(" "))}` : ""}</p>` : ""}
+        ${keyProjectsHtml}
         <div class="zpr-living-map-column">${zippickReportMapHtml(mapItem, { redevelopment:true })}</div>
-        <p class="zpr-living-print-note">사업 위치·거리와 공식 근거는 아래 자세히 보기에 있어요. 직선거리는 도보거리와 달라요.</p>
         ${Array.isArray(briefing.news) && briefing.news.length ? `<p class="zpr-living-news"><span>지역 교통 소식</span> ${briefing.news.map(newsLine).join(" / ")}</p>` : ""}
         <div class="zpr-living-folds">
-          <details class="zpr-future-details"><summary>주변 사업 자료 보기</summary>
+          <details class="zpr-future-details zpr-living-all-projects"><summary>주변 사업 자료 보기</summary>
             <p class="zpr-living-fold-note">점수에는 직선 2km 안 정비사업 ${number(housingComponent.projectCount || 0)}곳을 넣었어요. 아래는 공식 자료로 확인한 주변 사업이에요.</p>
             <div class="zpr-living-projects">${visibleProjects.map(projectHtml).join("") || '<p class="zpr-lead">위치와 규모가 확인된 주변 사업 자료가 아직 없어요.</p>'}</div>
             ${railLists}
@@ -19809,6 +19834,7 @@
             <p>${esc(plan?.version || "")} · 기준일 ${esc(plan?.asOfDate || "")}${analysis.metroCoverage ? ` · 정비사업 확인 ${esc(analysis.metroCoverage.checkedAt || "미확인")}` : ""}</p>
           </details>
         </div>
+        <p class="zpr-living-print-note">주변 사업 전체 목록은 웹 리포트의 '주변 사업 자료 보기'에서 볼 수 있어요.</p>
         <p class="zpr-living-footnote">직선거리 기준 참고 점수예요. 집값 변화를 예측하지 않아요.</p>
       </section>`;
       }
