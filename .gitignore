@@ -21,3 +21,6 @@ tsconfig.tsbuildinfo
 .write_test
 outputs/
 tmp/
+
+# Local editor settings and managed worktrees
+.claude/

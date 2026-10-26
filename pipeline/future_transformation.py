@@ -490,7 +490,8 @@ def analyze(row, entity=None, *, as_of=None, path=None, scores_enabled=None):
         if not ready_result(result) and any(p['stale'] for p in result['projects'] + result['referenceProjects']):
             result['status'] = 'stale'
         result['projects'].sort(key=lambda p: (p['phase'] != 'within_horizon', p['distanceMeters']))
-        result['livingArea'] = living_area.analyze({**(entity or row), 'apartmentId': apartment_id}, day=day)
+        result['livingArea'] = living_area.analyze({**(entity or row), 'apartmentId': apartment_id,
+            **{key: row[key] for key in ('buildingAge','buildYear','approvedAt') if row.get(key) not in (None, '')}}, day=day)
         # All versioned inputs, scope, date, configuration and coordinates affect snapshots.
         snapshot_id = _hash({'result': result, 'config': CONFIG, 'coordinates': {k: coordinates.get(k) for k in ('latitude', 'longitude')}})
         result['snapshotId'] = snapshot_id

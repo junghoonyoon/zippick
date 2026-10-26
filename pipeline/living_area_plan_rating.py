@@ -9,7 +9,7 @@ from living_area_scoring_policy import STAGES, distance_decay, rounded
 from living_area_rail_policy import line_policy, under_review
 import living_area_sources as sources
 
-VERSION = 'living-area-plan-v8-beta'
+VERSION = 'living-area-plan-v9-beta'
 # Housing change is the base score. New rail adds at most one point on top
 # (5 rail points x .2), so a complex without new rail is not pulled down.
 WEIGHTS = {'housing': 1.0, 'transport': .2}
@@ -38,6 +38,16 @@ def expected_households_score(expected):
         return 0
     points = 2 + 3*math.log10(expected/HOUSING_SCORE_LOW)/math.log10(HOUSING_SCORE_HIGH/HOUSING_SCORE_LOW)
     return rounded(max(0, min(5, points)))
+
+
+def reconsidered_zero(rating):
+    """An unscheduled reconsidered line earns zero, rather than missing data."""
+    rating['subScores']['transport'] = 0
+    rating['components']['transport'] = {
+        'summary':'재추진 중인 노선은 일정이 정해지지 않아 새 철도 가점은 0점이에요.',
+        'formula':'일정이 정해지지 않은 재추진 노선은 0점으로 계산해요.',
+        'policy':'재추진 노선은 참고 정보로 남기고, 매수 이유와 추가 노선 가점에서 제외해요.',
+        'inputs':[], 'reconsideredWithoutSchedule':True}
 
 
 def calculate(projects, spatial, day, extra_rail=()):
@@ -190,6 +200,12 @@ def calculate(projects, spatial, day, extra_rail=()):
             'inputs':rail, 'selectedProjectId':best['projectId'], 'selectedLineId':best['lineId'],
             'secondLineId':second['lineId'] if second else None,
             'secondLineBonus':rounded(bonus, 2), 'unscoredLineCount':len(unscored_rail_lines)}
+    nearby = [station for station in spatial.get('stations', [])
+              if station.get('serviceStatus') != 'operating'
+              and valid(station.get('distanceMeters')) and 0 <= station['distanceMeters'] <= 2000]
+    if (output['subScores']['transport'] is None and nearby
+            and all(under_review(station) for station in nearby)):
+        reconsidered_zero(output)
     output['score'] = aggregate(output['subScores'])
     output['status'] = 'ready' if output['score'] is not None else 'insufficient_data'
     reasons = {'housing':'사업 위치·계획 세대수 또는 공식 구역면적·진행 단계를 함께 확인해야 해요.',
@@ -319,7 +335,9 @@ def attach(result, identity, day):
     coverage = rail_station_mapping.complex_coverage(center, day)
     extensions = line_extension_inputs(coverage.get('nearbyOperatingStations', []), center) if center else []
     rating = calculate(result.get('displayProjects',[]),spatial,day,extensions)
-    if rating['subScores']['transport'] is not None:
+    if rating['components'].get('transport', {}).get('reconsideredWithoutSchedule'):
+        transport_status='rail_under_review'
+    elif rating['subScores']['transport'] is not None:
         transport_status='scored'
     elif not result.get('metroCoverage'):
         transport_status='catalogue_unavailable'
@@ -383,7 +401,10 @@ def attach(result, identity, day):
     if (rating['subScores']['transport'] is None and coverage.get('nearbyReviewStations')
             and not coverage.get('nearbyPlannedStations') and not map_references and not visible_routes):
         transport_status = 'rail_under_review'
-        rating['missingReasons']['transport'] = '재추진 중인 노선은 일정이 정해지지 않아 교통 가점에서 제외했어요.'
+        reconsidered_zero(rating)
+        rating['missingReasons'].pop('transport', None)
+        rating['score'] = aggregate(rating['subScores'])
+        rating['status'] = 'ready' if rating['score'] is not None else 'insufficient_data'
     # Only a route within 2km whose stops are not all located can still hide a
     # new station here. A stop lies on its route, so a route farther than 2km
     # cannot, and unlocated stops elsewhere in the region do not withhold the score.

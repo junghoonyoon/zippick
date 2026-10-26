@@ -402,7 +402,14 @@
       "maturity": "concept",
       "stageCode": "planning",
       "stageLabel": "계획 단계",
-      "sourceUrl": "https://news.seoul.go.kr/traffic/archives/519066"
+      "sourceUrl": "https://news.seoul.go.kr/traffic/archives/519066",
+      "reviewStatus": "reconsidering",
+      "feasibilityStatus": "failed",
+      "reviewLabel": "예타 미통과 · 재검토 중",
+      "reviewReason": "사업이 가능한지 따지는 예비타당성조사를 통과하지 못했어요. 노선과 일정이 바뀔 수 있어 교통 가점과 매수 이유에서 제외해요.",
+      "reviewSourceUrl": "https://www.seoul.go.kr/news/news_report.do?nttNo=415662",
+      "reviewSourceDate": "2024-07-11",
+      "reviewedAt": "2026-10-21"
     }
   }
 }

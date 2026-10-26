@@ -1,0 +1,73 @@
+{
+  "checkedAt": "2026-10-20",
+  "endpoint": "/api/apartments/{apartmentId}/future-transformation",
+  "passed": 6,
+  "results": [
+    {
+      "apartmentId": "11350100002611",
+      "name": "미륭",
+      "district": "노원구",
+      "status": "confirmed",
+      "points": 2.5,
+      "stage": "추진위원회승인",
+      "sources": [
+        "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeUrl=mms0612"
+      ]
+    },
+    {
+      "apartmentId": "11350100050244",
+      "name": "삼호3",
+      "district": "노원구",
+      "status": "confirmed",
+      "points": 2.5,
+      "stage": "추진위원회승인",
+      "sources": [
+        "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeUrl=mms0612"
+      ]
+    },
+    {
+      "apartmentId": "11350100002615",
+      "name": "삼호4",
+      "district": "노원구",
+      "status": "confirmed",
+      "points": 2.5,
+      "stage": "추진위원회승인",
+      "sources": [
+        "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeUrl=samho4apt"
+      ]
+    },
+    {
+      "apartmentId": "11380100000585",
+      "name": "미성아파트",
+      "district": "은평구",
+      "status": "confirmed",
+      "points": 2.5,
+      "stage": "추진위원회승인",
+      "sources": [
+        "https://cleanup.seoul.go.kr/cafe/mainIndx.do?cafeUrl=BulgwangMiseong"
+      ]
+    },
+    {
+      "apartmentId": "41290100007441",
+      "name": "주공5",
+      "district": "과천시",
+      "status": "confirmed",
+      "points": 4,
+      "stage": "관리처분",
+      "sources": [
+        "https://www.gg.go.kr/opendata/openDataContent.do?gg_content_idx=11673&decodeIdx=5318"
+      ]
+    },
+    {
+      "apartmentId": "28110100005446",
+      "name": "송월",
+      "district": "중구",
+      "status": "confirmed",
+      "points": 3.5,
+      "stage": "사업시행계획인가",
+      "sources": [
+        "https://renewal.incheon.go.kr/ires/program/0000-0020-0037/program/board/board_inscr.do?bbs_id=BBSMSTR_000000000001&ntt_id=1317"
+      ]
+    }
+  ]
+}

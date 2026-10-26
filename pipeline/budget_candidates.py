@@ -32,10 +32,13 @@ VERIFIED_PRICE_SOURCES = {"molit", "molit_csv", "molit_reference"}
 MAX_PURCHASE_POWER_RATIO = 1.05
 SHORTLIST_EXTENSION_MAX_RATIO = 1.10
 SHORTLIST_EXTENSION_LIMIT = 3
+# 앱의 후보 한 페이지 크기(CANDIDATE_PAGE_SIZE)와 같다.
+FIRST_LOOK_FUTURE_ROW_LIMIT = 10
 # v11: 최근 거래를 제외한 매수 판단 밴드 가격대가 모든 후보 응답에 포함된다.
 # v12: 주간 가격지수 보정에 쓰는 거래 목록(valuationTrades)이 후보 응답에 포함된다.
 CANDIDATE_RESULT_SCHEMA_VERSION = 14
 _ENTITY_LOOKUP = None
+_PARCEL_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
     "현대", "삼성", "한신", "우성", "대우", "대림", "동아", "한양", "극동",
     "한마을", "주공", "신동아", "두산", "벽산", "쌍용", "롯데",
@@ -1472,11 +1475,27 @@ def _soft_region_key(value):
     return real_estate_search.compact(value).replace("시", "")
 
 
+def _parcel_matches(dong_key, jibun_key, rebuild=False):
+    """Non-aggregate master entities on one legal-dong parcel, in master order."""
+    global _PARCEL_LOOKUP
+    master = real_estate_search.APARTMENT_MASTER
+    if rebuild or _PARCEL_LOOKUP is None or _PARCEL_LOOKUP[0] is not master or _PARCEL_LOOKUP[1] != len(master):
+        index = {}
+        for entity in master:
+            if entity.get("aggregate"):
+                continue
+            parcel = (real_estate_search.compact(entity.get("legalDong")), _entity_jibun(entity))
+            index.setdefault(parcel, []).append(entity)
+        _PARCEL_LOOKUP = (master, len(master), index)
+    return list(_PARCEL_LOOKUP[2].get((dong_key, jibun_key), ()))
+
+
 def _find_entities(name, region="", legal_dong="", jibun=""):
     global _ENTITY_LOOKUP
     key = real_estate_search.compact(name)
     if not key:
         return []
+    rebuild_parcels = _ENTITY_LOOKUP is None
     if _ENTITY_LOOKUP is None:
         lookup = {}
         for entity in real_estate_search.APARTMENT_MASTER:
@@ -1499,12 +1518,7 @@ def _find_entities(name, region="", legal_dong="", jibun=""):
         # 정확한 지번이 있는데도 지도·역 정보를 누락시켰다.
         dong_key = real_estate_search.compact(legal_dong)
         jibun_key = apartment_identity.parcel_key(jibun, legal_dong)
-        matches = [
-            entity for entity in real_estate_search.APARTMENT_MASTER
-            if not entity.get("aggregate")
-            and real_estate_search.compact(entity.get("legalDong")) == dong_key
-            and _entity_jibun(entity) == jibun_key
-        ]
+        matches = _parcel_matches(dong_key, jibun_key, rebuild=rebuild_parcels)
     if region:
         region_key = real_estate_search.compact(region)
         regional_matches = []
@@ -2483,10 +2497,18 @@ def _finalize_candidate_rows(
     include_naver_links=True,
     progress_callback=None,
     verified_rows_callback=None,
+    first_look_rows=None,
 ):
     """Attach the common display, signal, link and verdict result model."""
     if progress_callback:
         progress_callback("card_prepare", processed=0, total=len(rows))
+    # The verified (middle) result only needs living-area reports for the cards
+    # on the first screen. No rank, filter or score reads them, so the rest are
+    # filled after that result is sent and the final result stays the same.
+    first_look_ids = {id(row) for row in first_look_rows} if (
+        first_look_rows is not None and verified_rows_callback and not fast_mode
+    ) else None
+    deferred_future = []
     for row in rows:
         if not _has_verified_price(row):
             _invalidate_unverified_price(row)
@@ -2525,7 +2547,11 @@ def _finalize_candidate_rows(
         except Exception:
             row["lifestyleChange"] = {"status": "error"}
         row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
-        row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
+        if first_look_ids is not None and id(row) not in first_look_ids:
+            row["futureTransformation"] = {"status": "pending"}
+            deferred_future.append((row, entity))
+        else:
+            row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
         row.update(_decision_support(
             row,
             entity,
@@ -2542,6 +2568,9 @@ def _finalize_candidate_rows(
             verified_rows_callback()
         except Exception:
             pass
+
+    for row, entity in deferred_future:
+        row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
 
     if not fast_mode and rows:
         if progress_callback:
@@ -3462,5 +3491,12 @@ def budget_candidates(
         include_naver_links=False,
         progress_callback=progress,
         verified_rows_callback=emit_verified_result,
+        # `전체` 목록(서버 순서)과 지금 자금으로 검토 가능한 목록의 첫 페이지.
+        first_look_rows=[
+            *candidates[:FIRST_LOOK_FUTURE_ROW_LIMIT],
+            *visible_candidates[:FIRST_LOOK_FUTURE_ROW_LIMIT],
+            *policy_excluded_candidates,
+            *extension_candidates,
+        ] if verified_result_callback else None,
     )
     return result_payload(True)

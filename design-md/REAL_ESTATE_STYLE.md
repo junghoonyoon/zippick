@@ -69,6 +69,12 @@ Use a Korean financial-service visual language inspired by the clarity and comfo
 가격과 거래가 함께 늘었어요`처럼 쓴다. `전세가율이 낮습니다`, `출퇴근 시간이
 보통입니다`, `가격이 올랐습니다`처럼 상태만 말하고 결론을 생략하지 않는다.
 
+- 제목을 `단지 조건은 좋아요`처럼 판단만으로 끝내지 않는다. 역·학교 거리,
+  거래 변화, 건물 연식, 전세금 비중처럼 확인된 이유를 바로 붙인다.
+- 강점과 약점이 함께 있으면 중요한 주의점도 짧게 보여준다. 점수가 같더라도
+  단지별 근거에 따라 제목이 달라져야 한다.
+- 근거가 없는 항목은 추측하지 않는다. 무엇을 확인하지 못했는지 제목에 쓴다.
+
 ## Loading Spinner Convention
 
 Use a spinner for every state where the user is waiting for data, calculation, or map/chart rendering.

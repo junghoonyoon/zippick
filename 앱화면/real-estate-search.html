@@ -1359,6 +1359,7 @@
     .zpr-overall-verdict { display:flex; flex-wrap:wrap; align-items:center; gap:9px; color:#191f28; line-height:1.35 }
     .zpr-overall-verdict .zpr-section-stars { font-size:19px; letter-spacing:1.4px }
     .zpr-overall-verdict strong { font-size:15px; font-weight:900 }
+    .zpr-overall-caution { display:inline-block; padding:4px 8px; border-radius:6px; background:#fff4db; color:#8a5700; font-size:13px; font-weight:750; white-space:nowrap }
     .zpr-title { margin:0; font-size:21px; font-weight:900; letter-spacing:-.5px; line-height:1.5 }
     .zpr-sub { margin:0; font-size:14px; font-weight:700; color:#4e5968; line-height:1.68 }
     .zpr-sub-src { display:block; margin-top:4px; color:#4e5968; font-size:13px; font-weight:750; line-height:1.55; text-decoration:none }
@@ -2940,6 +2941,135 @@
     }
     .subdistrict-tab:hover { border-color:#cfd8e6; background:#f8fafc; color:var(--ink) }
     .subdistrict-tab.primary { border-color:#cfe1fb; background:var(--blue-wash); color:#1267d8 }
+    .flow-view { max-width:900px; margin:0 auto; padding-top:24px }
+    .flow-main-section { margin-top:56px; border-top:1px solid #e7ebf0; padding-top:32px }
+    .flow-intro { display:flex; align-items:center; justify-content:space-between; gap:16px }
+    .flow-intro h1 { margin:0; color:var(--ink); font-size:28px; line-height:1.3; letter-spacing:-.025em }
+    .flow-panel { margin-top:16px }
+    .flow-explore { margin:0 0 18px; border-bottom:1px solid #e9edf2; padding:0 0 18px }
+    .flow-explore h2 { margin:0; color:#191f28; font-size:21px; font-weight:900; line-height:1.35; word-break:keep-all }
+    .flow-explore p { margin:5px 0 0; color:#667085; font-size:14px; font-weight:650; line-height:1.5; word-break:keep-all }
+    .flow-explore-choices { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px }
+    .flow-explore-choice { appearance:none; min-height:41px; border:1px solid #dce3ec; border-radius:999px; padding:0 15px; background:#fff; color:#344054; font:inherit; font-size:15px; font-weight:800; cursor:pointer }
+    .flow-explore-choice:hover { border-color:#aab7ca; background:#f8fafc }
+    .flow-explore-choice[aria-pressed="true"] { border-color:#191f28; background:#191f28; color:#fff }
+    .flow-explore-choice:focus-visible { outline:3px solid rgba(49,130,246,.25); outline-offset:2px }
+    .flow-demo-badge { display:inline-flex; align-items:center; min-height:32px; border:1px solid #e3e8ef; border-radius:999px; padding:0 11px; background:#f7f9fb; color:#667085; font-size:13px; font-weight:850; white-space:nowrap }
+    .flow-live-grid { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(304px,.9fr); gap:14px; align-items:start }
+    .flow-map-column { min-width:0 }
+    .flow-route-panel { position:relative; max-height:420px; overflow:hidden; border:1px solid #e2e7ee; border-radius:18px; background:#fff }
+    .flow-route-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:15px 15px 10px }
+    .flow-section-label { flex:0 0 auto; margin:0; color:#344054; font-size:15px; font-weight:900; line-height:1.4; white-space:nowrap }
+    .flow-route-unit { color:#8b95a1; font-size:13px; font-weight:700; white-space:nowrap }
+    .flow-route-filters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin:0 9px; border-bottom:1px solid #e5e8eb }
+    .flow-route-filter-item { position:relative; display:flex; min-width:0; align-items:stretch }
+    .flow-route-filter-item:has(.flow-route-filter[aria-selected="true"])::after { content:""; position:absolute; right:0; bottom:-1px; left:0; height:3px; background:#191f28; pointer-events:none }
+    .flow-route-filter { appearance:none; flex:1 1 auto; min-width:0; min-height:48px; border:0; border-radius:0; padding:0 8px; background:transparent; color:#9b9fa6; font-size:15px; font-weight:750; white-space:nowrap; cursor:pointer }
+    .flow-route-filter:hover { color:#4e5968 }
+    .flow-route-filter[aria-selected="true"] { color:#191f28; font-weight:850 }
+    .flow-route-filter-item:has(.flow-route-info) .flow-route-filter { padding-right:28px }
+    .flow-route-filter:focus-visible { outline:3px solid rgba(49,130,246,.18); outline-offset:-3px }
+    .flow-route-info { appearance:none; position:absolute; z-index:1; top:50%; right:6px; display:grid; place-items:center; width:22px; height:22px; border:1px solid #cbd2db; border-radius:50%; padding:0; background:#fff; color:#667085; font-size:12px; font-weight:900; line-height:1; transform:translateY(-50%); cursor:pointer }
+    .flow-route-info:hover { border-color:#8b95a1; color:#344054 }
+    .flow-route-info:focus-visible { outline:3px solid rgba(49,130,246,.18); outline-offset:2px }
+    .flow-status-popover { position:absolute; z-index:8; top:100px; right:9px; left:9px; padding:13px 42px 13px 14px; border:1px solid #d6dce5; border-radius:14px; background:#fff; box-shadow:0 10px 24px rgba(25,31,40,.16); color:#4e5968; font-size:13px; line-height:1.55 }
+    .flow-status-popover::before { content:""; position:absolute; top:-6px; left:42%; width:10px; height:10px; border-top:1px solid #d6dce5; border-left:1px solid #d6dce5; background:#fff; transform:rotate(45deg) }
+    .flow-status-popover strong { display:block; color:#191f28; font-size:14px; font-weight:900 }
+    .flow-status-popover p { margin:5px 0 0; font-weight:700 }
+    .flow-status-popover-close { appearance:none; position:absolute; top:9px; right:9px; display:grid; place-items:center; width:26px; height:26px; border:0; border-radius:8px; padding:0; background:transparent; color:#667085; font-size:22px; font-weight:400; line-height:1; cursor:pointer }
+    .flow-status-popover-close:hover { background:#f2f4f6; color:#191f28 }
+    .flow-status-popover-close:focus-visible { outline:3px solid rgba(49,130,246,.22); outline-offset:1px }
+    .flow-status-popover[hidden] { display:none }
+    .flow-route-list { display:flex; flex-direction:column; gap:6px; max-height:315px; margin:0; overflow-y:auto; padding:0 9px 10px; scrollbar-width:thin }
+    .flow-route-empty { padding:22px 12px; color:#667085; font-size:14px; font-weight:700; line-height:1.55; text-align:center; word-break:keep-all }
+    .flow-route-empty strong { display:block; color:#344054; font-size:15px }
+    .flow-route-empty p { margin:5px 0 10px }
+    .flow-route-empty button { appearance:none; border:0; padding:0; background:none; color:#1767c5; font:inherit; font-weight:800; text-decoration:underline; text-underline-offset:3px; cursor:pointer }
+    .flow-route-group-title { margin:10px 12px 2px; color:#667085; font-size:13px; font-weight:850; line-height:1.4 }
+    .flow-route-choice { display:block; width:100%; min-height:54px; border:1px solid transparent; border-radius:12px; padding:9px 12px; background:#fff; color:#505967; font:inherit; text-align:left; cursor:pointer }
+    .flow-route-choice.is-ranked { display:grid; grid-template-columns:22px minmax(0,1fr); align-items:start; gap:10px }
+    .flow-route-choice:hover { background:#f7f9fc }
+    .flow-route-choice[aria-pressed="true"] { border-color:#d1d5db; background:#f2f4f6; color:#191f28 }
+    .flow-route-rank { align-self:start; padding-top:1px; color:#3182f6; font-size:16px; font-weight:700; line-height:1.4; font-variant-numeric:tabular-nums; text-align:center }
+    .flow-route-name { min-width:0; color:#344054; font-size:15px; font-weight:800; line-height:1.4; word-break:keep-all }
+    .flow-route-name small { display:block; margin-top:2px; color:#667085; font-size:13px; font-weight:650; line-height:1.4 }
+    .flow-related-routes { margin-top:12px; border-top:1px solid #e1e7ef; padding-top:12px }
+    .flow-related-routes > strong { display:block; color:#344054; font-size:14px; font-weight:850 }
+    .flow-related-routes p { margin:5px 0 9px; color:#667085; font-size:13px; line-height:1.5 }
+    .flow-related-route { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:3px 8px; padding:7px 0; border-top:1px solid #f0f2f5; font-size:13px; line-height:1.45 }
+    .flow-related-route span { color:#344054; font-weight:750; word-break:keep-all }
+    .flow-related-route small { color:#667085; font-size:13px; word-break:keep-all }
+    .flow-map-shell { position:relative; overflow:hidden; height:420px; border:1px solid #dfe5ec; border-radius:18px; background:#edf2f6 }
+    .flow-map-canvas { position:absolute; z-index:1; inset:0; width:100%; height:100%; touch-action:auto }
+    .flow-map-state { position:absolute; z-index:4; inset:0; display:grid; place-items:center; padding:24px; background:linear-gradient(145deg,#f3f6f9,#e5ebf1); color:#667085; font-size:14px; font-weight:750; text-align:center }
+    .flow-map-state[hidden] { display:none }
+    .flow-map-node-label { display:block; min-width:max-content; border:2px solid #fff; border-radius:999px; padding:7px 11px; background:#667085; color:#fff; box-shadow:0 3px 10px rgba(18,28,45,.2); font-size:13px; font-weight:900; line-height:1; pointer-events:none }
+    .flow-map-node-label.is-past { background:#191f28; transform:translateY(-15px) }
+    .flow-map-node-label.is-current { background:#667085 }
+    .flow-map-node-label.is-future { border-style:dashed; border-color:#1767c5; background:#fff; color:#1767c5; transform:translateY(22px) }
+    .flow-map-node-label.is-future.is-rising { border-style:solid; border-color:#667085; color:#344054 }
+    .flow-map-node-label.is-future.is-waiting { border-color:#98a2b3; color:#667085 }
+    .flow-map-arrow { display:grid; place-items:center; width:28px; height:28px; border:2px solid #fff; border-radius:50%; background:var(--flow-color,#3182f6); color:#fff; box-shadow:0 3px 10px rgba(18,28,45,.2); font-size:19px; font-weight:900; line-height:1; pointer-events:none }
+    .flow-map-arrow::before { content:"➜"; display:block; transform:rotate(var(--flow-angle,0deg)) }
+    .flow-selection { margin:0 0 18px; padding:22px; border:1px solid #e2e7ee; border-radius:18px; background:#fff }
+    .flow-selection-copy { min-width:0 }
+    .flow-selection-copy strong { display:block; color:#202938; font-size:26px; font-weight:900; line-height:1.35; word-break:keep-all }
+    .flow-selection-copy mark { border-radius:0; padding:0 1px; background:transparent; color:#191f28; box-shadow:inset 0 -5px 0 #dcecff }
+    .flow-decision-reason { margin:6px 0 0; color:#5e6978; font-size:16px; font-weight:650; line-height:1.6; word-break:keep-all }
+    .flow-sequence { margin:13px 0 0; color:#5e6978; font-size:14px; font-weight:700; line-height:1.55 }
+    .flow-title-history-link { appearance:none; border:0; padding:0; background:transparent; color:#667085; font:inherit; font-weight:750; line-height:inherit; text-decoration:underline; text-decoration-color:#cbd2db; text-underline-offset:3px; cursor:pointer }
+    .flow-title-history-link:hover { color:#344054; text-decoration-color:currentColor }
+    .flow-story-wrap { margin-top:16px }
+    .flow-story-rail { display:grid; grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr) 26px minmax(0,1.12fr); align-items:stretch; border-top:1px solid #e9edf2; border-bottom:1px solid #e9edf2 }
+    .flow-stage-card { min-width:0; padding:17px 6px 18px; color:#4b5565 }
+    .flow-stage-card.is-candidate { margin:8px 0; border-left:3px solid #3182f6; border-radius:0 12px 12px 0; padding:10px 12px; background:#f6f8fb }
+    .flow-stage-card.is-candidate.is-rising { border-left-color:#667085 }
+    .flow-stage-card.is-candidate.is-waiting { border-left-color:#b0b7c2; background:#f7f8fa }
+    .flow-stage-kicker { display:block; color:#667085; font-size:13px; font-weight:900; line-height:1.35 }
+    .flow-stage-card.is-current .flow-stage-kicker { color:#4e5968 }
+    .flow-stage-card.is-candidate .flow-stage-kicker { color:#1767c5 }
+    .flow-stage-card.is-candidate.is-rising .flow-stage-kicker,
+    .flow-stage-card.is-candidate.is-waiting .flow-stage-kicker { color:#4e5968 }
+    .flow-stage-region { display:block; margin-top:5px; color:#202938; font-size:18px; font-weight:900; line-height:1.35 }
+    .flow-stage-card.is-candidate .flow-stage-region { color:#191f28 }
+    .flow-stage-period { display:block; margin-top:2px; color:#7a8493; font-size:13px; font-weight:750; line-height:1.4; white-space:nowrap }
+    .flow-stage-metrics { display:flex; flex-wrap:wrap; gap:5px 12px; margin-top:9px; color:#667085; font-size:13px; font-weight:750; line-height:1.4 }
+    .flow-stage-metrics span { white-space:nowrap }
+    .flow-stage-metrics b { margin-left:3px; color:#191f28; font-size:16px; font-weight:900 }
+    .flow-stage-metrics b.is-down { color:#6b7280 }
+    .flow-stage-arrow { display:grid; place-items:center; color:#a5afbd; font-size:24px; font-weight:900 }
+    .flow-stage-arrow.is-next { color:#191f28 }
+    .flow-story-empty { grid-column:1 / -1; margin:0; padding:22px 8px; color:#667085; font-size:14px; font-weight:700; line-height:1.55; text-align:center }
+    .flow-candidate-shortcut { appearance:none; display:inline-flex; align-items:center; min-height:42px; margin:14px 0 0; border:0; border-radius:10px; padding:0 14px; background:#3182f6; color:#fff; font:inherit; font-size:15px; font-weight:850; line-height:1.5; box-shadow:0 3px 8px rgba(49,130,246,.18); cursor:pointer }
+    .flow-candidate-shortcut:hover { background:#1b6fd0 }
+    .flow-candidate-shortcut:focus-visible { outline:3px solid rgba(49,130,246,.26); outline-offset:3px }
+    .flow-candidate-shortcut[hidden] { display:none }
+    .flow-evidence { margin-top:18px; border-top:1px solid #dfe5ec; padding-top:15px }
+    .flow-evidence > details > summary { color:#344054; font-size:15px; font-weight:850; line-height:1.5; cursor:pointer }
+    .flow-evidence p { margin:10px 0 0; color:#5e6978; font-size:14px; font-weight:650; line-height:1.6 }
+    .flow-note { margin:15px 2px 0; color:#7b8491; font-size:13px; font-weight:650; line-height:1.55 }
+    .flow-history-dialog { position:fixed; z-index:250; inset:0; display:none; place-items:center; padding:28px; background:rgba(17,24,39,.46); backdrop-filter:blur(7px) }
+    .flow-history-dialog.show { display:grid }
+    .flow-history-backdrop { position:absolute; inset:0; border:0; background:transparent; cursor:default }
+    .flow-history-panel { position:relative; width:min(720px,100%); max-height:calc(100vh - 56px); overflow:auto; border-radius:22px; padding:24px; background:#fff; box-shadow:0 30px 80px rgba(0,0,0,.24); outline:0 }
+    .flow-history-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px }
+    .flow-history-kicker { margin:0 0 5px; color:#4e5968; font-size:13px; font-weight:850; line-height:1.4 }
+    .flow-history-title { margin:0; color:#202938; font-size:22px; font-weight:900; line-height:1.35; letter-spacing:-.025em }
+    .flow-history-close { position:relative; flex:0 0 auto; width:36px; height:36px; border:1px solid #dfe5ec; border-radius:50%; background:#fff; cursor:pointer }
+    .flow-history-close::before, .flow-history-close::after { content:""; position:absolute; top:16px; left:10px; width:14px; height:2px; border-radius:2px; background:#667085; transform:rotate(45deg) }
+    .flow-history-close::after { transform:rotate(-45deg) }
+    .flow-history-summary { margin:10px 0 0; color:#5e6978; font-size:14px; font-weight:700; line-height:1.6 }
+    .flow-history-tabs { display:flex; gap:8px; margin:18px 0 12px }
+    .flow-history-tab { appearance:none; min-height:36px; border:1px solid #dce3ed; border-radius:999px; padding:0 12px; background:#fff; color:#667085; font-size:14px; font-weight:800; cursor:pointer }
+    .flow-history-tab[aria-selected="true"] { border-color:#d1d5db; background:#f2f4f6; color:#191f28 }
+    .flow-history-list { display:flex; flex-direction:column; gap:9px }
+    .flow-history-case { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:stretch; padding:13px; border:1px solid #e5eaf1; border-radius:14px; background:#fff }
+    .flow-history-metric { min-width:0; padding-left:10px; border-left:1px solid #edf0f4 }
+    .flow-history-metric b { display:block; color:#5e6978; font-size:13px; font-weight:800; line-height:1.35 }
+    .flow-history-metric small { display:block; margin-top:3px; color:#7a8493; font-size:13px; font-weight:700; line-height:1.35 }
+    .flow-history-metric strong { display:block; margin-top:5px; color:#1767c5; font-size:16px; font-weight:900; line-height:1.25 }
+    .flow-history-metric.is-not-risen strong { color:#667085 }
+    body.flow-history-open { overflow:hidden }
     .suggestions {
       display:none; position:absolute; z-index:20; left:0; right:0; top:calc(100% + 8px);
       overflow:auto; max-height:430px; border:1px solid #dfe3ea; border-radius:14px;
@@ -3220,6 +3350,33 @@
       .district-tab { padding:7px 9px; font-size:13px }
       .region-result { margin-top:24px }
       .region-result-head { align-items:flex-start; flex-direction:column; gap:8px }
+      .flow-view { padding-top:12px }
+      .flow-main-section { margin-top:40px; padding-top:24px }
+      .flow-intro { flex-wrap:wrap; gap:8px }
+      .flow-intro h1 { font-size:24px }
+      .flow-explore { padding-bottom:16px }
+      .flow-explore h2 { font-size:19px }
+      .flow-explore-choices { gap:7px }
+      .flow-explore-choice { min-height:38px; padding:0 13px; font-size:14px }
+      .flow-selection { padding:16px }
+      .flow-live-grid { grid-template-columns:1fr }
+      .flow-map-shell { height:350px; border-radius:16px }
+      .flow-route-panel { height:auto; max-height:355px }
+      .flow-route-list { max-height:260px }
+      .flow-map-node-label { padding:6px 9px; font-size:13px }
+      .flow-selection-copy strong { font-size:22px }
+      .flow-decision-reason { font-size:15px }
+      .flow-sequence { font-size:14px }
+      .flow-history-dialog { align-items:end; padding:0 }
+      .flow-history-panel { width:100%; max-height:88vh; border-radius:22px 22px 0 0; padding:20px 16px 24px }
+      .flow-history-title { font-size:20px }
+      .flow-history-case { grid-template-columns:1fr 1fr; gap:11px 12px }
+      .flow-history-metric { padding-left:0; border-left:0 }
+      .flow-history-metric:last-child { grid-column:1 / -1; padding-top:10px; border-top:1px solid #edf0f4 }
+      .flow-story-rail { grid-template-columns:1fr; border-bottom:0 }
+      .flow-stage-card { padding:14px 4px }
+      .flow-stage-card.is-candidate { margin:0; padding:14px 13px }
+      .flow-stage-arrow { height:24px; transform:rotate(90deg); font-size:21px }
       .popular-panel { margin-top:30px }
       .rank-head { gap:10px; margin-top:20px }
       .chip-tabs { border-radius:16px }
@@ -4697,10 +4854,10 @@
     .listing-report-history button span { color:#3182f6; font-size:13px; font-weight:850 }
     .listing-report-history button small { grid-column:1 / -1; color:#8b95a1; font-size:12px; font-weight:650 }
     @media (max-width:620px) {
-      .app-header { display:flex; align-items:center; gap:12px }
+      .app-header { display:flex; align-items:center; gap:6px }
       .app-header .brand { flex:0 0 auto }
       .app-header .view-tabs { flex:0 1 auto; min-width:0; margin-right:auto; margin-left:auto; padding:3px }
-      .app-header .view-tab { min-width:0; min-height:36px; padding:0 10px; font-size:14px }
+      .app-header .view-tab { min-width:0; min-height:36px; padding:0 7px; font-size:14px }
       .app-header .apt-search {
         flex:0 0 46px; width:46px; max-width:46px; margin-left:0;
       }
@@ -5012,6 +5169,65 @@
     .pdf-export-root .zpr-map-expand,
     .pdf-export-root .zpr-living-reference-toggle { display:none; }
     .pdf-export-root .zpr-living-project,.pdf-export-root .zpr-living-summary-row { break-inside:avoid; }
+    .comparison-header-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px }
+    .comparison-header-row .comparison-result-edit { min-height:42px; margin:0; font-size:14px; font-weight:650 }
+    .comparison-result-edit[hidden] { display:none }
+    .comparison-overview { margin-top:0 }
+    .comparison-overview h3 { margin:0 0 14px; color:#191f28; font-size:20px; font-weight:750; line-height:1.5 }
+    .comparison-overview .comparison-verdict { display:block; margin-bottom:28px }
+    .comparison-overview .comparison-preference-highlights { margin:0 0 12px }
+    .comparison-preference-highlight { font-weight:600; font-size:13px }
+    .comparison-overview .comparison-verdict-title { margin:0; font-size:25px; font-weight:800; line-height:1.5 }
+    .comparison-overview .comparison-verdict-subtitle { margin-top:10px; font-size:16px; font-weight:400; line-height:1.7 }
+    .comparison-verdict-subtitle.is-short { color:#a53b20 }
+    .comparison-funding { margin:0 0 30px }
+    .comparison-funding .comparison-score-grid { grid-template-columns:repeat(var(--comparison-count,3),minmax(0,1fr)); gap:12px }
+    .comparison-funding .comparison-score-card { padding:18px; border-radius:16px }
+    .comparison-score-name-row > button { flex-shrink:0 }
+    .comparison-candidate-meta { min-height:41px; margin:6px 0 0; color:#8b95a1; font-size:13px; font-weight:400; line-height:1.55; overflow-wrap:anywhere }
+    .comparison-score-badge { padding:3px 7px; font-size:13px; font-weight:650 }
+    .comparison-funding-status { margin:18px 0 8px; color:#191f28; font-size:17px; font-weight:750; line-height:1.55; overflow-wrap:anywhere }
+    .comparison-funding-status span { display:block; margin-bottom:3px; font-size:14px; font-weight:400; color:#667085 }
+    .comparison-funding-status strong { display:block; font-size:18px; font-weight:750 }
+    .comparison-funding-status.is-short { color:#a53b20 }
+    .comparison-funding-status.is-unknown { color:#667085 }
+    .comparison-funding-required { margin:0; color:#667085; font-size:14px; font-weight:400; line-height:1.6 }
+    .comparison-funding-required strong { color:#303846; font-weight:600 }
+    .comparison-section-note { margin:12px 0 0; color:#667085; font-size:13px; font-weight:400; line-height:1.65; overflow-wrap:anywhere }
+    .comparison-key-differences { margin:0 0 30px }
+    .comparison-key-differences .comparison-table-wrap { margin:0; border:1px solid #e5e8eb; border-radius:14px }
+    .comparison-key-table { width:100%; min-width:560px; border-collapse:collapse }
+    .comparison-key-table th, .comparison-key-table td { padding:14px 16px; font-size:15px; line-height:1.6; font-weight:400; vertical-align:middle }
+    .comparison-key-table thead th { color:#191f28; font-weight:650; background:#f7f8fa }
+    .comparison-key-table tbody th { color:#667085; background:#fff; font-size:14px; font-weight:400 }
+    .comparison-key-table .comparison-key-best { color:#1767d8; font-weight:700 }
+    .comparison-decision-reasons { border-top:1px solid #e5e8eb; padding:24px 0 0; margin:0 0 28px }
+    .comparison-decision-reasons ul { display:grid; gap:10px; padding-left:20px; margin:0 0 18px; color:#303846; font-size:16px; font-weight:400; line-height:1.7 }
+    .comparison-decision-reasons p { margin:10px 0 0; color:#4e5968; font-size:15px; font-weight:400; line-height:1.7 }
+    .comparison-decision-reasons p > span { display:block; color:#191f28; font-weight:650; margin-bottom:3px }
+    .comparison-evidence { border-top:1px solid #e5e8eb }
+    .comparison-evidence > summary { padding:18px 0; color:#303846; font-size:16px; font-weight:650; cursor:pointer }
+    .comparison-evidence > summary:focus-visible { outline:2px solid #3182f6; outline-offset:3px }
+    .comparison-evidence-body { padding-bottom:12px }
+    .comparison-evidence .comparison-recommendation-basis, .comparison-evidence .comparison-recommendation-copy p { font-weight:400 }
+    @media (max-width:640px) {
+      .comparison-header-row { align-items:flex-start; gap:10px }
+      .comparison-header-row h2 { font-size:21px }
+      .comparison-header-row .comparison-result-edit { min-height:40px; padding:6px 11px; font-size:13px }
+      .comparison-overview .comparison-verdict-title { font-size:22px }
+      .comparison-overview h3 { font-size:19px }
+      .comparison-funding .comparison-score-grid { grid-template-columns:1fr }
+      .comparison-funding .comparison-score-card { padding:16px }
+      .comparison-key-table th, .comparison-key-table td { padding:12px; font-size:14px }
+      .comparison-key-table tbody th { position:sticky; left:0; z-index:1; background:#fff; box-shadow:1px 0 #e5e8eb }
+      .comparison-key-table thead th:first-child { position:sticky; left:0; z-index:2; background:#f7f8fa }
+    }
+    .comparison-consultation-reason { margin:14px 0 0; max-width:76ch; color:#303846; font-size:16px; font-weight:400; line-height:1.8; word-break:keep-all; overflow-wrap:anywhere }
+    .comparison-consultation-caution { margin:12px 0 0; max-width:76ch; color:#667085; font-size:15px; font-weight:400; line-height:1.75; word-break:keep-all; overflow-wrap:anywhere }
+    .comparison-consultation-caution strong { color:#4e5968; font-weight:650 }
+    .comparison-consultation-funding { margin:18px 0 0; border-left:3px solid #e5e8eb; padding:8px 12px; color:#4e5968; background:#f7f8fa; font-size:14px; font-weight:400; line-height:1.7; word-break:keep-all; overflow-wrap:anywhere }
+    .comparison-consultation-funding > span { display:block; margin-bottom:3px; font-weight:650 }
+    .comparison-consultation-funding.is-short { border-left-color:#e7bc98; color:#8c4826; background:#fff9f2 }
   </style>
 </head>
 <body class="condition-stage-power">
@@ -5030,6 +5246,7 @@
           <span class="view-tab-label-long">지역별 대장</span>
           <span class="view-tab-label-short" aria-hidden="true">지역 대장</span>
         </button>
+        <button class="view-tab" id="flowEntry" type="button" role="tab" data-view="flow" aria-selected="false" aria-controls="flowView" aria-label="온기지도" tabindex="-1">온기지도</button>
       </nav>
       <button class="apt-search-page-back" id="aptSearchPageBack" type="button" aria-label="검색 화면 닫기">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
@@ -5541,6 +5758,68 @@
       </section>
     </div>
 
+    <section class="app-view flow-view" id="flowView" role="tabpanel" aria-labelledby="flowEntry" hidden>
+      <header class="flow-intro">
+        <h1>온기 확산 지도</h1>
+        <span class="flow-demo-badge" id="flowDataBadge">실거래 불러오는 중</span>
+      </header>
+
+      <section class="flow-panel" aria-label="서울 수도권 지역 흐름">
+        <div class="flow-selection">
+          <div class="flow-explore" aria-label="지금 살펴볼 지역 선택">
+            <h2>지금 어디를 살펴볼까요?</h2>
+            <p id="flowExploreCaption">최근 실거래에서 눈여겨볼 지역을 골라 보세요.</p>
+            <div class="flow-explore-choices" id="flowExploreChoices"></div>
+          </div>
+          <div class="flow-selection-copy">
+            <strong id="flowSelectionTitle"></strong>
+            <p class="flow-decision-reason" id="flowDecisionReason"></p>
+            <p class="flow-sequence" id="flowSequence"></p>
+            <div class="flow-story-wrap">
+              <div class="flow-story-rail" id="flowSelectionCopy" role="list" aria-label="선택한 온기 확산 요약"></div>
+            </div>
+            <button class="flow-candidate-shortcut" id="flowCandidateShortcut" type="button" hidden></button>
+          </div>
+        </div>
+        <div class="flow-live-grid">
+          <div class="flow-map-column">
+            <div class="flow-map-shell">
+              <div class="flow-map-canvas" id="flowMapCanvas" role="img" aria-label="서울과 경기의 주택 가격 흐름 지도"></div>
+              <div class="flow-map-state" id="flowMapState" role="status">서울·경기 지도를 불러오고 있어요.</div>
+            </div>
+          </div>
+          <aside class="flow-route-panel" aria-label="온기 확산 지역">
+            <div class="flow-route-head"><p class="flow-section-label">지역 선택</p><span class="flow-route-unit">과거 상승 사례</span></div>
+            <div class="flow-route-filters" id="flowRouteFilters" role="tablist" aria-label="볼 지역 선택"></div>
+            <div class="flow-status-popover" id="flowStatusPopover" role="dialog" aria-label="지금 볼 곳 설명" hidden>
+              <strong>지금 볼 곳이란?</strong>
+              <p>과거에 앞 지역이 오른 뒤 따라 오른 사례가 있어요. 최근에는 앞 지역보다 덜 올랐어요. 가격과 거래 움직임을 함께 확인하세요.</p>
+              <button class="flow-status-popover-close" type="button" data-flow-info-close aria-label="지금 볼 곳 설명 닫기">×</button>
+            </div>
+            <div class="flow-route-list" id="flowRouteList" aria-label="지역 선택"></div>
+          </aside>
+        </div>
+        <section class="flow-evidence" id="flowEvidence" aria-label="지역 판단 근거"></section>
+        <p class="flow-note" id="flowNote">온기는 직전 3개월 가격·거래량과 과거 반복 사례를 함께 봐요. 거래량은 국토부에 신고된 거래 건수예요.</p>
+      </section>
+    </section>
+
+    <section class="flow-history-dialog" id="flowHistoryDialog" role="dialog" aria-modal="true" aria-labelledby="flowHistoryTitle" aria-hidden="true" hidden>
+      <button class="flow-history-backdrop" type="button" data-flow-history-close aria-label="과거 사례 닫기"></button>
+      <div class="flow-history-panel" tabindex="-1">
+        <header class="flow-history-head">
+          <div>
+            <p class="flow-history-kicker">국토부 실거래 과거 사례</p>
+            <h2 class="flow-history-title" id="flowHistoryTitle">과거 사례</h2>
+          </div>
+          <button class="flow-history-close" type="button" data-flow-history-close aria-label="과거 사례 닫기"></button>
+        </header>
+        <p class="flow-history-summary" id="flowHistorySummary"></p>
+        <div class="flow-history-tabs" id="flowHistoryTabs" role="tablist" aria-label="과거 사례 결과 구분"></div>
+        <div class="flow-history-list" id="flowHistoryList"></div>
+      </div>
+    </section>
+
     <div class="app-view" id="regionView" role="region" aria-label="지역 탐색" hidden>
       <div class="hero-copy region-intro">
         <h1>관심 지역부터<br>하나씩 살펴보세요</h1>
@@ -5592,7 +5871,9 @@
     <section class="comparison-panel" role="dialog" aria-modal="true" aria-labelledby="comparisonTitle">
       <div class="comparison-head">
         <div>
-          <h2 id="comparisonTitle">후보 비교 결과</h2>
+          <div class="comparison-header-row"><h2 id="comparisonTitle">후보 비교 결과</h2>
+            <button class="comparison-result-edit" id="comparisonEdit" type="button" data-comparison-preference-edit hidden>기준 다시 선택</button>
+          </div>
         </div>
         <button class="comparison-close" id="comparisonClose" type="button" aria-label="비교 화면 닫기">×</button>
       </div>
@@ -5614,6 +5895,27 @@
     const conditionView = $("conditionView");
     const regionView = $("regionView");
     const leaderView = $("leaderView");
+    const flowView = $("flowView");
+    const flowRouteList = $("flowRouteList");
+    const flowExploreChoices = $("flowExploreChoices");
+    const flowExploreCaption = $("flowExploreCaption");
+    const flowRouteFilters = $("flowRouteFilters");
+    const flowStatusPopover = $("flowStatusPopover");
+    const flowMapCanvas = $("flowMapCanvas");
+    const flowMapState = $("flowMapState");
+    const flowSelectionTitle = $("flowSelectionTitle");
+    const flowDecisionReason = $("flowDecisionReason");
+    const flowSequence = $("flowSequence");
+    const flowSelectionCopy = $("flowSelectionCopy");
+    const flowCandidateShortcut = $("flowCandidateShortcut");
+    const flowEvidence = $("flowEvidence");
+    const flowDataBadge = $("flowDataBadge");
+    const flowNote = $("flowNote");
+    const flowHistoryDialog = $("flowHistoryDialog");
+    const flowHistoryTitle = $("flowHistoryTitle");
+    const flowHistorySummary = $("flowHistorySummary");
+    const flowHistoryTabs = $("flowHistoryTabs");
+    const flowHistoryList = $("flowHistoryList");
     const leaderForm = $("leaderForm");
     const leaderSido = $("leaderSido");
     const leaderCityField = $("leaderCityField");
@@ -5812,6 +6114,7 @@
     const comparisonLimitToast = $("comparisonLimitToast");
     const comparisonOverlay = $("comparisonOverlay");
     const comparisonTitle = $("comparisonTitle");
+    const comparisonEdit = $("comparisonEdit");
     const comparisonClose = $("comparisonClose");
     const comparisonContent = $("comparisonContent");
     const locationScoreSheet = $("locationScoreSheet");
@@ -5833,7 +6136,7 @@
     const comparisonPreferenceDefaults = { type:"", period:"", priority:"" };
     let comparisonPreference = { ...comparisonPreferenceDefaults };
     let comparisonPreferenceQuestionIndex = 0;
-    let comparisonStep = "results";
+    let comparisonStep = "questions";
     let chipTabsData = [];
     let activeChipTab = "all";
     let activeRegion = "seoul";
@@ -6166,6 +6469,7 @@
       // 이전 화면 상태도 화면에 표시한 구매력과 다른 후보를 되살리면 안 된다.
       if (Number(data?.candidateResultSchemaVersion || 0) < CANDIDATE_RESULT_SCHEMA_VERSION) return true;
       if (displayedBudget > 0 && Math.abs(displayedBudget - candidateBudget) > .01) return true;
+      if (data.enrichmentPending || data.initialStage || data.candidateScoreDataReady === false) return true;
       const rows = [
         ...(Array.isArray(data.allCandidates) ? data.allCandidates : []),
         ...(Array.isArray(data.candidates) ? data.candidates : []),
@@ -6541,7 +6845,7 @@
       if (document.body.classList.contains("apt-search-mode")) {
         return !aptSearchView.hidden && currentAptSearchItems.length ? "apt-result" : "apt-landing";
       }
-      if (activeView === "region" || activeView === "leader") return activeView;
+      if (["region", "leader", "flow"].includes(activeView)) return activeView;
       if (conditionStage === "results" && currentBudgetData) return "budget-result";
       return `condition-${conditionStage}`;
     }
@@ -6562,8 +6866,7 @@
         savedAt:Date.now(),
         scrollY:window.scrollY,
       } : null;
-      try {
-        sessionStorage.setItem(refreshPageStateKey, JSON.stringify({
+      const state = {
           savedAt:Date.now(),
           page,
           scrollY:window.scrollY,
@@ -6577,8 +6880,18 @@
           aptQuery:aptItem?.name || aptSearchInput.value.trim(),
           aptItem,
           budgetState,
-        }));
-      } catch (_) {}
+      };
+      try {
+        sessionStorage.setItem(refreshPageStateKey, JSON.stringify(state));
+      } catch (_) {
+        // 거래·차트 자료가 많아 저장 한도를 넘으면 조건만 남겨 검색을 재연결한다.
+        if (!budgetState) return;
+        try {
+          sessionStorage.setItem(refreshPageStateKey, JSON.stringify({
+            ...state, page:"condition-results", budgetState:null,
+          }));
+        } catch (_) {}
+      }
     }
 
     async function restoreRefreshPageState() {
@@ -6598,6 +6911,18 @@
         currentPurchasePower = saved.currentPurchasePower;
         renderPurchasePower(currentPurchasePower);
         closePurchasePowerSheet();
+      }
+      if (saved.page === "condition-results" && currentPurchasePower) {
+        // 검증된 카드가 나오기 전 새로고침해도 진행 중이던 검색을 다시 연결한다.
+        setActiveView("condition");
+        await loadBudgetCandidates();
+        restoreScroll();
+        return true;
+      }
+      if (saved.page === "flow") {
+        setActiveView("flow");
+        restoreScroll();
+        return true;
       }
       if (saved.page === "budget-result" && saved.budgetState) {
         try {
@@ -6687,8 +7012,8 @@
       { key:"fit", label:"자금 적정", className:"" },
       { key:"roomy", label:"자금 여유", className:"is-roomy" },
     ];
-    const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    const LEAFLET_CSS_URL = "assets/vendor/leaflet/leaflet.css";
+    const LEAFLET_JS_URL = "assets/vendor/leaflet/leaflet.js";
     let candidateVisibleCount = CANDIDATE_PAGE_SIZE;
     let candidateListMode = "shortlist";
     let candidateMap = null;
@@ -6766,6 +7091,23 @@
         districts:["성남시","과천시","하남시","광명시","수원시","용인시","고양시","화성시","남양주시","안양시","부천시","김포시","파주시","의정부시","구리시","군포시","의왕시","안산시","시흥시","평택시"]
       }
     };
+    let flowRoutes = [];
+    let activeFlowRouteId = "";
+    let activeFlowStatus = "watch";
+    const flowPeriod = 3;
+    let flowSnapshot = null;
+    let flowLoading = false;
+    let flowLoadError = "";
+    let flowLoadPromise = null;
+    let flowRequestId = 0;
+    let flowHistoryFilter = "risen";
+    let flowHistoryRouteId = "";
+    let flowHistoryOpener = null;
+    let flowMap = null;
+    let flowMapApi = null;
+    let flowMapLoadingPromise = null;
+    let flowMapLayers = [];
+    let flowMapHasFit = false;
     const multiDefaultValues = {
       region:[],
     };
@@ -7785,18 +8127,643 @@
       }
     }
 
+    function activeFlowRoute() {
+      return flowRoutes.find(route => route.id === activeFlowRouteId) || flowRoutes[0];
+    }
+
+    function flowStatusMeta(route) {
+      const status = route?.status || "waiting";
+      if (status === "next_candidate") return { status, label:"지금 볼 곳", className:"is-next", rank:0 };
+      if (status === "waiting" && flowSnapshot?.watchRouteIds?.includes(route?.id)) return { status:"watch_history", label:"지금 볼 곳", className:"is-next", rank:0 };
+      if (status === "already_rising") return { status, label:"이미 오른 곳", className:"is-rising", rank:1 };
+      return { status:"waiting", label:"더 기다릴 곳", className:"is-waiting", rank:2 };
+    }
+
+    function rankedFlowRoutes() {
+      const rate = item => Number(item?.historicalPattern?.targetRiseRatePct ?? -1);
+      const trials = item => Number(item?.historicalPattern?.precedingPatternCount ?? 0);
+      const compareByRate = (left, right) => {
+        const statusDiff = flowStatusMeta(left).rank - flowStatusMeta(right).rank;
+        if (statusDiff) return statusDiff;
+        const rateDiff = rate(right) - rate(left);
+        if (rateDiff) return rateDiff;
+        const trialDiff = trials(right) - trials(left);
+        if (trialDiff) return trialDiff;
+        return Number(right.score || 0) - Number(left.score || 0);
+      };
+      return [...flowRoutes].sort(compareByRate);
+    }
+
+    function flowTargetRegions() {
+      const routesById = new Map(flowRoutes.map(route => [route.id, route]));
+      const regions = Array.isArray(flowSnapshot?.targetRegions) ? flowSnapshot.targetRegions : [];
+      if (regions.length && regions.every(region => routesById.has(region.representativeRouteId))) return regions;
+      // Keep the screen usable while an older local API snapshot is refreshed.
+      const grouped = new Map();
+      rankedFlowRoutes().forEach(route => {
+        const name = route.nodes?.[2]?.name;
+        if (!name) return;
+        if (!grouped.has(name)) grouped.set(name, {
+          name, status:"other", representativeRouteId:route.id, routeIds:[],
+          routeCount:0, candidateRouteCount:0, alreadyRisingRouteCount:0, waitingRouteCount:0,
+          signal:route.nodes[2].signal,
+        });
+        const region = grouped.get(name);
+        region.routeIds.push(route.id);
+        region.routeCount++;
+        if (route.status === "next_candidate") {
+          region.status = "watch";
+          if (++region.candidateRouteCount === 1) region.representativeRouteId = route.id;
+        } else if (route.status === "already_rising") region.alreadyRisingRouteCount++;
+        else region.waitingRouteCount++;
+      });
+      return [...grouped.values()].sort((left, right) =>
+        Number(right.status === "watch") - Number(left.status === "watch")
+        || right.candidateRouteCount - left.candidateRouteCount
+        || right.routeCount - left.routeCount
+        || left.name.localeCompare(right.name, "ko"));
+    }
+
+    function filteredFlowTargets() {
+      const regions = flowTargetRegions();
+      return activeFlowStatus === "all" ? regions : regions.filter(region => region.status === "watch");
+    }
+
+    function flowTargetGroup(region) {
+      if (region.status === "watch") return "watch";
+      return Number(region.alreadyRisingRouteCount || 0) > 0 ? "risen" : "waiting";
+    }
+
+    function flowRouteContext(route = activeFlowRoute()) {
+      if (!route?.nodes?.length) return null;
+      const displayNodes = [...route.nodes];
+      return {
+        displayNodes,
+        pastNode:displayNodes[0],
+        currentNode:displayNodes[1],
+        futureNode:displayNodes[2],
+        targetNode:displayNodes[2],
+      };
+    }
+
+    function clearFlowMapLayers() {
+      flowMapLayers.forEach(layer => layer?.setMap?.(null));
+      flowMapLayers = [];
+    }
+
+    function flowMapArrowAngle(fromNode, toNode) {
+      const averageLatitude = (fromNode.latitude + toNode.latitude) / 2 * Math.PI / 180;
+      const horizontal = (toNode.longitude - fromNode.longitude) * Math.cos(averageLatitude);
+      const vertical = -(toNode.latitude - fromNode.latitude);
+      return Math.atan2(vertical, horizontal) * 180 / Math.PI;
+    }
+
+    function appendFlowMapOverlay(position, element, yAnchor = .5) {
+      const overlay = new flowMapApi.maps.CustomOverlay({
+        map:flowMap,
+        position,
+        content:element,
+        xAnchor:.5,
+        yAnchor,
+        zIndex:8,
+      });
+      if (element.parentElement && element.parentElement !== flowMapCanvas) {
+        element.parentElement.style.pointerEvents = "none";
+      }
+      flowMapLayers.push(overlay);
+      return overlay;
+    }
+
+    function drawFlowMap() {
+      if (!flowMap || !flowMapApi) return;
+      clearFlowMapLayers();
+      const activeRoute = activeFlowRoute();
+      const activeContext = flowRouteContext(activeRoute);
+      if (!activeRoute || !activeContext) return;
+      const topRoutes = filteredFlowTargets().slice(0, 8)
+        .map(region => flowRoutes.find(route => route.id === region.representativeRouteId))
+        .filter(Boolean);
+      const visibleRoutes = topRoutes.some(route => route.id === activeRoute.id)
+        ? topRoutes
+        : [...topRoutes.slice(0, 4), activeRoute];
+      const orderedRoutes = [...visibleRoutes.filter(route => route.id !== activeRoute.id), activeRoute];
+
+      orderedRoutes.forEach(route => {
+        const isActive = route.id === activeRoute.id;
+        const nodes = isActive ? activeContext.displayNodes : route.nodes;
+        const activeStatus = flowStatusMeta(route).status;
+        const nextSegment = ["next_candidate", "watch_history"].includes(activeStatus)
+          ? { color:"#3182f6", style:"shortdash" }
+          : activeStatus === "already_rising"
+            ? { color:"#4e5968", style:"solid" }
+            : { color:"#98a2b3", style:"shortdash" };
+        const segments = isActive
+          ? [
+              { nodes:nodes.slice(0, 2), color:"#ef4444", opacity:.96, style:"solid" },
+              { nodes:nodes.slice(1, 3), color:nextSegment.color, opacity:.96, style:nextSegment.style },
+            ]
+          : [{ nodes, color:route.color, opacity:.28, style:"solid" }];
+        segments.forEach(segment => {
+          const line = new flowMapApi.maps.Polyline({
+            map:flowMap,
+            path:segment.nodes.map(node => new flowMapApi.maps.LatLng(node.latitude, node.longitude)),
+            strokeWeight:isActive ? 7 : 4,
+            strokeColor:segment.color,
+            strokeOpacity:segment.opacity,
+            strokeStyle:segment.style,
+            zIndex:isActive ? 5 : 2,
+          });
+          flowMapLayers.push(line);
+        });
+
+        nodes.slice(0, -1).forEach((node, index) => {
+          const nextNode = nodes[index + 1];
+          const position = new flowMapApi.maps.LatLng(
+            node.latitude + (nextNode.latitude - node.latitude) * .62,
+            node.longitude + (nextNode.longitude - node.longitude) * .62,
+          );
+          const arrow = document.createElement("span");
+          arrow.className = `flow-map-arrow${isActive ? "" : " is-muted"}`;
+          arrow.style.setProperty("--flow-color", isActive ? (index === 0 ? "#98a2b3" : nextSegment.color) : route.color);
+          arrow.style.setProperty("--flow-angle", `${flowMapArrowAngle(node, nextNode)}deg`);
+          if (!isActive) arrow.style.opacity = ".58";
+          appendFlowMapOverlay(position, arrow);
+        });
+      });
+
+      activeContext.displayNodes.forEach(node => {
+        const label = document.createElement("span");
+        const state = node === activeContext.pastNode ? "past" : node === activeContext.currentNode ? "current" : "future";
+        const routeStatus = flowStatusMeta(activeRoute);
+        const futurePrefix = ["next_candidate", "watch_history"].includes(routeStatus.status)
+          ? "지금 볼 곳"
+          : routeStatus.status === "already_rising" ? "이미 오른 곳" : "더 기다릴 곳";
+        const prefix = state === "past" ? "먼저" : state === "current" ? "뒤이어" : futurePrefix;
+        label.className = `flow-map-node-label is-${state}${state === "future" ? ` ${routeStatus.className}` : ""}`;
+        label.textContent = `${prefix} · ${node.name}`;
+        appendFlowMapOverlay(new flowMapApi.maps.LatLng(node.latitude, node.longitude), label, 1.35);
+      });
+
+      if (!flowMapHasFit) {
+        const bounds = new flowMapApi.maps.LatLngBounds();
+        activeContext.displayNodes.forEach(node => {
+          bounds.extend(new flowMapApi.maps.LatLng(node.latitude, node.longitude));
+        });
+        flowMap.setBounds(bounds);
+        flowMapHasFit = true;
+      }
+    }
+
+    async function ensureFlowMap() {
+      if (flowMap && flowMapApi) {
+        flowMap.relayout?.();
+        drawFlowMap();
+        return;
+      }
+      if (flowMapLoadingPromise) return flowMapLoadingPromise;
+      flowMapState.hidden = false;
+      flowMapState.textContent = "서울·경기 지도를 불러오고 있어요.";
+      flowMapLoadingPromise = (async () => {
+        try {
+          // Kakao is preferred; an unregistered local origin can reject its SDK.
+          flowMapApi = await loadMapApi();
+          const roadMapType = flowMapApi.maps.MapTypeId?.ROADMAP;
+          flowMap = new flowMapApi.maps.Map(flowMapCanvas, {
+            center:new flowMapApi.maps.LatLng(37.575, 127.01),
+            level:9,
+            ...(roadMapType ? { mapTypeId:roadMapType } : {}),
+            fitPadding:90,
+            draggable:true,
+            scrollwheel:true,
+          });
+          if (roadMapType) flowMap.setMapTypeId?.(roadMapType);
+          flowMapState.hidden = true;
+          drawFlowMap();
+          window.setTimeout(() => flowMap?.relayout?.(), 0);
+        } catch (error) {
+          flowMapApi = null;
+          flowMapState.hidden = false;
+          flowMapState.textContent = "지도를 불러오지 못했어요. 아래 지역 흐름은 계속 볼 수 있어요.";
+        } finally {
+          flowMapLoadingPromise = null;
+        }
+      })();
+      return flowMapLoadingPromise;
+    }
+
+    function flowStageMetricHtml(label, value, { decimals = 1 } = {}) {
+      const rate = Number(value);
+      if (!Number.isFinite(rate)) return `<span>${esc(label)} <b class="is-down">비교 중</b></span>`;
+      const sign = rate > 0 ? "+" : rate < 0 ? "-" : "";
+      const direction = rate < 0 ? "is-down" : "";
+      return `<span>${esc(label)} <b class="${direction}">${sign}${Math.abs(rate).toFixed(decimals)}%</b></span>`;
+    }
+
+    function flowPointText(value) {
+      const amount = Number(value);
+      return Number.isFinite(amount) ? `${Math.abs(amount).toFixed(1)}%p` : "계산 중";
+    }
+
+    function flowHistoryPeriodText(endMonth) {
+      const matched = String(endMonth || "").match(/^(\d{4})-(\d{2})$/);
+      if (!matched) return "시점 확인 중";
+      const year = Number(matched[1]);
+      const month = Number(matched[2]);
+      const start = new Date(year, month - 3, 1);
+      const startText = `${start.getFullYear()}.${String(start.getMonth() + 1).padStart(2, "0")}`;
+      const endText = `${year}.${String(month).padStart(2, "0")}`;
+      return start.getFullYear() === year ? `${startText}~${String(month).padStart(2, "0")}` : `${startText}~${endText}`;
+    }
+
+    function flowDataCutoffText(baseMonth) {
+      const matched = String(baseMonth || "").match(/^(\d{4})-(\d{2})$/);
+      if (!matched) return "신고된 거래 기준";
+      return `${matched[1]}.${matched[2]}까지 신고된 거래`;
+    }
+
+    function flowShiftMonthKey(monthKey, offset) {
+      const matched = String(monthKey || "").match(/^(\d{4})-(\d{2})$/);
+      if (!matched) return "";
+      const date = new Date(Number(matched[1]), Number(matched[2]) - 1 + offset, 1);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    function flowHistoryRateText(value) {
+      const rate = Number(value);
+      if (!Number.isFinite(rate)) return "비교 중";
+      return `${rate > 0 ? "+" : ""}${rate.toFixed(1)}%`;
+    }
+
+    function flowHistoryCaseHtml(item, route) {
+      const [sourceNode, currentNode, targetNode] = route.nodes || [];
+      const targetRose = item?.targetRose === true;
+      return `
+        <article class="flow-history-case">
+          <div class="flow-history-metric"><b>${esc(sourceNode?.name || "먼저")}</b><small>${esc(flowHistoryPeriodText(item?.sourceEndMonth))}</small><strong>${esc(flowHistoryRateText(item?.sourcePriceChangePct))}</strong></div>
+          <div class="flow-history-metric"><b>${esc(currentNode?.name || "지금")}</b><small>${esc(flowHistoryPeriodText(item?.currentEndMonth))}</small><strong>${esc(flowHistoryRateText(item?.currentPriceChangePct))}</strong></div>
+          <div class="flow-history-metric${targetRose ? "" : " is-not-risen"}"><b>${esc(targetNode?.name || "다음")}</b><small>${esc(flowHistoryPeriodText(item?.targetEndMonth))} · ${targetRose ? "상승" : "미상승"}</small><strong>${esc(flowHistoryRateText(item?.targetPriceChangePct))}</strong></div>
+        </article>`;
+    }
+
+    function renderFlowHistoryDialog() {
+      const route = flowRoutes.find(item => item.id === flowHistoryRouteId) || activeFlowRoute();
+      if (!route) return;
+      const pattern = route.historicalPattern || {};
+      const allCases = Array.isArray(pattern.evidenceCases) ? pattern.evidenceCases : [];
+      const risenCases = allCases.filter(item => item?.targetRose === true);
+      const notRisenCases = allCases.filter(item => item?.targetRose !== true);
+      const cases = flowHistoryFilter === "not-risen" ? notRisenCases : risenCases;
+      flowHistoryTitle.textContent = `${route.nodes.map(node => node.name).join(" → ")} 과거 사례`;
+      flowHistorySummary.textContent = `같은 앞 두 지역이 오른 ${allCases.length}번 중 다음 지역도 오른 경우는 ${risenCases.length}번이에요.`;
+      flowHistoryTabs.innerHTML = `
+        <button class="flow-history-tab" type="button" role="tab" data-flow-history-filter="risen" aria-selected="${flowHistoryFilter === "risen"}">상승 ${risenCases.length}회</button>
+        <button class="flow-history-tab" type="button" role="tab" data-flow-history-filter="not-risen" aria-selected="${flowHistoryFilter === "not-risen"}">미상승 ${notRisenCases.length}회</button>`;
+      flowHistoryList.innerHTML = cases.length
+        ? cases.map(item => flowHistoryCaseHtml(item, route)).join("")
+        : `<p class="flow-route-empty">보여줄 사례가 없어요.</p>`;
+    }
+
+    function openFlowHistoryDialog(route, opener) {
+      if (!route) return;
+      flowHistoryRouteId = route.id;
+      flowHistoryFilter = "risen";
+      flowHistoryOpener = opener || null;
+      renderFlowHistoryDialog();
+      flowHistoryDialog.hidden = false;
+      flowHistoryDialog.classList.add("show");
+      flowHistoryDialog.setAttribute("aria-hidden", "false");
+      document.body.classList.add("flow-history-open");
+      window.requestAnimationFrame(() => flowHistoryDialog.querySelector(".flow-history-panel")?.focus());
+    }
+
+    function closeFlowHistoryDialog() {
+      if (flowHistoryDialog.hidden) return;
+      flowHistoryDialog.classList.remove("show");
+      flowHistoryDialog.hidden = true;
+      flowHistoryDialog.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("flow-history-open");
+      flowHistoryOpener?.focus?.();
+      flowHistoryOpener = null;
+    }
+
+    function renderFlowView() {
+      const allTargets = flowTargetRegions();
+      const displayedTargets = filteredFlowTargets();
+      let route = activeFlowRoute();
+      let activeTargetRegion = displayedTargets.find(region => region.name === route?.nodes?.[2]?.name);
+      if (displayedTargets.length && !activeTargetRegion) {
+        activeTargetRegion = displayedTargets[0];
+        route = flowRoutes.find(item => item.id === activeTargetRegion.representativeRouteId);
+        activeFlowRouteId = route.id;
+        flowMapHasFit = false;
+      }
+      const context = flowRouteContext(route);
+      if (!route || !context) {
+        const message = flowLoadError || "국토부 실거래를 불러오고 있어요.";
+        flowExploreChoices.innerHTML = "";
+        flowExploreCaption.textContent = message;
+        flowRouteList.innerHTML = `<div class="flow-route-empty">${esc(message)}</div>`;
+        flowRouteFilters.innerHTML = "";
+        flowSelectionTitle.textContent = flowLoadError ? "온기 확산을 아직 보여드리지 못했어요" : "온기 확산을 계산하고 있어요";
+        flowDecisionReason.textContent = "";
+        flowSequence.textContent = "";
+        flowSelectionCopy.innerHTML = `<p class="flow-story-empty">${esc(flowLoadError ? "잠시 후 다시 열어 주세요." : "지역별 가격과 거래량을 비교하고 있어요.")}</p>`;
+        flowCandidateShortcut.hidden = true;
+        flowCandidateShortcut.textContent = "";
+        flowEvidence.innerHTML = "";
+        flowDataBadge.textContent = flowLoadError ? "실거래 연결 필요" : "실거래 불러오는 중";
+        flowNote.textContent = "가격 변화와 거래량 변화를 계산하고 있어요. 거래량은 국토부에 신고된 거래 건수예요.";
+        void ensureFlowMap();
+        return;
+      }
+      const { pastNode, currentNode, futureNode } = context;
+      const pastRate = pastNode.signal?.pastPriceChangePct;
+      const pastTrade = pastNode.signal?.pastTradeChangePct;
+      const currentPastRate = currentNode.signal?.pastPriceChangePct;
+      const currentRate = currentNode.signal?.currentPriceChangePct;
+      const currentTrade = currentNode.signal?.currentTradeChangePct;
+      const futurePastRate = futureNode.signal?.pastPriceChangePct;
+      const futureRate = futureNode.signal?.currentPriceChangePct;
+      const futureTrade = futureNode.signal?.currentTradeChangePct;
+      const stageMetrics = route.stageMetrics || {};
+      const stageValue = (key, fallback) => {
+        const direct = Number(stageMetrics[key]);
+        return Number.isFinite(direct) ? direct : Number(fallback);
+      };
+      const currentAcceleration = stageValue("currentAccelerationPct", Number(currentRate) - Number(currentPastRate));
+      const targetLag = stageValue("targetLagPct", Number(currentRate) - Number(futureRate));
+      const targetAcceleration = stageValue("targetAccelerationPct", Number(futureRate) - Number(futurePastRate));
+      const historyFactText = item => {
+        const pattern = item?.historicalPattern || {};
+        const trials = Number(pattern.precedingPatternCount || 0);
+        const hits = Number(pattern.targetRiseCount || 0);
+        const rate = Number(pattern.targetRiseRatePct);
+        if (!trials) return "과거 사례 부족";
+        return Number.isFinite(rate) ? `오른 사례 ${hits}/${trials}회 · ${rate}%` : `오른 사례 ${hits}/${trials}회`;
+      };
+      const historyMonths = Number(flowSnapshot?.historyMonths || 0);
+      const historyYears = historyMonths >= 12 ? Math.round(historyMonths / 12) : 0;
+      const historyWindowText = historyYears ? `최근 ${historyYears}년` : "과거 실거래";
+      const watchTargets = allTargets.filter(region => region.status === "watch");
+      flowExploreCaption.textContent = `서울·경기 ${Number(flowSnapshot?.regionCount || 0)}곳 분석 · 지금 볼 곳 ${watchTargets.length}곳`;
+      flowExploreChoices.innerHTML = watchTargets.map(region => `
+        <button class="flow-explore-choice" type="button" data-flow-explore="${esc(region.representativeRouteId)}" aria-pressed="${region.name === activeTargetRegion?.name}">${esc(region.name)}</button>
+      `).join("");
+      const filterItems = [
+        ["watch", "지금 볼 곳", allTargets.filter(region => region.status === "watch").length],
+        ["all", "분석된 지역", allTargets.length],
+      ];
+      flowRouteFilters.innerHTML = filterItems.map(([value, label, count]) => `
+        <div class="flow-route-filter-item">
+          <button class="flow-route-filter" type="button" role="tab" data-flow-status="${value}" aria-selected="${activeFlowStatus === value}">${esc(label)} ${Number(count).toLocaleString("ko-KR")}</button>
+          ${value === "watch" ? `<button class="flow-route-info" type="button" data-flow-info-toggle aria-label="지금 볼 곳 설명 보기" aria-expanded="${!flowStatusPopover.hidden}" aria-controls="flowStatusPopover">i</button>` : ""}
+        </div>
+      `).join("");
+      const routeChoiceHtml = (region, rank = null) => {
+        const representative = flowRoutes.find(item => item.id === region.representativeRouteId);
+        const watch = region.status === "watch";
+        const history = representative.historicalPattern || {};
+        const historyText = `과거 ${Number(history.targetRiseCount || 0)}/${Number(history.precedingPatternCount || 0)}회(${Number(history.targetRiseRatePct || 0)}%) 상승`;
+        const basis = watch ? `<small>${historyText}</small>` : "";
+        return `
+        <button class="flow-route-choice${watch ? " is-ranked" : ""}" type="button" data-flow-route="${esc(representative.id)}" aria-label="${watch ? `${rank}위, ` : ""}${esc(region.name)}${watch ? `, ${historyText}` : ""}" aria-pressed="${region.name === activeTargetRegion?.name ? "true" : "false"}">
+          ${watch ? `<span class="flow-route-rank" aria-hidden="true">${rank}</span>` : ""}<span class="flow-route-name">${esc(region.name)}${basis}</span>
+        </button>`;
+      };
+      if (!displayedTargets.length) {
+        const risenCount = allTargets.filter(region => flowTargetGroup(region) === "risen").length;
+        flowRouteList.innerHTML = `<div class="flow-route-empty"><strong>지금 볼 곳은 없어요.</strong><p>현재 기준에 맞는 지역이 없어요.</p>${risenCount ? `<button type="button" data-flow-status="all">이미 오른 ${risenCount}곳 보기</button>` : ""}</div>`;
+      } else if (activeFlowStatus === "all") {
+        const groups = [
+          ["watch", "지금 볼 곳"],
+          ["risen", "이미 오른 곳"],
+          ["waiting", "더 기다릴 곳"],
+        ];
+        flowRouteList.innerHTML = groups.map(([key, label]) => {
+          const items = displayedTargets.filter(region => flowTargetGroup(region) === key);
+          if (!items.length) return "";
+          const groupTitle = key === "watch" ? "" : `<p class="flow-route-group-title">${label} ${items.length}</p>`;
+          return `${groupTitle}${items.map((region, index) => routeChoiceHtml(region, key === "watch" ? index + 1 : null)).join("")}`;
+        }).join("");
+      } else {
+        flowRouteList.innerHTML = displayedTargets.map((region, index) => routeChoiceHtml(region, index + 1)).join("");
+      }
+      const activeStatusMeta = flowStatusMeta(route);
+      const riseCriteria = flowSnapshot?.riseCriteria || {};
+      const minimumDeals = Number(riseCriteria.minimumTradesPerWindow || 8);
+      const currentPeriodEnd = String(flowSnapshot?.baseMonth || "");
+      const pastPeriodEnd = flowShiftMonthKey(currentPeriodEnd, -flowPeriod);
+      const nextPeriodEnd = flowShiftMonthKey(currentPeriodEnd, flowPeriod);
+      const pastPeriodLabel = flowHistoryPeriodText(pastPeriodEnd);
+      const currentPeriodLabel = flowHistoryPeriodText(currentPeriodEnd);
+      const nextPeriodLabel = flowHistoryPeriodText(nextPeriodEnd);
+      const changeText = value => {
+        const amount = Number(value);
+        if (!Number.isFinite(amount)) return "상승폭을 확인하고 있어요";
+        if (amount > 0) return `상승폭이 ${flowPointText(amount)} 커졌어요`;
+        if (amount < 0) return `상승폭이 ${flowPointText(amount)} 줄었어요`;
+        return "상승폭이 비슷해요";
+      };
+      const targetGapText = targetLag >= 0
+        ? `${currentNode.name}보다 ${flowPointText(targetLag)} 덜 올랐어요`
+        : `${currentNode.name}보다 ${flowPointText(targetLag)} 더 올랐어요`;
+      const watchSignalText = targetAcceleration < 0
+        ? "다만 최근 상승폭은 줄어, 다시 커지는지 확인하세요."
+        : "최근 상승폭이 더 커지는지 확인하세요.";
+      const status = activeStatusMeta.status;
+      const mixedSignals = Number(activeTargetRegion?.candidateRouteCount || 0) > 0
+        && Number(activeTargetRegion?.alreadyRisingRouteCount || 0) > 0;
+      const statusCopy = status === "next_candidate"
+        ? {
+            title:`지금 <mark>${esc(futureNode.name)}</mark>를 주목하세요.`,
+            firstLabel:"먼저 올랐어요", currentLabel:"지금 강하게 올라요", futureLabel:"지금 볼 곳",
+            futurePeriod:`${nextPeriodLabel} 주목`, cardClass:"is-next",
+            evidenceTitle:`왜 ${futureNode.name}를 지금 봐야 하나요?`,
+            currentText:`과거에는 ${currentNode.name} 다음으로 ${futureNode.name}가 오른 사례가 있어요. ${futureNode.name}는 아직 상대적으로 덜 올랐고 최근 상승폭도 커져, 관심 단지를 지금 비교해 보세요.`,
+          }
+        : status === "watch_history"
+          ? {
+              title:`지금 <mark>${esc(futureNode.name)}</mark>를 살펴보세요.`,
+              firstLabel:"먼저 오른 곳", currentLabel:"뒤이어 오른 곳", futureLabel:"지금 볼 곳",
+              futurePeriod:`${nextPeriodLabel} 주목`, cardClass:"is-next",
+              evidenceTitle:`왜 ${futureNode.name}를 살펴보나요?`,
+              currentText:`과거에는 ${currentNode.name} 다음으로 ${futureNode.name}가 오른 사례가 있어요. ${futureNode.name}가 상대적으로 덜 오른 지금은 관심 단지를 미리 비교할 기회예요. ${watchSignalText}`,
+            }
+        : status === "already_rising"
+          ? {
+              title:`<mark>${esc(futureNode.name)}</mark>까지 이미 올랐어요.`,
+              firstLabel:"먼저 오른 곳", currentLabel:"뒤이어 오른 곳", futureLabel:"이미 오른 곳",
+              futurePeriod:currentPeriodLabel, cardClass:"is-rising",
+              evidenceTitle:`왜 ${futureNode.name}는 이미 오른 곳인가요?`,
+              currentText:`${futureNode.name}는 ${targetGapText}. 최근 ${changeText(targetAcceleration)}.`,
+            }
+          : {
+              title:`<mark>${esc(futureNode.name)}</mark>는 조금 더 지켜보세요.`,
+              firstLabel:"먼저 오른 곳", currentLabel:"뒤이어 오른 곳", futureLabel:"더 기다릴 곳",
+              futurePeriod:currentPeriodLabel, cardClass:"is-waiting",
+              evidenceTitle:`왜 ${futureNode.name}는 더 기다려야 하나요?`,
+              currentText:Number(currentRate) < 1 || currentAcceleration < .5
+                ? `${currentNode.name}의 최근 상승 신호가 아직 뚜렷하지 않아요.`
+                : targetAcceleration < .5
+                  ? `${futureNode.name}의 상승폭이 아직 커지지 않았어요.`
+                  : `${futureNode.name}가 지금 볼 곳 기준에 아직 닿지 않았어요.`,
+            };
+      flowSelectionTitle.innerHTML = statusCopy.title;
+      flowDecisionReason.textContent = status === "next_candidate" || status === "watch_history"
+        ? `${currentNode.name}가 먼저 올랐고, ${futureNode.name}는 ${targetGapText}. ${targetAcceleration < 0 ? "최근 상승폭은 줄고 있어요." : "최근 상승폭은 커지고 있어요."}`
+        : statusCopy.currentText;
+      flowSequence.innerHTML = `<button class="flow-title-history-link" type="button" data-flow-history="${esc(route.id)}" aria-haspopup="dialog" aria-controls="flowHistoryDialog">${esc(`${historyWindowText} · 과거 ${Number(route.historicalPattern?.targetRiseCount || 0)}/${Number(route.historicalPattern?.precedingPatternCount || 0)}회 상승 · 사례 보기`)}</button>`;
+      flowSelectionCopy.innerHTML = `
+        <article class="flow-stage-card is-past" role="listitem">
+          <span class="flow-stage-kicker">${esc(statusCopy.firstLabel)}</span>
+          <strong class="flow-stage-region">${esc(pastNode.name)}</strong>
+          <time class="flow-stage-period">${esc(pastPeriodLabel)}</time>
+          <div class="flow-stage-metrics">${flowStageMetricHtml("가격", pastRate)}${flowStageMetricHtml("거래", pastTrade, { decimals:0 })}</div>
+        </article>
+        <span class="flow-stage-arrow" aria-hidden="true">→</span>
+        <article class="flow-stage-card is-current" role="listitem">
+          <span class="flow-stage-kicker">${esc(statusCopy.currentLabel)}</span>
+          <strong class="flow-stage-region">${esc(currentNode.name)}</strong>
+          <time class="flow-stage-period">${esc(currentPeriodLabel)}</time>
+          <div class="flow-stage-metrics">${flowStageMetricHtml("가격", currentRate)}${flowStageMetricHtml("거래", currentTrade, { decimals:0 })}</div>
+        </article>
+        <span class="flow-stage-arrow is-next" aria-hidden="true">→</span>
+        <article class="flow-stage-card is-candidate ${esc(statusCopy.cardClass)}" role="listitem">
+          <span class="flow-stage-kicker">${esc(statusCopy.futureLabel)}</span>
+          <strong class="flow-stage-region">${esc(futureNode.name)}</strong>
+          <span class="flow-stage-period">${esc(statusCopy.futurePeriod)}</span>
+          <div class="flow-stage-metrics">${flowStageMetricHtml("가격", futureRate)}${flowStageMetricHtml("거래", futureTrade, { decimals:0 })}</div>
+        </article>`;
+      const showCandidateShortcut = activeTargetRegion?.status === "watch";
+      flowCandidateShortcut.hidden = !showCandidateShortcut;
+      flowCandidateShortcut.dataset.flowCandidateRegion = showCandidateShortcut ? futureNode.name : "";
+      flowCandidateShortcut.textContent = showCandidateShortcut ? `${futureNode.name} 내 예산 후보 보기 →` : "";
+      flowCandidateShortcut.setAttribute("aria-label", showCandidateShortcut ? `${futureNode.name}에서 내 예산 후보 보기` : "");
+      const tradeCaution = Number(futureTrade) < 0
+        ? `${futureNode.name} 거래는 ${Math.abs(Math.round(Number(futureTrade)))}% 줄었어요. 거래가 다시 늘어나는지 확인하세요.`
+        : "";
+      const relatedRoutes = (activeTargetRegion?.routeIds || [route.id])
+        .map(id => flowRoutes.find(item => item.id === id)).filter(Boolean);
+      const relatedRouteHtml = relatedRoutes.length > 1 ? `
+        <div class="flow-related-routes">
+          <strong>${esc(futureNode.name)} 관련 경로 ${relatedRoutes.length}개</strong>
+          <p>${mixedSignals
+            ? `${esc(futureNode.name)}의 실제 가격 변화는 하나예요. 앞 지역을 어디로 잡느냐에 따라 '지금 볼 곳'인지 '이미 오른 곳'인지 달라져요. 아래 경로를 함께 확인하세요.`
+            : "같은 지역에 닿는 경로를 각각 확인하세요. 과거 사례는 서로 겹칠 수 있어 합산하지 않아요."}</p>
+          ${relatedRoutes.map(item => {
+            const routeSignal = ["next_candidate", "watch_history"].includes(flowStatusMeta(item).status) ? "과거 순서상 주목"
+              : item.status === "already_rising" ? "앞 지역과 비슷하거나 더 오름" : "최근 신호 약함";
+            return `<div class="flow-related-route"><span>${esc(item.label)}</span><small>${esc(routeSignal)} · ${esc(historyFactText(item))}</small></div>`;
+          }).join("")}
+        </div>` : "";
+      const candidateCriteria = flowSnapshot?.candidateCriteria || {};
+      const minimumLag = Number(candidateCriteria.minimumTargetLagPct || 1);
+      const classificationText = status === "next_candidate"
+        ? `앞 지역보다 ${minimumLag}%p 이상 덜 올랐고, 최근 상승폭이 커진 경로가 있어요.`
+        : status === "watch_history"
+          ? "과거에도 이 순서로 오른 사례가 있고, 최근에는 앞 지역보다 덜 올랐어요. 상승폭과 거래량을 계속 확인하세요."
+        : status === "already_rising"
+          ? "이 지역의 상승도 이미 확인돼, 다음 상승 후보에서는 뺐어요."
+          : "과거에는 같은 순서로 오른 적이 있지만, 최근 상승 신호는 아직 부족해요.";
+      flowEvidence.setAttribute("aria-label", `${activeStatusMeta.label} 판단 근거`);
+      flowEvidence.innerHTML = `
+        <details>
+          <summary>${esc(statusCopy.evidenceTitle)}</summary>
+          <p>${esc(classificationText)} 선택한 경로는 ${esc(route.label)}예요.</p>
+          ${tradeCaution ? `<p>${esc(tradeCaution)}</p>` : ""}
+          <p>각 비교 기간에 거래가 ${minimumDeals}건 이상인 지역만 분석해요.</p>
+          ${relatedRouteHtml}
+        </details>`;
+      flowDataBadge.textContent = flowDataCutoffText(flowSnapshot?.baseMonth);
+      flowNote.textContent = `국토부 실거래 기준 · 선정한 서울·경기 ${Number(flowSnapshot?.regionCount || 0)}곳 분석 · 미래 가격을 보장하지 않아요.`;
+      void ensureFlowMap();
+    }
+
+    async function loadFlowData() {
+      const requestId = ++flowRequestId;
+      const requestedPeriod = flowPeriod;
+      flowLoading = true;
+      flowLoadError = "";
+      renderFlowView();
+      flowLoadPromise = (async () => {
+        try {
+          let response;
+          let payload;
+          do {
+            response = await fetch("/api/market-flow", { cache:"no-store" });
+            payload = await response.json().catch(() => ({}));
+            if (response.status === 202 && payload.pending) {
+              if (requestId !== flowRequestId) return;
+              flowDataBadge.textContent = "실거래 분석 준비 중";
+              flowNote.textContent = "최근 10년 실거래를 처음 준비하고 있어요. 잠시만 기다려 주세요.";
+              await new Promise(resolve => window.setTimeout(resolve, 1000));
+            }
+          } while (response.status === 202 && payload.pending);
+          if (!response.ok) throw new Error(payload.error || "실거래 분석 서버에 연결하지 못했어요.");
+          const routes = Array.isArray(payload.routes) ? payload.routes : [];
+          if (!routes.length) throw new Error("비교할 수 있는 최근 실거래가 아직 충분하지 않아요.");
+          if (requestId !== flowRequestId) return;
+          flowRoutes = routes;
+          flowSnapshot = payload;
+          activeFlowRouteId = routes.some(route => route.id === activeFlowRouteId) ? activeFlowRouteId : routes[0].id;
+          flowMapHasFit = false;
+          trackEvent("market_flow_loaded", { period_months:requestedPeriod, route_count:routes.length, base_month:payload.baseMonth || "" });
+        } catch (error) {
+          if (requestId !== flowRequestId) return;
+          flowRoutes = [];
+          flowSnapshot = null;
+          flowLoadError = error.message || "실거래 흐름을 불러오지 못했어요.";
+          trackEvent("market_flow_failed", { period_months:requestedPeriod });
+        } finally {
+          if (requestId !== flowRequestId) return;
+          flowLoading = false;
+          flowLoadPromise = null;
+          renderFlowView();
+        }
+      })();
+      return flowLoadPromise;
+    }
+
+    function openFlowCandidateSearch(region) {
+      const targetRegion = normalizeConditionRegionValue(region);
+      if (!targetRegion) return;
+      // 흐름 화면에서 고른 지역만 후보 조건에 넣어, 다른 지역 후보가 섞이지 않게 한다.
+      multiSelections.region = new Set([targetRegion]);
+      syncMultiDraft("region");
+      savePurchasePowerForm();
+      renderMultiPickers();
+      renderPersistentRegion();
+      trackEvent("flow_candidate_shortcut_opened", {
+        region:targetRegion,
+        has_purchase_power:Boolean(currentPurchasePower),
+      });
+      setActiveView("condition");
+      if (currentPurchasePower) {
+        void loadBudgetCandidates();
+        return;
+      }
+      setConditionStage("power");
+      window.setTimeout(() => policyCash.focus({ preventScroll:true }), 250);
+    }
+
     function setActiveView(view) {
       const aptView = document.getElementById("aptSearchView");
       if (aptView) aptView.hidden = true;
-      activeView = ["region", "leader"].includes(view) ? view : "condition";
+      activeView = ["region", "leader", "flow"].includes(view) ? view : "condition";
       trackDailyActiveUser();
       trackEvent("page_viewed", { page:activeView });
       const showingRegion = activeView === "region";
       const showingLeader = activeView === "leader";
       if (!showingLeader && !leaderMapView.hidden) closeLeaderMap({ restoreFocus:false });
-      conditionView.hidden = showingRegion || showingLeader;
+      conditionView.hidden = showingRegion || showingLeader || activeView === "flow";
       regionView.hidden = !showingRegion;
       leaderView.hidden = !showingLeader;
+      flowView.hidden = activeView !== "flow";
+      if (activeView === "flow") requestAnimationFrame(() => {
+        flowMap?.relayout?.();
+        flowMapHasFit = false;
+        renderFlowView();
+      });
       viewTabs.forEach(tab => {
         const selected = tab.dataset.view === activeView;
         tab.classList.toggle("active", selected);
@@ -7817,6 +8784,9 @@
         if (!chipsEl.innerHTML.trim()) loadChips();
       } else if (showingLeader && !leaderRegionsLoaded) {
         void loadLeaderRegions();
+      } else {
+        renderFlowView();
+        if (!flowRoutes.length && !flowLoading) void loadFlowData();
       }
     }
     function setConditionStage(stage, shouldScroll = true) {
@@ -12261,11 +13231,23 @@
         <p class="verdict-fine">${esc(record.disclaimer || "")}</p>`;
     }
 
-    function verdictCardHtml(item) {
+    function verdictCardHtml(item, interestEok = NaN) {
       const card = item?.locationScore?.verdictCard;
       if (!card || card.status !== "ok" || !card.breakeven) return "";
       const breakeven = card.breakeven;
-      const rows = (breakeven.items || []).map(entry => `<div class="verdict-cost-row">
+      // 대출 이자를 알면 표에도 한 줄로 넣어, 위 문장의 합계와 표의 합계를 같게 한다.
+      const interestAmount = Number.isFinite(interestEok) && interestEok > 0 ? Math.round(interestEok * 100000000) : 0;
+      const totalAmount = Number(breakeven.totalAmount || 0) + interestAmount;
+      const ratePercent = interestAmount && Number(card.price) > 0
+        ? Math.round(totalAmount / Number(card.price) * 1000) / 10
+        : breakeven.ratePercent;
+      const headline = interestAmount
+        ? String(breakeven.headline || "").replace(/[\d.]+%/, `${ratePercent}%`)
+        : breakeven.headline;
+      const excludes = (breakeven.excludes || []).filter(label => !(interestAmount && label === "대출 이자"));
+      const entries = [...(breakeven.items || []),
+        ...(interestAmount ? [{ label:"첫 3년 대출 이자", amount:interestAmount, estimated:true }] : [])];
+      const rows = entries.map(entry => `<div class="verdict-cost-row">
           <span>${esc(entry.label)}${entry.estimated ? " (약)" : ""}</span>
           <span>${esc(entry.amount === 0 ? (entry.note || "0원") : verdictMoneyText(entry.amount))}</span>
         </div>`).join("");
@@ -12279,30 +13261,31 @@
             <span class="verdict-card-price">${esc(verdictMoneyText(card.price))}</span>
           </div>
           <div>
-            <p class="verdict-headline">${esc(breakeven.headline)}</p>
-            <p class="verdict-sub">${esc(verdictMoneyText(card.price))}에 산다고 가정하고, 계산할 수 있는 세금과 중개비 등 ${esc(verdictMoneyText(breakeven.totalAmount))}만 넣었어요. 실제 손익분기점은 더 높을 수 있어요.</p>
+            <p class="verdict-headline">${esc(headline)}</p>
+            <p class="verdict-sub">${esc(verdictMoneyText(card.price))}에 산다고 가정하고, 계산할 수 있는 ${interestAmount ? "세금·중개비와 첫 3년 대출 이자" : "세금과 중개비"} ${esc(verdictMoneyText(totalAmount))}만 넣었어요. 실제로 메워야 할 돈은 더 많을 수 있어요.</p>
           </div>
           <div class="verdict-cost">
             ${rows}
             <div class="verdict-cost-row is-total">
               <span>합계</span>
-              <span>${esc(verdictMoneyText(breakeven.totalAmount))} · ${esc(breakeven.ratePercent)}%</span>
+              <span>${esc(verdictMoneyText(totalAmount))} · ${esc(ratePercent)}%</span>
             </div>
           </div>
           ${verdictRecordHtml(card.trackRecord)}
           ${notes ? `<div class="verdict-notes">${notes}</div>` : ""}
-          <p class="verdict-fine">${esc(excluded)}${esc((breakeven.excludes || []).join(", "))}는 넣지 않았어요. 양도세 비과세 여부는 매도가, 보유·거주 기간, 주택 수에 따라 달라져요. 앞으로 오른다는 뜻이 아니에요.</p>
+          <p class="verdict-fine">${esc(excluded)}${esc(excludes.join(", "))}는 넣지 않았어요. 양도세 비과세 여부는 매도가, 보유·거주 기간, 주택 수에 따라 달라져요. 앞으로 오른다는 뜻이 아니에요.</p>
         </section>`;
     }
 
     function zippickBreakevenHtml(item) {
-      const card = verdictCardHtml(item);
-      if (!card) return "";
-      const cost = item.locationScore.verdictCard;
+      const cost = item?.locationScore?.verdictCard;
+      if (!cost) return "";
       const scenario = (item.policyImpact?.cashScenarios || []).find(row => Math.abs(Number(row.priceEok) - Number(cost.price) / 100000000) < 0.005);
       const interest = zpNum(scenario?.repayment?.first3YearsInterestEok);
       const total = zpNum(cost.breakeven?.totalAmount);
       const complete = Number.isFinite(interest) && Number.isFinite(total);
+      const card = verdictCardHtml(item, complete ? interest : NaN);
+      if (!card) return "";
       return `<section class="zpr-section" aria-label="매수와 보유 비용">
         <span class="zpr-kicker" data-zpr-step="매수·보유 비용"></span>
         <h5>계산한 비용을 메우려면 얼마나 올라야 할까요?</h5>
@@ -12952,17 +13935,49 @@
         : null;
     }
 
+    function validKakaoMapConfig(mapConfig) {
+      return Boolean(mapConfig?.configured && mapConfig?.appKey);
+    }
+
+    async function loadLocalKakaoMapConfig() {
+      if (window.ZIPPICK_LOCAL_MAP_CONFIG?.appKey) {
+        return { configured:true, appKey:window.ZIPPICK_LOCAL_MAP_CONFIG.appKey };
+      }
+      const localPreviewHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+      const isLocalPreview = window.location.protocol === "file:" || localPreviewHosts.has(window.location.hostname);
+      if (!isLocalPreview) return null;
+      try {
+        await loadExternalResource(
+          "script",
+          { src:"./local-map-config.js", "data-local-map-config":"true" },
+          "script[data-local-map-config]"
+        );
+      } catch (_) {
+        return null;
+      }
+      return window.ZIPPICK_LOCAL_MAP_CONFIG?.appKey
+        ? { configured:true, appKey:window.ZIPPICK_LOCAL_MAP_CONFIG.appKey }
+        : null;
+    }
+
+    async function resolveKakaoMapConfig() {
+      const localConfig = await loadLocalKakaoMapConfig();
+      if (validKakaoMapConfig(localConfig)) return localConfig;
+      try {
+        const response = await fetch("/api/map-config");
+        const mapConfig = await response.json();
+        if (response.ok && validKakaoMapConfig(mapConfig)) return mapConfig;
+      } catch (_) {}
+      const error = new Error("카카오 지도 JavaScript 키가 아직 설정되지 않았어요.");
+      error.code = "MAP_KEY_MISSING";
+      throw error;
+    }
+
     async function loadKakaoMapApi() {
       if (window.kakao?.maps?.services?.Geocoder) return window.kakao;
       if (candidateMapApiPromise) return candidateMapApiPromise;
       candidateMapApiPromise = (async () => {
-        const response = await fetch("/api/map-config");
-        const mapConfig = await response.json();
-        if (!response.ok || !mapConfig.configured || !mapConfig.appKey) {
-          const error = new Error("카카오 지도 JavaScript 키가 아직 설정되지 않았어요.");
-          error.code = "MAP_KEY_MISSING";
-          throw error;
-        }
+        const mapConfig = await resolveKakaoMapConfig();
         const sdkUrl = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(mapConfig.appKey)}&autoload=false&libraries=services`;
         await new Promise((resolve, reject) => {
           const existing = document.querySelector("script[data-kakao-map-sdk]");
@@ -13107,6 +14122,7 @@
       class MapAdapter {
         constructor(container, options = {}) {
           const center = options.center || new LatLng(37.5665, 126.9780);
+          this._fitPadding = Number(options.fitPadding) || 42;
           this._map = L.map(container, {
             center:[center.latitude, center.longitude],
             zoom:leafletZoomFromKakaoLevel(options.level || 7),
@@ -13143,13 +14159,14 @@
         }
       }
       class Polyline {
-        constructor({ map, path = [], strokeWeight = 3, strokeColor = "#3182f6", strokeOpacity = .95, zIndex = 1 }) {
+        constructor({ map, path = [], strokeWeight = 3, strokeColor = "#3182f6", strokeOpacity = .95, strokeStyle = "solid", zIndex = 1 }) {
           this.path = path;
           this.map = null;
           this._layer = L.polyline(this._latLngs(), {
             color:strokeColor,
             weight:strokeWeight,
             opacity:strokeOpacity,
+            dashArray:strokeStyle === "solid" ? null : "7 6",
             interactive:false,
           });
           this.zIndex = zIndex;
@@ -17058,8 +18075,8 @@
       if (!risk) return verdict;
       return {
         ...verdict,
-        label: "매수 검토 · 가격 주의",
-        short: "매수 검토 · 가격 주의",
+        label: "우선 검토",
+        short: "우선 검토",
         tone: "conditional",
         title: risk.atPeak
           ? "단지와 거래 흐름은 좋지만, 최근 가격이 고점권이에요."
@@ -17108,8 +18125,17 @@
 
     // 점수 계산용 이름은 API와 비교 로직에서 유지하고, 리포트에는 뜻이
     // 드러나는 이름을 보여준다. 교육 점수에는 학교와 학원 접근성이 들어간다.
+    // 같은 구 비교 단지와의 가격 차이(price_rank)는 조건 차이가 크면 점수에서
+    // 빠진다. 그때는 대장 단지와의 차이만 점수에 들어간다는 것을 분명히 한다.
+    function zippickPriceRankExcluded(part) {
+      const rank = (Array.isArray(part?.details) ? part.details : []).find(detail => detail?.key === "price_rank");
+      return Boolean(rank) && (rank.points === null || rank.points === undefined);
+    }
+
     function zippickReportPartLabel(part) {
-      if (part?.key === "price") return "지역 시세·대장 단지와 비교한 가격 점수";
+      if (part?.key === "price") return zippickPriceRankExcluded(part)
+        ? "대장 단지·최근 거래와 비교한 가격 점수"
+        : "지역 시세·대장 단지와 비교한 가격 점수";
       if (part?.key === "demand") return "입지·교육·실수요";
       return String(part?.label || "항목");
     }
@@ -17160,6 +18186,7 @@
       const lines = [];
       let rankSummary = "";
       let leaderCaveat = "";
+      let rankExcludedNote = "";
       const rankMatch = String(rank?.reason || "").match(/지역 후보\s+(\d+)\/(\d+)위\s+·\s+상위\s+(\d+)%\s+·\s+(.+)/);
       if (rankMatch) {
         const topPercent = Number(rankMatch[3]);
@@ -17167,6 +18194,10 @@
           : topPercent <= 60 ? "지역의 보통 가격대예요."
           : "지역에서 가격 부담이 낮은 편이에요.";
         rankSummary = `지역 가격대 ${rankMatch[1]}/${rankMatch[2]}위(상위 ${rankMatch[3]}%)로 ${rankMeaning}`;
+      } else if (zippickPriceRankExcluded(part)) {
+        // 이 문장이 대장 단지 문장 바로 뒤에 붙으면 대장 비교가 빠진 것처럼 읽힌다.
+        const leaderScored = Number.isFinite(Number(leader?.points)) && leader?.points !== null && !isSameLeader;
+        rankExcludedNote = `같은 구 비교 단지와의 가격 차이는 단지 조건이 달라 이 점수에 넣지 않았어요.${leaderScored ? " 대장 단지와의 차이는 점수에 넣었어요." : ""}`;
       } else if (rank?.reason) {
         rankSummary = String(rank.reason).replace(/^지역 후보/, "지역 가격대");
       }
@@ -17190,6 +18221,7 @@
       }
       if (rankSummary) lines.push(rankSummary);
       if (leaderCaveat) lines.push(leaderCaveat);
+      if (rankExcludedNote) lines.push(rankExcludedNote);
       if (!lines.length) return "지역 가격대와 대장 단지 가격을 함께 비교했어요.";
       return lines.join(" ");
     }
@@ -17316,7 +18348,17 @@
           part.points, part.maxPoints, zippickBarReason(item, part))).join("")}</div>`;
     }
 
-    function zippickSignalBarReason(entry, key) {
+    function zippickTradeCountText(signals) {
+      // 거래 건수는 화면 어디서나 실제 건수로 말한다. 점수에만 보정값을 쓴다.
+      const recent = zpNum(signals?.recentDealCount);
+      const prior = zpNum(signals?.priorDealCount);
+      if (!Number.isFinite(recent) || !Number.isFinite(prior) || prior <= 0) return "";
+      const change = Math.round((recent / prior - 1) * 100);
+      const direction = change > 5 ? `${change}% 늘었어요` : change < -5 ? `${Math.abs(change)}% 줄었어요` : "비슷해요";
+      return `최근 6개월 거래는 ${recent}건으로, 그 전 6개월 ${prior}건보다 ${direction}.`;
+    }
+
+    function zippickSignalBarReason(entry, key, signals = {}) {
       const rawValue = entry?.value;
       const value = rawValue === null || rawValue === undefined || rawValue === "" ? NaN : Number(rawValue);
       if (entry?.neutral || !Number.isFinite(value)) {
@@ -17338,6 +18380,14 @@
           return `최근 6개월 같은 면적 실거래 가격이 ${amount}% 내렸어요. 가격 흐름 점수에는 불리하게 반영됐어요. 하락이 멈췄는지 확인해 보세요.`;
         }
         return "최근 6개월 같은 면적 실거래 가격에 큰 변화가 없어요. 가격 상승 신호는 뚜렷하지 않아요.";
+      }
+
+      if (key === "turnover" && zippickTradeCountText(signals)) {
+        const smoothed = zpNum(signals?.turnoverSmoothed);
+        const raw = zpNum(signals?.turnoverRatio);
+        const adjusted = Number.isFinite(smoothed) && Number.isFinite(raw) && Math.abs(smoothed - raw) >= 0.05
+          ? " 거래가 적은 단지가 점수를 너무 많이 받지 않도록, 점수는 건수를 조금 보정해서 매겼어요." : "";
+        return `${zippickTradeCountText(signals)}${adjusted}`;
       }
 
       if (key === "turnover") {
@@ -17379,7 +18429,7 @@
       const rows = Object.entries(breakdown).filter(([, entry]) => Number(entry?.maxPoints) > 0);
       if (!rows.length) return "";
       return `<div class="zpr-bars">${rows.map(([key, entry]) => {
-        const reason = zippickSignalBarReason(entry, key);
+        const reason = zippickSignalBarReason(entry, key, item?.signals || {});
         return zippickBarHtml(entry.label, entry.points, entry.maxPoints, reason);
       }).join("")}</div>`;
     }
@@ -17395,6 +18445,8 @@
     const ZIPPICK_MINIMUM_ARTICLE_RECONSTRUCTION_AGE = 20;
 
     function zippickDevelopmentArticleSignalAllowed(item) {
+      const own = zippickOwnDevelopmentModel(item);
+      if (own && own.status !== "confirmed") return false;
       // 법정 사업 가능 연령이 아니라 잘못된 단지 자체 사업 안내를 막는 검증 기준.
       if (/분양권|입주예정|미준공/.test(compactText(item?.status))) return false;
       const ages = [];
@@ -17687,6 +18739,8 @@
               districtCode:zone.districtCode || "",
               stage:zone.stage || "단계 확인 필요",
 	              source:zone.source || "",
+              sourceUrl:zone.sourceUrl || zone.source || "",
+              sourceDate:zone.sourceDate || "",
 	              sourceNote:zone.sourceNote || "",
 	              areaSqm:Number(zone.areaSqm || 0),
               distanceMeters,
@@ -17812,10 +18866,33 @@
       ));
     }
 
+    function zippickOwnDevelopmentModel(item) {
+      const model = item?.futureTransformation?.ownDevelopment;
+      if (model?.version !== "apartment-development-v1" || !item?.apartmentId
+          || String(model.apartmentId) !== String(item.apartmentId)) return null;
+      for (const key of ["province", "legalDong", "jibun"]) {
+        if (item[key] && model.identity?.[key] && String(item[key]) !== String(model.identity[key])) return null;
+      }
+      const district = item.district || item.region;
+      if (district && model.identity?.district && !String(district).endsWith(model.identity.district)) return null;
+      return model;
+    }
+
     function zippickOwnDevelopmentZones(item, officialZones = []) {
       // 준공 전 사업 구역이 지도에 남아 있어도 신축의 새 사업으로 해석하지 않는다.
       if (!zippickDevelopmentArticleSignalAllowed(item)) return [];
-      return zippickActiveOfficialDevelopmentZones(officialZones).filter(zone => {
+      const model = zippickOwnDevelopmentModel(item);
+      if (model) return model.status === "confirmed" ? model.projects.map(project => ({...project,
+        projectType:project.projectTypeLabel, stage:project.stageLabel,
+        source:"공식 사업장 현황", distanceMeters:project.distanceMeters ?? null})) : [];
+      const reportMatches = item?.apartmentId && String(item.apartmentId) === String(item?.futureTransformation?.apartmentId);
+      const reportZones = (reportMatches ? item.futureTransformation.subjectZoneReferences || [] : [])
+        .filter(zone => zone.containsSubject === true && zone.zoneKind === "renewal" && zone.businessNameConfirmed)
+        .map(zone => ({...zone, inside:true, projectType:zone.projectTypeLabel,
+          stage:zone.stageLabel || zone.stage, completed:zone.stage === "completed",
+          source:"공식 구역 자료", sourceUrl:zone.sourceUrl}));
+      const seen = new Set();
+      return zippickActiveOfficialDevelopmentZones([...reportZones, ...officialZones]).filter(zone => {
         if (!zippickDevelopmentOfficialZoneSelfMatch(item, zone)) return false;
         const distanceMeters = Number(zone?.distanceMeters);
         // 주소 좌표가 단지 출입구에 찍히면 공식 경계에서 몇 m 벗어날 수 있다.
@@ -17823,12 +18900,17 @@
         const closeToBoundary = Number.isFinite(distanceMeters)
           && distanceMeters >= 0
           && distanceMeters <= ZIPPICK_OWN_DEVELOPMENT_BOUNDARY_TOLERANCE_METERS;
-        return zone.inside === true || closeToBoundary;
+        if (!(zone.inside === true || closeToBoundary)) return false;
+        const key = zone.id || zone.name;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
     }
 
     function zippickDevelopmentSelfMatch(item, rows = [], officialZones = []) {
       if (!zippickDevelopmentArticleSignalAllowed(item)) return false;
+      if (["completed_or_cancelled", "not_applicable"].includes(zippickOwnDevelopmentModel(item)?.status)) return false;
       return zippickOwnDevelopmentRows(rows).length > 0
         || zippickOwnDevelopmentZones(item, officialZones).length > 0;
     }
@@ -17847,10 +18929,9 @@
     }
 
     function zippickDevelopmentProjectWord(rows = [], officialZones = []) {
-      const text = [
-        ...officialZones.map(zone => zone?.projectType),
-        ...rows.map(row => `${row?.eventLabel || ""} ${row?.badge || ""} ${row?.title || ""}`),
-      ].join(" ");
+      const text = (officialZones.length
+        ? officialZones.map(zone => zone?.projectType)
+        : rows.map(row => `${row?.eventLabel || ""} ${row?.badge || ""} ${row?.title || ""}`)).join(" ");
       if (/리모델링/.test(text)) return "리모델링";
       if (/재개발/.test(text)) return "재개발";
       if (/모아타운|가로주택/.test(text)) return "소규모 정비사업";
@@ -17866,7 +18947,182 @@
       return /추진위원|추진위|조합설립|사업시행|관리처분|이주|철거|착공|입주\s*예정|준공|완료/.test(stageText);
     }
 
+    // 집픽의 진행 단계 비교 배점. 공식 확률·사업성·매수 수익 점수가 아니다.
+    // 절차 참고: https://cleanup.seoul.go.kr/cleanup/view/redevelop.do
+    const ZIPPICK_DEVELOPMENT_STAGE_RATINGS = [
+      {
+        "label": "계획 검토·진단",
+        "points": 1,
+        "stages": [
+          "계획",
+          "계획검토",
+          "정비계획수립",
+          "정비계획입안",
+          "안전진단",
+          "안전진단통과",
+          "재건축진단통과",
+          "planning",
+          "정비계획수립중",
+          "예정구역",
+          "안전진단(1차)",
+          "정비계획변경추진중"
+        ]
+      },
+      {
+        "label": "후보지·대상지 선정",
+        "points": 1.5,
+        "stages": [
+          "후보지선정",
+          "대상지선정",
+          "대상지선정(추진중)",
+          "신속통합기획선정",
+          "기획중",
+          "기획완료",
+          "신속통합기획착수",
+          "주민공람",
+          "구의회의견청취",
+          "도시계획위원회심의",
+          "도시계획심의"
+        ]
+      },
+      {
+        "label": "정비구역 지정",
+        "points": 2,
+        "stages": [
+          "정비구역지정",
+          "구역지정",
+          "정비계획결정",
+          "정비계획결정고시",
+          "designated",
+          "정비구역",
+          "정비구역지정(추진위승인)"
+        ]
+      },
+      {
+        "label": "추진위원회 승인",
+        "points": 2.5,
+        "stages": [
+          "추진위구성",
+          "추진위원회구성",
+          "추진위원회승인",
+          "추진위원회구성승인",
+          "추진위승인",
+          "추진위원회"
+        ]
+      },
+      {
+        "label": "조합 설립·건축심의",
+        "points": 3,
+        "stages": [
+          "조합설립",
+          "조합설립인가",
+          "association",
+          "건축심의",
+          "사업시행자지정(신탁사)"
+        ]
+      },
+      {
+        "label": "사업시행 인가",
+        "points": 3.5,
+        "stages": [
+          "사업시행인가",
+          "사업시행계획인가",
+          "사업계획승인",
+          "approved",
+          "사업계획승인(리모델링허가)"
+        ]
+      },
+      {
+        "label": "관리처분 인가",
+        "points": 4,
+        "stages": [
+          "관리처분인가",
+          "관리처분계획인가",
+          "disposal",
+          "관리처분"
+        ]
+      },
+      {
+        "label": "이주·철거",
+        "points": 4.5,
+        "stages": [
+          "이주",
+          "이주중",
+          "이주완료",
+          "철거",
+          "철거중",
+          "철거완료",
+          "relocation",
+          "demolition",
+          "이주·해체",
+          "해체"
+        ]
+      },
+      {
+        "label": "착공",
+        "points": 5,
+        "stages": [
+          "착공",
+          "공사중",
+          "construction",
+          "철거및착공"
+        ]
+      }
+    ];
+
+    function zippickDevelopmentRatingView(item) {
+      const missing = reason => ({title:"단지 변화 · 추진 단계", points:null, ratio:0, stars:"—",
+        scoreText:"평가 보류", state:"missing", reason});
+      const model = zippickOwnDevelopmentModel(item);
+      if (model) return model.status === "confirmed" && model.rating?.state === "ready"
+        ? {title:"단지 변화 · 추진 단계", ...model.rating}
+        : missing(model.rating?.reason || "단지와 공식 사업의 연결을 더 확인해야 해요.");
+      const zones = zippickOwnDevelopmentZones(item, item?.zippickDevelopmentInsight?.zones || []);
+      const today = new Date().toISOString().slice(0, 10);
+      const sourced = zones.filter(zone => {
+        try {
+          const url = new URL(zone.sourceUrl || zone.source || "");
+          const date = String(zone.sourceDate || "");
+          const age = (Date.parse(today) - Date.parse(date)) / 86400000;
+          return url.protocol === "https:" && /(^|\.)(go\.kr|seoul\.kr)$/.test(url.hostname)
+            && /^\d{4}-\d{2}-\d{2}$/.test(date) && age >= 0 && age <= 365
+            && new Date(date).toISOString().slice(0, 10) === date;
+        } catch (_) { return false; }
+      });
+      if (!sourced.length) return missing("현재 추진 단계를 확인할 공식 자료가 부족해요. 기사만으로 별점을 매기지 않아요.");
+      const latest = sourced.map(zone => zone.sourceDate).sort().at(-1);
+      const current = sourced.filter(zone => zone.sourceDate === latest);
+      const stages = current.map(zone => ZIPPICK_DEVELOPMENT_STAGE_RATINGS.find(row =>
+        row.stages.includes(String(zone.stageLabel || zone.stage || "").replace(/\s+/g, ""))));
+      if (stages.some(stage => !stage)) return missing("공식 자료의 현재 단계를 더 확인해야 해요. 예정·신청 단계는 완료된 단계로 계산하지 않아요.");
+      if (new Set(stages.map(stage => stage.points)).size !== 1) return missing("공식 자료에 서로 다른 단계가 있어요. 현재 단계를 확인한 뒤 별점을 매겨요.");
+      const stage = stages[0], zone = current[0];
+      return {title:"단지 변화 · 추진 단계", points:stage.points, ratio:stage.points / 5,
+        stars:stage.points.toFixed(1), scoreText:`${stage.points.toFixed(1)}/5`,
+        stageLabel:stage.label, sourceStage:zone.stageLabel || zone.stage,
+        sourceDate:zone.sourceDate, sourceUrl:zone.sourceUrl || zone.source,
+        state:"ready", version:"own-development-stage-v2"};
+    }
+
+    function zippickDevelopmentRatingBasisHtml(item) {
+      const rating = zippickDevelopmentRatingView(item);
+      const basis = rating.state === "ready"
+        ? `<b>${esc(rating.stageLabel)}</b> · 기본 1.0점 + 단계 가점 ${(rating.points - 1).toFixed(1)}점 = <b>${esc(rating.scoreText)}</b><br>자료 표기: ${esc(rating.sourceStage)} · ${rating.sourceDate ? `자료 기준일 ${esc(rating.sourceDate)}` : `공식 현황 확인일 ${esc(rating.checkedAt)}`}`
+        : esc(rating.reason);
+      return `<p class="zpr-score-note">${basis}</p>
+        <details class="zpr-details"><summary>단지 변화 별점 기준</summary>
+          <p>공식 자료로 확인한 진행 단계에 가점을 더해요. 집픽의 단계 비교용 점수예요.</p>
+          <table class="zpr-table"><thead><tr><th>확인한 단계</th><th>별점</th></tr></thead><tbody>
+            ${ZIPPICK_DEVELOPMENT_STAGE_RATINGS.map(stage => `<tr><td>${esc(stage.label)}</td><td>${stage.points.toFixed(1)} / 5</td></tr>`).join("")}
+          </tbody></table>
+          <p>분담금·사업성·가격 상승 가능성은 이 별점에 넣지 않았어요. 준공된 사업은 앞으로의 단지 변화에서 제외해요.</p>
+          <p><a href="https://cleanup.seoul.go.kr/cleanup/view/redevelop.do" target="_blank" rel="noopener">서울시 정비사업 절차 안내 ↗</a>${rating.sourceUrl ? ` · <a href="${esc(rating.sourceUrl)}" target="_blank" rel="noopener">현재 단계의 공식 자료 ↗</a>` : ""}</p>
+        </details>`;
+    }
+
     function zippickDevelopmentHtml(item) {
+      const model = zippickOwnDevelopmentModel(item);
+      if (["completed_or_cancelled", "not_applicable"].includes(model?.status)) return "";
       const allRows = zippickDevelopmentRows(item);
       const insight = item?.zippickDevelopmentInsight || {};
       const allOfficialZones = Array.isArray(insight.zones) ? insight.zones : [];
@@ -17875,11 +19131,15 @@
         ? ownRows
         : [];
       const officialZones = zippickOwnDevelopmentZones(item, allOfficialZones);
-      if (!rows.length && !officialZones.length) return "";
+      if (!rows.length && !officialZones.length) {
+        if (!["unresolved", "building_age_unresolved", "error"].includes(model?.status)) return "";
+        return `<section class="zpr-section"><span class="zpr-kicker" data-zpr-step="단지 변화"></span>
+          <h5>단지 정비사업을 더 확인해야 해요</h5><p class="zpr-insight">${esc(model.errorReason || "공식 사업목록과 단지의 주소·연식을 더 확인해야 해요. 확인 전에는 이 단지의 사업이나 별점으로 표시하지 않아요.")}</p></section>`;
+      }
       const confirmedRows = zippickConfirmedOwnDevelopmentRows(rows);
       const hasOfficialStage = confirmedRows.length > 0 || officialZones.length > 0;
       const tier = hasOfficialStage
-        ? zippickDevelopmentStageTier(confirmedRows, officialZones)
+        ? zippickDevelopmentStageTier(model ? [] : confirmedRows, officialZones)
         : "signal";
       const word = zippickDevelopmentProjectWord(rows, officialZones);
 
@@ -17907,11 +19167,13 @@
 
       const lead = selfLead;
 
-      const heading = tier === "signal" ? `이 단지 ${word} 추진 소식이 있습니다`
+      let heading = tier === "signal" ? `이 단지 ${word} 추진 소식이 있습니다. 공식 단계는 아직 확인 중이에요`
         : tier === "late" ? `이 단지 ${zpJosa(word, "이", "가")} 막바지 단계입니다`
         : tier === "mid" ? `이 단지가 ${zpJosa(word, "을", "를")} 추진 중입니다`
         : tier === "early" ? `이 단지 ${zpJosa(word, "은", "는")} 아직 초기 단계입니다`
         : `이 단지가 ${word} 대상입니다`;
+      const stageRating = zippickDevelopmentRatingView(item);
+      if (stageRating.state === "ready") heading += `. 현재 ${stageRating.stageLabel} 단계예요`;
 
       const note = tier === "signal"
         ? "현재는 기사에서 추진 움직임만 확인된 상태입니다. <b>공식 고시가 나오기 전에는 재건축 일정과 분담금을 확정할 수 없습니다.</b>"
@@ -17950,6 +19212,7 @@
       return `<section class="zpr-section">
         <span class="zpr-kicker" data-zpr-step="단지 변화"></span>
         <h5>${esc(heading)}</h5>
+        ${zippickDevelopmentRatingBasisHtml(item)}
         <p class="zpr-insight">${lead}</p>
         ${officialHtml}
         ${newsHtml}
@@ -18085,7 +19348,7 @@
 
     function zippickLifestylePlanRating(analysis) {
       const plan = analysis?.planRating;
-      return ["living-area-plan-v3-beta", "living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan?.version) ? plan : null;
+      return ["living-area-plan-v3-beta", "living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta", "living-area-plan-v9-beta"].includes(plan?.version) ? plan : null;
     }
 
     function zippickLifestyleChangeRatingData(item) {
@@ -18101,6 +19364,15 @@
 
     function zippickLifestyleChangeRatingView(item) {
       const analysis = item?.futureTransformation;
+      if (analysis?.status === "pending") {
+        // 2차 보강 중간 결과에서 첫 화면 밖 후보는 최종 결과가 오면 채워져요.
+        return {
+          points:0,
+          title:"생활권 변화 · 계산 중",
+          scoreText:"계산 중",
+          state:"missing",
+        };
+      }
       if (analysis?.status === "error") {
         return {
           points:0,
@@ -18267,7 +19539,7 @@
     function zippickRailUnderReview(project = {}) {
       if (["construction", "completed", "cancelled"].includes(project.stageCode || project.stage)) return false;
       return project.railReviewStatus === "reconsidering"
-        || /재추진|재검토/.test(project.stageLabel || project.stage || "");
+        || /재추진|재검토|예타\s*(?:미통과|탈락|철회)/.test(project.stageLabel || project.stage || "");
     }
 
     function zippickLivingRailVisible(project, reviewEnabled = false) {
@@ -18294,7 +19566,7 @@
       if (!rows.length) return "";
       return `<div class="zpr-living-summary zpr-living-transport" aria-label="${esc(title)}"><h6>${esc(title)}</h6>${rows.map(p => {
         const route = p.geometryBasis === "official_reference_alignment";
-        if (zippickRailUnderReview(p)) return `<div class="zpr-living-summary-row"><span class="zpr-living-icon" aria-hidden="true">↗</span><div><strong>${esc(p.name)}</strong><p>${esc(p.reviewLabel || "재추진 중 · 일정 미정")}</p><p>자료 표기: ${esc(p.stageLabel || p.stage || "진행 단계 확인 중")}</p><small>교통 가점과 매수 이유에서 제외한 참고 자료예요.</small><p>${zippickFutureSourceLink(zippickLivingProjectSourceUrl(p))} · 자료 기준 ${esc(p.sourceDate || "미확인")}</p></div></div>`;
+        if (zippickRailUnderReview(p)) return `<div class="zpr-living-summary-row"><span class="zpr-living-icon" aria-hidden="true">↗</span><div><strong>${esc(p.name)}</strong><p>${esc(p.reviewLabel || "재추진 중 · 일정 미정")}</p><p>자료 표기: ${esc(p.stageLabel || p.stage || "진행 단계 확인 중")}</p><small>${esc(p.reviewReason || "교통 가점과 매수 이유에서 제외한 참고 자료예요.")}</small><p>${zippickFutureSourceLink(p.reviewSourceUrl || zippickLivingProjectSourceUrl(p))} · 자료 기준 ${esc(p.reviewSourceDate || p.sourceDate || "미확인")}</p></div></div>`;
         return `<div class="zpr-living-summary-row"><span class="zpr-living-icon" aria-hidden="true">↗</span><div><strong>${esc(p.name)}</strong><p>${esc(route ? `지도 자료 표기: ${p.stageLabel || "단계 미확인"}` : p.factSummary || p.stageLabel || "단계 미확인")}</p>${Number.isFinite(p.distanceMeters) ? `<p>${route ? "노선까지" : "기존 역 대표점까지"} 직선 ${p.distanceMeters.toLocaleString("ko-KR")}m · ${route ? "역까지 거리 아님" : "도보거리 아님"}</p>` : ""}<small>${route ? "이미 개통한 구간이 포함될 수 있어요. 노선과 가깝다는 이유로 새 역세권 점수를 더하지 않아요." : esc(p.planningNote || "계획 경유역 자료예요. 실제 출입구와 도보시간은 별도로 확인해야 해요.")}</small><p>${zippickFutureSourceLink(zippickLivingProjectSourceUrl(p))} · ${p.regionalReference && p.publishedAt ? `발표 ${esc(p.publishedAt)} · 확인 ${esc(p.checkedAt || p.sourceDate || "미확인")}` : `${route ? "조회" : "자료 기준"} ${esc(p.sourceDate || "미확인")}`}</p></div></div>`;
       }).join("")}</div>`;
     }
@@ -18344,7 +19616,7 @@
       ];
       const stages = { planning:"계획", designated:"구역 지정", association:"조합 설립", approved:"사업 인가", disposal:"관리처분", construction:"착공", completed:"완료" };
       const housingScoreInputsHtml = component => {
-        if (!["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
+        if (!["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta", "living-area-plan-v9-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
         return `<ul class="zpr-living-score-inputs" aria-label="점수에 반영한 정비사업">${component.inputs.map(project => {
           const distance = Number.isFinite(project.distanceMeters) ? `직선 ${project.distanceMeters.toLocaleString("ko-KR")}m` : "거리 확인 중";
           const contribution = Number.isFinite(project.contributionScore) ? `${project.contributionScore.toFixed(2)}점 반영` : "반영 점수 확인 중";
@@ -18352,7 +19624,7 @@
         }).join("")}</ul>`;
       };
       const transportScoreInputsHtml = component => {
-        if (!["living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
+        if (!["living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta", "living-area-plan-v9-beta"].includes(plan?.version) || !Array.isArray(component?.inputs)) return "";
         const used = component.inputs.filter(line => Number.isFinite(line.contributionScore));
         return `<ul class="zpr-living-score-inputs" aria-label="점수에 반영한 철도 노선">${used.map(line => {
           const distance = Number.isFinite(line.distanceMeters) ? `참고 위치까지 직선 ${line.distanceMeters.toLocaleString("ko-KR")}m` : "위치 확인 중";
@@ -18417,7 +19689,7 @@
       let planNote = "";
       if (plan?.score === null && Number.isFinite(plan.subScores?.housing)
           && !Number.isFinite(plan.subScores?.transport)) {
-        planNote = (["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta"].includes(plan.version)
+        planNote = (["living-area-plan-v4-beta", "living-area-plan-v5-beta", "living-area-plan-v6-beta", "living-area-plan-v7-beta", "living-area-plan-v8-beta", "living-area-plan-v9-beta"].includes(plan.version)
           ? "주거환경 점수는 직선 2km 안의 사업을 규모·거리·진행 단계별로 계산해 더해요. "
           : "주거환경 점수는 확인된 사업 중 가장 높은 1곳을 기준으로 해요. 다른 사업을 더해 점수를 높이지 않아요. ")
           + (plan.transportCoverage?.status === "map_reference_only"
@@ -18458,10 +19730,21 @@
               ? `가장 영향 큰 곳 ${esc(leadInput.name)} · ${number(leadInput.distanceMeters)}m · ${esc(stages[leadInput.stage] || leadInput.stageLabel || "단계 확인 중")}` : ""]
           : [esc(plan?.missingReasons?.housing || "주거환경 자료를 확인하고 있어요.")];
         const railInput = (railComponent.inputs || []).find(row => Number.isFinite(row.contributionScore)) || (railComponent.inputs || [])[0];
+        const scoredLines = new Set((railComponent.inputs || []).map(row => row.lineId));
+        const unscoredLines = new Map();
+        for (const row of railComponent.excludedStations || []) {
+          if (scoredLines.has(row.lineId) || zippickRailUnderReview(row)) continue;
+          const station = (plan?.transportCoverage?.nearbyPlannedStations || [])
+            .find(station => station.lineId === row.lineId && station.name === row.name) || row;
+          const prior = unscoredLines.get(row.lineId || row.name);
+          if (!prior || station.distanceMeters < prior.distanceMeters) unscoredLines.set(row.lineId || row.name, station);
+        }
+        const unscoredRailFacts = [...unscoredLines.values()].map(station =>
+          `${esc(station.name)}${station.stageLabel ? ` · ${esc(station.stageLabel)}` : ""}${Number.isFinite(station.distanceMeters) ? ` · 직선 ${number(station.distanceMeters)}m` : ""} · 기존 역보다 멀어 가점 제외`);
         const railFacts = Number.isFinite(railValue)
-          ? [railInput ? `${esc(railInput.name)} · 직선 ${number(railInput.distanceMeters)}m${railInput.kind === "line_extension" ? " · 이미 운행 중인 노선 연장" : ""}`
-             : railComponent.noUsefulPlannedStation ? "새로 탈 만한 예정역 없음"
-             : "2km 안 새 예정역 없음"]
+          ? [railInput ? `${esc(railInput.name)}${railInput.stageLabel ? ` · ${esc(railInput.stageLabel)}` : ""} · 직선 ${number(railInput.distanceMeters)}m${railInput.kind === "line_extension" ? " · 이미 운행 중인 노선 연장" : ""}`
+             : railComponent.noUsefulPlannedStation ? "예정역은 있지만, 거리 기준상 가점 제외"
+             : "2km 안 새 예정역 없음", ...unscoredRailFacts]
           : [esc(plan?.missingReasons?.transport || "새 철도 자료를 확인하고 있어요.")];
         const factCard = (label, value, facts) => `<div class="zpr-living-fact"><span>${label}</span><strong>${value}</strong>${facts.filter(Boolean).map(text => `<small>${text}</small>`).join("")}</div>`;
         const railBonus = Number.isFinite(railValue) && Number.isFinite(plan?.weights?.transport)
@@ -18524,7 +19807,7 @@
           const metrics = (analysis.metrics || []).filter(metric => keys.includes(metric.key));
           const missingState = analysis.status === "stale" || plan?.status === "stale" ? "최신 자료 확인 필요"
             : (housingScoreKnown || transportScoreKnown) ? "평가 보류" : "평가 자료 부족";
-          return `<div><span>${label}</span><strong class="zpr-living-sub-number">${scoreText(value)}</strong><small>${value === 0 && component?.noPlannedStationWithinRadius ? "신규 예정역 없음 · 가점 없음" : value === 0 && component?.noUsefulPlannedStation ? "새로 탈 만한 예정역 없음 · 가점 없음" : Number.isFinite(value) ? (component?.coverageIncomplete ? "확인한 예정역 기준 · 추가 확인 중" : "계획 기준 · 베타") : key === "transport" && plan?.transportCoverage?.status === "station_mapping_incomplete" ? "다른 노선의 예정역 확인 중" : missingState}</small>${!Number.isFinite(value) && plan?.missingReasons?.[key] ? `<small class="zpr-living-missing-reason">${esc(plan.missingReasons[key])}</small>` : ""}<details><summary>점수 근거 보기</summary><p>${esc(component?.summary || plan?.missingReasons?.[key] || analysis.categoryFacts?.[key]?.detail || reason)}</p>${component ? `<p>${esc(component.formula)}</p><p>${esc(component.policy)}</p>${key === "housing" ? housingScoreInputsHtml(component) : `${transportScoreInputsHtml(component)}${[component.impactPolicy,component.maturityPolicy,component.accessPolicy].filter(Boolean).map(text => `<p>${esc(text)}</p>`).join("")}`}` : metrics.map(metric => `<p>${esc(metric.label)} <b>${Number.isFinite(metric.value) ? `${esc(metric.value)} / 100` : "추가 자료 필요"}</p>`).join("")}<p>자료가 없는 항목은 0점으로 계산하지 않아요. 가격 상승률을 뜻하지 않아요.</p></details></div>`;
+          return `<div><span>${label}</span><strong class="zpr-living-sub-number">${scoreText(value)}</strong><small>${value === 0 && component?.noPlannedStationWithinRadius ? "신규 예정역 없음 · 가점 없음" : value === 0 && component?.noUsefulPlannedStation ? "예정역은 있지만, 거리 기준상 가점 제외" : Number.isFinite(value) ? (component?.coverageIncomplete ? "확인한 예정역 기준 · 추가 확인 중" : "계획 기준 · 베타") : key === "transport" && plan?.transportCoverage?.status === "station_mapping_incomplete" ? "다른 노선의 예정역 확인 중" : missingState}</small>${!Number.isFinite(value) && plan?.missingReasons?.[key] ? `<small class="zpr-living-missing-reason">${esc(plan.missingReasons[key])}</small>` : ""}<details><summary>점수 근거 보기</summary><p>${esc(component?.summary || plan?.missingReasons?.[key] || analysis.categoryFacts?.[key]?.detail || reason)}</p>${component ? `<p>${esc(component.formula)}</p><p>${esc(component.policy)}</p>${key === "housing" ? housingScoreInputsHtml(component) : `${transportScoreInputsHtml(component)}${[component.impactPolicy,component.maturityPolicy,component.accessPolicy].filter(Boolean).map(text => `<p>${esc(text)}</p>`).join("")}`}` : metrics.map(metric => `<p>${esc(metric.label)} <b>${Number.isFinite(metric.value) ? `${esc(metric.value)} / 100` : "추가 자료 필요"}</p>`).join("")}<p>자료가 없는 항목은 0점으로 계산하지 않아요. 가격 상승률을 뜻하지 않아요.</p></details></div>`;
         }).join("")}</div>`}
         ${analysisError || !planNote ? "" : `<p class="zpr-living-plan-note">${esc(planNote)}</p>`}
         ${!analysisError && plan?.transportCoverage?.nearbyOperatingStations?.length ? `<p class="zpr-living-plan-note"><strong>현재 이용 가능한 철도</strong> ${plan.transportCoverage.nearbyOperatingStations.map(station => `${esc(station.name)} · 직선 ${Number(station.distanceMeters).toLocaleString("ko-KR")}m`).join(" / ")}<br>이미 개통한 역이에요. 새 철도 가점과 구분해요.</p>` : ""}
@@ -18694,19 +19977,28 @@
       const hasJeonse = Number.isFinite(jeonse) && jeonse > 0;
       if (!hasRatio && !hasJeonse) return "";
 
-      const gap = hasSale && hasJeonse ? sale - jeonse : NaN;
+      // 돈 계산(전세 차이·필요한 내 돈·매수 비용)은 모두 같은 가격으로 한다.
+      // 리포트 아래 '매수·보유 비용'과 같은 최근 실거래가를 먼저 쓴다.
+      const latestDeal = zpNum(item?.latestDealPriceEok);
+      const basisPrice = Number.isFinite(latestDeal) && latestDeal > 0 ? latestDeal : sale;
+      const basisLabel = Number.isFinite(latestDeal) && latestDeal > 0 ? "최근 실거래가" : "예상 시세";
+      const gap = Number.isFinite(basisPrice) && hasJeonse ? basisPrice - jeonse : NaN;
       const hasGap = Number.isFinite(gap) && gap > 0;
 
       // 실거주(대출 받아 직접 들어감)와 전세 끼고 사는 경우는 필요한 돈이
       // 전혀 다르다. 둘을 나란히 보여줘야 "내가 살 수 있는 집인가"에 답이 된다.
-      const liveCash = zpNum(item?.policyImpact?.requiredCashEok);
+      const basisScenario = (item?.policyImpact?.cashScenarios || [])
+        .find(row => Number.isFinite(basisPrice) && Math.abs(Number(row.priceEok) - basisPrice) < 0.005);
+      const scenarioCash = zpNum(basisScenario?.requiredCashEok);
+      const liveCash = Number.isFinite(scenarioCash) ? scenarioCash : zpNum(item?.policyImpact?.requiredCashEok);
+      const liveCashPrice = Number.isFinite(scenarioCash) ? basisPrice : NaN;
       const hasLiveCash = Number.isFinite(liveCash) && liveCash > 0;
 
       const peer = zippickJeonsePeerStat(item, ratio);
 
       // 매매·전세 기준값과 비교 후보 중간값은 숫자 카드에 한 번만 보여준다.
       const cells = [];
-      if (hasSale) cells.push({ lb:"매매 기준가", vl:transactionMoney(sale), nt:"전세 비교용 · 현재 매물값은 아님" });
+      if (hasSale) cells.push({ lb:"예상 시세", vl:transactionMoney(sale), nt:"전세금 비중 계산용 · 현재 매물값은 아님" });
       if (hasJeonse) cells.push({ lb:"전세금", vl:transactionMoney(jeonse), nt:"같은 평형 전세 실거래" });
       if (hasRatio) {
         cells.push({
@@ -18722,25 +20014,27 @@
         ? "다른 후보보다 전세금에 비해 매매가가 비싼 편이에요."
         : "";
       const lines = [];
-      if (hasGap) lines.push(`전세 승계가 가능하다면, 매매가에서 전세금을 뺀 차이는 <b>${transactionMoney(gap)}</b>예요. 세금·대출은 별도예요.`);
-      if (hasLiveCash) lines.push(`직접 살 때는 대출을 반영해 내 돈 <b>${transactionMoney(liveCash)}</b>이 필요할 것으로 봐요. 실제 대출 심사에 따라 달라져요.`);
+      if (hasGap) lines.push(`전세를 끼고 산다면, ${basisLabel} ${transactionMoney(basisPrice)}에서 전세금을 뺀 <b>${transactionMoney(gap)}</b>이 필요해요. 세금·대출은 별도예요.`);
+      if (hasLiveCash) lines.push(Number.isFinite(liveCashPrice)
+        ? `직접 들어가 산다면, ${basisLabel} ${transactionMoney(liveCashPrice)} 기준으로 대출을 빼고 내 돈 <b>${transactionMoney(liveCash)}</b>이 필요해요. 실제 대출 심사에 따라 달라져요.`
+        : `직접 들어가 산다면, 대출을 빼고 내 돈 <b>${transactionMoney(liveCash)}</b>이 필요할 것으로 봐요. 실제 대출 심사에 따라 달라져요.`);
       if (!lines.length) lines.push("매매가와 전세금을 확인하면 필요한 돈을 비교할 수 있어요.");
       if (hasRatio && ratio >= 70) lines.push("전세를 끼고 산다면 만기에 전세금을 돌려줄 돈도 준비하세요.");
 
       // 자금 조건도 높다·낮다만 말하지 않고, 매수에 유리한지부터 답한다.
-      let heading = "자금 조건은 판단할 수 없어요. 전세 거래를 더 확인하세요";
+      let heading = "자금 조건은 판단할 수 없어요. 매매가와 같은 면적의 전세금을 함께 확인해야 해요";
       if (peer) {
         heading = peer.band === "high"
           ? "자금 조건은 좋아요. 전세금 비중이 다른 후보보다 높아요"
           : peer.band === "low"
-            ? "전세를 끼고 사도 내 돈이 많이 필요해요"
+            ? "자금 조건은 아쉬워요. 전세금 비중이 다른 후보보다 낮아요"
             : "자금 조건은 보통이에요. 전세금 비중이 다른 후보와 비슷해요";
       } else if (hasRatio) {
         heading = ratio >= 55
           ? "자금 조건은 좋아요. 전세금 비중이 높은 편이에요"
           : ratio >= 40
             ? "자금 조건은 보통이에요. 전세금과 매매가의 차이를 확인하세요"
-            : "전세를 끼고 사도 내 돈이 많이 필요해요";
+            : `전세를 끼고 사도 내 돈이 많이 필요해요. 전세금 비중은 ${zpPct(ratio)}예요`;
       }
 
       // 가격 판단은 숫자 표 위에 먼저 보여주고, 자금 계산은 표 아래에 둔다.
@@ -18869,7 +20163,7 @@
       if (stat.band === "illiquid") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
           <span class="zpr-kicker" data-zpr-step="하락기 거래"></span>
-          <h5>나중에 팔기 어려울 수 있어 신중하게 보세요</h5>
+          <h5>팔 때 시간이 걸릴 수 있어요. ${esc(span)} 중 ${esc(stat.silentTotal)}개월은 거래가 없었어요</h5>
           <p class="zpr-insight">${esc(span)} 중 <b>${esc(stat.silentTotal)}개월</b>은 거래가 <b>한 건도 없었습니다.</b> 값이 오르고 내리고를 따지기 전에, <b>팔고 싶을 때 살 사람을 찾기 어렵다</b>는 뜻이에요.</p>
           <p class="zpr-insight">시세라고 부를 만한 값도 만들어지지 않습니다. <b>이 리포트의 가격은 참고선으로만 보셔야 합니다.</b></p>
         </section>`;
@@ -18878,8 +20172,15 @@
       if (stat.band === "no_downturn") {
         return `<section class="zpr-section" aria-label="하락장 환금성">
           <span class="zpr-kicker" data-zpr-step="하락기 거래"></span>
-          <h5>하락기에도 잘 팔리는지는 아직 알 수 없어요</h5>
+          <h5>하락기 거래는 판단하기 어려워요. 값이 내린 달이 ${esc(stat.downMonths)}개월뿐이에요</h5>
           <p class="zpr-insight">${esc(span)} 동안 값이 뚜렷하게 내린 달이 <b>${esc(stat.downMonths)}개월</b>뿐이라, <b>내릴 때도 팔리는 단지인지</b>는 아직 시험대에 오른 적이 없습니다. 다음 조정장이 와야 알 수 있는 부분이에요.</p>
+        </section>`;
+      }
+      if (stat.band === "unknown") {
+        return `<section class="zpr-section" aria-label="하락장 환금성">
+          <span class="zpr-kicker" data-zpr-step="하락기 거래"></span>
+          <h5>하락기 거래는 판단할 수 없어요. 평소 거래와 비교할 자료가 부족해요</h5>
+          <p class="zpr-insight">값이 내린 ${esc(stat.downMonths)}개월 동안 ${esc(stat.downDeals)}건이 거래됐어요. 다른 기간의 월평균 거래가 없어 거래가 유지됐는지는 비교하지 못했어요.</p>
         </section>`;
       }
 
@@ -18887,8 +20188,8 @@
       const heading = stat.band === "strong"
         ? "하락기 거래는 좋아요. 값이 내려도 거래가 유지됐어요"
         : stat.band === "fair"
-          ? "하락기 거래는 아쉬워요. 값을 낮춰야 팔릴 수 있어요"
-          : "하락기 거래는 아쉬워요. 값이 내려가면 팔기 어려울 수 있어요";
+          ? `하락기 거래는 아쉬워요. 거래 건수가 평소의 ${Math.round(stat.ratio * 100)}%로 줄었어요`
+          : `하락기 거래는 아쉬워요. 값이 내린 ${stat.downMonths}개월 동안 ${stat.downDeals}건만 거래됐어요`;
 
       const cells = [
         { lb:"값이 내린 달", vl:`${stat.downMonths}개월`, nt:`${span} 중` },
@@ -19002,6 +20303,8 @@
         const ratio = Math.max(0, Math.min(1, points / maxPoints));
         const stars = (ratio * 5).toFixed(1);
         return { title, ratio, stars, scoreText:view.scoreText, state:view.state };
+      } else if (label === "단지 변화") {
+        return zippickDevelopmentRatingView(item);
       }
       if (!title || !Number.isFinite(points) || !Number.isFinite(maxPoints) || maxPoints <= 0) return null;
       const ratio = Math.max(0, Math.min(1, points / maxPoints));
@@ -19027,9 +20330,11 @@
       const ratings = { yes:4.5, conditional:3, hold:2, risk:1 };
       const stars = verdict?.peakGuard ? 4 : ratings[verdict?.tone];
       if (!Number.isFinite(stars)) return `<div class="zpr-overall-verdict"><strong>${esc(label)}</strong></div>`;
-      return `<div class="zpr-overall-verdict" aria-label="매수 판단 ${esc(stars)}/5, ${esc(label)}">
+      const caution = verdict?.peakGuard ? "가격 주의" : "";
+      return `<div class="zpr-overall-verdict" aria-label="매수 판단 ${esc(stars)}/5, ${esc(label)}${caution ? `, ${caution}` : ""}">
         <span class="zpr-section-stars" aria-hidden="true" style="--zpr-rating-fill:${stars * 20}%">★★★★★</span>
         <strong>${esc(label)}</strong>
+        ${caution ? `<span class="zpr-overall-caution">${esc(caution)}</span>` : ""}
       </div>`;
     }
 
@@ -19710,7 +21015,7 @@
       // 고점 보정이 걸린 단지는 표에서 짚은 칸과 위 판정 배지가 달라진다.
       // 왜 다른지 표 안에서 바로 설명해야 사용자가 오류로 읽지 않는다.
       const guardNote = verdict?.peakGuard
-        ? ` 다만 지금 값이 <b>${verdict.peakGuard.atPeak ? "2년 중 가장 높은 구간" : "짧게 많이 오른 직후"}</b>이라, 표의 <b>'적극 검토'</b> 대신 <b>'매수 검토 · 가격 주의'</b>로 봤습니다.`
+        ? ` 다만 지금 값이 <b>${verdict.peakGuard.atPeak ? "2년 중 가장 높은 구간" : "짧게 많이 오른 직후"}</b>이라, 표의 <b>'적극 검토'</b>에서 <b>'우선 검토'</b>로 한 단계 낮추고 <b>'가격 주의'</b>를 따로 표시했어요.`
         : "";
 
       return `<section class="zpr-mx">
@@ -19769,27 +21074,78 @@
       return `<b>${esc(zpJosa(best.gain, "이", "가"))}</b> 상대적인 강점이고, <b>${esc(zpJosa(worst.give, "은", "는"))}</b> 확인이 필요해요.`;
     }
 
-    // 섹션 제목은 결론이어야 한다. "이렇습니다"는 아무것도 말해주지 않는다.
+    function zippickLocationHeadingFact(item, part, positive) {
+      const details = (Array.isArray(part?.details) ? part.details : []).filter(detail =>
+        detail.status !== "missing" && Number.isFinite(zpNum(detail.points)) && zpNum(detail.maxPoints) > 0);
+      const detail = key => details.find(row => row.key === key
+        && (positive ? zpPartRatio(row) >= .65 : zpPartRatio(row) < .55));
+      const distance = row => {
+        const match = /([\d,]+)\s*m/.exec(String(row?.reason || ""));
+        return match ? Number(match[1].replaceAll(",", "")).toLocaleString("ko-KR") : "";
+      };
+      if (part?.key === "demand") {
+        const station = distance(detail("station")), school = distance(detail("education"));
+        if (positive && station && school) return `역은 직선 ${station}m, 학교는 ${school}m로 가까워요`;
+        if (station) return positive ? `역까지 직선 ${station}m로 가까워요` : `역까지 직선 ${station}m로 거리가 멀어요`;
+        if (school) return positive ? `학교까지 ${school}m로 가까워요` : `학교까지 ${school}m로 통학 거리를 확인해야 해요`;
+        const commute = detail("commute");
+        const match = /(광화문|강남|여의도)\s*(\d+)분/.exec(String(commute?.reason || ""));
+        if (match) return `${match[1]}까지 약 ${match[2]}분${positive ? "으로 이동시간이 짧은 편이에요" : "이 걸려요"}`;
+      }
+      if (part?.key === "price") {
+        const leader = detail("leader_gap");
+        const match = /지역 대장보다 ([\d.]+)% (낮음|높음)/.exec(String(leader?.reason || ""));
+        if (match && !item?.signals?.isRegionalLeader
+            && (positive ? match[2] === "낮음" : match[2] === "높음")) {
+          return `대장 단지보다 실거래가가 ${match[1]}% ${match[2] === "낮음" ? "낮아요" : "높아요"}`;
+        }
+        if (!positive && /보다 높/.test(String(detail("estimate_range")?.reason || "")))
+          return "최근 거래가 집픽 추정 가격대보다 높아요";
+      }
+      if (part?.key === "product") {
+        const age = zpNum(item?.buildingAge), homes = zpNum(item?.households);
+        if (positive && detail("households") && homes >= 1000) return `${Math.round(homes).toLocaleString("ko-KR")}세대의 큰 단지예요`;
+        if (positive && detail("age") && Number.isFinite(age) && age >= 0 && age <= 10) return `${Math.round(age)}년차로 건물 연식이 짧아요`;
+        if (!positive && detail("age") && age >= 25) return `${Math.round(age)}년차 구축인 점은 아쉬워요`;
+        if (!positive && detail("households") && homes > 0 && homes < 600) return `${Math.round(homes).toLocaleString("ko-KR")}세대로 단지 규모가 작아요`;
+      }
+      if (part?.key === "market") {
+        const market = zippickMarketVerdict(item);
+        if (!positive && /아쉬워요/.test(market.heading)) return market.heading.split(". ").slice(1).join(". ");
+        const liquidity = detail("liquidity");
+        const match = /^최근 (\d+)개월 거래 (\d+)건$/.exec(String(liquidity?.reason || ""));
+        if (match) return `최근 ${match[1]}개월 동안 ${match[2]}건이 거래됐어요`;
+      }
+      return "";
+    }
+
+    // 공통 제목: 판정 다음에 그 단지의 확인된 강점·약점이 바로 이어진다.
     function zippickLocationHeading(item, verdict) {
       const score = zpNum(item?.locationScore?.score);
-      if (!Number.isFinite(score)) return "단지 조건은 판단할 수 없어요";
-      if (score >= 65 && verdict?.peakGuard) {
-        return verdict.peakGuard.atPeak
-          ? "단지 조건은 좋아요. 다만 최근 거래 가격은 2년 고점권입니다"
-          : "단지 조건은 좋아요. 다만 최근 거래 가격이 빠르게 올랐습니다";
-      }
-      if (score >= 80) return "단지 조건은 좋아요";
-      if (score >= 65) return "단지 조건은 좋아요";
-      if (score >= 50) return "단지 조건은 보통이에요";
-      return "단지 조건은 아쉬워요";
+      const parts = zpScoredParts(item).filter(part => Number.isFinite(zpPartRatio(part)) && part.status !== "missing"
+        && (!Array.isArray(part.details) || !part.details.length
+          || part.details.some(detail => detail.status !== "missing" && Number.isFinite(zpNum(detail.points)))));
+      if (!Number.isFinite(score) || !parts.length) return "단지 조건은 판단할 수 없어요. 세부 평가 자료가 부족해요";
+      const strong = parts.filter(part => zpPartRatio(part) >= .65).sort((a,b) => b.points-a.points)
+        .find(part => zippickLocationHeadingFact(item, part, true));
+      const weak = parts.filter(part => zpPartRatio(part) < .55).sort((a,b) => zpPartRatio(a)-zpPartRatio(b))
+        .find(part => zippickLocationHeadingFact(item, part, false));
+      const primary = score >= 65 ? strong : score < 50 ? weak : weak || strong;
+      if (!primary) return "단지 조건의 이유는 추가 확인이 필요해요. 총점만으로 강점이나 약점을 단정하지 않아요";
+      const meaning = score >= 65 ? "좋아요" : score >= 50 ? "보통이에요" : "아쉬워요";
+      let heading = `단지 조건은 ${meaning}. ${zippickLocationHeadingFact(item, primary, primary === strong)}`;
+      if (score >= 65 && verdict?.peakGuard) heading += verdict.peakGuard.atPeak
+        ? ". 다만 최근 거래 가격은 2년 고점권이에요" : ". 다만 최근 거래 가격이 빠르게 올랐어요";
+      else if (score >= 65 && weak && weak !== primary) heading += `. 다만 ${zippickLocationHeadingFact(item, weak, false)}`;
+      return heading;
     }
 
     function zippickCommuteHeading(item) {
       const hubs = item?.commuteProfile?.hubs;
-      if (!hubs) return "주요 업무지구 접근성은 판단할 수 없어요";
+      if (!hubs) return "주요 업무지구 접근성은 판단할 수 없어요. 이동시간 자료가 없어요";
       const rows = Object.entries(hubs).map(([n, v]) => ({ n, m: zpNum(v?.totalMinutes) }))
         .filter(r => Number.isFinite(r.m)).sort((a, b) => a.m - b.m);
-      if (!rows.length) return "주요 업무지구 접근성은 판단할 수 없어요";
+      if (!rows.length) return "주요 업무지구 접근성은 판단할 수 없어요. 확인된 이동시간이 없어요";
       const best = rows[0];
       if (best.m <= ZP_COMMUTE_GOOD_MINUTES) return `주요 업무지구 접근성은 좋아요. ${best.n}까지 ${best.m}분이에요`;
       if (best.m <= ZP_COMMUTE_OK_MINUTES) return `주요 업무지구 접근성은 보통이에요. ${best.n}까지 ${best.m}분이에요`;
@@ -19853,8 +21209,8 @@
       const market = zippickMarketVerdict(item);
       if (verdict?.peakGuard && market.summary === "가격과 거래가 함께 늘었어요") {
         return verdict.peakGuard.atPeak
-          ? "최근 시장 흐름은 좋아요. 다만 2년 고점권이라 최근 거래 평균 이하 매물만 보세요"
-          : "최근 시장 흐름은 좋아요. 다만 최근 급등해 최근 거래 평균 이하 매물만 보세요";
+          ? "최근 시장 흐름은 좋아요. 가격과 거래가 함께 늘었지만, 가격은 2년 고점권이에요"
+          : "최근 시장 흐름은 좋아요. 가격과 거래가 함께 늘었지만, 최근 급등은 주의하세요";
       }
       return market.heading;
     }
@@ -20406,13 +21762,13 @@
       // 매수 판단은 단지와 시장 자료만 사용한다. 추가 자금은 마련한다고 가정한다.
       const location = zpNum(item?.locationScore?.score);
       const decisions = {
-        yes: "매수 검토",
-        conditional: "조건부 매수 검토",
-        hold: "지금은 관망",
-        risk: "다른 단지 우선",
+        yes: "적극 검토",
+        conditional: "조건부 검토",
+        hold: "관망",
+        risk: "다른 후보 우선",
         missing: "판단 보류"
       };
-      const label = verdict.peakGuard ? "매수 검토 · 가격 주의" : decisions[verdict.tone] || decisions.missing;
+      const label = verdict.peakGuard ? "우선 검토" : decisions[verdict.tone] || decisions.missing;
       const title = zippickVerdictTitle(item, verdict);
       const locationParts = zpScoredParts(item);
       const strongCount = locationParts.filter(part => zpPartRatio(part) >= .65).length;
@@ -20455,7 +21811,9 @@
           : Number.isFinite(age) && age >= 25
             ? ` ${Math.round(age)}년차 구축이라 새 단지와 경쟁할 때 불리할 수 있어요.`
             : "";
-        return `단지·입지 ${Math.round(score)}점/100점. 이 점수에는 지역 시세·대장단지 비교도 들어가지만, 지금 나온 매물 가격은 반영되지 않았어요. ${riskText}${productRisk}`;
+        const pricePart = parts.find(part => part?.key === "price");
+        const priceBasis = pricePart && zippickPriceRankExcluded(pricePart) ? "대장단지 비교" : "지역 시세·대장단지 비교";
+        return `단지·입지 ${Math.round(score)}점/100점. 이 점수에는 ${priceBasis}도 들어가지만, 지금 나온 매물 가격은 반영되지 않았어요. ${riskText}${productRisk}`;
       }
       const sorted = parts.slice().sort((a, b) => zpPartRatio(b) - zpPartRatio(a));
       const strongest = sorted[0], weakest = sorted[sorted.length - 1];
@@ -20762,6 +22120,24 @@
       return station.scoringEligible === false ? "지도 참고점 · 점수 미반영" : "예정역 참고 위치";
     }
 
+    function zippickLivingRepresentativeStations(stations = []) {
+      const nearest = new Map();
+      stations.forEach((station, index) => {
+        if (!Number.isFinite(station.distanceMeters) || station.distanceMeters < 0 || station.distanceMeters > 2000
+            || !Number.isFinite(station.latitude) || !Number.isFinite(station.longitude)
+            || station.latitude <= 33 || station.latitude >= 39 || station.longitude <= 124 || station.longitude >= 132) return;
+        // Use line identity, never a station's display name. Keep operating and planned stops distinct.
+        const line = station.lineId || station.projectId || station.routeId || station.id || `unknown-${index}`;
+        const key = `${line}|${station.serviceStatus === "operating" ? "operating" : "planned"}`;
+        const previous = nearest.get(key);
+        if (!previous || station.distanceMeters < previous.distanceMeters
+            || station.distanceMeters === previous.distanceMeters && String(station.id || "") < String(previous.id || "")) {
+          nearest.set(key, station);
+        }
+      });
+      return [...nearest.values()];
+    }
+
     function zippickLivingProjectSourceUrl(project) {
       return [project.officialDetailUrl, project.stageSourceUrl, project.nameSourceUrl, project.sourceUrl]
         .map(zippickOfficialDetailUrl).find(Boolean) || "";
@@ -20791,6 +22167,7 @@
       let reviewRailEnabled = false;
       const stations = (data.stations || []).filter(station =>
         Number.isFinite(station.distanceMeters) && station.distanceMeters >= 0 && station.distanceMeters <= 2000);
+      const representativeStations = zippickLivingRepresentativeStations(stations);
       const routes = data.routes || [];
       [...stations, ...routes].forEach(project => {
         if (zippickRailUnderReview(project)) project.railReviewStatus = "reconsidering";
@@ -20803,7 +22180,8 @@
         && !zones.some(zone => zone.projectId === point.id));
       const validPoint = point => Number.isFinite(point.latitude) && Number.isFinite(point.longitude)
         && point.latitude > 33 && point.latitude < 39 && point.longitude > 124 && point.longitude < 132;
-      const all = [...points, ...stations].filter(validPoint);
+      // Label one nearest stop per line; retain all source stations for route geometry and facts.
+      const all = [...points, ...representativeStations].filter(validPoint);
       const closestRailStation = stations.filter(station => validPoint(station) && !zippickRailUnderReview(station))
         .sort((a,b) => a.distanceMeters-b.distanceMeters)[0] || null;
       const distanceText = meters => Number.isFinite(meters) ? `직선 약 ${meters.toLocaleString("ko-KR")}m` : "거리 미확인";
@@ -21616,8 +22994,8 @@
         </section>` : ""}
         ${zippickLiquidityHtml(item)}
         ${zippickLifestyleChangeHtml(item)}
-        ${zippickFundingHtml(item)}
         ${zippickDevelopmentHtml(item)}
+        ${zippickFundingHtml(item)}
         ${zippickAlternativesHtml(item)}
         ${zippickBreakevenHtml(item)}
         <details class="zpr-details"><summary>왜 이런 매수 판단이 나왔는지 자세히 보기</summary>
@@ -21937,9 +23315,99 @@
       };
     }
 
+    function comparisonFundingState(row) {
+      const policy = row?.policyImpact || {};
+      const scenarios = Array.isArray(policy.cashScenarios) ? policy.cashScenarios : [];
+      const gaps = [policy.cashGapEok, ...scenarios.map(item => item.cashGapEok)]
+        .map(comparisonNumber).filter(value => value !== null);
+      const requiredValues = [policy.requiredCashEok, ...scenarios.map(item => item.requiredCashEok)]
+        .map(comparisonNumber).filter(value => value !== null && value >= 0);
+      const gap = gaps.length ? Math.min(...gaps) : null;
+      const required = requiredValues.length ? Math.max(...requiredValues) : null;
+      const restricted = policy.status === "restricted";
+      const shortage = gap !== null && gap < 0 ? Math.abs(gap) : null;
+      const text = shortage !== null ? `추가 자기자금 ${readableGapMoney(shortage)} 필요`
+        : restricted ? "대출 제한 확인 필요"
+        : gap === null ? "자금 조건 확인 필요"
+        : gap === 0 ? "추가 자기자금 없음" : `자기자금 ${readableGapMoney(gap)} 여유`;
+      return { gap, required, shortage, restricted, text, kind:shortage !== null || restricted ? "short" : gap === null ? "unknown" : "within" };
+    }
+
+    function comparisonPriceGapText(row) {
+      const gap = comparisonNumber(row?.budgetGapEok);
+      if (gap === null) return "검토 기준선 확인 필요";
+      if (gap === 0) return "검토 기준선과 같음";
+      return `검토 기준선보다 ${readableGapMoney(Math.abs(gap))} ${gap > 0 ? "낮음" : "높음"}`;
+    }
+
+    function comparisonRecommendationDifferences(recommendation) {
+      if (!recommendation.row || !recommendation.runnerUp) return [];
+      const weights = comparisonPreferenceWeights();
+      const labels = { total:"단지·입지 종합점수", flow:"최근 시장 신호", price:"가격 점수", transport:"교통 점수", education:"교육환경 점수", growth:"상승 여지 점수" };
+      const factors = [{key:"total",weight:weights.total}, {key:"flow",weight:weights.flow}, {key:comparisonPreference.priority,weight:weights.priority}];
+      return factors.map(item => {
+        const value = comparisonMetricScore(recommendation.row, item.key);
+        const other = comparisonMetricScore(recommendation.runnerUp, item.key);
+        return value === null || other === null ? null : { ...item, label:labels[item.key], value, other, difference:value - other };
+      }).filter(Boolean).sort((a, b) => b.difference * b.weight - a.difference * a.weight);
+    }
+
+    function comparisonDecisionReasonsHtml(rows, recommendation) {
+      if (!recommendation.row) return "";
+      const differences = comparisonRecommendationDifferences(recommendation);
+      const positive = differences.filter(item => item.difference > 0).slice(0, 2);
+      const negative = [...differences].reverse().find(item => item.difference < 0);
+      const otherName = recommendation.runnerUp ? candidateDisplayName(recommendation.runnerUp) : "다른 후보";
+      const format = value => Number(value.toFixed(1)).toLocaleString("ko-KR");
+      const reasons = positive.map(item => `${otherName}보다 ${item.label}가 ${format(item.difference)}점 높아요. (${format(item.value)}점 / ${format(item.other)}점)`);
+      if (!reasons.length) reasons.push("현재 반영된 점수로는 후보 간 뚜렷한 강점을 가리기 어려워요.");
+      let tradeoff = negative
+        ? `${negative.label}는 ${otherName}보다 ${format(Math.abs(negative.difference))}점 낮아요.`
+        : "점수에 없는 동·층·향과 수리 상태는 실제 매물에서 확인해야 해요.";
+      if (!negative && recommendation.runnerUp) {
+        const age = comparisonNumber(recommendation.row.buildingAge);
+        const otherAge = comparisonNumber(recommendation.runnerUp.buildingAge);
+        if (age !== null && otherAge !== null && age > otherAge) {
+          tradeoff = `건물 나이는 ${otherName}보다 ${Math.round(age - otherAge)}년 많아요. (${Math.round(age)}년차 / ${Math.round(otherAge)}년차)`;
+        }
+      }
+      return `<section class="comparison-decision-reasons" aria-label="추천을 가른 차이">
+        <h3>이 후보가 앞선 이유</h3>
+        <ul>${reasons.map(reason => `<li>${esc(reason)}</li>`).join("")}</ul>
+        <p><span>함께 볼 점</span> ${esc(tradeoff)}</p>
+        <p><span>다음 확인</span> 같은 평형의 최근 거래와 지금 나온 매물 가격을 비교하세요.</p>
+      </section>`;
+    }
+
+    function comparisonKeyDifferencesHtml(rows) {
+      const metrics = [
+        {label:"기준 가격", value:row => comparisonNumber(row.midPriceEok), format:value => transactionMoney(value)},
+        {label:"종합점수", value:row => comparisonNumber(row?.locationScore?.score), format:value => `${Math.round(value)}점`, score:true},
+        {label:"최근 시장 신호", value:row => comparisonNumber(row?.signals?.score), format:value => `${Math.round(value)}점`, score:true},
+        {label:"최근 3개월 가격 변화", value:row => comparisonNumber(row?.signals?.recent3Pct), format:value => marketRateText(value)},
+        {label:"건물 나이", value:row => comparisonNumber(row.buildingAge), format:value => `${Math.round(value)}년차`},
+        {label:"세대수", value:row => comparisonNumber(row.households), format:value => `${value.toLocaleString("ko-KR")}세대`},
+      ];
+      return `<section class="comparison-key-differences" aria-label="후보 간 핵심 차이"><h3>후보 간 차이</h3>
+        <div class="comparison-table-wrap"><table class="comparison-table comparison-key-table">
+          <thead><tr><th scope="col">비교 항목</th>${rows.map(row => `<th scope="col">${esc(candidateDisplayName(row))}</th>`).join("")}</tr></thead>
+          <tbody>${metrics.map(metric => {
+            const values = rows.map(metric.value);
+            const known = values.filter(value => value !== null);
+            const best = metric.score && known.length === rows.length && new Set(known).size > 1 ? Math.max(...known) : null;
+            return `<tr><th scope="row">${esc(metric.label)}</th>${values.map(value => {
+              const highest = best !== null && value === best && values.filter(item => item === best).length === 1;
+              return `<td${highest ? ' class="comparison-key-best" aria-label="이 항목 점수 가장 높음"' : ""}>${value === null ? "판단불가" : esc(metric.format(value))}</td>`;
+            }).join("")}</tr>`;
+          }).join("")}</tbody>
+        </table></div>
+        <p class="comparison-section-note">기준 가격은 예상 시세예요. 가격 변화는 높다는 이유만으로 유리하다고 보지 않아요.</p>
+      </section>`;
+    }
+
     function comparisonRequiredCashText(row) {
-      const value = comparisonNumber(row?.policyImpact?.requiredCashEok);
-      return value !== null && value > 0 ? policyMoney(value) : "조건 계산 전";
+      const state = comparisonFundingState(row);
+      return state.required !== null ? policyMoney(state.required) : "조건 계산 전";
     }
 
     function comparisonLeadingStrengthLabel(row, rows) {
@@ -22198,7 +23666,7 @@
       }
       if (dominantKey === "total") {
         const balance = comparisonScoreBalance(winner);
-        return `<strong>가격·입지·단지 조건을 함께 봤을 때 가장 균형이 좋았어요.</strong>${balance.strengthLabel ? ` 특히 ${esc(balance.strengthLabel)}이 받쳐줘 오래 보유할 후보로 더 편안합니다.` : " 한 가지 장점에 기대기보다 여러 조건이 고르게 받쳐주는 집이에요."}`;
+        return `<strong>가격·입지·단지 조건을 함께 봤을 때 가장 균형이 좋았어요.</strong>${balance.strengthLabel ? ` 특히 ${esc(zpJosa(balance.strengthLabel, "이", "가"))} 받쳐줘 오래 보유할 후보로 더 편안합니다.` : " 한 가지 장점에 기대기보다 여러 조건이 고르게 받쳐주는 집이에요."}`;
       }
       const partKey = dominantKey === "price" ? "price" : "demand";
       const part = comparisonLocationScorePart(winner, partKey);
@@ -22299,21 +23767,76 @@
       </ul>`;
     }
 
-    function comparisonPreferenceVerdictHtml(rows, recommendation = comparisonPreferenceRecommendation(rows)) {
-      if (!recommendation.row) {
-        return `<div class="comparison-verdict">
-        <div class="comparison-verdict-copy">
-          <p class="comparison-verdict-subtitle">${esc(recommendation.reason)}</p>
-        </div>
-      </div>`;
+    function comparisonConsultationSummary(recommendation) {
+      const row = recommendation.row;
+      const other = recommendation.runnerUp;
+      const name = candidateDisplayName(row);
+      const otherName = other ? candidateDisplayName(other) : "다른 후보";
+      const positive = comparisonRecommendationDifferences(recommendation).filter(item => item.difference > 0);
+      const priority = positive.find(item => item.key === comparisonPreference.priority);
+      const focus = ["transport", "education", "price"].includes(priority?.key) ? priority : positive[0];
+      const format = value => Number(value.toFixed(1)).toLocaleString("ko-KR");
+      if (!focus) return { title:"지금 자료로는 한 곳을 자신 있게 권하기 어렵습니다", reason:"후보를 가를 만큼 뚜렷한 차이가 확인되지 않았습니다. 같은 평형의 매물 가격과 동·층·향을 더 비교해 보겠습니다.", caution:"자료가 없는 항목을 좋은 조건으로 해석하지는 않았습니다." };
+      const scores = `${otherName}보다 ${focus.label}가 ${format(focus.difference)}점 높습니다. (${format(focus.value)}점 / ${format(focus.other)}점)`;
+      let title = `조건을 종합하면 ${name}부터 보겠습니다`;
+      let reason = scores;
+      if (focus.key === "flow" || focus.key === "growth") {
+        title = `최근 흐름을 중시한다면 ${name}부터 보겠습니다`;
+        const signals = row.signals || {};
+        const rate = comparisonNumber(signals.recent3Pct);
+        const recent = comparisonNumber(signals.recentDealCount);
+        const prior = comparisonNumber(signals.priorDealCount);
+        const facts = [];
+        if (rate !== null) facts.push(`최근 3개월 가격은 ${format(Math.abs(rate))}% ${rate > 0 ? "올랐습니다" : rate < 0 ? "내렸습니다" : "변화 없이 유지됐습니다"}`);
+        if (recent !== null && prior !== null) facts.push(`거래는 이전 6개월 ${Math.round(prior)}건에서 최근 6개월 ${Math.round(recent)}건으로 ${recent > prior ? "늘었습니다" : recent < prior ? "줄었습니다" : "같았습니다"}`);
+        reason = `${facts.length ? `${facts.join(". ")}. ` : ""}${scores}`;
+        if (rate !== null && rate > 0 && recent !== null && prior !== null && recent > prior) {
+          reason += " 가격 상승과 거래 증가가 함께 나타난다는 점이 먼저 살펴볼 이유입니다.";
+        } else {
+          reason += " 다만 점수가 앞선다는 이유만으로 가격이 계속 오른다고 보지는 않습니다.";
+        }
+      } else if (focus.key === "transport") {
+        title = `교통을 우선하면 ${name}부터 보겠습니다`;
+        const distance = comparisonNumber(row.nearestStationDistance);
+        const station = row.nearestStationName || "가까운 역";
+        reason = `${distance !== null && distance > 0 ? `${station}까지 직선거리 약 ${Math.round(distance).toLocaleString("ko-KR")}m입니다. ` : ""}${scores} 역 접근성을 중시한 답변에 더 맞는 후보입니다. 실제 걷는 길과 출근 시간은 따로 확인하겠습니다.`;
+      } else if (focus.key === "education") {
+        title = `교육환경을 우선하면 ${name}부터 보겠습니다`;
+        const detail = comparisonLocationScorePart(row, "demand")?.details?.find(item => item.key === "education");
+        reason = `${detail?.reason ? `${detail.reason} ` : ""}${scores} 학교와 교육환경을 중요하게 본 답변에서 이 항목이 앞섭니다. 실제 배정 학교는 주소로 다시 확인하겠습니다.`;
+      } else if (focus.key === "price") {
+        title = `가격 조건부터 따지면 ${name}부터 보겠습니다`;
+        const price = comparisonNumber(row.midPriceEok);
+        reason = `${price !== null && price > 0 ? `현재 예상 시세의 기준 가격은 ${transactionMoney(price)}입니다. ` : ""}${scores} 이 점수는 가격 비교 결과이므로, 실제로 필요한 내 돈도 함께 확인하겠습니다.`;
+      } else {
+        const bestPart = (row.locationScore?.parts || []).filter(part => !locationScorePartHasNoData(part) && comparisonNumber(part.points) !== null && comparisonNumber(part.maxPoints) > 0)
+          .sort((a, b) => b.points / b.maxPoints - a.points / a.maxPoints)[0];
+        reason = `${scores}${bestPart?.reason ? ` 강점으로 잡힌 근거는 ‘${bestPart.reason}’입니다.` : " 가격·입지·단지 조건을 함께 계산한 결과입니다."}`;
       }
-      return `<div class="comparison-verdict">
-        <div class="comparison-verdict-copy">
-          <h3 class="comparison-verdict-title">추천 후보는 ${esc(candidateDisplayName(recommendation.row))}예요</h3>
-          ${comparisonPreferenceHighlightsHtml(recommendation.reasonParts)}
-          ${comparisonRecommendationDetailHtml(rows, recommendation)}
-        </div>
-      </div>`;
+      const age = comparisonNumber(row.buildingAge);
+      const otherAge = comparisonNumber(other?.buildingAge);
+      const recovery = comparisonNumber(row.signals?.recoveryPct);
+      const recentDeals = comparisonNumber(row.signals?.recentDealCount);
+      let caution = "점수에 없는 동·층·향과 수리 상태를 확인한 뒤 매물을 좁히겠습니다.";
+      if (recentDeals !== null && recentDeals < 5) caution = `최근 6개월 거래가 ${Math.round(recentDeals)}건뿐이라 흐름을 단정하기 어렵습니다. 같은 평형의 추가 거래를 먼저 확인하겠습니다.`;
+      else if (recovery !== null && recovery >= 95) caution = "최근 2년 고점에 가까운 가격입니다. 흐름이 좋다는 이유로 비싼 매물까지 따라가지는 않겠습니다.";
+      else if (age !== null && otherAge !== null && age > otherAge) caution = `${Math.round(age)}년차로 ${otherName}보다 ${Math.round(age - otherAge)}년 오래됐습니다. 배관·주차·수리 상태를 현장에서 확인하겠습니다.`;
+      else if (age !== null && age >= 30) caution = `${Math.round(age)}년차 단지입니다. 건물 나이에서 오는 수리 부담을 감수할 수 있는지 확인하겠습니다.`;
+      if (recommendation.leadGap !== null && recommendation.leadGap < 2) caution = `${otherName}와의 종합 판단 차이는 작습니다. ${caution}`;
+      return { title, reason, caution };
+    }
+
+    function comparisonPreferenceVerdictHtml(rows, recommendation = comparisonPreferenceRecommendation(rows)) {
+      if (!recommendation.row) return `<p class="comparison-verdict-subtitle">${esc(recommendation.reason)}</p>`;
+      const funding = comparisonFundingState(recommendation.row);
+      const consultation = comparisonConsultationSummary(recommendation);
+      return `<div class="comparison-verdict"><div class="comparison-verdict-copy">
+        ${comparisonPreferenceHighlightsHtml(recommendation.reasonParts)}
+        <h3 class="comparison-verdict-title" tabindex="-1">${esc(consultation.title)}</h3>
+        <p class="comparison-consultation-reason">${esc(consultation.reason)}</p>
+        <p class="comparison-consultation-caution"><strong>다만,</strong> ${esc(consultation.caution)}</p>
+        <p class="comparison-consultation-funding${funding.kind === "short" ? " is-short" : ""}"><span>자금 확인</span> ${esc(funding.text)}${funding.shortage !== null ? ". 추가 자금을 마련하거나 매물 가격을 조정할 수 있어야 합니다." : ""}</p>
+      </div></div>`;
     }
 
     function comparisonCloseScoreVerdict(rows, leadGap, scoredRows) {
@@ -22362,31 +23885,26 @@
       const recommendation = comparisonPreferenceRecommendation(rows);
       const recommendedKey = recommendation.row ? candidateIdentityKey(recommendation.row) : "";
       return `<section class="comparison-overview" aria-label="후보 핵심 비교">
+        ${loading ? '<span class="comparison-score-loading" role="status">최신 점수 확인 중</span>' : ""}
         ${comparisonPreferenceVerdictHtml(rows, recommendation)}
-        ${loading ? '<span class="comparison-score-loading">최신 점수 확인 중</span>' : ""}
-        <div class="comparison-score-grid">
-          ${rows.map(row => {
-            const total = comparisonNumber(row?.locationScore?.score);
-            const balance = comparisonScoreBalance(row);
-            const isRecommended = Boolean(recommendedKey && candidateIdentityKey(row) === recommendedKey);
-            return `<article class="comparison-score-card${isRecommended ? " is-recommended" : ""}" data-candidate-key="${esc(candidateIdentityKey(row))}">
-              <div class="comparison-score-name-row">
-                <strong class="comparison-score-name">${esc(candidateDisplayName(row))}${isRecommended ? '<span class="comparison-score-badge">추천</span>' : ""}</strong>
-                <div class="comparison-score-actions">
-                  ${candidateMapInlineButtonHtml(row)}
-                </div>
-              </div>
-              <div class="comparison-score-facts">
-                <div class="comparison-score-fact"><span>종합점수</span><strong>${total !== null ? `${esc(Math.round(total))}점 · ${esc(row?.locationScore?.label || "판단불가")}` : "판단불가"}</strong></div>
-                <div class="comparison-score-fact"><span>최근 시장 신호</span><strong>${esc(comparisonMarketSignalSummary(row))}</strong></div>
-                <div class="comparison-score-fact"><span>기준 가격</span><strong>${esc(row.midPriceEok ? transactionMoney(row.midPriceEok) : "확인 필요")}</strong></div>
-                <div class="comparison-score-fact"><span>필요 자기자금</span><strong>${esc(comparisonRequiredCashText(row))}</strong></div>
-                <div class="comparison-score-fact"><span>강점</span><strong>${esc(balance.strength)}</strong></div>
-                <div class="comparison-score-fact"><span>확인</span><strong>${esc(balance.caution)}</strong></div>
-              </div>
-            </article>`;
-          }).join("")}
-        </div>
+        <section class="comparison-funding" aria-label="자기자금 확인"><h3>내 돈으로 살 수 있을까요?</h3>
+          <div class="comparison-score-grid" style="--comparison-count:${rows.length}">
+            ${rows.map(row => {
+              const funding = comparisonFundingState(row);
+              const isRecommended = Boolean(recommendedKey && candidateIdentityKey(row) === recommendedKey);
+              return `<article class="comparison-score-card${isRecommended ? " is-recommended" : ""}" data-candidate-key="${esc(candidateIdentityKey(row))}">
+                <div class="comparison-score-name-row"><strong class="comparison-score-name">${esc(candidateDisplayName(row))}${isRecommended ? '<span class="comparison-score-badge">내 기준 1위</span>' : ""}</strong>${candidateMapInlineButtonHtml(row)}</div>
+                <p class="comparison-candidate-meta">${esc(candidateMetaText(row))}</p>
+                <p class="comparison-funding-status is-${funding.kind}">${funding.shortage !== null ? `<span>추가 자기자금</span><strong>${esc(readableGapMoney(funding.shortage))} 필요</strong>` : esc(funding.text)}</p>
+                <p class="comparison-funding-required">필요 자기자금 <strong>${esc(comparisonRequiredCashText(row))}</strong></p>
+                ${funding.restricted && funding.shortage !== null ? '<p class="comparison-section-note">대출 제한도 확인해야 해요.</p>' : ""}
+              </article>`;
+            }).join("")}
+          </div>
+          <p class="comparison-section-note">대출·부대비용을 반영한 계산이에요. 가격별 계산이 여러 개면 필요한 돈이 가장 큰 경우를 표시해요. 실제 대출은 금융회사 심사가 필요해요.</p>
+        </section>
+        ${comparisonKeyDifferencesHtml(rows)}
+        ${comparisonDecisionReasonsHtml(rows, recommendation)}
       </section>`;
     }
 
@@ -22396,8 +23914,8 @@
       if (key === "totalScore") return comparisonTotalScoreCellHtml(row);
       if (key.startsWith("score:")) return comparisonLocationScoreCellHtml(row, key.slice(6));
       if (key === "price") return `<strong>${esc(row.midPriceEok ? transactionMoney(row.midPriceEok) : "-")}</strong><br><span>${esc(row.priceRangeText || "가격 범위 확인 필요")}</span>`;
-      if (key === "gap") return esc(budgetGapText(row.budgetGapEok));
-      if (key === "fit") return `<span class="fit-pill ${esc(row.fitClass || "mention")}">${esc(row.fitStatus || "확인 필요")}</span>`;
+      if (key === "gap") return esc(comparisonPriceGapText(row));
+      if (key === "fit") return esc(comparisonFundingState(row).text);
       if (key === "scale") return row.households ? `${Number(row.households).toLocaleString("ko-KR")}세대` : "세대수 확인 필요";
       if (key === "age") return row.buildYear ? `${esc(row.buildYear)}년 사용승인<br>${esc(row.buildingAge)}년차` : "연식 확인 필요";
       if (key === "source") {
@@ -22416,9 +23934,8 @@
         return `<strong>${policy.estimatedLoanLimitEok == null ? "-" : policyMoney(policy.estimatedLoanLimitEok)}</strong><br><span>LTV ${esc(policy.ltvRate ?? "-")}% · DSR 심사 전 참고값</span>`;
       }
       if (key === "policyCash") {
-        const policy = row.policyImpact || {};
-        const gap = policy.cashGapEok == null ? "자기자금 입력 필요" : policy.cashGapEok >= 0 ? `${readableGapMoney(policy.cashGapEok)} 여유` : `추가 자금 ${readableGapMoney(Math.abs(policy.cashGapEok))} 필요`;
-        return `<strong>${policy.requiredCashEok == null ? "-" : policyMoney(policy.requiredCashEok)}</strong><br><span>${esc(gap)}</span>`;
+        const funding = comparisonFundingState(row);
+        return `<strong>${esc(comparisonRequiredCashText(row))}</strong><br><span>${esc(funding.text)}</span>`;
       }
       if (key === "policyDuty") {
         const policy = row.policyImpact || {};
@@ -22566,8 +24083,8 @@
         ["최근 시장 신호", "signal", "section"],
         ["시세 흐름", "summary"],
         ["기준 가격", "price"],
-        ["검토 기준선 차이", "gap"],
-        ["구매력 범위", "fit"],
+        ["집값과 검토 기준선 차이", "gap"],
+        ["자기자금 상태", "fit"],
         ["단지 규모", "scale"],
         ["사용승인일", "age"],
         ["가격 근거", "source"],
@@ -22588,11 +24105,20 @@
     }
 
     function comparisonContentHtml(rows, loading = {}) {
-      return `${comparisonScoreOverviewHtml(rows, loading.locationScore)}${comparisonTrendHtml(rows, loading.trend)}${comparisonTableHtml(rows)}`;
+      if (comparisonStep === "questions") {
+        return comparisonPreferenceHtml();
+      }
+      const recommendation = comparisonPreferenceRecommendation(rows);
+      return `${comparisonScoreOverviewHtml(rows, loading.locationScore)}
+        <details class="comparison-evidence"><summary>가격 흐름과 자세한 근거</summary><div class="comparison-evidence-body">
+          ${comparisonTrendHtml(rows, loading.trend)}${comparisonTableHtml(rows)}
+          ${recommendation.row ? comparisonRecommendationDetailHtml(rows, recommendation) : ""}
+        </div></details>`;
     }
 
     function updateComparisonHeader() {
-      comparisonTitle.textContent = "후보 비교 결과";
+      comparisonTitle.textContent = comparisonStep === "questions" ? "사전 질문" : "후보 비교 결과";
+      comparisonEdit.hidden = comparisonStep === "questions";
     }
 
     function refreshOpenComparisonContent(loading = {}) {
@@ -22614,14 +24140,18 @@
       });
       const needsTrendData = rows.some(row => !sparklineSeries(row));
       const needsLocationScoreData = rows.some(locationScoreNeedsRefresh);
-      comparisonStep = "results";
+      if (!comparisonPreferenceComplete()) {
+        comparisonStep = "questions";
+      }
       updateComparisonHeader();
       comparisonContent.innerHTML = comparisonContentHtml(rows, { trend:needsTrendData, locationScore:needsLocationScoreData });
       comparisonOverlay.classList.add("show");
       comparisonOverlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("comparison-open");
       requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
-      comparisonContent.querySelector("[data-candidate-view], .comparison-score-card")?.focus();
+      comparisonContent.querySelector(comparisonStep === "questions"
+        ? "[data-comparison-preference] input"
+        : ".comparison-verdict-title")?.focus();
       if (!needsTrendData && !needsLocationScoreData) return;
       await Promise.allSettled([
         ...rows.map(row => loadMarketInsight(row)),
@@ -22790,6 +24320,9 @@
     }
 
     function candidateScorePendingHtml() {
+      if (currentBudgetData?.enrichmentPending === false) {
+        return `<div class="candidate-score-pending"><span>종합 점수를 계산하지 못했어요. 다시 검색해 주세요.</span></div>`;
+      }
       return `<div class="candidate-score-pending">${spinnerHtml("small")}<span>종합 점수를 계산하고 있어요</span></div>`;
     }
 
@@ -23218,6 +24751,24 @@
       });
     }
 
+    async function getBudgetProgress(jobId, includeVerified, signal) {
+      const request = new AbortController();
+      const cancel = () => request.abort();
+      signal.addEventListener("abort", cancel, { once:true });
+      const timeout = setTimeout(() => request.abort(), 15000);
+      try {
+        if (signal.aborted) request.abort();
+        return await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}${includeVerified}`, { signal:request.signal });
+      } catch (error) {
+        if (signal.aborted) throw error;
+        if (request.signal.aborted) throw { error:"점수 계산 상태를 확인하지 못했어요. 잠시 후 다시 검색해 주세요." };
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+        signal.removeEventListener("abort", cancel);
+      }
+    }
+
     async function waitForCompletedBudgetCandidates(data, url, controller) {
       if (!data.enrichmentPending) return { data, verifiedShown:false };
       const jobId = data.enrichmentJobId;
@@ -23246,7 +24797,7 @@
         await waitForBudgetPoll(750, controller.signal);
         if (controller.signal.aborted || budgetSearchController !== controller) return null;
         const includeVerified = verifiedShown ? "" : "&include_verified=true";
-        const next = await getJson(`/api/budget-candidates/progress?id=${encodeURIComponent(jobId)}${includeVerified}`, { signal:controller.signal });
+        const next = await getBudgetProgress(jobId, includeVerified, controller.signal);
         if (!verifiedShown && next.verifiedResult) revealVerified(next.verifiedResult);
         if (!next.done) {
           if (!verifiedShown) {
@@ -23308,8 +24859,10 @@
       budgetSearchController?.abort();
       const controller = new AbortController();
       budgetSearchController = controller;
+      currentBudgetData = null;
       setConditionStage("results");
       startBudgetLoading();
+      saveRefreshPageState();
       try {
         const params = new URLSearchParams({
           budget: currentPurchasePower.budgetEok,
@@ -23665,6 +25218,74 @@
         setActiveView(nextTab.dataset.view);
         nextTab.focus();
       });
+    });
+    flowView.addEventListener("click", event => {
+      const exploreButton = event.target.closest("[data-flow-explore]");
+      if (exploreButton) {
+        activeFlowRouteId = exploreButton.dataset.flowExplore;
+        activeFlowStatus = "watch";
+        flowMapHasFit = false;
+        renderFlowView();
+        return;
+      }
+      const closeInfoButton = event.target.closest("[data-flow-info-close]");
+      if (closeInfoButton) {
+        flowStatusPopover.hidden = true;
+        flowView.querySelector("[data-flow-info-toggle]")?.setAttribute("aria-expanded", "false");
+        return;
+      }
+      const infoButton = event.target.closest("[data-flow-info-toggle]");
+      if (infoButton) {
+        const shouldOpen = flowStatusPopover.hidden;
+        flowStatusPopover.hidden = !shouldOpen;
+        infoButton.setAttribute("aria-expanded", String(shouldOpen));
+        return;
+      }
+      const statusButton = event.target.closest("[data-flow-status]");
+      if (statusButton) {
+        const status = statusButton.dataset.flowStatus;
+        activeFlowStatus = status === "watch" ? "watch" : "all";
+        flowStatusPopover.hidden = true;
+        renderFlowView();
+        return;
+      }
+      const historyButton = event.target.closest("[data-flow-history]");
+      if (historyButton) {
+        openFlowHistoryDialog(
+          flowRoutes.find(route => route.id === historyButton.dataset.flowHistory),
+          historyButton,
+        );
+        return;
+      }
+      const candidateShortcut = event.target.closest("[data-flow-candidate-region]");
+      if (candidateShortcut) {
+        openFlowCandidateSearch(candidateShortcut.dataset.flowCandidateRegion);
+        return;
+      }
+      const routeButton = event.target.closest("[data-flow-route]");
+      if (routeButton) {
+        activeFlowRouteId = routeButton.dataset.flowRoute;
+        flowMapHasFit = false;
+        renderFlowView();
+        return;
+      }
+    });
+    flowHistoryDialog.addEventListener("click", event => {
+      if (event.target.closest("[data-flow-history-close]")) {
+        closeFlowHistoryDialog();
+        return;
+      }
+      const filterButton = event.target.closest("[data-flow-history-filter]");
+      if (filterButton) {
+        flowHistoryFilter = filterButton.dataset.flowHistoryFilter === "not-risen" ? "not-risen" : "risen";
+        renderFlowHistoryDialog();
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !flowHistoryDialog.hidden) {
+        event.preventDefault();
+        closeFlowHistoryDialog();
+      }
     });
     budgetForm.addEventListener("click", event => {
       const homeActionButton = event.target.closest("[data-home-ownership-action]");
@@ -24404,6 +26025,14 @@
     compareCartClose.addEventListener("click", collapseComparisonBar);
     compareCartChip.addEventListener("click", expandComparisonBar);
     comparisonClose.addEventListener("click", closeComparison);
+    comparisonEdit.addEventListener("click", () => {
+      comparisonStep = "questions";
+      comparisonPreferenceQuestionIndex = 0;
+      refreshOpenComparisonContent();
+    });
+    comparisonContent.addEventListener("toggle", event => {
+      if (event.target.matches(".comparison-evidence[open]")) requestAnimationFrame(() => syncSparkAxisLabelSizes(comparisonContent));
+    }, true);
     comparisonContent.addEventListener("click", event => {
       const candidateViewButton = event.target.closest("[data-candidate-view]");
       if (candidateViewButton) {
@@ -24432,8 +26061,15 @@
         trackEvent("candidate_comparison_preference_back", { step:comparisonPreferenceQuestionIndex + 1 });
         return;
       }
+      if (event.target.closest("[data-comparison-preference-edit]")) {
+        comparisonStep = "questions";
+        comparisonPreferenceQuestionIndex = 0;
+        refreshOpenComparisonContent();
+        return;
+      }
       const preferenceButton = event.target.closest("[data-comparison-preference]");
       if (preferenceButton) {
+        event.preventDefault();
         const key = preferenceButton.dataset.comparisonPreference;
         const value = preferenceButton.dataset.comparisonPreferenceValue;
         if (key && value) {
@@ -24671,6 +26307,7 @@
       conditionView.hidden = true;
       regionView.hidden = true;
       leaderView.hidden = true;
+      flowView.hidden = true;
       aptSearchView.hidden = true;
       aptSearchLanding.hidden = false;
       if (focus) requestAnimationFrame(() => aptSearchInput.focus({ preventScroll:true }));
@@ -24682,6 +26319,7 @@
       conditionView.hidden = true;
       regionView.hidden = true;
       leaderView.hidden = true;
+      flowView.hidden = true;
       aptSearchLanding.hidden = true;
       aptSearchView.hidden = false;
     }
@@ -26926,9 +28564,12 @@
       void restoreRefreshPageState();
     }
     window.addEventListener("pagehide", saveRefreshPageState);
+    window.addEventListener("beforeunload", saveRefreshPageState);
     window.addEventListener("pageshow", () => restoreNaverReturnState());
     void initAnalytics();
     loadStatus();
+    renderFlowView();
+    void loadFlowData();
     renderRegionTabs();
     void restoreListingReportFromUrl();
   </script>

@@ -26,24 +26,48 @@ def _read_overrides(path, mtime):
         return []
 
 
-def reviewed_entries():
-    try:
-        rows = _read_overrides(str(OVERRIDES_PATH), OVERRIDES_PATH.stat().st_mtime_ns)
-    except OSError:
-        return []
+PROJECT_IDENTITY_KEYS = ("id", "name", "region", "legalDong", "jibun")
+
+
+@lru_cache(maxsize=4)
+def _reviewed(path, mtime, today):
+    # Validated once per file revision and day; candidate lists call this per project.
     valid = []
-    for row in rows:
+    for row in _read_overrides(path, mtime):
         if row.get("status") not in {"occupied", "completed"} or not all(row.get(key) for key in (
             "kaptCode", "legalDong", "useApprovalDate", "sourceUrl", "verifiedAt", "evidence"
         )) or not (row.get("roadAddress") or row.get("legalAddress")):
             continue
         try:
-            if not (date.fromisoformat(row["useApprovalDate"]) <= date.fromisoformat(row["verifiedAt"]) <= date.today()):
+            if not (date.fromisoformat(row["useApprovalDate"]) <= date.fromisoformat(row["verifiedAt"])
+                    <= date.fromisoformat(today)):
                 continue
         except (TypeError, ValueError):
             continue
         valid.append(row)
-    return valid
+    return tuple(valid)
+
+
+@lru_cache(maxsize=4)
+def _project_index(path, mtime, today):
+    index = {}
+    for row in _reviewed(path, mtime, today):
+        for identity in row.get("projectIdentities", []):
+            key = tuple(str(identity.get(k) or "") for k in PROJECT_IDENTITY_KEYS)
+            index.setdefault(key, row)
+    return index
+
+
+def _revision_key():
+    return str(OVERRIDES_PATH), OVERRIDES_PATH.stat().st_mtime_ns, date.today().isoformat()
+
+
+def reviewed_entries():
+    try:
+        key = _revision_key()
+    except OSError:
+        return []
+    return list(_reviewed(*key))
 
 
 def occupancy_evidence(zone):
@@ -59,12 +83,11 @@ def occupancy_evidence(zone):
 
 def project_evidence(project):
     """Apply the same reviewed retirement to catalogue/list/score identities."""
-    for row in reviewed_entries():
-        for identity in row.get("projectIdentities", []):
-            if all(str(project.get(k) or "") == str(identity.get(k) or "")
-                   for k in ("id", "name", "region", "legalDong", "jibun")):
-                return row
-    return None
+    try:
+        index = _project_index(*_revision_key())
+    except OSError:
+        return None
+    return index.get(tuple(str(project.get(k) or "") for k in PROJECT_IDENTITY_KEYS))
 
 
 def completed_stage(stage):

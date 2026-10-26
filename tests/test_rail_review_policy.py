@@ -41,12 +41,46 @@ def test_reviewed_lines_are_retained_but_cannot_earn_points(line_id):
 
 def test_normal_plans_and_later_reviewed_construction_are_not_permanently_hidden(monkeypatch):
     assert not policy.under_review({'lineId': 'myeonmok', 'stage': 'planning', 'stageLabel': '기본계획안 의견 수렴'})
-    assert policy.line_policy('mokdong', 'planning', '계획 단계')
+    assert policy.line_policy('myeonmok', 'planning', '기본계획안 의견 수렴')
     assert not policy.under_review({'lineId': 'gangbuk-cross', 'stage': 'construction', 'stageLabel': '공사 중'})
     rows = copy.deepcopy(policy._read(policy.PATH.stat().st_mtime_ns))
     rows['gangbuk-cross'].update(stageCode='construction', stageLabel='공사 중', maturity='construction')
     monkeypatch.setattr(policy, '_read', lambda _: rows)
     assert policy.line_policy('gangbuk-cross', 'construction', '공사 중')
+
+
+@pytest.mark.parametrize('label', ['계획 단계', '도시철도망 계획 승인', '예타 미통과 · 대안 검토'])
+def test_mokdong_failure_overrides_older_network_plan_labels(label):
+    original = {**station('mokdong'), 'stageLabel': label}
+    decorated = policy.annotate(original)
+    assert decorated['defaultVisible'] is decorated['scoringEligible'] is False
+    assert decorated['reviewLabel'] == '예타 미통과 · 재검토 중'
+    assert decorated['reviewSourceUrl'].endswith('nttNo=415662')
+    assert decorated['reviewSourceDate'] == '2024-07-11'
+    assert policy.line_policy('mokdong', 'planning', label) is None
+    assert original['scoringEligible'] is True
+
+
+@pytest.mark.parametrize('label', ['예타 미통과', '예타탈락', '예타 철회'])
+def test_explicit_failed_or_withdrawn_feasibility_is_reference_only(label):
+    assert policy.under_review({'lineId': 'unregistered', 'stage': 'planning', 'stageLabel': label})
+
+
+def test_mokdong_is_reference_only_in_candidate_map_coverage_and_scores():
+    identity = {'province': '서울특별시', 'district': '양천구'}
+    planned = next(p for p in planned_rail.planned_rail_for_candidate(identity) if p['id'] == 'mokdong')
+    assert planned['defaultVisible'] is False
+    capital = capital_transport.for_complex(identity)
+    assert next(p for p in capital['matchedPlans'] if p['id'] == 'mokdong')['scoringEligible'] is False
+    mapped = [s for s in registry.stations(DAY) if s['lineId'] == 'mokdong']
+    assert mapped and all(s['defaultVisible'] is s['scoringEligible'] is False for s in mapped)
+    normal = next(s for s in registry.stations(DAY) if s['lineId'] == 'dongbuk')
+    assert not policy.under_review(normal)
+    assert policy.line_policy(normal['lineId'], normal['stage'], normal['stageLabel'])
+    pending = {**station('mokdong'), 'distanceMeters': 100}
+    result = rating.calculate([], {'stations': [pending]}, DAY)
+    assert result['subScores']['transport'] == 0
+    assert result['components']['transport']['reconsideredWithoutSchedule']
 
 
 def test_reconsidered_rail_does_not_add_a_base_score_or_second_line_bonus():
@@ -60,8 +94,8 @@ def test_reconsidered_rail_does_not_add_a_base_score_or_second_line_bonus():
     assert mixed['components']['transport']['secondLineBonus'] == 0
     assert [s['lineId'] for s in mixed['components']['transport']['inputs']] == ['gtx-b']
     only_pending = rating.calculate(projects, {'stations': [pending]}, DAY)
-    assert only_pending['subScores']['transport'] is None
-    assert 'transport' not in only_pending['components']
+    assert only_pending['subScores']['transport'] == 0
+    assert only_pending['components']['transport']['reconsideredWithoutSchedule']
 
 
 def test_coverage_separates_reconsidered_stations_without_losing_operating_rail(monkeypatch):
@@ -89,7 +123,7 @@ def test_candidate_and_capital_references_retain_review_metadata():
     assert next(p for p in capital['matchedPlans'] if p['id'] == 'gangbuk-cross')['railReviewStatus'] == 'reconsidering'
 
 
-def test_only_reconsidered_stations_are_withheld_rather_than_reported_as_no_future_station(monkeypatch):
+def test_only_reconsidered_stations_score_zero_rather_than_pending(monkeypatch):
     import living_area_map
     pending = policy.annotate(station())
     monkeypatch.setattr(living_area_map, 'map_context', lambda *_: {'stations': [pending]})
@@ -101,9 +135,9 @@ def test_only_reconsidered_stations_are_withheld_rather_than_reported_as_no_futu
               'mapCenter': {'latitude': 37.58, 'longitude': 127.04}}
     output = rating.attach(result, {}, DAY)['planRating']
     assert output['transportCoverage']['status'] == 'rail_under_review'
-    assert output['subScores']['transport'] is None
-    assert '재추진' in output['missingReasons']['transport']
-    assert '지도에는' not in output['missingReasons']['transport']
+    assert output['subScores']['transport'] == 0
+    assert 'transport' not in output['missingReasons']
+    assert '재추진' in output['components']['transport']['summary']
 
 
 def test_reconsidered_projects_and_routes_do_not_enter_the_buying_narrative():
@@ -136,6 +170,7 @@ const normal={...pending,id:'metro-rail:gtx-b',name:'GTX-B',stage:'construction'
 assert(!zippickLivingRailVisible(pending));
 assert(zippickLivingRailVisible(pending,true));
 assert(zippickLivingRailVisible(normal));
+assert(!zippickLivingRailVisible({...pending,stageLabel:'예타 미통과'}));
 assert(!zippickLivingTransportHtml({displayProjects:[pending,normal]}).includes('강북횡단선'));
 const refs=zippickReviewRailReferences({plannedRail:[{...pending,id:'gangbuk-cross'}]},
   {displayProjects:[pending,normal],capitalTransport:{matchedPlans:[{...pending,id:'gangbuk-cross'}]}});
@@ -143,6 +178,27 @@ assert.equal(refs.length,1,'중복 경로에서 같은 노선을 여러 번 표�
 const reference=zippickLivingTransportHtml({displayProjects:refs,includeReviewRail:true});
 assert(reference.includes('재추진 중 · 일정 미정'));
 assert(reference.includes('교통 가점과 매수 이유에서 제외'));
+const failed={...pending,id:'metro-rail:mokdong',name:'목동선',stageLabel:'계획 단계',
+  railReviewStatus:'reconsidering',reviewLabel:'예타 미통과 · 재검토 중',
+  reviewReason:'예비타당성조사를 통과하지 못했어요.',
+  reviewSourceUrl:'https://www.seoul.go.kr/news/news_report.do?nttNo=415662',reviewSourceDate:'2024-07-11'};
+assert(!zippickLivingTransportHtml({displayProjects:[failed]}).includes('목동선'));
+const failedReference=zippickLivingTransportHtml({displayProjects:[failed],includeReviewRail:true});
+assert(failedReference.includes(failed.reviewLabel));
+assert(failedReference.includes(failed.reviewReason));
+assert(failedReference.includes(failed.reviewSourceUrl));
+assert(failedReference.includes(failed.reviewSourceDate));
 '''
     result = subprocess.run(['node'], input=script, text=True, capture_output=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_reconsidered_zero_keeps_housing_total_and_does_not_zero_unknown_lines():
+    pending = station()
+    result = rating.calculate([], {'stations': [pending]}, DAY)
+    assert result['subScores']['transport'] == 0
+    assert rating.aggregate({'housing': 3.2, 'transport': result['subScores']['transport']}) == 3.2
+    unknown = {**station('gtx-b'), 'lineId': 'unknown', 'projectId': 'unknown'}
+    project = {'id': 'unknown', 'projectType': 'transport', 'stage': 'planning'}
+    mixed = rating.calculate([project], {'stations': [pending, unknown]}, DAY)
+    assert mixed['subScores']['transport'] is None

@@ -278,10 +278,11 @@ def revision():
         'project_official_links.json', 'living_area_seoul_snapshot.json',
         'capital_transport_plan_inventory.json', 'capital_transport_transfer_2026.json',
         'capital_transport_brt_2026.json', 'capital_transport_road_projects.json', 'redevelopment_zones.geojson',
-        'redevelopment_project_scales.json', 'redevelopment_occupancy_overrides.json', 'map_zone_stage_codes.json')]
+        'redevelopment_project_scales.json', 'redevelopment_occupancy_overrides.json', 'map_zone_stage_codes.json',
+        'apartment_development_sources.json', 'apartment_development_policy.json')]
     context_paths.extend(config.ROOT / 'pipeline' / name for name in (
         'living_area_context.py', 'living_area_metro.py', 'living_area_plan_rating.py', 'living_area_rail_policy.py',
-        'project_official_links.py',
+        'project_official_links.py', 'apartment_development.py',
         'capital_transport.py', 'planned_rail.py', 'rail_station_mapping.py', 'map_zone_policy.py', 'map_zone_stage.py',
         'living_area_map.py', 'living_area_reference_points.py', 'redevelopment_occupancy.py', 'redevelopment_completion.py'))
     context_paths.append(config.ROOT / 'pipeline/cache/living_area_audited_centers.json')

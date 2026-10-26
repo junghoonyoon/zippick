@@ -197,6 +197,75 @@ class BudgetCandidatesTest(unittest.TestCase):
         self.assertEqual(row["latestJeonseDepositEok"], 6.7)
         self.assertNotIn("임시 추정", row["jeonseSourceNote"])
 
+    def test_verified_result_analyzes_first_page_and_final_result_fills_the_rest(self):
+        entities, price_rows = [], []
+        for index in range(14):
+            entity = {
+                "name": f"생활권지연{index:02d}아파트",
+                "dedupeKey": f"defer-{index}",
+                "province": "서울특별시",
+                "city": "서울시",
+                "district": "테스트구",
+                "legalDong": "테스트동",
+                "address": f"서울특별시 테스트구 테스트동 {index + 1}",
+                "households": 1200,
+                "approvedAt": "2015-01-01",
+            }
+            entities.append(entity)
+            price_rows.append({
+                "name": entity["name"],
+                "region": "테스트구",
+                "legalDong": "테스트동",
+                "jibun": str(index + 1),
+                "areaLabel": "전용 59~60㎡",
+                "minPriceEok": 8.0,
+                "midPriceEok": 8.0 + index / 100,
+                "maxPriceEok": 9.0,
+                "priceSource": "molit_csv",
+                "transactionCount": 8,
+                "latestDealDate": "2026-07-01",
+                "sourceNote": "국토부 실거래",
+            })
+        by_name = {entity["name"]: entity for entity in entities}
+        analyzed = []
+        verified_payloads = []
+
+        def analyze(row, entity):
+            analyzed.append(row["name"])
+            return {"status": "ready", "apartmentId": row["name"]}
+
+        with mock.patch.object(budget_candidates, "_load_price_bands", return_value=price_rows), \
+             mock.patch.object(budget_candidates, "_find_entities",
+                               side_effect=lambda name, *_args, **_kwargs: [by_name[name]] if name in by_name else []), \
+             mock.patch.object(budget_candidates, "_find_entity",
+                               side_effect=lambda name, *_args, **_kwargs: by_name.get(name)), \
+             mock.patch.object(budget_candidates.real_estate_search, "APARTMENT_MASTER", entities), \
+             mock.patch.object(budget_candidates.molit_transactions, "configured", return_value=False), \
+             mock.patch.object(budget_candidates.molit_transactions, "price_band_for_apartment", return_value=None), \
+             mock.patch.object(budget_candidates.momentum_signals, "attach_signals"), \
+             mock.patch.object(budget_candidates.naver_complex, "attach_links"), \
+             mock.patch.object(budget_candidates.future_transformation, "analyze", side_effect=analyze), \
+             mock.patch.object(budget_candidates.future_transformation, "public_facts", side_effect=lambda value: value):
+            payload = budget_candidates.budget_candidates(
+                "10",
+                region="테스트구",
+                all_matches=True,
+                verified_result_callback=verified_payloads.append,
+            )
+
+        limit = budget_candidates.FIRST_LOOK_FUTURE_ROW_LIMIT
+        verified = verified_payloads[0]["candidates"]
+        self.assertEqual(len(verified), 14)
+        self.assertTrue(all(row["futureTransformation"]["status"] == "ready" for row in verified[:limit]))
+        self.assertTrue(all(row["futureTransformation"] == {"status": "pending"} for row in verified[limit:]))
+        # Each candidate is analyzed once, and the final result has every report.
+        self.assertEqual(sorted(analyzed), sorted(by_name))
+        self.assertEqual(
+            [row["futureTransformation"]["apartmentId"] for row in payload["candidates"]],
+            [row["name"] for row in payload["candidates"]],
+        )
+        self.assertEqual([row["name"] for row in verified], [row["name"] for row in payload["candidates"]])
+
     def test_step_and_direct_search_share_the_same_canonical_candidate_fields(self):
         verified_payloads = []
         entity = {

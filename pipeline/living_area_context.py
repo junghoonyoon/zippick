@@ -26,6 +26,28 @@ def read(path):
     return copy.deepcopy(_read(str(path), path.stat().st_mtime_ns))
 
 
+@lru_cache(maxsize=4)
+def _verified_context_records(path, modified):
+    # The integrity check runs once per file revision, not once per apartment.
+    bundle = _read(path, modified)
+    records = bundle.get('projects', [])
+    if sources.digest(records) != bundle.get('projectsDigest'):
+        raise ValueError('official context integrity')
+    return records
+
+
+@lru_cache(maxsize=4)
+def _verified_points(path, modified):
+    bundle = _read(path, modified)
+    rows = bundle.get('rows', [])
+    if sources.digest(rows) != bundle.get('rowsDigest') or len(rows) != bundle.get('totalCount'):
+        raise ValueError('apartment points integrity')
+    by_area = {}
+    for row in rows:
+        by_area.setdefault((row.get('sgg_addr'), row.get('emd_addr')), []).append(row)
+    return {r['apt_cd']: r for r in rows}, by_area
+
+
 def recent(value, day):
     date = sources.date(value)
     return date is not None and 0 <= (day-date).days <= 120
@@ -43,10 +65,7 @@ def prepare(identity, projects, observation, day):
             any(observation.get('identity', {}).get(k) != identity.get(k) for k in ('district','legalDong','jibun'))):
         return projects, observation
     if CONTEXT_PATH.exists():
-        bundle = read(CONTEXT_PATH)
-        records = bundle.get('projects', [])
-        if sources.digest(records) != bundle.get('projectsDigest'):
-            raise ValueError('official context integrity')
+        records = _verified_context_records(str(CONTEXT_PATH), CONTEXT_PATH.stat().st_mtime_ns)
         for record in records:
             if ((record['region'] != identity.get('district') and identity.get('district') not in record.get('nearbyRegions', [])) or not recent(record.get('checkedAt'), day)
                     or not sources.allowed(record['sourceId'], day=day)
@@ -57,7 +76,7 @@ def prepare(identity, projects, observation, day):
             existing = next((p for p in projects if p['id'] == record['id']), None)
             if existing and any(existing.get(k) != record.get(k) for k in ('region','legalDong','jibun')):
                 continue
-            updated = {k: v for k, v in record.items() if k != 'referenceApartmentIds'}
+            updated = copy.deepcopy({k: v for k, v in record.items() if k != 'referenceApartmentIds'})
             if existing:
                 updated['previousSource'] = {k: existing.get(k) for k in ('sourceId','sourceRecordId','snapshotId','stageLabel','sourceDate')}
                 projects[projects.index(existing)] = updated
@@ -65,13 +84,12 @@ def prepare(identity, projects, observation, day):
                 projects.append(updated)
     if not POINTS_PATH.exists() or not sources.allowed('seoul-apartment-points', day=day):
         return projects, observation
-    bundle = read(POINTS_PATH)
+    points_modified = POINTS_PATH.stat().st_mtime_ns
+    # Shared cached bundle: read only; copy rows before they enter evidence.
+    bundle = _read(str(POINTS_PATH), points_modified)
     if not recent(bundle.get('checkedAt'), day):
         return projects, observation
-    rows = bundle.get('rows', [])
-    if sources.digest(rows) != bundle.get('rowsDigest') or len(rows) != bundle.get('totalCount'):
-        raise ValueError('apartment points integrity')
-    indexed = {r['apt_cd']: r for r in rows}
+    indexed, rows_by_area = _verified_points(str(POINTS_PATH), points_modified)
     evidence = observation.setdefault('evidence', {})
 
     def location(binding):
@@ -93,7 +111,7 @@ def prepare(identity, projects, observation, day):
                          'snapshotId':bundle['rowsDigest'], 'asOfDate':bundle['checkedAt'],
                          'publishedAt':sources.stage_date(row['mdfcn_ymd']), 'collectedAt':bundle['collectedAt'],
                          'verificationStatus':'verified',
-                         'raw':{'latitude':latitude,'longitude':longitude,'officialRow':row}}
+                         'raw':{'latitude':latitude,'longitude':longitude,'officialRow':copy.deepcopy(row)}}
         return {'latitude':latitude,'longitude':longitude,'geometryType':'point','coordinateBasis':'official_point',
                 'verificationStatus':'verified','evidenceIds':[key], 'sourceRecordId':row['apt_cd']}
 
@@ -102,9 +120,7 @@ def prepare(identity, projects, observation, day):
         dong, lot = target.get('legalDong'), str(target.get('jibun') or '').strip()
         name = re.sub(r'\s+', '', str(target.get('name') or '')).removesuffix('아파트')
         matches = []
-        for row in rows:
-            if row.get('sgg_addr') != district or row.get('emd_addr') != dong:
-                continue
+        for row in rows_by_area.get((district, dong), ()):
             code_match = target.get('kaptCode') and row['apt_cd'] == target['kaptCode']
             name_match = re.sub(r'\s+', '', str(row.get('apt_nm') or '')).removesuffix('아파트') == name
             # Only a complete lot number is accepted; never parse a partial address.
@@ -312,7 +328,7 @@ def describe(result, identity):
     return result
 
 
-VERDICT_POLICY_VERSION = 'living-area-verdict-v18'
+VERDICT_POLICY_VERSION = 'living-area-verdict-v19'
 VERDICT_LABELS = {'good':('좋아요', '좋아요.'), 'normal':('보통', '보통이에요.'),
                   'weak':('약해요', '약해요.'), 'pending':('판단 보류', '판단을 보류했어요.')}
 STAGE_MEANING = {'planning':'계획만 나온 초기 단계', 'designated':'구역 지정만 된 초기 단계',
@@ -383,6 +399,14 @@ def conclude(result, identity):
     rail_name = rail_project['name'] if rail_project else (rail_input or {}).get('name')
     from living_area_rail_policy import under_review
     route = next((route for route in result.get('transportRoutes') or [] if not under_review(route)), None)
+    # A distance-based score exclusion does not erase an actual rail project.
+    nearby_planned = [row for row in (plan.get('transportCoverage') or {}).get('nearbyPlannedStations', [])
+                      if row.get('serviceStatus') != 'operating' and not under_review(row)]
+    excluded_stations = [row for row in rail_component.get('excludedStations', []) if not under_review(row)]
+    rail_known = bool(rail_input or nearby_planned or excluded_stations or route)
+    if not rail_name:
+        rail_name = next((row.get('name') or row.get('lineName') for row in nearby_planned + excluded_stations
+                          if row.get('name') or row.get('lineName')), None)
     direct = lead is not None and lead.get('benefitClass') == 'direct'
     planned_move_in = bool(identity.get('plannedMoveInMonth')) and not identity.get('approvedAt')
     sub_scores = plan.get('subScores') or {}
@@ -471,9 +495,11 @@ def conclude(result, identity):
             caveats.append('새 노선 출입구와 걸어가는 시간은 확인되지 않았어요.')
         else:
             unknowns.append(f'{station_label} 계획은 있지만, 이 단지에서 이용할 역 위치는 확인 중이에요.')
+    elif transport_score == 0 and rail_component.get('reconsideredWithoutSchedule'):
+        weaknesses.append(transport_reason)
     elif transport_score == 0 and rail_component.get('noUsefulPlannedStation'):
-        weaknesses.append('근처에 새로 탈 만한 철도 계획은 없어요.')
-        caveats.append('지도에 보이는 예정역은 지금 걸어서 타는 역보다 멀어서 새 교통 변화로 보지 않았어요.')
+        weaknesses.append('새 철도 계획은 있지만, 기존 역보다 멀어 거리 기준상 가점에서 제외했어요.')
+        caveats.append('예정역이 지금 걸어서 타는 역보다 멀어 가점은 주지 않았어요. 새 노선으로 이동시간이 얼마나 줄어드는지는 따로 확인해야 해요.')
     elif transport_score == 0 and stations_outside:
         weaknesses.append('직선 2km 안에 새로 생길 예정역이 없어요.')
         unlocated = rail_component.get('unlocatedLocalStations') or []
@@ -491,8 +517,10 @@ def conclude(result, identity):
     if score is None:
         verdict = 'pending'
         if housing_known and not transport_known:
-            reason = ('정비사업은 기대되지만, 교통 자료가 아직 없어요' if housing_score >= 3.0 else
-                      '정비사업 가점은 작고, 교통 자료는 아직 없어요')
+            reason = (('정비사업은 기대되지만, 교통 점수는 보류했어요' if housing_score >= 3.0 else
+                       '정비사업 가점은 작고, 교통 점수는 보류했어요') if rail_known else
+                      ('정비사업은 기대되지만, 교통 자료가 아직 없어요' if housing_score >= 3.0 else
+                       '정비사업 가점은 작고, 교통 자료는 아직 없어요'))
             advice = [f'{named_subject} 주거환경만 보면 기대할 만해요.' if housing_score >= 3.0 else
                       f'{named_subject} 주변 주거환경 변화가 크지 않아요.',
                       '교통 자료가 들어오면 판정을 다시 내려요.']
@@ -537,8 +565,10 @@ def conclude(result, identity):
     else:
         verdict = 'weak' if score < 3.0 else 'normal'
         if lead and housing_known and transport_known and housing_score >= 3.5 and transport_score < 3.0:
-            reason = (('정비사업은 많지만, ' if housing_count >= 3 else '정비사업은 기대되지만, ')
-                      + ('새 교통 호재는 약해요' if rail_input else '새로 생길 철도 호재는 없어요'))
+            reason = ('정비사업과 새 철도 계획은 있지만, 교통 가점은 없어요'
+                      if rail_component.get('noUsefulPlannedStation') else
+                      ('정비사업은 많지만, ' if housing_count >= 3 else '정비사업은 기대되지만, ')
+                      + ('새 교통 호재는 약해요' if rail_known else '확인한 예정역은 직선 2km 밖에 있어요'))
             advice = [f"{named_subject} '교통이 좋아지는 곳'보다 '동네가 새 아파트로 바뀌는 곳'에 가까워요.",
                       '매수 판단의 근거는 새 철도보다 주변 정비사업이에요.',
                       '사업이 끝날 때마다 새 아파트와 이 단지의 가격 차이를 비교해 보세요.']
@@ -563,7 +593,9 @@ def conclude(result, identity):
                 advice = [f'{named_subject} 변화를 기대하고 사는 단지는 아니에요.',
                           '지금의 교통, 학교, 상권이 마음에 드는지로 판단하세요.']
         else:
-            reason = ('정비사업과 새 철도 계획이 있지만, 효과는 보통이에요' if lead and rail_name else
+            reason = ('정비사업과 새 철도 계획은 있지만, 교통 가점은 없어요'
+                      if lead and rail_component.get('noUsefulPlannedStation') else
+                      '정비사업과 새 철도 계획이 있지만, 효과는 보통이에요' if lead and rail_known else
                       '정비사업은 있지만, 새 교통 계획은 확인되지 않았어요' if lead else
                       '새 철도 계획은 있지만, 주변 정비사업은 확인되지 않았어요' if rail_name else
                       '확인된 계획의 실제 효과는 더 지켜봐야 해요')

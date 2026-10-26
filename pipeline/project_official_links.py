@@ -40,6 +40,16 @@ def _rows(modified):
 
 
 @lru_cache(maxsize=2)
+def _snapshot_index(modified):
+    # First linked row per official PK, kept with its file order.
+    index = {}
+    for position, row in enumerate(_rows(modified)['rows']):
+        if row.get('cleanup_bsns_url'):
+            index.setdefault('seoul-plan-renewal:' + str(int(row['basic_info_seq'])), (position, row))
+    return index
+
+
+@lru_cache(maxsize=2)
 def _reviewed(modified):
     return json.loads(REVIEWED.read_text())['links']
 
@@ -60,13 +70,12 @@ def for_project(project, day=None):
            *(project.get('routeIds') or [])} - {None}
     # An official record PK, rather than an apartment/project name, owns its URL.
     if SNAPSHOT.exists():
-        snapshot = _rows(SNAPSHOT.stat().st_mtime_ns)
-        if snapshot['asOfDate'] > day.isoformat():
-            snapshot = {**snapshot, 'rows': []}
-        for row in snapshot['rows']:
-            pid = 'seoul-plan-renewal:' + str(int(row['basic_info_seq']))
-            if pid not in ids or not row.get('cleanup_bsns_url'):
-                continue
+        modified = SNAPSHOT.stat().st_mtime_ns
+        snapshot = _rows(modified)
+        index = _snapshot_index(modified) if snapshot['asOfDate'] <= day.isoformat() else {}
+        linked = [index[pid] for pid in ids if pid in index]
+        if linked:
+            row = min(linked, key=lambda item: item[0])[1]
             if project.get('name') and project['name'] != row['bsns_name']:
                 return {}
             if project.get('region') and project['region'] != row['site_code_nm']:

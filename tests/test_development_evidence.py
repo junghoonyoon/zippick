@@ -65,11 +65,14 @@ class DevelopmentEvidenceTest(unittest.TestCase):
             "zippickConfirmedOwnDevelopmentRow", "zippickOwnDevelopmentProgressRow",
             "zippickOwnDevelopmentRows", "zippickOwnDevelopmentZones",
             "zippickDevelopmentSelfMatch", "zippickDevelopmentHtml",
+            "zippickOwnDevelopmentModel",
             "candidateChoiceCatalyst", "candidateRelatedNewsHtml",
             "zippickDevelopmentCompletedOfficialZone", "zippickActiveOfficialDevelopmentZones",
             "zippickDevelopmentIdentityKeys", "zippickDevelopmentOfficialZoneSelfMatch", "zippickOwnDevelopmentWord",
             "zippickConfirmedOwnDevelopmentRows",
             "zippickDevelopmentStageTier", "zippickDevelopmentProjectWord",
+            "zippickDevelopmentRatingView", "zippickDevelopmentRatingBasisHtml",
+            "zippickSectionRatingData", "zippickSectionRatingHtml", "zippickNumberSteps",
         ]
         functions = []
         for name in names:
@@ -77,6 +80,7 @@ class DevelopmentEvidenceTest(unittest.TestCase):
                 rf"    function {name}\(.*?\n    \}}", html, re.DOTALL,
             ).group(0))
         constants = re.findall(r"    const ZIPPICK_(?:DEVELOPMENT_PATTERN|DEVELOPMENT_EXCLUDED_PATTERN|MINIMUM_ARTICLE_RECONSTRUCTION_AGE|OWN_DEVELOPMENT_BOUNDARY_TOLERANCE_METERS) = .*?;", html)
+        constants.append(re.search(r"    const ZIPPICK_DEVELOPMENT_STAGE_RATINGS = \[.*?\n    \];", html, re.S).group())
         script = "\n".join(constants + functions) + r"""
           const assert = require('node:assert/strict');
           function compactText(value) { return String(value || '').replace(/\s+/g, ''); }
@@ -151,5 +155,54 @@ class DevelopmentEvidenceTest(unittest.TestCase):
           assert.match(report, /불광미성/);
           assert.match(report, /대상지선정\(추진중\)/);
           assert.doesNotMatch(report, /이 단지가 재건축 대상입니다/);
+          const reference = {id:misungZone.id, name:'불광미성', districtCode:'11380',
+            projectTypeLabel:'신속통합기획', stage:'planning', stageLabel:'대상지선정(추진중)',
+            containsSubject:true, zoneKind:'renewal', businessNameConfirmed:true,
+            distanceMeters:0, sourceUrl:'https://data.seoul.go.kr/official', sourceDate:'2026-09-10'};
+          const withoutExtraRequests = {...misung, futureTransformation:{apartmentId:misung.apartmentId, subjectZoneReferences:[reference]}};
+          const initialReport = zippickDevelopmentHtml(withoutExtraRequests);
+          assert.match(initialReport, /data-zpr-step="단지 변화"/);
+          assert.match(initialReport, /불광미성/);
+          assert.equal(zippickOwnDevelopmentZones(withoutExtraRequests, [misungZone]).length, 1);
+          for (const invalid of [
+            {...reference, containsSubject:false}, {...reference, zoneKind:'reference'},
+            {...reference, businessNameConfirmed:false}, {...reference, districtCode:'11710'},
+            {...reference, stage:'completed'},
+          ]) assert.equal(zippickDevelopmentHtml({...misung,
+            futureTransformation:{apartmentId:misung.apartmentId, subjectZoneReferences:[invalid]}}), '');
+          assert.equal(zippickDevelopmentHtml({...misung,
+            futureTransformation:{apartmentId:'another-complex', subjectZoneReferences:[reference]}}), '');
+          const today = new Date().toISOString().slice(0,10);
+          const rated = stage => ({...withoutExtraRequests, futureTransformation:{apartmentId:misung.apartmentId,
+            subjectZoneReferences:[{...reference, stageLabel:stage, sourceDate:today}]}});
+          for (const [stage, points] of [
+            ['정비계획수립',1], ['대상지선정(추진중)',1.5], ['정비구역 지정',2],
+            ['추진위구성',2.5], ['조합설립인가',3], ['사업시행계획인가',3.5],
+            ['관리처분계획인가',4], ['이주중',4.5], ['착공',5],
+          ]) {
+            assert.equal(zippickDevelopmentRatingView(rated(stage)).points, points, stage);
+            assert.equal(zippickSectionRatingData(rated(stage),'단지 변화').stars, points.toFixed(1));
+          }
+          const numbered = zippickNumberSteps(zippickDevelopmentHtml(rated('대상지선정(추진중)')),
+            rated('대상지선정(추진중)'));
+          assert.match(numbered, /단지 변화 · 추진 단계 1.5\/5/);
+          assert.match(numbered, /기본 1.0점 \+ 단계 가점 0.5점/);
+          for (const stage of ['착공 예정','조합설립인가 신청','조합설립인가 추진중(연번부여)',
+            '진행 단계 확인 중','해제','취소','준공']) {
+            assert.equal(zippickDevelopmentRatingView(rated(stage)).points,null,stage);
+          }
+          assert.equal(zippickDevelopmentRatingView({...misung, newsCatalyst:own}).points,null);
+          const stale = rated('착공');
+          stale.futureTransformation.subjectZoneReferences[0].sourceDate = '2000-01-01';
+          assert.equal(zippickDevelopmentRatingView(stale).state,'missing');
+          const untrusted = rated('착공');
+          untrusted.futureTransformation.subjectZoneReferences[0].sourceUrl = 'https://example.com/news';
+          assert.equal(zippickDevelopmentRatingView(untrusted).points,null);
+          const conflicted = rated('조합설립인가');
+          conflicted.futureTransformation.subjectZoneReferences.push({...reference,id:'another-boundary',
+            stageLabel:'착공',sourceDate:today});
+          assert.equal(zippickDevelopmentRatingView(conflicted).points,null);
+          conflicted.futureTransformation.subjectZoneReferences[1].sourceDate = '2000-01-01';
+          assert.equal(zippickDevelopmentRatingView(conflicted).points,3);
         """
         subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)

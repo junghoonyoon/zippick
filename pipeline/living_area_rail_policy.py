@@ -40,12 +40,16 @@ def review_context(line_id=None, stage_label=None, stage_code=None):
     code = stage_code or row.get('stageCode')
     if code in ('construction', 'completed', 'cancelled'):
         return {}
-    reviewed = row.get('reviewStatus') == 'reconsidering' and label == row.get('stageLabel')
-    if not reviewed and not re.search(r'재추진|재검토', label):
+    # A generic or older planning label must not override a reviewed failure.
+    reviewed = (row.get('reviewStatus') == 'reconsidering'
+                or row.get('feasibilityStatus') in ('failed', 'withdrawn'))
+    if not reviewed and not re.search(r'재추진|재검토|예타\s*(?:미통과|탈락|철회)', label):
         return {}
     return {'railReviewStatus': 'reconsidering', 'defaultVisible': False,
-            'scoringEligible': False, 'reviewLabel': '재추진 중 · 일정 미정',
-            'reviewReason': '사업을 다시 검토하고 있어요. 교통 가점과 매수 이유에서 제외해요.'}
+            'scoringEligible': False,
+            'reviewLabel': row.get('reviewLabel', '재추진 중 · 일정 미정'),
+            'reviewReason': row.get('reviewReason', '사업을 다시 검토하고 있어요. 교통 가점과 매수 이유에서 제외해요.'),
+            **{key: row[key] for key in ('reviewSourceUrl', 'reviewSourceDate', 'reviewedAt') if key in row}}
 
 
 def annotate(row):

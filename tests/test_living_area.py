@@ -596,13 +596,16 @@ def test_context_license_expiry_and_integrity_fail_closed(monkeypatch):
     assert not obs.get('center')
     _, obs = context.prepare(identity, sources.bundled_projects(), None, DAY + dt.timedelta(days=121))
     assert not obs.get('center')
-    original = context.read
-    def corrupt(path):
-        bundle = original(path)
-        if path == context.CONTEXT_PATH:
+    original = context._read
+    def corrupt(path, modified):
+        bundle = original(path, modified)
+        if path == str(context.CONTEXT_PATH):
+            bundle = copy.deepcopy(bundle)
             bundle['projects'][0]['plannedHouseholds'] = 9999
         return bundle
-    monkeypatch.setattr(context, 'read', corrupt)
+    monkeypatch.setattr(context, '_read', corrupt)
+    # A failed integrity check raises and is never cached; drop earlier valid reads.
+    context._verified_context_records.cache_clear()
     with pytest.raises(ValueError, match='integrity'):
         context.prepare(identity, [], None, DAY)
 
@@ -661,7 +664,7 @@ def test_planned_stop_farther_than_current_station_is_not_a_transport_change():
     assert rating.split_useful_stations([tram], None) == ([tram], [])
 
 
-def test_briefing_says_no_new_rail_when_every_planned_stop_is_farther_than_current_station():
+def test_briefing_keeps_known_rail_when_every_planned_stop_is_farther_than_current_station():
     import living_area_context as context
 
     report = {'displayProjects': [
@@ -673,10 +676,10 @@ def test_briefing_says_no_new_rail_when_every_planned_stop_is_farther_than_curre
         'judgment': {}}
     result = context.conclude(report, {**IDENTITY, 'name': '가상단지'})
 
-    assert result['headline'] == '생활권 변화는 보통이에요. 정비사업은 많지만, 새로 생길 철도 호재는 없어요.'
-    assert result['briefing']['weaknesses'] == ['근처에 새로 탈 만한 철도 계획은 없어요.']
+    assert result['headline'] == '생활권 변화는 보통이에요. 정비사업과 새 철도 계획은 있지만, 교통 가점은 없어요.'
+    assert result['briefing']['weaknesses'] == ['새 철도 계획은 있지만, 기존 역보다 멀어 거리 기준상 가점에서 제외했어요.']
     assert '먼트램역' not in briefing_text(result)
-    assert '지금 걸어서 타는 역보다 멀어서' in ' '.join(result['briefing']['caveats'])
+    assert '지금 걸어서 타는 역보다 멀어' in ' '.join(result['briefing']['caveats'])
 
 
 def test_heriston_drops_wirye_tram_and_reports_wirye_sinsa_as_regional_news(tmp_path):

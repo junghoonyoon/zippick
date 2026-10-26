@@ -423,6 +423,19 @@ def attach(result,identity,day):
     result['transportRoutes']=[{k:v for k,v in route.items() if k!='geometry'}
                                for route in nearby_spatial['routes']]
     zones=nearby_spatial['zones']
+    # A containing area is not a neighbouring benefit. Keep its source facts in
+    # the report so the client can verify the apartment name/address without a
+    # second map/news request. Containment alone does not assert an own project.
+    result['subjectZoneReferences'] = [
+        {key: zone[key] for key in (
+            'id', 'projectId', 'name', 'sourceName', 'districtCode',
+            'projectTypeLabel', 'stage', 'stageLabel', 'sourceUrl', 'sourceDate',
+            'containsSubject', 'distanceMeters', 'zoneKind', 'businessNameConfirmed',
+        ) if key in zone}
+        for zone in zones
+        if zone.get('containsSubject') and zone.get('zoneKind') == 'renewal'
+        and zone.get('businessNameConfirmed')
+    ]
     by_id={p['id']:p for p in near}
     candidates_by_id={p['id']:p for p in candidates}
     for z in zones:
@@ -497,5 +510,6 @@ def attach(result,identity,day):
         result['intro']='같은 지역의 공개 사업 목록은 아래에서 확인할 수 있어요. 단지 가까이 있는지 확인되지 않은 사업은 점수에 넣지 않아요.'
     result['snapshotId']=sources.digest({'previous':result['snapshotId'],'catalogue':bundle['projectsDigest'],
                                         'center':center,'projects':result['referenceProjects'],
+                                        'subjectZones':result['subjectZoneReferences'],
                                         'transportRoutes':result['transportRoutes']})
     return result

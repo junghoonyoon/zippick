@@ -274,6 +274,8 @@ def analyze(identity, *, path=None, day=None):
         result = context.describe(result, identity)
         import living_area_plan_rating
         result = living_area_plan_rating.attach(result, identity, day)
+        import apartment_development
+        result = apartment_development.attach(result, identity, day)
         import capital_transport
         result['capitalTransport'] = capital_transport.for_complex(identity)
         return context.conclude(result, identity)
@@ -286,4 +288,6 @@ def analyze(identity, *, path=None, day=None):
             result['capitalTransport'] = capital_transport.for_complex(identity)
         except (ValueError, OSError, TypeError, KeyError):
             result['capitalTransport'] = {'status': 'error', 'matchedPlans': []}
+        import apartment_development
+        result = apartment_development.attach(result, identity, day)
         return result

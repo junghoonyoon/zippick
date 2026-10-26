@@ -93,6 +93,35 @@ class BudgetResultCacheTest(unittest.TestCase):
             self.assertTrue(search_server._admin_token_authorized("secret-token"))
             self.assertFalse(search_server._admin_token_authorized("wrong-token"))
 
+    def test_retry_starts_new_job_after_score_error_or_timeout(self):
+        for stage in ("score_error", "timeout"):
+            with self.subTest(stage=stage):
+                jobs = {"failed": {"cacheKey": "retry", "done": True, "result": {
+                    "error": "점수 계산 실패", "enrichmentStage": stage,
+                    "candidateScoreDataReady": False, "enrichmentPending": False,
+                }}}
+                with mock.patch.object(search_server, "BUDGET_JOBS", jobs), \
+                     mock.patch.object(search_server, "_cached_budget_payload", return_value=None), \
+                     mock.patch.object(search_server.molit_transactions, "configured", return_value=True), \
+                     mock.patch.object(search_server.budget_candidates, "budget_candidates", return_value={"candidates": []}), \
+                     mock.patch.object(search_server.threading, "Thread") as thread:
+                    result = search_server._start_staged_budget_payload("retry", {"budget": "9.2"})
+                self.assertTrue(result["enrichmentPending"])
+                self.assertNotEqual(result["enrichmentJobId"], "failed")
+                thread.return_value.start.assert_called_once()
+
+    def test_retry_reuses_a_completed_score_result(self):
+        jobs = {"ready": {"cacheKey": "ready-key", "done": True, "result": {
+            "candidateScoreDataReady": True, "candidates": [{"name": "완료 후보"}],
+        }}}
+        with mock.patch.object(search_server, "BUDGET_JOBS", jobs), \
+             mock.patch.object(search_server, "_cached_budget_payload", return_value=None), \
+             mock.patch.object(search_server.threading, "Thread") as thread:
+            result = search_server._start_staged_budget_payload("ready-key", {"budget": "9.2"})
+        self.assertFalse(result["enrichmentPending"])
+        self.assertTrue(result["candidateScoreDataReady"])
+        thread.assert_not_called()
+
     def test_staged_result_returns_fast_payload_then_completed_enrichment(self):
         def calculate(**arguments):
             if arguments.get("fast_mode"):

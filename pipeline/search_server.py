@@ -25,6 +25,7 @@ import location_scores
 import kakao_station_distances
 import listing_review
 import market_indicators
+import market_flow
 import molit_transactions
 import momentum_signals
 import report_price_comparison
@@ -74,6 +75,7 @@ RATE_LIMIT_BUCKETS = {}
 RATE_LIMIT_MAX_CLIENTS = 5000
 RATE_LIMIT_HEAVY_PATHS = {
     "/api/budget-candidates",
+    "/api/market-flow",
     "/api/apartment-areas",
     "/api/rone-estimate",
     "/api/apartment-report",
@@ -2963,7 +2965,11 @@ def _start_staged_budget_payload(cache_key, candidate_arguments):
             if job.get("cacheKey") != cache_key:
                 continue
             if job.get("done") and job.get("result"):
-                payload = json.loads(json.dumps(job["result"], ensure_ascii=False))
+                result = job["result"]
+                # 실패한 작업을 재검색에서도 계속 돌려주면 점수를 다시 계산할 수 없다.
+                if result.get("error") or result.get("candidateScoreDataReady") is False:
+                    continue
+                payload = json.loads(json.dumps(result, ensure_ascii=False))
                 payload.update({"done": True, "enrichmentPending": False})
                 return payload
             available = job.get("verifiedResult") or job.get("initial") or {}
@@ -3483,6 +3489,16 @@ class Handler(BaseHTTPRequestHandler):
                 "appKey": config.KAKAO_MAP_JAVASCRIPT_KEY,
                 "fallbackConfigured": kakao_station_distances.configured(),
             })
+            return
+        if parsed.path == "/api/market-flow":
+            try:
+                payload = market_flow.get_snapshot()
+                self._json(payload, 202 if payload.get("pending") else 200)
+            except ValueError as exc:
+                self._json({"error": str(exc)}, 422)
+            except Exception:
+                _record_operation("externalDataFallbacks")
+                self._json({"error": "실거래 흐름을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."}, 502)
             return
         if parsed.path == "/api/map-geocode":
             address = " ".join((params.get("address", [""])[0] or "").split())[:180]
@@ -4124,6 +4140,8 @@ def main():
     print(f"집픽 서버: http://{HOST}:{PORT}")
     if config.BUDGET_PREWARM_ENABLED:
         threading.Thread(target=_prewarm_budget_transaction_cache, daemon=True).start()
+    # 10년 실거래 흐름은 계산량이 커서, 첫 화면 요청 전에 백그라운드에서 준비한다.
+    threading.Thread(target=market_flow.prewarm_snapshot, daemon=True).start()
     SearchServer((HOST, PORT), Handler).serve_forever()
 
 

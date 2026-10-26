@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scoreFormulaVersion": "education-env-v1",
-  "dataThrough": "2026-10-20",
+  "dataThrough": "2026-10-26",
   "source": "kakao-local-v2",
   "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide",
   "regions": [
@@ -12813,6 +12813,926 @@
       "dataThrough": "2026-10-20",
       "source": "kakao-local-v2",
       "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "c4c0d07b168a1b39": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "위례고운초등학교",
+        "위례푸른초등학교",
+        "위례초등학교"
+      ],
+      "elementaryDistanceMeters": 261,
+      "middleSchoolNames": [
+        "위례한빛중학교",
+        "위례중학교",
+        "위례중앙중학교"
+      ],
+      "middleDistanceMeters": 509,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "426ddd0f0496cf39": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울서신초등학교",
+        "서울신사초등학교",
+        "서울증산초등학교"
+      ],
+      "elementaryDistanceMeters": 329,
+      "middleSchoolNames": [
+        "상신중학교",
+        "연서중학교 (휴교)",
+        "숭실중학교"
+      ],
+      "middleDistanceMeters": 123,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "da7db1ee0597848b": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울수색초등학교",
+        "서울증산초등학교",
+        "서울서신초등학교"
+      ],
+      "elementaryDistanceMeters": 423,
+      "middleSchoolNames": [
+        "증산중학교",
+        "상신중학교",
+        "숭실중학교"
+      ],
+      "middleDistanceMeters": 523,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "ad0d63fabaca06a1": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울수리초등학교",
+        "서울연천초등학교",
+        "서울불광초등학교"
+      ],
+      "elementaryDistanceMeters": 214,
+      "middleSchoolNames": [
+        "불광중학교",
+        "연신중학교",
+        "연천중학교"
+      ],
+      "middleDistanceMeters": 588,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "7465e4ab36ce11d6": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "성남제일초등학교",
+        "대원초등학교 (휴교)",
+        "성남중앙초등학교"
+      ],
+      "elementaryDistanceMeters": 238,
+      "middleSchoolNames": [
+        "성일중학교",
+        "동광중학교",
+        "성남중학교"
+      ],
+      "middleDistanceMeters": 763,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "4e0cf1c9b4086b5b": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "금상초등학교",
+        "하원초등학교",
+        "중원초등학교"
+      ],
+      "elementaryDistanceMeters": 195,
+      "middleSchoolNames": [
+        "금광중학교",
+        "대원중학교",
+        "성남동중학교"
+      ],
+      "middleDistanceMeters": 455,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "ce46855baf974190": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울한서초등학교",
+        "서울용강초등학교",
+        "서울공덕초등학교"
+      ],
+      "elementaryDistanceMeters": 378,
+      "middleSchoolNames": [
+        "서울여자중학교",
+        "숭문중학교",
+        "동도중학교"
+      ],
+      "middleDistanceMeters": 214,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "cca070e8aac627f4": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울대곡초등학교",
+        "서울대현초등학교",
+        "서울대치초등학교"
+      ],
+      "elementaryDistanceMeters": 320,
+      "middleSchoolNames": [
+        "단국대학교사범대학 부속중학교",
+        "개원중학교",
+        "휘문중학교"
+      ],
+      "middleDistanceMeters": 787,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "1e4e5bccb501dcaf": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울선유초등학교",
+        "서울경인초등학교",
+        "서울당중초등학교"
+      ],
+      "elementaryDistanceMeters": 172,
+      "middleSchoolNames": [
+        "선유중학교",
+        "당산서중학교",
+        "양정중학교"
+      ],
+      "middleDistanceMeters": 287,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "e109024e387d9b43": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "화성청계초등학교",
+        "아인초등학교",
+        "동탄중앙초등학교"
+      ],
+      "elementaryDistanceMeters": 270,
+      "middleSchoolNames": [
+        "청계중학교",
+        "동탄중학교",
+        "이산중학교"
+      ],
+      "middleDistanceMeters": 345,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "bdc065f8805edb80": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "초림초등학교",
+        "백현초등학교",
+        "내정초등학교"
+      ],
+      "elementaryDistanceMeters": 324,
+      "middleSchoolNames": [
+        "백현중학교",
+        "내정중학교",
+        "정자중학교"
+      ],
+      "middleDistanceMeters": 563,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "4a5d59e50bbcf6eb": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 91,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울인왕초등학교",
+        "서울홍제초등학교",
+        "서울고은초등학교"
+      ],
+      "elementaryDistanceMeters": 568,
+      "middleSchoolNames": [
+        "홍은중학교",
+        "정원여자중학교",
+        "신연중학교"
+      ],
+      "middleDistanceMeters": 381,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "3b498bc76f191a6d": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "청솔초등학교",
+        "성남미금초등학교",
+        "오리초등학교"
+      ],
+      "elementaryDistanceMeters": 186,
+      "middleSchoolNames": [
+        "불곡중학교",
+        "계원예술중학교",
+        "분당중학교"
+      ],
+      "middleDistanceMeters": 723,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "717040112c2565de": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 93,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울한천초등학교",
+        "서울공릉초등학교",
+        "서울선곡초등학교"
+      ],
+      "elementaryDistanceMeters": 281,
+      "middleSchoolNames": [
+        "석관중학교",
+        "남대문중학교",
+        "광운중학교"
+      ],
+      "middleDistanceMeters": 1107,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-20",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "44ea8b0f8278c783": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울은평초등학교",
+        "서울녹번초등학교",
+        "서울어울초등학교"
+      ],
+      "elementaryDistanceMeters": 441,
+      "middleSchoolNames": [
+        "영락중학교",
+        "홍은중학교",
+        "정원여자중학교"
+      ],
+      "middleDistanceMeters": 564,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "f69b89b7b15115ea": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울신남초등학교",
+        "서울장수초등학교",
+        "서울지향초등학교"
+      ],
+      "elementaryDistanceMeters": 199,
+      "middleSchoolNames": [
+        "강신중학교",
+        "금옥중학교",
+        "신남중학교"
+      ],
+      "middleDistanceMeters": 336,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "25427fd4ff490452": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울은천초등학교",
+        "서울관악초등학교",
+        "서울신봉초등학교"
+      ],
+      "elementaryDistanceMeters": 258,
+      "middleSchoolNames": [
+        "봉림중학교",
+        "신관중학교",
+        "국사봉중학교"
+      ],
+      "middleDistanceMeters": 579,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "8357ca2e85fab7ce": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울상곡초등학교",
+        "청원초등학교",
+        "서울상원초등학교"
+      ],
+      "elementaryDistanceMeters": 148,
+      "middleSchoolNames": [
+        "청원중학교",
+        "온곡중학교",
+        "상경중학교"
+      ],
+      "middleDistanceMeters": 297,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "0117d7a57ccf85a5": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 93,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울금나래초등학교",
+        "서울독산초등학교",
+        "서울안천초등학교"
+      ],
+      "elementaryDistanceMeters": 209,
+      "middleSchoolNames": [
+        "안천중학교",
+        "한울중학교",
+        "가산중학교"
+      ],
+      "middleDistanceMeters": 870,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "edbd76010f654d0d": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 91,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울창서초등학교",
+        "서울서교초등학교",
+        "서울연희초등학교"
+      ],
+      "elementaryDistanceMeters": 561,
+      "middleSchoolNames": [
+        "서연중학교",
+        "경성중학교",
+        "창천중학교"
+      ],
+      "middleDistanceMeters": 764,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "852184b589f94405": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "충암초등학교",
+        "서울응암초등학교",
+        "명지초등학교"
+      ],
+      "elementaryDistanceMeters": 238,
+      "middleSchoolNames": [
+        "명지중학교",
+        "충암중학교",
+        "정원여자중학교"
+      ],
+      "middleDistanceMeters": 262,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "6e3574d3a173fd22": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울은명초등학교",
+        "서울연은초등학교",
+        "서울응암초등학교"
+      ],
+      "elementaryDistanceMeters": 330,
+      "middleSchoolNames": [
+        "영락중학교",
+        "충암중학교",
+        "홍은중학교"
+      ],
+      "middleDistanceMeters": 287,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "a0eea6e8253bc216": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울연가초등학교",
+        "서울가재울초등학교",
+        "서울북가좌초등학교"
+      ],
+      "elementaryDistanceMeters": 259,
+      "middleSchoolNames": [
+        "연희중학교",
+        "가재울중학교",
+        "충암중학교"
+      ],
+      "middleDistanceMeters": 272,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "6bb30a9a02bfd2a6": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울금나래초등학교",
+        "서울안천초등학교",
+        "서울독산초등학교"
+      ],
+      "elementaryDistanceMeters": 237,
+      "middleSchoolNames": [
+        "안천중학교",
+        "가산중학교",
+        "문일중학교"
+      ],
+      "middleDistanceMeters": 622,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "a4f49acfeb3e03e4": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 88,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울광희초등학교",
+        "서울숭신초등학교",
+        "서울신당초등학교"
+      ],
+      "elementaryDistanceMeters": 668,
+      "middleSchoolNames": [
+        "대광중학교",
+        "한양중학교",
+        "금호중학교"
+      ],
+      "middleDistanceMeters": 901,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "720aa4248a6ca01d": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울중화초등학교",
+        "서울신현초등학교",
+        "서울신내초등학교"
+      ],
+      "elementaryDistanceMeters": 129,
+      "middleSchoolNames": [
+        "상봉중학교",
+        "신현중학교",
+        "영란여자중학교"
+      ],
+      "middleDistanceMeters": 302,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "ac6a2dbc96c005c4": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울신기초등학교",
+        "서울남명초등학교",
+        "서울장수초등학교"
+      ],
+      "elementaryDistanceMeters": 306,
+      "middleSchoolNames": [
+        "오류중학교",
+        "금옥중학교",
+        "신서중학교"
+      ],
+      "middleDistanceMeters": 561,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "766802446c84236b": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울쌍문초등학교",
+        "서울숭미초등학교",
+        "한신초등학교"
+      ],
+      "elementaryDistanceMeters": 360,
+      "middleSchoolNames": [
+        "강북중학교",
+        "신도봉중학교",
+        "정의여자중학교"
+      ],
+      "middleDistanceMeters": 257,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "4ec56321dc76928f": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울면중초등학교 (휴교)",
+        "서울면남초등학교",
+        "서울면동초등학교"
+      ],
+      "elementaryDistanceMeters": 134,
+      "middleSchoolNames": [
+        "면목중학교",
+        "중화중학교",
+        "용마중학교"
+      ],
+      "middleDistanceMeters": 221,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "f96ef7e832776298": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울석계초등학교",
+        "서울묵현초등학교",
+        "서울석관초등학교"
+      ],
+      "elementaryDistanceMeters": 392,
+      "middleSchoolNames": [
+        "석관중학교",
+        "남대문중학교",
+        "중랑중학교"
+      ],
+      "middleDistanceMeters": 329,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "dd773ddf295ba2b0": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울안천초등학교",
+        "하안남초등학교",
+        "가림초등학교"
+      ],
+      "elementaryDistanceMeters": 236,
+      "middleSchoolNames": [
+        "안천중학교",
+        "가림중학교",
+        "하안중학교"
+      ],
+      "middleDistanceMeters": 102,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "e69d6d8c4c252c59": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울은빛초등학교",
+        "서울은진초등학교",
+        "서울진관초등학교"
+      ],
+      "elementaryDistanceMeters": 338,
+      "middleSchoolNames": [
+        "진관중학교",
+        "신도중학교",
+        "지축중학교"
+      ],
+      "middleDistanceMeters": 736,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-21",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "cc714159dbdfd0b2": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "인덕원초등학교",
+        "벌말초등학교",
+        "포일초등학교"
+      ],
+      "elementaryDistanceMeters": 132,
+      "middleSchoolNames": [
+        "인덕원중학교",
+        "과천율목중학교",
+        "백운중학교"
+      ],
+      "middleDistanceMeters": 725,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-22",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "3bf59efda82bb105": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울상수초등학교",
+        "상명초등학교",
+        "서울상계초등학교"
+      ],
+      "elementaryDistanceMeters": 197,
+      "middleSchoolNames": [
+        "신상중학교",
+        "상계중학교",
+        "상명중학교"
+      ],
+      "middleDistanceMeters": 262,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-23",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "e3b0ee7a4a45df97": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울상곡초등학교",
+        "청원초등학교",
+        "서울상원초등학교"
+      ],
+      "elementaryDistanceMeters": 236,
+      "middleSchoolNames": [
+        "청원중학교",
+        "온곡중학교",
+        "상경중학교"
+      ],
+      "middleDistanceMeters": 439,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-23",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "8aab5f3536d8a9ee": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울상곡초등학교",
+        "서울상계초등학교",
+        "서울상월초등학교"
+      ],
+      "elementaryDistanceMeters": 287,
+      "middleSchoolNames": [
+        "온곡중학교",
+        "청원중학교",
+        "신상중학교"
+      ],
+      "middleDistanceMeters": 199,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-23",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "8d995a075bca61e2": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 93,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울답십리초등학교",
+        "서울동답초등학교",
+        "서울군자초등학교"
+      ],
+      "elementaryDistanceMeters": 423,
+      "middleSchoolNames": [
+        "동대문중학교",
+        "장평중학교",
+        "전농중학교"
+      ],
+      "middleDistanceMeters": 914,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-23",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "db9abfeddb2ffe15": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울상봉초등학교",
+        "서울중흥초등학교",
+        "서울묵동초등학교"
+      ],
+      "elementaryDistanceMeters": 206,
+      "middleSchoolNames": [
+        "장안중학교",
+        "상봉중학교",
+        "중랑중학교"
+      ],
+      "middleDistanceMeters": 406,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-23",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "d333e27c17c24736": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 88,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울새솔초등학교",
+        "서울양원숲초등학교",
+        "서울동원초등학교"
+      ],
+      "elementaryDistanceMeters": 325,
+      "middleSchoolNames": [
+        "송곡중학교",
+        "동원중학교",
+        "영란여자중학교"
+      ],
+      "middleDistanceMeters": 1110,
+      "academyCount1km": 37,
+      "dataThrough": "2026-10-23",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
+    },
+    "4b6e61e7a8a04b14": {
+      "status": "ok",
+      "basis": "nearby_school_access",
+      "score": 96,
+      "coverage": 1.0,
+      "scoreFormulaVersion": "education-env-v1",
+      "elementarySchoolNames": [
+        "서울내발산초등학교",
+        "서울우장초등학교",
+        "서울발산초등학교"
+      ],
+      "elementaryDistanceMeters": 263,
+      "middleSchoolNames": [
+        "화곡중학교",
+        "명덕여자중학교",
+        "덕원중학교"
+      ],
+      "middleDistanceMeters": 504,
+      "academyCount1km": 45,
+      "dataThrough": "2026-10-26",
+      "source": "kakao-local-v2",
+      "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
     }
   },
   "zones": [],
@@ -12822,5 +13742,5 @@
     "records에 단지별 사전 계산값을 넣거나, zones와 schools에 변환된 학구도 도형·학교 위치를 넣으면 점수가 계산됩니다.",
     "초등학교와 중학교는 배정권역 기준입니다. 가까운 학교가 배정학교라는 뜻은 아닙니다."
   ],
-  "updatedAt": "2026-10-20T02:17:45.704674+00:00"
+  "updatedAt": "2026-10-26T02:00:23.119258+00:00"
 }

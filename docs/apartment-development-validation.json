@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-20",
+  "focusedTests": {
+    "passed": 31,
+    "subtestsPassed": 42,
+    "files": [
+      "tests/test_apartment_development.py",
+      "tests/test_development_evidence.py",
+      "tests/test_paid_report.py"
+    ]
+  },
+  "catalogAudit": {
+    "apartments": 19646,
+    "confirmed": 332,
+    "rated": 322,
+    "status": {
+      "identity_unresolved": 2,
+      "not_applicable": 7311,
+      "confirmed": 332,
+      "not_found": 11950,
+      "unresolved": 50,
+      "building_age_unresolved": 1
+    },
+    "sourceProjects": 2869
+  },
+  "catalogAuditFailures": [],
+  "sharedRendererConfirmedCases": 332,
+  "apiSmokePassed": 6,
+  "browserVerified": [
+    "월계삼호4차 desktop 1280x900",
+    "월계삼호4차 mobile 390x844",
+    "불광 미성아파트 existing browser report"
+  ],
+  "broaderRegression": {
+    "passed": 89,
+    "failed": 12,
+    "note": "별도 광범위 검사에는 예전 단지 ID fixture, 기존 지도·철도 함수 추출 assertion 및 sandbox HTTP bind 실패가 남음. 전체 suite 통과로 보고하지 않음.",
+    "log": "/tmp/zippick-development-tests.log"
+  }
+}

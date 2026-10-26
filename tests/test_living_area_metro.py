@@ -11,6 +11,25 @@ import import_living_area_metro as importer
 DAY=dt.date(2026,10,16)
 
 
+def test_containing_zone_facts_are_kept_for_report_without_neighbor_benefit():
+    from shapely.geometry import shape
+    feature = next(f for f in json.loads((future.config.ROOT / 'data/redevelopment_zones.geojson').read_text())['features']
+                   if f['id'] == '11000UQ120PS202407010944')
+    point = shape(feature['geometry']).representative_point()
+    identity = {'apartmentId':'11380100000585', 'name':'미성아파트', 'province':'서울특별시',
+                'district':'은평구', 'legalDong':'불광동', 'jibun':'248'}
+    result = metro.attach({'projects':[], 'referenceProjects':[], 'snapshotId':'test',
+                           'center':{'latitude':point.y, 'longitude':point.x}}, identity, DAY)
+    own = next(z for z in result['subjectZoneReferences'] if z['id'] == feature['id'])
+    assert own['name'] == '불광미성'
+    assert own['districtCode'] == '11380'
+    assert own['containsSubject'] is True
+    assert own['projectTypeLabel'] == '신속통합기획'
+    assert own['sourceUrl'].startswith('https://data.seoul.go.kr/')
+    assert 'geometry' not in own
+    assert own['projectId'] not in {p['id'] for p in result['referenceProjects']}
+
+
 @pytest.mark.parametrize('relative', ['data/living_area_metro_catalog.json', 'data/planned_rail_metro.json', 'data/redevelopment_zones.geojson',
                                     'data/redevelopment_project_scales.json',
                                     'data/redevelopment_occupancy_overrides.json',
