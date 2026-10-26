@@ -197,11 +197,11 @@ BUDGET_PREWARM_DELAY_SECONDS = float(os.environ.get("BUDGET_PREWARM_DELAY_SECOND
 BUDGET_PREWARM_MONTHS = int(os.environ.get("BUDGET_PREWARM_MONTHS", str(MOLIT_SIGNAL_LOOKBACK_MONTHS)))
 BUDGET_PREWARM_MAX_WORKERS = int(os.environ.get("BUDGET_PREWARM_MAX_WORKERS", "4"))
 # 서버 시작 시 미리 실거래 캐시를 데워 둘 지역. 조건 검색이 지원하는
-# 서울·경기 전체를 기본으로 준비해 첫 검색도 저장 데이터만으로 계산한다.
+# 서울·경기·인천 전체를 기본으로 준비해 첫 검색도 저장 데이터만으로 계산한다.
 # 환경변수로 더 좁게 재정의할 수 있다.
 BUDGET_PREWARM_REGIONS = tuple(
     value.strip()
-    for value in os.environ.get("BUDGET_PREWARM_REGIONS", "서울특별시,경기도").split(",")
+    for value in os.environ.get("BUDGET_PREWARM_REGIONS", "서울특별시,경기도,인천광역시").split(",")
     if value.strip()
 )
 # 신고 기한(계약 후 30일)이 지난 과거 월 실거래는 거의 바뀌지 않으므로 긴 주기로만 갱신한다.
