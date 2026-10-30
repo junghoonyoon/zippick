@@ -225,11 +225,37 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('params.set("complex_no", context.complexNo)', fetch)
         self.assertIn("void refreshLocationScoreSheet(report, rerender);", html)
         self.assertIn("requestId === aptReportRequestId && currentAptReportItem === report", html)
+        self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
+        self.assertIn("repaintCandidateScoreBadges(item, originalKey)", html)
         payload_start = html.index("    function locationScoreRefreshPayload(item) {")
         payload_end = html.index("    async function refreshLocationScoreSheet", payload_start)
         payload = html[payload_start:payload_end]
         for identity in ("apartmentId", "kaptCode", "complexNo"):
             self.assertIn(f"{identity}:item?.{identity}", payload)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_location_score_refresh_repaints_matching_search_and_budget_cards(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        start = html.index("    function repaintCandidateScoreBadges(item, originalKey) {")
+        end = html.index("    function aptSearchMapRows()", start)
+        repaint_body = html[start:end]
+        script = f"""
+          const candidate = {{apartmentId:'complex-1',locationScore:{{score:74}}}};
+          const currentAptSearchItems = [candidate];
+          const candidateRowsForLookup = () => currentAptSearchItems;
+          const candidateIdentityKey = row => row.apartmentId;
+          const candidateTopScoreBadgesHtml = row => `score:${{row.locationScore.score}}`;
+          const searchBadge = {{innerHTML:''}};
+          const aptSearchResults = {{querySelector:() => ({{querySelector:() => searchBadge}})}};
+          const budgetBadge = {{innerHTML:''}};
+          const budgetCard = {{dataset:{{candidateKey:'complex-1'}},querySelector:() => budgetBadge}};
+          const budgetResultEl = {{querySelectorAll:() => [budgetCard]}};
+          {repaint_body}
+          repaintCandidateScoreBadges(candidate, 'complex-1');
+          console.log(JSON.stringify([searchBadge.innerHTML,budgetBadge.innerHTML]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        self.assertEqual(json.loads(result.stdout), ["score:74", "score:74"])
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_location_heading_labels_school_distance_as_straight_line(self):
@@ -3347,7 +3373,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertIn("budgetBackgroundStatusHtml(data)", render_body)
         self.assertIn("candidateScoreDataReady", render_body)
-        self.assertIn("scoreDataReady ? candidateTopScoreBadgesHtml(item)", render_body)
+        self.assertIn('<span data-candidate-score-badges>${candidateTopScoreBadgesHtml(item)}</span>', render_body)
         self.assertIn('const includeVerified = verifiedShown ? "" : "&include_verified=true"', html)
         self.assertIn("if (!verifiedShown && next.verifiedResult) revealVerified(next.verifiedResult)", html)
         self.assertIn("{ preserveSelection:completed.verifiedShown }", load_body)
@@ -4584,7 +4610,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('["jeonse_ratio", "jeonse_freshness", "investment_gap", "station", "education"].includes(String(detail?.key || ""))', html)
         self.assertIn('getJson("/api/apartment-location-score"', html)
         self.assertIn("const originalKey = candidateIdentityKey(item);", html)
-        self.assertIn("candidateRowsForLookup().forEach(row =>", html)
+        self.assertIn("const rowsToRefresh = candidateRowsForLookup().filter(", html)
+        self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
         self.assertIn("void refreshLocationScoreSheet(item);", html)
         self.assertIn('data-candidate-key="${esc(candidateIdentityKey(item))}"', preview_match.group("body"))
         self.assertIn('const mapPreview = button.closest("[data-candidate-map-preview]");', lookup_match.group("body"))

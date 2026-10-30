@@ -6553,6 +6553,9 @@
       if (!item || !locationScoreNeedsRefresh(item)) return;
       try {
         const originalKey = candidateIdentityKey(item);
+        const rowsToRefresh = candidateRowsForLookup().filter(
+          row => candidateIdentityKey(row) === originalKey,
+        );
         const payload = await getJson("/api/apartment-location-score", {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
@@ -6560,14 +6563,11 @@
         });
         if (!payload?.candidate?.locationScore) return;
         Object.assign(item, payload.candidate);
+        rowsToRefresh.forEach(row => Object.assign(row, payload.candidate));
         if (!locationScoreSheet.hidden) {
           locationScoreContent.innerHTML = locationScoreSheetHtml(item);
         }
-        candidateRowsForLookup().forEach(row => {
-          if (row && candidateIdentityKey(row) === originalKey) {
-            Object.assign(row, payload.candidate);
-          }
-        });
+        repaintCandidateScoreBadges(item, originalKey);
         if (typeof onRefresh === "function") onRefresh(item);
       } catch (_) {}
     }
@@ -13377,6 +13377,29 @@
         unique.set(candidateIdentityKey(item), item);
       });
       return [...unique.values()];
+    }
+
+    function repaintCandidateScoreBadges(item, originalKey) {
+      const keys = new Set([originalKey, candidateIdentityKey(item)]);
+      const rowsByKey = new Map();
+      [item, ...candidateRowsForLookup()].forEach(row => {
+        if (!row) return;
+        const key = candidateIdentityKey(row);
+        if (keys.has(key)) rowsByKey.set(key, row);
+      });
+      currentAptSearchItems.forEach((row, index) => {
+        if (!keys.has(candidateIdentityKey(row))) return;
+        const card = aptSearchResults.querySelector(`[data-apt-card-index="${index}"]`);
+        const badges = card?.querySelector("[data-apt-score-badges]");
+        if (badges) badges.innerHTML = candidateTopScoreBadgesHtml(row);
+      });
+      budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-key]").forEach(card => {
+        const key = card.dataset.candidateKey || "";
+        if (!keys.has(key)) return;
+        const badges = card.querySelector("[data-candidate-score-badges]");
+        const row = rowsByKey.get(key) || item;
+        if (badges) badges.innerHTML = candidateTopScoreBadgesHtml(row);
+      });
     }
 
     function aptSearchMapRows() {
@@ -24582,7 +24605,7 @@
                 <div class="budget-main">
                   <span class="candidate-name-row">${candidateTitleHtml(item)}</span>
                   <span class="budget-meta">${candidateListMetaHtml(item)}</span>
-	                  ${scoreDataReady ? candidateTopScoreBadgesHtml(item) : ""}
+                  ${scoreDataReady ? `<span data-candidate-score-badges>${candidateTopScoreBadgesHtml(item)}</span>` : ""}
                 </div>
                 ${candidateMapInlineButtonHtml(item)}
               </div>
