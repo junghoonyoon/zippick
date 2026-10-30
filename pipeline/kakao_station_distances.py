@@ -364,6 +364,17 @@ def _request_json(path, params):
             raise KakaoAuthenticationError("카카오 REST API 키 또는 카카오맵 사용 설정을 확인해 주세요.")
         if response.status_code == 429:
             raise KakaoQuotaError("카카오 Local API 요청 한도에 도달했습니다(429).")
+        if response.status_code == 400:
+            try:
+                error_payload = response.json()
+            except ValueError:
+                error_payload = {}
+            try:
+                error_code = int(error_payload.get("code")) if isinstance(error_payload, dict) else None
+            except (TypeError, ValueError):
+                error_code = None
+            if error_code == -10:
+                raise KakaoQuotaError("카카오 Local API 요청 한도에 도달했습니다(HTTP 400, code -10).")
         if response.status_code >= 500:
             last_error = KakaoNetworkError(f"카카오 Local API 일시 오류({response.status_code})")
             if attempt < 2:

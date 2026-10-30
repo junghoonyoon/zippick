@@ -315,6 +315,25 @@ class KakaoStationDistancesTest(unittest.TestCase):
         saved = json.loads(kakao_station_distances.CACHE_PATH.read_text(encoding="utf-8"))
         self.assertEqual(saved["records"], {})
 
+    def test_http_400_kakao_quota_code_is_classified_as_quota_without_retry(self):
+        response = mock.Mock(status_code=400)
+        response.json.return_value = {"msg": "API limit has been exceeded.", "code": -10}
+        with mock.patch.object(kakao_station_distances.config, "KAKAO_REST_API_KEY", "test-key"), \
+             mock.patch.object(kakao_station_distances.requests, "get", return_value=response) as request:
+            with self.assertRaises(kakao_station_distances.KakaoQuotaError):
+                kakao_station_distances._request_json("search/category.json", {"category_group_code": "SC4"})
+        request.assert_called_once()
+
+    def test_http_400_nonquota_error_stays_a_local_api_error(self):
+        response = mock.Mock(status_code=400)
+        response.json.return_value = {"msg": "invalid request", "code": -2}
+        with mock.patch.object(kakao_station_distances.config, "KAKAO_REST_API_KEY", "test-key"), \
+             mock.patch.object(kakao_station_distances.requests, "get", return_value=response) as request:
+            with self.assertRaises(kakao_station_distances.KakaoLocalError) as raised:
+                kakao_station_distances._request_json("search/category.json", {"category_group_code": "SC4"})
+        self.assertNotIsInstance(raised.exception, kakao_station_distances.KakaoQuotaError)
+        request.assert_called_once()
+
     def test_batch_without_key_reports_configuration_error(self):
         with mock.patch.object(
             kakao_station_distances.config,
