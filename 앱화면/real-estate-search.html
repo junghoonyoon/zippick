@@ -21589,42 +21589,10 @@
           lowData:comparison.lowData === true,
         };
       }
-      const pricePart = zpScoredParts(item).find(part => part.key === "price");
-      const rank = (Array.isArray(pricePart?.details) ? pricePart.details : [])
-        .find(detail => detail?.key === "price_rank" && detail?.status !== "missing");
-      const rankMatch = String(rank?.reason || "").match(/^지역 후보\s+\d+\/(\d+)위\s+·\s+(.+)$/);
-      const rankCount = Number(rankMatch?.[1] || 0);
-      const namedPeers = (Array.isArray(rank?.comparisonPeers) ? rank.comparisonPeers : [])
-        .filter(peer => String(peer?.name || "").trim());
-      const peerCount = Number(rank?.comparisonPeerCount || 0);
-      const comparisonRegion = String(item?.region || item?.legalDong || "").trim();
-      const burden = rankMatch?.[2] || "";
-      const position = /가격 부담 낮/.test(burden) ? "낮은 편이에요"
-        : /가격 부담 (?:다소 )?높/.test(burden) ? "비싼 편이에요"
-        : /가격 부담 보통|중간 가격대/.test(burden) ? "보통이에요" : "";
-      const average = candidateHeadlinePrice(item);
-      const averagePrice = zpNum(average?.priceEok);
-      const averageText = Number.isFinite(averagePrice) && averagePrice > 0
-        ? `이 아파트의 최근 ${average.label}가는 ${transactionMoney(averagePrice)}이에요.` : "";
-      if (!averageText) return { level:"보통이에요 (임시)", heading:"가격은 보통으로 임시 표시했어요. 평균 실거래가 자료가 부족해요." };
-      if (!position || rankCount < 3 || peerCount !== rankCount - 1 || !namedPeers.length || !comparisonRegion) return {
-        level:"보통이에요 (임시)",
-        heading:"가격은 보통으로 임시 표시했어요. 주변 단지와 가격을 비교하기 어려워요.",
-        subheading:averageText,
-      };
-      const peerLabels = namedPeers.map(peer => ({
-        name:String(peer.name || "").trim(),
-        legalDong:String(peer.legalDong || "").trim(),
-        areaLabel:String(peer.areaLabel || "").trim(),
-      }));
       return {
-        level:position,
-        heading:`시세가 ${position}. ${comparisonRegion}의 다른 단지 ${peerCount}곳과 비교한 결과예요.`,
-        subheading:averageText,
-        comparisonPeers:peerLabels,
-        comparisonPeerCount:peerCount,
-        comparisonCount:rankCount,
-        peerReason:"같은 구에서 비슷한 조건의 단지를 골랐어요.",
+        level:"판단 보류",
+        heading:"주변 시세와 비교할 자료가 부족해 판단할 수 없어요",
+        subheading:"비교 단지의 거래를 확인하지 못했어요.",
       };
     }
 
