@@ -232,6 +232,30 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             self.assertIn(f"{identity}:item?.{identity}", payload)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_location_heading_labels_school_distance_as_straight_line(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        start = html.index("    function zippickLocationHeadingFact(item, part, positive) {")
+        end = html.index("    // 공통 제목:", start)
+        heading_body = html[start:end]
+        script = f"""
+          const zpNum = value => Number(value);
+          const zpPartRatio = row => zpNum(row.points) / zpNum(row.maxPoints);
+          {heading_body}
+          const good = zippickLocationHeadingFact({{}}, {{key:'demand',details:[
+            {{key:'station',status:'ok',points:12,maxPoints:15,reason:'신정네거리역 2호선 · 직선 725m'}},
+            {{key:'education',status:'ok',points:12,maxPoints:15,reason:'서울남명초등학교 · 186m 거리'}},
+          ]}}, true);
+          const weak = zippickLocationHeadingFact({{}}, {{key:'demand',details:[
+            {{key:'education',status:'ok',points:4,maxPoints:15,reason:'서울남명초등학교 · 186m 거리'}},
+          ]}}, false);
+          console.log(JSON.stringify([good, weak]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        good, weak = json.loads(result.stdout)
+        self.assertEqual(good, "역은 직선 725m, 학교는 직선 186m로 가까워요")
+        self.assertEqual(weak, "학교까지 직선 186m로 통학 거리를 확인해야 해요")
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_market_score_bars_explain_each_signal_in_plain_korean(self):
         html = APP_HTML.read_text(encoding="utf-8")
         tone_body = html.split("    function zippickBarTone(ratio) {", 1)[1].split(

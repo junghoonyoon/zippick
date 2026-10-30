@@ -21162,9 +21162,9 @@
       };
       if (part?.key === "demand") {
         const station = distance(detail("station")), school = distance(detail("education"));
-        if (positive && station && school) return `역은 직선 ${station}m, 학교는 ${school}m로 가까워요`;
+        if (positive && station && school) return `역은 직선 ${station}m, 학교는 직선 ${school}m로 가까워요`;
         if (station) return positive ? `역까지 직선 ${station}m로 가까워요` : `역까지 직선 ${station}m로 거리가 멀어요`;
-        if (school) return positive ? `학교까지 ${school}m로 가까워요` : `학교까지 ${school}m로 통학 거리를 확인해야 해요`;
+        if (school) return positive ? `학교까지 직선 ${school}m로 가까워요` : `학교까지 직선 ${school}m로 통학 거리를 확인해야 해요`;
         const commute = detail("commute");
         const match = /(광화문|강남|여의도)\s*(\d+)분/.exec(String(commute?.reason || ""));
         if (match) return `${match[1]}까지 약 ${match[2]}분${positive ? "으로 이동시간이 짧은 편이에요" : "이 걸려요"}`;
