@@ -275,6 +275,44 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout), [1, ["score:74", "score:62"], ["score:74", "score:62"]])
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_report_scores_sync_to_same_search_complex_and_area(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        identity_start = html.index("    function candidateScoreAreaIdentity(item) {")
+        identity_end = html.index("    function syncAptSearchCandidateData", identity_start)
+        identity_helpers = html[identity_start:identity_end]
+        sync_start = html.index("    function syncCandidateReportScores(item) {")
+        sync_end = html.index("    async function refreshLocationScoreSheet", sync_start)
+        sync_body = html[sync_start:sync_end]
+        script = f"""
+          const report = {{apartmentId:'complex-1',name:'송도',region:'연수구',legalDong:'송도동',jibun:'308-1',displayAreaLabel:'전용 84.9㎡',locationScore:{{score:74}},signals:{{score:33}}}};
+          const currentAptSearchItems = [
+            {{...report,displayAreaLabel:'84㎡',locationScore:{{score:69}},signals:{{score:69}}}},
+            {{...report,displayAreaLabel:'59㎡',locationScore:{{score:62}},signals:{{score:61}}}},
+          ];
+          const compactText = value => String(value || '').replace(/\\s+/g,'').toLowerCase();
+          const candidateDisplayName = row => row.displayName || row.name || '';
+          const parcelIdentityKey = value => String(value || '').replace(/\\s+/g,'');
+          const candidateIdentityKey = row => `${{row.apartmentId}}|${{row.displayAreaLabel}}`;
+          const sameCandidateIdentity = (left,right) => left.apartmentId === right.apartmentId
+            && left.region === right.region && left.legalDong === right.legalDong && left.jibun === right.jibun;
+          {identity_helpers}
+          const candidateRowsForLookup = () => currentAptSearchItems;
+          let refreshedKeys = [];
+          const repaintCandidateScoreBadges = (item,key,previousKeys) => {{ refreshedKeys = previousKeys; }};
+          {sync_body}
+          syncCandidateReportScores(report);
+          console.log(JSON.stringify([
+            currentAptSearchItems.map(row => [row.locationScore.score,row.signals.score]),
+            refreshedKeys,
+          ]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        self.assertEqual(
+            json.loads(result.stdout),
+            [[[74, 33], [62, 61]], ["complex-1|84㎡"]],
+        )
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_location_heading_labels_school_distance_as_straight_line(self):
         html = APP_HTML.read_text(encoding="utf-8")
         start = html.index("    function zippickLocationHeadingFact(item, part, positive) {")

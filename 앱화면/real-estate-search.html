@@ -6549,6 +6549,20 @@
       };
     }
 
+    function syncCandidateReportScores(item) {
+      if (!item?.locationScore) return;
+      const rowsToSync = candidateRowsForLookup().filter(
+        row => sameCandidateScoreIdentity(row, item),
+      );
+      const previousRowKeys = rowsToSync.map(candidateIdentityKey);
+      rowsToSync.forEach(row => {
+        row.locationScore = item.locationScore;
+        if (item.signals && typeof item.signals === "object") row.signals = item.signals;
+        if (item.educationEnvironment) row.educationEnvironment = item.educationEnvironment;
+      });
+      repaintCandidateScoreBadges(item, candidateIdentityKey(item), previousRowKeys);
+    }
+
     async function refreshLocationScoreSheet(item, onRefresh = null) {
       if (!item || !locationScoreNeedsRefresh(item)) return;
       try {
@@ -28172,6 +28186,7 @@
         setAptReportDownloadReady(true);
         const rerender = () => {
           if (requestId === aptReportRequestId && currentAptReportItem === report && !aptReportSheet.hidden) {
+            syncCandidateReportScores(report);
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
             scheduleZippickReportMaps(aptReportContent);
           }
@@ -28193,6 +28208,7 @@
         if (requestId !== aptReportRequestId) return;
         const report = data.report || {};
         currentAptReportItem = report;
+        syncCandidateReportScores(report);
         // 직접 검색 리포트는 현재 예산 검색 결과가 아니라 서버의 구 대표
         // 비교군을 사용한다. 구버전 응답에서 peers가 빠져도 검색 후보 비교
         // UI로 잘못 폴백하지 않도록 직접 검색 리포트 타입을 유지한다.
