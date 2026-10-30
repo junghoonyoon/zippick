@@ -149,7 +149,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("대장 단지보다 18.4% 낮아", own_leader)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
-    def test_demand_and_market_report_explain_why_the_score_is_good(self):
+    def test_demand_copy_covers_good_normal_bad_and_missing_distance_data(self):
         html = APP_HTML.read_text(encoding="utf-8")
         demand_body = html.split("    function zippickDemandScoreReason(part) {", 1)[1].split(
             "    function zippickMarketScoreReason(item) {", 1,
@@ -172,20 +172,64 @@ class FrontendApartmentSearchTest(unittest.TestCase):
           function zippickDemandScoreReason(part) {{{demand_body}
           function zippickMarketScoreReason(item) {{{market_body}
           function zippickBarReason(item, part) {{{bar_body}
-          const demand = zippickBarReason({{}}, {{key:'demand',points:24,maxPoints:30,details:[
-            {{key:'station',reason:'우장산역 5호선 · 직선 422m',status:'available'}},
-            {{key:'education',reason:'강신초등학교 · 468m 거리',status:'available'}},
-          ]}});
+          const demandPart = details => ({{key:'demand',details}});
+          const good = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:90,reason:'우장산역 5호선 · 직선 422m',status:'ok'}},
+            {{key:'education',score:100,reason:'강신초등학교 · 468m 거리',status:'ok'}},
+          ]));
+          const normal = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:60,reason:'신정네거리역 2호선 · 직선 725m',status:'ok'}},
+            {{key:'education',score:55,reason:'서울남명초등학교 · 186m 거리',status:'ok'}},
+          ]));
+          const bad = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:30,reason:'가까운 역 · 직선 1800m',status:'ok'}},
+            {{key:'education',score:35,reason:'주변 학교 · 2200m 거리',status:'ok'}},
+          ]));
+          const partial = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:null,reason:'역거리 미수집',status:'missing'}},
+            {{key:'education',score:95,reason:'서울남명초등학교 · 186m 거리',status:'ok'}},
+          ]));
+          const missing = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:null,reason:'역거리 미수집',status:'missing'}},
+            {{key:'education',score:null,reason:'주변 학교 자료를 확인하지 못했어요',status:'missing'}},
+          ]));
           const market = zippickBarReason({{signals:{{momentumPct:12.9,turnoverRatio:1.33,isAtPeak:true,recoveryPct:100}}}}, {{key:'market'}});
-          console.log(JSON.stringify([demand, market]));
+          console.log(JSON.stringify([good, normal, bad, partial, missing, market]));
         """
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
-        demand, market = json.loads(result.stdout)
-        self.assertIn("역과 학교가 가까워 출퇴근·통학에 유리하고 입지 점수에 유리해요", demand)
-        self.assertIn("실제 도보 길과 학교 배정은 확인해 주세요", demand)
+        good, normal, bad, partial, missing, market = json.loads(result.stdout)
+        self.assertIn("역과 학교가 가까워 출퇴근·통학에 유리해요", good)
+        self.assertIn("우장산역 5호선까지 직선 422m", good)
+        self.assertIn("강신초등학교까지 직선 468m", good)
+        self.assertIn("확인된 거리는 신정네거리역 2호선까지 직선 725m", normal)
+        self.assertIn("서울남명초등학교까지 직선 186m", normal)
+        self.assertNotIn("가깝", normal)
+        self.assertIn("역이 멀어 출퇴근에는 불리해요", bad)
+        self.assertIn("학교 접근성이 낮아 통학에는 아쉬워요", bad)
+        self.assertIn("학교가 가까워 통학에 유리해요", partial)
+        self.assertIn("역 자료가 없어요", partial)
+        self.assertEqual(missing, "역·학교 자료를 불러오지 못해 판단할 수 없어요.")
+        self.assertNotIn("후보", missing)
+        self.assertNotIn("도보", good + normal + bad + partial + missing)
         self.assertIn("최근 6개월 가격은 12.9% 올랐고 거래는 33% 늘었어요", market)
         self.assertIn("가격 상승을 거래가 뒷받침해 시장 흐름 점수에 유리해요", market)
         self.assertIn("2년 고점권이라 최근 거래보다 비싼 매물은 주의해요", market)
+
+    def test_report_refresh_keeps_complex_identity_and_repaints_open_report(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        fetch_start = html.index("    async function fetchAptReport(name, region, context = {}) {")
+        fetch_end = html.index("    async function ensureCandidateCommuteProfile", fetch_start)
+        fetch = html[fetch_start:fetch_end]
+        self.assertIn('params.set("apartment_id", context.apartmentId)', fetch)
+        self.assertIn('params.set("kapt_code", context.kaptCode)', fetch)
+        self.assertIn('params.set("complex_no", context.complexNo)', fetch)
+        self.assertIn("void refreshLocationScoreSheet(report, rerender);", html)
+        self.assertIn("requestId === aptReportRequestId && currentAptReportItem === report", html)
+        payload_start = html.index("    function locationScoreRefreshPayload(item) {")
+        payload_end = html.index("    async function refreshLocationScoreSheet", payload_start)
+        payload = html[payload_start:payload_end]
+        for identity in ("apartmentId", "kaptCode", "complexNo"):
+            self.assertIn(f"{identity}:item?.{identity}", payload)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_market_score_bars_explain_each_signal_in_plain_korean(self):

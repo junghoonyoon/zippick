@@ -10,12 +10,13 @@ import os
 import re
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 import requests
 
 import config
 import molit_transactions
+import persistent_json_store
 import real_estate_search
 
 
@@ -28,9 +29,15 @@ _CACHE_LOCK = threading.RLock()
 _CACHE_DATA = None
 _CACHE_LOADED_PATH = None
 _CACHE_LOADED_REVISION = None
+_CACHE_PENDING_UPDATES = {
+    "records": {},
+    "geocodes": {},
+    "stationQueries": {},
+}
 _ACTIVE_BATCHES = 0
 _STATION_QUERY_LOCK = threading.RLock()
 _GEOCODE_LOCKS = tuple(threading.RLock() for _ in range(64))
+_API_REQUEST_CONTEXT = threading.local()
 SHARED_STATION_RADIUS_METERS = 500
 STATION_TILE_DEGREES = 0.005
 STATION_CERTAINTY_MARGIN_METERS = 25
@@ -38,6 +45,30 @@ STATION_CERTAINTY_MARGIN_METERS = 25
 
 class KakaoLocalError(RuntimeError):
     """카카오 Local API 설정 또는 호출 오류."""
+
+
+class KakaoAuthenticationError(KakaoLocalError):
+    """카카오 REST API 키 또는 Local API 권한 오류."""
+
+
+class KakaoQuotaError(KakaoLocalError):
+    """카카오 Local API 호출 한도 오류."""
+
+
+class KakaoNetworkError(KakaoLocalError):
+    """카카오 Local API 네트워크 또는 서버 일시 오류."""
+
+
+def run_counted_api_call(callback, *args, counter, counter_lock):
+    """Run a worker callback and count only Kakao requests it makes."""
+    _API_REQUEST_CONTEXT.count = 0
+    try:
+        return callback(*args)
+    finally:
+        count = _API_REQUEST_CONTEXT.count
+        with counter_lock:
+            counter[0] += count
+        del _API_REQUEST_CONTEXT.count
 
 
 def configured():
@@ -91,6 +122,8 @@ def reset_memory_cache():
         _CACHE_DATA = None
         _CACHE_LOADED_PATH = None
         _CACHE_LOADED_REVISION = None
+        for updates in _CACHE_PENDING_UPDATES.values():
+            updates.clear()
 
 
 def _file_revision():
@@ -99,6 +132,25 @@ def _file_revision():
     except OSError:
         return None
     return stat.st_mtime_ns, stat.st_size
+
+
+def _normalize_cache(payload):
+    if not isinstance(payload, dict) or payload.get("version") != CACHE_VERSION:
+        payload = _empty_cache()
+    if not isinstance(payload.get("records"), dict):
+        payload["records"] = {}
+    for key in ("geocodes", "stationQueries"):
+        if not isinstance(payload.get(key), dict):
+            payload[key] = {}
+    return payload
+
+
+def _apply_pending_updates(payload):
+    for bucket in ("records", "geocodes"):
+        payload[bucket].update(_CACHE_PENDING_UPDATES[bucket])
+    for key, queries in _CACHE_PENDING_UPDATES["stationQueries"].items():
+        payload["stationQueries"].setdefault(key, []).extend(queries)
+    return payload
 
 
 def _load_cache():
@@ -112,19 +164,8 @@ def _load_cache():
             and _CACHE_LOADED_REVISION == revision
         ):
             return _CACHE_DATA
-        payload = None
-        if CACHE_PATH.exists():
-            try:
-                payload = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
-            except (OSError, TypeError, ValueError):
-                payload = None
-        if not isinstance(payload, dict) or payload.get("version") != CACHE_VERSION:
-            payload = _empty_cache()
-        if not isinstance(payload.get("records"), dict):
-            payload["records"] = {}
-        for key in ("geocodes", "stationQueries"):
-            if not isinstance(payload.get(key), dict):
-                payload[key] = {}
+        payload = _normalize_cache(persistent_json_store.read_json_object(CACHE_PATH))
+        _apply_pending_updates(payload)
         _CACHE_DATA = payload
         _CACHE_LOADED_PATH = path_key
         _CACHE_LOADED_REVISION = revision
@@ -132,17 +173,21 @@ def _load_cache():
 
 
 def _save_cache():
-    global _CACHE_LOADED_REVISION
+    global _CACHE_DATA, _CACHE_LOADED_PATH, _CACHE_LOADED_REVISION
     with _CACHE_LOCK:
-        payload = _load_cache()
-        payload["updatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        temporary = CACHE_PATH.with_suffix(f".{os.getpid()}.tmp")
-        temporary.write_text(
-            json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
-            encoding="utf-8",
-        )
-        temporary.replace(CACHE_PATH)
+        has_pending = any(_CACHE_PENDING_UPDATES[bucket] for bucket in _CACHE_PENDING_UPDATES)
+        if not has_pending and CACHE_PATH.exists():
+            _CACHE_LOADED_REVISION = _file_revision()
+            return
+        with persistent_json_store.exclusive_file_lock(CACHE_PATH):
+            payload = _normalize_cache(persistent_json_store.read_json_object(CACHE_PATH))
+            _apply_pending_updates(payload)
+            payload["updatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            persistent_json_store.write_json_atomically(CACHE_PATH, payload, indent=None)
+            for updates in _CACHE_PENDING_UPDATES.values():
+                updates.clear()
+            _CACHE_DATA = payload
+            _CACHE_LOADED_PATH = os.fspath(CACHE_PATH)
         _CACHE_LOADED_REVISION = _file_revision()
 
 
@@ -152,16 +197,28 @@ def _save_if_not_batching():
             _save_cache()
 
 
+def _queue_cache_update(bucket, key, value, *, append=False):
+    with _CACHE_LOCK:
+        payload = _load_cache()
+        if append:
+            payload[bucket].setdefault(key, []).append(value)
+            _CACHE_PENDING_UPDATES[bucket].setdefault(key, []).append(value)
+        else:
+            payload[bucket][key] = value
+            _CACHE_PENDING_UPDATES[bucket][key] = value
+
+
 def _merge_records(records):
     if not records:
         return
     with _CACHE_LOCK:
-        payload = _load_cache()
-        payload["records"].update({
+        updates = {
             str(key): value
             for key, value in records.items()
             if isinstance(value, dict)
-        })
+        }
+        _load_cache()["records"].update(updates)
+        _CACHE_PENDING_UPDATES["records"].update(updates)
         _save_cache()
 
 
@@ -196,9 +253,8 @@ def _coordinates_for_entity(entity, address):
                         "coordinateMatchType": "address_cache"}
         coordinates = geocode_address(address) or geocode_apartment_keyword(entity)
         if coordinates:
-            with _CACHE_LOCK:
-                _load_cache()["geocodes"][key] = {"address": address, **coordinates}
-                _save_if_not_batching()
+            _queue_cache_update("geocodes", key, {"address": address, **coordinates})
+            _save_if_not_batching()
         return coordinates
 
 
@@ -282,6 +338,8 @@ def _request_json(path, params):
     last_error = None
     for attempt in range(3):
         try:
+            if hasattr(_API_REQUEST_CONTEXT, "count"):
+                _API_REQUEST_CONTEXT.count += 1
             response = requests.get(
                 url,
                 params=params,
@@ -293,7 +351,7 @@ def _request_json(path, params):
             if attempt < 2:
                 time.sleep(0.4 * (2 ** attempt))
                 continue
-            raise KakaoLocalError("카카오 Local API에 연결하지 못했습니다.") from exc
+            raise KakaoNetworkError("카카오 Local API에 연결하지 못했습니다.") from exc
         if response.status_code == 200:
             try:
                 payload = response.json()
@@ -303,12 +361,15 @@ def _request_json(path, params):
                 raise KakaoLocalError("카카오 Local API 응답 형식이 올바르지 않습니다.")
             return payload
         if response.status_code in {401, 403}:
-            raise KakaoLocalError("카카오 REST API 키 또는 카카오맵 사용 설정을 확인해 주세요.")
-        if response.status_code == 429 or response.status_code >= 500:
-            last_error = KakaoLocalError(f"카카오 Local API 일시 오류({response.status_code})")
+            raise KakaoAuthenticationError("카카오 REST API 키 또는 카카오맵 사용 설정을 확인해 주세요.")
+        if response.status_code == 429:
+            raise KakaoQuotaError("카카오 Local API 요청 한도에 도달했습니다(429).")
+        if response.status_code >= 500:
+            last_error = KakaoNetworkError(f"카카오 Local API 일시 오류({response.status_code})")
             if attempt < 2:
                 time.sleep(0.4 * (2 ** attempt))
                 continue
+            raise last_error
         raise KakaoLocalError(f"카카오 Local API 요청이 실패했습니다({response.status_code}).")
     raise KakaoLocalError("카카오 Local API 요청이 실패했습니다.") from last_error
 
@@ -572,9 +633,8 @@ def nearest_subway_station_shared(longitude, latitude):
         station = _station_from_query(query, longitude, latitude)
         if station:
             key = f"{tile_lat},{tile_lon}"
-            with _CACHE_LOCK:
-                _load_cache()["stationQueries"].setdefault(key, []).append(query)
-                _save_if_not_batching()
+            _queue_cache_update("stationQueries", key, query, append=True)
+            _save_if_not_batching()
             return station
         # Malformed or incomplete category response: retain the established
         # single-result lookup rather than guessing which station is nearest.
@@ -649,7 +709,7 @@ def entities_for_region(sido="", sigungu=""):
     for entity in real_estate_search.APARTMENT_MASTER:
         status = str(entity.get("status") or "").strip()
         if entity.get("aggregate") or (
-            status and status not in molit_transactions.PRESALE_STATUSES
+            status and status not in molit_transactions.PRESALE_STATUSES and status != "준공"
         ):
             continue
         if sido and not _region_matches(entity.get("province"), sido):
@@ -700,6 +760,7 @@ def enrich_entities(
         "readyCount": sum(1 for record in cached if record.get("status") == "ok"),
         "unavailableCount": sum(1 for record in cached if record.get("status") != "ok"),
         "failedCount": 0,
+        "apiRequestCount": 0,
         "failures": [],
         "dryRun": bool(dry_run),
     }
@@ -710,41 +771,93 @@ def enrich_entities(
     global _ACTIVE_BATCHES
     max_workers = max(1, min(int(workers or config.KAKAO_STATION_MAX_WORKERS), 16))
     updates = {}
+    api_request_counter = [0]
+    api_request_counter_lock = threading.Lock()
     with _CACHE_LOCK:
         _ACTIVE_BATCHES += 1
     try:
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            future_entities = {
-                pool.submit(enrich_entity, entity): entity
-                for entity in pending
-            }
-            for future in as_completed(future_entities):
-                entity = future_entities[future]
-                summary["processedCount"] += 1
-                try:
-                    record = future.result()
-                except KakaoLocalError as exc:
-                    summary["failedCount"] += 1
-                    if len(summary["failures"]) < 20:
-                        summary["failures"].append({
-                            "apartmentName": entity.get("name"),
-                            "error": str(exc),
-                        })
-                    continue
-                updates[entity_id(entity)] = record
-                if record.get("status") == "ok":
-                    summary["readyCount"] += 1
-                else:
-                    summary["unavailableCount"] += 1
-                if len(updates) >= 250:
-                    _merge_records(updates)
-                    updates.clear()
+        pool = ThreadPoolExecutor(max_workers=max_workers)
+        future_entities = {}
+        processed_futures = set()
+        pending_iter = iter(pending)
+        halted_error = None
+
+        def submit_next():
+            try:
+                entity = next(pending_iter)
+            except StopIteration:
+                return False
+            future_entities[pool.submit(
+                run_counted_api_call,
+                enrich_entity,
+                entity,
+                counter=api_request_counter,
+                counter_lock=api_request_counter_lock,
+            )] = entity
+            return True
+
+        def collect(future):
+            nonlocal halted_error
+            if future.cancelled() or future in processed_futures:
+                return
+            processed_futures.add(future)
+            entity = future_entities[future]
+            summary["processedCount"] += 1
+            try:
+                record = future.result()
+            except KakaoLocalError as exc:
+                summary["failedCount"] += 1
+                if len(summary["failures"]) < 20:
+                    summary["failures"].append({
+                        "apartmentName": entity.get("name"),
+                        "error": str(exc),
+                    })
+                if isinstance(exc, (KakaoAuthenticationError, KakaoQuotaError, KakaoNetworkError)):
+                    halted_error = exc
+                return
+            updates[entity_id(entity)] = record
+            if record.get("status") == "ok":
+                summary["readyCount"] += 1
+            else:
+                summary["unavailableCount"] += 1
+            if len(updates) >= 250:
+                _merge_records(updates)
+                updates.clear()
+
+        try:
+            for _ in range(min(max_workers, len(pending))):
+                submit_next()
+            while future_entities:
+                completed, _ = wait(future_entities, return_when=FIRST_COMPLETED)
+                for future in completed:
+                    collect(future)
+                    future_entities.pop(future, None)
+                if halted_error:
+                    remaining = tuple(future_entities)
+                    for future in remaining:
+                        future.cancel()
+                    pool.shutdown(wait=True, cancel_futures=True)
+                    for future in remaining:
+                        collect(future)
+                    future_entities.clear()
+                    summary["haltedReason"] = (
+                        "quota" if isinstance(halted_error, KakaoQuotaError)
+                        else "authentication" if isinstance(halted_error, KakaoAuthenticationError)
+                        else "network"
+                    )
+                    break
+                for _ in range(len(completed)):
+                    if not submit_next():
+                        break
+        finally:
+            pool.shutdown(wait=True, cancel_futures=True)
         _merge_records(updates)
     finally:
         with _CACHE_LOCK:
             _ACTIVE_BATCHES -= 1
             if _ACTIVE_BATCHES == 0:
                 _save_cache()
+    summary["apiRequestCount"] = api_request_counter[0]
     summary["cache"] = cache_stats(entities)
     return summary
 
@@ -784,6 +897,8 @@ def main(argv=None):
     except KakaoLocalError as exc:
         parser.error(str(exc))
     print(json.dumps(payload, ensure_ascii=False, indent=2))
+    if payload.get("haltedReason") or payload.get("failedCount"):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

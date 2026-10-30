@@ -1261,8 +1261,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         with mock.patch.object(
             search_server.budget_candidates,
-            "_find_entity",
-            return_value=entity,
+            "resolve_apartment_identity",
+            return_value={"status": "matched", "entity": entity},
         ), mock.patch.object(
             search_server.kakao_station_distances,
             "configured",
@@ -1328,8 +1328,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         with mock.patch.object(
             search_server.budget_candidates,
-            "_find_entity",
-            return_value=entity,
+            "resolve_apartment_identity",
+            return_value={"status": "matched", "entity": entity},
         ), mock.patch.object(
             search_server.kakao_station_distances,
             "configured",
@@ -1387,8 +1387,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         with mock.patch.object(
             search_server.budget_candidates,
-            "_find_entity",
-            return_value=entity,
+            "resolve_apartment_identity",
+            return_value={"status": "matched", "entity": entity},
         ), mock.patch.object(
             search_server.kakao_station_distances,
             "configured",
@@ -1453,8 +1453,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         with mock.patch.object(
             search_server.budget_candidates,
-            "_find_entity",
-            return_value=entity,
+            "resolve_apartment_identity",
+            return_value={"status": "matched", "entity": entity},
         ), mock.patch.object(
             search_server.kakao_station_distances,
             "configured",
@@ -1519,8 +1519,8 @@ class ApartmentAffordabilityTest(unittest.TestCase):
 
         with mock.patch.object(
             search_server.budget_candidates,
-            "_find_entity",
-            return_value=entity,
+            "resolve_apartment_identity",
+            return_value={"status": "matched", "entity": entity},
         ), mock.patch.object(
             search_server.kakao_station_distances,
             "configured",

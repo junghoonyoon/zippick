@@ -357,7 +357,7 @@ def _education_score(row):
         if status == "not_precomputed":
             return None, "주변 학교 자료를 아직 확인하지 못했어요"
         if status == "unsupported_region":
-            return None, "서울·경기 밖이라 교육 접근성 점수는 제공하지 않아요"
+            return None, "서울·경기·인천 밖이라 교육 접근성 점수는 제공하지 않아요"
         return None, "주변 학교 자료를 확인하지 못해 교육 접근성은 점수에서 뺐어요"
     school_names = education.get("elementarySchoolNames") or []
     elementary_distance = _distance_text(education.get("elementaryDistanceMeters"))

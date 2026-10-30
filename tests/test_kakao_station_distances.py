@@ -268,6 +268,53 @@ class KakaoStationDistancesTest(unittest.TestCase):
         self.assertEqual(cached["nearestStationName"], "두번째역")
         self.assertEqual(cached["nearestStationDistance"], 300)
 
+    def test_record_merge_preserves_another_process_write_and_pending_geocode(self):
+        first_id = kakao_station_distances.entity_id(self.entity)
+        first = {"status": "ok", "nearestStationName": "첫번째역"}
+        kakao_station_distances._merge_records({first_id: first})
+        kakao_station_distances._queue_cache_update(
+            "geocodes", "local-geocode", {"address": "테스트 주소", "latitude": 37.5, "longitude": 127.0},
+        )
+
+        other_id = "another-process-record"
+        payload = json.loads(kakao_station_distances.CACHE_PATH.read_text(encoding="utf-8"))
+        payload["records"][other_id] = {"status": "ok", "nearestStationName": "다른 프로세스역"}
+        replacement = kakao_station_distances.CACHE_PATH.with_suffix(".other-process")
+        replacement.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        replacement.replace(kakao_station_distances.CACHE_PATH)
+
+        third_id = "this-process-record"
+        kakao_station_distances._merge_records({
+            third_id: {"status": "ok", "nearestStationName": "현재 프로세스역"},
+        })
+        saved = json.loads(kakao_station_distances.CACHE_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(set(saved["records"]), {first_id, other_id, third_id})
+        self.assertEqual(saved["geocodes"]["local-geocode"]["address"], "테스트 주소")
+
+    def test_quota_error_stops_station_batch_without_saving_failure(self):
+        entities = [
+            self.entity,
+            dict(self.entity, name="두번째단지", jibun="722"),
+            dict(self.entity, name="세번째단지", jibun="723"),
+        ]
+        with mock.patch.object(
+            kakao_station_distances,
+            "configured",
+            return_value=True,
+        ), mock.patch.object(
+            kakao_station_distances,
+            "enrich_entity",
+            side_effect=kakao_station_distances.KakaoQuotaError("429"),
+        ) as enrich:
+            summary = kakao_station_distances.enrich_entities(entities, workers=1)
+
+        self.assertEqual(summary["haltedReason"], "quota")
+        self.assertEqual(summary["failedCount"], 1)
+        self.assertEqual(summary["readyCount"], 0)
+        self.assertEqual(enrich.call_count, 1)
+        saved = json.loads(kakao_station_distances.CACHE_PATH.read_text(encoding="utf-8"))
+        self.assertEqual(saved["records"], {})
+
     def test_batch_without_key_reports_configuration_error(self):
         with mock.patch.object(
             kakao_station_distances.config,
@@ -288,6 +335,7 @@ class KakaoStationDistancesTest(unittest.TestCase):
         entities = [
             dict(self.entity, name="일반단지", status="", dedupeKey="general"),
             dict(self.entity, name="분양단지", status="분양권", dedupeKey="presale"),
+            dict(self.entity, name="준공단지", status="준공", dedupeKey="completed"),
             dict(self.entity, name="임대단지", status="공공임대", dedupeKey="rental"),
             dict(self.entity, name="집계단지", aggregate=True, dedupeKey="aggregate"),
         ]
@@ -295,7 +343,7 @@ class KakaoStationDistancesTest(unittest.TestCase):
         with mock.patch.object(kakao_station_distances.real_estate_search, "APARTMENT_MASTER", entities):
             rows = kakao_station_distances.entities_for_region("서울특별시", "성동구")
 
-        self.assertEqual([row["name"] for row in rows], ["일반단지", "분양단지"])
+        self.assertEqual([row["name"] for row in rows], ["일반단지", "분양단지", "준공단지"])
 
 
 if __name__ == "__main__":

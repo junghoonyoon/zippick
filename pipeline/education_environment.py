@@ -1,83 +1,208 @@
 #!/usr/bin/env python3
-"""서울·경기 아파트 교육환경 점수.
+"""서울·경기·인천 아파트 교육 접근성 점수.
 
-공식 학구도 원자료를 앱에서 쓰기 쉬운 JSON으로 변환한 뒤 사용한다. 학구도
-원자료가 아직 비어 있으면 카카오 Local 장소 검색으로 주변 초·중학교와 학원
-접근성을 보조 계산해 로컬 JSON에 캐시한다. 이 보조 계산값은 배정학교 확정이
-아니므로 화면에도 주변 접근성 기준이라고 표시한다.
+서울·경기 공식 학구도와 역 거리 캐시를 사용한다. 학구도 자료가 없는 인천이나
+기준 자료에 없는 지역은 카카오 Local 장소 검색으로 주변 초·중학교와 학원
+접근성을 보조 계산해 공유 캐시에 저장한다. 이 값은 배정학교 확정이 아니므로
+화면에도 주변 접근성 기준이라고 표시한다.
 """
+import argparse
 import datetime
 import json
 import math
-import os
+import threading
 import time
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from pathlib import Path
 
 import config
 import kakao_station_distances
+import persistent_json_store
 
 
 DATA_PATH = config.ROOT / "data" / "education_environment_seoul_gyeonggi.json"
+OVERLAY_PATH = config.ROOT / "data" / "education_environment_extra_records.json"
+RECORDS_PATH = config.CACHE_DIR / "education_environment_records.json"
 SCORE_FORMULA_VERSION = "education-env-v1"
-SUPPORTED_REGIONS = {"서울특별시", "경기도"}
+SUPPORTED_REGIONS = {"서울특별시", "경기도", "인천광역시"}
 KAKAO_CATEGORY_RADIUS_METERS = 2000
 KAKAO_ACADEMY_RADIUS_METERS = 1000
 _DATASET = None
+_DATASET_REVISION = None
+_DATASET_LOCK = threading.RLock()
+_LEGACY_MIGRATION_DONE = False
 
 
 def reset_memory_cache():
-    global _DATASET
-    _DATASET = None
+    global _DATASET, _DATASET_REVISION, _LEGACY_MIGRATION_DONE
+    with _DATASET_LOCK:
+        _DATASET = None
+        _DATASET_REVISION = None
+        _LEGACY_MIGRATION_DONE = False
+
+
+def _path_revision(path):
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    return stat.st_mtime_ns, stat.st_size
+
+
+def _dataset_revision():
+    return tuple(_path_revision(path) for path in (DATA_PATH, OVERLAY_PATH, RECORDS_PATH))
+
+
+def _read_dataset_file(path):
+    if path == RECORDS_PATH:
+        return persistent_json_store.read_json_object(path)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _migrate_legacy_release_records(releases_root=None, current_release=None):
+    """Move records saved inside old release folders into the shared cache once."""
+    global _LEGACY_MIGRATION_DONE
+    if _LEGACY_MIGRATION_DONE:
+        return
+    if releases_root is None:
+        releases_root = config.ROOT.parent
+        if releases_root.name != "releases":
+            return
+    releases_root = releases_root.resolve()
+    current_release = Path(current_release or config.ROOT).resolve()
+    legacy_files = []
+    try:
+        for release in releases_root.iterdir():
+            if not release.is_dir() or release.resolve() == current_release:
+                continue
+            legacy_path = release / "data" / DATA_PATH.name
+            try:
+                revision = legacy_path.stat().st_mtime_ns
+            except OSError:
+                continue
+            legacy_files.append((revision, legacy_path))
+    except OSError:
+        _LEGACY_MIGRATION_DONE = True
+        return
+    legacy_files.sort(key=lambda item: item[0])
+    if not legacy_files:
+        _LEGACY_MIGRATION_DONE = True
+        return
+
+    with _DATASET_LOCK, persistent_json_store.exclusive_file_lock(RECORDS_PATH):
+        payload = persistent_json_store.read_json_object(RECORDS_PATH)
+        records = payload.get("records")
+        if isinstance(records, dict) and records:
+            _LEGACY_MIGRATION_DONE = True
+            return
+        merged = {}
+        latest_data_through = ""
+        for _revision, legacy_path in legacy_files:
+            legacy = _read_dataset_file(legacy_path)
+            rows = legacy.get("records")
+            if not isinstance(rows, dict):
+                continue
+            formula_version = legacy.get("scoreFormulaVersion") or SCORE_FORMULA_VERSION
+            for apartment_id, record in rows.items():
+                if isinstance(record, dict):
+                    merged[str(apartment_id)] = {
+                        **record,
+                        "scoreFormulaVersion": record.get("scoreFormulaVersion") or formula_version,
+                    }
+            latest_data_through = max(
+                latest_data_through,
+                str(legacy.get("dataThrough") or "").strip(),
+            )
+        if merged:
+            payload.update({
+                "schemaVersion": 1,
+                "scoreFormulaVersion": SCORE_FORMULA_VERSION,
+                "dataThrough": latest_data_through or datetime.date.today().isoformat(),
+                "source": "legacy-release-migration",
+                "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide",
+                "updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "records": merged,
+            })
+            persistent_json_store.write_json_atomically(RECORDS_PATH, payload)
+        _LEGACY_MIGRATION_DONE = True
 
 
 def _load_dataset():
-    global _DATASET
-    if _DATASET is not None:
+    global _DATASET, _DATASET_REVISION
+    with _DATASET_LOCK:
+        _migrate_legacy_release_records()
+        revision = _dataset_revision()
+        if _DATASET is not None and revision == _DATASET_REVISION:
+            return _DATASET
+        base = _read_dataset_file(DATA_PATH)
+        overlay = _read_dataset_file(OVERLAY_PATH)
+        cached = _read_dataset_file(RECORDS_PATH)
+        records = {}
+        for payload in (base, overlay, cached):
+            rows = payload.get("records")
+            if isinstance(rows, dict):
+                records.update(rows)
+        data_through = max(
+            (str(payload.get("dataThrough") or "").strip()
+             for payload in (base, overlay, cached)),
+            default="",
+        )
+        _DATASET = {
+            "records": records,
+            "zones": base.get("zones") if isinstance(base.get("zones"), list) else [],
+            "schools": {
+                str(row.get("code") or row.get("schoolCode") or "").strip(): row
+                for row in (base.get("schools") if isinstance(base.get("schools"), list) else [])
+                if isinstance(row, dict)
+            },
+            "dataThrough": data_through,
+            "source": str(base.get("source") or "").strip(),
+            "sourceUrl": str(base.get("sourceUrl") or "").strip(),
+        }
+        _DATASET_REVISION = revision
         return _DATASET
-    try:
-        payload = json.loads(DATA_PATH.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        payload = {}
-    _DATASET = {
-        "records": payload.get("records") if isinstance(payload.get("records"), dict) else {},
-        "zones": payload.get("zones") if isinstance(payload.get("zones"), list) else [],
-        "schools": {
-            str(row.get("code") or row.get("schoolCode") or "").strip(): row
-            for row in (payload.get("schools") if isinstance(payload.get("schools"), list) else [])
-            if isinstance(row, dict)
-        },
-        "dataThrough": str(payload.get("dataThrough") or "").strip(),
-        "source": str(payload.get("source") or "").strip(),
-        "sourceUrl": str(payload.get("sourceUrl") or "").strip(),
+
+
+def _save_precomputed_records(records):
+    global _DATASET, _DATASET_REVISION
+    updates = {
+        str(apartment_id): {
+            **record,
+            "scoreFormulaVersion": SCORE_FORMULA_VERSION,
+            "source": record.get("source") or "kakao-local-v2",
+            "sourceUrl": record.get("sourceUrl") or "https://developers.kakao.com/docs/latest/ko/local/dev-guide",
+        }
+        for apartment_id, record in (records or {}).items()
+        if apartment_id and isinstance(record, dict)
     }
-    return _DATASET
+    if not updates:
+        return
+    with _DATASET_LOCK, persistent_json_store.exclusive_file_lock(RECORDS_PATH):
+        payload = persistent_json_store.read_json_object(RECORDS_PATH)
+        current = payload.get("records")
+        if not isinstance(current, dict):
+            current = {}
+        current.update(updates)
+        payload.update({
+            "schemaVersion": 1,
+            "scoreFormulaVersion": SCORE_FORMULA_VERSION,
+            "dataThrough": datetime.date.today().isoformat(),
+            "source": "kakao-local-v2",
+            "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide",
+            "updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "records": current,
+        })
+        persistent_json_store.write_json_atomically(RECORDS_PATH, payload)
+        _DATASET = None
+        _DATASET_REVISION = None
 
 
 def _save_precomputed_record(apartment_id, record):
-    global _DATASET
-    if not apartment_id or not isinstance(record, dict):
-        return
-    try:
-        payload = json.loads(DATA_PATH.read_text(encoding="utf-8")) if DATA_PATH.exists() else {}
-    except (OSError, ValueError):
-        payload = {}
-    if not isinstance(payload, dict):
-        payload = {}
-    records = payload.get("records")
-    if not isinstance(records, dict):
-        records = {}
-    records[str(apartment_id)] = record
-    payload["records"] = records
-    payload.setdefault("schemaVersion", 1)
-    payload["scoreFormulaVersion"] = SCORE_FORMULA_VERSION
-    payload["dataThrough"] = datetime.date.today().isoformat()
-    payload["source"] = "kakao-local-v2"
-    payload["sourceUrl"] = "https://developers.kakao.com/docs/latest/ko/local/dev-guide"
-    payload["updatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    temporary = DATA_PATH.with_suffix(f".{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    temporary.replace(DATA_PATH)
-    _DATASET = None
+    _save_precomputed_records({apartment_id: record})
 
 
 def _region_supported(entity):
@@ -152,7 +277,9 @@ def middle_distance_score(distance_meters):
 
 def _kakao_category_places(category_group_code, lat, lon, radius, max_pages=3):
     if not kakao_station_distances.configured():
-        return []
+        raise kakao_station_distances.KakaoLocalError(
+            "카카오 REST API 키가 설정되어 있지 않습니다."
+        )
     places = []
     seen = set()
     for page in range(1, max_pages + 1):
@@ -363,6 +490,11 @@ def education_environment_for_entity(entity, allow_remote_lookup=True):
     apartment_id = kakao_station_distances.entity_id(entity)
     record = dataset["records"].get(apartment_id)
     if isinstance(record, dict):
+        if (
+            record.get("status") == "no_places"
+            and record.get("scoreFormulaVersion") == SCORE_FORMULA_VERSION
+        ):
+            return _with_metadata(record, dataset)
         scored = _score_from_record(record)
         if scored:
             return _with_metadata(scored, dataset)
@@ -392,6 +524,7 @@ def education_environment_for_entity(entity, allow_remote_lookup=True):
     middle_zone = middle_zones[0] if middle_zones else {}
     distance, schools = _school_distance(dataset, elementary_zone, lat, lon)
     record = {
+        "basis": "official_school_zone",
         "elementaryZoneName": elementary_zone.get("name") or "",
         "elementarySchoolNames": [row["name"] for row in schools if row.get("name")],
         "elementaryDistanceMeters": round(distance) if distance is not None else None,
@@ -407,8 +540,8 @@ def _with_metadata(record, dataset):
     return {
         **record,
         "dataThrough": dataset.get("dataThrough", ""),
-        "source": dataset.get("source", ""),
-        "sourceUrl": dataset.get("sourceUrl", ""),
+        "source": record.get("source") or dataset.get("source", ""),
+        "sourceUrl": record.get("sourceUrl") or dataset.get("sourceUrl", ""),
     }
 
 
@@ -422,3 +555,217 @@ def attach_education_environment(rows):
         except Exception:
             row["educationEnvironment"] = {"status": "error", "score": None}
     return rows
+
+
+def _entity_coordinates(entity):
+    station = kakao_station_distances.cached_station(entity) or {}
+    lat = _float_or_none(station.get("latitude"))
+    lon = _float_or_none(station.get("longitude"))
+    if lat is None or lon is None:
+        return None
+    return lat, lon
+
+
+def _collect_batch_targets(entities, retry_unavailable=False):
+    pending = []
+    summary = {
+        "requestedCount": len(entities),
+        "pendingCount": 0,
+        "skippedScoredCount": 0,
+        "skippedZoneCount": 0,
+        "noCoordinatesCount": 0,
+        "noSchoolCount": 0,
+        "unsupportedRegionCount": 0,
+        "failedCount": 0,
+        "apiRequestCount": 0,
+        "failures": [],
+    }
+    for entity in entities:
+        if not _region_supported(entity):
+            summary["unsupportedRegionCount"] += 1
+            continue
+        record = education_environment_for_entity(entity, allow_remote_lookup=False)
+        if record.get("score") is not None:
+            summary["skippedScoredCount"] += 1
+            if record.get("basis") == "official_school_zone":
+                summary["skippedZoneCount"] += 1
+            continue
+        if record.get("status") == "no_coordinates" or _entity_coordinates(entity) is None:
+            summary["noCoordinatesCount"] += 1
+            continue
+        if record.get("status") == "no_places" and not retry_unavailable:
+            summary["noSchoolCount"] += 1
+            continue
+        pending.append(entity)
+    summary["pendingCount"] = len(pending)
+    return pending, summary
+
+
+def enrich_entities(
+    entities,
+    *,
+    retry_unavailable=False,
+    limit=None,
+    workers=None,
+    dry_run=False,
+):
+    entities = list(entities)
+    if limit is not None:
+        entities = entities[:max(0, int(limit))]
+    pending, summary = _collect_batch_targets(entities, retry_unavailable)
+    summary.update({
+        "configured": kakao_station_distances.configured(),
+        "source": "kakao-local-v2",
+        "distanceType": "straight_line",
+        "savedCount": 0,
+        "readyCount": summary["skippedScoredCount"],
+        "dryRun": bool(dry_run),
+    })
+    if dry_run or not pending:
+        summary["cacheRecordCount"] = len(_load_dataset()["records"])
+        return summary
+    if not kakao_station_distances.configured():
+        summary["haltedReason"] = "configuration"
+        summary["failedCount"] = len(pending)
+        summary["failures"].append({"error": "카카오 REST API 키가 설정되어 있지 않습니다."})
+        return summary
+
+    max_workers = max(1, min(int(workers or config.KAKAO_STATION_MAX_WORKERS), 16))
+    updates = {}
+    api_request_counter = [0]
+    api_request_counter_lock = threading.Lock()
+    pending_iter = iter(pending)
+    pool = ThreadPoolExecutor(max_workers=max_workers)
+    future_entities = {}
+    processed_futures = set()
+    halted_error = None
+
+    def submit_next():
+        try:
+            entity = next(pending_iter)
+        except StopIteration:
+            return False
+        future_entities[pool.submit(
+            kakao_station_distances.run_counted_api_call,
+            _score_from_nearby_places,
+            *_entity_coordinates(entity),
+            counter=api_request_counter,
+            counter_lock=api_request_counter_lock,
+        )] = entity
+        return True
+
+    def collect(future):
+        nonlocal halted_error
+        if future.cancelled() or future in processed_futures:
+            return
+        processed_futures.add(future)
+        entity = future_entities[future]
+        try:
+            record = future.result()
+        except Exception as exc:
+            summary["failedCount"] += 1
+            if len(summary["failures"]) < 20:
+                summary["failures"].append({
+                    "apartmentName": entity.get("name"),
+                    "error": str(exc),
+                })
+            if isinstance(exc, (
+                kakao_station_distances.KakaoAuthenticationError,
+                kakao_station_distances.KakaoQuotaError,
+                kakao_station_distances.KakaoNetworkError,
+            )):
+                halted_error = exc
+            return
+        if record is None:
+            record = {
+                "status": "no_places",
+                "score": None,
+                "basis": "nearby_school_access",
+                "scoreFormulaVersion": SCORE_FORMULA_VERSION,
+                "checkedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "source": "kakao-local-v2",
+                "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide",
+            }
+            summary["noSchoolCount"] += 1
+        else:
+            record = {
+                **record,
+                "scoreFormulaVersion": SCORE_FORMULA_VERSION,
+                "checkedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "source": "kakao-local-v2",
+                "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide",
+            }
+            summary["readyCount"] += 1
+        updates[kakao_station_distances.entity_id(entity)] = record
+        summary["savedCount"] += 1
+        if len(updates) >= 250:
+            _save_precomputed_records(updates)
+            updates.clear()
+
+    try:
+        for _ in range(min(max_workers, len(pending))):
+            submit_next()
+        while future_entities:
+            completed, _ = wait(future_entities, return_when=FIRST_COMPLETED)
+            for future in completed:
+                collect(future)
+                future_entities.pop(future, None)
+            if halted_error:
+                remaining = tuple(future_entities)
+                for future in remaining:
+                    future.cancel()
+                pool.shutdown(wait=True, cancel_futures=True)
+                for future in remaining:
+                    collect(future)
+                future_entities.clear()
+                summary["haltedReason"] = (
+                    "quota"
+                    if isinstance(halted_error, kakao_station_distances.KakaoQuotaError)
+                    else "authentication"
+                    if isinstance(halted_error, kakao_station_distances.KakaoAuthenticationError)
+                    else "network"
+                )
+                break
+            for _ in range(len(completed)):
+                if not submit_next():
+                    break
+    finally:
+        pool.shutdown(wait=True, cancel_futures=True)
+        _save_precomputed_records(updates)
+    summary["cacheRecordCount"] = len(_load_dataset()["records"])
+    summary["apiRequestCount"] = api_request_counter[0]
+    return summary
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="역 거리 캐시 좌표와 카카오 Local API로 주변 학교 점수를 저장합니다."
+    )
+    parser.add_argument("--sido", default="")
+    parser.add_argument("--sigungu", default="")
+    parser.add_argument("--all", action="store_true")
+    parser.add_argument("--retry-unavailable", action="store_true")
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--workers", type=int)
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args(argv)
+    if not args.all and (not args.sido or not args.sigungu):
+        parser.error("지역 단위 실행에는 --sido와 --sigungu가 필요합니다. 전체 수집은 --all을 사용하세요.")
+    entities = kakao_station_distances.entities_for_region(
+        "" if args.all else args.sido,
+        "" if args.all else args.sigungu,
+    )
+    summary = enrich_entities(
+        entities,
+        retry_unavailable=args.retry_unavailable,
+        limit=args.limit,
+        workers=args.workers,
+        dry_run=args.dry_run,
+    )
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    if summary.get("haltedReason") or summary.get("failedCount"):
+        raise SystemExit(1)
+
+
+if __name__ == "__main__":
+    main()

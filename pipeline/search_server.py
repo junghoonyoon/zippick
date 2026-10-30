@@ -1340,12 +1340,23 @@ def _apartment_location_score(arguments):
     ).strip()
     if len(name) < 2 or len(region) < 2:
         return {"error": "단지명과 지역을 확인해 주세요."}, 400
-    try:
-        entity = budget_candidates._find_entity(name, region)
-    except Exception:
-        entity = None
+    identities = {
+        "apartmentId": str(arguments.get("apartmentId") or arguments.get("apartment_id") or "").strip(),
+        "kaptCode": str(arguments.get("kaptCode") or arguments.get("kapt_code") or "").strip(),
+        "complexNo": str(arguments.get("complexNo") or arguments.get("complex_no") or "").strip(),
+    }
+    resolution = budget_candidates.resolve_apartment_identity(
+        name,
+        region,
+        str(arguments.get("legalDong") or arguments.get("legal_dong") or "").strip(),
+        str(arguments.get("jibun") or "").strip(),
+        identities=identities,
+        allow_semantic=False,
+    )
+    entity = resolution.get("entity")
     if not entity:
-        return {"error": "단지 정보를 찾지 못했어요."}, 404
+        status = 409 if resolution.get("status") == "ambiguous" else 404
+        return {"error": "단지 정보를 정확히 찾지 못했어요."}, status
 
     try:
         if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
@@ -1368,6 +1379,9 @@ def _apartment_location_score(arguments):
         "district": entity.get("district") or arguments.get("district") or "",
         "legalDong": entity.get("legalDong") or arguments.get("legalDong") or "",
         "jibun": entity.get("jibun") or arguments.get("jibun") or "",
+        "apartmentId": entity.get("apartmentId") or "",
+        "kaptCode": entity.get("kaptCode") or "",
+        "complexNo": entity.get("complexNo") or "",
         "households": int(entity.get("households") or arguments.get("households") or 0),
         "approvedAt": building.get("approvedAt") or arguments.get("approvedAt") or "",
         "buildYear": building.get("buildYear") or arguments.get("buildYear") or 0,
@@ -3885,7 +3899,11 @@ class Handler(BaseHTTPRequestHandler):
             region = params.get("region", [""])[0].strip()
             legal_dong = params.get("legal_dong", [""])[0].strip()
             jibun = params.get("jibun", [""])[0].strip()
-            apartment_id = params.get("apartment_id", [""])[0].strip()
+            identities = {
+                "apartmentId": params.get("apartment_id", [""])[0].strip(),
+                "kaptCode": params.get("kapt_code", [""])[0].strip(),
+                "complexNo": params.get("complex_no", [""])[0].strip(),
+            }
             target_households = policy_evaluator._float(params.get("households", ["0"])[0])
             target_price_eok = policy_evaluator._float(params.get("price_eok", ["0"])[0])
             area_label = params.get("area_label", [""])[0].strip()
@@ -3893,24 +3911,19 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"error": "단지명을 확인해 주세요."}, 400)
                 return
             matched = None
-            if apartment_id:
-                matches = budget_candidates._find_entities(name, region, legal_dong, jibun)
-                matched = next(
-                    (entity for entity in matches if str(entity.get("apartmentId") or "").strip() == apartment_id),
-                    None,
+            if any(identities.values()) or legal_dong or jibun:
+                resolution = budget_candidates.resolve_apartment_identity(
+                    name,
+                    region,
+                    legal_dong,
+                    jibun,
+                    identities=identities,
+                    allow_semantic=False,
                 )
-                # 단지 대장에는 고유번호가 없는 행도 있다. 그때는 법정동과
-                # 지번을 둘 다 확인할 수 있을 때에만 물리적 위치로 고정한다.
-                if not matched and legal_dong and jibun:
-                    matched = next(
-                        (entity for entity in matches if not entity.get("apartmentId")),
-                        None,
-                    )
-            elif legal_dong or jibun:
-                matched = budget_candidates._find_entity(name, region, legal_dong, jibun)
-            if apartment_id or legal_dong or jibun:
+                matched = resolution.get("entity")
                 if not matched:
-                    self._json({"error": "공유한 단지를 정확히 찾지 못했어요."}, 404)
+                    status = 409 if resolution.get("status") == "ambiguous" else 404
+                    self._json({"error": "공유한 단지를 정확히 찾지 못했어요."}, status)
                     return
             self._json(_apartment_report(name, region, target_households, target_price_eok, area_label, legal_dong, jibun, matched))
             return

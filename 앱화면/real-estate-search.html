@@ -6428,6 +6428,13 @@
         if (item) {
           ensureZippickDevelopmentInsight(item);
           void ensureCandidateCommuteProfile(item);
+          void refreshLocationScoreSheet(item, () => {
+            const slot = sheet.querySelector("[data-signal-report]");
+            if (slot && !sheet.hidden) {
+              slot.innerHTML = candidateZippickReportHtml(item);
+              scheduleZippickReportMaps(sheet);
+            }
+          });
           void ensureZippickReportPeers(item, () => {
             const slot = sheet.querySelector("[data-signal-report]");
             if (slot && !sheet.hidden) {
@@ -6502,6 +6509,9 @@
         district:item?.district || "",
         legalDong:item?.legalDong || "",
         jibun:item?.jibun || "",
+        apartmentId:item?.apartmentId || "",
+        kaptCode:item?.kaptCode || "",
+        complexNo:item?.complexNo || "",
         households:item?.households || 0,
         buildingAge:item?.buildingAge || 0,
         buildYear:item?.buildYear || 0,
@@ -6539,7 +6549,7 @@
       };
     }
 
-    async function refreshLocationScoreSheet(item) {
+    async function refreshLocationScoreSheet(item, onRefresh = null) {
       if (!item || !locationScoreNeedsRefresh(item)) return;
       try {
         const originalKey = candidateIdentityKey(item);
@@ -6558,6 +6568,7 @@
             Object.assign(row, payload.candidate);
           }
         });
+        if (typeof onRefresh === "function") onRefresh(item);
       } catch (_) {}
     }
 
@@ -18259,29 +18270,53 @@
     function zippickDemandScoreReason(part) {
       const details = Array.isArray(part?.details) ? part.details : [];
       const find = key => details.find(detail => detail?.key === key);
-      const usable = detail => detail && detail.status !== "missing" && !/미수집|확인하지 못/.test(String(detail.reason || ""));
+      const usable = detail => detail
+        && detail.status !== "missing"
+        && detail.score !== null
+        && detail.score !== undefined
+        && Number.isFinite(Number(detail.score))
+        && String(detail.reason || "").trim()
+        && !/미수집|확인하지 못/.test(String(detail.reason || ""));
       const station = usable(find("station")) ? find("station") : null;
       const education = usable(find("education")) ? find("education") : null;
-      const ratio = zpNum(part?.points) / zpNum(part?.maxPoints);
-      const scoreMeaning = Number.isFinite(ratio) && ratio >= .7
-        ? "입지 점수에 유리해요."
-        : Number.isFinite(ratio) && ratio < .45
-          ? "입지 점수에는 아쉬워요."
-          : "입지 점수는 보통이에요.";
-      const facts = [station?.reason, education?.reason].filter(Boolean).map(value => String(value).trim());
-      if (station && education) {
-        return `역과 학교가 가까워 출퇴근·통학에 유리하고 ${scoreMeaning} ${facts.join(", ")}. 실제 도보 길과 학교 배정은 확인해 주세요.`;
+      if (!station && !education) return "역·학교 자료를 불러오지 못해 판단할 수 없어요.";
+      const fact = (detail, label) => {
+        if (!detail) return "";
+        const reason = String(detail.reason || "").trim();
+        if (/반경|안에 지하철역 없음/.test(reason)) return reason;
+        const distance = reason.match(/(?:직선\s*)?([\d,.]+\s*m)(?:\s*거리)?/i);
+        if (!distance) return reason;
+        const name = reason.slice(0, distance.index).split("·")[0].trim() || label;
+        return `${name}까지 직선 ${distance[1].replace(/\s+/g, "")}`;
+      };
+      const stationFact = fact(station, "가까운 역");
+      const educationFact = fact(education, "주변 학교");
+      const stationScore = station ? Number(station.score) : null;
+      const educationScore = education ? Number(education.score) : null;
+      let conclusion = "";
+      if (station && education && stationScore >= 70 && educationScore >= 70) {
+        conclusion = "역과 학교가 가까워 출퇴근·통학에 유리해요.";
+      } else if (station && education && stationScore < 45 && educationScore < 45) {
+        conclusion = "역이 멀어 출퇴근에는 불리해요. 학교 접근성이 낮아 통학에는 아쉬워요.";
+      } else if (station && stationScore < 45) {
+        conclusion = "역이 멀어 출퇴근에는 불리해요.";
+      } else if (education && educationScore < 45) {
+        conclusion = "학교 접근성이 낮아 통학에는 아쉬워요.";
+      } else if (!education && stationScore >= 70) {
+        conclusion = "역이 가까워 출퇴근에 유리해요.";
+      } else if (!station && educationScore >= 70) {
+        conclusion = "학교가 가까워 통학에 유리해요.";
       }
-      if (station) {
-        return `역이 가까워 출퇴근에 유리하고 ${scoreMeaning} ${facts[0]}. 실제 도보 길은 확인해 주세요.`;
-      }
-      if (education) {
-        return `학교가 가까워 통학에 유리하고 ${scoreMeaning} ${facts[0]}. 실제 배정 학교와 통학로는 확인해 주세요.`;
-      }
-      const reasons = zippickDetailReasons(part, ["representation", "redevelopment_influence", "commute"]);
-      return reasons.length
-        ? `${reasons.join(" · ")}. 이 자료를 입지·실수요 점수에 반영했어요. 실제 생활 동선은 현장에서 확인하세요.`
-        : "역·학교·생활권 자료가 부족해 입지·실수요 점수는 판단할 수 없어요.";
+      const facts = [stationFact, educationFact].filter(Boolean).join(", ");
+      const missing = [
+        !station ? "역 자료가 없어요." : "",
+        !education ? "학교 자료가 없어요." : "",
+      ].filter(Boolean).join(" ");
+      const statements = [];
+      if (conclusion) statements.push(conclusion);
+      if (facts) statements.push(`확인된 거리는 ${facts}예요.`);
+      if (missing) statements.push(missing);
+      return statements.join(" ");
     }
 
     function zippickMarketScoreReason(item) {
@@ -26714,7 +26749,7 @@
 
     async function fetchAptReport(name, region, context = {}) {
       const contextParams = aptReportContextParams(context);
-      const contextKey = `${contextParams.toString()}|${context?.legalDong || ""}|${context?.jibun || ""}|${context?.apartmentId || ""}`;
+      const contextKey = `${contextParams.toString()}|${context?.legalDong || ""}|${context?.jibun || ""}|${context?.apartmentId || ""}|${context?.kaptCode || ""}|${context?.complexNo || ""}`;
       const cacheKey = `${name}${region || ""}${contextKey}`;
       if (aptReportCache.has(cacheKey)) return aptReportCache.get(cacheKey);
       const params = new URLSearchParams({
@@ -26725,6 +26760,8 @@
       if (context?.legalDong) params.set("legal_dong", context.legalDong);
       if (context?.jibun) params.set("jibun", context.jibun);
       if (context?.apartmentId) params.set("apartment_id", context.apartmentId);
+      if (context?.kaptCode) params.set("kapt_code", context.kaptCode);
+      if (context?.complexNo) params.set("complex_no", context.complexNo);
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);
       const pending = getJson(
@@ -28078,11 +28115,12 @@
         scheduleZippickReportMaps(aptReportContent);
         setAptReportDownloadReady(true);
         const rerender = () => {
-          if (!aptReportSheet.hidden) {
+          if (requestId === aptReportRequestId && currentAptReportItem === report && !aptReportSheet.hidden) {
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
             scheduleZippickReportMaps(aptReportContent);
           }
         };
+        void refreshLocationScoreSheet(report, rerender);
         void ensureZippickReportPeers(report, () => {
           if (requestId === aptReportRequestId) rerender();
         });
@@ -28095,7 +28133,7 @@
         return;
       }
       try {
-        const data = await fetchAptReport(name, region, context);
+        const data = await fetchAptReport(name, region, { ...context, ...(candidate || {}) });
         if (requestId !== aptReportRequestId) return;
         const report = data.report || {};
         currentAptReportItem = report;
@@ -28116,11 +28154,12 @@
         scheduleZippickReportMaps(aptReportContent);
         setAptReportDownloadReady(true);
         const rerender = () => {
-          if (!aptReportSheet.hidden) {
+          if (requestId === aptReportRequestId && currentAptReportItem === report && !aptReportSheet.hidden) {
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
             scheduleZippickReportMaps(aptReportContent);
           }
         };
+        void refreshLocationScoreSheet(report, rerender);
         ensureZippickDevelopmentInsight(report, rerender);
         // /api/apartment-report 응답에는 뉴스가 없다. 후보 목록과 같은
         // 경로로 여기서 따로 보강한다.
