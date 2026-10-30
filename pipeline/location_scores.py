@@ -560,16 +560,15 @@ def _price_rank_burden_score(row, signals):
     if isinstance(comparison, dict):
         if comparison.get("status") != "ready":
             return None, comparison.get("reason") or "비슷한 단지의 거래가 부족해요."
-        difference = _float_or_none(comparison.get("differencePct"))
+        # 동네 차이로 원래 비싼 단지와 단순 비교하지 않고, 평소 가격 차이보다 벌어졌는지 본다.
+        shift = _float_or_none(comparison.get("shiftPp"))
         count = len(comparison.get("peers") or [])
-        if difference is None or not count:
-            return None, "비교 단지의 평균 가격을 확인하지 못했어요."
-        direction = "낮음" if difference < 0 else "높음" if difference > 0 else "같음"
-        score = 90 if difference <= -5 else 40 if difference >= 5 else 72
-        return score, (
-            f"비교 단지 {count}곳의 최근 {comparison.get('periodMonths')}개월 평균보다 "
-            f"{abs(difference):.1f}% {direction}"
-        )
+        if shift is None or not count:
+            return None, "비교 단지와의 평소 가격 차이를 확인하지 못했어요."
+        position = comparison.get("position")
+        score = 90 if position == "low" else 40 if position == "high" else 72
+        direction = "싸졌음" if shift < 0 else "비싸졌음" if shift > 0 else "그대로"
+        return score, f"비교 단지 {count}곳과의 가격 차이가 평소보다 {abs(shift):.1f}%p {direction}"
     price_rank = row.get("_locationPriceRank") or {}
     if price_rank:
         score = _price_burden_score(price_rank.get("topPercent") or 100)

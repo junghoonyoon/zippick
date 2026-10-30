@@ -1,61 +1,33 @@
-"""Same-area, same-period transaction comparison for a paid apartment report."""
+"""주변 비슷한 단지와 비교해 이 단지 시세가 싼지, 적정한지, 비싼지 판단한다.
 
+동네·연식·브랜드 차이로 원래 비싼 단지와 단순 가격을 견주면 판단이 틀어진다.
+그래서 두 단지의 가격 비율이 평소(지난 3년 반)보다 벌어졌는지, 좁혀졌는지를 본다.
+비교 단지는 1km 이내, 세대수 ±20%, 준공연도 차이 5년 이내에서 고른다.
+"""
+
+import collections
 import datetime
 import statistics
 
 import molit_transactions
 import real_estate_search
+import kakao_station_distances
 
 
-MIN_TRADES = 3
+WINDOW_MONTHS = 6
+# '지금'은 최근 6개월, '평소'는 그 전 6개월 구간 7개(3년 반)의 비율 중간값이다.
+HISTORY_WINDOWS = 7
+LOOKBACK_MONTHS = WINDOW_MONTHS * (HISTORY_WINDOWS + 1)
+MIN_WINDOW_TRADES = 3
+LOW_DATA_TRADES = 5
+MIN_USUAL_WINDOWS = 4
 MIN_PEERS = 2
-LOOKBACK_PERIODS = (3, 6, 12)
-MAX_PRICE_GAP = 0.20
-MAX_HOUSEHOLD_GAP = 0.65
-MAX_APPROVAL_YEAR_GAP = 15
-MAX_DISCOVERY_CANDIDATES = 60
-
-
-def _months(end_month, count):
-    return {
-        molit_transactions._shift_month(end_month, -offset)
-        for offset in range(count)
-    }
-
-
-def _average_in_months(transactions, months):
-    prices = [
-        float(trade.get("dealAmountEok") or 0)
-        for trade in transactions
-        if str(trade.get("dealDate") or "")[:7].replace("-", "") in months
-        and float(trade.get("dealAmountEok") or 0) > 0
-    ]
-    return (statistics.mean(prices), len(prices)) if prices else (None, 0)
-
-
-def _area_adjusted_average(transactions, months, target_area):
-    prices = []
-    for trade in transactions:
-        if str(trade.get("dealDate") or "")[:7].replace("-", "") not in months:
-            continue
-        try:
-            area = float(trade.get("exclusiveArea") or 0)
-            price = float(trade.get("dealAmountEok") or 0)
-        except (TypeError, ValueError):
-            continue
-        if area > 0 and price > 0 and abs(area / target_area - 1) <= .10:
-            prices.append(price * target_area / area)
-    return (statistics.mean(prices), len(prices)) if prices else (None, 0)
-
-
-def _transactions(entity, area_label):
-    return molit_transactions.transactions_for_apartment(
-        entity.get("name") or "",
-        region=entity.get("district") or "",
-        area_label=area_label,
-        lookback_months=12,
-        entity=entity,
-    )
+MAX_PEERS = 4
+SHIFT_THRESHOLD_PP = 3.0
+MAX_DISTANCE_METERS = 1000
+MAX_APPROVAL_YEAR_GAP = 5
+PEER_HOUSEHOLD_GAP = 0.2
+MAX_DISCOVERY_CANDIDATES = 20
 
 
 def _peer_entity(peer):
@@ -89,6 +61,22 @@ def _physical_key(entity):
     return (district, dong, jibun or real_estate_search.compact(entity.get("name")))
 
 
+def alternative_facts(peers):
+    """Attach verified master facts to budget alternatives without changing identity."""
+    result = []
+    for peer in peers or []:
+        item = dict(peer)
+        entity = _peer_entity(peer)
+        if entity:
+            year = _approved_year(entity)
+            if year:
+                item["buildingAge"] = max(0, datetime.date.today().year - year)
+            if entity.get("households"):
+                item["households"] = entity["households"]
+        result.append(item)
+    return result
+
+
 def _approved_year(entity):
     try:
         return int(str(entity.get("approvedAt") or "")[:4])
@@ -96,309 +84,233 @@ def _approved_year(entity):
         return None
 
 
-def _additional_candidates(target, already_selected):
-    """Find comparable physical complexes before checking their actual area trades."""
-    target_households = int(target.get("households") or 0)
-    target_year = _approved_year(target)
-    if target_households <= 0:
-        return []
-    excluded = {_physical_key(target), *already_selected}
-    district = real_estate_search.compact(target.get("district"))
-    dong = real_estate_search.compact(target.get("legalDong"))
-    candidates = []
-    for entity in real_estate_search.APARTMENT_MASTER:
-        if (real_estate_search.compact(entity.get("district")) != district
-                or entity.get("aggregate") or entity.get("status")
-                or _physical_key(entity) in excluded):
-            continue
-        households = int(entity.get("households") or 0)
-        year = _approved_year(entity)
-        if households <= 0 or abs(households / target_households - 1) > MAX_HOUSEHOLD_GAP:
-            continue
-        if target_year and year and abs(year - target_year) > MAX_APPROVAL_YEAR_GAP:
-            continue
-        candidates.append(entity)
-    candidates.sort(key=lambda entity: (
-        0 if real_estate_search.compact(entity.get("legalDong")) == dong else 1,
-        abs(int(entity.get("households") or 0) / target_households - 1),
-        abs((_approved_year(entity) or target_year or 0) - (target_year or 0)),
+def _entity_coordinates(entity):
+    direct = kakao_station_distances._valid_coordinates(entity.get("latitude"), entity.get("longitude"))
+    if direct:
+        return direct
+    cached = kakao_station_distances.cached_station(entity) or {}
+    coordinates = kakao_station_distances._valid_coordinates(cached.get("latitude"), cached.get("longitude"))
+    if coordinates:
+        return coordinates
+    address = kakao_station_distances.entity_address(entity)
+    geocode = kakao_station_distances._load_cache().get("geocodes", {}).get(
+        kakao_station_distances._coordinate_key(address), {})
+    if address and geocode.get("address") == address:
+        return kakao_station_distances._valid_coordinates(geocode.get("latitude"), geocode.get("longitude"))
+    return None
+
+
+def _peer_distance_meters(target, peer):
+    own_coordinates, peer_coordinates = _entity_coordinates(target), _entity_coordinates(peer)
+    return kakao_station_distances._distance_meters(*own_coordinates, *peer_coordinates) \
+        if own_coordinates and peer_coordinates else None
+
+
+def _transactions(entity, area_label):
+    return molit_transactions.transactions_for_apartment(
         entity.get("name") or "",
-    ))
-    return candidates[:MAX_DISCOVERY_CANDIDATES]
+        region=entity.get("district") or "",
+        area_label=area_label,
+        lookback_months=LOOKBACK_MONTHS,
+        entity=entity,
+    )
 
 
-def _candidate_fit(target, peer_entity, own_average, peer_average):
+def _window_index(deal_date, today):
+    try:
+        date = datetime.date.fromisoformat(str(deal_date or "")[:10])
+    except ValueError:
+        return None
+    months_back = (today.year - date.year) * 12 + today.month - date.month
+    return months_back // WINDOW_MONTHS if months_back >= 0 else None
+
+
+def _window_prices(trades, today):
+    """6개월 구간별 거래가격 목록. 0이 최근 6개월이다."""
+    groups = collections.defaultdict(list)
+    for trade in trades or []:
+        price = float(trade.get("dealAmountEok") or 0)
+        index = _window_index(trade.get("dealDate"), today)
+        if price > 0 and index is not None and index <= HISTORY_WINDOWS:
+            groups[index].append(price)
+    return groups
+
+
+def _window_medians(trades, today):
+    return {index: (statistics.median(prices), len(prices))
+            for index, prices in _window_prices(trades, today).items()}
+
+
+def _median_count(groups, indices):
+    prices = [price for index in indices for price in groups.get(index, [])]
+    return (statistics.median(prices), len(prices)) if prices else (None, 0)
+
+
+def _peer_gap(own, peer, current=(0,)):
+    """이 단지 ÷ 비교 단지 가격 비율의 평소 값과 지금 값. 거래가 부족하면 이유를 돌려준다.
+
+    ``current``는 '지금'으로 묶은 구간이다. 이 단지 거래가 뜸하면 최근 12개월(0, 1)을 쓴다.
+    """
+    usual = []
+    for index in range(max(current) + 1, HISTORY_WINDOWS + 1):
+        own_median, own_count = _median_count(own, (index,))
+        peer_median, peer_count = _median_count(peer, (index,))
+        if own_count >= MIN_WINDOW_TRADES and peer_count >= MIN_WINDOW_TRADES:
+            usual.append(own_median / peer_median * 100)
+    if len(usual) < MIN_USUAL_WINDOWS:
+        return None, "history"
+    peer_now, peer_count = _median_count(peer, current)
+    if peer_count < MIN_WINDOW_TRADES:
+        return None, "recent"
+    own_now, _own_count = _median_count(own, current)
+    usual_ratio = statistics.median(usual)
+    current_ratio = own_now / peer_now * 100
+    return {
+        "usualRatio": round(usual_ratio, 1),
+        "currentRatio": round(current_ratio, 1),
+        "shiftPp": round(current_ratio - usual_ratio, 1),
+        "usualWindowCount": len(usual),
+    }, ""
+
+
+def _candidates(target, *, nearby):
+    """가격은 보지 않고 위치·규모·연식으로 비교 후보를 고른다."""
     target_households = int(target.get("households") or 0)
-    peer_households = int(peer_entity.get("households") or 0)
     target_year = _approved_year(target)
-    peer_year = _approved_year(peer_entity)
-    price_gap = abs(peer_average / own_average - 1)
-    household_gap = abs(peer_households / target_households - 1) if target_households and peer_households else 1
-    age_gap = abs(peer_year - target_year) / MAX_APPROVAL_YEAR_GAP if target_year and peer_year else 1
-    location_gap = 0 if real_estate_search.compact(target.get("legalDong")) == real_estate_search.compact(peer_entity.get("legalDong")) else 1
-    return (price_gap / MAX_PRICE_GAP * .45 + household_gap / MAX_HOUSEHOLD_GAP * .30
-            + age_gap * .15 + location_gap * .10)
-
-
-def _district_candidates(target, excluded):
-    """Last resort: use every distinct complex in the same district."""
-    district = real_estate_search.compact(target.get("district"))
-    seen = {_physical_key(target), *excluded}
+    own_key = _physical_key(target)
+    seen, found = {own_key}, []
     for entity in real_estate_search.APARTMENT_MASTER:
         key = _physical_key(entity)
-        if (real_estate_search.compact(entity.get("district")) != district
-                or entity.get("aggregate") or entity.get("status") or key in seen):
+        if (key in seen or entity.get("aggregate") or entity.get("status")
+                or not entity.get("households")
+                or abs(int(entity["households"]) - target_households) > target_households * PEER_HOUSEHOLD_GAP):
+            continue
+        year = _approved_year(entity)
+        if not year or abs(year - target_year) > MAX_APPROVAL_YEAR_GAP:
+            continue
+        distance = _peer_distance_meters(target, entity)
+        if distance is None or distance > MAX_DISTANCE_METERS:
             continue
         seen.add(key)
-        yield entity
+        found.append((distance, entity.get("name") or "", entity, distance))
+    found.sort(key=lambda entry: entry[:2])
+    return [(entity, distance) for _rank, _name, entity, distance in found[:MAX_DISCOVERY_CANDIDATES]]
 
 
-def _relaxed_fit(target, peer_entity, own_average, peer_average):
-    """Prefer similar prices, then nearby places and comparable buildings."""
-    price_gap = abs(peer_average / own_average - 1)
-    own_households = int(target.get("households") or 0)
-    peer_households = int(peer_entity.get("households") or 0)
-    household_gap = min(1, abs(peer_households / own_households - 1)) if own_households and peer_households else 1
-    own_year, peer_year = _approved_year(target), _approved_year(peer_entity)
-    age_gap = min(1, abs(own_year - peer_year) / 15) if own_year and peer_year else 1
-    dong_gap = 0 if real_estate_search.compact(target.get("legalDong")) == real_estate_search.compact(peer_entity.get("legalDong")) else 1
-    return price_gap * 3 + household_gap * .25 + age_gap * .15 + dong_gap * .2
+def _peer_rows(target, own, area_label, candidates, today, taken, current=(0,)):
+    rows, excluded = [], []
+    for entity, distance in candidates:
+        key = _physical_key(entity)
+        if key in taken or len(rows) >= MAX_PEERS:
+            continue
+        try:
+            windows = _window_prices(_transactions(entity, area_label), today)
+        except Exception:
+            continue
+        gap, reason = _peer_gap(own, windows, current)
+        if not gap:
+            # 평소 비율은 있는데 최근 거래만 부족한 단지는 뺐다고 알려 준다.
+            if reason == "recent":
+                excluded.append(entity.get("name") or "")
+            continue
+        taken.add(key)
+        price, count = _median_count(windows, current)
+        rows.append({
+            **gap,
+            "name": entity.get("name") or "",
+            "legalDong": entity.get("legalDong") or "",
+            "households": int(entity.get("households") or 0) or None,
+            "approvalYear": _approved_year(entity),
+            "distanceMeters": round(distance) if distance is not None else None,
+            "areaLabel": area_label,
+            "averagePriceEok": round(price, 4),
+            "transactionCount": count,
+            "diffPct": round((price / _median_count(own, current)[0] - 1) * 100, 1),
+            "lowData": count < LOW_DATA_TRADES,
+        })
+    return rows, excluded
 
 
-def compare(row, entity, peers, area_label):
-    """Return a peer mean only when two or more peers have enough matching trades."""
+def compare(row, entity, peers, area_label, today=None):
+    """주변 비교 단지와의 가격 차이가 평소보다 벌어졌는지 좁혀졌는지로 판정한다.
+
+    ``peers``는 예전 호출 형태를 위해 받기만 한다. 비교 단지는 가격과 무관하게 새로 고른다.
+    """
+    today = today or datetime.date.today()
+    entity = entity or {}
     area_label = str(area_label or "").strip()
-    if not entity or not molit_transactions._area_target(area_label):
-        return {"status": "unavailable", "reason": "전용면적을 확인하지 못했어요."}
+    year, households = _approved_year(entity), int(entity.get("households") or 0)
+    criteria = {
+        "region": entity.get("district") or "",
+        "maxDistanceMeters": MAX_DISTANCE_METERS,
+        "priceIndependent": True,
+        "approvalYearGap": MAX_APPROVAL_YEAR_GAP,
+        "householdsMin": households * (1 - PEER_HOUSEHOLD_GAP),
+        "householdsMax": households * (1 + PEER_HOUSEHOLD_GAP),
+        "householdsGapRatio": PEER_HOUSEHOLD_GAP,
+        "windowMonths": WINDOW_MONTHS,
+        "historyMonths": WINDOW_MONTHS * HISTORY_WINDOWS,
+        "thresholdPp": SHIFT_THRESHOLD_PP,
+    }
+    if not year or households <= 0:
+        return {"status": "unavailable", "reasonCode": "missing_building_criteria",
+                "reason": "세대수나 준공연도 자료가 없어 비슷한 단지를 고르기 어려워요.", "selectionCriteria": criteria}
+    if not molit_transactions._area_target(area_label):
+        return {"status": "unavailable", "reasonCode": "missing_area",
+                "reason": "전용면적을 확인하지 못했어요.", "selectionCriteria": criteria}
     try:
-        own_trades = _transactions(entity, area_label)
+        own_trades = _transactions(entity, area_label) or []
     except Exception:
         own_trades = []
-    if not own_trades:
-        return {"status": "unavailable", "reason": "같은 면적의 실거래가 부족해요."}
+    own = _window_prices(own_trades, today)
+    # 이 단지의 최근 6개월 거래가 적으면 '지금'을 최근 12개월로 넓히고 자료 적음으로 표시한다.
+    current = (0,)
+    if _median_count(own, current)[1] < MIN_WINDOW_TRADES:
+        current = (0, 1)
+    if _median_count(own, current)[1] < MIN_WINDOW_TRADES:
+        return {"status": "unavailable", "reasonCode": "insufficient_recent_trades",
+                "reason": "이 단지의 최근 12개월 거래가 적어 주변과 비교하기 어려워요.", "selectionCriteria": criteria}
 
-    latest_month = max(str(trade.get("dealDate") or "")[:7] for trade in own_trades)
-    try:
-        latest_date = datetime.date.fromisoformat(latest_month + "-01")
-    except ValueError:
-        return {"status": "unavailable", "reason": "거래 날짜를 확인하지 못했어요."}
-    today = datetime.date.today()
-    age_months = (today.year - latest_date.year) * 12 + today.month - latest_date.month
-    if age_months > 3:
-        return {"status": "unavailable", "reason": "최근 거래가 오래돼 주변 단지와 비교하기 어려워요."}
+    if _entity_coordinates(entity) is None:
+        return {"status": "unavailable", "reasonCode": "missing_coordinates",
+                "reason": "단지 위치 자료가 없어 가까운 비교 단지를 고르기 어려워요.", "selectionCriteria": criteria}
+    taken = {_physical_key(entity)}
+    peer_rows, excluded = _peer_rows(entity, own, area_label, _candidates(entity, nearby=True), today, taken, current)
+    if len(peer_rows) < MIN_PEERS:
+        return {"status": "unavailable", "reasonCode": "insufficient_peers",
+                "reason": "1km 안에 비슷한 조건의 거래 자료가 부족해요.",
+                "selectionCriteria": criteria}
+    scope = "nearby"
 
-    peer_trades = []
-    selected_keys = set()
-    for peer in peers or []:
-        try:
-            peer_entity = _peer_entity(peer)
-            if not peer_entity:
-                continue
-            trades = _transactions(peer_entity, area_label)
-        except Exception:
-            continue
-        key = _physical_key(peer_entity)
-        if key in selected_keys or key == _physical_key(entity):
-            continue
-        selected_keys.add(key)
-        peer_trades.append((peer, peer_entity, trades, False))
-
-    additional_trades = None
-    reference_results = []
-
-    for period in LOOKBACK_PERIODS:
-        months = _months(latest_month.replace("-", ""), period)
-        own_average, own_count = _average_in_months(own_trades, months)
-        if own_count < MIN_TRADES:
-            continue
-        matched = []
-        for peer, peer_entity, trades, expanded in peer_trades:
-            peer_average, peer_count = _average_in_months(trades, months)
-            if peer_count < MIN_TRADES or abs(peer_average / own_average - 1) > MAX_PRICE_GAP:
-                continue
-            matched.append((peer, peer_entity, peer_average, peer_count, expanded))
-        if len(matched) < MIN_PEERS:
-            if additional_trades is None:
-                additional_trades = []
-                for candidate in _additional_candidates(entity, selected_keys):
-                    try:
-                        trades = _transactions(candidate, area_label)
-                    except Exception:
-                        continue
-                    if trades:
-                        additional_trades.append((candidate, candidate, trades, True))
-            extra = []
-            for peer, peer_entity, trades, expanded in additional_trades:
-                peer_average, peer_count = _average_in_months(trades, months)
-                if peer_count < MIN_TRADES or abs(peer_average / own_average - 1) > MAX_PRICE_GAP:
-                    continue
-                extra.append((peer, peer_entity, peer_average, peer_count, expanded))
-            extra.sort(key=lambda entry: (_candidate_fit(entity, entry[1], own_average, entry[2]), entry[1].get("name") or ""))
-            matched.extend(extra[:max(0, 3 - len(matched))])
-        if len(matched) < MIN_PEERS:
-            continue
-        matched = matched[:3]
-        peer_rows = [{
-            "name": peer.get("name") or "",
-            "legalDong": peer_entity.get("legalDong") or "",
-            "areaLabel": area_label,
-            "averagePriceEok": round(peer_average, 4),
-            "transactionCount": peer_count,
-        } for peer, peer_entity, peer_average, peer_count, _expanded in matched]
-        # Give each apartment equal weight; a very active complex must not
-        # silently stand in for all the comparison apartments.
-        peer_average = statistics.mean(peer["averagePriceEok"] for peer in peer_rows)
-        difference_pct = (own_average / peer_average - 1) * 100
-        expanded = any(entry[4] for entry in matched)
-        result = {
-            "status": "reference" if expanded or period > 6 else "ready",
-            "region": entity.get("district") or row.get("region") or "",
-            "areaLabel": area_label,
-            "periodMonths": period,
-            "throughMonth": latest_month,
-            "averagePriceEok": round(own_average, 4),
-            "transactionCount": own_count,
-            "peerAveragePriceEok": round(peer_average, 4),
-            "differencePct": round(difference_pct, 1),
-            "position": "low" if difference_pct <= -5 else "high" if difference_pct >= 5 else "similar",
-            "selectionMethod": "expanded" if expanded else "selected",
-            "peers": peer_rows,
-        }
-        if result["status"] == "reference":
-            result["reason"] = (
-                "비교 단지의 동네·연식·세대수 차이가 있어 이번 가격 차이는 종합 점수에 넣지 않았어요."
-                if expanded else "12개월 거래는 오래돼 이번 가격 차이는 종합 점수에 넣지 않았어요."
-            )
-        if result["status"] == "ready":
-            return result
-        fit = statistics.mean(_candidate_fit(entity, peer_entity, own_average, peer_average)
-                              for _peer, peer_entity, peer_average, _count, _expanded in matched)
-        reference_results.append((fit + {3: 0, 6: .08, 12: .25}[period], result))
-    if reference_results:
-        return min(reference_results, key=lambda entry: entry[0])[1]
-    # A strict price/size screen can exclude active markets such as older
-    # complexes with redevelopment expectations. Show actual same-area trades
-    # from the district as a clearly labelled reference comparison instead.
-    known = list(peer_trades) + list(additional_trades or [])
-    seen_keys = {_physical_key(peer_entity) for _, peer_entity, _, _ in known}
-    for candidate in _district_candidates(entity, seen_keys):
-        try:
-            trades = _transactions(candidate, area_label)
-        except Exception:
-            continue
-        if trades:
-            known.append((candidate, candidate, trades, True))
-    for period in LOOKBACK_PERIODS:
-        months = _months(latest_month.replace("-", ""), period)
-        own_average, own_count = _average_in_months(own_trades, months)
-        if own_count < MIN_TRADES:
-            continue
-        eligible = []
-        for peer, peer_entity, trades, _ in known:
-            peer_average, peer_count = _average_in_months(trades, months)
-            if peer_count >= MIN_TRADES:
-                eligible.append((peer, peer_entity, peer_average, peer_count))
-        if len(eligible) < MIN_PEERS:
-            continue
-        eligible.sort(key=lambda entry: (
-            _relaxed_fit(entity, entry[1], own_average, entry[2]),
-            entry[1].get("name") or "",
-        ))
-        peer_rows = [{
-            "name": peer.get("name") or "",
-            "legalDong": peer_entity.get("legalDong") or "",
-            "areaLabel": area_label,
-            "averagePriceEok": round(peer_average, 4),
-            "transactionCount": peer_count,
-        } for peer, peer_entity, peer_average, peer_count in eligible[:3]]
-        peer_average = statistics.mean(peer["averagePriceEok"] for peer in peer_rows)
-        difference_pct = (own_average / peer_average - 1) * 100
-        return {
-            "status": "reference",
-            "region": entity.get("district") or row.get("region") or "",
-            "areaLabel": area_label,
-            "periodMonths": period,
-            "throughMonth": latest_month,
-            "averagePriceEok": round(own_average, 4),
-            "transactionCount": own_count,
-            "peerAveragePriceEok": round(peer_average, 4),
-            "differencePct": round(difference_pct, 1),
-            "position": "low" if difference_pct <= -5 else "high" if difference_pct >= 5 else "similar",
-            "selectionMethod": "relaxed",
-            "peers": peer_rows,
-            "reason": "같은 구의 비슷한 면적 거래로 비교 범위를 넓혔어요. 단지 조건이 달라 이번 가격 차이는 종합 점수에 넣지 않았어요.",
-        }
-    # When no exact-size peers traded, compare homes within 10% of the
-    # target area after converting each sale price to the target area.
-    own_areas = []
-    for trade in own_trades:
-        try:
-            area = float(trade.get("exclusiveArea") or 0)
-        except (TypeError, ValueError):
-            continue
-        if area > 0:
-            own_areas.append(area)
-    target_area = (statistics.median(own_areas) if own_areas
-                   else sum(molit_transactions._area_target(area_label)) / 2)
-    range_label = f"{target_area * .9:.2f}~{target_area * 1.1:.2f}"
-    widened = []
-    for candidate in _district_candidates(entity, set()):
-        try:
-            trades = _transactions(candidate, range_label)
-        except Exception:
-            continue
-        if trades:
-            widened.append((candidate, trades))
-    single_peer_result = None
-    for period in LOOKBACK_PERIODS:
-        months = _months(latest_month.replace("-", ""), period)
-        own_average, own_count = _average_in_months(own_trades, months)
-        if own_count < MIN_TRADES:
-            continue
-        eligible = []
-        for candidate, trades in widened:
-            peer_average, peer_count = _area_adjusted_average(trades, months, target_area)
-            if peer_count >= MIN_TRADES:
-                eligible.append((candidate, peer_average, peer_count))
-        if not eligible:
-            continue
-        eligible.sort(key=lambda entry: (
-            _relaxed_fit(entity, entry[0], own_average, entry[1]),
-            entry[0].get("name") or "",
-        ))
-        peer_rows = [{
-            "name": candidate.get("name") or "",
-            "legalDong": candidate.get("legalDong") or "",
-            "areaLabel": range_label,
-            "averagePriceEok": round(peer_average, 4),
-            "transactionCount": peer_count,
-        } for candidate, peer_average, peer_count in eligible[:3]]
-        peer_average = statistics.mean(peer["averagePriceEok"] for peer in peer_rows)
-        difference_pct = (own_average / peer_average - 1) * 100
-        result = {
-            "status": "reference",
-            "region": entity.get("district") or row.get("region") or "",
-            "areaLabel": area_label,
-            "periodMonths": period,
-            "throughMonth": latest_month,
-            "averagePriceEok": round(own_average, 4),
-            "transactionCount": own_count,
-            "peerAveragePriceEok": round(peer_average, 4),
-            "differencePct": round(difference_pct, 1),
-            "position": "low" if difference_pct <= -5 else "high" if difference_pct >= 5 else "similar",
-            "selectionMethod": "area_adjusted",
-            "peers": peer_rows,
-            "reason": f"같은 구의 전용면적 {range_label}㎡ 거래를 {target_area:.1f}㎡ 가격으로 환산했어요. 단지 조건이 달라 이번 가격 차이는 종합 점수에 넣지 않았어요.",
-        }
-        if len(peer_rows) >= MIN_PEERS:
-            return result
-        if single_peer_result is None:
-            result["reason"] = "비교할 거래가 있는 단지 1곳의 비슷한 면적 거래를 환산했어요. 참고 별점이므로 다른 단지도 함께 살펴보세요."
-            single_peer_result = result
-    if single_peer_result:
-        return single_peer_result
+    # 단지마다 같은 비중으로 본다. 거래가 많은 한 단지가 결론을 끌고 가지 않게 한다.
+    shift = statistics.mean(peer["shiftPp"] for peer in peer_rows)
+    usual = statistics.mean(peer["usualRatio"] for peer in peer_rows)
+    current_ratio = statistics.mean(peer["currentRatio"] for peer in peer_rows)
+    own_price, own_count = _median_count(own, current)
+    period_months = WINDOW_MONTHS * len(current)
+    peer_average = statistics.mean(peer["averagePriceEok"] for peer in peer_rows)
+    latest_month = max((str(trade.get("dealDate") or "")[:7] for trade in own_trades), default="")
     return {
-        "status": "unavailable",
-        "reasonCode": "insufficient_peers",
-        "reason": "이 단지 거래는 있지만, 비슷한 면적·가격대·규모의 거래가 있는 비교 단지 2곳을 찾지 못했어요.",
+        "status": "ready",
+        "method": "usual_gap",
+        "region": entity.get("district") or row.get("region") or "",
+        "areaLabel": area_label,
+        "periodMonths": period_months,
+        "periodWidened": len(current) > 1,
+        "historyMonths": WINDOW_MONTHS * (HISTORY_WINDOWS + 1 - len(current)),
+        "throughMonth": latest_month,
+        "averagePriceEok": round(own_price, 4),
+        "transactionCount": own_count,
+        "peerAveragePriceEok": round(peer_average, 4),
+        "differencePct": round((own_price / peer_average - 1) * 100, 1),
+        "usualGapPct": round(usual - 100, 1),
+        "currentGapPct": round(current_ratio - 100, 1),
+        "shiftPp": round(shift, 1),
+        "position": "low" if shift < -SHIFT_THRESHOLD_PP else "high" if shift > SHIFT_THRESHOLD_PP else "similar",
+        "lowData": len(current) > 1 or own_count < LOW_DATA_TRADES or any(peer["lowData"] for peer in peer_rows),
+        "scope": scope,
+        "selectionMethod": scope,
+        "peers": peer_rows,
+        "excludedPeers": [name for name in dict.fromkeys(excluded) if name][:3],
+        "selectionCriteria": criteria,
     }

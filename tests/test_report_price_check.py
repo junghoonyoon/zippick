@@ -102,8 +102,13 @@ class ReportPriceCheckTest(unittest.TestCase):
         average_start = html.index("    function candidateHeadlinePrice(item) {")
         average_end = html.index("    function candidateHeadlinePriceHtml(item) {", average_start)
         average_functions = html[average_start:average_end]
+        section_start = html.index("    function zippickPriceComparisonHtml(item, assessment) {")
+        section_end = html.index("    function zippickPersonalFundingHtml(item) {", section_start)
+        section_functions = html[section_start:section_end]
         script = """
           function zpNum(value) { return value == null || value === '' ? NaN : Number(value); }
+          function candidateDisplayName(item) { return item.name || '테스트단지'; }
+          function zippickReportTable(headers, rows) { return headers.join('|') + rows.map(row => row.join('|')).join('\\n'); }
           function zpScoredParts(item) { return [item.testPricePart || {key:'price', points:24.6, maxPoints:30}]; }
           function zpPartRatio(part) { return part ? part.points / part.maxPoints : NaN; }
           const ZP_PEAK_RECOVERY_PCT = 98;
@@ -115,7 +120,7 @@ class ReportPriceCheckTest(unittest.TestCase):
           function candidateTrendPanelHtml(_item, _series, options = {}) {
             return options.compact === true ? '<div data-reused-price-chart>chart</div>' : '';
           }
-        """ + average_functions + rating_functions + functions + """
+        """ + average_functions + rating_functions + functions + section_functions + """
           const fresh = new Date().toISOString().slice(0, 10);
           const item = {
             region: '성남수정구',
@@ -210,7 +215,8 @@ class ReportPriceCheckTest(unittest.TestCase):
           if (!unmatchedFloorBand.includes('is-cheap is-current') || unmatchedFloorBand.includes('<small>싼지·비싼지 판단 보류</small>') || !unmatchedFloorBand.includes('여러 층 거래 기준이에요. 싸게 거래된 이유가 있는지')) process.exit(46);
           if (!unmatchedFloorBand.includes('참고 가격대를 2.0% 내렸어요') || unmatchedFloorBand.includes('적정가격을')) process.exit(43);
           if (zippickPriceCheckBasis(item).label !== '여러 층 거래 참고 가격') process.exit(44);
-          if (!zippickSectionRatingHtml(item, '가격 비교').includes('가격 비교 임시 점수') || !zippickSectionRatingHtml(item, '가격 비교').includes('3.0/5')) process.exit(47);
+          // 주변 단지와 비교하지 못하면 임시 별점을 붙이지 않는다.
+          if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(47);
           item.testQuarterStats = {currentCount:5, currentAverage:10.2, stale:false};
           const rankDetail = {key:'price_rank', status:'ok', reason:'지역 후보 3/4위 · 가격 부담 낮은 편',
             comparisonPeerCount:3, comparisonPeers:[
@@ -220,48 +226,45 @@ class ReportPriceCheckTest(unittest.TestCase):
             ]};
           item.testPricePart = {key:'price', points:24.6, maxPoints:30, details:[rankDetail]};
           item.priceComparison = {status:'loading'};
-          if (zippickPriceAssessment(item).heading !== '가격은 보통으로 임시 표시했어요. 주변 단지 거래를 확인하고 있어요.') process.exit(60);
-          if (!zippickSectionRatingHtml(item, '가격 비교').includes('3.0/5')) process.exit(65);
+          if (zippickPriceAssessment(item).heading !== '주변 단지 거래를 확인하고 있어요') process.exit(60);
+          if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(65);
           item.priceComparison = {status:'unavailable', reason:'비교할 거래가 부족해요.'};
-          if (zippickSectionRatingData(item, '가격 비교').stars !== '3.0') process.exit(66);
-          item.priceComparison = {status:'ready', region:'도봉구', areaLabel:'84.5', periodMonths:6,
-            averagePriceEok:9.6487, peerAveragePriceEok:10.0469, differencePct:-4.0, position:'similar',
+          if (zippickPriceAssessment(item).heading !== '주변 시세와 비교할 자료가 부족해 판단할 수 없어요') process.exit(66);
+          if (zippickPriceAssessment(item).subheading !== '비교할 거래가 부족해요.') process.exit(63);
+          // 원래 10% 싼 단지가 지금 11% 싸면 평소 수준(적정)이다. 단순 가격 차이로 싸다고 하지 않는다.
+          item.priceComparison = {status:'ready', region:'송파구', areaLabel:'전용 84㎡', scope:'district',
+            averagePriceEok:28.5, transactionCount:31, peerAveragePriceEok:32.28, differencePct:-11.7,
+            usualGapPct:-10.1, currentGapPct:-11.2, shiftPp:-1.1, position:'similar', lowData:false,
+            selectionCriteria:{householdsMin:2853, approvalYearGap:10},
             peers:[
-              {name:'동아청솔', legalDong:'창동', averagePriceEok:10.727, transactionCount:10},
-              {name:'삼성아파트', legalDong:'창동', averagePriceEok:9.3136, transactionCount:22},
-              {name:'주공19단지', legalDong:'창동', averagePriceEok:10.1, transactionCount:3},
+              {name:'파크리오', legalDong:'신천동', averagePriceEok:29, transactionCount:36, diffPct:1.8, usualRatio:98.3, currentRatio:98.3, shiftPp:0},
+              {name:'잠실엘스', legalDong:'잠실동', averagePriceEok:33.5, transactionCount:40, diffPct:17.5, usualRatio:86.1, currentRatio:85.1, shiftPp:-1},
             ]};
-          if (zippickPriceAssessment(item).heading !== '가격은 보통이에요. 시세가 도봉구 비교 단지 3곳보다 4.0% 낮아요.') process.exit(57);
+          const fair = zippickPriceAssessment(item);
+          if (fair.heading !== '비교 단지와의 가격 차이는 평소 수준이에요') process.exit(57);
+          if (fair.subheading !== '비교 단지보다 원래 10% 정도 싼 단지예요. 지금은 11% 싸요. 평소 수준이에요.') process.exit(58);
           if (!zippickSectionRatingHtml(item, '가격 비교').includes('가격 비교 점수 3.0/5')) process.exit(67);
-          if (zippickPriceAssessment(item).subheading !== '최근 6개월 평균 실거래가 · 이 단지 9.6487억 · 비교 단지 10.0469억') process.exit(58);
-          if (JSON.stringify(zippickPriceAssessment(item).comparisonPeers[0]) !== JSON.stringify({name:'동아청솔',legalDong:'창동',averagePriceEok:10.727,transactionCount:10})) process.exit(59);
-          if (zippickPriceAssessment(item).peerReason !== '같은 구에서 비슷한 조건의 단지를 골랐어요.') process.exit(63);
-          item.priceComparison.status = 'reference';
-          item.priceComparison.reason = '비교 단지의 조건 차이가 있어 이번 가격 차이는 종합 점수에 넣지 않았어요.';
-          if (!zippickPriceAssessment(item).heading.startsWith('가격은 보통이에요. 참고 비교에서 시세가 도봉구 비교 단지 3곳보다 4.0% 낮아요.')) process.exit(68);
-          if (!zippickPriceAssessment(item).peerReason.includes('참고 별점은 이 가격 차이로 계산했어요.')) process.exit(69);
-          if (!zippickSectionRatingHtml(item, '가격 비교').includes('가격 비교 참고점수 3.0/5')) process.exit(70);
-          item.priceComparison.position = 'high';
-          item.priceComparison.differencePct = 16.2;
-          if (zippickSectionRatingData(item, '가격 비교').stars !== '2.0' || !zippickPriceAssessment(item).heading.startsWith('가격은 아쉬워요.')) process.exit(74);
-          item.priceComparison.position = 'similar';
-          item.priceComparison.differencePct = -4.0;
-          item.priceComparison.peers = item.priceComparison.peers.slice(0, 1);
-          if (!zippickPriceAssessment(item).heading.includes('비교 단지 1곳보다') || zippickSectionRatingData(item, '가격 비교').stars !== '3.0') process.exit(73);
-          item.priceComparison.peers = [
-            {name:'동아청솔', legalDong:'창동', averagePriceEok:10.727, transactionCount:10},
-            {name:'삼성아파트', legalDong:'창동', averagePriceEok:9.3136, transactionCount:22},
-            {name:'주공19단지', legalDong:'창동', averagePriceEok:10.1, transactionCount:3},
-          ];
-          item.priceComparison.status = 'ready';
-          item.priceComparison.position = 'low';
-          item.priceComparison.differencePct = -7.0;
-          if (!zippickPriceAssessment(item).heading.startsWith('가격은 좋아요. 시세가 도봉구 비교 단지 3곳보다 7.0% 낮아요.')) process.exit(61);
-          if (zippickSectionRatingData(item, '가격 비교').stars !== '4.0') process.exit(71);
-          item.priceComparison.position = 'high';
-          item.priceComparison.differencePct = 7.0;
-          if (!zippickPriceAssessment(item).heading.startsWith('가격은 아쉬워요. 시세가 도봉구 비교 단지 3곳보다 7.0% 높아요.')) process.exit(62);
+          const fairHtml = zippickPriceEvidenceHtml(item);
+          // 평소 대비 -1.1%p는 막대 가운데 조금 왼쪽(50 - 1.1/9*50 = 43.9%)에 찍힌다.
+          if (!fairHtml.includes('zpr-price-gauge is-similar') || !fairHtml.includes('left:43.9%') || !fairHtml.includes('평소보다 1.1%p 쌈') || !fairHtml.includes('1km 안의 비슷한 단지와 비교했어요.')) process.exit(59);
+          if (fairHtml.includes('zpr-buy-band-zone')) process.exit(75);
+          if (!fairHtml.includes('+18%') || !fairHtml.includes('+2%') || fairHtml.includes('자료 적음')) process.exit(68);
+          if (fairHtml.includes('zpr-comparison-facts') || fairHtml.includes('비교할 후보') || fairHtml.includes('확인하세요')) process.exit(69);
+          item.priceComparison = {...item.priceComparison, shiftPp:4.1, currentGapPct:-6, position:'high', lowData:true,
+            peers:item.priceComparison.peers.map(peer => ({...peer, transactionCount:4, lowData:true}))};
+          const high = zippickPriceAssessment(item);
+          if (high.heading !== '비교 단지에 비해 평소보다 비싸졌어요' || !high.subheading.endsWith('평소보다 비싸졌어요.')) process.exit(74);
           if (zippickSectionRatingData(item, '가격 비교').stars !== '2.0') process.exit(72);
+          const highHtml = zippickPriceEvidenceHtml(item);
+          if (!highHtml.includes('자료 적음') || !highHtml.includes('최근 4건') || !highHtml.includes('zpr-price-gauge is-high') || !highHtml.includes('평소보다 4.1%p 비쌈')) process.exit(70);
+          item.priceComparison = {...item.priceComparison, periodMonths:12, periodWidened:true, historyMonths:36};
+          const widenedHtml = zippickPriceEvidenceHtml(item);
+          if (!widenedHtml.includes('이 단지의 최근 6개월 거래가 적어 최근 12개월로 봤어요.') || !widenedHtml.includes('최근 12개월</th>') || !widenedHtml.includes('지난 3년 동안')) process.exit(76);
+          item.priceComparison = {...item.priceComparison, periodMonths:6, periodWidened:false, historyMonths:42, shiftPp:-6.5, position:'low', lowData:false};
+          if (!zippickPriceAssessment(item).subheading.endsWith('평소보다 싸졌어요.')) process.exit(61);
+          if (zippickSectionRatingData(item, '가격 비교').stars !== '5.0') process.exit(71);
+          item.priceComparison = {...item.priceComparison, peers:item.priceComparison.peers.slice(0, 1)};
+          if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(73);
           delete item.priceComparison;
           const averagePriceTitle = zippickPriceAssessment(item).heading;
           if (averagePriceTitle !== '시세가 낮은 편이에요. 성남수정구의 다른 단지 3곳과 비교한 결과예요.') process.exit(48);

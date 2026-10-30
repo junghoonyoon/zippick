@@ -50,7 +50,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         html = APP_HTML.read_text(encoding="utf-8")
 
         self.assertNotIn("ⓘ 이 비교 가격의 기준", html)
-        self.assertIn('<details class="zpr-details" open><summary>비교 기준과 실제 거래</summary>', html)
+        # 가격 비교는 결론·이유·비교 단지만 펼쳐 두고, 계산 근거와 실거래는 접어 둔다.
+        self.assertIn('<details class="zpr-details zpr-price-method"><summary>계산 근거 보기</summary>', html)
+        self.assertNotIn("${zippickComparisonFactsHtml(item)}", html)
 
     def test_missing_redevelopment_is_never_presented_as_a_neutral_score(self):
         html = APP_HTML.read_text(encoding="utf-8")
