@@ -6554,8 +6554,9 @@
       try {
         const originalKey = candidateIdentityKey(item);
         const rowsToRefresh = candidateRowsForLookup().filter(
-          row => candidateIdentityKey(row) === originalKey,
+          row => sameCandidateScoreIdentity(row, item),
         );
+        const previousRowKeys = rowsToRefresh.map(candidateIdentityKey);
         const payload = await getJson("/api/apartment-location-score", {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
@@ -6567,7 +6568,7 @@
         if (!locationScoreSheet.hidden) {
           locationScoreContent.innerHTML = locationScoreSheetHtml(item);
         }
-        repaintCandidateScoreBadges(item, originalKey);
+        repaintCandidateScoreBadges(item, originalKey, previousRowKeys);
         if (typeof onRefresh === "function") onRefresh(item);
       } catch (_) {}
     }
@@ -13379,10 +13380,18 @@
       return [...unique.values()];
     }
 
-    function repaintCandidateScoreBadges(item, originalKey) {
-      const keys = new Set([originalKey, candidateIdentityKey(item)]);
+    function repaintCandidateScoreBadges(item, originalKey, previousRowKeys = []) {
+      const matchingRows = [item, ...candidateRowsForLookup()].filter(
+        row => sameCandidateScoreIdentity(row, item),
+      );
+      const keys = new Set([
+        originalKey,
+        candidateIdentityKey(item),
+        ...previousRowKeys,
+        ...matchingRows.map(candidateIdentityKey),
+      ]);
       const rowsByKey = new Map();
-      [item, ...candidateRowsForLookup()].forEach(row => {
+      [...matchingRows, ...candidateRowsForLookup()].forEach(row => {
         if (!row) return;
         const key = candidateIdentityKey(row);
         if (keys.has(key)) rowsByKey.set(key, row);
@@ -13450,6 +13459,30 @@
       const rightName = compactText(candidateDisplayName(right));
       return Boolean(leftName && leftName === rightName && leftRegion && rightRegion
         && leftDong && rightDong);
+    }
+
+    function candidateScoreAreaIdentity(item) {
+      const label = String(item?.displayAreaLabel || item?.areaLabel || "").trim();
+      const labelMatch = label.match(/\d+(?:\.\d+)?/);
+      if (labelMatch) {
+        return { value:Number(labelMatch[0]), rounded:!labelMatch[0].includes(".") };
+      }
+      for (const field of ["selectedArea", "exclusiveArea", "latestDealExclusiveArea"]) {
+        const value = Number(item?.[field]);
+        if (Number.isFinite(value) && value > 0) return { value, rounded:false };
+      }
+      return null;
+    }
+
+    function sameCandidateScoreIdentity(left, right) {
+      if (!sameCandidateIdentity(left, right)) return false;
+      const leftArea = candidateScoreAreaIdentity(left);
+      const rightArea = candidateScoreAreaIdentity(right);
+      if (!leftArea || !rightArea) return candidateIdentityKey(left) === candidateIdentityKey(right);
+      if (Math.abs(leftArea.value - rightArea.value) <= .15) return true;
+      if (leftArea.rounded && Math.floor(rightArea.value) === leftArea.value) return true;
+      if (rightArea.rounded && Math.floor(leftArea.value) === rightArea.value) return true;
+      return false;
     }
 
     function syncAptSearchCandidateData(index, candidate) {

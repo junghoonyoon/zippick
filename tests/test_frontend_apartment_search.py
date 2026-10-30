@@ -226,7 +226,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("void refreshLocationScoreSheet(report, rerender);", html)
         self.assertIn("requestId === aptReportRequestId && currentAptReportItem === report", html)
         self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
-        self.assertIn("repaintCandidateScoreBadges(item, originalKey)", html)
+        self.assertIn("repaintCandidateScoreBadges(item, originalKey, previousRowKeys)", html)
         payload_start = html.index("    function locationScoreRefreshPayload(item) {")
         payload_end = html.index("    async function refreshLocationScoreSheet", payload_start)
         payload = html[payload_start:payload_end]
@@ -236,26 +236,43 @@ class FrontendApartmentSearchTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_location_score_refresh_repaints_matching_search_and_budget_cards(self):
         html = APP_HTML.read_text(encoding="utf-8")
-        start = html.index("    function repaintCandidateScoreBadges(item, originalKey) {")
+        identity_start = html.index("    function candidateScoreAreaIdentity(item) {")
+        identity_end = html.index("    function syncAptSearchCandidateData", identity_start)
+        identity_helpers = html[identity_start:identity_end]
+        start = html.index("    function repaintCandidateScoreBadges(item, originalKey, previousRowKeys = []) {")
         end = html.index("    function aptSearchMapRows()", start)
         repaint_body = html[start:end]
         script = f"""
-          const candidate = {{apartmentId:'complex-1',locationScore:{{score:74}}}};
-          const currentAptSearchItems = [candidate];
+          const candidate = {{apartmentId:'complex-1',name:'송도',region:'연수구',legalDong:'송도동',jibun:'308-1',displayAreaLabel:'전용 84.9㎡',locationScore:{{score:74}}}};
+          const currentAptSearchItems = [
+            {{...candidate,displayAreaLabel:'84㎡',locationScore:{{score:69}}}},
+            {{...candidate,displayAreaLabel:'74.99㎡',locationScore:{{score:62}}}},
+          ];
           const candidateRowsForLookup = () => currentAptSearchItems;
-          const candidateIdentityKey = row => row.apartmentId;
+          const compactText = value => String(value || '').replace(/\\s+/g,'').toLowerCase();
+          const candidateDisplayName = row => row.displayName || row.name || '';
+          const parcelIdentityKey = value => String(value || '').replace(/\\s+/g,'');
+          const candidateIdentityKey = row => `${{row.apartmentId}}|${{row.displayAreaLabel}}`;
+          const sameCandidateIdentity = (left,right) => left.apartmentId === right.apartmentId
+            && left.region === right.region && left.legalDong === right.legalDong && left.jibun === right.jibun;
+          {identity_helpers}
+          const rowsToRefresh = candidateRowsForLookup().filter(row => sameCandidateScoreIdentity(row,candidate));
+          rowsToRefresh.forEach(row => Object.assign(row,{{locationScore:candidate.locationScore}}));
           const candidateTopScoreBadgesHtml = row => `score:${{row.locationScore.score}}`;
-          const searchBadge = {{innerHTML:''}};
-          const aptSearchResults = {{querySelector:() => ({{querySelector:() => searchBadge}})}};
-          const budgetBadge = {{innerHTML:''}};
-          const budgetCard = {{dataset:{{candidateKey:'complex-1'}},querySelector:() => budgetBadge}};
-          const budgetResultEl = {{querySelectorAll:() => [budgetCard]}};
+          const searchBadges = [{{innerHTML:''}},{{innerHTML:'score:62'}}];
+          const aptSearchResults = {{querySelector:selector => ({{querySelector:() => searchBadges[Number(selector.match(/\\d+/)[0])]}})}};
+          const budgetBadges = [{{innerHTML:''}},{{innerHTML:'score:62'}}];
+          const budgetCards = [
+            {{dataset:{{candidateKey:candidateIdentityKey(currentAptSearchItems[0])}},querySelector:() => budgetBadges[0]}},
+            {{dataset:{{candidateKey:candidateIdentityKey(currentAptSearchItems[1])}},querySelector:() => budgetBadges[1]}},
+          ];
+          const budgetResultEl = {{querySelectorAll:() => budgetCards}};
           {repaint_body}
           repaintCandidateScoreBadges(candidate, 'complex-1');
-          console.log(JSON.stringify([searchBadge.innerHTML,budgetBadge.innerHTML]));
+          console.log(JSON.stringify([rowsToRefresh.length,searchBadges.map(row => row.innerHTML),budgetBadges.map(row => row.innerHTML)]));
         """
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
-        self.assertEqual(json.loads(result.stdout), ["score:74", "score:74"])
+        self.assertEqual(json.loads(result.stdout), [1, ["score:74", "score:62"], ["score:74", "score:62"]])
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_location_heading_labels_school_distance_as_straight_line(self):
