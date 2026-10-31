@@ -931,7 +931,46 @@ class ApartmentAffordabilityTest(unittest.TestCase):
         self.assertEqual(payload["state"], "unavailable")
         self.assertEqual(payload["error"], "거래 자료 없음")
 
-    def test_rone_failure_keeps_all_unit_types_until_area_is_selected(self):
+    def test_default_area_prefers_84_then_the_most_traded_unit(self):
+        pick = search_server._default_area_option
+        self.assertEqual(pick([
+            {"value": "59.96", "label": "전용 59㎡", "transactionCount": 50},
+            {"value": "84.98", "label": "전용 84㎡", "transactionCount": 12},
+            {"value": "84.6", "label": "전용 84㎡", "transactionCount": 30},
+        ]), "84.6")
+        # 84㎡가 없으면 59㎡·84㎡처럼 다른 평형을 섞지 않고 거래가 가장 많은 면적 하나를 쓴다.
+        self.assertEqual(pick([
+            {"value": "59.82", "label": "전용 59㎡", "transactionCount": 9},
+            {"value": "76.5", "label": "전용 76㎡", "transactionCount": 21},
+            {"value": "101.2", "label": "전용 101㎡", "transactionCount": 4},
+        ]), "76.5")
+        self.assertEqual(pick([]), "")
+
+    def test_unselected_area_uses_the_default_unit_instead_of_all_types(self):
+        with mock.patch.object(
+            search_server.molit_transactions,
+            "area_options_for_apartment",
+            return_value=[
+                {"value": "59.96", "label": "전용 59㎡", "transactionCount": 50},
+                {"value": "84.98", "label": "전용 84㎡", "transactionCount": 40},
+            ],
+        ), mock.patch.object(
+            search_server.rone_estimates,
+            "estimate",
+            return_value=(ESTIMATE_PAYLOAD, 200),
+        ) as estimate:
+            payload, status = search_server._apartment_affordability({
+                "name": "테스트아파트",
+                "region": "성남분당구",
+                "months": 24,
+            })
+
+        self.assertEqual(status, 200)
+        self.assertEqual(estimate.call_args.kwargs["area"], "84.98")
+        self.assertEqual(payload["resolvedArea"], "84.98")
+        self.assertNotEqual(payload["areaBasis"], "단지 전체 평형 거래 기준")
+
+    def test_rone_failure_keeps_all_unit_types_when_no_unit_list_exists(self):
         broad_band = {
             "latestDealExclusiveArea": 59.82,
             "latestDealPriceEok": 17.0,
@@ -976,6 +1015,10 @@ class ApartmentAffordabilityTest(unittest.TestCase):
             },
         ]
         with mock.patch.object(
+            search_server.molit_transactions,
+            "area_options_for_apartment",
+            return_value=[],
+        ), mock.patch.object(
             search_server.rone_estimates,
             "estimate",
             return_value=({"detail": "해당 단지·면적의 실거래를 찾지 못했어요."}, 404),

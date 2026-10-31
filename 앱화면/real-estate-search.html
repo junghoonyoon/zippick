@@ -633,9 +633,7 @@
     .form-step-copy { margin:4px 0 0; color:#697384; font-size:13px; line-height:1.55 }
     .power-fields,.preference-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:12px }
     .power-region-field { grid-column:1 / -1 }
-    .power-advanced.is-always-open > summary,
-    .condition-stage-power .power-advanced.is-always-open > summary { display:none !important }
-    .power-advanced.is-always-open { border-top:0 !important; margin-top:0 !important; padding-top:0 !important }
+    .power-defaults-note { grid-column:1 / -1; margin:0; color:#6b7684; font-size:13px; line-height:1.6 }
     .power-cash-input { display:flex; align-items:center; gap:6px; margin-top:8px; border-bottom:2px solid #9fc8ff }
     .power-cash-input:focus-within { border-bottom-color:#1267d8 }
     .power-cash-input.is-error,.power-cash-input.is-error:focus-within { border-bottom-color:#d92d20 }
@@ -1427,17 +1425,29 @@
     .zpr-buy-band p b, .zpr-buy-band-basis li b { color:#191f28; font-weight:850 }
     .zpr-buy-band mark { padding:0 1px; background:linear-gradient(transparent 58%, #ffef9e 58%); color:#191f28; font-weight:850 }
     .zpr-buy-band-limit { padding-top:1px; color:#6b7684 !important }
-    .zpr-price-gauge { margin:34px 0 16px }
-    .zpr-price-gauge-track { position:relative; height:12px; border-radius:6px; background:linear-gradient(90deg,#9fdcc0 0%,#e8f3ff 33.3%,#e8f3ff 66.7%,#ffb4a8 100%) }
-    .zpr-price-gauge-dot { position:absolute; top:-6px; width:24px; height:24px; margin-left:-12px; box-sizing:border-box; border:5px solid #1b64da; border-radius:50%; background:#fff }
-    .zpr-price-gauge-flag { position:absolute; top:-30px; transform:translateX(-50%); color:#1b64da; font-size:12.5px; font-weight:800; white-space:nowrap }
-    .zpr-price-gauge.is-low .zpr-price-gauge-dot { border-color:#13795b }
-    .zpr-price-gauge.is-low .zpr-price-gauge-flag { color:#13795b }
-    .zpr-price-gauge.is-high .zpr-price-gauge-dot { border-color:#c63c2f }
-    .zpr-price-gauge.is-high .zpr-price-gauge-flag { color:#c63c2f }
-    .zpr-price-gauge-ticks { display:flex; justify-content:space-between; margin-top:10px; color:#8b95a1; font-size:12px; font-weight:600 }
+    .zpr-price-years { --zpr-years-now:#1b64da; margin:16px 0 18px; color:#8b95a1; font-size:12px; font-weight:600 }
+    .zpr-price-years.is-low { --zpr-years-now:#13795b }
+    .zpr-price-years.is-high { --zpr-years-now:#c63c2f }
+    .zpr-price-years-side { display:block; margin-bottom:4px }
+    .zpr-price-years-plot { position:relative; display:flex; gap:6px }
+    .zpr-price-years-zero, .zpr-price-years-usual { position:absolute; left:0; right:0; z-index:1 }
+    .zpr-price-years-zero { border-top:2px solid #b0b8c1 }
+    .zpr-price-years-usual { border-top:1.5px dashed #8b95a1 }
+    .zpr-price-years-col { position:relative; flex:1 1 0; min-width:0 }
+    .zpr-price-years-col i { position:absolute; left:18%; right:18%; border-radius:3px; background:#c5ccd4 }
+    .zpr-price-years-col b { position:absolute; left:50%; z-index:2; padding:0 3px; transform:translateX(-50%); background:#fff; color:#6b7684; font-size:12.5px; font-weight:700; line-height:1.3; white-space:nowrap }
+    .zpr-price-years-col > span { position:absolute; bottom:-22px; left:-4px; right:-4px; text-align:center }
+    .zpr-price-years-col.is-thin i { opacity:.45 }
+    .zpr-price-years-col.is-now i { background:var(--zpr-years-now) }
+    .zpr-price-years-col.is-now b { color:var(--zpr-years-now); font-weight:850 }
+    .zpr-price-years-col.is-now > span { color:#191f28; font-weight:800 }
+    .zpr-price-years-foot { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 10px; margin-top:28px; font-size:11.5px }
+    .zpr-price-selection { margin:14px 0 8px; padding:12px 14px; border-radius:12px; background:#f7f8fa }
+    .zpr-price-selection strong { display:block; color:#333d4b; font-size:13px; font-weight:800; line-height:1.5 }
+    .zpr-price-selection p { margin:3px 0 0; color:#4e5968; font-size:13px; line-height:1.6 }
     .zpr-price-peer-table { width:100%; border-collapse:collapse; font-size:14px }
     .zpr-price-peer-table th, .zpr-price-peer-table td { padding:10px 0; border-top:1px solid #edf0f3; text-align:right; font-weight:500; color:#333d4b }
+    .zpr-price-peer-table td { white-space:nowrap; padding-left:10px }
     .zpr-price-peer-table thead th { border-top:0; padding-top:0; color:#8b95a1; font-size:12px; font-weight:600 }
     .zpr-price-peer-table th:first-child { text-align:left }
     .zpr-price-peer-table tbody th small { display:block; margin-top:2px; color:#8b95a1; font-size:12px; font-weight:500 }
@@ -1481,15 +1491,37 @@
     .zippick-report .zpr-section[aria-label="다른 후보와 비교"] .zpr-table td { padding-top:15px; padding-bottom:15px }
     .zpr-section h5 { margin:0; font-size:20px; font-weight:900; letter-spacing:-.5px; line-height:1.42 }
     .zpr-price-summary { display:grid; gap:6px; min-width:0 }
+    .zpr-comparison-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:18px 0 24px }
+    .zpr-comparison-facts div { display:grid; align-content:start; gap:4px; min-width:0 }
+    .zpr-comparison-facts span, .zpr-comparison-facts small { color:#6b7684; font-size:13px; line-height:1.5 }
+    .zpr-comparison-facts b { color:#333d4b; font-size:14px; font-weight:600; line-height:1.6; word-break:keep-all; overflow-wrap:anywhere }
+    .zpr-comparison-block { margin:24px 0; padding-top:24px; border-top:1px solid #e5e8eb }
+    .zpr-comparison-label { margin:0 0 8px; font-size:14px; font-weight:650; color:#4e5968 }
+    .zpr-comparison-block h6 { font-size:17px; line-height:1.6; margin:0 0 8px; color:#333d4b }
+    .zpr-comparison-block .zpr-table { table-layout:fixed; font-size:13px }
+    .zpr-comparison-block .zpr-table th, .zpr-comparison-block .zpr-table td { min-width:0; padding:8px 6px }
+    @media(max-width:520px) { .zpr-comparison-facts { gap:10px } .zpr-comparison-facts b { font-size:13px } }
+
     .zpr-price-subtitle { margin:0; color:#4e5968; font-size:15px; font-weight:500; line-height:1.6 }
     .zpr-price-subtitle b { color:#2b3440; font-weight:750 }
     .zpr-price-peers { display:grid; gap:5px; margin:2px 0 0; min-width:0 }
     .zpr-price-peers h6 { margin:0; color:#2b3440; font-size:14px; font-weight:850; line-height:1.5 }
-    .zpr-price-peer-list { display:grid; gap:0; margin:0; padding:0; list-style:none; border-top:1px solid #edf0f3 }
-    .zpr-price-peer-list li { display:grid; gap:2px; min-width:0; padding:7px 0; border-bottom:1px solid #edf0f3; overflow-wrap:anywhere }
-    .zpr-price-peer-list strong { color:#2b3440; font-size:14px; font-weight:800; line-height:1.5 }
-    .zpr-price-peer-list span { color:#667386; font-size:13px; line-height:1.55 }
-    .zpr-price-peer-list .is-more { color:#667386; font-size:13px }
+    .zpr-peer-caption { margin:0; color:#6b7684; font-size:13px; line-height:1.5 }
+    .zpr-peer-table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:13px; line-height:1.5 }
+    .zpr-peer-table th, .zpr-peer-table td { padding:8px 6px; text-align:left; vertical-align:top; border-bottom:1px solid #edf0f3; overflow-wrap:anywhere }
+    .zpr-peer-table th:first-child, .zpr-peer-table td:first-child { padding-left:8px; width:27% }
+    .zpr-peer-table th:nth-child(2), .zpr-peer-table td:nth-child(2) { width:24% }
+    .zpr-peer-table th:last-child, .zpr-peer-table td:last-child { padding-right:8px }
+    .zpr-peer-table strong { display:block; color:#333d4b; font-size:14px; font-weight:650 }
+    .zpr-peer-table small { display:block; color:#6b7684; font-size:13px; line-height:1.5 }
+    .zpr-peer-price { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 7px }
+    .zpr-peer-gap { color:#6b7684; font-size:13px; font-weight:650; white-space:nowrap }
+    .zpr-peer-gap.is-higher { color:#d92d20 }
+    .zpr-peer-gap.is-lower { color:#1967d2 }
+    .zpr-peer-method { color:#6b7684; font-size:13px; line-height:1.6 }
+    .zpr-peer-method summary { cursor:pointer; padding:5px 0 }
+    .zpr-peer-method p { margin:4px 0 }
+
     .zpr-price-highlight { padding:0 2px; border-radius:2px; background:linear-gradient(transparent 58%, #ffef9e 58%); color:#191f28; font-weight:850; box-decoration-break:clone; -webkit-box-decoration-break:clone }
     .zpr-price-summary .zpr-score-note { margin:0 }
     .zpr-lead { margin:0; font-size:14px; font-weight:750; color:#4e5968; line-height:1.6 }
@@ -1606,12 +1638,12 @@
        한 단계씩 낮추고, 회색 상자 대신 얇은 선과 여백으로 묶음을 나눈다. */
     .zpr-head { gap:0 }
     .zpr-head .zpr-title { margin-top:16px; font-size:22px }
-    .zpr-head .zpr-summary.is-verdict { gap:0; margin:27px 0 0; padding:20px 0; border-top:1px solid #eef0f3; border-bottom:1px solid #eef0f3; border-radius:0; background:none }
-    .zpr-head .zpr-summary.is-verdict > div { gap:5px; padding-right:18px }
-    .zpr-head .zpr-summary.is-verdict > div + div { padding:0 0 0 18px; border-left:1px solid #eef0f3 }
+    .zpr-head .zpr-summary.is-verdict { gap:0; margin:32px 0 0; padding:32px 0; border:0; border-top:1px solid #e5e8eb; border-bottom:1px solid #e5e8eb; border-radius:0; background:none }
+    .zpr-head .zpr-summary.is-verdict > div { align-content:start; gap:5px; padding-right:18px }
+    .zpr-head .zpr-summary.is-verdict > div + div { padding:0 0 0 18px }
     .zpr-head .zpr-summary.is-verdict strong { color:#333d4b; font-size:15px; font-weight:800; line-height:1.5 }
     .zpr-head .zpr-summary.is-verdict small { color:#6b7684; font-size:13px }
-    .zpr-head .zpr-buy-band { gap:12px; margin-top:28px }
+    .zpr-head .zpr-buy-band { gap:12px; margin-top:32px }
     .zpr-head .zpr-buy-band-eyebrow { color:#6b7684; font-size:12px; font-weight:800 }
     /* 밴드 판정 문장은 가격 비교 섹션 제목(.zpr-section h5)과 같은 크기로 맞춘다. */
     .zpr-head .zpr-buy-band h4 { font-size:20px; font-weight:900; letter-spacing:-.5px; line-height:1.42 }
@@ -1671,7 +1703,7 @@
     .zpr-details > p { font-size:14px; font-weight:400; color:#4e5968 }
     .zpr-table-wrap { width:100%; min-width:0; max-width:100%; overflow-x:auto; margin:14px 0 }
     .zpr-table { width:100%; border-collapse:collapse; font-size:14px; line-height:1.6; text-align:left }
-    .zpr-table th { color:#6b7684; background:#f7f8fa; font-size:13px; font-weight:500 }
+    .zpr-table th, .zpr-peer-table th { color:#6b7684; background:#f7f8fa; font-size:13px; font-weight:500 }
     .zpr-table th, .zpr-table td { padding:12px 10px; border-bottom:1px solid #edf0f3; vertical-align:top; min-width:90px; overflow-wrap:anywhere }
     .zpr-table small { display:block; font-size:13px; color:#6b7684; font-weight:400; margin-top:4px }
     .zpr-peer-link { border:0; padding:0; background:none; color:#1b64da; font:inherit; font-weight:800; text-align:left; text-decoration:underline; text-underline-offset:3px; cursor:pointer }
@@ -1692,7 +1724,7 @@
       .zippick-report .zpr-section[aria-label="가격과 계산 근거"] .zpr-details { padding:15px }
       .zpr-summary { grid-template-columns:1fr }
       .zpr-head .zpr-summary.is-verdict > div { padding-right:0 }
-      .zpr-head .zpr-summary.is-verdict > div + div { margin-top:18px; padding:17px 0 0; border-top:1px solid #eef0f3; border-left:0 }
+      .zpr-head .zpr-summary.is-verdict > div + div { margin-top:18px; padding:17px 0 0; border:0 }
       .zpr-summary strong { font-size:21px }
       .zpr-map + .zpr-head { margin-top:-18px }
       .zpr-map-canvas { height:214px; border-radius:12px }
@@ -3985,6 +4017,7 @@
       .condition-stage-preference #budgetPanelTitle { font-size:30px }
       .condition-stage-preference #budgetPanelIntro { margin-bottom:26px; font-size:16px }
       .condition-stage-preference .preference-fields { grid-template-columns:1fr }
+      #policyPurchaseRegion,
       #policyHomeOwnership,
       #policyMaritalStatus,
       #policyFirstTime,
@@ -4042,6 +4075,10 @@
       .preference-single-picker .multi-sheet-title {
         display:block; margin:34px 28px 24px; color:#171d26; font-size:28px; font-weight:850; line-height:1.25;
       }
+      .power-single-picker .multi-sheet-title:has(+ .multi-sheet-description) { margin-bottom:8px }
+      .power-single-picker .multi-sheet-description { margin:0 28px 18px; color:#6b7684; font-size:15px; font-weight:500; line-height:1.5 }
+      .power-single-picker .single-option-text { display:grid; gap:3px; min-width:0; padding:12px 0 }
+      .power-single-picker .single-option-desc { color:#8b95a1; font-size:13px; font-weight:500; line-height:1.45 }
       #budgetMinAreaPicker .area-sheet-heading {
         display:flex; align-items:center; justify-content:space-between; gap:16px; margin:34px 28px 24px;
       }
@@ -5498,6 +5535,19 @@
               <select id="policyPurchaseRegion" aria-label="구매 희망지역" aria-describedby="policyPurchaseRegionHint" required>
                 <option value="">지역을 선택해 주세요</option>
               </select>
+              <details class="single-picker power-single-picker" id="purchaseRegionPicker" data-power-single-picker="purchaseRegion">
+                <summary><span id="purchaseRegionSummary">지역을 선택해 주세요</span></summary>
+                <div class="multi-option-panel">
+                  <div class="multi-sheet-grabber" aria-hidden="true"></div>
+                  <p class="multi-sheet-title">희망지역을 선택해주세요</p>
+                  <p class="multi-sheet-description">규제지역인지에 따라 대출 한도가 달라져요.</p>
+                  <div class="multi-option-body"><div class="multi-options" id="purchaseRegionOptions" role="radiogroup" aria-label="구매 희망지역"></div></div>
+                  <div class="multi-option-footer">
+                    <button class="multi-footer-button multi-reset" type="button" data-power-single-action="reset" data-power-single-type="purchaseRegion">초기화</button>
+                    <div class="multi-option-actions"><button class="multi-footer-button multi-apply" type="button" data-power-single-action="apply" data-power-single-type="purchaseRegion">적용</button></div>
+                  </div>
+                </div>
+              </details>
               <p class="power-region-hint" id="policyPurchaseRegionHint">규제지역인지에 따라 대출 한도가 달라져요. 상세 지역은 집 조건에서 골라요.</p>
             </div>
             <div class="budget-field">
@@ -5614,8 +5664,8 @@
               <label for="policySpouseDebt">배우자 기존 대출 월 상환액</label>
               <div class="input-with-unit"><input id="policySpouseDebt" type="number" min="0" step="10" inputmode="numeric" placeholder="예: 50" disabled><span class="input-unit" aria-hidden="true">만원/월</span></div>
             </div>
-            <details class="power-advanced is-always-open" id="purchasePowerAdvanced" open>
-              <summary>내 상황 더 입력하기</summary>
+            <details class="power-advanced" id="purchasePowerAdvanced">
+              <summary>내 상황에 맞게 조정하기</summary>
               <div class="power-advanced-fields">
                 <div class="budget-field">
                   <label for="policyCreditScore">신용점수 <span aria-hidden="true">(선택)</span></label>
@@ -5646,6 +5696,7 @@
                 </div>
               </div>
             </details>
+            <p class="power-defaults-note" id="purchasePowerDefaultsNote" aria-live="polite"></p>
             <div class="power-actions">
               <button class="power-calculate" id="powerApproximateCalculate" type="button" data-purchase-power-mode="approximate">대략 계산하기</button>
               <button class="power-calculate power-detail-action" id="powerCalculate" type="button">내 상황 더 입력하기</button>
@@ -6106,6 +6157,7 @@
     const policyPurchaseCostRate = $("policyPurchaseCostRate");
     const powerSinglePickers = [...document.querySelectorAll("[data-power-single-picker]")];
     const powerSinglePickerConfigs = {
+      purchaseRegion: { select:policyPurchaseRegion, picker:$("purchaseRegionPicker"), summary:$("purchaseRegionSummary"), options:$("purchaseRegionOptions"), describe:purchaseRegionSubtitle },
       firstTime: { select:policyFirstTime, picker:$("firstTimePicker"), summary:$("firstTimeSummary"), options:$("firstTimeOptions") },
       coBorrower: { select:policyCoBorrower, picker:$("coBorrowerPicker"), summary:$("coBorrowerSummary"), options:$("coBorrowerOptions") },
     };
@@ -6245,6 +6297,16 @@
       return purchaseRegionByCode(code)?.label || "";
     }
 
+    // 바텀시트 선택지 아래에 어떤 시·구가 들어가는지와 규제 여부를 함께 보여준다.
+    function purchaseRegionSubtitle(code) {
+      const region = purchaseRegionByCode(code);
+      if (!region) return "";
+      const description = String(region.description || "");
+      if (/규제/.test(`${region.label || ""}${description}`)) return description;
+      const tag = region.isRegulatedArea ? "규제지역" : "비규제지역";
+      return description ? `${description} · ${tag}` : tag;
+    }
+
     function renderPurchaseRegionHint() {
       const region = purchaseRegionByCode();
       if (!region) {
@@ -6261,6 +6323,9 @@
       policyPurchaseRegion.value = purchaseRegionByCode(code) ? code : "";
       pendingPurchaseRegionCode = "";
       renderPurchaseRegionHint();
+      // 지역 목록은 서버에서 늦게 오므로, 값이 정해진 뒤 바텀시트도 다시 그린다.
+      powerSingleDraftValues.purchaseRegion = policyPurchaseRegion.value;
+      renderPowerSinglePicker("purchaseRegion");
     }
 
     function renderPurchaseRegionOptions() {
@@ -6290,6 +6355,7 @@
       renderPurchaseRegionOptions();
       setPurchaseRegionValue(selected);
       if (!mortgageRateManuallyEdited && mortgageRateMarketAveragePercent) applyEstimatedMortgageRate(true);
+      syncPurchasePowerActionLabels();
     }
     let mortgageRateManuallyEdited = false;
 
@@ -6331,6 +6397,7 @@
       const changed = Number(policyMortgageRate.value) !== estimate.rate;
       policyMortgageRate.value = estimate.rate.toFixed(2);
       renderMortgageRateHelper();
+      syncPurchasePowerActionLabels();
       return changed;
     }
 
@@ -7392,10 +7459,16 @@
       const config = powerSinglePickerConfigs[type];
       if (!config) return;
       config.summary.textContent = powerSingleLabel(config);
-      config.options.innerHTML = [...config.select.options].filter(option => option.value !== "").map(option => `
+      config.options.innerHTML = [...config.select.options].filter(option => option.value !== "").map(option => {
+        const description = config.describe?.(option.value) || "";
+        const label = description
+          ? `<span class="single-option-text">${esc(option.textContent)}<small class="single-option-desc">${esc(description)}</small></span>`
+          : esc(option.textContent);
+        return `
         <button class="single-option" type="button" role="radio" data-power-single-type="${esc(type)}" data-power-single-value="${esc(option.value)}" aria-checked="${powerSingleDraftValues[type] === option.value}">
-          ${esc(option.textContent)}
-        </button>`).join("");
+          ${label}
+        </button>`;
+      }).join("");
     }
     function renderPowerSinglePickers() {
       Object.keys(powerSinglePickerConfigs).forEach(renderPowerSinglePicker);
@@ -10830,10 +10903,14 @@
       const leaderRegionName = String(item.signals?.leaderRegion || item.region || regionName).trim()
         || regionName;
       const regionLabel = `${regionName} 아파트 평균`;
-      const complexValue = sparklineLatestValue(series.complex);
-      const regionValue = sparklineLatestValue(series.region);
-      const leaderValue = sparklineLatestValue(series.leader);
-      const districtLeaderValue = sparklineLatestValue(series.districtLeader);
+      // 카드 설명과 범례는 단지의 마지막 거래 월을 함께 비교한다.
+      // 거래가 없는 달의 지역 지수나 이전 달 대장 거래를 섞지 않는다.
+      const comparisonIndex = series.complex.findLastIndex(value => Number.isFinite(value));
+      const valueAt = values => Number.isFinite(values?.[comparisonIndex]) ? values[comparisonIndex] : null;
+      const complexValue = valueAt(series.complex);
+      const regionValue = valueAt(series.region);
+      const leaderValue = valueAt(series.leader);
+      const districtLeaderValue = valueAt(series.districtLeader);
       if (!Number.isFinite(complexValue)) return null;
       const complexRate = complexValue - 100;
       const regionRate = regionValue == null ? null : regionValue - 100;
@@ -10859,6 +10936,7 @@
         sentiment,
         message,
         anchorLabel:readableSparklinePeriod(series.anchorPeriod),
+        comparisonPeriod:series.periods?.[comparisonIndex] || "",
       };
     }
 
@@ -13441,7 +13519,8 @@
       if (!candidate?.name) return candidate;
       const previous = currentAptSearchItems[index] || null;
       const previousKey = previous ? candidateIdentityKey(previous) : "";
-      currentAptSearchItems[index] = { ...(previous || {}), ...candidate };
+      // 카드·비교함·리포트가 동일한 선택 결과를 참조한다.
+      currentAptSearchItems[index] = candidate;
       aptCandidateResults.set(index, currentAptSearchItems[index]);
 
       if (candidateMapOrigin !== "aptSearch") return currentAptSearchItems[index];
@@ -13467,10 +13546,13 @@
       if (!candidate?.name) return;
       const key = candidateIdentityKey(candidate);
       aptCandidateResults.forEach((value, index) => {
-        if (candidateIdentityKey(value) !== key && !sameCandidateIdentity(value, candidate)) return;
-        aptCandidateResults.set(index, { ...value, ...candidate });
-        currentAptSearchItems[index] = aptCandidateResults.get(index);
+        // 단지가 같아도 이전 평형의 늦은 응답으로 새 선택을 덮어쓰지 않는다.
+        if (candidateIdentityKey(value) !== key) return;
+        Object.assign(value, candidate);
+        currentAptSearchItems[index] = value;
         const card = aptSearchResults.querySelector(`[data-apt-card-index="${index}"]`);
+        const badges = card?.querySelector("[data-apt-score-badges]");
+        if (badges) badges.innerHTML = candidateTopScoreBadgesHtml(value);
         const verdict = card?.querySelector(".candidate-verdict");
         if (verdict) {
           verdict.innerHTML = candidateVerdictHtml(aptCandidateResults.get(index), {
@@ -16395,19 +16477,21 @@
         policyCreditScore.value.trim() ||
         mortgageRateManuallyEdited ||
         (Number.isFinite(estimatedRate) && rateValue && Number(rateValue) !== estimatedRate) ||
-        policyLoanTerm.value !== "30"
+        policyLoanTerm.value !== "30" || policyRateType.value !== "periodic"
       );
     }
 
     function syncPurchasePowerActionLabels() {
-      // 상세 입력은 항상 펼쳐 두고, 입력한 값으로 한 번에 계산해요.
-      purchasePowerAdvanced.open = true;
-      const advancedOpen = true;
+      // 접기는 화면만 줄인다. 사용자가 조정한 금리와 만기는 그대로 쓴다.
+      const advancedOpen = purchasePowerAdvanced.open;
       powerApproximateCalculate.textContent = "계산하기";
-      powerApproximateCalculate.dataset.purchasePowerMode = advancedOpen ? "exact" : "approximate";
+      powerApproximateCalculate.dataset.purchasePowerMode = purchasePowerHasCustomDetails() ? "exact" : "approximate";
       powerCalculate.textContent = advancedOpen ? "기본 기준으로 계산하기" : "내 상황 더 입력하기";
       powerCalculate.hidden = true;
-      purchasePowerAdvanced.querySelector("summary").textContent = advancedOpen ? "상세 입력 닫기" : "내 상황 더 입력하기";
+      purchasePowerAdvanced.querySelector("summary").textContent = advancedOpen ? "조정 항목 접기" : "내 상황에 맞게 조정하기";
+      const note = document.getElementById("purchasePowerDefaultsNote");
+      const rate = Number(policyMortgageRate.value);
+      if (note) note.textContent = `${purchasePowerHasCustomDetails() ? "적용할 조건" : "기본 계산 조건"} · ${rate > 0 ? `금리 ${rate.toFixed(2)}%` : "금리 확인 중"} · ${policyLoanTerm.value}년 · ${policyRateType.selectedOptions[0]?.textContent || "금리 유형 확인 중"}`;
     }
 
     function openPurchasePowerDetails(source = "summary") {
@@ -16445,6 +16529,7 @@
       savePurchasePowerForm();
       trackEvent("purchase_power_reset", {});
       policyHomeOwnership.focus({ preventScroll:false });
+      purchasePowerAdvanced.open = false;
       syncPurchasePowerActionLabels();
     }
 
@@ -16459,7 +16544,7 @@
     }
 
     function purchasePowerParams(mode = "exact") {
-      const useSimpleDefaults = mode === "approximate" && !purchasePowerAdvanced.open;
+      const useSimpleDefaults = mode === "approximate" && !purchasePowerHasCustomDetails();
       return new URLSearchParams({
         purchase_region: policyPurchaseRegion.value,
         home_ownership: policyHomeOwnership.value,
@@ -17162,6 +17247,7 @@
         firstInvalid = policyReserveCash;
       }
       if (firstInvalid) {
+        if (purchasePowerAdvanced.contains(firstInvalid)) purchasePowerAdvanced.open = true;
         purchasePowerResult.classList.add("show");
         purchasePowerResult.classList.remove("is-sheet");
         document.body.classList.remove("purchase-power-sheet-open");
@@ -18010,10 +18096,165 @@
 
 
     // ── 집픽 분석 리포트 ────────────────────────────────────────────────
-    // 두 점수는 보는 대상이 달라 더하지 않는다.
-    // 종합(단지·입지) = 이 물건이 좋은가, 시장 신호 = 지금이 그 타이밍인가.
-    // 신호 구간 70·45는 점수 산식의 상한 규칙에서 그대로 가져왔다.
-    // (최근 3개월 상승 미확인 → 최대 69점, 가격·거래량 동반 약세 → 최대 44점)
+    // 매수 판단은 가격 비교와 입지·단지의 원지표로 계산한다. 시장 신호는 최근 움직임을 설명한다.
+    // 공통 판단 v2: 개인 예산·목적별 통근 점수와 시장 신호 총점은 사용하지 않는다.
+    // 기존 종합점수에서 가격·전세·시장 항목을 다시 합산하지 않고 확인된 원지표를 읽는다.
+    function zippickCommonProperty(item) {
+      const parts = Array.isArray(item?.locationScore?.parts) ? item.locationScore.parts : [];
+      const specs = [["demand", "station", "역 접근성"], ["demand", "education", "교육 접근성"],
+        ["product", "households", "단지 규모"], ["product", "age", "연식"]];
+      const metrics = specs.map(([group, key, label]) => {
+        const part = parts.find(row => row.key === group);
+        const detail = (part?.details || []).find(row => row.key === key);
+        const value = zpNum(detail?.score);
+        const score = detail?.status === "ok" && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
+        return {group, key, label, score, reason: String(detail?.reason || "자료가 없어요")};
+      });
+      const missing = metrics.filter(row => row.score === null);
+      // 두 축을 서로 보상시키지 않는다. 기존 65/50 구간은 비교 정책이며 수익 예측이 아니다.
+      const average = group => {
+        const rows = metrics.filter(row => row.group === group && row.score !== null);
+        return rows.length ? rows.reduce((sum, row) => sum + row.score, 0) / rows.length : null;
+      };
+      const access = average("demand"), building = average("product");
+      const grade = missing.length > 1 || access === null || building === null ? "missing" : access >= 65 && building >= 65 ? "good"
+        : access < 50 && building < 50 ? "weak" : "mixed";
+      const weakest = metrics.filter(row => row.score !== null).sort((a,b) => a.score-b.score)[0];
+      const summary = grade === "missing" ? `${missing.map(row => row.label).join("·")} 자료가 부족해요`
+        : grade === "good" ? `${missing.length ? "확인된 " : ""}입지와 규모·연식 조건이 좋아요`
+        : grade === "weak" ? "입지와 규모·연식 조건이 모두 아쉬워요"
+        : `${weakest.label} 조건은 ${weakest.score < 50 ? "아쉬워요" : "보통이에요"}`;
+      return {grade, access, building, metrics, summary, missingLabels:missing.map(row => row.label)};
+    }
+
+    function zippickCommonPurchaseVerdict(item, now = new Date()) {
+      const property = zippickCommonProperty(item);
+      const comparison = item?.priceComparison || {};
+      const shift = zpNum(comparison.shiftPp);
+      const count = zpNum(comparison.transactionCount);
+      const peers = Array.isArray(comparison.peers) ? comparison.peers : [];
+      const month = String(comparison.throughMonth || "");
+      const validMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
+      const ageMonths = validMonth ? (now.getFullYear() - Number(month.slice(0,4))) * 12
+        + now.getMonth() + 1 - Number(month.slice(5,7)) : NaN;
+      let missingPrice = "";
+      if (comparison.status !== "ready" || comparison.method !== "usual_gap" || !Number.isFinite(shift)
+          || !(zpNum(comparison.averagePriceEok) > 0) || peers.length < 2 || item?.priceIdentityVerified === false) {
+        missingPrice = "비교 단지와의 평소 가격 차이를 판단할 자료가 부족해요";
+      } else if (!Number.isFinite(ageMonths) || ageMonths < 0 || ageMonths > 4) {
+        missingPrice = "최근 가격을 판단할 거래 자료가 부족해요";
+      } else if (!(count >= 2) || !(zpNum(comparison.periodMonths) > 0 && zpNum(comparison.periodMonths) <= 24)) {
+        missingPrice = "가격을 비교할 실제 거래가 부족해요";
+      }
+      const limitedPrice = !missingPrice && Boolean(comparison.lowData || comparison.conditionsRelaxed
+        || comparison.areaAdjusted || comparison.periodWidened || comparison.scope === "district"
+        || peers.some(peer => Number(peer.tier) > 0 || peer.lowData) || count < 5 || zpNum(comparison.periodMonths) > 6);
+      const price = missingPrice ? "missing" : shift < -3 ? "low" : shift > 3 ? "high" : "similar";
+      const priceSummary = missingPrice || (price === "low" ? "비교 단지 대비 가격 부담이 평소보다 낮아졌어요"
+        : price === "high" ? "비교 단지 대비 가격 부담이 평소보다 커졌어요" : "비교 단지와의 가격 차이가 평소 수준이에요");
+      // 신호 점수나 가격 하락 자체로 등급을 낮추지 않는다. 관측된 거래 급감만 별도 조건으로 설명한다.
+      const recent = zpNum(item?.signals?.recentDealCount), prior = zpNum(item?.signals?.priorDealCount);
+      const tradeDrop = Number.isFinite(recent) && recent >= 0 && prior >= 5 && recent / prior < 0.5;
+      let tone, reason;
+      if (item?.priceIdentityVerified === false || property.grade === "missing") {
+        tone = "missing";
+        reason = item?.priceIdentityVerified === false ? "거래 자료가 이 단지와 일치하는지 확인되지 않았어요"
+          : "입지·단지 조건 중 확인된 항목이 적어요";
+      } else if (property.grade === "weak") {
+        tone = "hold";
+        reason = price === "missing" || limitedPrice ? "확인된 입지와 규모·연식 조건이 모두 아쉬워요"
+          : price === "low" ? "비교 가격 부담은 낮아졌지만 입지와 규모·연식 조건이 모두 아쉬워요"
+          : `${price === "high" ? "비교 가격 부담이 커졌고" : "비교 가격은 평소 수준이지만"} 입지와 규모·연식 조건이 모두 아쉬워요`;
+      } else if (price === "missing") {
+        tone = "conditional";
+        reason = property.grade === "good" ? "확인된 단지 조건은 좋지만 가격이 적절한지는 판단할 수 없어요"
+          : `${property.summary}, 가격이 적절한지는 판단할 수 없어요`;
+      } else if (limitedPrice) {
+        tone = "conditional";
+        reason = `${property.summary}, 가격 비교는 자료가 적어 확실하지 않아요`;
+      } else if (price === "high") {
+        tone = property.grade === "good" ? "conditional" : "hold";
+        reason = property.grade === "good" ? "단지 조건은 좋지만 비교 가격 부담이 평소보다 커졌어요"
+          : `비교 가격 부담이 커졌고 ${property.summary}`;
+      } else if (property.grade === "mixed") {
+        tone = "conditional";
+        reason = `${price === "low" ? "비교 가격 부담은 낮아졌지만" : "비교 가격은 평소 수준이지만"} ${property.summary}`;
+      } else if (tradeDrop) {
+        tone = "conditional";
+        reason = "비교 가격과 단지 조건은 괜찮지만 최근 거래 건수가 절반 넘게 줄었어요";
+      } else {
+        tone = "yes";
+        reason = `${price === "low" ? "비교 가격 부담이 평소보다 낮아졌고" : "비교 가격은 평소 수준이고"} 확인된 입지·단지 조건이 좋아요`;
+      }
+      const pending = tone === "missing" && ["pending", "loading"].includes(item?.reportPeerState) && comparison.status !== "ready";
+      const labels = {yes:"매수 검토", conditional:"조건부 검토", hold:"매수 보류", missing:"판단 보류"};
+      const leads = {yes:"매수 검토할 만해요", conditional:"조건부로 매수 검토할 만해요",
+        hold:"지금은 매수를 서두르지 않는 게 좋아요", missing:"자료가 부족해 매수 판단을 보류해요"};
+      return {common:true, pending, version:"common-purchase-v2", tone, label:pending ? "판단 준비 중" : labels[tone],
+        stars:({yes:4, conditional:3, hold:2})[tone] ?? null,
+        title:pending ? "가격 비교 자료를 불러오고 있어요. 자료가 준비되면 매수 판단을 보여드려요" : `${leads[tone]}. ${reason}`, property, price, priceSummary, limitedPrice, tradeDrop,
+        tradeEvidence:tradeDrop ? `최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건보다 절반 넘게 줄었어요.` : "",
+        basis:price === "missing" ? "확인된 입지·단지 자료 기준 · 가격 판단 자료 부족" : `${month}까지 최근 ${comparison.periodMonths || "—"}개월 실거래 비교 기준`};
+    }
+
+    function zippickCommonPropertyHtml(property) {
+      return `<div class="zpr-bars">${property.metrics.map(row => row.score === null
+        ? `<p class="zpr-score-note">${esc(row.label)} · 자료가 부족해 판단할 수 없어요</p>`
+        : zippickBarHtml(row.label, row.score, 100, row.reason)).join("")}</div>`;
+    }
+
+    function zippickDecisionScoresHtml(item, verdict) {
+      const location = zpNum(item?.locationScore?.score);
+      const locationParts = zpScoredParts(item);
+      const strongCount = locationParts.filter(part => zpPartRatio(part) >= .65).length;
+      const weakCount = locationParts.filter(part => zpPartRatio(part) < .55).length;
+      const locationMeaning = !Number.isFinite(location) ? "단지 조건은 판단할 수 없어요"
+        : location >= 80 ? "단지 조건은 좋아요. 강점이 뚜렷해요"
+        : location >= 65 ? "단지 조건은 좋아요. 강점이 더 많아요"
+        : location >= 50 ? strongCount > weakCount
+          ? "단지 조건은 보통이에요. 강점이 약점보다 많아요"
+          : strongCount < weakCount
+            ? "단지 조건은 아쉬워요. 약점이 강점보다 많아요"
+            : "단지 조건은 보통이에요. 강점과 약점이 비슷해요"
+        : "단지 조건은 아쉬워요. 약점이 많아요";
+      const locationEvidence = zippickLocationEvidenceText(item, verdict);
+      const market = zippickMarketVerdict(item);
+      const signalMeaning = market.heading;
+      const locationBadge = candidateLocationScoreBadgeHtml(item);
+      const flowBadge = candidateFlowScoreBadgeHtml(item);
+      return `<div class="zpr-summary is-verdict">
+          <div><div class="zpr-summary-score">${locationBadge}</div><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>
+          <div><div class="zpr-summary-score">${flowBadge}</div><strong>${esc(signalMeaning)}</strong><small>${esc(zippickMarketEvidenceText(item))}</small></div>
+        </div>
+        ${zippickHasVerifiedMixedCorridor(item) ? '<a class="zpr-sub-src" href="https://kbland.kr/se/c/454" target="_blank" rel="noopener noreferrer">현관 구조 출처: KB부동산 단지정보 ↗</a>' : ""}`;
+    }
+
+    function zippickCommonDecisionHtml(item, verdict) {
+      return `<header class="zpr-head">
+        ${zippickOverallRatingHtml(verdict, verdict.label)}
+        <h3 class="zpr-title">${esc(verdict.title)}</h3>
+        <p class="zpr-score-note">${esc(verdict.basis)} · 현재 매물 호가와 개인 예산은 반영하지 않았어요.</p>
+        ${zippickDecisionScoresHtml(item, verdict)}
+        ${zippickBuyBandHtml(item, verdict)}
+      </header>`;
+    }
+
+    function zippickCommonDecisionBasisHtml(verdict) {
+      return `<section class="zpr-section"><h5>매수 판단 기준</h5>
+        <p class="zpr-insight">${esc(verdict.title)}</p>
+        ${zippickReportTable(["판단", "기준"], [
+          ["매수 검토 · 4점", "비교 가격이 평소 수준 이하이고 입지·단지 두 조건이 좋으며, 확인된 거래 급감이 없어요."],
+          ["조건부 검토 · 3점", "가격이 비싸거나 아직 판단되지 않아요. 가격 비교 자료가 적거나, 단지 조건에 아쉬움 또는 거래 급감이 있어도 해당해요."],
+          ["매수 보류 · 2점", "입지·단지 두 조건이 모두 약하거나, 단지 조건이 보통인데 비교 가격도 비싸요."],
+          ["판단 보류 · 별점 없음", "입지·단지 네 항목 중 확인된 항목이 세 개 미만이거나 거래 자료의 단지 일치 여부에 문제가 있어요."],
+        ])}
+        <p class="zpr-insight">입지는 역·교육 점수의 평균, 단지 조건은 규모·연식 점수의 평균으로 봐요. 두 축이 각각 65점 이상이면 좋음, 모두 50점 미만이면 약함, 그 사이는 강점과 아쉬움이 섞인 상태예요. 네 항목 중 세 개 이상이고 두 축에 자료가 있으면 확인된 점수로 판단해요. 없는 항목은 0점으로 넣지 않고 따로 표시해요.</p>
+        <p class="zpr-insight">단순한 현재 가격 비교는 별점에 넣지 않아요. 비교 범위를 넓힌 자료는 자료 적음으로 표시하고 최대 조건부 검토로 판단해요. 가격은 비교 단지와의 평소 가격 차이보다 3포인트 넘게 벌어지면 비쌈, 3포인트 넘게 줄면 저렴으로 봐요. 최근 6개월 거래가 그 전 6개월의 절반 미만이면 조건부로 내려요. 이전 거래가 5건 미만이면 급감 판정에 쓰지 않아요.</p>
+        <p class="zpr-insight">시장 신호 총점·개인 예산·전세가율·개인 통근 조건은 이 별점에 합산하지 않아요. 미래 변화와 하락기 거래는 해당 항목에서 따로 설명해요. 이 기준은 집픽의 비교 정책이며, 수익률이나 저점을 예측하는 검증된 모형은 아니에요.</p>
+      </section>`;
+    }
+
+    // 이전 점수표 호환 헬퍼. 공통 리포트는 아래 매트릭스가 아닌 zippickCommonPurchaseVerdict를 사용한다.
     const ZIPPICK_MATRIX = [
       { min:65, bands:[
         { min:70, label:"적극 검토", short:"적극 검토", tone:"yes",         title:"단지 조건과 최근 흐름이 함께 받쳐주는 단지입니다." },
@@ -20300,7 +20541,7 @@
       let title = "", points = NaN, maxPoints = NaN;
       if (label === "가격 비교") {
         // 평소 가격 차이에서 얼마나 벗어났는지로 별점을 매긴다. 비교하지 못하면 별점을 비운다.
-        if (!zippickHasPriceComparison(item)) return null;
+        if (!zippickHasPriceComparison(item) || item.priceComparison.method === "simple") return null;
         const shift = zpNum(item.priceComparison.shiftPp);
         title = "가격 비교 점수";
         points = shift <= -6 ? 5 : shift < -3 ? 4 : shift <= 3 ? 3 : shift <= 6 ? 2 : 1;
@@ -20381,7 +20622,7 @@
     function zippickOverallRatingHtml(verdict, label) {
       // 상단 별점은 항목별 평균이 아니라 매수 판단의 강도다. 자료가 없으면 별점을 매기지 않는다.
       const ratings = { yes:4.5, conditional:3, hold:2, risk:1 };
-      const stars = verdict?.peakGuard ? 4 : ratings[verdict?.tone];
+      const stars = verdict?.common ? verdict.stars : verdict?.peakGuard ? 4 : ratings[verdict?.tone];
       if (!Number.isFinite(stars)) return `<div class="zpr-overall-verdict"><strong>${esc(label)}</strong></div>`;
       const caution = verdict?.peakGuard ? "가격 주의" : "";
       return `<div class="zpr-overall-verdict" aria-label="매수 판단 ${esc(stars)}/5, ${esc(label)}${caution ? `, ${caution}` : ""}">
@@ -20683,6 +20924,7 @@
     }
 
     function zippickVerdictTitle(item, verdict = null) {
+      if (verdict?.common) return verdict.title;
       const tone = String(verdict?.tone || "");
       const location = zpNum(item?.locationScore?.score);
       const signal = zpNum(item?.signals?.score);
@@ -20698,10 +20940,11 @@
       const priceGood = priceTier === 0 || priceTier === 1;
       const weakest = zippickWeakestPart(item);
       const age = zpNum(item?.buildingAge);
-      const liquidity = zippickLiquidityStat(item);
+      const marketConclusion = String(market.heading || market.summary || "최근 시장 흐름은 자료가 부족해 판단할 수 없어요").split(".")[0];
+      const locationConclusion = !Number.isFinite(location) ? "단지 조건은 자료가 부족해 판단할 수 없어요"
+        : location >= 65 ? "단지 조건은 좋아요" : location >= 50 ? "단지 조건은 보통이에요" : "단지 조건은 아쉬워요";
 
-      // 대타이틀은 리포트 전체의 결론이다. 가격 기준 하나를 행동 지침처럼
-      // 앞세우지 않고, 가격·단지 조건·최근 흐름을 함께 보고 결론부터 말한다.
+      // 대타이틀은 판정의 이유를 말하고, 조건부일 때는 검토 가능한 조건까지 연결한다.
       const positiveReason = locationGood && marketGood
         ? priceTier === 0
           ? "최근 실거래는 적정가격보다 싸고, 단지 조건과 최근 흐름이 좋아요"
@@ -20711,63 +20954,55 @@
               ? "단지 조건과 최근 흐름은 좋지만 최근 실거래는 적정가격보다 비싸요"
               : "단지 조건과 최근 흐름이 좋아요"
         : locationGood
-          ? priceGood ? "가격은 적정하고 단지 조건이 좋아요" : "단지 조건은 좋지만 최근 흐름을 더 확인해야 해요"
+          ? priceGood ? "가격은 적정하고 단지 조건이 좋아요" : `단지 조건은 좋아요. ${marketConclusion}`
           : marketGood
-            ? priceGood ? "가격은 적정하고 최근 흐름이 좋아요" : "최근 흐름은 좋지만 단지 조건을 더 확인해야 해요"
+            ? priceGood ? "가격은 적정하고 최근 흐름이 좋아요" : `최근 흐름은 좋아요. ${locationConclusion}`
             : priceGood
-              ? "가격은 적정하지만 단지 조건과 최근 흐름을 더 확인해야 해요"
-              : "단지 조건과 최근 흐름을 더 확인해야 해요";
+              ? `가격은 적정해요. ${locationConclusion}. ${marketConclusion}`
+              : `${locationConclusion}. ${marketConclusion}`;
 
-      const conditionalChecks = [];
-      if (weakest?.key === "product") {
-        conditionalChecks.push("단지 상품성");
-      } else if (weakest?.key === "demand") {
-        conditionalChecks.push("입지·교육 조건");
-      } else if (weakest?.key === "price") {
-        conditionalChecks.push("주변 단지와의 가격 비교");
-      } else if (weakest?.key === "market") {
-        conditionalChecks.push("거래 유동성");
-      }
-      if (["weak", "illiquid"].includes(liquidity?.band)) conditionalChecks.push("하락기 거래");
-      else if (liquidity?.band === "fair") conditionalChecks.push("하락기 매도 가능성");
-      else if (liquidity?.band === "no_downturn") conditionalChecks.push("하락기 거래 자료");
-      const uniqueChecks = [...new Set(conditionalChecks)].slice(0, 2);
-      const conditionalAction = uniqueChecks.length >= 2
-        ? `${zpJosa(uniqueChecks[0], "과", "와")} ${zpJosa(uniqueChecks[1], "을", "를")} 확인하세요`
-        : uniqueChecks.length === 1
-          ? `${zpJosa(uniqueChecks[0], "을", "를")} 확인하세요`
-          : "약한 항목을 확인하세요";
-      const conditionalStrength = locationGood && marketGood
-        ? priceGood ? "가격·단지 조건·최근 흐름은 좋지만," : "단지 조건과 최근 흐름은 좋지만,"
-        : locationGood
-          ? priceGood ? "가격과 단지 조건은 좋지만," : "단지 조건은 좋지만,"
-          : marketGood
-            ? priceGood ? "가격과 최근 흐름은 좋지만," : "최근 흐름은 좋지만,"
-            : priceGood ? "가격은 적정하지만," : "볼 만한 근거는 있지만,";
-
+      // 조건부 제목은 강점과 부족한 축만 짧게 대비한다. 금액·실행 조건은 넣지 않는다.
+      const partRatio = weakest ? zpPartRatio(weakest) : NaN;
+      const partMissing = weakest?.status === "missing" || weakest?.status === "insufficient"
+        || !Number.isFinite(partRatio);
+      const conditionalReason = weakest?.key === "market"
+        ? marketConclusion
+        : weakest?.key === "product"
+          ? Number.isFinite(age) && age >= 20 ? "오래된 연식은 약점이에요"
+            : partMissing ? "단지 규모·연식 자료가 부족해 상품성은 판단할 수 없어요"
+            : partRatio < .55 ? "단지 규모·연식 조건은 아쉬워요" : "단지 규모·연식 조건은 보통이에요"
+          : weakest?.key === "demand"
+            ? partMissing ? "입지·교육 자료가 부족해 판단할 수 없어요"
+              : partRatio < .55 ? "입지·교육 조건은 아쉬워요" : "입지·교육 조건은 보통이에요"
+            : weakest?.key === "price"
+              ? priceTier === 2 ? "최근 실거래는 적정가격보다 비싸요"
+                : partMissing ? "비교 자료가 부족해 비교 단지 대비 가격은 판단할 수 없어요"
+                : partRatio < .55 ? "비교 단지 대비 가격 조건은 아쉬워요" : "비교 단지 대비 가격 조건은 보통이에요"
+              : locationConclusion;
       if (verdict?.partial) {
-        if (tone === "conditional") return "조건부로 매수 검토할 만해요. 단지 조건은 좋지만 가격과 최근 흐름은 더 확인하세요";
+        if (tone === "conditional") return "단지 조건은 좋지만 거래가 적어 최근 흐름은 판단할 수 없어요";
         if (tone === "hold") return "지금은 관망하세요. 단지 조건은 보통이고 거래가 더 필요해요";
         return "다른 단지를 먼저 검토하세요. 단지 조건이 약하고 거래도 적어요";
       }
       if (verdict?.peakGuard) {
         return verdict.peakGuard.atPeak
-          ? "매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격은 2년 고점권이에요"
-          : "매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격이 최근 빠르게 올랐어요";
+          ? "조건부로 매수 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 고점권 가격은 부담이에요"
+          : "조건부로 매수 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 빠르게 오른 가격은 부담이에요";
       }
       if (tone === "yes") return `매수 후보로 우선 검토할 만해요. ${positiveReason}`;
       if (tone === "conditional") {
-        if (weakest?.key === "product" && Number.isFinite(age) && age >= 20) {
-          return `조건부로 매수 검토할 만해요. ${conditionalStrength} 구축이라는 점은 감안하세요`;
+        // 단지 조건이 좋아도 시장 신호가 45~69점이면 매수 시점의 근거는 부족하다.
+        if (locationGood && Number.isFinite(signal) && signal >= 45 && signal < 70) {
+          return "조건부로 매수 검토할 만해요. 단지 조건은 좋지만 최근 시장 흐름은 아직 부족해요";
         }
-        return `조건부로 매수 검토할 만해요. ${conditionalStrength} ${conditionalAction}`;
+        return `조건부로 매수 검토할 만해요. 최근 흐름은 좋지만 ${conditionalReason}`;
       }
       if (tone === "hold") {
         const reason = locationGood
           ? "단지 조건은 좋지만 최근 흐름이 약해요"
           : Number.isFinite(location) && location >= 50
             ? "단지 조건과 최근 흐름이 충분히 받쳐주지 않아요"
-            : "단지 조건이 아쉽고 최근 흐름도 더 확인해야 해요";
+            : "단지 조건이 아쉽고 최근 흐름도 약해요";
         return `지금은 매수를 서두르지 마세요. ${priceTier === 2 ? "최근 실거래가 적정가격보다 비싸고, " : ""}${reason}`;
       }
       if (tone === "risk") return "다른 단지를 먼저 검토하세요. 단지 조건과 최근 흐름이 모두 약해요";
@@ -20775,7 +21010,7 @@
 
       const s = item?.signals || {};
       const isLeader = Boolean(s.isRegionalLeader || s.isDistrictLeader || item?.isRegionalLeader || item?.isDistrictLeader);
-      return isLeader ? "지역 대표 단지이지만 매수 판단 자료를 더 확인해야 해요" : "집픽 분석 결과를 더 확인해 주세요";
+      return isLeader ? "지역 대표 단지이지만 자료가 부족해 매수 판단을 보류해요" : "자료가 부족해 매수 판단을 보류해요";
     }
 
 
@@ -21043,6 +21278,7 @@
     const ZP_LOCATION_ROWS = ["단지·입지<br>65점↑", "단지·입지<br>50~64", "단지·입지<br>49점↓"];
 
     function zippickMatrixTableHtml(item, verdict = null) {
+      if (verdict?.common) return zippickCommonDecisionBasisHtml(verdict);
       const loc = zpNum(item?.locationScore?.score);
       const sig = zpNum(item?.signals?.score);
       const hasBoth = Number.isFinite(loc) && Number.isFinite(sig);
@@ -21220,8 +21456,14 @@
       const volume = turnover > 1.05 ? "up" : turnover < 0.95 ? "down" : "flat";
       if (price === "up" && Number.isFinite(recent3) && recent3 < -0.05) return {
         summary:`6개월 가격은 올랐지만 최근 3개월은 내렸어요. 거래는 ${volume === "up" ? "늘었어요" : volume === "down" ? "줄었어요" : "비슷해요"}`,
-        heading:`최근 시장 흐름은 아쉬워요. 최근 가격이 꺾였고 거래도 ${volume === "up" ? "늘었지만" : volume === "down" ? "줄어" : "비슷해"} 매수를 서두르지 마세요`,
+        heading:"최근 시장 흐름은 아쉬워요. 6개월 기준으로는 상승했지만 최근 3개월은 하락했어요",
         action:"최근 가격이 다시 오르는지 확인한 뒤 매물을 고르세요",
+      };
+      if (price === "down" && Number.isFinite(recent3) && recent3 > 0.05) return {
+        summary:"6개월 기준으로는 하락했지만 최근 3개월은 반등했어요",
+        heading:"최근 시장 흐름은 보통이에요. 6개월 기준으로는 하락했지만 최근 3개월은 반등했어요",
+        barReason:`최근 6개월 가격은 그 전 6개월보다 ${zpPct(Math.abs(momentum))} 내렸지만, 최근 3개월은 그 전 3개월보다 ${zpPct(recent3)} 올랐어요. 반등이 이어지는지 다음 거래를 확인하세요.`,
+        action:"최근 반등이 이어지는지 다음 거래 가격과 거래량을 확인하세요",
       };
       if (price === "up" && volume === "up") return {
         summary:"가격과 거래가 함께 늘었어요",
@@ -21229,7 +21471,7 @@
         action:"거래가 활발해도 최근 실거래보다 비싼 매물은 가격을 따져보세요",
       };
       if (price === "up" && volume === "down") return {
-        summary:"거래는 줄고 가격만 올라 지금 사기엔 불리해요",
+        summary:"거래는 줄고 가격만 올랐어요",
         barReason:`최근 6개월 가격은 ${zpPct(momentum)} 올랐지만 거래 건수는 ${Math.round((1 - turnover) * 100)}% 줄었어요(${turnover.toFixed(1)}배). 가격 상승만으로 매수에 유리하다고 볼 수 없으니 최근 실거래보다 비싼 매물은 피하세요.`,
         shortlistReason:"단지 조건은 볼 만하지만 거래가 줄어 높은 가격은 피해야 해요",
         heading:"최근 시장 흐름은 아쉬워요. 가격은 올랐지만 거래가 줄었어요",
@@ -21248,7 +21490,7 @@
       };
       if (price === "down") return {
         summary:volume === "up" ? "가격은 내렸지만 거래는 늘었어요" : "가격은 내렸고 거래는 비슷해요",
-        heading:"최근 시장 흐름은 아쉬워요. 가격이 내리고 있어요",
+        heading:"최근 시장 흐름은 아쉬워요. 최근 6개월 가격이 그 전 6개월보다 낮아요",
         action:"최근 거래 가격이 더 내리는지 확인하세요",
       };
       return {
@@ -21260,6 +21502,7 @@
 
     function zippickSignalHeading(item, verdict) {
       const market = zippickMarketVerdict(item);
+      if (verdict?.common) return market.summary;
       if (verdict?.peakGuard && market.summary === "가격과 거래가 함께 늘었어요") {
         return verdict.peakGuard.atPeak
           ? "최근 시장 흐름은 좋아요. 가격과 거래가 함께 늘었지만, 가격은 2년 고점권이에요"
@@ -21277,7 +21520,11 @@
       const volumeChange = (turnover - 1) * 100;
       const volume = volumeChange > 5 ? `${Math.round(volumeChange)}% 늘었어요`
         : volumeChange < -5 ? `${Math.round(Math.abs(volumeChange))}% 줄었어요` : "비슷했어요";
-      return `최근 6개월 가격은 ${price} 거래 건수는 ${volume}. 그 전 6개월과 비교했어요.`;
+      const recent3 = zpNum(item?.signals?.recent3Pct);
+      const reversal = Number.isFinite(recent3) && Math.abs(momentum) > .05 && Math.abs(recent3) > .05
+        && Math.sign(momentum) !== Math.sign(recent3)
+        ? ` 다만 최근 3개월 가격은 그 전 3개월보다 ${Math.abs(recent3).toFixed(1)}% ${recent3 > 0 ? "올랐어요" : "내렸어요"}.` : "";
+      return `최근 6개월 가격은 ${price} 거래 건수는 ${volume}. 그 전 6개월과 비교했어요.${reversal}`;
     }
 
     function zippickStrengthBenefit(item, part) {
@@ -21544,22 +21791,61 @@
     function zippickHasPriceComparison(item) {
       const comparison = item?.priceComparison;
       return comparison?.status === "ready"
-        && Array.isArray(comparison.peers) && comparison.peers.length >= 2
+        && Array.isArray(comparison.peers) && comparison.peers.length >= 1
         && zpNum(comparison.averagePriceEok) > 0
-        && Number.isFinite(zpNum(comparison.shiftPp));
+        && (comparison.method === "simple" || Number.isFinite(zpNum(comparison.shiftPp)));
     }
 
-    // 가격 비교는 '주변 비슷한 단지보다 싼가 비싼가' 하나만 답한다.
+    // 실제로 사용한 가장 넓은 선정 단계. 0 가까운 곳, 1 같은 구, 2 이상은 세대수·연식 조건도 넓힌 경우다.
+    function zippickPriceSelectionTier(comparison) {
+      return Math.max(comparison.scope === "district" ? 1 : 0, ...(comparison.peers || []).map(peer => Number(peer.tier) || 0));
+    }
+
+    // 제목에는 무엇과 비교했는지 사실대로 쓴다. 세대수·연식 조건을 넓혔으면 '비슷한'이라고 하지 않는다.
+    function zippickPricePeerLabel(comparison) {
+      const similar = zippickPriceSelectionTier(comparison) < 2 ? "비슷한 " : "";
+      return `${String(comparison.region || "같은 구")} ${similar}단지 ${(comparison.peers || []).length}곳`;
+    }
+
+    // 제목은 비교 대상, 기준, 달라진 정도를 한 문장으로 말한다.
+    function zippickPriceHeading(comparison, position) {
+      const peerLabel = zippickPricePeerLabel(comparison);
+      const word = position === "low" ? "싸" : "비싸";
+      if (comparison.method === "simple") {
+        if (position === "similar") return `${peerLabel}과 가격이 비슷해요`;
+        const size = Math.round(Math.abs(zpNum(comparison.differencePct)));
+        return Number.isFinite(size) && size >= 1 ? `${peerLabel}보다 ${size}% ${word}요` : `${peerLabel}보다 ${word}요`;
+      }
+      if (position === "similar") return `${peerLabel}과 비교하면 평소 수준이에요`;
+      // 단순 뺄셈이 아니라 이 단지의 상대 가격이 평소보다 몇 % 달라졌는지 쓴다. 판정과 방향이 다르면 숫자를 뺀다.
+      const change = ((100 + zpNum(comparison.currentGapPct)) / (100 + zpNum(comparison.usualGapPct)) - 1) * 100;
+      const size = Math.round(Math.abs(change));
+      const matches = Number.isFinite(change) && size >= 1 && (change < 0) === (position === "low");
+      return `${peerLabel}과 비교하면 평소보다 ${matches ? `${size}% ` : ""}${word}졌어요`;
+    }
+
+    // 가격 비교는 '비교 단지보다 싼가 비싼가' 하나만 답한다.
     // 동네 차이는 평소 가격 차이로 감안하고, 최근 거래 한 건의 판정은 위 집픽 밴드가 맡는다.
     function zippickPriceGapSentence(comparison) {
-      const usual = zpNum(comparison.usualGapPct), now = zpNum(comparison.currentGapPct);
-      const pct = value => Math.round(Math.abs(value));
-      const usualText = Math.abs(usual) < 2 ? "비교 단지와 원래 비슷한 가격대예요."
-        : `비교 단지보다 원래 ${pct(usual)}% 정도 ${usual < 0 ? "싼" : "비싼"} 단지예요.`;
-      const nowText = Math.abs(now) < 1 ? "지금은 비슷해요." : `지금은 ${pct(now)}% ${now < 0 ? "싸요" : "비싸요"}.`;
-      const verdict = comparison.position === "low" ? "평소보다 싸졌어요."
-        : comparison.position === "high" ? "평소보다 비싸졌어요." : "평소 수준이에요.";
-      return `${usualText} ${nowText} ${verdict}`;
+      if (comparison.method === "simple") {
+        return "평소 가격 차이를 계산할 거래가 적어 지금 가격만 비교했어요. 동네 차이는 감안하지 못했어요.";
+      }
+      const now = zpNum(comparison.currentGapPct);
+      const gaps = (comparison.yearlyGaps || []).map(entry => zpNum(entry.gapPct)).filter(Number.isFinite);
+      const sizes = gaps.map(value => Math.round(Math.abs(value)));
+      const low = Math.min(...sizes), high = Math.max(...sizes);
+      const range = low === high ? `${low}%` : `${low}~${high}%`;
+      const allCheaper = gaps.length && gaps.every(value => value <= -1);
+      const allPricier = gaps.length && gaps.every(value => value >= 1);
+      const nowText = Math.abs(now) < 1 ? "비교 단지와 비슷해요" : `${Math.round(Math.abs(now))}% ${now < 0 ? "싸요" : "비싸요"}`;
+      if (!allCheaper && !allPricier) return `연도마다 비교 단지보다 싸기도 하고 비싸기도 했어요. 지금은 ${nowText}.`;
+      const steady = comparison.position === "similar" && Math.abs(now) >= 1 && (now < 0) === allCheaper;
+      const base = `해마다 비교 단지보다 ${range} ${allCheaper ? (steady ? "쌌고" : "쌌는데") : (steady ? "비쌌고" : "비쌌는데")}, 지금${steady ? "도" : "은"} ${nowText}.`;
+      const usual = zpNum(comparison.usualGapPct);
+      const sameDirection = Math.abs(now) >= 1 && (now < 0) === allCheaper;
+      if (steady || !sameDirection || !Number.isFinite(usual)) return base;
+      const widened = (comparison.position === "high") === allPricier;
+      return `${base} 평소 ${Math.round(Math.abs(usual))}%보다 차이가 ${widened ? "커졌어요" : "줄었어요"}.`;
     }
 
     function zippickPriceAssessment(item) {
@@ -21567,12 +21853,12 @@
       if (comparison && typeof comparison === "object") {
         if (comparison.status === "loading") return {
           level:"확인 중",
-          heading:"주변 단지 거래를 확인하고 있어요",
+          heading:"비교 단지 거래를 확인하고 있어요",
           loading:true,
         };
         if (!zippickHasPriceComparison(item)) return {
           level:"판단 보류",
-          heading:"주변 시세와 비교할 자료가 부족해 판단할 수 없어요",
+          heading:"비교할 단지 자료가 부족해 판단할 수 없어요",
           subheading:String(comparison.reason || "비교 단지의 거래를 확인하지 못했어요."),
         };
         const position = comparison.position === "low" ? "low" : comparison.position === "high" ? "high" : "similar";
@@ -21580,18 +21866,14 @@
           ready:true,
           position,
           level:{ low:"싸요", similar:"적정", high:"비싸요" }[position],
-          heading:{
-            low:"비교 단지에 비해 평소보다 싸졌어요",
-            similar:"비교 단지와의 가격 차이는 평소 수준이에요",
-            high:"비교 단지에 비해 평소보다 비싸졌어요",
-          }[position],
+          heading:zippickPriceHeading(comparison, position),
           subheading:zippickPriceGapSentence(comparison),
           lowData:comparison.lowData === true,
         };
       }
       return {
         level:"판단 보류",
-        heading:"주변 시세와 비교할 자료가 부족해 판단할 수 없어요",
+        heading:"비교할 단지 자료가 부족해 판단할 수 없어요",
         subheading:"비교 단지의 거래를 확인하지 못했어요.",
       };
     }
@@ -21771,6 +22053,7 @@
     }
 
     function zippickDecisionHtml(item, verdict) {
+      if (verdict?.common) return zippickCommonDecisionHtml(item, verdict);
       // 매수 판단은 단지와 시장 자료만 사용한다. 추가 자금은 마련한다고 가정한다.
       const location = zpNum(item?.locationScore?.score);
       const decisions = {
@@ -21852,45 +22135,101 @@
       if (!assessment.ready) return "";
       const ownName = candidateDisplayName(item) || "이 단지";
       const eok = value => `${(Math.round(zpNum(value) * 10) / 10).toLocaleString("ko-KR")}억`;
-      const diffText = value => Math.abs(value) < 1 ? "비슷" : `${value > 0 ? "+" : "−"}${Math.round(Math.abs(value))}%`;
-      // 평소 대비 변화(±9%p)를 막대 위 한 점으로 보여준다. 가운데 1/3(±3%p)이 '평소 수준'이다.
-      const shiftValue = zpNum(comparison.shiftPp);
-      const markerLeft = Math.max(4, Math.min(96, 50 + shiftValue / 9 * 50));
-      const markerText = Math.abs(shiftValue) < 0.5 ? "평소 수준"
-        : `평소보다 ${Math.abs(shiftValue).toFixed(1)}%p ${shiftValue < 0 ? "쌈" : "비쌈"}`;
-      const verdictHtml = `<div class="zpr-price-gauge is-${assessment.position}" role="img" aria-label="${esc(`평소 가격 차이 대비 ${markerText}`)}">
-          <div class="zpr-price-gauge-track"><span class="zpr-price-gauge-flag" style="left:${markerLeft.toFixed(1)}%">${esc(markerText)}</span><span class="zpr-price-gauge-dot" style="left:${markerLeft.toFixed(1)}%"></span></div>
-          <div class="zpr-price-gauge-ticks"><span>평소보다 쌈</span><span>평소 수준</span><span>평소보다 비쌈</span></div>
-        </div>`;
-      const peers = comparison.peers || [];
-      const rows = [
-        `<tr class="is-own"><th scope="row">${esc(ownName)}<small>${esc(item.legalDong || "")}</small></th><td>${esc(eok(comparison.averagePriceEok))}</td><td>-</td></tr>`,
-        ...peers.map(peer => `<tr><th scope="row">${esc(peer.name || "비교 단지")}<small>${esc([peer.legalDong, peer.lowData ? `최근 ${peer.transactionCount}건` : ""].filter(Boolean).join(" · "))}</small></th>
-          <td>${esc(eok(peer.averagePriceEok))}</td><td>${esc(diffText(zpNum(peer.diffPct)))}</td></tr>`),
+      const isSimple = comparison.method === "simple";
+      const gapWord = value => Math.abs(value) < 1 ? "비슷" : `${Math.round(Math.abs(value))}% ${value < 0 ? "쌈" : "비쌈"}`;
+      const nowGap = zpNum(isSimple ? comparison.differencePct : comparison.currentGapPct);
+      const usualGap = zpNum(comparison.usualGapPct);
+      // 해마다 비교 단지보다 얼마나 싸거나 비쌌는지 보여준다. 가운데 선이 비교 단지 평균이다.
+      const yearly = isSimple ? [] : (comparison.yearlyGaps || []);
+      const chartColumns = [
+        ...yearly.map(entry => ({ label:`${String(entry.year).slice(2)}년`, value:zpNum(entry.gapPct), thin:entry.lowData === true })),
+        { label:"지금", value:nowGap, now:true },
       ];
-      const scopeText = "1km 안의 비슷한 단지와 비교했어요.";
+      // 값이 있는 쪽만 그린다. 모두 싸면 아래쪽만, 모두 비싸면 위쪽만 차지한다.
+      const chartValues = [...chartColumns.map(column => column.value), usualGap].filter(Number.isFinite);
+      const chartUp = Math.max(0, ...chartValues), chartDown = Math.max(0, ...chartValues.map(value => -value));
+      const scale = 96 / Math.max(15, chartUp + chartDown);
+      const chartZero = chartUp * scale + (chartUp > 0 ? 22 : 2);
+      const chartHeight = chartZero + chartDown * scale + (chartDown > 0 ? 22 : 2);
+      const peers = comparison.peers || [];
+      const verdictHtml = yearly.length ? `<div class="zpr-price-years is-${assessment.position}" role="img" aria-label="${esc(`비교 단지 평균 대비 ${chartColumns.map(column => `${column.label} ${gapWord(column.value)}`).join(", ")}`)}">
+          ${chartUp > 0 ? '<span class="zpr-price-years-side">↑ 비교 단지보다 비쌈</span>' : ""}
+          <div class="zpr-price-years-plot" style="height:${chartHeight.toFixed(1)}px">
+            <i class="zpr-price-years-zero" style="top:${chartZero.toFixed(1)}px"></i>
+            <i class="zpr-price-years-usual" style="top:${(chartZero - usualGap * scale).toFixed(1)}px"></i>
+            ${chartColumns.map(column => {
+              const height = Math.max(Math.abs(column.value) * scale, 2);
+              const barTop = column.value >= 0 ? chartZero - height : chartZero;
+              const labelTop = column.value >= 0 ? barTop - 19 : barTop + height + 2;
+              return `<div class="zpr-price-years-col${column.now ? " is-now" : ""}${column.thin ? " is-thin" : ""}">
+                <i style="top:${barTop.toFixed(1)}px;height:${height.toFixed(1)}px"></i>
+                <b style="top:${labelTop.toFixed(1)}px">${Math.abs(column.value) < 1 ? "비슷" : `${Math.round(Math.abs(column.value))}%`}</b>
+                <span>${column.label}</span>
+              </div>`;
+            }).join("")}
+          </div>
+          <div class="zpr-price-years-foot"><span>${chartDown > 0 ? "↓ 비교 단지보다 쌈" : ""}</span><span>실선 비교 단지${peers.length > 1 ? " 평균" : ""} · 점선 평소${yearly.some(entry => entry.lowData) ? " · 흐린 막대는 거래가 적은 해" : ""}</span></div>
+        </div>` : "";
+      const buildingFacts = (dong, households, year, distance, tradeCount, isPeer = false) => [
+        dong,
+        zpNum(households) > 0 ? `${Number(households).toLocaleString("ko-KR")}세대` : "",
+        zpNum(year) > 0 ? `${year}년 준공` : "",
+        isPeer ? Number.isFinite(zpNum(distance)) && zpNum(distance) >= 0
+          ? `직선 ${zpNum(distance) >= 1000 ? `${(zpNum(distance) / 1000).toFixed(1)}km` : `${Math.round(zpNum(distance)).toLocaleString("ko-KR")}m`}`
+          : "거리 자료 없음" : "",
+        tradeCount ? `최근 ${tradeCount}건` : "",
+      ].filter(Boolean).join(" · ");
+      // 표도 판정과 같은 말을 쓴다. 이 단지가 각 비교 단지보다 평소·지금 얼마나 싼지 보여준다.
+      const peerGapText = peer => {
+        const now = Number.isFinite(zpNum(peer.currentRatio)) ? zpNum(peer.currentRatio) - 100 : (100 / (1 + zpNum(peer.diffPct) / 100)) - 100;
+        if (isSimple) return gapWord(now);
+        const usual = zpNum(peer.usualRatio) - 100;
+        // 방향이 같으면 한 번만 적어 휴대폰에서도 한 줄에 들어가게 한다.
+        return Math.abs(usual) >= 1 && Math.abs(now) >= 1 && (usual < 0) === (now < 0)
+          ? `${Math.round(Math.abs(usual))}% → ${gapWord(now)}`
+          : `${gapWord(usual)} → ${gapWord(now)}`;
+      };
+      const rows = [
+        `<tr class="is-own"><th scope="row">${esc(ownName)}<small>${esc(buildingFacts(item.legalDong, item.households, item.buildYear))}</small></th><td>${esc(eok(comparison.averagePriceEok))}</td><td></td></tr>`,
+        ...peers.map(peer => `<tr><th scope="row">${esc(peer.name || "비교 단지")}<small>${esc(buildingFacts(peer.legalDong, peer.households, peer.approvalYear, peer.distanceMeters, peer.lowData ? peer.transactionCount : 0, true))}</small></th>
+          <td>${esc(eok(peer.averagePriceEok))}</td><td>${esc(peerGapText(peer))}</td></tr>`),
+      ];
+      const region = String(comparison.region || item.region || "같은 구");
+      const scopeNotes = [
+        comparison.scope === "district"
+          ? `가까운 곳에 비교할 단지가 부족해 ${region}${/군$/.test(region) ? "으로" : "로"} 넓혔어요.`
+          : "가까운 단지와 비교했어요.",
+        comparison.conditionsRelaxed ? "세대수나 연식 차이가 큰 단지도 포함했어요." : "",
+        comparison.areaAdjusted ? "면적이 달라 같은 면적 가격으로 환산했어요." : "",
+      ].filter(Boolean).join(" ");
       const excluded = (comparison.excludedPeers || []).filter(Boolean);
       const shift = zpNum(comparison.shiftPp);
       const ratio = value => `${Math.round(zpNum(value))}%`;
-      const shiftText = value => `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toFixed(1)}%p`;
-      const criteria = comparison.selectionCriteria || {};
+      const shiftText = value => `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toFixed(1)}`;
+      // 실제로 사용한 가장 넓은 단계를 그대로 알려 준다.
+      const selectionTier = zippickPriceSelectionTier(comparison);
+      const selectionRule = [
+        "1km 안(위치를 모르면 같은 동)에서 세대수 차이 50% 이내, 준공연도 차이 10년 이내",
+        `${region}에서 세대수 차이 50% 이내, 준공연도 차이 10년 이내`,
+        `${region}에서 세대수가 이 단지의 30% 이상, 준공연도 차이 15년 이내`,
+        `${region}에서 100세대 이상`,
+      ][selectionTier];
       const period = Number(comparison.periodMonths) || 6;
-      const historyMonths = Number(comparison.historyMonths) || 42;
-      const historyText = historyMonths % 12 ? `${Math.floor(historyMonths / 12)}년 반` : `${historyMonths / 12}년`;
       return `${verdictHtml}
-        <table class="zpr-price-peer-table" aria-label="주변 단지 시세 비교">
-          <thead><tr><th scope="col">${esc(String(comparison.areaLabel || "같은 면적").replace(/^전용\s*/u, "전용 "))} 최근 ${period}개월</th><th scope="col">시세</th><th scope="col">${esc(ownName)} 대비</th></tr></thead>
+        <table class="zpr-price-peer-table" aria-label="비교 단지 시세">
+          <thead><tr><th scope="col">${esc(String(comparison.areaLabel || "같은 면적").replace(/^전용\s*/u, "전용 "))} 최근 ${period}개월</th><th scope="col">시세</th><th scope="col">${isSimple ? "이 단지가 지금" : "이 단지가 평소 → 지금"}</th></tr></thead>
           <tbody>${rows.join("")}</tbody>
         </table>
-        <p class="zpr-score-note">${comparison.periodWidened ? `이 단지의 최근 6개월 거래가 적어 최근 ${period}개월로 봤어요. ` : ""}${esc(scopeText)} 동네 차이는 지난 ${esc(historyText)} 동안의 평소 가격 차이로 감안했어요.${excluded.length ? ` 최근 거래가 적어 뺀 단지: ${esc(excluded.join("·"))}.` : ""}</p>
+        <div class="zpr-price-selection"><strong>비교 단지는 이렇게 골랐어요</strong><p>${esc(selectionRule)}인 단지 중 최근 거래가 있는 ${peers.length}곳이에요. 가격은 보지 않았어요.</p></div>
+        <p class="zpr-score-note">${comparison.periodWidened ? `이 단지의 최근 6개월 거래가 적어 최근 ${period}개월로 봤어요. ` : ""}${esc(scopeNotes)}${isSimple ? "" : " 동네 차이는 지난 연도별 가격 차이로 감안했어요."}${excluded.length ? ` 최근 거래가 적어 뺀 단지: ${esc(excluded.join("·"))}.` : ""}</p>
         <details class="zpr-details zpr-price-method"><summary>계산 근거 보기</summary>
-          <p>단지마다 '${esc(ownName)} 가격 ÷ 비교 단지 가격'을 구해요. 최근 ${period}개월 비율이 평소(그 전 ${esc(historyText)}의 중간값)보다 3%p 넘게 오르면 비싸요, 3%p 넘게 내리면 싸요로 봐요.</p>
+          ${isSimple ? `<p>평소 가격 차이를 계산할 거래가 적어요. 그래서 최근 ${period}개월 거래가격의 중간값만 비교해요. 5%보다 크게 차이 나면 비싸요 또는 싸요로 봐요. 이 비교는 종합 점수와 별점에 넣지 않아요.</p>` : `<p>단지마다 '${esc(ownName)} 가격 ÷ 비교 단지 가격'을 구해요. 해마다 비율을 구해 그 중간값을 평소로 봐요. 최근 ${period}개월 비율이 평소보다 3포인트 넘게 오르면 비싸졌다고, 3포인트 넘게 내리면 싸졌다고 봐요.</p>
           <table class="zpr-price-peer-table" aria-label="비교 단지별 평소와 지금 가격 비율">
-            <thead><tr><th scope="col">비교 단지</th><th scope="col">평소</th><th scope="col">지금</th><th scope="col">변화</th></tr></thead>
+            <thead><tr><th scope="col">비교 단지</th><th scope="col">평소</th><th scope="col">지금</th><th scope="col">변화(포인트)</th></tr></thead>
             <tbody>${peers.map(peer => `<tr><th scope="row">${esc(peer.name || "")}</th><td>${ratio(peer.usualRatio)}</td><td>${ratio(peer.currentRatio)}</td><td>${shiftText(zpNum(peer.shiftPp))}</td></tr>`).join("")}
               <tr class="is-own"><th scope="row">평균</th><td>${ratio(100 + zpNum(comparison.usualGapPct))}</td><td>${ratio(100 + zpNum(comparison.currentGapPct))}</td><td>${shiftText(shift)}</td></tr></tbody>
-          </table>
-          <p>비교 단지는 가격을 보지 않고 골라요. 1km 이내, 세대수 차이 20% 이내, 준공연도 차이 ${esc(criteria.approvalYearGap || 5)}년 이내인 단지예요. 출처: 국토교통부 실거래 중간값.</p>
+          </table>`}
+          <p>출처: 국토교통부 실거래 중간값.</p>
         </details>`;
     }
 
@@ -21899,7 +22238,7 @@
       const transactions = (item.roneEstimate?.adjustedTransactions || []).slice()
         .filter(row => zpNum(row.originalPriceEok) > 0 && row.dealDate)
         .sort((a, b) => String(b.dealDate).localeCompare(String(a.dealDate))).slice(0, 8);
-      return `<section class="zpr-section" aria-label="주변 시세 비교">
+      return `<section class="zpr-section" aria-label="가격 비교">
         <span class="zpr-kicker" data-zpr-step="가격 비교"></span>
         <div class="zpr-price-summary">
           <h5>${assessment.loading ? '<span class="loading-spinner loading-spinner--small" aria-hidden="true"></span> ' : ""}${esc(assessment.heading)}${assessment.lowData ? ' <span class="zpr-data-badge">자료 적음</span>' : ""}</h5>
@@ -21969,7 +22308,7 @@
 
     function zippickReportPeers(item) {
       if ((item.reportPeerState === "pending" || item.reportPeerState === "loading") && !(item.peers || []).length) return [];
-      const price = zippickPriceCheckBasis(item)?.price;
+      const price = zpNum(candidateHeadlinePrice(item)?.priceEok);
       const area = parseFloat(String(item.displayAreaLabel || item.areaLabel || item.latestDealExclusiveArea || "").replace(/^전용\s*/, ""));
       if (!(price > 0)) return [];
       const sameRegion = row => !item.region || !row.region
@@ -21994,33 +22333,44 @@
       });
       const sameArea = matches.filter(row => {
         const otherArea = parseFloat(String(row.displayAreaLabel || "").replace(/^전용\s*/, ""));
-        return !Number.isFinite(area) || !Number.isFinite(otherArea) || Math.abs(otherArea - area) <= 15;
+        return area > 0 && otherArea > 0 && Math.abs(otherArea / area - 1) <= 0.10;
       });
       const near = sameArea.filter(row => {
         const other = zpNum(row.latestDealPriceEok);
         return Math.abs(other / price - 1) <= 0.25;
       });
-      return (near.length ? near : sameArea).sort((a, b) =>
+      return near.sort((a, b) =>
         Math.abs(zpNum(a.latestDealPriceEok) - price) - Math.abs(zpNum(b.latestDealPriceEok) - price)
       ).slice(0, 3);
     }
 
+    function zippickAlternativeDifferenceHtml(item, peer) {
+      const age = zpNum(item?.buildingAge), otherAge = zpNum(peer?.buildingAge);
+      const size = zpNum(item?.households), otherSize = zpNum(peer?.households);
+      const ageGap = otherAge - age, sizeGap = otherSize - size;
+      const ageText = Number.isFinite(age) && Number.isFinite(otherAge)
+        ? ageGap === 0 ? "같은 연식" : `${Math.abs(ageGap)}년 더 ${ageGap < 0 ? "새 건물" : "오래됨"}` : "연식 미확인";
+      const sizeText = size > 0 && otherSize > 0
+        ? sizeGap === 0 ? "같은 세대수" : `${Math.abs(sizeGap).toLocaleString("ko-KR")}세대 ${sizeGap < 0 ? "적음" : "많음"}` : "세대수 미확인";
+      return `${esc(ageText)}<small>${esc(sizeText)}</small>`;
+    }
+
     function zippickAlternativesHtml(item) {
       const peers = zippickReportPeers(item);
-      const base = zippickPriceCheckBasis(item);
-      const floorLimited = item?.valuation?.status === "ready" && item?.valuation?.floorComparison?.status !== "matched";
+      const base = candidateHeadlinePrice(item);
       const waiting = item.reportPeerState === "pending" || item.reportPeerState === "loading";
       const failed = item.reportPeerState === "error";
-      return `<section class="zpr-section" aria-label="다른 후보와 비교">
-        <span class="zpr-kicker" data-zpr-step="다른 단지 비교"></span><h5>${peers.length ? `같은 지역에서 비교할 단지 ${peers.length}곳을 찾았어요` : waiting ? "비슷한 단지의 최근 거래를 찾고 있어요" : failed ? "비교 단지 정보를 불러오지 못했어요" : "비교할 단지의 최근 거래를 찾지 못했어요"}</h5>
-        ${peers.length ? `<p class="zpr-lead">${floorLimited ? "비슷한 층 거래가 부족해 이 단지의 적정가격은 아직 정하지 못했어요. 아래 단지의 집 크기와 거래 날짜를 함께 보세요." : base ? `이 단지의 가격 기준은 ${esc(transactionMoney(base.price))}입니다. 아래 단지의 집 크기와 거래 날짜도 함께 보세요.` : "현재 단지의 가격 자료를 먼저 확인해 주세요."}</p>` : ""}
-        ${peers.length ? zippickReportTable(["비교 단지", "최근 거래 가격", "규모와 연식"], peers.map(row => {
+      return `<div class="zpr-comparison-block" aria-label="비슷한 가격대의 대안">
+        <p class="zpr-comparison-label">같은 가격대의 다른 선택지</p>
+        <h6>${waiting ? '<span class="loading-spinner loading-spinner--small" aria-hidden="true"></span> ' : ""}${peers.length ? `비슷한 가격대에서 비교할 후보 ${peers.length}곳이 있어요` : waiting ? "비슷한 가격대의 거래를 찾고 있어요" : failed ? "대안 단지 정보를 불러오지 못했어요" : "가격과 면적이 비슷한 대안은 아직 찾지 못했어요"}</h6>
+        <p class="zpr-peer-caption">${base?.priceEok > 0 ? `${esc(item.name || "이 단지")} ${esc(transactionMoney(base.priceEok))} 기준 · 가격 ±25% · 면적 ±10% · 같은 구` : "기준 가격 자료가 부족해요."}</p>
+        ${peers.length ? zippickReportTable(["대안 단지", "최근 실거래", "이 단지와 다른 점"], peers.map(row => {
           const preferredArea = row.latestDealExclusiveArea || parseFloat(String(row.displayAreaLabel || row.areaLabel || "").replace(/^전용\s*/, "")) || "";
           const peerLink = `<button class="zpr-peer-link" type="button" data-zpr-peer-open data-apt-peer-name="${esc(row.name || candidateDisplayName(row))}" data-apt-peer-region="${esc(row.region || "")}" data-apt-peer-display-region="${esc(row.displayRegion || "")}" data-apt-peer-address="${esc(row.address || "")}" data-apt-peer-apartment-id="${esc(row.apartmentId || "")}" data-apt-peer-kapt-code="${esc(row.kaptCode || "")}" data-apt-peer-complex-no="${esc(row.complexNo || "")}" data-apt-peer-legal-dong="${esc(row.legalDong || row.dong || "")}" data-apt-peer-jibun="${esc(row.jibun || "")}" data-apt-peer-households="${esc(row.households || "")}" data-apt-peer-preferred-area="${esc(preferredArea)}" aria-label="${esc(candidateDisplayName(row))} 단지 상세 카드 보기">${esc(candidateDisplayName(row))}</button>`;
-          return [`${peerLink}<small>${esc([row.region,row.legalDong,row.displayAreaLabel].filter(Boolean).join(" · "))}</small>`, `${esc(transactionMoney(zpNum(row.latestDealPriceEok)))}<small>${esc(row.latestDealDate)}</small>`, `${esc(row.households ? `${Number(row.households).toLocaleString("ko-KR")}세대` : "세대수 미확인")}<small>${esc(row.buildingAge ? `${row.buildingAge}년차` : "연식 미확인")}</small>`];
-        })) : waiting ? "" : `<p role="status">${failed ? "리포트를 다시 열어 확인해 주세요." : "같은 구에서 면적이 비슷한 단지의 최근 거래가 없어요."}</p>`}
-        ${peers.length ? `<p class="zpr-score-note">같은 구에서 면적이 비슷한 단지를 먼저 골랐어요. 각 가격의 계산 기간과 집 상태가 달라 금액만으로 더 싼 단지를 정하지 않았어요.</p>` : ""}
-      </section>`;
+          return [`${peerLink}<small>${esc([row.region,row.legalDong,row.displayAreaLabel].filter(Boolean).join(" · "))}</small>`, `${esc(transactionMoney(zpNum(row.latestDealPriceEok)))}<small>${esc(row.latestDealDate)}</small>`, zippickAlternativeDifferenceHtml(item, row)];
+        })) : waiting ? "" : `<p role="status">${failed ? "리포트를 다시 열어 확인해 주세요." : "조건을 넓혀 대안을 채우지 않았어요."}</p>`}
+        ${peers.length ? `<p class="zpr-score-note">가격 비교 판정에는 넣지 않은 단지예요.</p>` : ""}
+      </div>`;
     }
 
     function zippickViewingChecklistHtml(item) {
@@ -22982,18 +23332,7 @@
 
     function candidateZippickReportHtml(item) {
       if (candidateShouldWaitForScores(item)) return candidateScorePendingHtml();
-      const locationScore = zpNum(item?.locationScore?.score);
-      const signalScore = zpNum(item?.signals?.score);
-      const hasLocation = Number.isFinite(locationScore);
-      const hasSignal = Number.isFinite(signalScore);
-      // 고점 보정은 점수를 바꾸지 않는다. 이 리포트의 판정 문구만 낮춘다.
-      const verdict = zippickGuardVerdict(
-        item,
-        zippickPartialVerdict(
-          item,
-          zippickMatrixVerdict(hasLocation ? locationScore : null, hasSignal ? signalScore : null),
-        ),
-      );
+      const verdict = zippickCommonPurchaseVerdict(item);
       const locationBars = zippickLocationBarsHtml(item);
       const signalBars = zippickSignalBarsHtml(item);
       // 별점이 있는 판단 항목을 먼저 보여주고, 비용 계산은 비교 항목 아래에 둔다.
@@ -23019,23 +23358,9 @@
         ${zippickLifestyleChangeHtml(item)}
         ${zippickDevelopmentHtml(item)}
         ${zippickFundingHtml(item)}
-        ${zippickAlternativesHtml(item)}
         ${zippickBreakevenHtml(item)}
+        <section class="zpr-section" aria-label="같은 가격대의 다른 선택지">${zippickAlternativesHtml(item)}</section>
         <details class="zpr-details"><summary>왜 이런 매수 판단이 나왔는지 자세히 보기</summary>
-        <div class="zpr-scores">
-          <div class="zpr-score">
-            <span class="zpr-score-lb">단지·입지</span>
-            <strong class="zpr-score-vl">${hasLocation ? `${esc(Math.round(locationScore))}점` : "판단불가"}</strong>
-            <em class="zpr-score-tag">${esc(item?.locationScore?.label || "")}</em>
-          </div>
-          <div class="zpr-score">
-            <span class="zpr-score-lb">최근 시장 신호</span>
-            <strong class="zpr-score-vl">${hasSignal ? `${esc(Math.round(signalScore))}점` : "측정 불가"}</strong>
-            <em class="zpr-score-tag">${esc(zippickSignalLabel(item))}</em>
-          </div>
-        </div>
-        <p class="zpr-score-note">단지·입지 점수에도 가격과 거래 흐름이 일부 들어가요. 두 점수는 독립된 기준이 아닙니다.</p>
-        ${zippickEvidenceHtml(item)}
         ${zippickMatrixTableHtml(item, verdict)}
         </details>
         <div class="zpr-warn is-limit">
@@ -25087,6 +25412,7 @@
         }
         savePurchasePowerForm();
         invalidatePurchasePower();
+        syncPurchasePowerActionLabels();
       });
     });
     mortgageRateAutoReset.addEventListener("click", () => {
@@ -27926,7 +28252,7 @@
         ? `${displayLabel} 기준으로 예상 매수가와 필요한 자금을 계산하고 있어요…`
         : displayLabel !== "상관없음"
           ? `${displayLabel} 조건으로 예상 매수가와 필요한 자금을 계산하고 있어요…`
-          : "단지 전체 평형 기준으로 계산하고 있어요…";
+          : "대표 면적(84㎡ 우선)을 골라 계산하고 있어요…";
       slot.innerHTML = `${spinnerHtml("default")}${esc(loadingText)}`;
       const requestToken = String(Number(card.dataset.aptAreaRequest || 0) + 1);
       card.dataset.aptAreaRequest = requestToken;
@@ -28044,7 +28370,11 @@
       aptReportMeta.hidden = true;
       aptReportContent.innerHTML = `<div class="apt-result-empty">최근 실거래로 리포트를 만들고 있어요…</div>`;
       if (candidate) {
-        const report = { ...candidate, peers:[], reportPeerState:"pending", priceComparison:{status:"loading"} };
+        const report = candidate;
+        // 면적을 바꾼 뒤에는 이전 리포트의 비교 결과를 재사용하지 않는다.
+        report.peers = [];
+        report.reportPeerState = "pending";
+        report.priceComparison = {status:"loading"};
         currentAptReportItem = report;
         aptReportTitle.innerHTML = candidateDetailTitleHtml(report, name);
         const metaParts = [
@@ -28059,7 +28389,8 @@
         scheduleZippickReportMaps(aptReportContent);
         setAptReportDownloadReady(true);
         const rerender = () => {
-          if (!aptReportSheet.hidden) {
+          if (requestId === aptReportRequestId && currentAptReportItem === report && !aptReportSheet.hidden) {
+            refreshAptSearchTrendCandidate(report);
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
             scheduleZippickReportMaps(aptReportContent);
           }
@@ -28097,7 +28428,7 @@
         scheduleZippickReportMaps(aptReportContent);
         setAptReportDownloadReady(true);
         const rerender = () => {
-          if (!aptReportSheet.hidden) {
+          if (requestId === aptReportRequestId && currentAptReportItem === report && !aptReportSheet.hidden) {
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
             scheduleZippickReportMaps(aptReportContent);
           }
@@ -28570,7 +28901,7 @@
     restorePurchasePowerForm();
     void loadPurchasePowerConfig();
     applyEstimatedMortgageRate();
-    purchasePowerAdvanced.open = true;
+    purchasePowerAdvanced.open = false;
     syncPurchasePowerActionLabels();
     purchasePowerAdvancedTrackingReady = true;
     syncMaritalFields();

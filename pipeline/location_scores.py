@@ -564,11 +564,12 @@ def _price_rank_burden_score(row, signals):
         shift = _float_or_none(comparison.get("shiftPp"))
         count = len(comparison.get("peers") or [])
         if shift is None or not count:
-            return None, "비교 단지와의 평소 가격 차이를 확인하지 못했어요."
+            # 지금 가격만 비교한 결과는 동네 차이가 섞여 있어 점수에 넣지 않는다.
+            return None, "비교 단지와의 평소 가격 차이를 계산할 거래가 적어 점수에 넣지 않았어요."
         position = comparison.get("position")
         score = 90 if position == "low" else 40 if position == "high" else 72
         direction = "싸졌음" if shift < 0 else "비싸졌음" if shift > 0 else "그대로"
-        return score, f"비교 단지 {count}곳과의 가격 차이가 평소보다 {abs(shift):.1f}%p {direction}"
+        return score, f"비교 단지 {count}곳과의 가격 차이가 평소보다 {abs(shift):.1f}포인트 {direction}"
     price_rank = row.get("_locationPriceRank") or {}
     if price_rank:
         score = _price_burden_score(price_rank.get("topPercent") or 100)
@@ -898,7 +899,7 @@ def _purchase_score_parts(row, entity, signals):
     comparison = row.get("priceComparison")
     price_rank_metric = _metric(
         "price_rank",
-        "주변 단지 가격 비교" if isinstance(comparison, dict) else "지역 가격 순위",
+        "비교 단지 가격 비교" if isinstance(comparison, dict) else "지역 가격 순위",
         10,
         price_rank_score,
         price_rank_reason,

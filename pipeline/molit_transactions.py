@@ -42,8 +42,13 @@ PRICE_BAND_CACHE_SCHEMA_VERSION = 18
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 # 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
 # 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
+# 인천은 2026-07-01 행정구역 개편으로 중구·동구·서구가 제물포구·영종구·서해구·검단구로
+# 바뀌었다. 국토부 API는 과거 거래까지 새 코드로 옮겨서 옛 코드로는 한 건도 오지 않는다.
 LAWD_CODE_SUCCESSORS = {
     "41590": ("41591", "41593", "41595", "41597"),
+    "28110": ("28125", "28155"),  # 중구 → 제물포구(내륙), 영종구(영종도)
+    "28140": ("28125",),  # 동구 → 제물포구
+    "28260": ("28275", "28290"),  # 서구 → 서해구(청라·가정·석남), 검단구(당하·원당·마전)
 }
 _CIRCUIT_STATE = {
     TRANSACTION_KIND_APARTMENT: {"disabledUntil": 0, "lastError": ""},
@@ -662,6 +667,17 @@ def _items_for_source_row(lawd_cd, deal_ymd, items, row, dong_only=False):
     if dong:
         return [item for (item_dong, _), values in address_index.items() if item_dong == dong for item in values]
     return items
+
+
+def _relocated_candidates(lawd_cd, deal_ymd, items, row, name):
+    """옮겨진 구 코드의 거래 중 이름이 정확히 같거나 법정동·지번이 같은 거래를 모은다.
+
+    화성시처럼 주소까지 바뀐 단지는 이름으로, 인천처럼 구 코드만 바뀐 단지는 주소로 찾는다.
+    """
+    by_name = _items_for_exact_names(lawd_cd, deal_ymd, items, [name, *_row_name_values(row)])
+    by_address = _items_for_source_row(lawd_cd, deal_ymd, items, row) if _source_jibun(row) else []
+    seen = set()
+    return [item for item in [*by_name, *by_address] if not (id(item) in seen or seen.add(id(item)))]
 
 
 def _items_for_exact_names(lawd_cd, deal_ymd, items, names):
@@ -1481,7 +1497,16 @@ def _matches_transaction(row, item, name, allow_relocated=False):
     # 행정구역 분리와 함께 법정동·지번이 바뀐 단지는 구 코드가 달라진
     # 거래에서 긴 고유 단지명이 정확히 일치할 때만 주소 불일치를 허용한다.
     if allow_relocated:
-        return bool(exact_name_match and len(item_name) >= 6)
+        if exact_name_match and len(item_name) >= 6:
+            return True
+        # 인천 개편처럼 구 코드만 바뀌고 법정동·지번이 그대로면 주소가 같은 거래를 인정한다.
+        row_dong = _legal_dong_leaf(_source_legal_dong(row))
+        row_jibun = apartment_identity.parcel_key(_source_jibun(row))
+        return bool(
+            row_dong and row_jibun
+            and _legal_dong_leaf(item.get("legalDong")) == row_dong
+            and apartment_identity.parcel_key(item.get("jibun")) == row_jibun
+        )
     row_dong = _legal_dong_leaf(_source_legal_dong(row))
     item_dong = _legal_dong_leaf(item.get("legalDong"))
     if row_dong and item_dong != row_dong:
@@ -1508,12 +1533,7 @@ def _matching_transactions(rows, name, area_label, lookback_months, monthly):
                 items = monthly.get((lawd_cd, deal_ymd), [])
                 relocated = lawd_cd != source_lawd_cd
                 candidates = (
-                    _items_for_exact_names(
-                        lawd_cd,
-                        deal_ymd,
-                        items,
-                        [name, *_row_name_values(row)],
-                    )
+                    _relocated_candidates(lawd_cd, deal_ymd, items, row, name)
                     if relocated
                     else _items_for_source_row(
                         lawd_cd,
@@ -2253,14 +2273,22 @@ def _scan_months_for_latest(
             except Exception:
                 continue
             for source_row in rows:
-                if _row_lawd_cd(source_row) != lawd_cd:
+                source_lawd_cd = _row_lawd_cd(source_row)
+                if lawd_cd not in related_lawd_codes(source_lawd_cd):
                     continue
-                for item in _items_for_source_row(lawd_cd, deal_ymd, items, source_row, dong_only=bool(_unit_number(name))):
+                # 행정구역 개편으로 옮겨진 코드에서는 _matching_transactions와 같이 단지 이름으로 찾는다.
+                relocated = lawd_cd != source_lawd_cd
+                candidates = (
+                    _relocated_candidates(lawd_cd, deal_ymd, items, source_row, name)
+                    if relocated
+                    else _items_for_source_row(lawd_cd, deal_ymd, items, source_row, dong_only=bool(_unit_number(name)))
+                )
+                for item in candidates:
                     if not _is_market_transaction(item):
                         continue
                     if not _matches_area(item, area_label):
                         continue
-                    if not _matches_transaction(source_row, item, name):
+                    if not _matches_transaction(source_row, item, name, allow_relocated=relocated):
                         continue
                     month_matches.append(item)
         if month_matches:

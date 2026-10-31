@@ -1218,8 +1218,9 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                 else molit_transactions.source_rows(row["name"], row["region"])
             )
             for source_row in source_rows:
-                lawd_cd = molit_transactions._row_lawd_cd(source_row)
-                if lawd_cd:
+                for lawd_cd in molit_transactions.related_lawd_codes(
+                    molit_transactions._row_lawd_cd(source_row)
+                ):
                     pairs.update((lawd_cd, deal_ymd) for deal_ymd in months)
             molit_transactions.prefetch_months(pairs)
         except Exception:
@@ -1279,6 +1280,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             )
         except Exception:
             row["peers"] = []
+    row["peers"] = report_price_comparison.alternative_facts(row.get("peers") or [])
     try:
         row["priceComparison"] = report_price_comparison.compare(
             row,
@@ -1889,6 +1891,31 @@ def _molit_lookup_windows(months):
     return [recent_months] + ([stale_months] if stale_months > recent_months else [])
 
 
+DEFAULT_AREA_SQM = 84
+
+
+def _default_area_option(area_options):
+    """면적을 고르지 않았을 때 쓸 전용면적: 84㎡ 타입, 없으면 최근 거래가 가장 많은 타입."""
+    options = [
+        option for option in area_options or []
+        if isinstance(option, dict) and policy_evaluator._float(option.get("value")) > 0
+    ]
+    if not options:
+        return ""
+    nominal = [
+        option for option in options
+        if int(policy_evaluator._float(option.get("value"))) == DEFAULT_AREA_SQM
+    ]
+    best = max(
+        nominal or options,
+        key=lambda option: (
+            int(option.get("transactionCount") or 0),
+            str(option.get("latestDealDate") or ""),
+        ),
+    )
+    return f"{policy_evaluator._float(best.get('value')):g}"
+
+
 def _molit_area_options_with_fallback(name, region, months, entity=None):
     """Find actual unit sizes, extending only when the recent window is empty."""
     transaction_kind = molit_transactions.transaction_kind_for_apartment(name, region)
@@ -2278,6 +2305,30 @@ def _apartment_affordability(arguments):
                 common_candidate = resolved_candidate
         except Exception:
             pass
+    elif not area:
+        # 면적을 고르지 않으면 59㎡·84㎡처럼 조건이 다른 평형이 한 가격에 섞이므로
+        # 기본 면적을 하나 정한다. 면적 목록을 못 얻으면 전체 평형 기준을 유지한다.
+        try:
+            area_options, _ = _molit_area_options_with_fallback(
+                name, region, months, entity=market_entity,
+            )
+        except Exception:
+            area_options = []
+        default_area = _default_area_option(area_options)
+        if default_area:
+            effective_area = default_area
+            try:
+                resolved_candidate = budget_candidates.apartment_candidate_result(
+                    **{
+                        **common_candidate_arguments,
+                        "area": effective_area,
+                        "min_area": 0,
+                    }
+                )
+                if resolved_candidate:
+                    common_candidate = resolved_candidate
+            except Exception:
+                pass
 
     transaction_kind = molit_transactions.transaction_kind_for_apartment(name, region)
     if transaction_kind == molit_transactions.TRANSACTION_KIND_PRESALE:
@@ -3097,8 +3148,9 @@ def _prewarm_budget_transaction_cache():
             return any(key.startswith(prefix) for prefix in prefix_keys)
 
         lawd_codes = {
-            molit_transactions._row_lawd_cd(row)
+            code
             for row in source_rows
+            for code in molit_transactions.related_lawd_codes(molit_transactions._row_lawd_cd(row))
             if any(
                 _region_matches(value)
                 for value in (

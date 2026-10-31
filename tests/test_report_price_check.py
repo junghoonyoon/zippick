@@ -215,7 +215,7 @@ class ReportPriceCheckTest(unittest.TestCase):
           if (!unmatchedFloorBand.includes('is-cheap is-current') || unmatchedFloorBand.includes('<small>싼지·비싼지 판단 보류</small>') || !unmatchedFloorBand.includes('여러 층 거래 기준이에요. 싸게 거래된 이유가 있는지')) process.exit(46);
           if (!unmatchedFloorBand.includes('참고 가격대를 2.0% 내렸어요') || unmatchedFloorBand.includes('적정가격을')) process.exit(43);
           if (zippickPriceCheckBasis(item).label !== '여러 층 거래 참고 가격') process.exit(44);
-          // 주변 단지와 비교하지 못하면 임시 별점을 붙이지 않는다.
+          // 비교 단지와 비교하지 못하면 임시 별점을 붙이지 않는다.
           if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(47);
           item.testQuarterStats = {currentCount:5, currentAverage:10.2, stale:false};
           const rankDetail = {key:'price_rank', status:'ok', reason:'지역 후보 3/4위 · 가격 부담 낮은 편',
@@ -226,47 +226,80 @@ class ReportPriceCheckTest(unittest.TestCase):
             ]};
           item.testPricePart = {key:'price', points:24.6, maxPoints:30, details:[rankDetail]};
           item.priceComparison = {status:'loading'};
-          if (zippickPriceAssessment(item).heading !== '주변 단지 거래를 확인하고 있어요') process.exit(60);
+          if (zippickPriceAssessment(item).heading !== '비교 단지 거래를 확인하고 있어요') process.exit(60);
           if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(65);
           item.priceComparison = {status:'unavailable', reason:'비교할 거래가 부족해요.'};
-          if (zippickPriceAssessment(item).heading !== '주변 시세와 비교할 자료가 부족해 판단할 수 없어요') process.exit(66);
+          if (zippickPriceAssessment(item).heading !== '비교할 단지 자료가 부족해 판단할 수 없어요') process.exit(66);
           if (zippickPriceAssessment(item).subheading !== '비교할 거래가 부족해요.') process.exit(63);
           // 원래 10% 싼 단지가 지금 11% 싸면 평소 수준(적정)이다. 단순 가격 차이로 싸다고 하지 않는다.
           item.priceComparison = {status:'ready', region:'송파구', areaLabel:'전용 84㎡', scope:'district',
             averagePriceEok:28.5, transactionCount:31, peerAveragePriceEok:32.28, differencePct:-11.7,
-            usualGapPct:-10.1, currentGapPct:-11.2, shiftPp:-1.1, position:'similar', lowData:false,
+            usualGapPct:-12.2, currentGapPct:-11.2, shiftPp:1, position:'similar', lowData:false,
+            yearlyGaps:[{year:2022, gapPct:-12.8, lowData:false}, {year:2023, gapPct:-11.5, lowData:false}, {year:2024, gapPct:-11, lowData:false}, {year:2025, gapPct:-14.1, lowData:true}],
             selectionCriteria:{householdsMin:2853, approvalYearGap:10},
             peers:[
               {name:'파크리오', legalDong:'신천동', averagePriceEok:29, transactionCount:36, diffPct:1.8, usualRatio:98.3, currentRatio:98.3, shiftPp:0},
               {name:'잠실엘스', legalDong:'잠실동', averagePriceEok:33.5, transactionCount:40, diffPct:17.5, usualRatio:86.1, currentRatio:85.1, shiftPp:-1},
             ]};
           const fair = zippickPriceAssessment(item);
-          if (fair.heading !== '비교 단지와의 가격 차이는 평소 수준이에요') process.exit(57);
-          if (fair.subheading !== '비교 단지보다 원래 10% 정도 싼 단지예요. 지금은 11% 싸요. 평소 수준이에요.') process.exit(58);
+          if (fair.heading !== '송파구 비슷한 단지 2곳과 비교하면 평소 수준이에요') process.exit(57);
+          if (fair.subheading !== '해마다 비교 단지보다 11~14% 쌌고, 지금도 11% 싸요.') process.exit(58);
           if (!zippickSectionRatingHtml(item, '가격 비교').includes('가격 비교 점수 3.0/5')) process.exit(67);
           const fairHtml = zippickPriceEvidenceHtml(item);
-          // 평소 대비 -1.1%p는 막대 가운데 조금 왼쪽(50 - 1.1/9*50 = 43.9%)에 찍힌다.
-          if (!fairHtml.includes('zpr-price-gauge is-similar') || !fairHtml.includes('left:43.9%') || !fairHtml.includes('평소보다 1.1%p 쌈') || !fairHtml.includes('1km 안의 비슷한 단지와 비교했어요.')) process.exit(59);
+          // 해마다 비교 단지보다 얼마나 쌌는지와 지금을 한 차트로 보여준다. %p 표현은 쓰지 않는다.
+          if (!fairHtml.includes('zpr-price-years is-similar') || !fairHtml.includes('↓ 비교 단지보다 쌈') || !fairHtml.includes('실선 비교 단지 평균') || fairHtml.includes('주변 평균') || !fairHtml.includes('22년') || !fairHtml.includes('25년') || !fairHtml.includes('지금') || !fairHtml.includes('is-thin') || !fairHtml.includes('거래가 적은 해') || fairHtml.includes('%p') || !fairHtml.includes('가까운 곳에 비교할 단지가 부족해 송파구로 넓혔어요.')) process.exit(59);
           if (fairHtml.includes('zpr-buy-band-zone')) process.exit(75);
-          if (!fairHtml.includes('+18%') || !fairHtml.includes('+2%') || fairHtml.includes('자료 적음')) process.exit(68);
+          if (!fairHtml.includes('14% → 15% 쌈') || !fairHtml.includes('이 단지가 평소 → 지금') || fairHtml.includes('자료 적음')) process.exit(68);
+          // 비교 단지를 어떤 기준으로 골랐는지 실제 단계와 단지별 사실을 보여준다.
+          if (!fairHtml.includes('비교 단지는 이렇게 골랐어요') || !fairHtml.includes('송파구에서 세대수 차이 50% 이내, 준공연도 차이 10년 이내') || !fairHtml.includes('가격은 보지 않았어요')) process.exit(82);
+          const factsHtml = (() => { const saved = item.priceComparison; item.priceComparison = {...saved, peers:[{...saved.peers[0], households:6864, approvalYear:2008, distanceMeters:2561, tier:3}, saved.peers[1]]}; const html = zippickPriceEvidenceHtml(item); item.priceComparison = saved; return html; })();
+          if (!factsHtml.includes('6,864세대 · 2008년 준공 · 2,561m') || !factsHtml.includes('송파구에서 100세대 이상')) process.exit(83);
           if (fairHtml.includes('zpr-comparison-facts') || fairHtml.includes('비교할 후보') || fairHtml.includes('확인하세요')) process.exit(69);
           item.priceComparison = {...item.priceComparison, shiftPp:4.1, currentGapPct:-6, position:'high', lowData:true,
             peers:item.priceComparison.peers.map(peer => ({...peer, transactionCount:4, lowData:true}))};
           const high = zippickPriceAssessment(item);
-          if (high.heading !== '비교 단지에 비해 평소보다 비싸졌어요' || !high.subheading.endsWith('평소보다 비싸졌어요.')) process.exit(74);
+          if (high.heading !== '송파구 비슷한 단지 2곳과 비교하면 평소보다 7% 비싸졌어요' || high.subheading !== '해마다 비교 단지보다 11~14% 쌌는데, 지금은 6% 싸요. 평소 12%보다 차이가 줄었어요.') process.exit(74);
           if (zippickSectionRatingData(item, '가격 비교').stars !== '2.0') process.exit(72);
           const highHtml = zippickPriceEvidenceHtml(item);
-          if (!highHtml.includes('자료 적음') || !highHtml.includes('최근 4건') || !highHtml.includes('zpr-price-gauge is-high') || !highHtml.includes('평소보다 4.1%p 비쌈')) process.exit(70);
-          item.priceComparison = {...item.priceComparison, periodMonths:12, periodWidened:true, historyMonths:36};
+          if (!highHtml.includes('자료 적음') || !highHtml.includes('최근 4건') || !highHtml.includes('zpr-price-years is-high') || !highHtml.includes('6%')) process.exit(70);
+          // 평소 차이를 모르면 지금 가격만 비교했다고 밝히고 별점을 붙이지 않는다.
+          const beforeSimple = item.priceComparison;
+          item.priceComparison = {...beforeSimple, method:'simple', shiftPp:null, usualGapPct:null, currentGapPct:null,
+            differencePct:-8, position:'low', lowData:true, scope:'district', conditionsRelaxed:true, areaAdjusted:true};
+          const simple = zippickPriceAssessment(item);
+          if (simple.heading !== '송파구 비슷한 단지 2곳보다 8% 싸요' || !simple.subheading.includes('동네 차이는 감안하지 못했어요')) process.exit(77);
+          if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(78);
+          const simpleHtml = zippickPriceEvidenceHtml(item);
+          if (!simpleHtml.includes('8%') || simpleHtml.includes('zpr-price-years') || !simpleHtml.includes('이 단지가 지금') || !simpleHtml.includes('자료 적음')) process.exit(79);
+          if (!simpleHtml.includes('송파구로 넓혔어요') || !simpleHtml.includes('세대수나 연식 차이가 큰 단지도 포함했어요') || !simpleHtml.includes('같은 면적 가격으로 환산했어요')) process.exit(80);
+          if (simpleHtml.includes('평소 가격 차이로 감안했어요') || simpleHtml.includes('NaN')) process.exit(81);
+          // 세대수·연식 조건까지 넓히면 '비슷한'이라고 하지 않고 구 이름과 단지 수를 쓴다.
+          const widenedPeers = beforeSimple.peers.map(peer => ({...peer, tier:2}));
+          item.priceComparison = {...beforeSimple, peers:widenedPeers};
+          if (zippickPriceAssessment(item).heading !== '송파구 단지 2곳과 비교하면 평소보다 7% 비싸졌어요') process.exit(84);
+          item.priceComparison = {...beforeSimple, peers:widenedPeers, position:'similar'};
+          if (zippickPriceAssessment(item).heading !== '송파구 단지 2곳과 비교하면 평소 수준이에요') process.exit(85);
+          item.priceComparison = {...beforeSimple, peers:widenedPeers, method:'simple', position:'similar', differencePct:1};
+          if (zippickPriceAssessment(item).heading !== '송파구 단지 2곳과 가격이 비슷해요') process.exit(86);
+          item.priceComparison = {...beforeSimple, peers:widenedPeers, method:'simple', position:'high', differencePct:8};
+          if (zippickPriceAssessment(item).heading !== '송파구 단지 2곳보다 8% 비싸요') process.exit(87);
+          item.priceComparison = {...beforeSimple, usualGapPct:-12, currentGapPct:-16, position:'low'};
+          if (zippickPriceAssessment(item).heading !== '송파구 비슷한 단지 2곳과 비교하면 평소보다 5% 싸졌어요') process.exit(88);
+          // 대표값과 판정의 방향이 다르면 틀린 숫자를 쓰지 않는다.
+          item.priceComparison = {...beforeSimple, usualGapPct:-12, currentGapPct:-6, position:'low'};
+          if (zippickPriceAssessment(item).heading !== '송파구 비슷한 단지 2곳과 비교하면 평소보다 싸졌어요') process.exit(89);
+          item.priceComparison = beforeSimple;
+          item.priceComparison = {...item.priceComparison, periodMonths:12, periodWidened:true};
           const widenedHtml = zippickPriceEvidenceHtml(item);
-          if (!widenedHtml.includes('이 단지의 최근 6개월 거래가 적어 최근 12개월로 봤어요.') || !widenedHtml.includes('최근 12개월</th>') || !widenedHtml.includes('지난 3년 동안')) process.exit(76);
-          item.priceComparison = {...item.priceComparison, periodMonths:6, periodWidened:false, historyMonths:42, shiftPp:-6.5, position:'low', lowData:false};
-          if (!zippickPriceAssessment(item).subheading.endsWith('평소보다 싸졌어요.')) process.exit(61);
+          if (!widenedHtml.includes('이 단지의 최근 6개월 거래가 적어 최근 12개월로 봤어요.') || !widenedHtml.includes('최근 12개월</th>')) process.exit(76);
+          item.priceComparison = {...item.priceComparison, periodMonths:6, periodWidened:false, shiftPp:-6.5, position:'low', lowData:false};
+          if (!zippickPriceAssessment(item).subheading.endsWith('평소 12%보다 차이가 커졌어요.')) process.exit(61);
           if (zippickSectionRatingData(item, '가격 비교').stars !== '5.0') process.exit(71);
           item.priceComparison = {...item.priceComparison, peers:item.priceComparison.peers.slice(0, 1)};
-          if (zippickSectionRatingData(item, '가격 비교') !== null) process.exit(73);
+          // 비교 단지 1곳이어도 평소 차이를 계산했으면 판정을 보여준다.
+          if (zippickSectionRatingData(item, '가격 비교') === null) process.exit(73);
           delete item.priceComparison;
-          if (zippickPriceAssessment(item).heading !== '주변 시세와 비교할 자료가 부족해 판단할 수 없어요') process.exit(48);
+          if (zippickPriceAssessment(item).heading !== '비교할 단지 자료가 부족해 판단할 수 없어요') process.exit(48);
           item.latestDealPriceEok = 12;
           item.valuation.floorComparison = {status:'matched', targetFloor:14, sampleCount:8};
           item.latestDealFloor = '14';

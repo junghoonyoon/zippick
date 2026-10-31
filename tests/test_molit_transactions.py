@@ -970,6 +970,69 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertEqual(band["valuationEstimateMidPriceEok"], 9.2)
         self.assertIn("가장 최근 거래를 제외한", band["valuationEstimateMethod"])
 
+    def test_incheon_reorganized_districts_read_their_new_codes(self):
+        # 2026-07 개편 뒤 국토부 API는 중구·동구·서구 거래를 새 코드로만 돌려준다.
+        self.assertEqual(molit_transactions.related_lawd_codes("28110"), ("28110", "28125", "28155"))
+        self.assertEqual(molit_transactions.related_lawd_codes("28140"), ("28140", "28125"))
+        self.assertEqual(molit_transactions.related_lawd_codes("28260"), ("28260", "28275", "28290"))
+        self.assertEqual(molit_transactions.related_lawd_codes("28185"), ("28185",))
+
+    def test_successor_code_accepts_short_name_when_dong_and_lot_are_unchanged(self):
+        # 인천 동구 → 제물포구: 구 코드만 바뀌고 법정동·지번은 그대로다.
+        source = {
+            "필지고유번호": "2814010300100060026",
+            "대표단지명": "송현주공아파트",
+            "법정동": "송현동",
+            "지번": "6-26",
+        }
+        same_address = {
+            "apartment": "송현주공", "legalDong": "송현동", "jibun": "6-26",
+            "dealDate": "2026-07-24", "dealAmountEok": 0.98, "exclusiveArea": 36.0, "floor": "10",
+        }
+        other_lot = {**same_address, "jibun": "154", "dealDate": "2026-07-20"}
+        with mock.patch.object(molit_transactions, "_deal_months", return_value=["202607"]):
+            rows = molit_transactions._matching_transactions(
+                [source], "송현주공아파트", "", 12,
+                {("28125", "202607"): [same_address, other_lot]},
+            )
+
+        self.assertEqual([row["jibun"] for row in rows], ["6-26"])
+
+    def test_latest_transaction_reads_trades_moved_to_a_successor_code(self):
+        source_row = {
+            "대표단지명": "청라테스트아파트",
+            "자치구": "서구",
+            "법정동": "청라동",
+            "지번": "149-2",
+            "필지고유번호": "2826011600101490002",
+        }
+        trade = {
+            "apartment": "청라테스트아파트",
+            "legalDong": "청라동",
+            "jibun": "149-2",
+            "exclusiveArea": 84.9,
+            "floor": "12",
+            "dealDate": "2026-04-15",
+            "dealAmountEok": 7.9,
+        }
+        months = molit_transactions._deal_months(6)
+
+        def fake_fetch_month(lawd_cd, deal_ymd):
+            return [trade] if lawd_cd == "28275" and deal_ymd == months[2] else []
+
+        with mock.patch.object(molit_transactions, "source_rows", return_value=[source_row]), \
+             mock.patch.object(molit_transactions, "fetch_month", side_effect=fake_fetch_month):
+            latest = molit_transactions.latest_transaction_for_apartment(
+                "청라테스트아파트",
+                "서구",
+                "전용 84㎡",
+                lookback_months=6,
+                skip_months=2,
+            )
+
+        self.assertIsNotNone(latest)
+        self.assertEqual(latest["latestDealPriceEok"], 7.9)
+
     def test_latest_transaction_skips_recent_months_and_returns_first_old_match(self):
         source_row = {
             "대표단지명": "오래된거래아파트",

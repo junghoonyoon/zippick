@@ -19,12 +19,13 @@ class PaidReportTest(unittest.TestCase):
         html = (ROOT / '앱화면/real-estate-search.html').read_text()
         matrix = re.search(r'    const ZIPPICK_MATRIX = \[.*?\n    \];', html, re.S).group()
         names = ['zpNum', 'zippickMatrixVerdict', 'zippickPartialVerdict',
+                 'zippickCommonProperty', 'zippickCommonPurchaseVerdict',
                  'candidateFlowScoreBadgeHtml', 'candidateReadonlyFlowScoreBadgeHtml',
                  'signalBadgesHtml', 'candidateZippickReportHtml']
         functions = '\n'.join(re.search(
             r'    function ' + name + r'\([^\n]*\) \{.*?\n    \}', html, re.S,
         ).group() for name in names)
-        stubs = ['zippickLocationBarsHtml', 'zippickSignalBarsHtml', 'zippickReportMapHtml',
+        stubs = ['zippickCommonPropertyHtml', 'zippickLocationBarsHtml', 'zippickSignalBarsHtml', 'zippickReportMapHtml',
                  'zippickPriceEvidenceHtml', 'zippickCommuteHtml', 'zippickLiquidityHtml',
                  'zippickLifestyleChangeHtml', 'zippickFundingHtml', 'zippickDevelopmentHtml',
                  'zippickAlternativesHtml', 'zippickBreakevenHtml', 'zippickSignalLabel',
@@ -42,8 +43,8 @@ const zippickDecisionHtml = (_item, verdict) => `verdict:${verdict.tone}`;
 const signalTierLabel = () => '신호 적음';
 const base = {name:'테스트',locationScore:{score:78}};
 const zero = {...base,signals:{status:'ok',score:0}};
-assert.match(candidateZippickReportHtml(zero),/verdict:hold/);
-assert.match(candidateZippickReportHtml(zero),/>0점</);
+// A measured zero is still displayed; no price/property evidence means unknown, not hold.
+assert.match(candidateZippickReportHtml(zero),/verdict:missing/);
 assert.match(signalBadgesHtml(zero),/최근 시장 신호 0점/);
 assert.match(signalBadgesHtml({...base,signals:{status:'insufficient',score:''}}),/표본 부족/);
 for (const badge of [candidateFlowScoreBadgeHtml, candidateReadonlyFlowScoreBadgeHtml]) {

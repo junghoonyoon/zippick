@@ -272,6 +272,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
           const zippickPriceCheckBasis = () => ({{low:8.5, high:9.53}});
           const zippickBuyBandTier = () => 1;
           const zippickWeakestPart = () => ({{key:'product'}});
+          const zpPartRatio = part => part.points == null ? NaN : part.points / part.maxPoints;
           const zippickLiquidityStat = () => ({{band:'good'}});
           const zpJosa = (value, yes, no) => value + no;
           const zpScoredParts = () => [{{key:'product',points:4,maxPoints:10}}];
@@ -291,13 +292,13 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         result = subprocess.run(["node"], input=script, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         mixed, other, twenty_one_year, different_area, peak_evidence = json.loads(result.stdout)
-        self.assertIn("구축이라는 점은 감안하세요", mixed)
-        self.assertNotIn("28년차", mixed)
+        self.assertIn("오래된 연식은 약점이에요", mixed)
+        self.assertNotIn("감안하세요", mixed)
         self.assertNotIn("복도식", mixed)
         self.assertNotIn("관리 상태", mixed)
-        self.assertIn("구축이라는 점은 감안하세요", twenty_one_year)
-        self.assertNotIn("21년차", twenty_one_year)
-        self.assertIn("구축이라는 점은 감안하세요", other)
+        self.assertIn("오래된 연식은 약점이에요", twenty_one_year)
+        self.assertNotIn("감안하세요", twenty_one_year)
+        self.assertIn("오래된 연식은 약점이에요", other)
         self.assertNotIn("새 단지와 경쟁할 때 불리할 수 있어요", other)
         self.assertNotIn("복도식", other)
         self.assertNotIn("교체비", other)
@@ -467,7 +468,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
 
     def test_zippick_report_guards_against_buying_at_the_peak(self):
         html=APP_HTML.read_text(encoding="utf-8")
-        self.assertIn('const verdict = zippickGuardVerdict(',html)
+        self.assertIn('const verdict = zippickCommonPurchaseVerdict(item);',html)
         self.assertNotIn('signals.score =',html)
         self.run_ui_functions(["zippickPeakRisk","zippickGuardVerdict","zippickGuardWarnHtml"], """
           const assert=require('node:assert/strict');const zpNum=v=>v == null ? NaN:Number(v);
@@ -1050,7 +1051,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function zippickNumberSteps(html, item)", html)
         self.assertIn("return zippickNumberSteps(`<article class=\"zippick-report\"", html)
         self.assertNotIn('data-zpr-step="매물 가격 비교"', html)
-        for label in ("생활권 변화", "단지 조건", "업무지구 이동시간", "자금 조건", "현장 확인"):
+        for label in ("생활권 변화", "입지·단지 조건", "업무지구 이동시간", "자금 조건", "현장 확인"):
             self.assertIn(f'data-zpr-step="{label}"', html)
         self.assertIn('${step}. ${esc(label)}', html)
         self.assertNotIn('<span class="zpr-kicker" data-zpr-step></span>', html)
@@ -1060,7 +1061,10 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickFundingHtml(item)}"))
         self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickDevelopmentHtml(item)}"))
         self.assertLess(report.index("${zippickFundingHtml(item)}"), report.index("${zippickBreakevenHtml(item)}"))
-        self.assertLess(report.index("${zippickAlternativesHtml(item)}"), report.index("${zippickBreakevenHtml(item)}"))
+        # 같은 가격대 대안은 '이 돈이면 어디를 살 수 있나'라는 다른 질문이라 가격 비교 밖에 둔다.
+        price_section = html.split("    function zippickPriceEvidenceHtml(item) {", 1)[1].split("    function zippickPersonalFundingHtml", 1)[0]
+        self.assertNotIn("${zippickAlternativesHtml(item)}", price_section)
+        self.assertLess(report.index("${zippickBreakevenHtml(item)}"), report.index("${zippickAlternativesHtml(item)}"))
 
         # 순서 표현만으로는 무슨 내용인지 알 수 없다.
         for fixed in ("첫 번째", "두 번째", "세 번째", "네 번째"):
@@ -1321,16 +1325,18 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn(".power-reset:hover { background:transparent !important; color:#667085 !important; transform:none !important }", html)
         self.assertNotIn("계산 기준 더보기", html)
         self.assertNotIn("세부 기준으로 계산하기", html)
-        # 상세 입력은 항상 펼쳐 두고 계산 버튼은 하나만 보여 준다.
-        self.assertIn('id="purchasePowerAdvanced" open', html)
-        self.assertIn(".condition-stage-power .power-advanced.is-always-open > summary { display:none !important }", html)
+        # 상세 입력은 접어서 시작하며, 조정한 값은 접어도 유지한다.
+        self.assertIn('class="power-advanced" id="purchasePowerAdvanced">', html)
+        self.assertNotIn('id="purchasePowerAdvanced" open', html)
+        self.assertIn("내 상황에 맞게 조정하기", html)
+        self.assertIn('id="purchasePowerDefaultsNote"', html)
         self.assertIn('powerApproximateCalculate.textContent = "계산하기";', html)
         self.assertIn("powerCalculate.hidden = true;", html)
         self.assertNotIn('id="purchaseCostInfoButton"', html)
         self.assertNotIn("부대비용 기준", html)
         self.assertIn("function purchasePowerHasCustomDetails()", html)
         self.assertIn("function handlePowerDetailedAction()", html)
-        self.assertIn('powerApproximateCalculate.dataset.purchasePowerMode = advancedOpen ? "exact" : "approximate"', html)
+        self.assertIn('powerApproximateCalculate.dataset.purchasePowerMode = purchasePowerHasCustomDetails() ? "exact" : "approximate"', html)
         self.assertIn('powerCalculate.textContent = advancedOpen ? "기본 기준으로 계산하기" : "내 상황 더 입력하기"', html)
         self.assertIn("!purchasePowerAdvanced.open", html)
         self.assertIn('openPurchasePowerDetails("secondary_action")', html)
@@ -1394,7 +1400,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("power-cost-box", html)
         self.assertLess(
             html.index('id="policyAnnualIncome"'),
-            html.index('class="power-advanced is-always-open"'),
+            html.index('class="power-advanced"'),
         )
 
     def test_condition_summary_edit_syncs_purchase_power_shortcut(self):
@@ -1728,7 +1734,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIsNotNone(sync_match)
         self.assertIsNotNone(render_match)
         sync_body = sync_match.group("body")
-        self.assertIn("currentAptSearchItems[index] = { ...(previous || {}), ...candidate }", sync_body)
+        self.assertIn("currentAptSearchItems[index] = candidate;", sync_body)
         self.assertIn("aptCandidateResults.set(index, currentAptSearchItems[index])", sync_body)
         self.assertIn('candidateMapOrigin !== "aptSearch"', sync_body)
         self.assertIn("candidateMapEntries.forEach", sync_body)

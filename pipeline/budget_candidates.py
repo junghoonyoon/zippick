@@ -2586,8 +2586,9 @@ def _finalize_candidate_rows(
                     for source_row in molit_transactions.source_rows_for_entity(
                         entity, row.get("region", ""),
                     ):
-                        lawd_cd = molit_transactions._row_lawd_cd(source_row)
-                        if lawd_cd:
+                        for lawd_cd in molit_transactions.related_lawd_codes(
+                            molit_transactions._row_lawd_cd(source_row)
+                        ):
                             signal_pairs.update(
                                 (lawd_cd, deal_ymd) for deal_ymd in signal_months
                             )
@@ -3208,11 +3209,11 @@ def budget_candidates(
                 for source_row in molit_transactions.source_rows_for_entity(
                     entity, row.get("region", ""),
                 ):
-                    lawd_cd = molit_transactions._row_lawd_cd(source_row)
-                    if not lawd_cd:
-                        continue
-                    for deal_ymd in recent_months:
-                        prefetch_pairs.add((lawd_cd, deal_ymd))
+                    for lawd_cd in molit_transactions.related_lawd_codes(
+                        molit_transactions._row_lawd_cd(source_row)
+                    ):
+                        for deal_ymd in recent_months:
+                            prefetch_pairs.add((lawd_cd, deal_ymd))
             except Exception:
                 continue
 
