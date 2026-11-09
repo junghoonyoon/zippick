@@ -1184,6 +1184,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         row["transactionScope"] = reviewed_transaction_scope
     if area_label:
         row["displayAreaLabel"] = area_label
+        row["tradeAreaScope"] = molit_transactions.area_scope(area_label)
     # 교육 접근성은 단지 좌표가 필요하다. 첫 조회에서도 좌표를 먼저 채운다.
     if entity:
         try:
@@ -1262,8 +1263,8 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             if last_deal:
                 last_date = str(last_deal.get("latestDealDate") or "")
                 if last_date >= str(row.get("latestDealDate") or ""):
-                    row["latestDealPriceEok"] = last_deal.get("latestDealPriceEok")
-                    row["latestDealDate"] = last_date
+                    for key in ("latestDealPriceEok", "latestDealDate", "latestDealExclusiveArea", "latestDealFloor"):
+                        row[key] = last_deal.get(key)
                     area = last_deal.get("latestDealExclusiveArea")
                     if area and not area_label:
                         row["displayAreaLabel"] = f"{area}㎡"
@@ -1321,6 +1322,14 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         market_indicators.attach([row])
     except Exception:
         pass
+    row["tradeAreaScope"] = molit_transactions.area_scope(
+        area_label or row.get("displayAreaLabel") or row.get("areaLabel") or ""
+    )
+    row["latestTrade"] = {"dealAmountEok": row.get("latestDealPriceEok"),
+                          "dealDate": row.get("latestDealDate"),
+                          "exclusiveArea": row.get("latestDealExclusiveArea"),
+                          "floor": row.get("latestDealFloor")}
+    row["latestTradeStatus"] = "available" if row.get("latestDealPriceEok") else "no_selected_area_trade"
     try:
         price_valuation.attach_valuations([row])
     except Exception:
@@ -2496,6 +2505,7 @@ def _apartment_affordability(arguments):
         "naverListingReference": estimate_payload.get("naverListingReference"),
         "selectedArea": effective_area,
         "resolvedArea": effective_area,
+        "tradeAreaScope": molit_transactions.area_scope(effective_area),
         "areaFallback": area_fallback,
         "requestedMinArea": minimum_area or None,
         "transactionKind": (
@@ -2508,6 +2518,7 @@ def _apartment_affordability(arguments):
     }
 
     if common_candidate:
+        common_candidate["tradeAreaScope"] = response["tradeAreaScope"]
         canonical_min = (
             common_candidate.get("estimatedMinPriceEok")
             or common_candidate.get("currentEstimateMinPriceEok")

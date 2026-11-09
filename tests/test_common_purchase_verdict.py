@@ -407,6 +407,29 @@ assert.equal(zippickCommonPurchaseVerdict(item,new Date(2026,10,9)).stars,4,
 """)
 
 
+def test_observed_exceptional_fundamentals_can_earn_five_at_fair_price():
+    sample = next(case for case in LIVE_CASES if case['request'][0] == '헬리오시티')
+    run("const item=" + json.dumps(sample['report'], ensure_ascii=False) + ";" + """
+const observedVerdict=item=>zippickCommonPurchaseVerdict(item,new Date(2026,10,9));
+const actual=observedVerdict(item);
+assert.equal(actual.stars,5);
+assert.equal(actual.label,'우선 검토');
+assert.match(actual.title,/가격이 평소 수준 이하이며 최근 거래도 충분해요/);
+assert.match(actual.basis,/최근 6개월 32건.*그 전 6개월 52건보다 줄었어요/);
+const fewer=structuredClone(item);fewer.signals.recentDealCount=19;fewer.signals.priorDealCount=30;
+assert.equal(observedVerdict(fewer).stars,4);
+const sharpDrop=structuredClone(item);sharpDrop.signals.recentDealCount=25;
+assert.equal(observedVerdict(sharpDrop).stars,3);
+const weakerAccess=structuredClone(item);
+weakerAccess.locationScore.parts[0].details[0].score=70;
+assert.equal(observedVerdict(weakerAccess).stars,4);
+const referenceBand=structuredClone(item);referenceBand.valuation.referenceOnly=true;
+assert.equal(observedVerdict(referenceBand).stars,4);
+const widerBand=structuredClone(item);widerBand.valuation.dataQuality.periodMonths=12;
+assert.equal(observedVerdict(widerBand).stars,4);
+""")
+
+
 EXTREME_FIXTURE = """
 function complete(){
  const item=base();item.priceIdentityVerified=true;

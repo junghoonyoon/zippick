@@ -1179,11 +1179,28 @@ def _area_target(area_label):
 
 
 def _matches_area(item, area_label):
-    target = _area_target(area_label)
-    if not target:
+    scope = area_scope(area_label)
+    if not scope:
         return True
     area = float(item.get("exclusiveArea") or 0)
-    return target[0] <= area <= target[1]
+    return (scope["minSqm"] <= area
+            and (area <= scope["maxSqm"] if scope["upperInclusive"] else area < scope["maxSqm"]))
+
+
+def area_scope(area_label):
+    """Expose the exact server-side area filter to report consumers."""
+    target = _area_target(area_label)
+    if not target:
+        return None
+    interval = re.search(r"(\d+(?:\.\d+)?)\s*[~〜–-]\s*(\d+(?:\.\d+)?)", str(area_label))
+    if interval:
+        low, high = map(float, interval.groups())
+        if high > low:
+            whole = low.is_integer() and high.is_integer()
+            return {"version": "exclusive-area-v1", "label": str(area_label),
+                    "minSqm": low, "maxSqm": high + 1 if whole else high, "upperInclusive": not whole}
+    return {"version": "exclusive-area-v1", "label": str(area_label),
+            "minSqm": target[0], "maxSqm": target[1], "upperInclusive": True}
 
 
 def _is_market_transaction(item):

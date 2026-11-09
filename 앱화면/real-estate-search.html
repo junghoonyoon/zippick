@@ -18423,8 +18423,15 @@
       const corroboratedPrice = bandEvidence.ready && bandEvidence.periodMonths <= 6
         && item?.valuation?.referenceOnly !== true && item?.valuation?.dataQuality?.periodWidened !== true
         && ["low", "similar"].includes(bandEvidence.position);
-      const priorityCandidate = reliableComparison && strongProperty && price === "low"
-        && !priceDisagreement && stableTrades && corroboratedPrice;
+      const discountedStrongCandidate = strongProperty && price === "low" && stableTrades;
+      // 두 축이 모두 매우 좋은 단지는 충분한 거래가 이어지고 가격이 평소 수준이면
+      // 5점으로 판단한다. 직전보다 거래가 줄었으면 그 사실을 근거에 그대로 밝힌다.
+      const exceptionalProperty = property.access >= 85 && property.building >= 85
+        && property.metrics.every(metric => metric.score !== null && metric.score >= 50);
+      const activeFairCandidate = exceptionalProperty && ["low", "similar"].includes(price)
+        && completeTradeCounts && recent >= 20 && !tradeDrop;
+      const priorityCandidate = reliableComparison && !priceDisagreement && corroboratedPrice
+        && (discountedStrongCandidate || activeFairCandidate);
       // 2점의 일반 가격 부담(3포인트 초과)과 1점의 큰 부담(10포인트 초과)을 구분한다.
       const largePriceBurden = priceSource === "usual_gap" && price === "high" && shift > 10;
       const compoundedRisk = reliableComparison && price === "high" && !priceDisagreement
@@ -18479,7 +18486,9 @@
       } else {
         tone = "yes";
         reason = priorityCandidate
-          ? "입지와 단지 조건이 우수하고, 평소 가격 차이 대비 저렴하며 거래도 유지됐어요"
+          ? discountedStrongCandidate
+            ? "입지와 단지 조건이 우수하고, 평소 가격 차이 대비 저렴하며 거래도 유지됐어요"
+            : "입지와 단지 조건이 우수하고, 가격이 평소 수준 이하이며 최근 거래도 충분해요"
           : `입지와 단지 조건이 좋고, ${price === "low" ? "다른 단지와의 평소 가격 차이를 감안해도 저렴해요" : "다른 단지와의 평소 가격 차이를 감안해도 적정해요"}`;
       }
       const pending = tone === "missing" && item?.reportPeerState !== "error" && comparison.status !== "error"
@@ -18493,10 +18502,11 @@
       const basisDetails = price === "missing" ? [priceUnknownConclusion] : [priceSummary, ...limitations.map(row => row.detail)];
       if (compoundedRisk && largePriceBurden) basisDetails.push(`평소 가격 차이보다 ${shift}포인트 높아 큰 가격 부담 기준인 10포인트를 넘었어요`);
       if (tradeDrop) basisDetails.push(`최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건보다 절반 넘게 줄었어요`);
-      if (priorityCandidate) basisDetails.push(`입지 ${property.access}점·단지 ${property.building}점으로 두 축 모두 75점 이상이고 네 항목 모두 50점 이상이에요`,
+      if (priorityCandidate) basisDetails.push(`입지 ${property.access}점·단지 ${property.building}점으로 두 축 모두 ${discountedStrongCandidate ? 75 : 85}점 이상이고 네 항목 모두 50점 이상이에요`,
         `최근 한 건도 같은 단지의 최근 ${bandEvidence.periodMonths}개월 다른 거래 ${bandEvidence.count}건 가격대 이하예요`,
-        `최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건 이상 거래됐어요`);
-      return {common:true, pending, version:"common-purchase-v7", tone, label:pending ? "판단 준비 중" : labels[tone],
+        discountedStrongCandidate ? `최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건 이상 거래됐어요`
+          : `최근 6개월 ${recent}건으로 거래가 충분해요. 그 전 6개월 ${prior}건보다 ${recent < prior ? "줄었어요" : "같거나 늘었어요"}`);
+      return {common:true, pending, version:"common-purchase-v8", tone, label:pending ? "판단 준비 중" : labels[tone],
         stars:({yes:priorityCandidate ? 5 : 4, conditional:3, hold:2, risk:1})[tone] ?? null,
         title:pending ? "가격 비교 자료를 불러오고 있어요. 자료가 준비되면 매수 판단을 보여드려요" : reason, property, price, priceSummary, priceSource, priceDisagreement, limitedPrice, priceRatingCapped, tradeDrop,
         reliableComparison, moderateEvidence, priorityCandidate, compoundedRisk, largePriceBurden,

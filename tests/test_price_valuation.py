@@ -73,12 +73,108 @@ class PriceValuationTest(unittest.TestCase):
         self.assertGreaterEqual(result["fairPrice"]["widthPct"], 10.0)
         self.assertEqual(result["macro"]["status"], "unavailable")
 
-    def test_holds_when_sample_is_sparse_or_stale(self):
+    def test_sparse_samples_hold_but_old_trades_keep_a_reference_range(self):
         sparse = {**self.row, "valuationEstimateSampleCount": 2, "transactionCount": 3}
         stale = {**self.row, "latestDealDate": "2026-01-01"}
 
         self.assertEqual(price_valuation.valuation_for_candidate(sparse, today=self.today)["status"], "unavailable")
-        self.assertEqual(price_valuation.valuation_for_candidate(stale, today=self.today)["status"], "unavailable")
+        result = price_valuation.valuation_for_candidate(stale, today=self.today)
+        self.assertEqual(result["status"], "ready")
+        self.assertTrue(result["referenceOnly"])
+        self.assertEqual(result["dataQuality"]["level"], "low")
+        self.assertEqual(price_valuation.verdict_for_price(result, 9), "hold")
+
+    def _sparse_row(self):
+        return {**self.row, "name": "검수단지", "region": "검수구", "legalDong": "검수동", "jibun": "1",
+                "latestDealPriceEok": 10.5, "latestDealExclusiveArea": 84.5, "latestDealFloor": "10",
+                "valuationEstimateMinPriceEok": None, "valuationEstimateMidPriceEok": None,
+                "valuationEstimateMaxPriceEok": None, "valuationEstimateSampleCount": 0}
+
+    def _trade(self, date, price=10, floor="10", area=84.5):
+        return {"dealDate": date, "dealAmountEok": price, "floor": floor, "exclusiveArea": area}
+
+    def test_widens_to_twelve_months_without_using_evaluated_trade(self):
+        history = [self._trade("2026-09-10", 10.5), self._trade("2026-09-01"),
+                   self._trade("2026-08-01", 10.1, "9"), self._trade("2026-02-01", 9.8, "11")]
+        row = self._sparse_row()
+        before = dict(row)
+        with mock.patch.object(price_valuation, "_cached_history", return_value=(history, "cached")):
+            result = price_valuation.valuation_for_candidate(row, today=self.today)
+        self.assertEqual(row, before)
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["dataQuality"]["periodMonths"], 12)
+        self.assertEqual(result["dataQuality"]["sampleCount"], 3)
+        self.assertEqual(result["dataQuality"]["level"], "low")
+        self.assertTrue(result["referenceOnly"])
+        self.assertEqual(result["comparisonSearch"]["windows"][0]["sampleCount"], 2)
+        self.assertEqual(result["floorComparison"]["status"], "matched")
+
+    def test_widens_to_twenty_four_months_only_when_twelve_is_insufficient(self):
+        history = [self._trade("2026-09-10", 10.5), self._trade("2026-09-01"),
+                   self._trade("2026-08-01"), self._trade("2025-02-01", 9.8)]
+        with mock.patch.object(price_valuation, "_cached_history", return_value=(history, "cached")):
+            result = price_valuation.valuation_for_candidate(self._sparse_row(), today=self.today)
+        self.assertEqual(result["dataQuality"]["periodMonths"], 24)
+        self.assertEqual([window["sampleCount"] for window in result["comparisonSearch"]["windows"]], [2, 2, 3])
+        self.assertTrue(result["referenceOnly"])
+
+    def test_uses_other_floors_as_reference_without_inventing_a_floor_discount(self):
+        history = [self._trade("2026-09-10", 10.5), self._trade("2026-09-01", floor="1"),
+                   self._trade("2026-08-01", floor="20"), self._trade("2026-07-01", floor="25")]
+        with mock.patch.object(price_valuation, "_cached_history", return_value=(history, "cached")):
+            result = price_valuation.valuation_for_candidate(self._sparse_row(), today=self.today)
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["dataQuality"]["periodMonths"], 6)
+        self.assertEqual(result["floorComparison"]["sampleCount"], 0)
+        self.assertTrue(result["referenceOnly"])
+        self.assertEqual(price_valuation.verdict_for_price(result, 1), "hold")
+
+    def test_excludes_future_other_area_and_evaluated_transactions(self):
+        history = [self._trade("2026-09-10", 10.5), self._trade("2026-09-11", 100),
+                   self._trade("2026-08-01", 10), self._trade("2026-07-01", 10.1),
+                   self._trade("2026-06-01", 100, area=114.5)]
+        with mock.patch.object(price_valuation, "_cached_history", return_value=(history, "cached")):
+            result = price_valuation.valuation_for_candidate(self._sparse_row(), today=self.today)
+        self.assertEqual(result["status"], "unavailable")
+        self.assertNotIn("fairPrice", result)
+        self.assertIn("2건", result["reason"])
+        self.assertIn("24개월", result["reason"])
+
+    def test_history_lookup_failure_is_not_reported_as_proven_absence(self):
+        with mock.patch.object(price_valuation, "_cached_history", side_effect=RuntimeError):
+            result = price_valuation.valuation_for_candidate(self._sparse_row(), today=self.today)
+        self.assertEqual(result["status"], "unavailable")
+        self.assertIn("불러오지 못해", result["reason"])
+        self.assertEqual(result["comparisonSearch"]["source"], "lookup_failed")
+
+    def test_a_fresh_sufficient_similar_floor_sample_needs_no_extra_lookup(self):
+        row = {**self.row, "latestDealFloor": "10", "valuationTrades": [
+            ["2026-09-01", 10, "10"], ["2026-08-01", 10, "9"], ["2026-07-01", 10, "11"]]}
+        with mock.patch.object(price_valuation, "_cached_history") as lookup:
+            result = price_valuation.valuation_for_candidate(row, today=self.today)
+        lookup.assert_not_called()
+        self.assertEqual(result["status"], "ready")
+        self.assertFalse(result["referenceOnly"])
+
+    def test_expanded_period_can_use_complete_weekly_index_but_stays_low_confidence(self):
+        history = [self._trade("2026-09-10", 10.5), self._trade("2026-09-01"),
+                   self._trade("2026-08-01"), self._trade("2026-02-01")]
+        with mock.patch.object(price_valuation, "_cached_history", return_value=(history, "cached")), \
+             mock.patch.object(price_valuation.regional_price_index, "series_for_region",
+                               return_value=self._weekly_index(.1, weeks=50)):
+            result = price_valuation.valuation_for_candidate(self._sparse_row(), today=self.today)
+        self.assertEqual(result["indexAdjustment"]["status"], "applied")
+        self.assertFalse(result["referenceOnly"])
+        self.assertEqual(result["dataQuality"]["level"], "low")
+
+    def test_history_lookup_requires_exact_complex_identity(self):
+        import budget_candidates
+        with mock.patch.object(budget_candidates, "_price_lookup_entity", return_value=None), \
+             mock.patch.object(price_valuation.molit_transactions, "transactions_for_apartment_cached") as lookup:
+            history, status = price_valuation._cached_history(self._sparse_row())
+        lookup.assert_not_called()
+        self.assertEqual(history, [])
+        self.assertEqual(status, "identity_unavailable")
 
     def test_holds_when_latest_trade_cannot_be_excluded(self):
         row = {
@@ -146,7 +242,8 @@ class PriceValuationTest(unittest.TestCase):
 
         self.assertEqual(result["floorComparison"]["status"], "insufficient")
         self.assertEqual(result["floorComparison"]["sampleCount"], 0)
-        self.assertEqual(result["fairPrice"]["centerEok"], 10.0)
+        self.assertEqual(result["fairPrice"]["centerEok"], 14.2)
+        self.assertTrue(result["referenceOnly"])
         self.assertIn("최근 거래의 층은 확인했지만", result["limitations"][0])
 
     def test_exposes_official_rate_as_separate_market_risk(self):
@@ -232,12 +329,23 @@ class PriceValuationTest(unittest.TestCase):
         self.assertEqual(result["fairPrice"]["centerEok"], 10.0)
 
     def test_limits_a_single_trade_adjustment(self):
-        series = self._weekly_index(2.0)
+        series = self._weekly_index(5.0)
+        row = self._index_row()
+        row["latestDealFloor"] = "10"
+        row["valuationTrades"] = [[*trade, "10"] for trade in row["valuationTrades"]]
         with mock.patch.object(price_valuation.regional_price_index, "series_for_region", return_value=series):
-            result = price_valuation.valuation_for_candidate(self._index_row(), today=self.today)
+            result = price_valuation.valuation_for_candidate(row, today=self.today)
 
-        limit = 10.0 * (1 + price_valuation.MAX_INDEX_ADJUSTMENT_PCT / 100)
-        self.assertLessEqual(result["fairPrice"]["centerEok"], round(limit, 2))
+        cap = price_valuation.MAX_INDEX_ADJUSTMENT_PCT
+        adjustments = result["indexAdjustment"]["transactions"]
+        capped = [trade for trade in adjustments if trade["rawChangePct"] > cap]
+        self.assertTrue(capped)
+        self.assertTrue(all(trade["changePct"] == cap for trade in capped))
+        self.assertLessEqual(result["fairPrice"]["centerEok"], round(10.0 * (1 + cap / 100), 2))
+        self.assertEqual(result["floorComparison"]["status"], "matched")
+        self.assertTrue(result["indexAdjustment"]["limited"])
+        self.assertTrue(result["referenceOnly"])
+        self.assertNotIn("오늘 기준", result["fairPrice"]["method"])
 
     def test_keeps_previous_method_when_index_is_missing_or_incomplete(self):
         row = self._index_row()
@@ -253,11 +361,17 @@ class PriceValuationTest(unittest.TestCase):
             no_trades = price_valuation.valuation_for_candidate(self.row, today=self.today)
             lookup.assert_not_called()
 
+        self.assertIn("최근 21일", no_index["indexAdjustment"]["reason"])
+        self.assertIn("비교 거래 시점", incomplete["indexAdjustment"]["reason"])
+        self.assertIn("최근 21일", old_index["indexAdjustment"]["reason"])
+        self.assertIn("비교 거래의 날짜와 가격", no_trades["indexAdjustment"]["reason"])
+
         for result in (no_index, incomplete, old_index, no_trades):
             self.assertEqual(result["status"], "ready")
-            self.assertEqual(result["indexAdjustment"], {"status": "unavailable"})
+            self.assertEqual(result["indexAdjustment"]["status"], "unavailable")
             self.assertEqual(result["fairPrice"]["centerEok"], 10.0)
-            self.assertIn("지역·주변 흐름 보정", result["fairPrice"]["method"])
+            self.assertIn("참고 가격대", result["fairPrice"]["method"])
+            self.assertTrue(result["referenceOnly"])
 
 
 if __name__ == "__main__":

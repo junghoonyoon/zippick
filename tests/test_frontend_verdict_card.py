@@ -34,7 +34,7 @@ class VerdictCardTest(unittest.TestCase):
         report = _function_body(self.html, "candidateZippickReportHtml")
         self.assertIn("const card = verdictCardHtml(item, complete ? interest : NaN);", wrapper)
         self.assertIn('aria-label="매수와 보유 비용"', wrapper)
-        self.assertIn("계산한 비용을 메우려면 얼마나 올라야 할까요?", wrapper)
+        self.assertIn("계산한 비용을 메우려면 매수가보다 최소", wrapper)
         self.assertIn("${zippickBreakevenHtml(item)}", report)
         self.assertLess(
             report.index("${zippickFundingHtml(item)}"),
