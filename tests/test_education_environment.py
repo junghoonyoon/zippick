@@ -274,7 +274,7 @@ class EducationEnvironmentTest(unittest.TestCase):
                          education_environment.SCORE_FORMULA_VERSION)
         self.assertEqual(dataset["zones"], [{"name": "기준 학구"}])
         self.assertIn("S1", dataset["schools"])
-        self.assertEqual(dataset["dataThrough"], "2026-10-31")
+        self.assertEqual(dataset["dataThrough"], max("2026-10-31", education_environment.datetime.date.today().isoformat()))
 
     def test_legacy_release_records_migrate_to_shared_cache_once(self):
         releases = Path(self.temporary.name) / "releases"

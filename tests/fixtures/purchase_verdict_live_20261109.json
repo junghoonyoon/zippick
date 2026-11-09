@@ -1,0 +1,4276 @@
+{
+  "observedOn": "2026-11-09",
+  "source": "Local /api/apartment-report reading the production shared facts replica. Public apartment data only.",
+  "cases": [
+    {
+      "request": [
+        "남서울힐스테이트",
+        "서울특별시 금천구",
+        "시흥동",
+        "59"
+      ],
+      "expected": "hold",
+      "expectedStars": 2,
+      "report": {
+        "name": "남서울힐스테이트",
+        "region": "서울특별시 금천구",
+        "buildingAge": 12,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 9.0,
+        "latestDealDate": "2026-10-24",
+        "latestDealExclusiveArea": 59.973,
+        "latestDealFloor": "11",
+        "latestTrade": {
+          "dealAmountEok": 9.0,
+          "dealDate": "2026-10-24",
+          "exclusiveArea": 59.973,
+          "floor": "11"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "59",
+          "minSqm": 58.0,
+          "maxSqm": 60.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "59",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "59",
+            "minSqm": 58.0,
+            "maxSqm": 60.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 9.0,
+            "dealDate": "2026-10-24",
+            "exclusiveArea": 59.973,
+            "floor": "11"
+          },
+          "fairPrice": {
+            "lowEok": 8.4,
+            "centerEok": 9.03,
+            "highEok": 9.66,
+            "widthPct": 14.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 3,
+            "latestTradeDate": "2026-10-24",
+            "latestTradeAgeDays": 16,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": false,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "provided",
+            "windows": [],
+            "reconstructed": false,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-07-29",
+              "originalPriceEok": 9.0,
+              "floor": "13"
+            },
+            {
+              "dealDate": "2026-07-14",
+              "originalPriceEok": 8.595,
+              "floor": "13"
+            },
+            {
+              "dealDate": "2026-06-13",
+              "originalPriceEok": 8.42,
+              "floor": "11"
+            }
+          ],
+          "floorComparison": {
+            "status": "matched",
+            "targetFloor": 11,
+            "sampleCount": 3,
+            "knownFloorCount": 6,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 5.0,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 금천구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 5.0,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-07-29",
+                "originalPriceEok": 9.0,
+                "adjustedPriceEok": 9.3922,
+                "changePct": 4.36,
+                "rawChangePct": 4.36,
+                "floor": "13"
+              },
+              {
+                "dealDate": "2026-07-14",
+                "originalPriceEok": 8.595,
+                "adjustedPriceEok": 9.0296,
+                "changePct": 5.06,
+                "rawChangePct": 5.06,
+                "floor": "13"
+              },
+              {
+                "dealDate": "2026-06-13",
+                "originalPriceEok": 8.42,
+                "adjustedPriceEok": 8.9655,
+                "changePct": 6.48,
+                "rawChangePct": 6.48,
+                "floor": "11"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 10.8,
+            "district6mPct": 7.4,
+            "peer6mPct": 11.6,
+            "leader6mPct": null,
+            "comparisonCount": 1,
+            "blended6mPct": 7.4
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 3건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 금천구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 거래와 층이 비슷한 실거래 3건으로 가격대를 계산했어요."
+          ],
+          "limitations": [
+            "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "금천구",
+          "areaLabel": "59",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2023,
+              "gapPct": 47.9,
+              "peerCount": 2,
+              "tradeCount": 4,
+              "lowData": true
+            },
+            {
+              "year": 2024,
+              "gapPct": 56.4,
+              "peerCount": 4,
+              "tradeCount": 14,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 60.0,
+              "peerCount": 4,
+              "tradeCount": 19,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 8.98,
+          "transactionCount": 7,
+          "peerAveragePriceEok": 6.0725,
+          "differencePct": 47.9,
+          "usualGapPct": 56.4,
+          "currentGapPct": 71.6,
+          "shiftPp": 15.2,
+          "position": "high",
+          "lowData": true,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": true,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 86.9,
+              "currentRatio": 83.1,
+              "shiftPp": -3.7,
+              "yearlyRatios": {
+                "2024": 89.6,
+                "2025": 84.2
+              },
+              "name": "금천 롯데캐슬 골드파크 3차",
+              "legalDong": "독산동",
+              "households": 1236,
+              "approvalYear": 2018,
+              "distanceMeters": 1388,
+              "areaLabel": "59",
+              "averagePriceEok": 10.8,
+              "transactionCount": 23,
+              "diffPct": 20.3,
+              "lowData": false,
+              "tier": 1
+            },
+            {
+              "usualRatio": 197.7,
+              "currentRatio": 224.5,
+              "shiftPp": 26.8,
+              "yearlyRatios": {
+                "2024": 192.7,
+                "2025": 202.6
+              },
+              "name": "벽산",
+              "legalDong": "시흥동",
+              "households": 2336,
+              "approvalYear": 2000,
+              "distanceMeters": 1661,
+              "areaLabel": "59",
+              "averagePriceEok": 4.0,
+              "transactionCount": 9,
+              "diffPct": -55.5,
+              "lowData": false,
+              "tier": 2
+            },
+            {
+              "usualRatio": 174.3,
+              "currentRatio": 191.5,
+              "shiftPp": 17.2,
+              "yearlyRatios": {
+                "2023": 152.9,
+                "2024": 174.3,
+                "2025": 180.2
+              },
+              "name": "벽산아파트",
+              "legalDong": "시흥동",
+              "households": 2810,
+              "approvalYear": 2004,
+              "distanceMeters": 1543,
+              "areaLabel": "59",
+              "averagePriceEok": 4.69,
+              "transactionCount": 22,
+              "diffPct": -47.8,
+              "lowData": false,
+              "tier": 2
+            },
+            {
+              "usualRatio": 169.1,
+              "currentRatio": 187.1,
+              "shiftPp": 18.0,
+              "yearlyRatios": {
+                "2023": 143.0,
+                "2024": 169.1,
+                "2025": 173.2
+              },
+              "name": "우방",
+              "legalDong": "시흥동",
+              "households": 671,
+              "approvalYear": 2002,
+              "distanceMeters": 1115,
+              "areaLabel": "59",
+              "averagePriceEok": 4.8,
+              "transactionCount": 9,
+              "diffPct": -46.5,
+              "lowData": false,
+              "tier": 2
+            }
+          ],
+          "excludedPeers": [
+            "금천 롯데캐슬 골드파크 1차"
+          ],
+          "selectionCriteria": {
+            "region": "금천구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 30,
+                  "status": "ok",
+                  "reason": "금천구청역 1호선 · 직선 1,137m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울문백초등학교 · 163m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 78,
+                  "status": "ok",
+                  "reason": "1,764세대 · 1,000~1,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 70,
+                  "status": "ok",
+                  "reason": "2014년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 7,
+          "priorDealCount": 17
+        }
+      }
+    },
+    {
+      "request": [
+        "창신쌍용아파트 2지구",
+        "서울특별시 종로구",
+        "창신동",
+        "64"
+      ],
+      "expected": "hold",
+      "expectedStars": 2,
+      "report": {
+        "name": "창신쌍용아파트 2지구",
+        "region": "서울특별시 종로구",
+        "buildingAge": 33,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 8.9,
+        "latestDealDate": "2026-08-21",
+        "latestDealExclusiveArea": 64.66,
+        "latestDealFloor": "13",
+        "latestTrade": {
+          "dealAmountEok": 8.9,
+          "dealDate": "2026-08-21",
+          "exclusiveArea": 64.66,
+          "floor": "13"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "64",
+          "minSqm": 63.0,
+          "maxSqm": 65.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "64",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "64",
+            "minSqm": 63.0,
+            "maxSqm": 65.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 8.9,
+            "dealDate": "2026-08-21",
+            "exclusiveArea": 64.66,
+            "floor": "13"
+          },
+          "fairPrice": {
+            "lowEok": 7.26,
+            "centerEok": 8.07,
+            "highEok": 8.88,
+            "widthPct": 20.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 4,
+            "latestTradeDate": "2026-08-21",
+            "latestTradeAgeDays": 80,
+            "marketContextAvailable": true,
+            "periodMonths": 12,
+            "periodWidened": true
+          },
+          "referenceOnly": false,
+          "comparisonSearch": {
+            "periodMonths": 12,
+            "periodWidened": true,
+            "source": "cached",
+            "windows": [
+              {
+                "periodMonths": 6,
+                "sampleCount": 2,
+                "similarFloorCount": 1
+              },
+              {
+                "periodMonths": 12,
+                "sampleCount": 13,
+                "similarFloorCount": 4
+              }
+            ],
+            "reconstructed": true,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-08-08",
+              "originalPriceEok": 8.5,
+              "floor": "11"
+            },
+            {
+              "dealDate": "2026-03-31",
+              "originalPriceEok": 7.42,
+              "floor": "14"
+            },
+            {
+              "dealDate": "2026-02-23",
+              "originalPriceEok": 7.5,
+              "floor": "12"
+            },
+            {
+              "dealDate": "2026-01-15",
+              "originalPriceEok": 7.3,
+              "floor": "12"
+            }
+          ],
+          "floorComparison": {
+            "status": "matched",
+            "targetFloor": 13,
+            "sampleCount": 4,
+            "knownFloorCount": 13,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 8.76,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 종로구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 8.76,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-08-08",
+                "originalPriceEok": 8.5,
+                "adjustedPriceEok": 8.7913,
+                "changePct": 3.43,
+                "rawChangePct": 3.43,
+                "floor": "11"
+              },
+              {
+                "dealDate": "2026-03-31",
+                "originalPriceEok": 7.42,
+                "adjustedPriceEok": 8.0202,
+                "changePct": 8.09,
+                "rawChangePct": 8.09,
+                "floor": "14"
+              },
+              {
+                "dealDate": "2026-02-23",
+                "originalPriceEok": 7.5,
+                "adjustedPriceEok": 8.1714,
+                "changePct": 8.95,
+                "rawChangePct": 8.95,
+                "floor": "12"
+              },
+              {
+                "dealDate": "2026-01-15",
+                "originalPriceEok": 7.3,
+                "adjustedPriceEok": 8.07,
+                "changePct": 10.55,
+                "rawChangePct": 10.55,
+                "floor": "12"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 14.4,
+            "district6mPct": 7.5,
+            "peer6mPct": 3.4,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 7.5
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 4건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 종로구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 거래와 층이 비슷한 실거래 4건으로 가격대를 계산했어요.",
+            "최근 6개월 자료가 부족해 12개월까지 넓혔어요. 자료의 확실성은 낮게 표시했어요."
+          ],
+          "limitations": [
+            "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "종로구",
+          "areaLabel": "64",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2024,
+              "gapPct": -36.4,
+              "peerCount": 2,
+              "tradeCount": 14,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": -36.0,
+              "peerCount": 2,
+              "tradeCount": 22,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-08",
+          "averagePriceEok": 8.5,
+          "transactionCount": 3,
+          "peerAveragePriceEok": 11.7444,
+          "differencePct": -27.6,
+          "usualGapPct": -36.2,
+          "currentGapPct": -26.5,
+          "shiftPp": 9.7,
+          "position": "high",
+          "lowData": true,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": false,
+          "areaAdjusted": true,
+          "peers": [
+            {
+              "usualRatio": 67.7,
+              "currentRatio": 82.2,
+              "shiftPp": 14.5,
+              "yearlyRatios": {
+                "2024": 66.0,
+                "2025": 69.3
+              },
+              "name": "두산",
+              "legalDong": "창신동",
+              "households": 529,
+              "approvalYear": 1999,
+              "distanceMeters": 714,
+              "areaLabel": "64",
+              "averagePriceEok": 10.3434,
+              "transactionCount": 4,
+              "diffPct": 21.7,
+              "lowData": true,
+              "tier": 0
+            },
+            {
+              "usualRatio": 60.0,
+              "currentRatio": 64.7,
+              "shiftPp": 4.6,
+              "yearlyRatios": {
+                "2024": 61.3,
+                "2025": 58.8
+              },
+              "name": "무악현대아파트",
+              "legalDong": "무악동",
+              "households": 964,
+              "approvalYear": 2000,
+              "distanceMeters": 4500,
+              "areaLabel": "64",
+              "averagePriceEok": 13.1454,
+              "transactionCount": 3,
+              "diffPct": 54.7,
+              "lowData": true,
+              "tier": 1
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "종로구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "창신역 6호선 · 직선 326m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울명신초등학교 · 264m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 58,
+                  "status": "ok",
+                  "reason": "919세대 · 500~999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 15,
+                  "status": "ok",
+                  "reason": "1993년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 4,
+          "priorDealCount": 11
+        }
+      }
+    },
+    {
+      "request": [
+        "헬리오시티",
+        "서울특별시 송파구",
+        "",
+        "84"
+      ],
+      "expected": "yes",
+      "expectedStars": 4,
+      "report": {
+        "name": "헬리오시티",
+        "region": "서울특별시 송파구",
+        "buildingAge": 8,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 29.2,
+        "latestDealDate": "2026-10-24",
+        "latestDealExclusiveArea": 84.95,
+        "latestDealFloor": "22",
+        "latestTrade": {
+          "dealAmountEok": 29.2,
+          "dealDate": "2026-10-24",
+          "exclusiveArea": 84.95,
+          "floor": "22"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 29.2,
+            "dealDate": "2026-10-24",
+            "exclusiveArea": 84.95,
+            "floor": "22"
+          },
+          "fairPrice": {
+            "lowEok": 27.87,
+            "centerEok": 29.97,
+            "highEok": 32.07,
+            "widthPct": 14.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 3,
+            "latestTradeDate": "2026-10-24",
+            "latestTradeAgeDays": 16,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": false,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "provided",
+            "windows": [],
+            "reconstructed": false,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-07-10",
+              "originalPriceEok": 30.0,
+              "floor": "24"
+            },
+            {
+              "dealDate": "2026-06-24",
+              "originalPriceEok": 30.8,
+              "floor": "24"
+            },
+            {
+              "dealDate": "2026-06-05",
+              "originalPriceEok": 27.9,
+              "floor": "20"
+            }
+          ],
+          "floorComparison": {
+            "status": "matched",
+            "targetFloor": 22,
+            "sampleCount": 3,
+            "knownFloorCount": 14,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": -0.1,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 송파구",
+            "asOf": "2026-11-02",
+            "centerChangePct": -0.1,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-07-10",
+                "originalPriceEok": 30.0,
+                "adjustedPriceEok": 29.9696,
+                "changePct": -0.1,
+                "rawChangePct": -0.1,
+                "floor": "24"
+              },
+              {
+                "dealDate": "2026-06-24",
+                "originalPriceEok": 30.8,
+                "adjustedPriceEok": 30.9731,
+                "changePct": 0.56,
+                "rawChangePct": 0.56,
+                "floor": "24"
+              },
+              {
+                "dealDate": "2026-06-05",
+                "originalPriceEok": 27.9,
+                "adjustedPriceEok": 28.3101,
+                "changePct": 1.47,
+                "rawChangePct": 1.47,
+                "floor": "20"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 0.0,
+            "district6mPct": 0.4,
+            "peer6mPct": 0.4,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 0.4
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 3건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 송파구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 거래와 층이 비슷한 실거래 3건으로 가격대를 계산했어요."
+          ],
+          "limitations": [
+            "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "송파구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2022,
+              "gapPct": -12.8,
+              "peerCount": 3,
+              "tradeCount": 46,
+              "lowData": false
+            },
+            {
+              "year": 2023,
+              "gapPct": -11.5,
+              "peerCount": 3,
+              "tradeCount": 167,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": -11.0,
+              "peerCount": 3,
+              "tradeCount": 200,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": -14.1,
+              "peerCount": 3,
+              "tradeCount": 163,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 29.0,
+          "transactionCount": 15,
+          "peerAveragePriceEok": 32.6333,
+          "differencePct": -11.1,
+          "usualGapPct": -12.2,
+          "currentGapPct": -10.7,
+          "shiftPp": 1.5,
+          "position": "similar",
+          "lowData": false,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 97.2,
+              "currentRatio": 98.3,
+              "shiftPp": 1.1,
+              "yearlyRatios": {
+                "2022": 85.8,
+                "2023": 97.4,
+                "2024": 97.0,
+                "2025": 97.7
+              },
+              "name": "파크리오",
+              "legalDong": "신천동",
+              "households": 6864,
+              "approvalYear": 2008,
+              "distanceMeters": 2561,
+              "areaLabel": "84",
+              "averagePriceEok": 29.5,
+              "transactionCount": 21,
+              "diffPct": 1.7,
+              "lowData": false,
+              "tier": 1
+            },
+            {
+              "usualRatio": 84.0,
+              "currentRatio": 86.6,
+              "shiftPp": 2.5,
+              "yearlyRatios": {
+                "2022": 87.0,
+                "2023": 83.0,
+                "2024": 85.1,
+                "2025": 80.6
+              },
+              "name": "잠실엘스",
+              "legalDong": "잠실동",
+              "households": 5678,
+              "approvalYear": 2008,
+              "distanceMeters": 3075,
+              "areaLabel": "84",
+              "averagePriceEok": 33.5,
+              "transactionCount": 35,
+              "diffPct": 15.5,
+              "lowData": false,
+              "tier": 1
+            },
+            {
+              "usualRatio": 85.0,
+              "currentRatio": 83.1,
+              "shiftPp": -1.9,
+              "yearlyRatios": {
+                "2022": 88.7,
+                "2023": 85.1,
+                "2024": 84.9,
+                "2025": 79.4
+              },
+              "name": "리센츠",
+              "legalDong": "잠실동",
+              "households": 5563,
+              "approvalYear": 2008,
+              "distanceMeters": 2649,
+              "areaLabel": "84",
+              "averagePriceEok": 34.9,
+              "transactionCount": 25,
+              "diffPct": 20.3,
+              "lowData": false,
+              "tier": 1
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "송파구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 75,
+                  "status": "ok",
+                  "reason": "송파역 8호선 · 직선 516m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울가락초등학교 · 308m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 100,
+                  "status": "ok",
+                  "reason": "9,510세대 · 3,000세대 이상 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 85,
+                  "status": "ok",
+                  "reason": "2018년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 32,
+          "priorDealCount": 52
+        }
+      }
+    },
+    {
+      "request": [
+        "마포래미안푸르지오2단지",
+        "서울특별시 마포구",
+        "아현동",
+        "84"
+      ],
+      "expected": "yes",
+      "expectedStars": 4,
+      "report": {
+        "name": "마포래미안푸르지오2단지",
+        "region": "서울특별시 마포구",
+        "buildingAge": 12,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 26.65,
+        "latestDealDate": "2026-09-29",
+        "latestDealExclusiveArea": 84.5978,
+        "latestDealFloor": "20",
+        "latestTrade": {
+          "dealAmountEok": 26.65,
+          "dealDate": "2026-09-29",
+          "exclusiveArea": 84.5978,
+          "floor": "20"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 26.65,
+            "dealDate": "2026-09-29",
+            "exclusiveArea": 84.5978,
+            "floor": "20"
+          },
+          "fairPrice": {
+            "lowEok": 23.86,
+            "centerEok": 25.66,
+            "highEok": 27.46,
+            "widthPct": 14.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 4,
+            "latestTradeDate": "2026-09-29",
+            "latestTradeAgeDays": 41,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": true,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "cached",
+            "windows": [
+              {
+                "periodMonths": 6,
+                "sampleCount": 4,
+                "similarFloorCount": 1
+              }
+            ],
+            "reconstructed": true,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-08-07",
+              "originalPriceEok": 26.1,
+              "floor": "12"
+            },
+            {
+              "dealDate": "2026-07-14",
+              "originalPriceEok": 24.7,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-06-19",
+              "originalPriceEok": 25.0,
+              "floor": "19"
+            },
+            {
+              "dealDate": "2026-06-01",
+              "originalPriceEok": 24.3,
+              "floor": "13"
+            }
+          ],
+          "floorComparison": {
+            "status": "insufficient",
+            "targetFloor": 20,
+            "sampleCount": 1,
+            "knownFloorCount": 4,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 3.89,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 마포구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 3.89,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-08-07",
+                "originalPriceEok": 26.1,
+                "adjustedPriceEok": 26.8325,
+                "changePct": 2.81,
+                "rawChangePct": 2.81,
+                "floor": "12"
+              },
+              {
+                "dealDate": "2026-07-14",
+                "originalPriceEok": 24.7,
+                "adjustedPriceEok": 25.6557,
+                "changePct": 3.87,
+                "rawChangePct": 3.87,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-06-19",
+                "originalPriceEok": 25.0,
+                "adjustedPriceEok": 26.2375,
+                "changePct": 4.95,
+                "rawChangePct": 4.95,
+                "floor": "19"
+              },
+              {
+                "dealDate": "2026-06-01",
+                "originalPriceEok": 24.3,
+                "adjustedPriceEok": 25.5611,
+                "changePct": 5.19,
+                "rawChangePct": 5.19,
+                "floor": "13"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": -0.1,
+            "district6mPct": 3.2,
+            "peer6mPct": -0.0,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 3.2
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 4건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 마포구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 기간에 층이 비슷한 거래가 부족해 같은 면적의 여러 층 거래와 비교했어요. 층별 가격 차이는 보정하지 않았어요.",
+            "확보한 거래로 참고 가격대는 보여드리지만, 현재 매물이 싸거나 비싸다고 단정하지 않아요."
+          ],
+          "limitations": [
+            "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "마포구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2023,
+              "gapPct": 3.8,
+              "peerCount": 1,
+              "tradeCount": 9,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": 14.6,
+              "peerCount": 4,
+              "tradeCount": 27,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 18.8,
+              "peerCount": 4,
+              "tradeCount": 13,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-09",
+          "averagePriceEok": 25.0,
+          "transactionCount": 5,
+          "peerAveragePriceEok": 22.225,
+          "differencePct": 12.5,
+          "usualGapPct": 14.6,
+          "currentGapPct": 13.3,
+          "shiftPp": -1.3,
+          "position": "similar",
+          "lowData": true,
+          "scope": "nearby",
+          "selectionMethod": "nearby",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 94.1,
+              "currentRatio": 102.0,
+              "shiftPp": 7.9,
+              "yearlyRatios": {
+                "2024": 92.7,
+                "2025": 95.5
+              },
+              "name": "마포더클래시",
+              "legalDong": "아현동",
+              "households": 1419,
+              "approvalYear": 2022,
+              "distanceMeters": 284,
+              "areaLabel": "84",
+              "averagePriceEok": 24.5,
+              "transactionCount": 3,
+              "diffPct": -2.0,
+              "lowData": true,
+              "tier": 0
+            },
+            {
+              "usualRatio": 129.4,
+              "currentRatio": 121.4,
+              "shiftPp": -8.1,
+              "yearlyRatios": {
+                "2024": 124.2,
+                "2025": 134.7
+              },
+              "name": "신촌푸르지오",
+              "legalDong": "북아현동",
+              "households": 940,
+              "approvalYear": 2015,
+              "distanceMeters": 537,
+              "areaLabel": "84",
+              "averagePriceEok": 20.6,
+              "transactionCount": 7,
+              "diffPct": -17.6,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 133.0,
+              "currentRatio": 125.0,
+              "shiftPp": -8.0,
+              "yearlyRatios": {
+                "2024": 132.6,
+                "2025": 133.4
+              },
+              "name": "힐스테이트 신촌",
+              "legalDong": "북아현동",
+              "households": 1226,
+              "approvalYear": 2020,
+              "distanceMeters": 781,
+              "areaLabel": "84",
+              "averagePriceEok": 20.0,
+              "transactionCount": 3,
+              "diffPct": -20.0,
+              "lowData": true,
+              "tier": 0
+            },
+            {
+              "usualRatio": 108.8,
+              "currentRatio": 105.0,
+              "shiftPp": -3.8,
+              "yearlyRatios": {
+                "2023": 103.8,
+                "2024": 108.8,
+                "2025": 111.4
+              },
+              "name": "마포자이 더 센트리지",
+              "legalDong": "염리동",
+              "households": 767,
+              "approvalYear": 2022,
+              "distanceMeters": 691,
+              "areaLabel": "84",
+              "averagePriceEok": 23.8,
+              "transactionCount": 5,
+              "diffPct": -4.8,
+              "lowData": false,
+              "tier": 0
+            }
+          ],
+          "excludedPeers": [
+            "서울역센트럴자이",
+            "래미안 공덕5차",
+            "마포그랑자이(1단지)"
+          ],
+          "selectionCriteria": {
+            "region": "마포구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 100,
+                  "status": "ok",
+                  "reason": "아현역 2호선 · 직선 298m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울아현초등학교 · 211m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 78,
+                  "status": "ok",
+                  "reason": "1,071세대 · 1,000~1,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 70,
+                  "status": "ok",
+                  "reason": "2014년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 7,
+          "priorDealCount": 3
+        }
+      }
+    },
+    {
+      "request": [
+        "고덕그라시움",
+        "서울특별시 강동구",
+        "",
+        "84"
+      ],
+      "expected": "yes",
+      "expectedStars": 4,
+      "report": {
+        "name": "고덕그라시움",
+        "region": "서울특별시 강동구",
+        "buildingAge": 7,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 25.5,
+        "latestDealDate": "2026-10-03",
+        "latestDealExclusiveArea": 84.244,
+        "latestDealFloor": "13",
+        "latestTrade": {
+          "dealAmountEok": 25.5,
+          "dealDate": "2026-10-03",
+          "exclusiveArea": 84.244,
+          "floor": "13"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 25.5,
+            "dealDate": "2026-10-03",
+            "exclusiveArea": 84.244,
+            "floor": "13"
+          },
+          "fairPrice": {
+            "lowEok": 23.71,
+            "centerEok": 24.96,
+            "highEok": 26.21,
+            "widthPct": 10.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 6,
+            "latestTradeDate": "2026-10-03",
+            "latestTradeAgeDays": 37,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": true,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "cached",
+            "windows": [
+              {
+                "periodMonths": 6,
+                "sampleCount": 6,
+                "similarFloorCount": 2
+              }
+            ],
+            "reconstructed": true,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-09-12",
+              "originalPriceEok": 24.5,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-07-16",
+              "originalPriceEok": 24.9,
+              "floor": "22"
+            },
+            {
+              "dealDate": "2026-06-27",
+              "originalPriceEok": 25.45,
+              "floor": "18"
+            },
+            {
+              "dealDate": "2026-06-27",
+              "originalPriceEok": 25.0,
+              "floor": "15"
+            },
+            {
+              "dealDate": "2026-06-20",
+              "originalPriceEok": 23.5,
+              "floor": "11"
+            },
+            {
+              "dealDate": "2026-06-15",
+              "originalPriceEok": 24.1,
+              "floor": "21"
+            }
+          ],
+          "floorComparison": {
+            "status": "insufficient",
+            "targetFloor": 13,
+            "sampleCount": 2,
+            "knownFloorCount": 6,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 1.88,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 강동구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 1.88,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-09-12",
+                "originalPriceEok": 24.5,
+                "adjustedPriceEok": 24.7165,
+                "changePct": 0.88,
+                "rawChangePct": 0.88,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-07-16",
+                "originalPriceEok": 24.9,
+                "adjustedPriceEok": 25.5119,
+                "changePct": 2.46,
+                "rawChangePct": 2.46,
+                "floor": "22"
+              },
+              {
+                "dealDate": "2026-06-27",
+                "originalPriceEok": 25.45,
+                "adjustedPriceEok": 26.2981,
+                "changePct": 3.33,
+                "rawChangePct": 3.33,
+                "floor": "18"
+              },
+              {
+                "dealDate": "2026-06-27",
+                "originalPriceEok": 25.0,
+                "adjustedPriceEok": 25.8331,
+                "changePct": 3.33,
+                "rawChangePct": 3.33,
+                "floor": "15"
+              },
+              {
+                "dealDate": "2026-06-20",
+                "originalPriceEok": 23.5,
+                "adjustedPriceEok": 24.3408,
+                "changePct": 3.58,
+                "rawChangePct": 3.58,
+                "floor": "11"
+              },
+              {
+                "dealDate": "2026-06-15",
+                "originalPriceEok": 24.1,
+                "adjustedPriceEok": 24.9622,
+                "changePct": 3.58,
+                "rawChangePct": 3.58,
+                "floor": "21"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 3.8,
+            "district6mPct": 3.0,
+            "peer6mPct": 0.7,
+            "leader6mPct": null,
+            "comparisonCount": 1,
+            "blended6mPct": 3.0
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 6건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 강동구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 기간에 층이 비슷한 거래가 부족해 같은 면적의 여러 층 거래와 비교했어요. 층별 가격 차이는 보정하지 않았어요.",
+            "확보한 거래로 참고 가격대는 보여드리지만, 현재 매물이 싸거나 비싸다고 단정하지 않아요."
+          ],
+          "limitations": [
+            "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "강동구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2023,
+              "gapPct": 10.4,
+              "peerCount": 2,
+              "tradeCount": 14,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": 10.1,
+              "peerCount": 2,
+              "tradeCount": 74,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 16.0,
+              "peerCount": 2,
+              "tradeCount": 89,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 24.9,
+          "transactionCount": 7,
+          "peerAveragePriceEok": 22.2125,
+          "differencePct": 12.1,
+          "usualGapPct": 10.4,
+          "currentGapPct": 12.2,
+          "shiftPp": 1.8,
+          "position": "similar",
+          "lowData": false,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 110.4,
+              "currentRatio": 108.6,
+              "shiftPp": -1.7,
+              "yearlyRatios": {
+                "2023": 110.4,
+                "2024": 108.3,
+                "2025": 115.1
+              },
+              "name": "고덕아르테온",
+              "legalDong": "상일동",
+              "households": 4066,
+              "approvalYear": 2020,
+              "distanceMeters": 295,
+              "areaLabel": "84",
+              "averagePriceEok": 22.925,
+              "transactionCount": 14,
+              "diffPct": -7.9,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 111.9,
+              "currentRatio": 115.8,
+              "shiftPp": 3.9,
+              "yearlyRatios": {
+                "2023": 110.4,
+                "2024": 111.9,
+                "2025": 117.0
+              },
+              "name": "래미안힐스테이트 고덕",
+              "legalDong": "고덕동",
+              "households": 3658,
+              "approvalYear": 2016,
+              "distanceMeters": 1448,
+              "areaLabel": "84",
+              "averagePriceEok": 21.5,
+              "transactionCount": 13,
+              "diffPct": -13.7,
+              "lowData": false,
+              "tier": 1
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "강동구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 100,
+                  "status": "ok",
+                  "reason": "상일동역 5호선 · 직선 265m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울강덕초등학교 · 255m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 100,
+                  "status": "ok",
+                  "reason": "4,932세대 · 3,000세대 이상 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 85,
+                  "status": "ok",
+                  "reason": "2019년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 12,
+          "priorDealCount": 13
+        }
+      }
+    },
+    {
+      "request": [
+        "판교푸르지오그랑블",
+        "경기도 성남시 분당구",
+        "",
+        "97"
+      ],
+      "expected": "missing",
+      "expectedStars": null,
+      "report": {
+        "name": "판교푸르지오그랑블",
+        "region": "경기도 성남시 분당구",
+        "buildingAge": 15,
+        "latestDealPriceEok": 35.7,
+        "latestDealDate": "2026-04-10",
+        "latestDealExclusiveArea": 97.7136,
+        "latestDealFloor": "4",
+        "latestTrade": {
+          "dealAmountEok": 35.7,
+          "dealDate": "2026-04-10",
+          "exclusiveArea": 97.7136,
+          "floor": "4"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "97",
+          "minSqm": 96.0,
+          "maxSqm": 98.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "unavailable",
+          "verdict": "hold",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "reason": "단지를 정확히 확인하지 못해 가격을 판단할 수 없어요.",
+          "market": {
+            "status": "available",
+            "apartment6mPct": null,
+            "district6mPct": null,
+            "peer6mPct": 3.8,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 3.8
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "comparisonSearch": {}
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "simple",
+          "region": "성남분당구",
+          "areaLabel": "97",
+          "periodMonths": 24,
+          "periodWidened": true,
+          "yearlyGaps": [],
+          "throughMonth": "2026-04",
+          "averagePriceEok": 28.65,
+          "transactionCount": 3,
+          "peerAveragePriceEok": 22.925,
+          "differencePct": 25.0,
+          "usualGapPct": null,
+          "currentGapPct": null,
+          "shiftPp": null,
+          "position": "high",
+          "lowData": true,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": true,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "name": "판교알파리움2단지",
+              "legalDong": "백현동",
+              "households": 514,
+              "approvalYear": 2015,
+              "distanceMeters": 577,
+              "areaLabel": "97",
+              "averagePriceEok": 23.0,
+              "transactionCount": 9,
+              "diffPct": -19.7,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "name": "판교알파리움1단지",
+              "legalDong": "백현동",
+              "households": 417,
+              "approvalYear": 2015,
+              "distanceMeters": 647,
+              "areaLabel": "97",
+              "averagePriceEok": 22.85,
+              "transactionCount": 6,
+              "diffPct": -20.2,
+              "lowData": false,
+              "tier": 2
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "성남분당구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "판교역 경강선 · 직선 310m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "보평초등학교 · 373m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 58,
+                  "status": "ok",
+                  "reason": "948세대 · 500~999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 70,
+                  "status": "ok",
+                  "reason": "2011년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "insufficient",
+          "recentDealCount": 0,
+          "priorDealCount": 0
+        }
+      }
+    },
+    {
+      "request": [
+        "광교중흥S클래스",
+        "경기도 수원시 영통구",
+        "",
+        "84"
+      ],
+      "expected": "yes",
+      "expectedStars": 5,
+      "report": {
+        "name": "광교중흥S클래스",
+        "region": "경기도 수원시 영통구",
+        "buildingAge": 7,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 19.3,
+        "latestDealDate": "2026-10-23",
+        "latestDealExclusiveArea": 84.9388,
+        "latestDealFloor": "35",
+        "latestTrade": {
+          "dealAmountEok": 19.3,
+          "dealDate": "2026-10-23",
+          "exclusiveArea": 84.9388,
+          "floor": "35"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 19.3,
+            "dealDate": "2026-10-23",
+            "exclusiveArea": 84.9388,
+            "floor": "35"
+          },
+          "fairPrice": {
+            "lowEok": 18.42,
+            "centerEok": 20.16,
+            "highEok": 21.57,
+            "widthPct": 15.6,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 3,
+            "latestTradeDate": "2026-10-23",
+            "latestTradeAgeDays": 17,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": false,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "provided",
+            "windows": [],
+            "reconstructed": false,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-10-02",
+              "originalPriceEok": 19.6,
+              "floor": "37"
+            },
+            {
+              "dealDate": "2026-08-26",
+              "originalPriceEok": 17.35,
+              "floor": "34"
+            },
+            {
+              "dealDate": "2026-06-18",
+              "originalPriceEok": 18.4,
+              "floor": "32"
+            }
+          ],
+          "floorComparison": {
+            "status": "matched",
+            "targetFloor": 35,
+            "sampleCount": 3,
+            "knownFloorCount": 15,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 9.57,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "경기 수원시 영통구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 9.57,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-10-02",
+                "originalPriceEok": 19.6,
+                "adjustedPriceEok": 20.1622,
+                "changePct": 2.87,
+                "rawChangePct": 2.87,
+                "floor": "37"
+              },
+              {
+                "dealDate": "2026-08-26",
+                "originalPriceEok": 17.35,
+                "adjustedPriceEok": 18.4229,
+                "changePct": 6.18,
+                "rawChangePct": 6.18,
+                "floor": "34"
+              },
+              {
+                "dealDate": "2026-06-18",
+                "originalPriceEok": 18.4,
+                "adjustedPriceEok": 20.5329,
+                "changePct": 11.59,
+                "rawChangePct": 11.59,
+                "floor": "32"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 8.5,
+            "district6mPct": 8.0,
+            "peer6mPct": 10.8,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 8.0
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 3건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 경기 수원시 영통구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 거래와 층이 비슷한 실거래 3건으로 가격대를 계산했어요."
+          ],
+          "limitations": [
+            "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "수원영통구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2023,
+              "gapPct": 38.5,
+              "peerCount": 3,
+              "tradeCount": 5,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": 45.1,
+              "peerCount": 4,
+              "tradeCount": 66,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 42.4,
+              "peerCount": 4,
+              "tradeCount": 67,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 19.15,
+          "transactionCount": 16,
+          "peerAveragePriceEok": 15.175,
+          "differencePct": 26.2,
+          "usualGapPct": 42.4,
+          "currentGapPct": 30.7,
+          "shiftPp": -11.7,
+          "position": "low",
+          "lowData": false,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 103.3,
+              "currentRatio": 93.9,
+              "shiftPp": -9.4,
+              "yearlyRatios": {
+                "2023": 103.3,
+                "2024": 106.8,
+                "2025": 101.9
+              },
+              "name": "자연앤 힐스테이트",
+              "legalDong": "이의동",
+              "households": 1764,
+              "approvalYear": 2012,
+              "distanceMeters": 853,
+              "areaLabel": "84",
+              "averagePriceEok": 20.4,
+              "transactionCount": 21,
+              "diffPct": 6.5,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 144.1,
+              "currentRatio": 136.8,
+              "shiftPp": -7.4,
+              "yearlyRatios": {
+                "2024": 143.0,
+                "2025": 145.3
+              },
+              "name": "광교 호반베르디움",
+              "legalDong": "원천동",
+              "households": 1330,
+              "approvalYear": 2014,
+              "distanceMeters": 1126,
+              "areaLabel": "84",
+              "averagePriceEok": 14.0,
+              "transactionCount": 5,
+              "diffPct": -26.9,
+              "lowData": false,
+              "tier": 1
+            },
+            {
+              "usualRatio": 154.3,
+              "currentRatio": 138.8,
+              "shiftPp": -15.5,
+              "yearlyRatios": {
+                "2023": 149.7,
+                "2024": 159.0,
+                "2025": 154.3
+              },
+              "name": "힐스테이트 영통",
+              "legalDong": "망포동",
+              "households": 2140,
+              "approvalYear": 2017,
+              "distanceMeters": 4439,
+              "areaLabel": "84",
+              "averagePriceEok": 13.8,
+              "transactionCount": 22,
+              "diffPct": -27.9,
+              "lowData": false,
+              "tier": 1
+            },
+            {
+              "usualRatio": 167.9,
+              "currentRatio": 153.2,
+              "shiftPp": -14.7,
+              "yearlyRatios": {
+                "2023": 162.4,
+                "2024": 171.5,
+                "2025": 167.9
+              },
+              "name": "영통아이파크캐슬1단지",
+              "legalDong": "망포동",
+              "households": 1783,
+              "approvalYear": 2019,
+              "distanceMeters": 4532,
+              "areaLabel": "84",
+              "averagePriceEok": 12.5,
+              "transactionCount": 11,
+              "diffPct": -34.7,
+              "lowData": false,
+              "tier": 1
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "수원영통구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 55,
+                  "status": "ok",
+                  "reason": "광교중앙역 신분당선 · 직선 869m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "광교호수초등학교 · 325m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "2,231세대 · 2,000~2,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 85,
+                  "status": "ok",
+                  "reason": "2019년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 23,
+          "priorDealCount": 14
+        }
+      }
+    },
+    {
+      "request": [
+        "길음뉴타운8단지(래미안)",
+        "서울특별시 성북구",
+        "길음동",
+        "84"
+      ],
+      "expected": "conditional",
+      "expectedStars": 3,
+      "report": {
+        "name": "길음뉴타운8단지(래미안)",
+        "region": "서울특별시 성북구",
+        "buildingAge": 16,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 15.9,
+        "latestDealDate": "2026-07-29",
+        "latestDealExclusiveArea": 84.82,
+        "latestDealFloor": "8",
+        "latestTrade": {
+          "dealAmountEok": 15.9,
+          "dealDate": "2026-07-29",
+          "exclusiveArea": 84.82,
+          "floor": "8"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 15.9,
+            "dealDate": "2026-07-29",
+            "exclusiveArea": 84.82,
+            "floor": "8"
+          },
+          "fairPrice": {
+            "lowEok": 13.65,
+            "centerEok": 16.58,
+            "highEok": 17.91,
+            "widthPct": 25.7,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 3,
+            "latestTradeDate": "2026-07-29",
+            "latestTradeAgeDays": 103,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": false,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "provided",
+            "windows": [],
+            "reconstructed": false,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-06-26",
+              "originalPriceEok": 15.3,
+              "floor": "9"
+            },
+            {
+              "dealDate": "2026-06-09",
+              "originalPriceEok": 12.5,
+              "floor": "11"
+            },
+            {
+              "dealDate": "2026-06-05",
+              "originalPriceEok": 15.2,
+              "floor": "11"
+            }
+          ],
+          "floorComparison": {
+            "status": "matched",
+            "targetFloor": 8,
+            "sampleCount": 3,
+            "knownFloorCount": 4,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 9.08,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 성북구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 9.08,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-06-26",
+                "originalPriceEok": 15.3,
+                "adjustedPriceEok": 16.5791,
+                "changePct": 8.36,
+                "rawChangePct": 8.36,
+                "floor": "9"
+              },
+              {
+                "dealDate": "2026-06-09",
+                "originalPriceEok": 12.5,
+                "adjustedPriceEok": 13.6547,
+                "changePct": 9.24,
+                "rawChangePct": 9.24,
+                "floor": "11"
+              },
+              {
+                "dealDate": "2026-06-05",
+                "originalPriceEok": 15.2,
+                "adjustedPriceEok": 16.6618,
+                "changePct": 9.62,
+                "rawChangePct": 9.62,
+                "floor": "11"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 10.3,
+            "district6mPct": 9.8,
+            "peer6mPct": 9.2,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 9.8
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 3건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 성북구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 거래와 층이 비슷한 실거래 3건으로 가격대를 계산했어요."
+          ],
+          "limitations": [
+            "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "성북구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2022,
+              "gapPct": 29.7,
+              "peerCount": 3,
+              "tradeCount": 3,
+              "lowData": true
+            },
+            {
+              "year": 2023,
+              "gapPct": 12.5,
+              "peerCount": 4,
+              "tradeCount": 19,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": 17.1,
+              "peerCount": 4,
+              "tradeCount": 25,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 25.3,
+              "peerCount": 4,
+              "tradeCount": 41,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-07",
+          "averagePriceEok": 15.2,
+          "transactionCount": 5,
+          "peerAveragePriceEok": 12.95,
+          "differencePct": 17.4,
+          "usualGapPct": 21.2,
+          "currentGapPct": 18.1,
+          "shiftPp": -3.1,
+          "position": "low",
+          "lowData": false,
+          "scope": "nearby",
+          "selectionMethod": "nearby",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 113.8,
+              "currentRatio": 116.0,
+              "shiftPp": 2.3,
+              "yearlyRatios": {
+                "2022": 111.2,
+                "2023": 109.9,
+                "2024": 116.4,
+                "2025": 122.6
+              },
+              "name": "길음뉴타운4단지(e편한세상)",
+              "legalDong": "길음동",
+              "households": 1605,
+              "approvalYear": 2005,
+              "distanceMeters": 550,
+              "areaLabel": "84",
+              "averagePriceEok": 13.1,
+              "transactionCount": 12,
+              "diffPct": -13.8,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 127.2,
+              "currentRatio": 129.4,
+              "shiftPp": 2.1,
+              "yearlyRatios": {
+                "2022": 123.8,
+                "2023": 120.9,
+                "2024": 130.7,
+                "2025": 141.6
+              },
+              "name": "길음뉴타운2단지(푸르지오)",
+              "legalDong": "길음동",
+              "households": 1634,
+              "approvalYear": 2005,
+              "distanceMeters": 500,
+              "areaLabel": "84",
+              "averagePriceEok": 11.75,
+              "transactionCount": 10,
+              "diffPct": -22.7,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 131.3,
+              "currentRatio": 122.1,
+              "shiftPp": -9.2,
+              "yearlyRatios": {
+                "2022": 154.0,
+                "2023": 122.8,
+                "2024": 128.3,
+                "2025": 134.3
+              },
+              "name": "길음동동부센트레빌(1278-0)",
+              "legalDong": "길음동",
+              "households": 1377,
+              "approvalYear": 2003,
+              "distanceMeters": 648,
+              "areaLabel": "84",
+              "averagePriceEok": 12.45,
+              "transactionCount": 7,
+              "diffPct": -18.1,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 96.2,
+              "currentRatio": 104.8,
+              "shiftPp": 8.6,
+              "yearlyRatios": {
+                "2023": 96.2,
+                "2024": 92.9,
+                "2025": 102.6
+              },
+              "name": "길음뉴타운9단지(래미안)",
+              "legalDong": "길음동",
+              "households": 1012,
+              "approvalYear": 2010,
+              "distanceMeters": 421,
+              "areaLabel": "84",
+              "averagePriceEok": 14.5,
+              "transactionCount": 5,
+              "diffPct": -4.6,
+              "lowData": false,
+              "tier": 0
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "성북구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 75,
+                  "status": "ok",
+                  "reason": "정릉역 우이신설선 · 직선 673m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울길원초등학교 · 195m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 78,
+                  "status": "ok",
+                  "reason": "1,497세대 · 1,000~1,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 55,
+                  "status": "ok",
+                  "reason": "2010년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 7,
+          "priorDealCount": 15
+        }
+      }
+    },
+    {
+      "request": [
+        "텐즈힐(1단지)",
+        "서울특별시 성동구",
+        "하왕십리동",
+        "84"
+      ],
+      "expected": "conditional",
+      "expectedStars": 3,
+      "report": {
+        "name": "텐즈힐(1단지)",
+        "region": "서울특별시 성동구",
+        "buildingAge": 11,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 22.0,
+        "latestDealDate": "2026-10-01",
+        "latestDealExclusiveArea": 84.88,
+        "latestDealFloor": "2",
+        "latestTrade": {
+          "dealAmountEok": 22.0,
+          "dealDate": "2026-10-01",
+          "exclusiveArea": 84.88,
+          "floor": "2"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 22.0,
+            "dealDate": "2026-10-01",
+            "exclusiveArea": 84.88,
+            "floor": "2"
+          },
+          "fairPrice": {
+            "lowEok": 21.55,
+            "centerEok": 23.17,
+            "highEok": 24.79,
+            "widthPct": 14.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 4,
+            "latestTradeDate": "2026-10-01",
+            "latestTradeAgeDays": 39,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": true,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "cached",
+            "windows": [
+              {
+                "periodMonths": 6,
+                "sampleCount": 4,
+                "similarFloorCount": 0
+              }
+            ],
+            "reconstructed": true,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-08-19",
+              "originalPriceEok": 22.8,
+              "floor": "25"
+            },
+            {
+              "dealDate": "2026-08-07",
+              "originalPriceEok": 22.9,
+              "floor": "20"
+            },
+            {
+              "dealDate": "2026-07-04",
+              "originalPriceEok": 22.6,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-06-20",
+              "originalPriceEok": 22.6,
+              "floor": "23"
+            }
+          ],
+          "floorComparison": {
+            "status": "insufficient",
+            "targetFloor": 2,
+            "sampleCount": 0,
+            "knownFloorCount": 4,
+            "rule": "1~3층"
+          },
+          "marketAdjustmentPct": 1.62,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 성동구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 1.62,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-08-19",
+                "originalPriceEok": 22.8,
+                "adjustedPriceEok": 23.084,
+                "changePct": 1.25,
+                "rawChangePct": 1.25,
+                "floor": "25"
+              },
+              {
+                "dealDate": "2026-08-07",
+                "originalPriceEok": 22.9,
+                "adjustedPriceEok": 23.2387,
+                "changePct": 1.48,
+                "rawChangePct": 1.48,
+                "floor": "20"
+              },
+              {
+                "dealDate": "2026-07-04",
+                "originalPriceEok": 22.6,
+                "adjustedPriceEok": 23.17,
+                "changePct": 2.52,
+                "rawChangePct": 2.52,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-06-20",
+                "originalPriceEok": 22.6,
+                "adjustedPriceEok": 23.3013,
+                "changePct": 3.1,
+                "rawChangePct": 3.1,
+                "floor": "23"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 6.6,
+            "district6mPct": 0.7,
+            "peer6mPct": 0.7,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 0.7
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 4건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 성동구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 기간에 층이 비슷한 거래가 부족해 같은 면적의 여러 층 거래와 비교했어요. 층별 가격 차이는 보정하지 않았어요.",
+            "확보한 거래로 참고 가격대는 보여드리지만, 현재 매물이 싸거나 비싸다고 단정하지 않아요."
+          ],
+          "limitations": [
+            "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "성동구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2022,
+              "gapPct": -20.8,
+              "peerCount": 1,
+              "tradeCount": 4,
+              "lowData": true
+            },
+            {
+              "year": 2023,
+              "gapPct": 27.2,
+              "peerCount": 2,
+              "tradeCount": 23,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": 28.4,
+              "peerCount": 2,
+              "tradeCount": 45,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 33.4,
+              "peerCount": 2,
+              "tradeCount": 57,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 22.6,
+          "transactionCount": 5,
+          "peerAveragePriceEok": 17.6,
+          "differencePct": 28.4,
+          "usualGapPct": 27.8,
+          "currentGapPct": 37.8,
+          "shiftPp": 10.0,
+          "position": "high",
+          "lowData": false,
+          "scope": "nearby",
+          "selectionMethod": "nearby",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 104.2,
+              "currentRatio": 101.8,
+              "shiftPp": -2.4,
+              "yearlyRatios": {
+                "2022": 79.2,
+                "2023": 108.9,
+                "2024": 106.5,
+                "2025": 101.9
+              },
+              "name": "텐즈힐(2단지)",
+              "legalDong": "상왕십리동",
+              "households": 937,
+              "approvalYear": 2014,
+              "distanceMeters": 255,
+              "areaLabel": "84",
+              "averagePriceEok": 22.2,
+              "transactionCount": 5,
+              "diffPct": -1.8,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 150.3,
+              "currentRatio": 173.8,
+              "shiftPp": 23.5,
+              "yearlyRatios": {
+                "2023": 145.5,
+                "2024": 150.3,
+                "2025": 164.8
+              },
+              "name": "롯데캐슬베네치아",
+              "legalDong": "황학동",
+              "households": 1870,
+              "approvalYear": 2008,
+              "distanceMeters": 654,
+              "areaLabel": "84",
+              "averagePriceEok": 13.0,
+              "transactionCount": 14,
+              "diffPct": -42.5,
+              "lowData": false,
+              "tier": 0
+            }
+          ],
+          "excludedPeers": [
+            "왕십리자이",
+            "래미안신당하이베르아파트",
+            "이편한세상 청계 센트럴포레"
+          ],
+          "selectionCriteria": {
+            "region": "성동구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "상왕십리역 2호선 · 직선 459m"
+                },
+                {
+                  "key": "education",
+                  "score": 93,
+                  "status": "ok",
+                  "reason": "서울숭신초등학교 · 79m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 78,
+                  "status": "ok",
+                  "reason": "1,369세대 · 1,000~1,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 70,
+                  "status": "ok",
+                  "reason": "2015년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 7,
+          "priorDealCount": 7
+        }
+      }
+    },
+    {
+      "request": [
+        "황골마을주공1단지아파트",
+        "경기도 수원시 영통구",
+        "영통동",
+        "59"
+      ],
+      "expected": "risk",
+      "expectedStars": 1,
+      "report": {
+        "name": "황골마을주공1단지아파트",
+        "region": "경기도 수원시 영통구",
+        "buildingAge": 29,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 6.7,
+        "latestDealDate": "2026-10-27",
+        "latestDealExclusiveArea": 59.99,
+        "latestDealFloor": "7",
+        "latestTrade": {
+          "dealAmountEok": 6.7,
+          "dealDate": "2026-10-27",
+          "exclusiveArea": 59.99,
+          "floor": "7"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "59",
+          "minSqm": 58.0,
+          "maxSqm": 60.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "59",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "59",
+            "minSqm": 58.0,
+            "maxSqm": 60.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 6.7,
+            "dealDate": "2026-10-27",
+            "exclusiveArea": 59.99,
+            "floor": "7"
+          },
+          "fairPrice": {
+            "lowEok": 6.33,
+            "centerEok": 6.63,
+            "highEok": 6.9,
+            "widthPct": 8.5,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "high",
+            "sampleCount": 31,
+            "latestTradeDate": "2026-10-27",
+            "latestTradeAgeDays": 13,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": false,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "provided",
+            "windows": [],
+            "reconstructed": false,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-10-22",
+              "originalPriceEok": 6.7,
+              "floor": "10"
+            },
+            {
+              "dealDate": "2026-10-19",
+              "originalPriceEok": 6.95,
+              "floor": "8"
+            },
+            {
+              "dealDate": "2026-10-14",
+              "originalPriceEok": 6.64,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-10-13",
+              "originalPriceEok": 5.95,
+              "floor": "9"
+            },
+            {
+              "dealDate": "2026-10-13",
+              "originalPriceEok": 6.65,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-10-06",
+              "originalPriceEok": 6.3,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-10-03",
+              "originalPriceEok": 6.0,
+              "floor": "6"
+            },
+            {
+              "dealDate": "2026-09-30",
+              "originalPriceEok": 6.59,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-09-19",
+              "originalPriceEok": 6.2,
+              "floor": "10"
+            },
+            {
+              "dealDate": "2026-09-17",
+              "originalPriceEok": 6.65,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-09-17",
+              "originalPriceEok": 6.25,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-09-15",
+              "originalPriceEok": 6.65,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-09-15",
+              "originalPriceEok": 6.78,
+              "floor": "10"
+            },
+            {
+              "dealDate": "2026-09-05",
+              "originalPriceEok": 6.0,
+              "floor": "9"
+            },
+            {
+              "dealDate": "2026-08-27",
+              "originalPriceEok": 6.45,
+              "floor": "10"
+            },
+            {
+              "dealDate": "2026-08-19",
+              "originalPriceEok": 6.94,
+              "floor": "9"
+            },
+            {
+              "dealDate": "2026-08-07",
+              "originalPriceEok": 6.0,
+              "floor": "6"
+            },
+            {
+              "dealDate": "2026-07-30",
+              "originalPriceEok": 5.6,
+              "floor": "10"
+            },
+            {
+              "dealDate": "2026-07-25",
+              "originalPriceEok": 5.775,
+              "floor": "8"
+            },
+            {
+              "dealDate": "2026-07-24",
+              "originalPriceEok": 5.87,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-07-24",
+              "originalPriceEok": 6.19,
+              "floor": "8"
+            },
+            {
+              "dealDate": "2026-07-22",
+              "originalPriceEok": 5.8,
+              "floor": "6"
+            },
+            {
+              "dealDate": "2026-07-20",
+              "originalPriceEok": 6.27,
+              "floor": "10"
+            },
+            {
+              "dealDate": "2026-07-04",
+              "originalPriceEok": 5.6,
+              "floor": "6"
+            },
+            {
+              "dealDate": "2026-07-03",
+              "originalPriceEok": 5.25,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-06-30",
+              "originalPriceEok": 5.99,
+              "floor": "8"
+            },
+            {
+              "dealDate": "2026-06-18",
+              "originalPriceEok": 5.45,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-06-16",
+              "originalPriceEok": 4.3,
+              "floor": "4"
+            },
+            {
+              "dealDate": "2026-06-11",
+              "originalPriceEok": 5.6,
+              "floor": "8"
+            },
+            {
+              "dealDate": "2026-06-07",
+              "originalPriceEok": 5.9,
+              "floor": "5"
+            },
+            {
+              "dealDate": "2026-06-04",
+              "originalPriceEok": 5.75,
+              "floor": "7"
+            }
+          ],
+          "floorComparison": {
+            "status": "matched",
+            "targetFloor": 7,
+            "sampleCount": 31,
+            "knownFloorCount": 88,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 6.08,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "경기 수원시 영통구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 6.08,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-10-22",
+                "originalPriceEok": 6.7,
+                "adjustedPriceEok": 6.7674,
+                "changePct": 1.01,
+                "rawChangePct": 1.01,
+                "floor": "10"
+              },
+              {
+                "dealDate": "2026-10-19",
+                "originalPriceEok": 6.95,
+                "adjustedPriceEok": 7.0199,
+                "changePct": 1.01,
+                "rawChangePct": 1.01,
+                "floor": "8"
+              },
+              {
+                "dealDate": "2026-10-14",
+                "originalPriceEok": 6.64,
+                "adjustedPriceEok": 6.742,
+                "changePct": 1.54,
+                "rawChangePct": 1.54,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-10-13",
+                "originalPriceEok": 5.95,
+                "adjustedPriceEok": 6.0414,
+                "changePct": 1.54,
+                "rawChangePct": 1.54,
+                "floor": "9"
+              },
+              {
+                "dealDate": "2026-10-13",
+                "originalPriceEok": 6.65,
+                "adjustedPriceEok": 6.7522,
+                "changePct": 1.54,
+                "rawChangePct": 1.54,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-10-06",
+                "originalPriceEok": 6.3,
+                "adjustedPriceEok": 6.4407,
+                "changePct": 2.23,
+                "rawChangePct": 2.23,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-10-03",
+                "originalPriceEok": 6.0,
+                "adjustedPriceEok": 6.1721,
+                "changePct": 2.87,
+                "rawChangePct": 2.87,
+                "floor": "6"
+              },
+              {
+                "dealDate": "2026-09-30",
+                "originalPriceEok": 6.59,
+                "adjustedPriceEok": 6.779,
+                "changePct": 2.87,
+                "rawChangePct": 2.87,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-09-19",
+                "originalPriceEok": 6.2,
+                "adjustedPriceEok": 6.4709,
+                "changePct": 4.37,
+                "rawChangePct": 4.37,
+                "floor": "10"
+              },
+              {
+                "dealDate": "2026-09-17",
+                "originalPriceEok": 6.65,
+                "adjustedPriceEok": 6.9405,
+                "changePct": 4.37,
+                "rawChangePct": 4.37,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-09-17",
+                "originalPriceEok": 6.25,
+                "adjustedPriceEok": 6.5231,
+                "changePct": 4.37,
+                "rawChangePct": 4.37,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-09-15",
+                "originalPriceEok": 6.65,
+                "adjustedPriceEok": 6.9405,
+                "changePct": 4.37,
+                "rawChangePct": 4.37,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-09-15",
+                "originalPriceEok": 6.78,
+                "adjustedPriceEok": 7.0762,
+                "changePct": 4.37,
+                "rawChangePct": 4.37,
+                "floor": "10"
+              },
+              {
+                "dealDate": "2026-09-05",
+                "originalPriceEok": 6.0,
+                "adjustedPriceEok": 6.3299,
+                "changePct": 5.5,
+                "rawChangePct": 5.5,
+                "floor": "9"
+              },
+              {
+                "dealDate": "2026-08-27",
+                "originalPriceEok": 6.45,
+                "adjustedPriceEok": 6.8489,
+                "changePct": 6.18,
+                "rawChangePct": 6.18,
+                "floor": "10"
+              },
+              {
+                "dealDate": "2026-08-19",
+                "originalPriceEok": 6.94,
+                "adjustedPriceEok": 7.4248,
+                "changePct": 6.99,
+                "rawChangePct": 6.99,
+                "floor": "9"
+              },
+              {
+                "dealDate": "2026-08-07",
+                "originalPriceEok": 6.0,
+                "adjustedPriceEok": 6.4581,
+                "changePct": 7.63,
+                "rawChangePct": 7.63,
+                "floor": "6"
+              },
+              {
+                "dealDate": "2026-07-30",
+                "originalPriceEok": 5.6,
+                "adjustedPriceEok": 6.0466,
+                "changePct": 7.97,
+                "rawChangePct": 7.97,
+                "floor": "10"
+              },
+              {
+                "dealDate": "2026-07-25",
+                "originalPriceEok": 5.775,
+                "adjustedPriceEok": 6.2553,
+                "changePct": 8.32,
+                "rawChangePct": 8.32,
+                "floor": "8"
+              },
+              {
+                "dealDate": "2026-07-24",
+                "originalPriceEok": 5.87,
+                "adjustedPriceEok": 6.3582,
+                "changePct": 8.32,
+                "rawChangePct": 8.32,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-07-24",
+                "originalPriceEok": 6.19,
+                "adjustedPriceEok": 6.7048,
+                "changePct": 8.32,
+                "rawChangePct": 8.32,
+                "floor": "8"
+              },
+              {
+                "dealDate": "2026-07-22",
+                "originalPriceEok": 5.8,
+                "adjustedPriceEok": 6.2823,
+                "changePct": 8.32,
+                "rawChangePct": 8.32,
+                "floor": "6"
+              },
+              {
+                "dealDate": "2026-07-20",
+                "originalPriceEok": 6.27,
+                "adjustedPriceEok": 6.7914,
+                "changePct": 8.32,
+                "rawChangePct": 8.32,
+                "floor": "10"
+              },
+              {
+                "dealDate": "2026-07-04",
+                "originalPriceEok": 5.6,
+                "adjustedPriceEok": 6.1981,
+                "changePct": 10.68,
+                "rawChangePct": 10.68,
+                "floor": "6"
+              },
+              {
+                "dealDate": "2026-07-03",
+                "originalPriceEok": 5.25,
+                "adjustedPriceEok": 5.8107,
+                "changePct": 10.68,
+                "rawChangePct": 10.68,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-06-30",
+                "originalPriceEok": 5.99,
+                "adjustedPriceEok": 6.6297,
+                "changePct": 10.68,
+                "rawChangePct": 10.68,
+                "floor": "8"
+              },
+              {
+                "dealDate": "2026-06-18",
+                "originalPriceEok": 5.45,
+                "adjustedPriceEok": 6.0818,
+                "changePct": 11.59,
+                "rawChangePct": 11.59,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-06-16",
+                "originalPriceEok": 4.3,
+                "adjustedPriceEok": 4.7984,
+                "changePct": 11.59,
+                "rawChangePct": 11.59,
+                "floor": "4"
+              },
+              {
+                "dealDate": "2026-06-11",
+                "originalPriceEok": 5.6,
+                "adjustedPriceEok": 6.2707,
+                "changePct": 11.98,
+                "rawChangePct": 11.98,
+                "floor": "8"
+              },
+              {
+                "dealDate": "2026-06-07",
+                "originalPriceEok": 5.9,
+                "adjustedPriceEok": 6.6291,
+                "changePct": 12.36,
+                "rawChangePct": 12.36,
+                "floor": "5"
+              },
+              {
+                "dealDate": "2026-06-04",
+                "originalPriceEok": 5.75,
+                "adjustedPriceEok": 6.4606,
+                "changePct": 12.36,
+                "rawChangePct": 12.36,
+                "floor": "7"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 26.4,
+            "district6mPct": 8.0,
+            "peer6mPct": 5.8,
+            "leader6mPct": null,
+            "comparisonCount": 1,
+            "blended6mPct": 8.0
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 31건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 경기 수원시 영통구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 거래와 층이 비슷한 실거래 31건으로 가격대를 계산했어요."
+          ],
+          "limitations": [
+            "동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "수원영통구",
+          "areaLabel": "59",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2023,
+              "gapPct": -13.1,
+              "peerCount": 2,
+              "tradeCount": 22,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": -11.9,
+              "peerCount": 2,
+              "tradeCount": 166,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": -13.7,
+              "peerCount": 2,
+              "tradeCount": 174,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 6.0,
+          "transactionCount": 89,
+          "peerAveragePriceEok": 5.9925,
+          "differencePct": 0.1,
+          "usualGapPct": -13.1,
+          "currentGapPct": 0.3,
+          "shiftPp": 13.4,
+          "position": "high",
+          "lowData": false,
+          "scope": "district",
+          "selectionMethod": "district",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 93.7,
+              "currentRatio": 105.5,
+              "shiftPp": 11.8,
+              "yearlyRatios": {
+                "2023": 94.8,
+                "2024": 93.7,
+                "2025": 93.7
+              },
+              "name": "원천레이크파크",
+              "legalDong": "원천동",
+              "households": 1835,
+              "approvalYear": 1999,
+              "distanceMeters": 1749,
+              "areaLabel": "59",
+              "averagePriceEok": 5.685,
+              "transactionCount": 26,
+              "diffPct": -5.2,
+              "lowData": false,
+              "tier": 1
+            },
+            {
+              "usualRatio": 79.1,
+              "currentRatio": 95.2,
+              "shiftPp": 16.1,
+              "yearlyRatios": {
+                "2023": 79.1,
+                "2024": 82.4,
+                "2025": 79.0
+              },
+              "name": "현대힐스테이트",
+              "legalDong": "매탄동",
+              "households": 2328,
+              "approvalYear": 2006,
+              "distanceMeters": 3675,
+              "areaLabel": "59",
+              "averagePriceEok": 6.3,
+              "transactionCount": 7,
+              "diffPct": 5.0,
+              "lowData": false,
+              "tier": 1
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "수원영통구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "청명역 수인분당선 · 직선 328m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "황곡초등학교 · 364m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 100,
+                  "status": "ok",
+                  "reason": "3,129세대 · 3,000세대 이상 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 25,
+                  "status": "ok",
+                  "reason": "1997년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 113,
+          "priorDealCount": 124
+        }
+      }
+    },
+    {
+      "request": [
+        "동아청솔",
+        "서울특별시 도봉구",
+        "창동",
+        "84"
+      ],
+      "expected": "risk",
+      "expectedStars": 1,
+      "report": {
+        "name": "동아청솔",
+        "region": "서울특별시 도봉구",
+        "buildingAge": 29,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 12.95,
+        "latestDealDate": "2026-10-22",
+        "latestDealExclusiveArea": 84.97,
+        "latestDealFloor": "8",
+        "latestTrade": {
+          "dealAmountEok": 12.95,
+          "dealDate": "2026-10-22",
+          "exclusiveArea": 84.97,
+          "floor": "8"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 12.95,
+            "dealDate": "2026-10-22",
+            "exclusiveArea": 84.97,
+            "floor": "8"
+          },
+          "fairPrice": {
+            "lowEok": 10.76,
+            "centerEok": 12.28,
+            "highEok": 12.89,
+            "widthPct": 17.4,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 5,
+            "latestTradeDate": "2026-10-22",
+            "latestTradeAgeDays": 18,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": true,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "cached",
+            "windows": [
+              {
+                "periodMonths": 6,
+                "sampleCount": 5,
+                "similarFloorCount": 1
+              }
+            ],
+            "reconstructed": true,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-10-08",
+              "originalPriceEok": 12.4,
+              "floor": "18"
+            },
+            {
+              "dealDate": "2026-08-29",
+              "originalPriceEok": 10.4,
+              "floor": "1"
+            },
+            {
+              "dealDate": "2026-06-29",
+              "originalPriceEok": 12.37,
+              "floor": "7"
+            },
+            {
+              "dealDate": "2026-06-20",
+              "originalPriceEok": 11.5,
+              "floor": "12"
+            },
+            {
+              "dealDate": "2026-06-07",
+              "originalPriceEok": 9.6,
+              "floor": "1"
+            }
+          ],
+          "floorComparison": {
+            "status": "insufficient",
+            "targetFloor": 8,
+            "sampleCount": 1,
+            "knownFloorCount": 5,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 6.78,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 도봉구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 6.78,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-10-08",
+                "originalPriceEok": 12.4,
+                "adjustedPriceEok": 12.5549,
+                "changePct": 1.25,
+                "rawChangePct": 1.25,
+                "floor": "18"
+              },
+              {
+                "dealDate": "2026-08-29",
+                "originalPriceEok": 10.4,
+                "adjustedPriceEok": 10.7614,
+                "changePct": 3.47,
+                "rawChangePct": 3.47,
+                "floor": "1"
+              },
+              {
+                "dealDate": "2026-06-29",
+                "originalPriceEok": 12.37,
+                "adjustedPriceEok": 13.1048,
+                "changePct": 5.94,
+                "rawChangePct": 5.94,
+                "floor": "7"
+              },
+              {
+                "dealDate": "2026-06-20",
+                "originalPriceEok": 11.5,
+                "adjustedPriceEok": 12.2849,
+                "changePct": 6.83,
+                "rawChangePct": 6.83,
+                "floor": "12"
+              },
+              {
+                "dealDate": "2026-06-07",
+                "originalPriceEok": 9.6,
+                "adjustedPriceEok": 10.3349,
+                "changePct": 7.66,
+                "rawChangePct": 7.66,
+                "floor": "1"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 9.3,
+            "district6mPct": 6.0,
+            "peer6mPct": 10.2,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 6.0
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 5건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 도봉구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 기간에 층이 비슷한 거래가 부족해 같은 면적의 여러 층 거래와 비교했어요. 층별 가격 차이는 보정하지 않았어요.",
+            "확보한 거래로 참고 가격대는 보여드리지만, 현재 매물이 싸거나 비싸다고 단정하지 않아요."
+          ],
+          "limitations": [
+            "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "도봉구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2023,
+              "gapPct": 5.5,
+              "peerCount": 4,
+              "tradeCount": 9,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": 9.3,
+              "peerCount": 4,
+              "tradeCount": 17,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": 14.8,
+              "peerCount": 4,
+              "tradeCount": 23,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 11.935,
+          "transactionCount": 6,
+          "peerAveragePriceEok": 9.4975,
+          "differencePct": 25.7,
+          "usualGapPct": 9.3,
+          "currentGapPct": 26.2,
+          "shiftPp": 16.9,
+          "position": "high",
+          "lowData": false,
+          "scope": "nearby",
+          "selectionMethod": "nearby",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 105.3,
+              "currentRatio": 120.3,
+              "shiftPp": 14.9,
+              "yearlyRatios": {
+                "2023": 101.2,
+                "2024": 106.6,
+                "2025": 105.3
+              },
+              "name": "북한산아이파크5차",
+              "legalDong": "창동",
+              "households": 2061,
+              "approvalYear": 2004,
+              "distanceMeters": 418,
+              "areaLabel": "84",
+              "averagePriceEok": 9.925,
+              "transactionCount": 14,
+              "diffPct": -16.8,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 107.3,
+              "currentRatio": 117.8,
+              "shiftPp": 10.5,
+              "yearlyRatios": {
+                "2023": 104.9,
+                "2024": 107.3,
+                "2025": 107.7
+              },
+              "name": "쌍용",
+              "legalDong": "창동",
+              "households": 1352,
+              "approvalYear": 1997,
+              "distanceMeters": 198,
+              "areaLabel": "84",
+              "averagePriceEok": 10.135,
+              "transactionCount": 8,
+              "diffPct": -15.1,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 111.0,
+              "currentRatio": 127.6,
+              "shiftPp": 16.7,
+              "yearlyRatios": {
+                "2023": 109.7,
+                "2024": 111.0,
+                "2025": 121.6
+              },
+              "name": "삼성아파트",
+              "legalDong": "창동",
+              "households": 1668,
+              "approvalYear": 1992,
+              "distanceMeters": 977,
+              "areaLabel": "84",
+              "averagePriceEok": 9.35,
+              "transactionCount": 13,
+              "diffPct": -21.7,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 112.5,
+              "currentRatio": 139.1,
+              "shiftPp": 26.6,
+              "yearlyRatios": {
+                "2023": 106.2,
+                "2024": 112.5,
+                "2025": 124.5
+              },
+              "name": "대상타운현대아파트",
+              "legalDong": "방학동",
+              "households": 1278,
+              "approvalYear": 2001,
+              "distanceMeters": 810,
+              "areaLabel": "84",
+              "averagePriceEok": 8.58,
+              "transactionCount": 11,
+              "diffPct": -28.1,
+              "lowData": false,
+              "tier": 0
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "도봉구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "창동역 4호선 · 직선 500m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울자운초등학교 · 156m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 78,
+                  "status": "ok",
+                  "reason": "1,981세대 · 1,000~1,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 25,
+                  "status": "ok",
+                  "reason": "1997년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 11,
+          "priorDealCount": 15
+        }
+      }
+    },
+    {
+      "request": [
+        "두산",
+        "서울특별시 성북구",
+        "석관동",
+        "84"
+      ],
+      "expected": "hold",
+      "expectedStars": 2,
+      "report": {
+        "name": "두산",
+        "region": "서울특별시 성북구",
+        "buildingAge": 28,
+        "priceIdentityVerified": true,
+        "latestDealPriceEok": 11.47,
+        "latestDealDate": "2026-10-17",
+        "latestDealExclusiveArea": 84.9,
+        "latestDealFloor": "7",
+        "latestTrade": {
+          "dealAmountEok": 11.47,
+          "dealDate": "2026-10-17",
+          "exclusiveArea": 84.9,
+          "floor": "7"
+        },
+        "tradeAreaScope": {
+          "version": "exclusive-area-v1",
+          "label": "84",
+          "minSqm": 83.0,
+          "maxSqm": 85.0,
+          "upperInclusive": true
+        },
+        "valuation": {
+          "status": "ready",
+          "verdict": "compare_price",
+          "modelVersion": "zippick-current-value-v5",
+          "asOf": "2026-11-09",
+          "areaLabel": "84",
+          "areaScope": {
+            "version": "exclusive-area-v1",
+            "label": "84",
+            "minSqm": 83.0,
+            "maxSqm": 85.0,
+            "upperInclusive": true
+          },
+          "evaluatedTrade": {
+            "dealAmountEok": 11.47,
+            "dealDate": "2026-10-17",
+            "exclusiveArea": 84.9,
+            "floor": "7"
+          },
+          "fairPrice": {
+            "lowEok": 11.04,
+            "centerEok": 11.62,
+            "highEok": 12.2,
+            "widthPct": 10.0,
+            "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+          },
+          "dataQuality": {
+            "level": "low",
+            "sampleCount": 5,
+            "latestTradeDate": "2026-10-17",
+            "latestTradeAgeDays": 23,
+            "marketContextAvailable": true,
+            "periodMonths": 6,
+            "periodWidened": false
+          },
+          "referenceOnly": true,
+          "comparisonSearch": {
+            "periodMonths": 6,
+            "periodWidened": false,
+            "source": "cached",
+            "windows": [
+              {
+                "periodMonths": 6,
+                "sampleCount": 5,
+                "similarFloorCount": 0
+              }
+            ],
+            "reconstructed": true,
+            "selectionPolicy": "recent_period_before_floor"
+          },
+          "comparisonTrades": [
+            {
+              "dealDate": "2026-10-08",
+              "originalPriceEok": 11.45,
+              "floor": "15"
+            },
+            {
+              "dealDate": "2026-09-22",
+              "originalPriceEok": 11.45,
+              "floor": "18"
+            },
+            {
+              "dealDate": "2026-08-21",
+              "originalPriceEok": 11.2,
+              "floor": "18"
+            },
+            {
+              "dealDate": "2026-06-22",
+              "originalPriceEok": 9.9,
+              "floor": "3"
+            },
+            {
+              "dealDate": "2026-06-03",
+              "originalPriceEok": 10.4,
+              "floor": "19"
+            }
+          ],
+          "floorComparison": {
+            "status": "insufficient",
+            "targetFloor": 7,
+            "sampleCount": 0,
+            "knownFloorCount": 5,
+            "rule": "앞뒤 3층"
+          },
+          "marketAdjustmentPct": 3.75,
+          "indexAdjustment": {
+            "status": "applied",
+            "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+            "region": "서울 성북구",
+            "asOf": "2026-11-02",
+            "centerChangePct": 3.75,
+            "limited": false,
+            "transactions": [
+              {
+                "dealDate": "2026-10-08",
+                "originalPriceEok": 11.45,
+                "adjustedPriceEok": 11.6183,
+                "changePct": 1.47,
+                "rawChangePct": 1.47,
+                "floor": "15"
+              },
+              {
+                "dealDate": "2026-09-22",
+                "originalPriceEok": 11.45,
+                "adjustedPriceEok": 11.6946,
+                "changePct": 2.14,
+                "rawChangePct": 2.14,
+                "floor": "18"
+              },
+              {
+                "dealDate": "2026-08-21",
+                "originalPriceEok": 11.2,
+                "adjustedPriceEok": 11.7079,
+                "changePct": 4.54,
+                "rawChangePct": 4.54,
+                "floor": "18"
+              },
+              {
+                "dealDate": "2026-06-22",
+                "originalPriceEok": 9.9,
+                "adjustedPriceEok": 10.7277,
+                "changePct": 8.36,
+                "rawChangePct": 8.36,
+                "floor": "3"
+              },
+              {
+                "dealDate": "2026-06-03",
+                "originalPriceEok": 10.4,
+                "adjustedPriceEok": 11.4002,
+                "changePct": 9.62,
+                "rawChangePct": 9.62,
+                "floor": "19"
+              }
+            ]
+          },
+          "latestTradeExcluded": true,
+          "market": {
+            "status": "available",
+            "apartment6mPct": 11.9,
+            "district6mPct": 9.8,
+            "peer6mPct": 11.6,
+            "leader6mPct": null,
+            "comparisonCount": 3,
+            "blended6mPct": 9.8
+          },
+          "macro": {
+            "status": "unavailable",
+            "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+          },
+          "reasons": [
+            "비슷한 면적의 이전 실거래 5건을 사용했어요.",
+            "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+            "한국부동산원 서울 성북구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+            "최근 기간에 층이 비슷한 거래가 부족해 같은 면적의 여러 층 거래와 비교했어요. 층별 가격 차이는 보정하지 않았어요.",
+            "확보한 거래로 참고 가격대는 보여드리지만, 현재 매물이 싸거나 비싸다고 단정하지 않아요."
+          ],
+          "limitations": [
+            "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."
+          ]
+        },
+        "priceComparison": {
+          "status": "ready",
+          "method": "usual_gap",
+          "region": "성북구",
+          "areaLabel": "84",
+          "periodMonths": 6,
+          "periodWidened": false,
+          "yearlyGaps": [
+            {
+              "year": 2022,
+              "gapPct": -15.0,
+              "peerCount": 1,
+              "tradeCount": 5,
+              "lowData": false
+            },
+            {
+              "year": 2023,
+              "gapPct": 2.7,
+              "peerCount": 2,
+              "tradeCount": 15,
+              "lowData": false
+            },
+            {
+              "year": 2024,
+              "gapPct": -8.0,
+              "peerCount": 2,
+              "tradeCount": 21,
+              "lowData": false
+            },
+            {
+              "year": 2025,
+              "gapPct": -5.2,
+              "peerCount": 2,
+              "tradeCount": 35,
+              "lowData": false
+            }
+          ],
+          "throughMonth": "2026-10",
+          "averagePriceEok": 11.325,
+          "transactionCount": 6,
+          "peerAveragePriceEok": 11.69,
+          "differencePct": -3.1,
+          "usualGapPct": -6.6,
+          "currentGapPct": -2.8,
+          "shiftPp": 3.8,
+          "position": "high",
+          "lowData": false,
+          "scope": "nearby",
+          "selectionMethod": "nearby",
+          "conditionsRelaxed": false,
+          "areaAdjusted": false,
+          "peers": [
+            {
+              "usualRatio": 100.0,
+              "currentRatio": 103.1,
+              "shiftPp": 3.1,
+              "yearlyRatios": {
+                "2023": 103.3,
+                "2024": 95.5,
+                "2025": 100.0
+              },
+              "name": "현대",
+              "legalDong": "월계동",
+              "households": 1281,
+              "approvalYear": 2000,
+              "distanceMeters": 891,
+              "areaLabel": "84",
+              "averagePriceEok": 10.98,
+              "transactionCount": 5,
+              "diffPct": -3.0,
+              "lowData": false,
+              "tier": 0
+            },
+            {
+              "usualRatio": 89.1,
+              "currentRatio": 91.3,
+              "shiftPp": 2.3,
+              "yearlyRatios": {
+                "2022": 85.0,
+                "2023": 102.0,
+                "2024": 88.4,
+                "2025": 89.7
+              },
+              "name": "이문e편한세상아파트",
+              "legalDong": "이문동",
+              "households": 1378,
+              "approvalYear": 2003,
+              "distanceMeters": 930,
+              "areaLabel": "84",
+              "averagePriceEok": 12.4,
+              "transactionCount": 7,
+              "diffPct": 9.5,
+              "lowData": false,
+              "tier": 0
+            }
+          ],
+          "excludedPeers": [],
+          "selectionCriteria": {
+            "region": "성북구",
+            "maxDistanceMeters": 1000,
+            "priceIndependent": true,
+            "windowMonths": 6,
+            "historyYears": 4,
+            "thresholdPp": 3.0
+          }
+        },
+        "locationScore": {
+          "parts": [
+            {
+              "key": "demand",
+              "details": [
+                {
+                  "key": "station",
+                  "score": 90,
+                  "status": "ok",
+                  "reason": "석계역 6호선 · 직선 371m"
+                },
+                {
+                  "key": "education",
+                  "score": 96,
+                  "status": "ok",
+                  "reason": "서울석계초등학교 · 422m 거리"
+                }
+              ]
+            },
+            {
+              "key": "product",
+              "details": [
+                {
+                  "key": "households",
+                  "score": 78,
+                  "status": "ok",
+                  "reason": "1,998세대 · 1,000~1,999세대 구간"
+                },
+                {
+                  "key": "age",
+                  "score": 25,
+                  "status": "ok",
+                  "reason": "1998년 사용승인"
+                }
+              ]
+            }
+          ]
+        },
+        "signals": {
+          "status": "ok",
+          "recentDealCount": 11,
+          "priorDealCount": 22
+        }
+      }
+    }
+  ]
+}

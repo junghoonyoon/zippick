@@ -26,7 +26,8 @@ def run_functions(names, script):
 
 
 def test_peer_enrichment_cannot_replace_selected_area_score_or_price():
-    run_functions(["ensureZippickReportPeers"], """
+    run_functions(["zpNum", "zippickTradeAreaScope", "zippickAreaContains", "zippickLatestTradeDetails",
+                   "zippickValuationMatchesTrade", "zippickReportAreaKey", "zippickRefreshReportLocation", "ensureZippickReportPeers"], """
       const score = {status:'ok',score:73};
       const item = {name:'잠실엘스',region:'송파구',displayAreaLabel:'전용 59.96㎡',
         locationScore:score,latestDealPriceEok:29.4,signals:{score:55}};
@@ -61,15 +62,38 @@ def test_chart_legend_and_card_compare_the_same_month_with_missing_trades():
     """)
 
 
+PRICE_FUNCTIONS = ['zpNum', 'zippickHasPriceComparison', 'zippickPriceSelectionTier',
+                   'zippickPricePeerLabel', 'zippickPriceHeading', 'zippickPriceGapSentence',
+                   'zippickPriceAssessment', 'zippickPriceComparisonHtml', 'zippickPriceEvidenceHtml']
+PRICE_SETUP = r'''
+const esc=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+const candidateDisplayName=item=>item.name || '';
+const render=item=>zippickPriceEvidenceHtml(item);
+const simple=peers=>({name:'초록',latestDealPriceEok:99,priceComparison:{status:'ready',method:'simple',
+ position:'similar',averagePriceEok:10,differencePct:0,periodMonths:6,areaLabel:'59㎡',region:'강서구',peers}});
+'''
+
+
 def test_market_reversals_name_both_time_windows_and_missing_is_not_down():
-    run_functions(["zpNum", "zpPct", "zippickMarketVerdict", "zippickMarketEvidenceText"], """
-      const rebound={signals:{momentumPct:-2.7,recent3Pct:4.1,turnoverRatio:1.67}};
+    run_functions(['zpNum', 'zpPct', 'zippickMarketVerdict', 'zippickMarketEvidenceText',
+                   'zippickSignalBarsHtml', 'zippickSignalBarReason', 'zippickTradeCountText'], r'''
+      const zippickBarHtml=(label,points,max,reason)=>`<p>${label}: ${reason}</p>`;
+      const rebound={signals:{momentumPct:-2.7,recent3Pct:4.1,turnoverRatio:1.67,
+        comparisonBasis:{areaLabel:'59㎡'},scoreBreakdown:{
+          priceMomentum:{label:'6개월 가격 변화',value:-2.7,points:0,maxPoints:40},
+          recentPersistence:{label:'최근 3개월 지속성',value:4.1,points:15,maxPoints:15}}}};
       assert.match(zippickMarketVerdict(rebound).heading,/6개월.*하락.*3개월.*반등/);
-      assert.match(zippickMarketEvidenceText(rebound),/2.7% 내렸.*3개월.*4.1% 올랐/);
+      // The summary names the area; the actual detail rows own the numeric evidence.
+      assert.match(zippickMarketEvidenceText(rebound),/59㎡ 실거래 기준/);
+      const detail=zippickSignalBarsHtml(rebound);
+      assert.match(detail,/최근 6개월.*2.7% 내렸/);
+      assert.match(detail,/최근 3개월.*직전 3개월보다 4.1% 올랐/);
       assert.match(zippickMarketVerdict({signals:{momentumPct:4,recent3Pct:-2,turnoverRatio:1.1}}).heading,/6개월.*상승.*3개월.*하락/);
       assert.match(zippickMarketVerdict({signals:{momentumPct:-4,recent3Pct:null,turnoverRatio:1}}).heading,/6개월.*그 전 6개월/);
       assert.match(zippickMarketVerdict({signals:{momentumPct:null,turnoverRatio:1}}).heading,/판단할 수 없어요/);
-    """)
+      assert.match(zippickSignalBarReason({value:null},'priceMomentum'),/실거래가 부족.*판단하기는 어려워요/);
+      assert.doesNotMatch(zippickSignalBarReason({value:null},'priceMomentum'),/0%|내렸어요/);
+    ''')
 
 
 def test_collapsing_details_never_discards_custom_rate_term_or_type():
@@ -104,7 +128,8 @@ def test_late_chart_update_does_not_replace_a_new_area_selection():
       refreshAptSearchTrendCandidate({name:'같은 이름',apartmentId:'A',areaLabel:'59',locationScore:{score:50}});
       assert.equal(aptCandidateResults.get(0).locationScore.score,80);
       assert.strictEqual(aptCandidateResults.get(0),selected);
-      refreshAptSearchTrendCandidate({...selected,locationScore:{score:81}});
+      selected.locationScore = {score:81};
+      refreshAptSearchTrendCandidate(selected);
       assert.strictEqual(currentAptSearchItems[0],selected);
       assert.equal(selected.locationScore.score,81);
     """)
@@ -150,85 +175,90 @@ def test_conditional_verdict_names_strength_and_limitation_without_price_instruc
     """)
 
 def test_compact_peer_table_preserves_selection_metadata_and_unknowns():
-    run_functions(["zpNum", "zippickPriceAssessment", "zippickPricePeerListHtml"], """
-      const esc=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-      const transactionMoney=value=>`${value}억`;
-      const zippickHasPriceComparison=()=>true;
-      const comparison={status:'reference',position:'high',averagePriceEok:9,peerAveragePriceEok:8,
-        differencePct:12.5,periodMonths:6,throughMonth:'2026-08',selectionMethod:'expanded',areaLabel:'59㎡',region:'강서구',
-        peers:[{name:'<A>',legalDong:'화곡동',averagePriceEok:8,transactionCount:5,
-          distanceMeters:850,similarities:['같은 동네','비슷한 면적'],differences:['8년 더 오래됨','100세대 적음']} ]};
-      const assessment=zippickPriceAssessment({priceComparison:comparison});
-      assert.equal(assessment.heading,'강서구 비교 단지 1곳보다 평균 실거래가가 12.5% 높아요.');
-      assert.equal(zippickPriceAssessment({priceComparison:{...comparison,status:'ready',differencePct:-4}}).heading,'강서구 비교 단지 1곳보다 평균 실거래가가 4.0% 낮아요.');
-      assert.match(zippickPriceAssessment({priceComparison:{...comparison,differencePct:0}}).heading,/평균 실거래가가 같아요/);
-      assert.doesNotMatch(assessment.heading,/아쉬워요|참고 비교에서|시세가/);
-      const html=zippickPricePeerListHtml(assessment);
-      assert.match(html,/<table.*비교단지 선정 이유와 가격/s);
-      assert.match(html,/주변 단지 가격 참고 1곳/);
-      assert.match(html,/2026.08까지 6개월/);
-      assert.match(html,/화곡동 · 59㎡/);
-      assert.match(html,/직선 850m · 8년 더 오래됨 · 100세대 적음/);
-      assert.doesNotMatch(html,/비슷한 면적<|다른 동네|<td>[^<]*<small>/);
-      assert.match(html,/8년 더 오래됨 · 100세대 적음/);
-      assert.match(html,/8억.*5건/s);
-      assert.match(html,/&lt;A&gt;/);
-      assert.doesNotMatch(html,/<A>|59㎡㎡/);
-      assert.match(html,/<details.*비교단지를 고른 기준/s);
-      const old=zippickPricePeerListHtml({comparisonPeers:[{name:'이름만 확인된 단지'}]});
-      assert.match(old,/거리 미확인 · 연식 미확인 · 세대수 미확인/);
-      assert.doesNotMatch(old,/같은 동네|비슷한 면적|같은 준공/);
-      const uniform=zippickPricePeerListHtml({comparisonPeers:[
-        {name:'동일 조건',distanceMeters:2839,similarities:['같은 세대수','같은 준공연도']},
-        {name:'연식 누락',distanceMeters:500,differences:['1,000세대 많음']},
-        {name:'거리 누락',differences:['146세대 적음','1년 더 새 건물']},
-      ]});
-      assert.match(uniform,/직선 2,839m · 같은 준공연도 · 같은 세대수/);
-      assert.match(uniform,/직선 500m · 연식 미확인 · 1,000세대 많음/);
-      assert.match(uniform,/거리 미확인 · 1년 더 새 건물 · 146세대 적음/);
-      const criteriaOnly=zippickPricePeerListHtml({comparisonCriteria:{region:'강서구',householdsMin:500,householdsMax:750,ageMin:23,ageMax:33}});
-      assert.match(criteriaOnly,/선정 기준: 강서구 · 500~750세대 · 23~33년차/);
-      assert.doesNotMatch(criteriaOnly,/<table/);
-      assert.equal(zippickPricePeerListHtml({}), '');
-    """)
+    run_functions(PRICE_FUNCTIONS, PRICE_SETUP + r'''
+      const item={name:'기준단지',legalDong:'화곡동',households:625,buildYear:2015,
+       priceComparison:{status:'ready',method:'usual_gap',position:'high',averagePriceEok:9,
+        currentGapPct:12.5,usualGapPct:5,shiftPp:7.5,periodMonths:6,throughMonth:'2026-08',
+        areaLabel:'59㎡',region:'강서구',scope:'district',conditionsRelaxed:true,lowData:true,
+        peers:[{name:'<A>',legalDong:'화곡동',households:500,approvalYear:2007,tier:2,
+          averagePriceEok:8,transactionCount:5,lowData:true,distanceMeters:850,currentRatio:112.5,usualRatio:105,shiftPp:7.5}]}};
+      const before=JSON.stringify(item),html=render(item);
+      assert.match(html,/<table.*aria-label="비교 단지 시세"/s);
+      assert.match(html,/59㎡ 최근 6개월/);
+      assert.match(html,/화곡동 · 500세대 · 2007년 준공 · 직선 850m · 최근 5건/);
+      assert.match(html,/&lt;A&gt;/);assert.doesNotMatch(html,/<A>|59㎡㎡/);
+      assert.match(html,/최근 평균 가격은 강서구 단지 1곳과의 평소 가격 차이를 감안하면 비싸요/);
+      assert.match(html,/세대수가 이 단지의 30% 이상, 준공연도 차이 15년 이내/);
+      assert.match(html,/가까운 곳에 비교할 단지가 부족해 강서구로 넓혔어요/);
+      assert.match(html,/세대수나 연식 차이가 큰 단지도 포함/);
+      assert.match(html,/<details.*계산 근거 보기/s);
+      assert.equal(JSON.stringify(item),before);
+      const unknown=render(simple([{name:'이름만 확인된 단지',averagePriceEok:null,currentRatio:null,usualRatio:null}]));
+      assert.match(unknown,/세대수 미확인/);assert.match(unknown,/준공연도 미확인/);
+      assert.match(unknown,/거리 자료 없음/);assert.match(unknown,/자료 없음/);
+      assert.doesNotMatch(unknown,/NaN|undefined|같은 준공|직선 0m|0세대|0년 준공/);
+    ''')
 
 
 def test_peer_price_gaps_use_own_same_period_average_and_explicit_signs():
-    run_functions(["zpNum", "zippickPricePeerListHtml"], r"""
-      const esc=String;
-      const assessment={comparisonOwnName:'초록',comparisonOwnAveragePriceEok:10,
-        comparisonPeers:[{name:'높은 단지',averagePriceEok:11},{name:'낮은 단지',averagePriceEok:9},{name:'같은 단지',averagePriceEok:10}]};
-      const html=zippickPricePeerListHtml(assessment);
-      assert.match(html,/초록 평균 대비 \+높음 \/ −낮음/);
-      assert.match(html,/class="zpr-peer-gap is-higher"[^>]*>\+10.0%<\/span>/);
-      assert.match(html,/class="zpr-peer-gap is-lower"[^>]*>−10.0%<\/span>/);
-      assert.match(html,/class="zpr-peer-gap is-equal"[^>]*>0.0%<\/span>/);
-      assert.match(html,/aria-label="초록 평균 대비 −10.0% 낮음"/);
-      const missing=zippickPricePeerListHtml({...assessment,comparisonOwnAveragePriceEok:null});
-      assert.doesNotMatch(missing,/zpr-peer-gap|평균 대비/);
-      const missingPeer=zippickPricePeerListHtml({...assessment,comparisonPeers:[{name:'미확인',averagePriceEok:null}]});
-      assert.doesNotMatch(missingPeer,/class="zpr-peer-gap/);
-      const tiny=zippickPricePeerListHtml({...assessment,comparisonPeers:[{name:'거의 같음',averagePriceEok:9.999}]});
-      assert.match(tiny,/is-equal[^>]*>0.0%/);
-      assert.doesNotMatch(tiny,/−0.0%|is-lower/);
-    """)
+    run_functions(PRICE_FUNCTIONS, PRICE_SETUP + r'''
+      // The table now states how expensive the SELECTED complex is relative to each peer.
+      // Ratios must use the same-period averages (10), never the latest single trade (99).
+      const item=simple([{name:'높은 단지',averagePriceEok:11,currentRatio:10/11*100},
+        {name:'낮은 단지',averagePriceEok:9,currentRatio:10/9*100},
+        {name:'같은 단지',averagePriceEok:10,currentRatio:100}]);
+      const html=render(item), row=name=>html.match(new RegExp(`<tr><th[^>]*>${name}[\\s\\S]*?</tr>`))[0];
+      assert.match(html,/이 단지가 지금/);
+      assert.match(html,/<tr class="is-own">.*초록.*10억/s);
+      assert.match(row('높은 단지'),/11억.*9% 쌈/s);
+      assert.match(row('낮은 단지'),/9억.*11% 비쌈/s);
+      assert.match(row('같은 단지'),/10억.*비슷/s);
+      assert.doesNotMatch(html,/99억/);
+      const missingOwn=render({...item,priceComparison:{...item.priceComparison,averagePriceEok:null}});
+      assert.doesNotMatch(missingOwn,/<table|NaN|0억/);
+      const missingPeer=render(simple([{name:'미확인',averagePriceEok:null,currentRatio:null,diffPct:null}]));
+      assert.match(missingPeer,/자료 없음/);assert.doesNotMatch(missingPeer,/NaN|Infinity|<td>0억|>0% 비쌈/);
+      assert.match(render(simple([{name:'거의 같음',averagePriceEok:9.999,currentRatio:100.01}])),/거의 같음.*비슷/s);
+      const history={...item,priceComparison:{...item.priceComparison,method:'usual_gap',shiftPp:10,
+        currentGapPct:10,usualGapPct:-10,peers:[{name:'방향 전환',averagePriceEok:9,currentRatio:110,usualRatio:90,shiftPp:20}]}};
+      assert.match(render(history),/10% 쌈 → 10% 비쌈/);
+      history.priceComparison.peers[0].usualRatio=null;
+      assert.match(render(history),/자료 없음 → 10% 비쌈/);
+      assert.doesNotMatch(render(history),/NaN|Infinity/);
+      // Missing historical/current values must not become zero-price or zero-height chart evidence.
+      history.priceComparison.usualGapPct=null;
+      history.priceComparison.currentGapPct=null;
+      history.priceComparison.yearlyGaps=[{year:2024,gapPct:null},{year:2025,gapPct:0}];
+      history.priceComparison.peers[0].shiftPp=null;
+      const partial=render(history);
+      assert.doesNotMatch(partial,/NaN|Infinity|zpr-price-years-usual|점선 평소|24년/);
+      assert.match(partial,/25년 비슷/);
+      assert.match(partial,/<td>자료 없음<\/td>/);
+      for(const invalid of [null,undefined,'',NaN,Infinity,-100,-101]) {
+        const unavailable=render(simple([{name:'비율 미확인',averagePriceEok:9,currentRatio:null,diffPct:invalid}]));
+        assert.doesNotMatch(unavailable,/NaN|Infinity|% 쌈|% 비쌈/);
+        assert.match(unavailable,/<td>자료 없음<\/td>/);
+      }
+      // Legacy current-only data has the opposite numerator, so invert it when forming this-complex wording.
+      assert.match(render(simple([{name:'낮은 단지',averagePriceEok:9,diffPct:-10}])),/11% 비쌈/);
+
+    ''')
 
 
 def test_missing_nearby_peers_never_looks_like_cheap_or_neutral_price():
-    run_functions(["zpNum", "zippickPriceAssessment", "zippickSectionRatingData", "zippickPricePeerListHtml"], """
-      const esc=String,transactionMoney=value=>`${value}억`;
-      const zippickHasPriceComparison=()=>false;
-      const candidateHeadlinePrice=()=>({priceEok:8.5,label:'평균 실거래'});
-      const criteria={region:'강서구',maxDistanceMeters:1000,householdsMin:500,householdsMax:750,ageMin:23,ageMax:33};
+    run_functions([*PRICE_FUNCTIONS,'zippickSectionRatingData'], PRICE_SETUP + r'''
       for(const reasonCode of ['insufficient_nearby_peers','missing_comparison_coordinates','missing_building_criteria']) {
-        const item={priceComparison:{status:'unavailable',reasonCode,reason:'가까운 비교단지가 부족해요.',selectionCriteria:criteria}};
-        const assessment=zippickPriceAssessment(item);
-        assert.match(assessment.heading,/가격 비교는 보류/);
-        assert.doesNotMatch(assessment.heading,/보통|낮아요|싸요/);
+        const item={priceComparison:{status:'unavailable',reasonCode,reason:'가까운 비교단지가 부족해요.'}};
+        const assessment=zippickPriceAssessment(item),html=render(item);
+        assert.match(assessment.heading,/자료가 부족해 판단할 수 없어요/);
+        assert.doesNotMatch(assessment.heading,/보통|저렴|싸요|적정/);
         assert.equal(zippickSectionRatingData(item,'가격 비교'),null);
-        assert.match(zippickPricePeerListHtml(assessment),/반경 1,000m.*500~750세대/);
+        assert.match(html,/가까운 비교단지가 부족해요/);
+        assert.doesNotMatch(html,/<table|NaN|0억/);
       }
-    """)
+      const currentOnly=simple([{name:'비교단지',averagePriceEok:10,currentRatio:100}]);
+      assert.equal(zippickSectionRatingData(currentOnly,'가격 비교'),null,'simple comparisons must not acquire stars');
+    ''')
 
 
 def test_alternatives_never_expand_price_or_accept_unknown_area():
@@ -248,14 +278,66 @@ def test_alternatives_never_expand_price_or_accept_unknown_area():
 
 
 def test_comparison_facts_and_differences_do_not_invent_missing_values():
-    run_functions(['zpNum', 'zippickComparisonFactsHtml', 'zippickAlternativeDifferenceHtml'], '''
-      const esc = value => String(value);
-      assert.match(zippickComparisonFactsHtml({}), /거래 건수 미확인/);
-      assert.doesNotMatch(zippickComparisonFactsHtml({}), /3개월 0건/);
+    run_functions(['zpNum','zippickAlternativeDifferenceHtml','zippickTradeCountText',
+                   'zippickSignalBarReason','zippickCommuteHtml'], r'''
+      const esc=String,zippickCommuteGrade=()=> 'fair',zippickCommuteHeading=()=>'',zippickCommuteInsight=()=>'';
       const item={buildingAge:28,households:625};
-      assert.match(zippickAlternativeDifferenceHtml(item,{buildingAge:25,households:500}), /3년 더 새 건물.*125세대 적음/);
-      assert.match(zippickAlternativeDifferenceHtml(item,{}), /연식 미확인.*세대수 미확인/);
-      const facts=zippickComparisonFactsHtml({...item,commuteProfile:{station:'우장산',walkMinutes:6,estimated:true},signals:{recent3DealCount:3,comparisonBasis:{recent3Start:'2026-07',recent3End:'2026-09'}}});
-      assert.match(facts,/도보 약 6분 · 추정/);
-      assert.match(facts,/3개월 3건/);
+      assert.match(zippickAlternativeDifferenceHtml(item,{buildingAge:25,households:500}),/3년 더 새 건물.*125세대 적음/);
+      assert.match(zippickAlternativeDifferenceHtml(item,{}),/연식 미확인.*세대수 미확인/);
+      for(const missing of [null,undefined,'']) {
+        const signals={recentDealCount:missing,priorDealCount:10};
+        assert.equal(zippickTradeCountText(signals),'');
+        assert.doesNotMatch(zippickSignalBarReason({value:null},'turnover',signals),/0건/);
+      }
+      assert.match(zippickTradeCountText({recentDealCount:0,priorDealCount:10}),/최근 6개월 거래는 0건/);
+      assert.match(zippickTradeCountText({recentDealCount:3,priorDealCount:10}),/최근 6개월 거래는 3건.*그 전 6개월 10건/);
+      const commute=zippickCommuteHtml({commuteProfile:{station:'우장산',walkMinutes:6,estimated:true,hubs:{여의도:{totalMinutes:30}}}});
+      assert.match(commute,/우장산역.*도보 6분/);assert.match(commute,/도보 포함.*추정/);
     ''')
+
+
+def test_report_refreshes_collected_location_without_changing_price_cohort():
+    run_functions(["zippickRefreshReportLocation"], """
+      const price={key:'price',score:30,maxPoints:30,coverage:1};
+      const oldDemand={key:'demand',score:null,maxPoints:30,coverage:0};
+      const product={key:'product',score:60,maxPoints:10,coverage:1};
+      const item={apartmentId:'exact',name:'동일이름',region:'마포구',latestDealPriceEok:17,
+        locationScore:{score:38,parts:[price,oldDemand,product]},signals:{score:55}};
+      const demand={key:'demand',score:90,maxPoints:30,coverage:1,details:[
+        {key:'station',status:'ok',score:100,reason:'공덕역 · 직선 159m'},
+        {key:'education',status:'ok',score:80,reason:'주변 학교'}]};
+      const report={apartmentId:'exact',locationScore:{score:99,parts:[{...price,score:99},demand]},
+        latestDealPriceEok:20,signals:{score:99},nearestStationDistance:159.1,
+        educationEnvironment:{status:'ok',elementaryDistanceMeters:250,basis:'nearby_school_access'}};
+      zippickRefreshReportLocation(item,report);
+      assert.strictEqual(item.locationScore.parts[0],price);
+      assert.strictEqual(item.locationScore.parts[2],product);
+      assert.strictEqual(item.locationScore.parts[1],demand);
+      assert.equal(item.locationScore.score,60);
+      assert.equal(item.locationScore.coverage,1);
+      assert.equal(item.latestDealPriceEok,17);assert.equal(item.signals.score,55);
+      assert.equal(item.nearestStationDistance,159.1);
+      assert.equal(item.educationEnvironment.elementaryDistanceMeters,250);
+      const saved=item.locationScore;
+      zippickRefreshReportLocation(item,{...report,apartmentId:'different'});
+      assert.strictEqual(item.locationScore,saved);
+      const noId={...item,apartmentId:''};
+      zippickRefreshReportLocation(noId,{...report,apartmentId:''});
+      assert.strictEqual(noId.locationScore,saved);
+    """)
+
+
+def test_distance_refresh_keeps_the_buyers_existing_commute_metric():
+    run_functions(["zippickRefreshReportLocation"], """
+      const commute={key:'commute',score:20,maxPoints:8,status:'ok',reason:'입력한 직장권'};
+      const item={apartmentId:'same',locationScore:{parts:[{key:'demand',score:20,maxPoints:30,coverage:1,details:[commute]}]}};
+      const fresh={apartmentId:'same',locationScore:{parts:[{key:'demand',score:100,maxPoints:30,details:[
+        {key:'commute',score:100,maxPoints:8,status:'ok'},
+        {key:'station',score:100,maxPoints:5,status:'ok'},
+        {key:'education',score:100,maxPoints:4,status:'ok'}]}]}};
+      zippickRefreshReportLocation(item,fresh);
+      const part=item.locationScore.parts[0];
+      assert.strictEqual(part.details[0],commute);
+      assert.equal(part.score,62);assert.equal(part.points,18.6);
+      assert.equal(item.locationScore.score,62);
+    """)

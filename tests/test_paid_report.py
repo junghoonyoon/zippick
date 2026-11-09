@@ -20,6 +20,8 @@ class PaidReportTest(unittest.TestCase):
         matrix = re.search(r'    const ZIPPICK_MATRIX = \[.*?\n    \];', html, re.S).group()
         names = ['zpNum', 'zippickMatrixVerdict', 'zippickPartialVerdict',
                  'zippickCommonProperty', 'zippickCommonPurchaseVerdict',
+                 'zippickBandPriceEvidence', 'zippickLatestTradeDetails', 'zippickTradeAreaScope',
+                 'zippickAreaContains', 'zippickBuyBandTradeMatchesArea', 'zippickBuyBandTier',
                  'candidateFlowScoreBadgeHtml', 'candidateReadonlyFlowScoreBadgeHtml',
                  'signalBadgesHtml', 'candidateZippickReportHtml']
         functions = '\n'.join(re.search(
@@ -91,9 +93,13 @@ assert.equal(noVerifiedTrade.tone, 'missing');
             html, re.S,
         )
         self.assertIsNotNone(lookup)
-        self.assertIn('reportPeerState:"pending"', html)
+        self.assertIn('await ensureZippickReportPeers(report)', html)
         self.assertNotIn('현재 검색 결과 밖의 단지도 확인하고 있어요.', html)
-        script = lookup.group() + r'''
+        helper = re.search(r'    function zippickRefreshReportLocation\([^\n]*\) \{.*?\n    \}', html, re.S)
+        area_helpers = '\n'.join(re.search(r'    function '+name+r'\([^\n]*\) \{.*?\n    \}', html, re.S).group()
+                                 for name in ['zpNum', 'zippickTradeAreaScope', 'zippickAreaContains', 'zippickLatestTradeDetails',
+                                              'zippickValuationMatchesTrade', 'zippickReportAreaKey'])
+        script = area_helpers + helper.group() + lookup.group() + r'''
 const assert = require('node:assert/strict');
 let fetchAptReport = async () => ({report:{peers:[{apartmentId:'peer-1'}]}});
 (async () => {
@@ -145,60 +151,52 @@ let fetchAptReport = async () => ({report:{peers:[{apartmentId:'peer-1'}]}});
     @unittest.skipUnless(shutil.which('node'), 'Node required')
     def test_report_uses_matching_price_scenario_and_handles_missing_data(self):
         html = (ROOT / '앱화면/real-estate-search.html').read_text()
-        self.assertIn('조건부로 매수 검토할 만해요. ${conditionalStrength} ${conditionalAction}', html)
-        self.assertIn('conditionalChecks.push("하락기 거래")', html)
         names = ['zpNum', 'zippickPriceCheckBasis', 'zippickReportFinance',
-                 'zippickDecisionHtml', 'candidateIdentityKey', 'candidateDisplayName', 'zippickReportPeers']
+                 'zippickCommonProperty', 'zippickCommonPurchaseVerdict', 'zippickBandPriceEvidence',
+                 'zippickTradeAreaScope', 'zippickAreaContains', 'zippickLatestTradeDetails',
+                 'zippickBuyBandTradeMatchesArea', 'zippickBuyBandTier', 'zippickValuationMatchesTrade',
+                 'zippickDecisionHtml', 'zippickCommonDecisionHtml', 'zippickReportPeers']
         functions = '\n'.join(re.search(r'    function '+name+r'\([^\n]*\) \{.*?\n    \}', html, re.S).group() for name in names)
         script = functions + r'''
 const assert = require('node:assert/strict');
-const esc = value => String(value).replaceAll('<','&lt;');
-const transactionMoney = value => `${value}억`;
-const zippickWeakestPart = () => null;
-const zpScoredParts = () => [];
-const zpPartRatio = () => 0;
-const zippickLocationEvidenceText = () => '';
-const zippickMarketVerdict = () => ({heading:'최근 시장 흐름은 보통이에요'});
-const candidateLocationScoreBadgeHtml = () => '';
-const candidateFlowScoreBadgeHtml = () => '';
-const zippickMarketEvidenceText = () => '';
-const zippickBuyBandHtml = () => '';
-const zippickOverallRatingHtml = () => '';
-const zippickHasVerifiedMixedCorridor = () => false;
-const zippickVerdictTitle = (_item, verdict) => verdict.peakGuard
-  ? '매수 후보로 검토할 만해요. 단지 조건과 최근 흐름은 좋지만 가격은 2년 고점권이에요'
-  : verdict.tone === 'yes' ? '매수 후보로 우선 검토할 만해요. 가격·단지 조건·최근 흐름이 좋아요'
-  : verdict.tone === 'conditional' ? '조건부로 매수 검토할 만해요. 가격과 단지 조건은 좋지만, 약한 항목을 확인하세요'
-  : verdict.tone === 'hold' ? '지금은 매수를 서두르지 마세요. 최근 흐름이 약해요'
-  : verdict.tone === 'risk' ? '다른 단지를 먼저 검토하세요. 단지 조건과 최근 흐름이 모두 약해요'
-  : '자료가 더 필요해 매수 판단을 보류해요';
-const item = {locationScore:{score:71}, signals:{score:52}, apartmentId:'a', name:'A', region:'성동구', areaLabel:'84㎡',
- statsThrough:new Date().toISOString().slice(0,10), recent3AdjustedTradeCount:4,
- recent3AdjustedAveragePriceEok:24.21, latestDealPriceEok:24,
- policyImpact:{cashGapEok:0.04, requiredCashEok:20.96, reportProfile:{cashEok:21},
- cashScenarios:[{priceEok:24,requiredCashEok:20.96,cashGapEok:0.04},
- {priceEok:24.21,requiredCashEok:21.18,cashGapEok:-0.18}]}};
-assert.equal(zippickReportFinance(item).required,21.18);
-assert.equal(zippickReportFinance(item).gap,-0.18);
-const decision = zippickDecisionHtml(item,{tone:'conditional'});
-assert.match(decision,/조건부로 매수 검토할 만해요/);
+const esc=String, zippickPriceBasesHtml=()=>'', zippickDecisionScoresHtml=()=>'', zippickBuyBandHtml=()=>'';
+const zippickOverallRatingHtml=verdict=>verdict.label;
+const metric=(key)=>({key,score:80,status:'ok',reason:'확인됨'});
+const item={apartmentId:'a',name:'A',region:'성동구',areaLabel:'84㎡',
+ locationScore:{parts:[{key:'demand',details:[metric('station'),metric('education')]},
+  {key:'product',details:[metric('households'),metric('age')]}]},
+ signals:{recentDealCount:10,priorDealCount:12},
+ priceComparison:{status:'ready',method:'usual_gap',shiftPp:5,averagePriceEok:24.21,
+  periodMonths:6,throughMonth:'2026-10',transactionCount:10,peers:[{tier:0},{tier:0}]},
+ statsThrough:new Date().toISOString().slice(0,10),recent3AdjustedTradeCount:4,
+ recent3AdjustedAveragePriceEok:24.21,latestDealPriceEok:24,
+ policyImpact:{cashGapEok:0.04,requiredCashEok:20.96,reportProfile:{cashEok:21},
+  cashScenarios:[{priceEok:24,requiredCashEok:20.96,cashGapEok:0.04},
+   {priceEok:24.21,requiredCashEok:21.18,cashGapEok:-0.18}]}};
+const finance=zippickReportFinance(item);
+assert.equal(finance.scenario.priceEok,24.21);
+assert.equal(finance.required,21.18);assert.equal(finance.gap,-0.18);
+const stale={...item,statsThrough:'2000-01-01'};
+assert.equal(zippickPriceCheckBasis(stale).price,24);
+assert.equal(zippickReportFinance(stale).required,20.96);
+assert.equal(zippickReportFinance(stale).gap,0.04);
+const missing=zippickReportFinance({...item,policyImpact:{}});
+assert.equal(missing.scenarios.length,0);assert.equal(missing.scenario,undefined);
+assert(Number.isNaN(missing.required));assert(Number.isNaN(missing.gap));
+const render=value=>zippickDecisionHtml(value,zippickCommonPurchaseVerdict(value,new Date(2026,10,9)));
+const decision=render(item);
+assert.match(decision,/조건부 검토/);assert.match(decision,/단지 조건은 좋지만.*비싸요/);
 assert.doesNotMatch(decision,/추가 자금|부족한 현금|마련해야|자금 조건/);
-assert.equal(decision,zippickDecisionHtml({...item, policyImpact:{}},{tone:'conditional'}));
-assert.equal(decision,zippickDecisionHtml({...item, policyImpact:{cashGapEok:100,missingInputs:['income']}},{tone:'conditional'}));
-assert.match(zippickDecisionHtml(item,{tone:'yes'}),/매수 후보로 우선 검토할 만해요/);
-assert.match(zippickDecisionHtml(item,{tone:'hold'}),/지금은 매수를 서두르지/);
-assert.match(zippickDecisionHtml(item,{tone:'risk'}),/다른 단지를 먼저/);
-assert.match(zippickDecisionHtml(item,{tone:'conditional',peakGuard:{atPeak:true}}),/가격은 2년 고점권/);
-assert.match(zippickDecisionHtml({...item, policyImpact:{}},{tone:'missing'}),/자료가 더 필요해 매수 판단을 보류/);
-assert.equal(zippickPriceCheckBasis({...item,statsThrough:'2000-01-01'}).price,24);
-const make = (id, region, price, area='84㎡') => ({...item,apartmentId:id,name:id,region,areaLabel:area,
-  latestDealDate:new Date().toISOString().slice(0,10),latestDealExclusiveArea:Number(area.replace('㎡','')),
-  latestDealPriceEok:price,recent3AdjustedAveragePriceEok:price});
-const rows = [item,make('same','성동구',24.4),make('far','강동구',24.22),make('expensive','성동구',40),make('big','성동구',24,'110㎡')];
+assert.equal(decision,render({...item,policyImpact:{}}));
+assert.equal(decision,render({...item,policyImpact:{cashGapEok:100,missingInputs:['income']}}));
+assert.match(render({...item,locationScore:{}}),/판단 보류.*확인된 항목이 적어요/s);
+const candidateHeadlinePrice=()=>({priceEok:24});
+const make=(id,region,price,area=84)=>({...item,apartmentId:id,name:id,region,areaLabel:`${area}㎡`,
+ latestDealDate:'2026-10-01',latestDealExclusiveArea:area,latestDealPriceEok:price});
+const rows=[item,make('same','성동구',24.4),make('far','강동구',24.22),make('expensive','성동구',40),make('big','성동구',24,110)];
 rows.push(rows[1]);
-function candidateRowsForLookup() { return rows; }
+function candidateRowsForLookup(){return rows;}
 assert.deepEqual(zippickReportPeers(item).map(row=>row.apartmentId),['same']);
-console.log('ok');
 '''
         result = subprocess.run(['node'], input=script, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
