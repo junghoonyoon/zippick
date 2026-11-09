@@ -22,6 +22,37 @@ class BudgetCandidatesTest(unittest.TestCase):
     def tearDown(self):
         self.live_price_patch.stop()
 
+    def test_supplied_apartment_id_resolves_name_variant_without_name_search(self):
+        entity = {
+            "name": "신트리1단지아파트",
+            "apartmentId": "11560100001002",
+            "province": "서울특별시",
+            "city": "서울시",
+            "district": "양천구",
+            "legalDong": "신정동",
+            "jibun": "1259",
+        }
+        with mock.patch.object(
+            budget_candidates.real_estate_search,
+            "APARTMENT_MASTER",
+            [entity],
+        ), mock.patch.object(
+            budget_candidates,
+            "_find_entities",
+            return_value=[],
+        ):
+            result = budget_candidates.resolve_apartment_identity(
+                "신트리1단지",
+                "서울특별시 양천구",
+                "신정동",
+                "1259",
+                identities={"apartmentId": "11560100001002"},
+                allow_semantic=False,
+            )
+        self.assertEqual(result["status"], "matched")
+        self.assertEqual(result["method"], "exact_id")
+        self.assertIs(result["entity"], entity)
+
     def test_candidate_identity_keeps_official_ids_address_and_aliases(self):
         fields = budget_candidates._candidate_identity_fields(
             {"name": "남성"},

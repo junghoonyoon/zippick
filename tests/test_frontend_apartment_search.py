@@ -158,7 +158,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertNotIn("대장 단지보다 18.4% 낮아", own_leader)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
-    def test_demand_and_market_report_explain_why_the_score_is_good(self):
+    def test_demand_copy_covers_good_normal_bad_and_missing_distance_data(self):
         html = APP_HTML.read_text(encoding="utf-8")
         demand_body = html.split("    function zippickDemandScoreReason(part) {", 1)[1].split(
             "    function zippickMarketScoreReason(item) {", 1,
@@ -181,20 +181,169 @@ class FrontendApartmentSearchTest(unittest.TestCase):
           function zippickDemandScoreReason(part) {{{demand_body}
           function zippickMarketScoreReason(item) {{{market_body}
           function zippickBarReason(item, part) {{{bar_body}
-          const demand = zippickBarReason({{}}, {{key:'demand',points:24,maxPoints:30,details:[
-            {{key:'station',reason:'우장산역 5호선 · 직선 422m',status:'available'}},
-            {{key:'education',reason:'강신초등학교 · 468m 거리',status:'available'}},
-          ]}});
+          const demandPart = details => ({{key:'demand',details}});
+          const good = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:90,reason:'우장산역 5호선 · 직선 422m',status:'ok'}},
+            {{key:'education',score:100,reason:'강신초등학교 · 468m 거리',status:'ok'}},
+          ]));
+          const normal = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:60,reason:'신정네거리역 2호선 · 직선 725m',status:'ok'}},
+            {{key:'education',score:55,reason:'서울남명초등학교 · 186m 거리',status:'ok'}},
+          ]));
+          const bad = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:30,reason:'가까운 역 · 직선 1800m',status:'ok'}},
+            {{key:'education',score:35,reason:'주변 학교 · 2200m 거리',status:'ok'}},
+          ]));
+          const partial = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:null,reason:'역거리 미수집',status:'missing'}},
+            {{key:'education',score:95,reason:'서울남명초등학교 · 186m 거리',status:'ok'}},
+          ]));
+          const missing = zippickDemandScoreReason(demandPart([
+            {{key:'station',score:null,reason:'역거리 미수집',status:'missing'}},
+            {{key:'education',score:null,reason:'주변 학교 자료를 확인하지 못했어요',status:'missing'}},
+          ]));
           const market = zippickBarReason({{signals:{{momentumPct:12.9,turnoverRatio:1.33,isAtPeak:true,recoveryPct:100}}}}, {{key:'market'}});
-          console.log(JSON.stringify([demand, market]));
+          console.log(JSON.stringify([good, normal, bad, partial, missing, market]));
         """
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
-        demand, market = json.loads(result.stdout)
-        self.assertIn("역과 학교가 가까워 출퇴근·통학에 유리하고 입지 점수에 유리해요", demand)
-        self.assertIn("실제 도보 길과 학교 배정은 확인해 주세요", demand)
+        good, normal, bad, partial, missing, market = json.loads(result.stdout)
+        self.assertIn("역과 학교가 가까워 출퇴근·통학에 유리해요", good)
+        self.assertIn("우장산역 5호선까지 직선 422m", good)
+        self.assertIn("강신초등학교까지 직선 468m", good)
+        self.assertIn("확인된 거리는 신정네거리역 2호선까지 직선 725m", normal)
+        self.assertIn("서울남명초등학교까지 직선 186m", normal)
+        self.assertNotIn("가깝", normal)
+        self.assertIn("역이 멀어 출퇴근에는 불리해요", bad)
+        self.assertIn("학교 접근성이 낮아 통학에는 아쉬워요", bad)
+        self.assertIn("학교가 가까워 통학에 유리해요", partial)
+        self.assertIn("역 자료가 없어요", partial)
+        self.assertEqual(missing, "역·학교 자료를 불러오지 못해 판단할 수 없어요.")
+        self.assertNotIn("후보", missing)
+        self.assertNotIn("도보", good + normal + bad + partial + missing)
         self.assertIn("최근 6개월 가격은 12.9% 올랐고 거래는 33% 늘었어요", market)
         self.assertIn("가격 상승을 거래가 뒷받침해 시장 흐름 점수에 유리해요", market)
         self.assertIn("2년 고점권이라 최근 거래보다 비싼 매물은 주의해요", market)
+
+    def test_report_refresh_keeps_complex_identity_and_repaints_open_report(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        fetch_start = html.index("    async function fetchAptReport(name, region, context = {}) {")
+        fetch_end = html.index("    async function ensureCandidateCommuteProfile", fetch_start)
+        fetch = html[fetch_start:fetch_end]
+        self.assertIn('params.set("apartment_id", context.apartmentId)', fetch)
+        self.assertIn('params.set("kapt_code", context.kaptCode)', fetch)
+        self.assertIn('params.set("complex_no", context.complexNo)', fetch)
+        self.assertIn("void refreshLocationScoreSheet(report, rerender);", html)
+        self.assertIn("requestId === aptReportRequestId && currentAptReportItem === report", html)
+        self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
+        self.assertIn("repaintCandidateScoreBadges(item, originalKey, previousRowKeys)", html)
+        payload_start = html.index("    function locationScoreRefreshPayload(item) {")
+        payload_end = html.index("    async function refreshLocationScoreSheet", payload_start)
+        payload = html[payload_start:payload_end]
+        for identity in ("apartmentId", "kaptCode", "complexNo"):
+            self.assertIn(f"{identity}:item?.{identity}", payload)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_location_score_refresh_repaints_matching_search_and_budget_cards(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        identity_start = html.index("    function candidateScoreAreaIdentity(item) {")
+        identity_end = html.index("    function syncAptSearchCandidateData", identity_start)
+        identity_helpers = html[identity_start:identity_end]
+        start = html.index("    function repaintCandidateScoreBadges(item, originalKey, previousRowKeys = []) {")
+        end = html.index("    function aptSearchMapRows()", start)
+        repaint_body = html[start:end]
+        script = f"""
+          const candidate = {{apartmentId:'complex-1',name:'송도',region:'연수구',legalDong:'송도동',jibun:'308-1',displayAreaLabel:'전용 84.9㎡',locationScore:{{score:74}}}};
+          const currentAptSearchItems = [
+            {{...candidate,displayAreaLabel:'84㎡',locationScore:{{score:69}}}},
+            {{...candidate,displayAreaLabel:'74.99㎡',locationScore:{{score:62}}}},
+          ];
+          const candidateRowsForLookup = () => currentAptSearchItems;
+          const compactText = value => String(value || '').replace(/\\s+/g,'').toLowerCase();
+          const candidateDisplayName = row => row.displayName || row.name || '';
+          const parcelIdentityKey = value => String(value || '').replace(/\\s+/g,'');
+          const candidateIdentityKey = row => `${{row.apartmentId}}|${{row.displayAreaLabel}}`;
+          const sameCandidateIdentity = (left,right) => left.apartmentId === right.apartmentId
+            && left.region === right.region && left.legalDong === right.legalDong && left.jibun === right.jibun;
+          {identity_helpers}
+          const rowsToRefresh = candidateRowsForLookup().filter(row => sameCandidateScoreIdentity(row,candidate));
+          rowsToRefresh.forEach(row => Object.assign(row,{{locationScore:candidate.locationScore}}));
+          const candidateTopScoreBadgesHtml = row => `score:${{row.locationScore.score}}`;
+          const searchBadges = [{{innerHTML:''}},{{innerHTML:'score:62'}}];
+          const aptSearchResults = {{querySelector:selector => ({{querySelector:() => searchBadges[Number(selector.match(/\\d+/)[0])]}})}};
+          const budgetBadges = [{{innerHTML:''}},{{innerHTML:'score:62'}}];
+          const budgetCards = [
+            {{dataset:{{candidateKey:candidateIdentityKey(currentAptSearchItems[0])}},querySelector:() => budgetBadges[0]}},
+            {{dataset:{{candidateKey:candidateIdentityKey(currentAptSearchItems[1])}},querySelector:() => budgetBadges[1]}},
+          ];
+          const budgetResultEl = {{querySelectorAll:() => budgetCards}};
+          {repaint_body}
+          repaintCandidateScoreBadges(candidate, 'complex-1');
+          console.log(JSON.stringify([rowsToRefresh.length,searchBadges.map(row => row.innerHTML),budgetBadges.map(row => row.innerHTML)]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        self.assertEqual(json.loads(result.stdout), [1, ["score:74", "score:62"], ["score:74", "score:62"]])
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_report_scores_sync_to_same_search_complex_and_area(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        identity_start = html.index("    function candidateScoreAreaIdentity(item) {")
+        identity_end = html.index("    function syncAptSearchCandidateData", identity_start)
+        identity_helpers = html[identity_start:identity_end]
+        sync_start = html.index("    function syncCandidateReportScores(item) {")
+        sync_end = html.index("    async function refreshLocationScoreSheet", sync_start)
+        sync_body = html[sync_start:sync_end]
+        script = f"""
+          const report = {{apartmentId:'complex-1',name:'송도',region:'연수구',legalDong:'송도동',jibun:'308-1',displayAreaLabel:'전용 84.9㎡',locationScore:{{score:74}},signals:{{score:33}}}};
+          const currentAptSearchItems = [
+            {{...report,displayAreaLabel:'84㎡',locationScore:{{score:69}},signals:{{score:69}}}},
+            {{...report,displayAreaLabel:'59㎡',locationScore:{{score:62}},signals:{{score:61}}}},
+          ];
+          const compactText = value => String(value || '').replace(/\\s+/g,'').toLowerCase();
+          const candidateDisplayName = row => row.displayName || row.name || '';
+          const parcelIdentityKey = value => String(value || '').replace(/\\s+/g,'');
+          const candidateIdentityKey = row => `${{row.apartmentId}}|${{row.displayAreaLabel}}`;
+          const sameCandidateIdentity = (left,right) => left.apartmentId === right.apartmentId
+            && left.region === right.region && left.legalDong === right.legalDong && left.jibun === right.jibun;
+          {identity_helpers}
+          const candidateRowsForLookup = () => currentAptSearchItems;
+          let refreshedKeys = [];
+          const repaintCandidateScoreBadges = (item,key,previousKeys) => {{ refreshedKeys = previousKeys; }};
+          {sync_body}
+          syncCandidateReportScores(report);
+          console.log(JSON.stringify([
+            currentAptSearchItems.map(row => [row.locationScore.score,row.signals.score]),
+            refreshedKeys,
+          ]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        self.assertEqual(
+            json.loads(result.stdout),
+            [[[74, 33], [62, 61]], ["complex-1|84㎡"]],
+        )
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
+    def test_location_heading_labels_school_distance_as_straight_line(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        start = html.index("    function zippickLocationHeadingFact(item, part, positive) {")
+        end = html.index("    // 공통 제목:", start)
+        heading_body = html[start:end]
+        script = f"""
+          const zpNum = value => Number(value);
+          const zpPartRatio = row => zpNum(row.points) / zpNum(row.maxPoints);
+          {heading_body}
+          const good = zippickLocationHeadingFact({{}}, {{key:'demand',details:[
+            {{key:'station',status:'ok',points:12,maxPoints:15,reason:'신정네거리역 2호선 · 직선 725m'}},
+            {{key:'education',status:'ok',points:12,maxPoints:15,reason:'서울남명초등학교 · 186m 거리'}},
+          ]}}, true);
+          const weak = zippickLocationHeadingFact({{}}, {{key:'demand',details:[
+            {{key:'education',status:'ok',points:4,maxPoints:15,reason:'서울남명초등학교 · 186m 거리'}},
+          ]}}, false);
+          console.log(JSON.stringify([good, weak]));
+        """
+        result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
+        good, weak = json.loads(result.stdout)
+        self.assertEqual(good, "역은 직선 725m, 학교는 직선 186m로 가까워요")
+        self.assertEqual(weak, "학교까지 직선 186m로 통학 거리를 확인해야 해요")
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for report copy behavior checks")
     def test_market_score_bars_explain_each_signal_in_plain_korean(self):
@@ -3294,7 +3443,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertIn("budgetBackgroundStatusHtml(data)", render_body)
         self.assertIn("candidateScoreDataReady", render_body)
-        self.assertIn("scoreDataReady ? candidateTopScoreBadgesHtml(item)", render_body)
+        self.assertIn('<span data-candidate-score-badges>${candidateTopScoreBadgesHtml(item)}</span>', render_body)
         self.assertIn('const includeVerified = verifiedShown ? "" : "&include_verified=true"', html)
         self.assertIn("if (!verifiedShown && next.verifiedResult) revealVerified(next.verifiedResult)", html)
         self.assertIn("{ preserveSelection:completed.verifiedShown }", load_body)
@@ -4531,7 +4680,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('["jeonse_ratio", "jeonse_freshness", "investment_gap", "station", "education"].includes(String(detail?.key || ""))', html)
         self.assertIn('getJson("/api/apartment-location-score"', html)
         self.assertIn("const originalKey = candidateIdentityKey(item);", html)
-        self.assertIn("candidateRowsForLookup().forEach(row =>", html)
+        self.assertIn("const rowsToRefresh = candidateRowsForLookup().filter(", html)
+        self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
         self.assertIn("void refreshLocationScoreSheet(item);", html)
         self.assertIn('data-candidate-key="${esc(candidateIdentityKey(item))}"', preview_match.group("body"))
         self.assertIn('const mapPreview = button.closest("[data-candidate-map-preview]");', lookup_match.group("body"))

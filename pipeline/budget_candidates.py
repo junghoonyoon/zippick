@@ -1644,7 +1644,8 @@ def resolve_apartment_identity(
     }
     query_identity = {"name": name, "region": region, "legalDong": legal_dong, "jibun": jibun, **identities}
     named_matches = _find_entities(name, region)
-    if (named_matches and real_estate_search.compact(name) not in GENERIC_APARTMENT_NAMES
+    if (not identities and not (legal_dong or jibun) and named_matches
+            and real_estate_search.compact(name) not in GENERIC_APARTMENT_NAMES
             and not any(apartment_identity.satisfies(query_identity, entity) for entity in named_matches)):
         return {
             "status": "unmatched", "method": "identity_conflict", "entity": None,

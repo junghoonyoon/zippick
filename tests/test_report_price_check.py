@@ -8,6 +8,16 @@ APP_HTML = ROOT / "앱화면" / "real-estate-search.html"
 
 
 class ReportPriceCheckTest(unittest.TestCase):
+    def test_missing_location_data_is_not_replaced_with_price_rank_copy(self):
+        html = APP_HTML.read_text(encoding="utf-8")
+        start = html.index("    function zippickDemandScoreReason(part) {")
+        end = html.index("    function zippickMarketScoreReason(item) {", start)
+        demand = html[start:end]
+        self.assertIn("역·학교 자료를 불러오지 못해 판단할 수 없어요.", demand)
+        self.assertNotIn("zippickDetailReasons(part", demand)
+        self.assertNotIn("지역 후보", demand)
+        self.assertNotIn("도보", demand)
+
     def test_report_summary_appears_before_buy_band(self):
         html = APP_HTML.read_text(encoding="utf-8")
         start = html.index("    function zippickDecisionHtml(item, verdict) {")

@@ -6514,6 +6514,13 @@
         if (item) {
           ensureZippickDevelopmentInsight(item);
           void ensureCandidateCommuteProfile(item);
+          void refreshLocationScoreSheet(item, () => {
+            const slot = sheet.querySelector("[data-signal-report]");
+            if (slot && !sheet.hidden) {
+              slot.innerHTML = candidateZippickReportHtml(item);
+              scheduleZippickReportMaps(sheet);
+            }
+          });
           void ensureZippickReportPeers(item, () => {
             const slot = sheet.querySelector("[data-signal-report]");
             if (slot && !sheet.hidden) {
@@ -6588,6 +6595,9 @@
         district:item?.district || "",
         legalDong:item?.legalDong || "",
         jibun:item?.jibun || "",
+        apartmentId:item?.apartmentId || "",
+        kaptCode:item?.kaptCode || "",
+        complexNo:item?.complexNo || "",
         households:item?.households || 0,
         buildingAge:item?.buildingAge || 0,
         buildYear:item?.buildYear || 0,
@@ -6625,10 +6635,28 @@
       };
     }
 
-    async function refreshLocationScoreSheet(item) {
+    function syncCandidateReportScores(item) {
+      if (!item?.locationScore) return;
+      const rowsToSync = candidateRowsForLookup().filter(
+        row => sameCandidateScoreIdentity(row, item),
+      );
+      const previousRowKeys = rowsToSync.map(candidateIdentityKey);
+      rowsToSync.forEach(row => {
+        row.locationScore = item.locationScore;
+        if (item.signals && typeof item.signals === "object") row.signals = item.signals;
+        if (item.educationEnvironment) row.educationEnvironment = item.educationEnvironment;
+      });
+      repaintCandidateScoreBadges(item, candidateIdentityKey(item), previousRowKeys);
+    }
+
+    async function refreshLocationScoreSheet(item, onRefresh = null) {
       if (!item || !locationScoreNeedsRefresh(item)) return;
       try {
         const originalKey = candidateIdentityKey(item);
+        const rowsToRefresh = candidateRowsForLookup().filter(
+          row => sameCandidateScoreIdentity(row, item),
+        );
+        const previousRowKeys = rowsToRefresh.map(candidateIdentityKey);
         const payload = await getJson("/api/apartment-location-score", {
           method:"POST",
           headers:{ "Content-Type":"application/json" },
@@ -6636,14 +6664,12 @@
         });
         if (!payload?.candidate?.locationScore) return;
         Object.assign(item, payload.candidate);
+        rowsToRefresh.forEach(row => Object.assign(row, payload.candidate));
         if (!locationScoreSheet.hidden) {
           locationScoreContent.innerHTML = locationScoreSheetHtml(item);
         }
-        candidateRowsForLookup().forEach(row => {
-          if (row && candidateIdentityKey(row) === originalKey) {
-            Object.assign(row, payload.candidate);
-          }
-        });
+        repaintCandidateScoreBadges(item, originalKey, previousRowKeys);
+        if (typeof onRefresh === "function") onRefresh(item);
       } catch (_) {}
     }
 
@@ -13465,6 +13491,37 @@
       return [...unique.values()];
     }
 
+    function repaintCandidateScoreBadges(item, originalKey, previousRowKeys = []) {
+      const matchingRows = [item, ...candidateRowsForLookup()].filter(
+        row => sameCandidateScoreIdentity(row, item),
+      );
+      const keys = new Set([
+        originalKey,
+        candidateIdentityKey(item),
+        ...previousRowKeys,
+        ...matchingRows.map(candidateIdentityKey),
+      ]);
+      const rowsByKey = new Map();
+      [...matchingRows, ...candidateRowsForLookup()].forEach(row => {
+        if (!row) return;
+        const key = candidateIdentityKey(row);
+        if (keys.has(key)) rowsByKey.set(key, row);
+      });
+      currentAptSearchItems.forEach((row, index) => {
+        if (!keys.has(candidateIdentityKey(row))) return;
+        const card = aptSearchResults.querySelector(`[data-apt-card-index="${index}"]`);
+        const badges = card?.querySelector("[data-apt-score-badges]");
+        if (badges) badges.innerHTML = candidateTopScoreBadgesHtml(row);
+      });
+      budgetResultEl.querySelectorAll(".budget-candidate[data-candidate-key]").forEach(card => {
+        const key = card.dataset.candidateKey || "";
+        if (!keys.has(key)) return;
+        const badges = card.querySelector("[data-candidate-score-badges]");
+        const row = rowsByKey.get(key) || item;
+        if (badges) badges.innerHTML = candidateTopScoreBadgesHtml(row);
+      });
+    }
+
     function aptSearchMapRows() {
       const rows = [
         ...currentAptSearchItems,
@@ -13513,6 +13570,30 @@
       const rightName = compactText(candidateDisplayName(right));
       return Boolean(leftName && leftName === rightName && leftRegion && rightRegion
         && leftDong && rightDong);
+    }
+
+    function candidateScoreAreaIdentity(item) {
+      const label = String(item?.displayAreaLabel || item?.areaLabel || "").trim();
+      const labelMatch = label.match(/\d+(?:\.\d+)?/);
+      if (labelMatch) {
+        return { value:Number(labelMatch[0]), rounded:!labelMatch[0].includes(".") };
+      }
+      for (const field of ["selectedArea", "exclusiveArea", "latestDealExclusiveArea"]) {
+        const value = Number(item?.[field]);
+        if (Number.isFinite(value) && value > 0) return { value, rounded:false };
+      }
+      return null;
+    }
+
+    function sameCandidateScoreIdentity(left, right) {
+      if (!sameCandidateIdentity(left, right)) return false;
+      const leftArea = candidateScoreAreaIdentity(left);
+      const rightArea = candidateScoreAreaIdentity(right);
+      if (!leftArea || !rightArea) return candidateIdentityKey(left) === candidateIdentityKey(right);
+      if (Math.abs(leftArea.value - rightArea.value) <= .15) return true;
+      if (leftArea.rounded && Math.floor(rightArea.value) === leftArea.value) return true;
+      if (rightArea.rounded && Math.floor(leftArea.value) === rightArea.value) return true;
+      return false;
     }
 
     function syncAptSearchCandidateData(index, candidate) {
@@ -18519,29 +18600,53 @@
     function zippickDemandScoreReason(part) {
       const details = Array.isArray(part?.details) ? part.details : [];
       const find = key => details.find(detail => detail?.key === key);
-      const usable = detail => detail && detail.status !== "missing" && !/미수집|확인하지 못/.test(String(detail.reason || ""));
+      const usable = detail => detail
+        && detail.status !== "missing"
+        && detail.score !== null
+        && detail.score !== undefined
+        && Number.isFinite(Number(detail.score))
+        && String(detail.reason || "").trim()
+        && !/미수집|확인하지 못/.test(String(detail.reason || ""));
       const station = usable(find("station")) ? find("station") : null;
       const education = usable(find("education")) ? find("education") : null;
-      const ratio = zpNum(part?.points) / zpNum(part?.maxPoints);
-      const scoreMeaning = Number.isFinite(ratio) && ratio >= .7
-        ? "입지 점수에 유리해요."
-        : Number.isFinite(ratio) && ratio < .45
-          ? "입지 점수에는 아쉬워요."
-          : "입지 점수는 보통이에요.";
-      const facts = [station?.reason, education?.reason].filter(Boolean).map(value => String(value).trim());
-      if (station && education) {
-        return `역과 학교가 가까워 출퇴근·통학에 유리하고 ${scoreMeaning} ${facts.join(", ")}. 실제 도보 길과 학교 배정은 확인해 주세요.`;
+      if (!station && !education) return "역·학교 자료를 불러오지 못해 판단할 수 없어요.";
+      const fact = (detail, label) => {
+        if (!detail) return "";
+        const reason = String(detail.reason || "").trim();
+        if (/반경|안에 지하철역 없음/.test(reason)) return reason;
+        const distance = reason.match(/(?:직선\s*)?([\d,.]+\s*m)(?:\s*거리)?/i);
+        if (!distance) return reason;
+        const name = reason.slice(0, distance.index).split("·")[0].trim() || label;
+        return `${name}까지 직선 ${distance[1].replace(/\s+/g, "")}`;
+      };
+      const stationFact = fact(station, "가까운 역");
+      const educationFact = fact(education, "주변 학교");
+      const stationScore = station ? Number(station.score) : null;
+      const educationScore = education ? Number(education.score) : null;
+      let conclusion = "";
+      if (station && education && stationScore >= 70 && educationScore >= 70) {
+        conclusion = "역과 학교가 가까워 출퇴근·통학에 유리해요.";
+      } else if (station && education && stationScore < 45 && educationScore < 45) {
+        conclusion = "역이 멀어 출퇴근에는 불리해요. 학교 접근성이 낮아 통학에는 아쉬워요.";
+      } else if (station && stationScore < 45) {
+        conclusion = "역이 멀어 출퇴근에는 불리해요.";
+      } else if (education && educationScore < 45) {
+        conclusion = "학교 접근성이 낮아 통학에는 아쉬워요.";
+      } else if (!education && stationScore >= 70) {
+        conclusion = "역이 가까워 출퇴근에 유리해요.";
+      } else if (!station && educationScore >= 70) {
+        conclusion = "학교가 가까워 통학에 유리해요.";
       }
-      if (station) {
-        return `역이 가까워 출퇴근에 유리하고 ${scoreMeaning} ${facts[0]}. 실제 도보 길은 확인해 주세요.`;
-      }
-      if (education) {
-        return `학교가 가까워 통학에 유리하고 ${scoreMeaning} ${facts[0]}. 실제 배정 학교와 통학로는 확인해 주세요.`;
-      }
-      const reasons = zippickDetailReasons(part, ["representation", "redevelopment_influence", "commute"]);
-      return reasons.length
-        ? `${reasons.join(" · ")}. 이 자료를 입지·실수요 점수에 반영했어요. 실제 생활 동선은 현장에서 확인하세요.`
-        : "역·학교·생활권 자료가 부족해 입지·실수요 점수는 판단할 수 없어요.";
+      const facts = [stationFact, educationFact].filter(Boolean).join(", ");
+      const missing = [
+        !station ? "역 자료가 없어요." : "",
+        !education ? "학교 자료가 없어요." : "",
+      ].filter(Boolean).join(" ");
+      const statements = [];
+      if (conclusion) statements.push(conclusion);
+      if (facts) statements.push(`확인된 거리는 ${facts}예요.`);
+      if (missing) statements.push(missing);
+      return statements.join(" ");
     }
 
     function zippickMarketScoreReason(item) {
@@ -21374,9 +21479,9 @@
       };
       if (part?.key === "demand") {
         const station = distance(detail("station")), school = distance(detail("education"));
-        if (positive && station && school) return `역은 직선 ${station}m, 학교는 ${school}m로 가까워요`;
+        if (positive && station && school) return `역은 직선 ${station}m, 학교는 직선 ${school}m로 가까워요`;
         if (station) return positive ? `역까지 직선 ${station}m로 가까워요` : `역까지 직선 ${station}m로 거리가 멀어요`;
-        if (school) return positive ? `학교까지 ${school}m로 가까워요` : `학교까지 ${school}m로 통학 거리를 확인해야 해요`;
+        if (school) return positive ? `학교까지 직선 ${school}m로 가까워요` : `학교까지 직선 ${school}m로 통학 거리를 확인해야 해요`;
         const commute = detail("commute");
         const match = /(광화문|강남|여의도)\s*(\d+)분/.exec(String(commute?.reason || ""));
         if (match) return `${match[1]}까지 약 ${match[2]}분${positive ? "으로 이동시간이 짧은 편이에요" : "이 걸려요"}`;
@@ -24853,7 +24958,7 @@
                 <div class="budget-main">
                   <span class="candidate-name-row">${candidateTitleHtml(item)}</span>
                   <span class="budget-meta">${candidateListMetaHtml(item)}</span>
-	                  ${scoreDataReady ? candidateTopScoreBadgesHtml(item) : ""}
+                  ${scoreDataReady ? `<span data-candidate-score-badges>${candidateTopScoreBadgesHtml(item)}</span>` : ""}
                 </div>
                 ${candidateMapInlineButtonHtml(item)}
               </div>
@@ -27021,7 +27126,7 @@
 
     async function fetchAptReport(name, region, context = {}) {
       const contextParams = aptReportContextParams(context);
-      const contextKey = `${contextParams.toString()}|${context?.legalDong || ""}|${context?.jibun || ""}|${context?.apartmentId || ""}`;
+      const contextKey = `${contextParams.toString()}|${context?.legalDong || ""}|${context?.jibun || ""}|${context?.apartmentId || ""}|${context?.kaptCode || ""}|${context?.complexNo || ""}`;
       const cacheKey = `${name}${region || ""}${contextKey}`;
       if (aptReportCache.has(cacheKey)) return aptReportCache.get(cacheKey);
       const params = new URLSearchParams({
@@ -27032,6 +27137,8 @@
       if (context?.legalDong) params.set("legal_dong", context.legalDong);
       if (context?.jibun) params.set("jibun", context.jibun);
       if (context?.apartmentId) params.set("apartment_id", context.apartmentId);
+      if (context?.kaptCode) params.set("kapt_code", context.kaptCode);
+      if (context?.complexNo) params.set("complex_no", context.complexNo);
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), MARKET_INSIGHT_TIMEOUT_MS);
       const pending = getJson(
@@ -28391,10 +28498,12 @@
         const rerender = () => {
           if (requestId === aptReportRequestId && currentAptReportItem === report && !aptReportSheet.hidden) {
             refreshAptSearchTrendCandidate(report);
+            syncCandidateReportScores(report);
             aptReportContent.innerHTML = `<div data-signal-report>${candidateZippickReportHtml(report)}</div>`;
             scheduleZippickReportMaps(aptReportContent);
           }
         };
+        void refreshLocationScoreSheet(report, rerender);
         void ensureZippickReportPeers(report, () => {
           if (requestId === aptReportRequestId) rerender();
         });
@@ -28407,10 +28516,11 @@
         return;
       }
       try {
-        const data = await fetchAptReport(name, region, context);
+        const data = await fetchAptReport(name, region, { ...context, ...(candidate || {}) });
         if (requestId !== aptReportRequestId) return;
         const report = data.report || {};
         currentAptReportItem = report;
+        syncCandidateReportScores(report);
         // 직접 검색 리포트는 현재 예산 검색 결과가 아니라 서버의 구 대표
         // 비교군을 사용한다. 구버전 응답에서 peers가 빠져도 검색 후보 비교
         // UI로 잘못 폴백하지 않도록 직접 검색 리포트 타입을 유지한다.
@@ -28433,6 +28543,7 @@
             scheduleZippickReportMaps(aptReportContent);
           }
         };
+        void refreshLocationScoreSheet(report, rerender);
         ensureZippickDevelopmentInsight(report, rerender);
         // /api/apartment-report 응답에는 뉴스가 없다. 후보 목록과 같은
         // 경로로 여기서 따로 보강한다.
