@@ -18415,6 +18415,15 @@
       const reliableComparison = item?.priceIdentityVerified === true && property.missingLabels.length === 0
         && priceSource === "usual_gap" && price !== "missing" && !priceRatingCapped && !moderateEvidence
         && !comparison.lowData && count >= 5 && verifiedPeerHistory && peers.every(peer => !peer.lowData);
+      // 연식만 약점인 구축 대단지는 충분한 실거래로 적정한 가격이 확인되면
+      // 연식 약점을 밝히면서 4점까지 검토한다. 가격 부담이나 다른 약점은 그대로 반영한다.
+      const ageMetric = property.metrics.find(metric => metric.key === "age");
+      const householdsMetric = property.metrics.find(metric => metric.key === "households");
+      const olderLargeCandidate = property.grade === "mixed" && zpNum(item?.buildingAge) >= 21
+        && ageMetric?.score !== null && ageMetric?.score < 50 && householdsMetric?.score >= 90
+        && property.access >= 65 && property.metrics.every(metric => metric.score !== null
+          && (metric.key === "age" || metric.score >= 50))
+        && reliableComparison && !priceDisagreement && ["low", "similar"].includes(price);
       const completeTradeCounts = item?.signals?.status === "ok" && Number.isInteger(recent) && recent >= 0
         && Number.isInteger(prior) && prior >= 5;
       const stableTrades = completeTradeCounts && recent >= 5 && recent >= prior;
@@ -18477,6 +18486,9 @@
         tone = property.grade === "good" ? "conditional" : "hold";
         reason = property.grade === "good" ? "단지 조건은 좋지만, 다른 단지와의 평소 가격 차이를 감안하면 비싸요"
           : `${property.summary}. ${priceSummary}`;
+      } else if (olderLargeCandidate && !tradeDrop) {
+        tone = "yes";
+        reason = `입지와 큰 단지 규모는 좋고, 다른 단지와의 평소 가격 차이를 감안하면 ${price === "low" ? "저렴해요" : "적정해요"}. 다만 ${Math.round(zpNum(item.buildingAge))}년차 연식은 약점이에요`;
       } else if (property.grade === "mixed") {
         tone = "conditional";
         reason = `${property.summary}. ${priceSummary}`;
@@ -18502,6 +18514,7 @@
       const basisDetails = price === "missing" ? [priceUnknownConclusion] : [priceSummary, ...limitations.map(row => row.detail)];
       if (compoundedRisk && largePriceBurden) basisDetails.push(`평소 가격 차이보다 ${shift}포인트 높아 큰 가격 부담 기준인 10포인트를 넘었어요`);
       if (tradeDrop) basisDetails.push(`최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건보다 절반 넘게 줄었어요`);
+      if (olderLargeCandidate && !tradeDrop) basisDetails.push(`단지 규모 ${householdsMetric.score}점과 연식 ${ageMetric.score}점을 따로 봤어요. 연식 약점은 4점 판단에도 남겨뒀어요`);
       if (priorityCandidate) basisDetails.push(`입지 ${property.access}점·단지 ${property.building}점으로 두 축 모두 ${discountedStrongCandidate ? 75 : 85}점 이상이고 네 항목 모두 50점 이상이에요`,
         `최근 한 건도 같은 단지의 최근 ${bandEvidence.periodMonths}개월 다른 거래 ${bandEvidence.count}건 가격대 이하예요`,
         discountedStrongCandidate ? `최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건 이상 거래됐어요`
@@ -18509,7 +18522,7 @@
       return {common:true, pending, version:"common-purchase-v8", tone, label:pending ? "판단 준비 중" : labels[tone],
         stars:({yes:priorityCandidate ? 5 : 4, conditional:3, hold:2, risk:1})[tone] ?? null,
         title:pending ? "가격 비교 자료를 불러오고 있어요. 자료가 준비되면 매수 판단을 보여드려요" : reason, property, price, priceSummary, priceSource, priceDisagreement, limitedPrice, priceRatingCapped, tradeDrop,
-        reliableComparison, moderateEvidence, priorityCandidate, compoundedRisk, largePriceBurden,
+        reliableComparison, moderateEvidence, olderLargeCandidate, priorityCandidate, compoundedRisk, largePriceBurden,
         tradeEvidence:tradeDrop ? `최근 6개월 ${recent}건으로 그 전 6개월 ${prior}건보다 절반 넘게 줄었어요.` : "",
         basis:`${periodBasis} · ${basisDetails.filter(Boolean).join(". ")}`};
     }
@@ -18597,7 +18610,7 @@
         <p class="zpr-insight">${esc(verdict.title)}</p>
         ${zippickReportTable(["판단", "기준"], [
           ["우선 검토 · 5점", "4점 조건에 더해 입지·단지 두 축이 각각 75점 이상이고 네 항목 모두 50점 이상이에요. 평소 가격 차이 대비 저렴하고, 같은 단지의 최근 거래 가격대 이하이며, 거래도 유지됐어요."],
-          ["매수 검토 · 4점", "비교 가격이 평소 수준 이하이고 입지·단지 두 조건이 좋으며, 확인된 거래 급감이 없어요. 같은 구까지 비교한 경우에도 아래의 거래·과거 비교 기준을 충족하면 해당해요."],
+          ["매수 검토 · 4점", "비교 가격이 평소 수준 이하이고 입지·단지 두 조건이 좋으며, 확인된 거래 급감이 없어요. 연식만 약점인 구축 대단지도 충분한 거래로 가격을 확인했다면 해당해요."],
           ["조건부 검토 · 3점", "가격 부담이나 단지의 아쉬움, 거래 급감이 있어요. 같은 단지의 가격대로만 비교했거나 아래 4점의 최소 비교 근거도 부족하면 최대 3점이에요. 확인된 약점으로 매수 보류에 해당하면 2점이에요."],
           ["매수 보류 · 2점", "입지·단지 두 조건이 모두 약하거나, 강점과 아쉬움이 섞인 상태에서 비교 가격도 비싸요. 아래의 1점 조건까지 겹치지 않은 경우예요."],
           ["다른 후보 우선 · 1점", "충분한 실제 비교에서 평소 가격 차이 대비 비싸고, 입지·단지 두 축 모두 약해요. 또는 강점과 아쉬움이 섞인 상태에서 평소 가격 차이보다 10포인트 넘게 비싸거나, 비싼 가격과 거래 급감이 겹쳤어요."],
@@ -18609,6 +18622,7 @@
         <p class="zpr-insight">단순한 현재 가격 비교는 별점에 넣지 않아요. 비교 단지와의 평소 가격 차이를 알 수 없으면, 평가할 최근 거래를 뺀 같은 단지의 다른 실거래가 3건 이상인 집픽 밴드를 써요. 같은 단지의 비교 거래를 기준으로 저렴·적정·비쌈을 판단해요. 다른 단지보다 싸다는 뜻은 아니며, 이 경우는 최대 조건부 검토예요.</p>
         <p class="zpr-insight">가까운 비교 단지 2곳 이상과 이 단지에 같은 면적의 최근 6개월 거래가 각각 3건 이상이고, 각 비교 단지와 과거 2년 이상의 가격 차이가 확인되면 자료가 적어도 4점까지 판단해요. 거래 수가 적다는 안내는 계속 표시하고, 이 근거만으로 1점이나 5점을 주지 않아요.</p>
         <p class="zpr-insight">같은 구까지 거리를 넓힌 경우는 규모·연식·면적을 유지하고, 이 단지와 비교 단지 2곳 이상 모두 최근 6개월 거래 5건 이상과 과거 2년 이상의 가격 차이가 확인돼야 4점이 가능해요. 규모·연식·면적·기간 조건까지 넓히거나 이보다 자료가 적으면 최대 3점이에요.</p>
+        <p class="zpr-insight">연식만 약점인 21년차 이상 대단지는 규모·입지 조건이 좋고, 충분한 실제 거래에서 가격이 적정하거나 저렴하면 4점까지 봐요. 비싼 가격이나 다른 약점이 있으면 이 기준을 쓰지 않아요. 연식 약점도 그대로 보여드려요.</p>
         <p class="zpr-insight">비교 단지와의 평소 가격 차이보다 3포인트 넘게 벌어지면 비쌈, 3포인트 넘게 줄면 저렴으로 봐요. 비교 단지 대비 부담이 낮아져도 최근 거래가 같은 단지의 가격대보다 높으면 조건부로 판단해요. 반대 방향일 때도 두 기준의 차이를 밝혀요. 최근 6개월 거래가 그 전 6개월의 절반 미만이면 급감으로 봐요. 4점 후보라도 이 경우는 3점이고, 가격 부담·단지 약점까지 겹치면 위의 1점 기준을 적용해요. 이전 거래가 5건 미만이면 급감 판정에 쓰지 않아요.</p>
         <p class="zpr-insight">시장 신호 총점·개인 예산·전세가율·개인 통근 조건은 이 별점에 합산하지 않아요. 미래 변화와 하락기 거래는 해당 항목에서 따로 설명해요. 이 기준은 집픽의 비교 정책이며, 수익률이나 저점을 예측하는 검증된 모형은 아니에요.</p>
       </section>`;

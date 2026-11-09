@@ -407,6 +407,34 @@ assert.equal(zippickCommonPurchaseVerdict(item,new Date(2026,10,9)).stars,4,
 """)
 
 
+def test_older_large_complex_can_earn_four_only_with_reliable_fair_price():
+    run("""
+const item=base();item.buildingAge=28;item.priceIdentityVerified=true;
+item.locationScore.parts[1].details[0].score=90;
+item.locationScore.parts[1].details[1].score=25;
+item.priceComparison.shiftPp=0;
+item.priceComparison.peers.forEach(peer=>Object.assign(peer,{transactionCount:12,
+  yearlyRatios:{'2023':85,'2024':88,'2025':87}}));
+const actual=verdict(item);
+assert.equal(actual.stars,4);assert.equal(actual.olderLargeCandidate,true);
+assert.match(actual.title,/적정해요.*28년차 연식은 약점/);
+assert.match(actual.basis,/단지 규모 90점과 연식 25점/);
+item.priceComparison.shiftPp=-4;assert.equal(verdict(item).stars,4);
+item.priceComparison.shiftPp=4;assert.equal(verdict(item).stars,2);
+item.priceComparison.shiftPp=0;
+item.priceComparison.peers[0].transactionCount=2;assert.equal(verdict(item).stars,3);
+item.priceComparison.peers[0].transactionCount=12;
+item.priceComparison.conditionsRelaxed=true;assert.equal(verdict(item).stars,3);
+item.priceComparison.conditionsRelaxed=false;
+item.locationScore.parts[1].details[0].score=80;assert.equal(verdict(item).stars,3);
+item.locationScore.parts[1].details[0].score=90;
+item.locationScore.parts[0].details[0].score=30;assert.equal(verdict(item).stars,3);
+item.locationScore.parts[0].details[0].score=80;
+item.signals.recentDealCount=5;item.signals.priorDealCount=12;
+assert.equal(verdict(item).stars,3);
+""")
+
+
 def test_observed_exceptional_fundamentals_can_earn_five_at_fair_price():
     sample = next(case for case in LIVE_CASES if case['request'][0] == '헬리오시티')
     run("const item=" + json.dumps(sample['report'], ensure_ascii=False) + ";" + """
