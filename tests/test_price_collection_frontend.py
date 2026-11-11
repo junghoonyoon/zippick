@@ -85,7 +85,8 @@ const report={...base,priceComparison:{status:'ready',shiftPp:2},locationScore:{
 const other={...base,areaLabel:'59㎡',priceComparison:{shiftPp:99}};
 const search={...base,priceComparison:{status:'loading'}}, budget={...base,priceComparison:{status:'loading'}}, map={...base,priceComparison:{status:'loading'}};
 const currentBudgetData={allCandidates:[budget],candidates:[budget]};
-const currentAptSearchItems=[search,other],currentAptSearchRivalItems=[],aptCandidateResults=new Map();
+const personal={...base,commuteAccessRequested:true,commuteAccessScore:20,locationScore:{score:40}};
+const currentAptSearchItems=[search,other,personal],currentAptSearchRivalItems=[],aptCandidateResults=new Map();
 const candidateMapEntries=[{item:map}],candidateMapLocatedEntries=[{item:map}];
 const candidateViewMode='map',candidateMapSelectedKey='same|84.9㎡';let shown;
 const candidateIdentityKey=x=>`${x.apartmentId}|${x.areaLabel}`;
@@ -96,6 +97,7 @@ const selectCandidateMapItem=(item,options)=>shown={item,options};
 syncCandidateReportScores(report);
 for(const row of [search,budget,map]) {assert.equal(row.priceComparison.shiftPp,2);assert.equal(row.locationScore.score,73);}
 assert.equal(other.priceComparison.shiftPp,99);
+assert.equal(personal.priceComparison.shiftPp,2);assert.equal(personal.locationScore.score,40,'do not overwrite personal commute score');
 assert.strictEqual(shown.item,map);assert.deepEqual(shown.options,{pan:false,stationRoute:false,preserveSheetState:true});
 '''
     result = subprocess.run(['node'], input=script, text=True, capture_output=True, timeout=15)
@@ -129,5 +131,60 @@ const locationScoreSheet={hidden:true};const locationScoreContent={};
  assert.equal(item.locationScore,undefined,'old response cannot overwrite changed area');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 '''
+    result = subprocess.run(['node'], input=script, text=True, capture_output=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+
+
+def test_price_score_refresh_is_shared_and_retried_per_area_and_source_revision():
+    source = HTML.read_text(encoding='utf-8')
+    start = source.index('    async function refreshCollectedPriceScore(')
+    end = source.index('    function openLocationScoreSheet(', start)
+    helper = source[start:end]
+    script = r"""
+const assert=require('node:assert/strict');let calls=0,fail=false;
+const zippickReportAreaKey=item=>item.areaLabel;
+const refreshLocationScoreSheet=async(item,callback,options)=>{
+ calls++;await Promise.resolve();if(!fail) (typeof callback==='function'?callback:options.onRefresh)();
+};
+""" + helper + r"""
+(async()=>{
+ const item={areaLabel:'84',reportPeerState:'ready',priceDataCollection:{sourceRevision:'v1'}};
+ let updates=0;await Promise.all([refreshCollectedPriceScore(item,()=>updates++),refreshCollectedPriceScore(item,()=>updates++)]);
+ assert.equal(calls,1);assert.equal(updates,2);
+ await refreshCollectedPriceScore(item);assert.equal(calls,1);
+ item.priceDataCollection.sourceRevision='v2';fail=true;await refreshCollectedPriceScore(item);assert.equal(calls,2);
+ fail=false;await refreshCollectedPriceScore(item);assert.equal(calls,3);
+ item.areaLabel='59';await refreshCollectedPriceScore(item);assert.equal(calls,4);
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
+    result = subprocess.run(['node'], input=script, text=True, capture_output=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+
+
+def test_list_and_map_detail_recalculate_score_after_a_collection():
+    source = HTML.read_text(encoding='utf-8')
+    start = source.index('    async function loadCandidateReportSheet(')
+    end = source.index('    function candidateZippickReportHtml(', start)
+    helper = source[start:end]
+    script = r"""
+const assert=require('node:assert/strict');let synced=0,refreshed=0;
+const zippickReportAreaKey=item=>item.areaLabel;
+const budgetCandidateReportReady=()=>false,zippickReportLoadStateHtml=()=>"loading";
+const candidateZippickReportHtml=item=>`price:${item.priceComparison.shiftPp};score:${item.locationScore.score}`;
+const ensureZippickReportPeers=async item=>{item.reportPeerState='ready';item.priceDataCollection={sourceRevision:'v1'};item.priceComparison={shiftPp:2};};
+const syncCandidateReportScores=()=>synced++;
+const refreshCollectedPriceScore=async(item,callback)=>{refreshed++;item.locationScore={score:77};callback();};
+const scheduleZippickReportMaps=()=>{},refreshZippickReconstructionSection=()=>{},refreshZippickReconstruction=async()=>{};
+""" + helper + r"""
+(async()=>{
+ for(const entry of ['list','map']){
+  const slot={innerHTML:''},sheet={dataset:{},hidden:false,querySelector:()=>slot,querySelectorAll:()=>[],addEventListener(){}};
+  const item={areaLabel:'84',locationScore:{score:50}};
+  await loadCandidateReportSheet(sheet,item);await Promise.resolve();
+  assert.equal(slot.innerHTML,'price:2;score:77',entry);
+ }
+ assert.equal(synced,2);assert.equal(refreshed,2);
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
     result = subprocess.run(['node'], input=script, text=True, capture_output=True, timeout=15)
     assert result.returncode == 0, result.stderr

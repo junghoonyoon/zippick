@@ -6667,8 +6667,10 @@
         row => sameCandidateScoreIdentity(row, item),
       );
       const previousRowKeys = rowsToSync.map(candidateIdentityKey);
+      const personalKey = row => JSON.stringify([Boolean(row?.commuteAccessRequested),
+        row?.commuteAccessScore ?? null, row?.commuteAccessReason || "", Boolean(row?.commuteMatched)]);
       rowsToSync.forEach(row => {
-        if (item.locationScore) row.locationScore = item.locationScore;
+        if (item.locationScore && personalKey(row) === personalKey(item)) row.locationScore = item.locationScore;
         if (item.priceComparison) row.priceComparison = item.priceComparison;
         if (item.valuation) row.valuation = item.valuation;
         if (Array.isArray(item.peers)) row.peers = item.peers;
@@ -6694,8 +6696,10 @@
         const originalKey = candidateIdentityKey(item);
         const areaKey = zippickReportAreaKey(item);
         const sourceRevision = item.priceDataCollection?.sourceRevision;
+        const personalKey = row => JSON.stringify([Boolean(row?.commuteAccessRequested),
+          row?.commuteAccessScore ?? null, row?.commuteAccessReason || "", Boolean(row?.commuteMatched)]);
         const rowsToRefresh = candidateRowsForLookup(false).filter(
-          row => sameCandidateScoreIdentity(row, item),
+          row => sameCandidateScoreIdentity(row, item) && personalKey(row) === personalKey(item),
         );
         const previousRowKeys = rowsToRefresh.map(candidateIdentityKey);
         const payload = await getJson("/api/apartment-location-score", {
@@ -6707,7 +6711,8 @@
             || item.priceDataCollection?.sourceRevision !== sourceRevision) return;
         Object.assign(item, payload.candidate);
         rowsToRefresh.forEach(row => Object.assign(row, payload.candidate));
-        if (!locationScoreSheet.hidden) {
+        if (!locationScoreSheet.hidden && locationScoreSheet.dataset?.scoreKind === "location"
+            && locationScoreSheet.dataset?.scoreKey === originalKey) {
           locationScoreContent.innerHTML = locationScoreSheetHtml(item);
         }
         repaintCandidateScoreBadges(item, originalKey, previousRowKeys);
@@ -6716,8 +6721,43 @@
       } catch (_) {}
     }
 
+    async function refreshCollectedPriceScore(item, onRefresh = null) {
+      const revision = item?.priceDataCollection?.sourceRevision;
+      if (!revision || item.reportPeerState !== "ready") return;
+      const key = JSON.stringify([zippickReportAreaKey(item), revision]);
+      if (item.collectedPriceScoreKey === key) {
+        if (typeof onRefresh === "function") onRefresh(item);
+        return;
+      }
+      if (item.collectedPriceScorePendingKey === key && item.collectedPriceScorePromise) {
+        await item.collectedPriceScorePromise;
+      } else {
+        let refreshed = false;
+        item.collectedPriceScorePendingKey = key;
+        const pending = refreshLocationScoreSheet(item, () => {refreshed = true;}, {force:true}).then(() => {
+          if (refreshed && JSON.stringify([zippickReportAreaKey(item), item.priceDataCollection?.sourceRevision]) === key) {
+            item.collectedPriceScoreKey = key;
+          }
+        });
+        item.collectedPriceScorePromise = pending;
+        try { await pending; }
+        finally {
+          if (item.collectedPriceScorePromise === pending) {
+            item.collectedPriceScorePromise = null;
+            item.collectedPriceScorePendingKey = "";
+          }
+        }
+      }
+      if (JSON.stringify([zippickReportAreaKey(item), item.priceDataCollection?.sourceRevision]) === key
+          && typeof onRefresh === "function") onRefresh(item);
+    }
+
     function openLocationScoreSheet(item, trigger = null) {
       if (!item?.locationScore) return;
+      if (locationScoreSheet.dataset) {
+        locationScoreSheet.dataset.scoreKind = "location";
+        locationScoreSheet.dataset.scoreKey = candidateIdentityKey(item);
+      }
       locationScoreReturnFocus = trigger || document.activeElement;
       locationScoreTitle.textContent = `${candidateDisplayName(item)} 종합 점수표`;
       locationScoreContent.innerHTML = locationScoreSheetHtml(item);
@@ -6732,6 +6772,7 @@
 
     function openFlowScoreSheet(item, trigger = null) {
       if (!item?.signals) return;
+      if (locationScoreSheet.dataset) locationScoreSheet.dataset.scoreKind = "flow";
       locationScoreReturnFocus = trigger || document.activeElement;
       locationScoreTitle.textContent = `${candidateDisplayName(item)} 최근 시장 신호표`;
       locationScoreContent.innerHTML = candidateLegacySignalReportHtml(item);
@@ -13177,6 +13218,12 @@
           if (budgetReportRowIsCurrent(item)) {
             refreshMarketInsight(item);
             refreshBudgetReportButton(item);
+            if (item.reportPeerState === "ready" && item.priceDataCollection?.sourceRevision) {
+              syncCandidateReportScores(item);
+              void refreshCollectedPriceScore(item, () => {
+                if (budgetReportRowIsCurrent(item)) refreshMarketInsight(item);
+              });
+            }
           }
           drainBudgetReportQueue();
         });
@@ -24086,6 +24133,15 @@
       if (slot) slot.innerHTML = budgetCandidateReportReady(item) ? candidateZippickReportHtml(item) : zippickReportLoadStateHtml(item, "loading");
       await ensureZippickReportPeers(item);
       if (!current()) return;
+      if (item.reportPeerState === "ready" && item.priceDataCollection?.sourceRevision) {
+        syncCandidateReportScores(item);
+        void refreshCollectedPriceScore(item, () => {
+          if (!current()) return;
+          const latestSlot = sheet.querySelector("[data-signal-report]");
+          if (latestSlot) latestSlot.innerHTML = candidateZippickReportHtml(item);
+          scheduleZippickReportMaps(sheet);
+        });
+      }
       const updatedSlot = sheet.querySelector("[data-signal-report]");
       if (updatedSlot) updatedSlot.innerHTML = candidateZippickReportHtml(item);
       downloads().forEach(button => { button.disabled = item.reportPeerState !== "ready"; });
