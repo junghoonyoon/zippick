@@ -19867,6 +19867,7 @@
       const model = zippickReconstructionModel(item);
       if (!model) return "";
       const assessment = zippickReconstructionFeasibility(item);
+      const assessed = ["assessed", "conditional"].includes(assessment?.status);
       const facts = model.profile || {};
       const numeric = value => Number.isFinite(Number(value)) && Number(value) > 0;
       const percent = value => numeric(value) ? `${Number(value).toLocaleString("ko-KR", {maximumFractionDigits:2})}%` : "자료 없음";
@@ -19894,8 +19895,8 @@
         out_of_coverage:"서울 외 지역은 계획 용적률·건폐율 자료를 아직 연결하지 못했어요."})[plan?.status] || "";
       const referenceRows = reference ? `${reference.zoneName && (assessment || !String(model.reason || "").includes(reference.zoneName)) ? `<div><dt>대표 지번 용도지역</dt><dd>${esc(reference.zoneName)}</dd></div>` : ""}${numeric(reference.floorAreaRatio) ? `<div><dt>대표 지번 조례 용적률</dt><dd>${percent(reference.floorAreaRatio)}</dd></div>` : ""}${model.differencePp != null && Number.isFinite(Number(model.differencePp)) ? `<div><dt>조례 기준과 단순 차이</dt><dd>${Number(model.differencePp).toLocaleString("ko-KR", {maximumFractionDigits:2})}%p</dd></div>` : ""}${numeric(reference.buildingCoverageRatio) ? `<div><dt>대표 지번 조례 건폐율</dt><dd>${percent(reference.buildingCoverageRatio)}</dd></div>` : ""}${reference.districtPlanName ? `<div><dt>지구단위계획 구역</dt><dd>${esc(reference.districtPlanName)}</dd></div>` : ""}` : "";
       return `<div class="zpr-reconstruction" aria-label="재건축 여건">
-        <h6>${esc(assessment ? summarized ? "사업성 판단에 쓴 건축 자료" : assessment.headline : model.heading)}</h6>
-        ${model.status === "loading" ? `<p role="status">${spinnerHtml("default")} ${esc(model.reason)}</p>` : assessment && summarized ? "" : `<p class="zpr-insight">${esc(assessment ? `${assessment.evidenceHeading ? assessment.evidenceHeading + ". " : ""}${assessment.reason}` : model.reason)}</p>`}
+        <h6>${esc(assessed ? summarized ? "사업성 판단에 쓴 건축 자료" : assessment.headline : model.heading)}</h6>
+        ${model.status === "loading" ? `<p role="status">${spinnerHtml("default")} ${esc(model.reason)}</p>` : assessment && summarized ? "" : `<p class="zpr-insight">${esc(assessed ? `${assessment.evidenceHeading ? assessment.evidenceHeading + ". " : ""}${assessment.reason}` : model.reason)}</p>`}
         ${facts.scope || reference ? `<dl class="zpr-reconstruction-facts">
           ${facts.scope ? `<div><dt>용적률 · 땅에 비해 지어진 전체 층 면적</dt><dd>${percent(facts.floorAreaRatio)}</dd></div>
           <div><dt>건폐율 · 땅에서 건물이 차지하는 비율</dt><dd>${percent(facts.buildingCoverageRatio)}</dd></div>` : ""}

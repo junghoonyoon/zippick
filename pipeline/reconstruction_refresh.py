@@ -1,6 +1,8 @@
 """Report-triggered collection always updates the shared production source."""
 import json
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -11,6 +13,11 @@ import collect_reconstruction_planning as parcels
 import collect_reconstruction_ordinance as ordinances
 import collect_seoul_reconstruction_plans as projects
 import shared_data
+
+
+_SYNC_POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix="reconstruction-source")
+_SYNC_LOCK = threading.Lock()
+_SYNC_JOB = None
 
 
 def start():
@@ -61,7 +68,22 @@ def _request_primary(entity, *, opener=None):
     return model
 
 
+def _same_facts(local, remote):
+    # Filesystem stamps differ between primary and replica. Public judgments
+    # and every underlying fact must match before skipping another sync.
+    return ({k: v for k, v in local.items() if k != "sourceRevision"}
+            == {k: v for k, v in remote.items() if k != "sourceRevision"})
+
+
+def _loading(entity, reason):
+    result = reconstruction.analyze(entity)
+    result.update(status="loading", heading="운영 원본의 건축 자료를 불러오고 있어요",
+                  reason=reason, summary="")
+    return result
+
+
 def refresh(entity):
+    global _SYNC_JOB
     if not shared_data.read_only():
         return _primary(entity)
     # Replica never calls data providers or writes independent facts. Production
@@ -69,14 +91,23 @@ def refresh(entity):
     try:
         remote = _request_primary(entity)
         if remote.get("status") == "loading":
-            result = reconstruction.analyze(entity)
-            result.update(status="loading", heading="운영 원본의 건축 자료를 불러오고 있어요",
-                          reason=remote.get("reason") or "운영 서버에서 빠진 자료를 수집하고 있어요.", summary="")
-            return result
-        state = shared_data.sync_once()
-        if state.get("status") != "ready":
-            raise shared_data.SharedDataError("shared source refresh failed")
-        return reconstruction.analyze(entity)
+            return _loading(entity, remote.get("reason") or "운영 서버에서 빠진 자료를 수집하고 있어요.")
+        local = reconstruction.analyze(entity)
+        if _same_facts(local, remote):
+            return local
+        # A full source publication can exceed a browser request's time limit.
+        # Share one background sync across reports; polling must stay responsive.
+        with _SYNC_LOCK:
+            if _SYNC_JOB is not None and _SYNC_JOB.done():
+                job, _SYNC_JOB = _SYNC_JOB, None
+                if job.result().get("status") != "ready":
+                    raise shared_data.SharedDataError("shared source refresh failed")
+                local = reconstruction.analyze(entity)
+                if _same_facts(local, remote):
+                    return local
+            if _SYNC_JOB is None:
+                _SYNC_JOB = _SYNC_POOL.submit(shared_data.sync_once)
+        return _loading(entity, "수집한 건축 자료를 공용 원본에서 가져오고 있어요.")
     except (URLError, OSError, ValueError, TypeError, KeyError, shared_data.SharedDataError):
         result = reconstruction.analyze(entity)
         result.update(status="stale" if result.get("profile", {}).get("scope") else "connection_error",

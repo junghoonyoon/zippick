@@ -242,7 +242,7 @@ def profile(entity, entry):
         matches.append(r)
     if len(matches) != 1:
         return {"status": "identity_unverified" if rows else "no_records",
-                "reason": "단지 전체의 건축물대장을 하나로 확인하지 못했어요." if rows else "해당 지번의 총괄표제부 조회 결과가 없어요."}
+                "reason": "단지 전체의 건축물대장을 하나로 확인하지 못했어요." if rows else "이 주소의 단지 전체 건축물대장 조회 결과가 없어요."}
     r = matches[0]
     far, coverage = number(r.get("vlRat")), number(r.get("bcRat"))
     land, area = number(r.get("platArea")), number(r.get("vlRatEstmTotArea"))
@@ -324,7 +324,7 @@ def _conditions(entity, entry=None, context=None, *, day=None):
     result["status"] = entry.get("status", "not_collected")
     if not entry.get("snapshot"):
         result["reason"] = {"connection_error": "건축물대장 연결에 실패했어요. 잠시 뒤 리포트를 다시 열어 주세요.",
-                            "no_records": "해당 지번의 총괄표제부 조회 결과가 없어요.",
+                            "no_records": "이 주소의 단지 전체 건축물대장 조회 결과가 없어요.",
                             "access_denied": "공식 자료 제공처에서 조회를 허용하지 않아 자료를 받지 못했어요. 연결이 복구되면 다시 확인할 수 있어요."}.get(result["status"], result["reason"])
         result["errorCode"] = entry.get("errorCode")
         return result

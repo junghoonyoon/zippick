@@ -1,5 +1,6 @@
 """Exercise production collection and replica forwarding as one real data flow."""
 import json
+import threading
 from unittest.mock import Mock
 
 import pytest
@@ -20,6 +21,7 @@ def store(tmp_path, monkeypatch):
     monkeypatch.setattr(refresh.ordinances, "request", lambda: False)
     monkeypatch.setattr(buildings, "_JOBS", {})
     monkeypatch.setattr(buildings, "_BLOCKED_UNTIL", 0)
+    monkeypatch.setattr(refresh, "_SYNC_JOB", None)
     reconstruction._read.cache_clear()
     return tmp_path
 
@@ -47,7 +49,7 @@ def test_replica_forwards_and_publishes_the_verified_primary_snapshot_without_lo
     local_collector = Mock(side_effect=AssertionError("replica called a provider"))
     monkeypatch.setattr(buildings, "request", local_collector)
     remote = reconstruction.analyze(ENTITY, entry(), day=DAY)
-    forward = Mock(side_effect=[{**remote, "status": "loading"}, remote])
+    forward = Mock(side_effect=[{**remote, "status": "loading"}, remote, remote])
     monkeypatch.setattr(refresh, "_request_primary", forward)
     def publish():
         (store / reconstruction.FACT_FILE).write_text(json.dumps({"records": {reconstruction.parcel_key(ENTITY): entry()}}))
@@ -56,11 +58,13 @@ def test_replica_forwards_and_publishes_the_verified_primary_snapshot_without_lo
     monkeypatch.setattr(shared_data, "sync_once", sync)
     assert refresh.refresh(ENTITY)["status"] == "loading"
     sync.assert_not_called()
+    assert refresh.refresh(ENTITY)["status"] == "loading"
+    refresh._SYNC_JOB.result(timeout=5)
     result = refresh.refresh(ENTITY)
     assert result["profile"]["floorAreaRatio"] == 160
     assert result["status"] != "loading"
     sync.assert_called_once()
-    assert forward.call_count == 2
+    assert forward.call_count == 3
     local_collector.assert_not_called()
 
 
@@ -110,3 +114,39 @@ def test_no_records_and_auth_failure_finish_without_becoming_zero_or_staying_loa
         assert model["status"] == ("access_denied" if code else "no_records")
         assert not model["profile"].get("floorAreaRatio")
         monkeypatch.setattr(buildings, "collect", original)
+
+
+def test_replica_does_not_block_or_start_duplicate_syncs_while_publishing(store, monkeypatch):
+    remote = reconstruction.analyze(ENTITY, entry(), day=DAY)
+    monkeypatch.setenv("ZIPPICK_DATA_MODE", "replica")
+    monkeypatch.setattr(shared_data, "status", lambda: {"status": "ready"})
+    monkeypatch.setattr(refresh, "_request_primary", Mock(return_value=remote))
+    release = threading.Event()
+    def publish():
+        assert release.wait(timeout=5)
+        (store / reconstruction.FACT_FILE).write_text(json.dumps({"records": {reconstruction.parcel_key(ENTITY): entry()}}))
+        return {"status": "ready"}
+    sync = Mock(side_effect=publish)
+    monkeypatch.setattr(shared_data, "sync_once", sync)
+    try:
+        for _ in range(5):
+            assert refresh.refresh(ENTITY)["status"] == "loading"
+        assert not refresh._SYNC_JOB.done()
+    finally:
+        release.set()
+        refresh._SYNC_JOB.result(timeout=5)
+    assert refresh.refresh(ENTITY)["profile"]["floorAreaRatio"] == 160
+    sync.assert_called_once()
+
+
+def test_replica_reuses_identical_facts_without_an_unnecessary_source_download(store, monkeypatch):
+    (store / reconstruction.FACT_FILE).write_text(json.dumps({"records": {reconstruction.parcel_key(ENTITY): entry()}}))
+    monkeypatch.setenv("ZIPPICK_DATA_MODE", "replica")
+    monkeypatch.setattr(shared_data, "status", lambda: {"status": "ready"})
+    remote = reconstruction.analyze(ENTITY)
+    remote["sourceRevision"] = ["different filesystem stamps"]
+    monkeypatch.setattr(refresh, "_request_primary", Mock(return_value=remote))
+    sync = Mock(side_effect=AssertionError("unchanged source downloaded again"))
+    monkeypatch.setattr(shared_data, "sync_once", sync)
+    assert refresh.refresh(ENTITY)["profile"]["floorAreaRatio"] == 160
+    sync.assert_not_called()

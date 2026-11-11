@@ -154,3 +154,18 @@ const getJson=async()=>{if(failed)throw new Error('offline');return {reconstruct
 })().catch(e=>{console.error(e);process.exitCode=1;});
 """)
 
+
+
+def test_missing_register_displays_the_actual_query_result_instead_of_hiding_it_behind_feasibility():
+    run_js(NAMES, HARNESS + r'''
+item.reconstructionConditions=model({status:'no_records',profile:{},
+ heading:'재건축 여건은 자료가 부족해 판단할 수 없어요',
+ reason:'이 주소의 단지 전체 건축물대장 조회 결과가 없어요.',
+ feasibility:{version:'reconstruction-feasibility-v1',status:'unknown',
+ headline:'사업성은 자료가 부족해 판단할 수 없어요',reason:'현재 용적률을 확인하지 못했어요.',
+ financialLimitation:'실제 수익성은 별도로 확인해야 해요.'}});
+const html=zippickReconstructionHtml(item);
+assert.match(html,/단지 전체 건축물대장 조회 결과가 없어요/);
+assert.doesNotMatch(html,/현재 용적률을 확인하지 못했어요/);
+assert.doesNotMatch(html,/0%|NaN|role="status"/);
+''')
