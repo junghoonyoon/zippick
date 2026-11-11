@@ -18,6 +18,11 @@ ENTITY = {"apartmentId": "example-3", "name": "예시아파트3단지", "provinc
           "households": 884, "approvedAt": "1995-06-12"}
 
 
+@pytest.fixture(autouse=True)
+def isolated_source(tmp_path, monkeypatch):
+    monkeypatch.setattr(shared_data, 'cache_path', lambda name: tmp_path / name)
+
+
 def entry(**changes):
     record = {**r.parcel(ENTITY), "regstrKindCd": "1", "mgmBldrgstPk": "example-register",
               "bldNm": "예시아파트3단지", "mainPurpsCdNm": "공동주택", "hhldCnt": 884,

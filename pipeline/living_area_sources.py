@@ -271,6 +271,7 @@ def read_export(path):
 
 
 def revision():
+    import regional_reconstruction_plans
     path = Path(DB_PATH)
     context_paths = [config.ROOT / 'data' / name for name in (
         'living_area_apartment_points.json', 'living_area_official_context.json',
@@ -287,5 +288,5 @@ def revision():
         'capital_transport.py', 'planned_rail.py', 'rail_station_mapping.py', 'map_zone_policy.py', 'map_zone_stage.py',
         'living_area_map.py', 'living_area_reference_points.py', 'redevelopment_occupancy.py', 'redevelopment_completion.py'))
     context_paths.append(config.ROOT / 'pipeline/cache/living_area_audited_centers.json')
-    return digest({'registry': REGISTRY, 'bundle': BUNDLED_PATH.stat().st_mtime_ns if BUNDLED_PATH.exists() else None, 'store': path.stat().st_mtime_ns if path.exists() else None,
+    return digest({'registry': REGISTRY, 'regionalPlans': regional_reconstruction_plans.stamp(), 'bundle': BUNDLED_PATH.stat().st_mtime_ns if BUNDLED_PATH.exists() else None, 'store': path.stat().st_mtime_ns if path.exists() else None,
                    'context': {p.name: p.stat().st_mtime_ns if p.exists() else None for p in context_paths}})

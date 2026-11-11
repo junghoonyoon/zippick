@@ -53,3 +53,36 @@ def test_report_http_collects_once_then_returns_matching_facts_and_rejects_other
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_regional_plan_is_connected_to_the_same_refresh_api_and_reused_across_areas(tmp_path, monkeypatch):
+    import collect_regional_reconstruction_plans as regional
+    from test_regional_reconstruction_plans import ENTITY as REGIONAL_ENTITY, GG_URL, workbook
+    entity = {**REGIONAL_ENTITY, 'households':884, 'cortarNo':'4111710200'}
+    monkeypatch.setenv('ZIPPICK_DATA_MODE','isolated')
+    monkeypatch.setattr(shared_data,'cache_path',lambda name:tmp_path/name)
+    monkeypatch.setattr(search_server.budget_candidates,'_find_entities',lambda *args:[entity])
+    for module in (refresh.parcels,refresh.projects,refresh.ordinances,refresh.regional_projects,buildings):
+        monkeypatch.setattr(module,'request',lambda *a,**k:False)
+    regional._save('gg-renewal',regional.parse_gyeonggi(workbook(),GG_URL))
+    raw = entry()
+    raw['snapshot']['parcel'] = reconstruction.parcel(entity)
+    raw['snapshot']['records'][0].update(reconstruction.parcel(entity),bldNm=entity['name'])
+    (tmp_path/reconstruction.FACT_FILE).write_text(json.dumps({'records':{reconstruction.parcel_key(entity):raw}}))
+    server=search_server.SearchServer(('127.0.0.1',0),search_server.Handler)
+    worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+    try:
+        params={'apartment_id':entity['apartmentId'],'name':entity['name'],'region':entity['district'],
+                'legal_dong':entity['legalDong'],'jibun':entity['jibun']}
+        results=[]
+        for area in ('59','84'):
+            url=f'http://127.0.0.1:{server.server_address[1]}/api/apartment-reconstruction?'+urlencode({**params,'area_label':area})
+            with urlopen(url,timeout=5) as response:
+                results.append(json.load(response)['reconstructionConditions'])
+        assert results[0] == results[1]
+        assert results[0]['projectPlan']['plannedFloorAreaRatio'] == 250
+        assert results[0]['projectPlan']['stageLabel'] == '추진위원회'
+        assert results[0]['feasibility']['direction'] == 'favorable'
+        assert results[0]['feasibility']['comparison']['siteScopeVerified'] is False
+    finally:
+        server.shutdown();server.server_close()

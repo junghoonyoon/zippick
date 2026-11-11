@@ -12,6 +12,7 @@ import collect_building_register as buildings
 import collect_reconstruction_planning as parcels
 import collect_reconstruction_ordinance as ordinances
 import collect_seoul_reconstruction_plans as projects
+import collect_regional_reconstruction_plans as regional_projects
 import shared_data
 
 
@@ -23,6 +24,7 @@ _SYNC_JOB = None
 def start():
     shared_data.start()
     projects.request()
+    regional_projects.request()
     ordinances.request()
 
 
@@ -30,6 +32,7 @@ def _primary(entity):
     pending = buildings.request(entity)
     pending_parcel = parcels.request(entity)
     pending_projects = projects.request()
+    pending_regional = regional_projects.request(entity)
     ordinances.request()
     result = reconstruction.analyze(entity)
     waiting = []
@@ -39,6 +42,8 @@ def _primary(entity):
         waiting.append("대표 지번의 건축 기준")
     if pending_projects and (result.get("projectPlan") or {}).get("status") in ("not_collected", "connection_error"):
         waiting.append("서울시 정비계획")
+    if pending_regional and (result.get("projectPlan") or {}).get("status") in ("not_collected", "connection_error", "stale"):
+        waiting.append("지역 정비계획")
     if waiting:
         result.update(status="loading", heading="공식 건축 자료를 불러오고 있어요",
                       reason=f"{'·'.join(waiting)}을 확인하고 있어요.", summary="")

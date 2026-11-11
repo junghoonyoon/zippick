@@ -1,4 +1,4 @@
-"""Read exact-address reconstruction plans from the shared Seoul source."""
+"""Read exact-address reconstruction plans from shared official sources."""
 import datetime as dt
 import json
 from functools import lru_cache
@@ -54,7 +54,8 @@ def _number(value, *, maximum=None):
 def for_apartment(entity, *, day=None):
     day = day or dt.date.today()
     if entity.get('province') != '서울특별시':
-        return {'status': 'out_of_coverage'}
+        import regional_reconstruction_plans
+        return regional_reconstruction_plans.for_apartment(entity, day=day)
     apartment_id = str(entity.get('apartmentId') or '')
     district, dong = (str(entity.get(k) or '') for k in ('district', 'legalDong'))
     lot = identity.entity_parcel(entity)
@@ -104,4 +105,5 @@ def for_apartment(entity, *, day=None):
             'projectAreaSqm': _number(row.get('bsns_area')),
             'beforeZone': row.get('spfc_prev'), 'afterZone': row.get('spfc_after'),
             'checkedAt': str(data.get('checkedAt') or '')[:10], 'sourceUrl': SOURCE_URL,
+            'sourceLabel': '서울시 정비사업 자료',
             'scope': 'official_project_area', 'identityMatch': 'district_dong_parcel_and_name'}

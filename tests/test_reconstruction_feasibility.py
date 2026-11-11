@@ -7,7 +7,8 @@ from test_reconstruction_frontend import HARNESS, NAMES, run_js
 
 
 @pytest.fixture(autouse=True)
-def plan_source(monkeypatch):
+def plan_source(monkeypatch, tmp_path):
+    monkeypatch.setattr(r.shared_data, 'cache_path', lambda name: tmp_path / name)
     monkeypatch.setattr(r.reconstruction_project_plans, 'for_apartment', lambda *a, **k: {'status': 'not_found'})
 
 
@@ -91,6 +92,32 @@ def test_building_coverage_age_and_household_counts_do_not_manufacture_profitabi
     assert analyze(context={})['feasibility']['direction'] == 'unknown'
     young = r.analyze({**ENTITY, 'approvedAt': '2020-01-01'}, entry(), context(), day=DAY)
     assert young['feasibility']['status'] == 'not_assessed'
+
+
+def test_verified_active_plan_is_not_hidden_just_because_the_master_is_under_thirty(monkeypatch):
+    monkeypatch.setattr(r.reconstruction_project_plans,'for_apartment',lambda *a,**k:{
+        'status':'ready','apartmentId':ENTITY['apartmentId'],'identityMatch':'district_dong_parcel_and_name',
+        'plannedFloorAreaRatio':250,'stageLabel':'조합설립인가'})
+    model=r.analyze({**ENTITY,'approvedAt':'1999-01-01'},entry(),{},day=DAY)
+    assert model['grade'] != 'not_assessed'
+    assert model['feasibility']['direction'] == 'favorable'
+
+
+@pytest.mark.parametrize('households_match,direction',[(True,'favorable'),(False,'unknown')])
+def test_missing_recap_can_only_use_published_before_after_density_with_matching_households(monkeypatch, households_match, direction):
+    monkeypatch.setattr(r.reconstruction_project_plans,'for_apartment',lambda *a,**k:{
+        'status':'ready','apartmentId':ENTITY['apartmentId'],'identityMatch':'district_dong_parcel_and_name',
+        'plannedFloorAreaRatio':250,'existingFloorAreaRatio':160,'subjectHouseholdsMatch':households_match,
+        'sourceDate':'2026-09-30','stageLabel':'추진위원회승인'})
+    model=r.analyze(ENTITY,{'status':'no_records'}, {},day=DAY)
+    f=model['feasibility']
+    assert f['direction'] == direction
+    if households_match:
+        assert f['status'] == 'conditional'
+        assert f['comparison']['currentSource'] == 'official_project_inventory'
+        assert f['comparison']['differencePp'] is None
+        assert '통계' in f['scopeNote']
+        assert model['profile'] == {}  # the inventory never becomes a building-register fact
 
 
 def test_all_existing_attach_consumers_receive_identical_analysis_for_each_area():

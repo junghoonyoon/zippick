@@ -15,6 +15,7 @@ import apartment_identity
 import apartment_development
 import config
 import reconstruction_project_plans
+import regional_reconstruction_plans
 import shared_data
 
 VERSION = "reconstruction-conditions-v1"
@@ -75,7 +76,7 @@ def revision():
     return [VERSION, FEASIBILITY_VERSION, _stamp(shared_data.cache_path(FACT_FILE)),
             _stamp(shared_data.cache_path(PLANNING_FILE)), _stamp(CONTEXT_PATH),
             _stamp(ORDINANCES_PATH), _stamp(shared_data.cache_path(reconstruction_project_plans.FILE)),
-            _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE))]
+            _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE)), regional_reconstruction_plans.stamp()]
 
 
 @lru_cache(maxsize=4)
@@ -343,7 +344,10 @@ def _conditions(entity, entry=None, context=None, *, day=None):
                       reason="건축물대장에 용적률이 비어 있거나 면적과 맞지 않아요.")
         return result
     age = apartment_development._age(entity, day)
-    young = age is None or age < 30
+    plan = result.get('projectPlan') or {}
+    confirmed_plan = (plan.get('status') == 'ready' and plan.get('apartmentId') == result['apartmentId']
+                      and plan.get('identityMatch') == 'district_dong_parcel_and_name')
+    young = (age is None or age < 30) and not confirmed_plan
     if young:
         reference = _planning_reference(entity, context, day)
         stale = result.get('planningSourceStatus') == 'stale'
@@ -455,7 +459,19 @@ def feasibility(model):
         result.update(status='not_assessed', headline='현재 건축 규모만으로 재건축 사업성을 판단하지 않아요')
         return result
     current = number(facts.get('floorAreaRatio'))
-    if not current or facts.get('scope') != 'whole_registered_site':
+    # Some older apartment sites have no recap register. The same official
+    # quarterly record can supply both before/after densities, but only when
+    # the physical address/name AND the existing household count agree.
+    # This remains a dated project-density comparison, never a site-wide limit.
+    inventory_current = (not current and plan.get('status') == 'ready'
+                         and plan.get('apartmentId') == model.get('apartmentId')
+                         and plan.get('identityMatch') == 'district_dong_parcel_and_name'
+                         and plan.get('subjectHouseholdsMatch') is True
+                         and number(plan.get('existingFloorAreaRatio'))
+                         and number(plan.get('plannedFloorAreaRatio')))
+    if inventory_current:
+        current = number(plan['existingFloorAreaRatio'])
+    if not current or not inventory_current and facts.get('scope') != 'whole_registered_site':
         result['reason'] = '현재 용적률을 확인하지 못해 계획대로 얼마나 더 지을 수 있는지 비교하지 못했어요.'
         return result
 
@@ -502,6 +518,10 @@ def feasibility(model):
                               'siteScopeVerified': scope_verified,
                               'differencePp': round(gap, 2) if scope_verified else None},
                   classificationNote='차이가 비교 기준의 10% 이내면 여지가 작다고 보는 집픽의 설명 기준이에요. 법적 기준이나 수익률 점수는 아니에요.')
+    if inventory_current:
+        result['comparison'].update(currentSource='official_project_inventory', currentSourceDate=plan.get('sourceDate'))
+        result['scopeNote'] = ('건축물대장 총괄자료가 없어 공식 통계에 실린 기존·신축 용적률을 비교했어요. '
+                               '단지 주소·이름·기존 세대수를 대조했어요. 통계 기준일 이후 바뀌었을 수 있고, 일반분양 물량이나 수익은 계산하지 않았어요.')
     return result
 
 

@@ -15,7 +15,7 @@ def run_js(names, script):
 import json
 
 
-NAMES = ["zippickReconstructionModel", "zippickReconstructionFeasibility", "zippickReconstructionHtml", "refreshZippickReconstruction"]
+NAMES = ["zippickOwnDevelopmentModel", "zippickReconstructionModel", "zippickReconstructionFeasibility", "zippickReconstructionHtml", "refreshZippickReconstruction"]
 HARNESS = """
 const esc=value=>String(value).replaceAll('<','&lt;'), spinnerHtml=()=>'<span>loading</span>';
 const item={apartmentId:'complex-3',name:'예시3단지',legalDong:'월계동',jibun:'320-11',areaLabel:'59'};
@@ -82,7 +82,8 @@ assert.match(missing,/250%/);assert.doesNotMatch(missing,/단순 차이|NaN/);
 
 def test_official_project_plan_displays_its_own_scope_without_implying_an_approved_ceiling():
     run_js(NAMES, HARNESS + """
-item.reconstructionConditions=model({projectPlan:{status:'ready',projectName:'예시3단지',stageLabel:'구역지정',
+item.reconstructionConditions=model({projectPlan:{status:'ready',apartmentId:item.apartmentId,
+ identityMatch:'district_dong_parcel_and_name',projectName:'예시3단지',stageLabel:'구역지정',
  stageAsOf:'2026-10-01',plannedFloorAreaRatio:280,plannedBuildingCoverageRatio:25,plannedHouseholds:1000,
  projectAreaSqm:50000,sourceUrl:'https://data.seoul.go.kr/dataList/OA-23112/S/1/datasetView.do'}});
 let html=zippickReconstructionHtml(item);

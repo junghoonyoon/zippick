@@ -18674,9 +18674,11 @@
     }
 
     function zippickCommonDecisionHtml(item, verdict) {
+      const title = item?.reconstructionConditions ? zippickVerdictTitle(item, verdict) : verdict.title;
       return `<header class="zpr-head">
         ${zippickOverallRatingHtml(verdict, verdict.label)}
-        <h3 class="zpr-title">${esc(verdict.title)}</h3>
+        <h3 class="zpr-title" data-zpr-purchase-title="${esc(verdict.title)}">${esc(title)}</h3>
+        <p class="zpr-insight" data-zpr-purchase-conclusion ${title === verdict.title ? "hidden" : ""}>매수 판단 · ${esc(verdict.title)}</p>
         ${zippickPriceBasesHtml(item)}
         <p class="zpr-score-note">${esc(verdict.basis)} · 현재 매물 호가와 개인 예산은 반영하지 않았어요.</p>
         ${zippickDecisionScoresHtml(item, verdict)}
@@ -19839,7 +19841,15 @@
 
     function zippickDevelopmentRatingView(item) {
       const missing = reason => ({title:"단지 변화 · 추진 단계", points:null, ratio:0, stars:"—",
-        scoreText:"평가 보류", state:"missing", reason});
+        scoreText:"단계 미확인", state:"missing", reason});
+      const conclusion = item?.reconstructionConditions ? zippickReconstructionConclusion(item) : null;
+      if (conclusion?.stage) return Number.isFinite(conclusion.stage.points)
+        ? {title:"단지 변화 · 추진 단계", ...conclusion.stage,
+          state:"ready", ratio:conclusion.stage.points / 5, stars:conclusion.stage.points.toFixed(1),
+          scoreText:`${conclusion.stage.points.toFixed(1)}/5`}
+        : {...missing(conclusion.stageLine), state:"unrated", scoreText:conclusion.stage.stageLabel};
+      if (conclusion && !conclusion.confirmed) return {...missing(conclusion.stageLine),
+        state:"not_confirmed", scoreText:conclusion.status === "completed" ? "사업 종료" : "추진 미확인"};
       const model = zippickOwnDevelopmentModel(item);
       if (model) return model.status === "confirmed" && model.rating?.state === "ready"
         ? {title:"단지 변화 · 추진 단계", ...model.rating}
@@ -19897,7 +19907,9 @@
 
     function zippickReconstructionFeasibility(item) {
       const model = zippickReconstructionModel(item);
-      const own = item?.futureTransformation?.ownDevelopment;
+      const own = zippickOwnDevelopmentModel(item);
+      if (own?.status === "confirmed" && own.projects?.length
+          && !own.projects.some(project => /재건축|reconstruction/.test(String(project.projectTypeLabel || project.projectType || "")))) return null;
       if (own?.projects?.some(project => /리모델링|remodeling/i.test(`${project.projectTypeLabel || ""} ${project.projectType || ""}`))) return null;
       if (own && String(own.apartmentId) === String(item.apartmentId)
           && (["completed_or_cancelled", "not_applicable"].includes(own.status)
@@ -19908,6 +19920,93 @@
       if (["stale", "connection_error", "invalid_source", "identity_unverified", "access_denied"].includes(model.status)
           && model.feasibility.status !== "unavailable") return null;
       return model.feasibility;
+    }
+
+    function zippickReconstructionConclusion(item) {
+      const model = zippickReconstructionModel(item);
+      if (!model) return null;
+      const own = zippickOwnDevelopmentModel(item);
+      const projects = own?.projects || [];
+      const types = projects.map(project => String(project.projectTypeLabel || project.projectType || ""));
+      if (own?.status === "confirmed" && types.length && !types.some(type => /재건축|reconstruction/.test(type))) return null;
+      if (own?.status === "confirmed" && types.some(type => /리모델링|remodeling|재개발|redevelopment/.test(type))) return null;
+      const plan = model.projectPlan || {};
+      const planMatches = plan.status === "ready" && String(plan.apartmentId) === String(item.apartmentId)
+        && plan.identityMatch === "district_dong_parcel_and_name";
+      const confirmed = own?.status === "confirmed" && types.some(type => /재건축|reconstruction/.test(type))
+        || planMatches && own?.status !== "not_applicable" && own?.status !== "completed_or_cancelled";
+      if (own?.status === "completed_or_cancelled" || plan.status === "completed") return {
+        status:"completed", confirmed:false, showInTitle:false,
+        headline:"확인한 정비사업은 종료돼 앞으로의 재건축 기대에 넣지 않아요",
+        stageLine:"공식 자료에서 준공 또는 사업 종료가 확인됐어요.",
+        conditionLine:"현재 건물의 용적률·건폐율은 건축 정보로만 보여드려요."};
+      const stageSource = own?.rating?.state === "ready" ? own.rating.sourceStage : planMatches ? plan.stageLabel
+        : own?.status === "confirmed" ? projects[0]?.stageLabel : "";
+      const stageRule = ZIPPICK_DEVELOPMENT_STAGE_RATINGS.find(row => row.stages.includes(String(stageSource || "").replace(/\s+/g, "")));
+      const stage = confirmed && stageSource ? {points:stageRule?.points ?? null, stageLabel:stageRule?.label || stageSource,
+        sourceStage:stageSource, sourceUrl:own?.rating?.sourceUrl || plan.stageSourceUrl || plan.sourceUrl,
+        sourceDate:own?.rating?.sourceDate || plan.stageAsOf || plan.stageSourceDate || plan.sourceDate,
+        checkedAt:own?.rating?.checkedAt || plan.checkedAt} : null;
+      const stageLead = !confirmed ? "재건축 추진은 미확인이지만"
+        : !stage ? "재건축 대상은 확인됐지만"
+        : !Number.isFinite(stage.points) ? `재건축은 ‘${stage.stageLabel}’ 단계이고`
+        : stage.points <= 2.5 ? "재건축은 초기지만"
+        : stage.points <= 3.5 ? "재건축은 진행 중이고"
+        : "재건축은 상당히 진행됐고";
+      const check = stage?.checkedAt || own?.checkedAt;
+      const sourceDate = stage?.sourceDate;
+      const stageLine = stage ? `${stage.stageLabel} 단계예요. 자료 표기는 ‘${stage.sourceStage}’예요.${sourceDate ? ` 자료 기준 ${sourceDate}.` : check ? ` 확인일 ${check}.` : ""}`
+        : confirmed ? "단지와 연결된 공식 재건축 사업은 있지만 현재 단계는 확인하지 못했어요."
+        : model.status === "loading" ? "공식 정비사업 자료를 수집하고 있어요."
+        : plan.status === "not_collected" ? "공식 정비사업 자료가 아직 수집되지 않았어요."
+        : ["connection_error", "stale"].includes(plan.status) ? "공식 정비사업 자료를 최신 상태로 확인하지 못했어요."
+        : own?.status === "error" ? "정비사업 자료 연결에 실패해 추진 여부를 확인하지 못했어요."
+        : own?.status === "unresolved" ? "같은 이름의 사업은 있지만 단지 주소·사업 범위가 일치하는지 확인되지 않았어요."
+        : "연결한 공식 자료에서는 이 단지의 재건축 추진 단계를 확인하지 못했어요. 자료에 없다는 이유로 사업이 없다고 단정하지 않아요.";
+      const assessment = zippickReconstructionFeasibility(item);
+      const assessed = ["assessed", "conditional"].includes(assessment?.status);
+      const current = Number(assessment?.comparison?.currentFloorAreaRatio);
+      const target = Number(assessment?.comparison?.referenceFloorAreaRatio);
+      const percent = value => `${value.toLocaleString("ko-KR", {maximumFractionDigits:2})}%`;
+      const qualifier = assessment?.basisKind === "parcel_ordinance" ? "조례 기준이 적용되면 "
+        : ["approved_plan", "project_plan"].includes(assessment?.basisKind) ? "계획 기준으로 " : "확인된 기준에서 ";
+      let headline, conditionLine;
+      if (assessed) {
+        const verdict = assessment.direction === "favorable" ? "사업성에 유리한 건축 조건이에요"
+          : assessment.direction === "limited" ? "건축 규모를 늘릴 여지가 작아요" : "사업성에 불리한 건축 조건이에요";
+        headline = `${stageLead}, ${qualifier}${verdict}`;
+        const label = assessment.basisKind === "parcel_ordinance" ? "대표 지번의 조례 용적률" : "계획 용적률";
+        const currentLabel = assessment.comparison?.currentSource === "official_project_inventory" ? "공식 통계의 기존 용적률" : "현재 용적률";
+        conditionLine = Number.isFinite(current) && Number.isFinite(target)
+          ? `${currentLabel} ${percent(current)}와 ${label} ${percent(target)}를 비교했어요. ${plan.sourceDate ? `계획 자료는 ${plan.sourceDate} 기준이에요. ` : ""}${assessment.reason}` : assessment.reason;
+      } else if (model.grade === "not_assessed" && !confirmed) {
+        headline = "현재 확인한 자료에서는 재건축 추진이 확인되지 않았어요";
+        const year = /^(\d{4})/.exec(String(model.profile?.approvedAt || item.approvedAt || item.buildYear || ""))?.[1];
+        conditionLine = `${year ? `${year}년에 준공된 단지예요. ` : ""}현재 건축 수치만으로 재건축 대상이나 사업성이 좋다고 판단하지 않아요.`;
+      } else {
+        headline = model.status === "loading" ? "재건축 여건을 판단할 공식 자료를 수집하고 있어요"
+          : confirmed ? `${stageLead}, 사업성은 자료가 부족해 판단할 수 없어요`
+          : "재건축 추진 여부와 사업성은 자료가 부족해 판단할 수 없어요";
+        conditionLine = model.status === "loading" ? model.reason : model.profile?.scope
+          ? assessment?.reason || model.reason : model.reason;
+      }
+      return {status:confirmed ? "confirmed" : "not_confirmed", confirmed, stage, headline, stageLine, conditionLine,
+        showInTitle:confirmed || assessed, scopeNote:assessed ? assessment.scopeNote : "",
+        financialLimitation:assessed || confirmed ? assessment?.financialLimitation : ""};
+    }
+
+    function zippickReconstructionReportHtml(item) {
+      const conclusion = zippickReconstructionConclusion(item);
+      if (!conclusion) return "";
+      return `<section class="zpr-section" data-zpr-reconstruction-section>
+        <span class="zpr-kicker" data-zpr-step="단지 변화"></span>
+        <h5>${esc(conclusion.headline)}</h5>
+        <p class="zpr-insight"><b>추진 단계</b> · ${esc(conclusion.stageLine)}</p>
+        <p class="zpr-insight"><b>건축 조건</b> · ${esc(conclusion.conditionLine)}</p>
+        ${conclusion.scopeNote ? `<p class="zpr-score-note">${esc(conclusion.scopeNote)}</p>` : ""}
+        ${conclusion.financialLimitation ? `<p class="zpr-score-note"><b>실제 수익성</b> · ${esc(conclusion.financialLimitation)}</p>` : ""}
+        <details class="zpr-details"><summary>건축 수치와 공식 자료 보기</summary>${zippickReconstructionHtml(item, {summarized:true})}</details>
+      </section>`;
     }
 
     function zippickReconstructionHtml(item, {summarized = false} = {}) {
@@ -19933,13 +20032,16 @@
         ? `<a href="${esc(reference.districtPlanUrl)}" target="_blank" rel="noopener noreferrer">지구단위계획 자료 ↗</a>` : "";
       const retry = model.status !== "loading" && (["connection_error", "stale", "not_collected", "access_denied", "invalid_source"].includes(model.status)
         || ["connection_error", "stale", "not_collected"].includes(plan?.status));
-      const planReady = ["ready", "stale"].includes(plan?.status);
+      const planReady = ["ready", "stale"].includes(plan?.status)
+        && String(plan.apartmentId) === String(item.apartmentId) && plan.identityMatch === "district_dong_parcel_and_name";
       const planStatus = ({not_collected:model.status === "loading" ? "정비계획 자료를 불러오고 있어요." : "정비계획 자료는 아직 수집되지 않았어요.",
-        not_found:"연결한 서울시 자료에서 이 단지의 재건축 계획을 찾지 못했어요. 다른 자료에는 있을 수 있어요.",
+        not_found:"연결한 공식 자료에서 이 단지의 재건축 계획을 찾지 못했어요. 다른 자료에는 있을 수 있어요.",
         ambiguous:"같은 주소에 연결되는 사업이 여러 개여서 계획 수치를 정하지 못했어요.",
         identity_unverified:"단지 주소를 확인하지 못해 정비계획을 연결하지 못했어요.",
         connection_error:"정비계획 자료를 불러오지 못했어요. 다시 불러올 수 있어요.",
-        out_of_coverage:"서울 외 지역은 계획 용적률·건폐율 자료를 아직 연결하지 못했어요."})[plan?.status] || "";
+        stale:"정비계획을 최신 상태로 확인하지 못했어요. 마지막 정상 자료가 있으면 함께 보여드려요.",
+        out_of_coverage:"이 지역의 정비계획 자료는 아직 연결되지 않았어요.",
+        completed:"공식 자료에서 사업 종료를 확인했어요."})[plan?.status] || "";
       const referenceRows = reference ? `${reference.zoneName && (assessment || !String(model.reason || "").includes(reference.zoneName)) ? `<div><dt>대표 지번 용도지역</dt><dd>${esc(reference.zoneName)}</dd></div>` : ""}${numeric(reference.floorAreaRatio) ? `<div><dt>대표 지번 조례 용적률</dt><dd>${percent(reference.floorAreaRatio)}</dd></div>` : ""}${model.differencePp != null && Number.isFinite(Number(model.differencePp)) ? `<div><dt>조례 기준과 단순 차이</dt><dd>${Number(model.differencePp).toLocaleString("ko-KR", {maximumFractionDigits:2})}%p</dd></div>` : ""}${numeric(reference.buildingCoverageRatio) ? `<div><dt>대표 지번 조례 건폐율</dt><dd>${percent(reference.buildingCoverageRatio)}</dd></div>` : ""}${reference.districtPlanName ? `<div><dt>지구단위계획 구역</dt><dd>${esc(reference.districtPlanName)}</dd></div>` : ""}` : "";
       return `<div class="zpr-reconstruction" aria-label="재건축 여건">
         <h6>${esc(assessed ? summarized ? "사업성 판단에 쓴 건축 자료" : assessment.headline : model.heading)}</h6>
@@ -19953,21 +20055,24 @@
           ${referenceRows}
         </dl>` : ""}
         ${facts.buildingCoverageRatio ? '<p class="zpr-score-note">건폐율은 현재 건물 배치를 보는 참고값이에요. 낮다는 이유만으로 사업성이 좋다고 판단하지 않아요.</p>' : ""}
-        ${assessment ? `<p class="zpr-score-note">${esc(assessment.financialLimitation)}</p>${assessment.scopeNote && assessment.basisKind !== "project_plan" ? `<p class="zpr-score-note">${esc(assessment.scopeNote)}</p>` : ""}` : `<p class="zpr-score-note">${esc(model.limitation)}</p>`}
+        ${summarized ? "" : assessment ? `<p class="zpr-score-note">${esc(assessment.financialLimitation)}</p>${assessment.scopeNote && assessment.basisKind !== "project_plan" ? `<p class="zpr-score-note">${esc(assessment.scopeNote)}</p>` : ""}` : `<p class="zpr-score-note">${esc(model.limitation)}</p>`}
         ${model.planningReferenceStatus === "stale" && model.status !== "stale" ? '<p class="zpr-score-note">건축 기준은 마지막 정상 자료를 보여드려요. 최신 자료는 다시 확인해 주세요.</p>' : ""}
         ${reference?.lawAsOf || reference?.landAsOf ? `<p class="zpr-score-note">${[reference.lawAsOf ? `법령·조례 기준일 ${esc(reference.lawAsOf)}` : "", reference.landAsOf ? `면적 기준일 ${esc(reference.landAsOf)}` : ""].filter(Boolean).join(" · ")}</p>` : ""}
         ${source || basisLink || referenceLink || ordinanceLink || planLink ? `<p class="zpr-score-note">${[source, basisLink, referenceLink, ordinanceLink, planLink].filter(Boolean).join(" · ")}${facts.fetchedAt ? ` · 건축물대장 조회 ${esc(String(facts.fetchedAt).slice(0,10))}` : ""}${reference?.checkedAt ? ` · 토지이음 조회 ${esc(reference.checkedAt)}` : ""}</p>` : ""}
-        ${planReady ? `<div class="zpr-reconstruction-plan"><h6>${plan.status === "stale" ? "마지막으로 확인한 재건축 계획이에요" : "서울시 자료에서 재건축 계획을 확인했어요"}</h6>
+        ${planReady ? `<div class="zpr-reconstruction-plan"><h6>${plan.status === "stale" ? "마지막으로 확인한 재건축 계획이에요" : "공식 자료에서 재건축 계획을 확인했어요"}</h6>
           <p class="zpr-insight">${esc(plan.projectName || "재건축 사업")} · ${esc(plan.stageLabel || "단계 미확인")}${plan.stageAsOf ? ` · ${esc(plan.stageAsOf)} 기준` : ""}</p>
           <dl class="zpr-reconstruction-facts">
+            ${numeric(plan.existingFloorAreaRatio) ? `<div><dt>공식 통계 기존 용적률</dt><dd>${percent(plan.existingFloorAreaRatio)}</dd></div>` : ""}
             ${numeric(plan.plannedFloorAreaRatio) ? `<div><dt>계획 용적률</dt><dd>${percent(plan.plannedFloorAreaRatio)}</dd></div>` : ""}
             ${numeric(plan.plannedBuildingCoverageRatio) ? `<div><dt>계획 건폐율</dt><dd>${percent(plan.plannedBuildingCoverageRatio)}</dd></div>` : ""}
             ${numeric(plan.plannedHouseholds) ? `<div><dt>계획 세대수</dt><dd>${Number(plan.plannedHouseholds).toLocaleString("ko-KR")}세대</dd></div>` : ""}
             ${numeric(plan.projectAreaSqm) ? `<div><dt>정비사업 범위</dt><dd>${Number(plan.projectAreaSqm).toLocaleString("ko-KR")}㎡</dd></div>` : ""}
           </dl>
           <p class="zpr-score-note">${esc(assessment?.basisKind === "project_plan" ? assessment.scopeNote + " 계획은 달라질 수 있어요." : "사업 범위와 단지 전체 땅의 범위가 다를 수 있어 현재 수치와 차이를 계산하지 않았어요. 계획은 달라질 수 있어요.")}</p>
-          ${/^https:\/\//.test(plan.sourceUrl || "") ? `<p class="zpr-score-note"><a href="${esc(plan.sourceUrl)}" target="_blank" rel="noopener noreferrer">서울시 정비사업 자료 ↗</a>${plan.checkedAt ? ` · 자료 조회 ${esc(plan.checkedAt)}` : ""}</p>` : ""}
-        </div>` : planStatus ? `<p class="zpr-score-note">${esc(planStatus)}</p>` : ""}
+          ${/^https:\/\//.test(plan.sourceUrl || "") ? `<p class="zpr-score-note"><a href="${esc(plan.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(plan.sourceLabel || "서울시 정비사업 자료")} ↗</a>${plan.sourceDate ? ` · 계획 자료 기준 ${esc(plan.sourceDate)}` : ""}${plan.stageSourceDate ? ` · 단계 자료 기준 ${esc(plan.stageSourceDate)}` : ""}${plan.checkedAt ? ` · 자료 조회 ${esc(plan.checkedAt)}` : ""}</p>` : ""}
+          ${plan.missingFields?.length ? `<p class="zpr-score-note">공식 자료에서 ${plan.missingFields.map(field => field === "plannedFloorAreaRatio" ? "계획 용적률" : "계획 건폐율").map(esc).join("·")} 수치는 확인되지 않았어요.</p>` : ""}
+          ${plan.districtMatchMethod === "official_administrative_successor" ? `<p class="zpr-score-note">행정구역 개편으로 단지 자료의 ${esc(plan.apartmentDistrict)}와 공식 자료의 ${esc(plan.sourceDistrict)} 이름이 달라요. 법정동·지번·단지명을 함께 대조했어요. <a href="https://www.incheon.go.kr/IC01070101" target="_blank" rel="noopener noreferrer">인천시 행정구역 개편 안내 ↗</a></p>` : ""}
+        </div>` : planStatus ? `<p class="zpr-score-note">${esc(planStatus)}</p>${(plan.sourceChecks || []).filter(source => source.checkedAt && /^https:\/\//.test(source.sourceUrl || "")).map(source => `<p class="zpr-score-note"><a href="${esc(source.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(source.sourceLabel)} ↗</a>${source.sourceDate ? ` · 자료 기준 ${esc(source.sourceDate)}` : ""} · 조회 ${esc(String(source.checkedAt).slice(0,10))}</p>`).join("")}` : ""}
         ${assessment?.classificationNote ? `<details class="zpr-details"><summary>사업성 건축 조건 판단 기준</summary><p>단지 전체에 적용되는 기준을 먼저 비교해요. 범위를 확인하지 못하면 공식 계획이나 대표 지번의 조례를 참고해요. 건폐율과 오래된 연식만으로 좋다고 판단하지 않아요.</p><p>${esc(assessment.classificationNote)}</p><p>계획 세대수에서 기존 세대수를 뺀 값은 일반분양 물량이 아니에요. 조합원·임대주택 물량과 공사비를 따로 확인해야 해요.</p></details>` : ""}
         ${retry ? `<button type="button" class="candidate-analysis-action" data-reconstruction-retry>${!facts.scope ? "건축물대장" : ["connection_error", "stale", "not_collected"].includes(plan?.status) && !["connection_error", "stale", "not_collected", "access_denied", "invalid_source"].includes(model.status) ? "정비계획" : "건축 기준"} 다시 불러오기</button>` : ""}
       </div>`;
@@ -19981,10 +20086,26 @@
       const updated = template.content.firstElementChild;
       if (!updated) return;
       const header = current.querySelector(".zpr-section-top") || current.querySelector(".zpr-kicker");
-      if (header) updated.querySelector(".zpr-kicker")?.replaceWith(header.cloneNode(true));
+      if (header) {
+        const top = document.createElement("div");
+        top.className = "zpr-section-top";
+        const kicker = document.createElement("span");
+        kicker.className = "zpr-kicker";
+        kicker.textContent = (header.querySelector(".zpr-kicker") || header).textContent;
+        top.append(kicker);
+        top.insertAdjacentHTML("beforeend", zippickSectionRatingHtml(item, "단지 변화"));
+        updated.querySelector(".zpr-kicker")?.replaceWith(top);
+      }
       const open = new Set([...current.querySelectorAll("details[open]")].map(node => node.querySelector("summary")?.textContent));
       updated.querySelectorAll("details").forEach(node => { node.open = open.has(node.querySelector("summary")?.textContent); });
       current.replaceWith(updated);
+      const title = root.querySelector("[data-zpr-purchase-title]");
+      if (title) {
+        const base = title.dataset.zprPurchaseTitle;
+        title.textContent = zippickVerdictTitle(item, {common:true, title:base});
+        const purchase = root.querySelector("[data-zpr-purchase-conclusion]");
+        if (purchase) purchase.hidden = title.textContent === base;
+      }
     }
 
     async function refreshZippickReconstruction(item, onUpdate = () => {}, isCurrent = () => true) {
@@ -20004,7 +20125,7 @@
         if (changed) onUpdate();
       };
       try {
-        for (let attempt = 0; attempt < 30; attempt++) {
+        for (let attempt = 0; attempt < 120; attempt++) {
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 10000);
           let payload;
@@ -20031,6 +20152,8 @@
     }
 
     function zippickDevelopmentHtml(item) {
+      const conclusion = item?.reconstructionConditions ? zippickReconstructionReportHtml(item) : "";
+      if (conclusion) return conclusion;
       const model = zippickOwnDevelopmentModel(item);
       const reconstruction = item?.reconstructionConditions ? zippickReconstructionHtml(item) : "";
       const conditionsOnly = reconstruction ? `<section class="zpr-section" data-zpr-reconstruction-section><span class="zpr-kicker" data-zpr-step="단지 변화"></span>${reconstruction}</section>` : "";
@@ -21214,6 +21337,7 @@
       const scoreText = rating.scoreText || `${stars}/5`;
       const stateClass = rating.state ? ` is-${esc(rating.state)}` : "";
       const ariaText = rating.state === "missing" ? `${title}` : `${title} ${scoreText}`;
+      if (label === "단지 변화" && !Number.isFinite(rating.points)) return `<span class="zpr-section-rating${stateClass}" aria-label="${esc(ariaText)}"><span>${esc(scoreText)}</span></span>`;
       return `<span class="zpr-section-rating${stateClass}" aria-label="${esc(ariaText)}">
         <span class="zpr-section-stars" aria-hidden="true" style="--zpr-rating-fill:${Math.round(ratio * 100)}%">★★★★★</span>
         <span>${esc(scoreText)}</span>
@@ -21525,6 +21649,8 @@
     }
 
     function zippickVerdictTitle(item, verdict = null) {
+      const reconstruction = item?.reconstructionConditions ? zippickReconstructionConclusion(item) : null;
+      if (reconstruction?.showInTitle) return reconstruction.headline;
       if (verdict?.common) return verdict.title;
       const tone = String(verdict?.tone || "");
       const location = zpNum(item?.locationScore?.score);
@@ -22674,6 +22800,7 @@
       };
       const label = verdict.peakGuard ? "우선 검토" : decisions[verdict.tone] || decisions.missing;
       const title = zippickVerdictTitle(item, verdict);
+      const purchaseTitle = zippickVerdictTitle({...item, reconstructionConditions:null}, verdict);
       const locationMeaning = zippickLocationHeading(item, verdict);
       const locationEvidence = zippickLocationEvidenceText(item, verdict);
       const signalMeaning = zippickSignalHeading(item, verdict);
@@ -22681,7 +22808,8 @@
       const flowBadge = candidateFlowScoreBadgeHtml(item);
       return `<header class="zpr-head">
         ${zippickOverallRatingHtml(verdict, label)}
-        <h3 class="zpr-title">${esc(title)}</h3>
+        <h3 class="zpr-title" data-zpr-purchase-title="${esc(purchaseTitle)}">${esc(title)}</h3>
+        <p class="zpr-insight" data-zpr-purchase-conclusion ${title === purchaseTitle ? "hidden" : ""}>매수 판단 · ${esc(purchaseTitle)}</p>
         ${zippickPriceBasesHtml(item)}
         <div class="zpr-summary is-verdict">
           <div><div class="zpr-summary-score">${locationBadge}</div><strong>${esc(locationMeaning)}</strong><small>${esc(locationEvidence || `단지·입지 ${Number.isFinite(location) ? `${Math.round(location)}점` : "점수 없음"}. 세부 근거 자료가 더 필요해요.`)}</small></div>

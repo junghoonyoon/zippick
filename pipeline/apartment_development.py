@@ -138,11 +138,12 @@ def policy():
 
 
 def revision():
+    import regional_reconstruction_plans
     paths = [PATH, POLICY, config.ROOT/'data/living_area_metro_catalog.json',
              config.ROOT/'data/redevelopment_zones.geojson', config.ROOT/'data/map_zone_stage_codes.json',
              config.ROOT/'data/redevelopment_occupancy_overrides.json',
              config.ROOT/'data/living_area_apartment_points.json']
-    return tuple(p.stat().st_mtime_ns if p.exists() else None for p in paths)
+    return tuple(p.stat().st_mtime_ns if p.exists() else None for p in paths) + (regional_reconstruction_plans.stamp(),)
 
 
 @lru_cache(maxsize=2)
@@ -150,6 +151,8 @@ def _index(revisions):
     import living_area_metro as metro
     from pyproj import Transformer
     rows = []
+    import regional_reconstruction_plans
+    rows.extend(regional_reconstruction_plans.development_records())
     if PATH.exists():
         rows.extend(json.loads(PATH.read_text())['projects'])
     for project in metro.catalog().get('projects', []):
@@ -169,6 +172,8 @@ def _index(revisions):
         row['legalDong'] = row.get('legalDong') or dong
         row['jibun'] = identity.parcel_key(row.get('jibun') or parcel)
         row['keys'] = name_keys(row['name'], row['legalDong'])
+        if row.get('sourceId') in regional_reconstruction_plans.SOURCES:
+            row['keys'] |= regional_reconstruction_plans.name_keys(row['name'], row['legalDong'])
         if not re.search(r'재건축|재개발|리모델링|가로주택|자율주택|소규모|신속통합|정비사업', row.get('projectTypeLabel') or ''):
             continue
         lots = address_lots(row.get('address')) or [(row['legalDong'], row['jibun'])]
