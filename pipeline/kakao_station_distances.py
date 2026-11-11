@@ -15,13 +15,14 @@ from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import requests
 
 import config
+import shared_data
 import molit_transactions
 import persistent_json_store
 import real_estate_search
 
 
 API_BASE_URL = "https://dapi.kakao.com/v2/local"
-CACHE_PATH = config.CACHE_DIR / "apartment_station_distances.json"
+CACHE_PATH = shared_data.cache_path("apartment_station_distances.json")
 CACHE_VERSION = 1
 SOURCE_NAME = "kakao-local-v2"
 TERMINAL_STATUSES = {"ok", "no_address", "address_not_found", "station_not_found"}
@@ -72,7 +73,7 @@ def run_counted_api_call(callback, *args, counter, counter_lock):
 
 
 def configured():
-    return bool(str(config.KAKAO_REST_API_KEY or "").strip())
+    return not shared_data.read_only() and bool(str(config.KAKAO_REST_API_KEY or "").strip())
 
 
 def entity_id(entity):
@@ -173,6 +174,7 @@ def _load_cache():
 
 
 def _save_cache():
+    shared_data.require_writer()
     global _CACHE_DATA, _CACHE_LOADED_PATH, _CACHE_LOADED_REVISION
     with _CACHE_LOCK:
         has_pending = any(_CACHE_PENDING_UPDATES[bucket] for bucket in _CACHE_PENDING_UPDATES)
@@ -209,6 +211,7 @@ def _queue_cache_update(bucket, key, value, *, append=False):
 
 
 def _merge_records(records):
+    shared_data.require_writer()
     if not records:
         return
     with _CACHE_LOCK:
@@ -331,6 +334,7 @@ def cache_stats(entities=None):
 
 
 def _request_json(path, params):
+    shared_data.require_writer()
     key = str(config.KAKAO_REST_API_KEY or "").strip()
     if not key:
         raise KakaoLocalError("카카오 REST API 키가 설정되어 있지 않습니다.")

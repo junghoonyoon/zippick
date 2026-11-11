@@ -35,6 +35,7 @@ import apartment_leaders
 import config
 import molit_transactions
 import real_estate_search
+import shared_data
 
 LOOKBACK_MONTHS = config.MOLIT_SIGNAL_LOOKBACK_MONTHS
 MIN_WINDOW_DEALS = config.SIGNAL_MIN_WINDOW_DEALS
@@ -703,8 +704,9 @@ def _district_entity_signals(region):
     region_key = _district_region_key(region)
     if not region_key:
         return []
-    if region_key in _DISTRICT_ENTITY_SIGNALS_CACHE:
-        return _DISTRICT_ENTITY_SIGNALS_CACHE[region_key]
+    cache_key = (region_key, shared_data.data_revision())
+    if cache_key in _DISTRICT_ENTITY_SIGNALS_CACHE:
+        return _DISTRICT_ENTITY_SIGNALS_CACHE[cache_key]
     pairs = []
     for entity in _district_leader_index().get(region_key, [])[:_DISTRICT_BENCHMARK_LIMIT]:
         try:
@@ -716,7 +718,7 @@ def _district_entity_signals(region):
         except Exception:
             continue
         pairs.append((entity, signals))
-    _DISTRICT_ENTITY_SIGNALS_CACHE[region_key] = pairs
+    _DISTRICT_ENTITY_SIGNALS_CACHE[cache_key] = pairs
     return pairs
 
 
@@ -726,7 +728,7 @@ def _district_peer_entity_signals(region, target_households=0, candidate_limit=4
     target = int(target_households or 0)
     if not region_key or target <= 0:
         return _district_entity_signals(region)
-    cache_key = (region_key, target)
+    cache_key = (region_key, target, shared_data.data_revision())
     if cache_key in _DISTRICT_PEER_ENTITY_SIGNALS_CACHE:
         return _DISTRICT_PEER_ENTITY_SIGNALS_CACHE[cache_key]
 
@@ -774,8 +776,9 @@ def _district_benchmark(region):
     region_key = _district_region_key(region)
     if not region_key:
         return {"momentumPct": None, "count": 0}
-    if region_key in _DISTRICT_MOMENTUM_CACHE:
-        return _DISTRICT_MOMENTUM_CACHE[region_key]
+    cache_key = (region_key, shared_data.data_revision())
+    if cache_key in _DISTRICT_MOMENTUM_CACHE:
+        return _DISTRICT_MOMENTUM_CACHE[cache_key]
     momentums = [
         signals["momentumPct"]
         for _entity, signals in _district_entity_signals(region)
@@ -785,7 +788,7 @@ def _district_benchmark(region):
         "momentumPct": round(statistics.median(momentums), 1) if len(momentums) >= _DISTRICT_BENCHMARK_MIN else None,
         "count": len(momentums),
     }
-    _DISTRICT_MOMENTUM_CACHE[region_key] = benchmark
+    _DISTRICT_MOMENTUM_CACHE[cache_key] = benchmark
     return benchmark
 
 
@@ -1042,8 +1045,9 @@ def _leader_scope_entity_signals(region, legal_dong):
     if not legal_dong_key:
         return _district_entity_signals(region)
     scope_key = (region_key, legal_dong_key)
-    if scope_key in _LEADER_SCOPE_ENTITY_SIGNALS_CACHE:
-        return _LEADER_SCOPE_ENTITY_SIGNALS_CACHE[scope_key]
+    cache_key = (region_key, legal_dong_key, shared_data.data_revision())
+    if cache_key in _LEADER_SCOPE_ENTITY_SIGNALS_CACHE:
+        return _LEADER_SCOPE_ENTITY_SIGNALS_CACHE[cache_key]
     pairs = []
     for entity in _leader_scope_index().get(scope_key, []):
         try:
@@ -1055,7 +1059,7 @@ def _leader_scope_entity_signals(region, legal_dong):
         except Exception:
             signals = {"status": "error", "dealCount": 0}
         pairs.append((entity, signals))
-    _LEADER_SCOPE_ENTITY_SIGNALS_CACHE[scope_key] = pairs
+    _LEADER_SCOPE_ENTITY_SIGNALS_CACHE[cache_key] = pairs
     return pairs
 
 
@@ -1115,6 +1119,7 @@ def _absolute_leader(
         datetime.date.today().isoformat(),
         # 단지 마스터가 교체되면(재적재·테스트) 캐시도 새 항목을 쓴다.
         id(real_estate_search.APARTMENT_MASTER),
+        shared_data.data_revision(),
     )
     with _ABSOLUTE_LEADER_CACHE_LOCK:
         if cache_key in _ABSOLUTE_LEADER_CACHE:

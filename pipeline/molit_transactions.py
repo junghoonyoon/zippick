@@ -18,6 +18,9 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 
 import config
+import shared_data
+import process_runtime
+import persistent_json_store
 import apartment_identity
 import apartment_sections
 import apartment_transaction_addresses
@@ -30,7 +33,7 @@ TRANSACTION_KIND_APARTMENT = "apartment"
 TRANSACTION_KIND_RENT = "rent"
 TRANSACTION_KIND_PRESALE = "presale"
 PRESALE_STATUSES = {"분양권", "입주권", "입주예정"}
-TRANSACTION_CACHE_DIR = config.CACHE_DIR / "molit_transactions"
+TRANSACTION_CACHE_DIR = shared_data.cache_path("molit_transactions")
 PRICE_BAND_CACHE_DIR = config.CACHE_DIR / "molit_price_bands"
 BUNDLED_JEONSE_SNAPSHOT_PATH = config.ROOT / "data" / "jeonse_rent_snapshots.json"
 MONTH_CACHE_TTL_SECONDS = 60 * 60 * 12
@@ -38,7 +41,7 @@ SETTLED_MONTH_CACHE_TTL_SECONDS = config.MOLIT_SETTLED_MONTH_CACHE_TTL_SECONDS
 SETTLED_MONTH_RECENT_WINDOW_MONTHS = config.MOLIT_MONTH_CACHE_RECENT_WINDOW_MONTHS
 PRICE_BAND_CACHE_TTL_SECONDS = 60 * 60 * 12
 PRICE_BAND_EMPTY_CACHE_TTL_SECONDS = 30
-PRICE_BAND_CACHE_SCHEMA_VERSION = 18
+PRICE_BAND_CACHE_SCHEMA_VERSION = 19
 RECENT_LOOKBACK_MONTHS = config.MOLIT_TRANSACTION_LOOKBACK_MONTHS
 # 화성시는 2026-02-01 일반구 신설로 기존 41590에서 네 코드로 분리됐다.
 # 2025년 단지 마스터와 최근 12개월 거래를 함께 쓰므로 신·구 코드를 모두 읽는다.
@@ -93,7 +96,7 @@ def configured(transaction_kind=TRANSACTION_KIND_APARTMENT):
     enabled()는 일시적인 회로 차단 상태까지 반영하므로, 디스크 캐시만으로도
     가능한 시그널 계산 여부를 판단할 때는 configured()를 사용해야 한다.
     """
-    return bool(_service_key(transaction_kind))
+    return shared_data.read_only() or bool(_service_key(transaction_kind))
 
 
 def enabled(transaction_kind=TRANSACTION_KIND_APARTMENT):
@@ -209,11 +212,23 @@ def _read_cached_month(
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    fetched_at = float(payload.get("fetchedAt") or 0)
-    items = payload.get("items") or []
-    # 구 캐시는 첫 1,000건만 저장됐을 수 있다. 정상 조회 때는 다시 받아
-    # 페이지 완결 표식이 있는 캐시로 교체하고, API 장애 때만 부분 캐시를 쓴다.
-    if not allow_stale and len(items) >= 1000 and payload.get("complete") is not True:
+    if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
+        return None
+    if str(payload.get("lawdCd") or "") != str(lawd_cd) or str(payload.get("dealYmd") or "") != str(deal_ymd):
+        return None
+    if payload.get("transactionKind", transaction_kind) != transaction_kind:
+        return None
+    try:
+        fetched_at = float(payload.get("fetchedAt") or 0)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(fetched_at) or not 0 < fetched_at < time.time() + 86400:
+        return None
+    items = payload["items"]
+    if any(not isinstance(item, dict) for item in items):
+        return None
+    # 구 캐시는 첫 1,000건만 저장됐을 수 있어 완결 표식이 없으면 다시 받는다.
+    if len(items) >= 1000 and payload.get("complete") is not True:
         return None
     if not allow_stale and time.time() - fetched_at > _month_cache_ttl(deal_ymd):
         return None
@@ -226,6 +241,7 @@ def _write_cached_month(
     items,
     transaction_kind=TRANSACTION_KIND_APARTMENT,
 ):
+    shared_data.require_writer()
     TRANSACTION_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path = _cache_path(lawd_cd, deal_ymd, transaction_kind)
     tmp = path.with_suffix(f".{time.monotonic_ns()}.tmp")
@@ -238,6 +254,12 @@ def _write_cached_month(
         "items": items,
     }, ensure_ascii=False), encoding="utf-8")
     tmp.replace(path)
+    # Every producer, including scheduled refreshes, advances the common version.
+    shared_data.bump_data_revision()
+
+
+def _month_memory_key(transaction_kind, lawd_cd, deal_ymd):
+    return (transaction_kind, str(lawd_cd), str(deal_ymd), shared_data.data_revision())
 
 
 def _read_cached_month_memory(
@@ -246,7 +268,7 @@ def _read_cached_month_memory(
     transaction_kind=TRANSACTION_KIND_APARTMENT,
 ):
     """Read a fresh month cache and reuse it across cache-only lookups."""
-    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
+    memory_key = _month_memory_key(transaction_kind, lawd_cd, deal_ymd)
     with _MONTH_MEMORY_CACHE_LOCK:
         memory_cached = _MONTH_MEMORY_CACHE.get(memory_key)
         if memory_cached and time.time() - memory_cached[0] <= _month_cache_ttl(deal_ymd):
@@ -254,6 +276,7 @@ def _read_cached_month_memory(
     cached = _read_cached_month(
         lawd_cd,
         deal_ymd,
+        allow_stale=shared_data.read_only(),
         transaction_kind=transaction_kind,
     )
     if cached is not None:
@@ -298,6 +321,7 @@ def _price_band_cache_key(name, region, area_label, lookback_months, entity=None
         "entity": _entity_cache_identity(entity),
         "lookbackMonths": int(lookback_months or RECENT_LOOKBACK_MONTHS),
         "transactionKind": transaction_kind_for_apartment(name, region),
+        "sharedDataRevision": shared_data.data_revision(),
         "dealMonths": _deal_months(int(lookback_months or RECENT_LOOKBACK_MONTHS)),
         # 릴리스마다 바뀌는 mtime 대신 원본 단지 데이터 내용으로만 무효화한다.
         "sourceRevision": _PRICE_BAND_SOURCE_SIGNATURE,
@@ -365,12 +389,21 @@ def _xml_text(item, names):
     return ""
 
 
+class OfficialTransactionError(RuntimeError):
+    def __init__(self, code):
+        raw = str(code or "invalid_response")
+        self.code = raw if re.fullmatch(r"[A-Za-z0-9_]{1,20}", raw) else "invalid_response"
+        super().__init__(f"공식 실거래 응답 오류 ({self.code})")
+
+
 def _parse_items(xml_text, transaction_kind=TRANSACTION_KIND_APARTMENT):
     root = ET.fromstring(xml_text)
-    result_code = _xml_text(root.find("header") or root, ["resultCode"])
-    result_message = _xml_text(root.find("header") or root, ["resultMsg"])
-    if result_code and result_code not in {"00", "000"}:
-        raise RuntimeError(result_message or f"국토부 API 오류: {result_code}")
+    header = root.find(".//header")
+    result_code = _xml_text(header if header is not None else root, ["resultCode"])
+    gateway_code = root.findtext(".//returnReasonCode")
+    result_code = str(gateway_code or result_code or "").strip()
+    if result_code not in {"00", "000"}:
+        raise OfficialTransactionError(result_code)
     rows = []
     for item in root.findall(".//item"):
         if transaction_kind == TRANSACTION_KIND_RENT:
@@ -436,9 +469,12 @@ def _parse_total_count(xml_text):
     root = ET.fromstring(xml_text)
     node = root.find(".//totalCount")
     try:
-        return int(str(node.text or "").strip()) if node is not None else 0
-    except ValueError:
-        return 0
+        count = int(str(node.text or "").strip()) if node is not None else -1
+        if count < 0:
+            raise ValueError("missing total count")
+        return count
+    except (TypeError, ValueError):
+        raise OfficialTransactionError("invalid_total") from None
 
 
 def fetch_month(
@@ -449,11 +485,11 @@ def fetch_month(
     memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
     lock = _MONTH_FETCH_LOCKS[hash(memory_key) % len(_MONTH_FETCH_LOCKS)]
     with lock:
-        return _fetch_month_singleflight(
-            lawd_cd,
-            deal_ymd,
-            transaction_kind=transaction_kind,
-        )
+        if shared_data.read_only():
+            return _fetch_month_singleflight(lawd_cd, deal_ymd, transaction_kind=transaction_kind)
+        path = _cache_path(lawd_cd, deal_ymd, transaction_kind)
+        with persistent_json_store.exclusive_file_lock(path):
+            return _fetch_month_singleflight(lawd_cd, deal_ymd, transaction_kind=transaction_kind)
 
 
 def _official_api_xml(endpoint, params, timeout):
@@ -473,7 +509,7 @@ def _official_api_xml(endpoint, params, timeout):
         query = urllib.parse.urlencode(params)
         url = f"{endpoint}?{query}"
         try:
-            completed = subprocess.run(
+            completed = process_runtime.run(
                 [
                     "curl", "--fail", "--silent", "--show-error",
                     "--proto", "=https", "--max-time", str(max(1, int(math.ceil(timeout)))),
@@ -494,7 +530,12 @@ def _fetch_month_singleflight(
     deal_ymd,
     transaction_kind=TRANSACTION_KIND_APARTMENT,
 ):
-    memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
+    if shared_data.read_only():
+        cached = _read_cached_month_memory(lawd_cd, deal_ymd, transaction_kind=transaction_kind)
+        if cached is not None:
+            return cached
+        raise shared_data.SharedDataError("공용 원본에 해당 지역·월의 실거래가 아직 없어요. 로컬에서 따로 수집하지 않아요.")
+    memory_key = _month_memory_key(transaction_kind, lawd_cd, deal_ymd)
     with _MONTH_MEMORY_CACHE_LOCK:
         memory_cached = _MONTH_MEMORY_CACHE.get(memory_key)
         if memory_cached and time.time() - memory_cached[0] <= _month_cache_ttl(deal_ymd):
@@ -545,6 +586,7 @@ def _fetch_month_singleflight(
         )
         items = _parse_items(response_text, transaction_kind)
         total_count = _parse_total_count(response_text)
+        received_count = len(ET.fromstring(response_text).findall(".//item"))
         page_count = max(1, math.ceil(total_count / request_params["numOfRows"]))
         for page_number in range(2, page_count + 1):
             page_response_text = _official_api_xml(
@@ -553,9 +595,18 @@ def _fetch_month_singleflight(
                 config.MOLIT_TRANSACTION_TIMEOUT_SECONDS,
             )
             items.extend(_parse_items(page_response_text, transaction_kind))
+            if _parse_total_count(page_response_text) != total_count:
+                raise OfficialTransactionError("changing_total")
+            received_count += len(ET.fromstring(page_response_text).findall(".//item"))
+        if received_count != total_count:
+            raise OfficialTransactionError("incomplete_pages")
+        if transaction_kind != TRANSACTION_KIND_RENT and (len(items) != total_count or any(
+                not item.get("apartment") or not item.get("dealDate")
+                or not item.get("exclusiveArea") or not item.get("dealAmountEok") for item in items)):
+            raise OfficialTransactionError("invalid_records")
     except requests.HTTPError as exc:
         status = getattr(exc.response, "status_code", None)
-        if status in {401, 403}:
+        if status in {401, 403, 429}:
             _disable_temporarily(
                 "국토부 실거래가 API 권한이 없거나 인증키가 승인되지 않았어요.",
                 transaction_kind=transaction_kind,
@@ -616,7 +667,7 @@ def prefetch_months(
             seen.add(key)
             # 이미 메모리에 신선한 월 데이터가 있으면 스레드 풀을 거치지 않는다.
             # 반복 검색에서 풀 생성·종료 비용이 계산 시간의 큰 몸을 차지했다.
-            memory_cached = _MONTH_MEMORY_CACHE.get((transaction_kind, key[0], key[1]))
+            memory_cached = _MONTH_MEMORY_CACHE.get(_month_memory_key(transaction_kind, key[0], key[1]))
             if memory_cached and now - memory_cached[0] <= _month_cache_ttl(key[1]):
                 continue
             pending.append(key)
@@ -1703,38 +1754,37 @@ def transactions_for_apartment_cached(
     area_label="",
     lookback_months=RECENT_LOOKBACK_MONTHS,
     entity=None,
+    allow_stale=False,
 ):
-    """Return matching transactions using only fresh local month caches.
-
-    Empty-state nearby suggestions must not fan out into additional public API
-    requests. This mirrors transactions_for_apartment's matching rules while
-    deliberately skipping both prefetch_months and fetch_month.
-    """
+    """Match the official feeds without issuing any new public API requests."""
     rows = source_rows_for_entity(entity, region) if entity else source_rows(name, region)
     if not rows:
         return []
     month_values = _deal_months(lookback_months)
-    lawd_cds = sorted({
-        code
-        for row in rows
-        for code in related_lawd_codes(_row_lawd_cd(row))
-    })
-    transactions = []
-    for transaction_kind in _transaction_kinds_for_apartment(name, region, entity):
+    lawd_cds = sorted({code for row in rows for code in related_lawd_codes(_row_lawd_cd(row))})
+
+    def load_kind(transaction_kind):
         monthly = {}
         for lawd_cd in lawd_cds:
             for deal_ymd in month_values:
-                items = _read_cached_month_memory(
-                    lawd_cd,
-                    deal_ymd,
-                    transaction_kind=transaction_kind,
-                )
+                items = _read_cached_month_memory(lawd_cd, deal_ymd, transaction_kind=transaction_kind)
+                if items is None and allow_stale:
+                    # Do not put a stale month into the fresh-month memory cache.
+                    items = _read_cached_month(lawd_cd, deal_ymd, allow_stale=True,
+                                               transaction_kind=transaction_kind)
                 if items is not None:
                     monthly[(lawd_cd, deal_ymd)] = items
-        transactions.extend(_matching_transactions(
-            rows, name, area_label, lookback_months, monthly,
-        ))
-    return _dedupe_transactions(transactions)
+        return _matching_transactions(rows, name, area_label, lookback_months, monthly)
+
+    kinds = _transaction_kinds_for_apartment(name, region, entity)
+    if len(kinds) > 1:
+        return _dedupe_transactions([transaction for kind in kinds for transaction in load_kind(kind)])
+    transactions = load_kind(kinds[0])
+    if kinds[0] == TRANSACTION_KIND_PRESALE:
+        completed = load_kind(TRANSACTION_KIND_APARTMENT)
+        if _latest_trade_date(completed) > _latest_trade_date(transactions):
+            return completed
+    return transactions
 
 
 def rent_transactions_for_apartment(

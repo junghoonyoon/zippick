@@ -15,7 +15,7 @@ class FrontendRemoteRegressionTest(unittest.TestCase):
         self.assertIn('params.set("apartment_id", context.apartmentId)', fetch)
         self.assertIn('params.set("kapt_code", context.kaptCode)', fetch)
         self.assertIn('params.set("complex_no", context.complexNo)', fetch)
-        self.assertIn("void refreshLocationScoreSheet(report, rerender);", html)
+        self.assertIn("void refreshLocationScoreSheet(report, rerender, {force:true});", html)
         self.assertIn("stillSelected() && currentAptReportItem === report", html)
         self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
         self.assertIn("repaintCandidateScoreBadges(item, originalKey, previousRowKeys)", html)

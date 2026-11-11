@@ -137,12 +137,13 @@ def _resolve_report_coordinates(entity):
 
 
 def _transactions(entity, area_label):
-    return molit_transactions.transactions_for_apartment(
+    return molit_transactions.transactions_for_apartment_cached(
         entity.get("name") or "",
         region=entity.get("district") or "",
         area_label=area_label,
         lookback_months=LOOKBACK_MONTHS,
         entity=entity,
+        allow_stale=True,
     )
 
 
@@ -346,21 +347,38 @@ def compare(row, entity, peers, area_label, today=None):
                 "reason": "이 단지의 최근 2년 거래가 적어 다른 단지와 비교하기 어려워요.", "selectionCriteria": criteria}
 
     gap_rows, plain_rows, excluded = _select_peers(entity, own, area_label, months, today)
-    area_adjusted = False
-    if not gap_rows and not plain_rows:
-        area_adjusted = True
-        gap_rows, plain_rows, more = _select_peers(
+    if len(gap_rows) < MIN_PEERS:
+        adjusted_gaps, adjusted_plain, more = _select_peers(
             entity, own, area_label, months, today, target_area=_target_area(own_trades, area_label))
         excluded += more
+        # Keep exact-area evidence when available. A converted-area history can
+        # replace a simple-only match, but never add the same complex twice.
+        gap_keys = {_physical_key(peer['_entity']) for peer in gap_rows}
+        for peer in adjusted_gaps:
+            key = _physical_key(peer['_entity'])
+            if key not in gap_keys:
+                peer['_areaAdjusted'] = True
+                gap_rows.append(peer)
+                gap_keys.add(key)
+        plain_rows = [peer for peer in plain_rows if _physical_key(peer['_entity']) not in gap_keys]
+        known = gap_keys | {_physical_key(peer['_entity']) for peer in plain_rows}
+        for peer in adjusted_plain:
+            key = _physical_key(peer['_entity'])
+            if key not in known:
+                peer['_areaAdjusted'] = True
+                plain_rows.append(peer)
+                known.add(key)
     if not gap_rows and not plain_rows:
         return {"status": "unavailable", "reasonCode": "insufficient_peers",
                 "reason": "같은 구에 최근 거래가 있는 비교 단지를 찾지 못했어요.", "selectionCriteria": criteria}
 
     simple = bool(plain_rows) and len(gap_rows) < MIN_PEERS
     peer_rows = (sorted([*gap_rows, *plain_rows], key=lambda peer: peer["tier"]) if simple else gap_rows)[:MAX_PEERS]
+    area_adjusted = any(peer.get('_areaAdjusted') for peer in peer_rows)
     own_coordinates = _resolve_report_coordinates(entity)
     for peer in peer_rows:
         peer_entity = peer.pop("_entity")
+        peer.pop('_areaAdjusted', None)
         if peer["distanceMeters"] is None and own_coordinates:
             peer_coordinates = _resolve_report_coordinates(peer_entity)
             if peer_coordinates:

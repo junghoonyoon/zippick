@@ -14,6 +14,8 @@ from pathlib import Path
 
 import config
 import molit_transactions
+import shared_data
+import hashlib
 
 
 CACHE_DIR = config.CACHE_DIR / "market_flow"
@@ -617,7 +619,8 @@ def _confidence(source, current, target):
 
 
 def _cache_path(reference, period_months):
-    return CACHE_DIR / f"{reference.strftime('%Y%m')}-{int(period_months)}-window{WINDOW_MONTHS}-history{HISTORY_MONTHS}-schema{SNAPSHOT_SCHEMA_VERSION}.json"
+    revision = hashlib.sha256(shared_data.data_revision().encode()).hexdigest()[:12]
+    return CACHE_DIR / f"{reference.strftime('%Y%m')}-{int(period_months)}-window{WINDOW_MONTHS}-history{HISTORY_MONTHS}-schema{SNAPSHOT_SCHEMA_VERSION}-{revision}.json"
 
 
 def _read_cached_payload(path):

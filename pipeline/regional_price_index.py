@@ -14,21 +14,24 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import config
+import shared_data
+import persistent_json_store
 
 
 API_URL = "https://www.reb.or.kr/r-one/openapi/SttsApiTblData.do"
 # (주) 아파트 매매가격지수. 시군구별 주간 값이 월요일 기준일로 들어 있다.
 STATBL_ID = "T244183132827305"
 SOURCE = "한국부동산원 주간 아파트가격동향 매매가격지수"
-CACHE_PATH = config.CACHE_DIR / "regional_price_index.json"
+CACHE_PATH = shared_data.cache_path("regional_price_index.json")
 CACHE_TTL_SECONDS = 60 * 60 * 12
 # 새 자료를 받지 못해도 이 기간까지는 저장된 자료를 쓴다.
 STALE_CACHE_LIMIT_SECONDS = 60 * 60 * 24 * 14
 # 마지막 지수가 이보다 오래됐으면 오늘 기준으로 맞췄다고 말할 수 없다.
 MAX_LATEST_POINT_AGE_DAYS = 21
-LOOKBACK_WEEKS = 40
+# 실거래 비교는 최대 24개월이다. 첫 거래 주의 직전 지수까지 포함한다.
+LOOKBACK_WEEKS = 112
 PAGE_SIZE = 1000
-MAX_PAGES = 30
+MAX_PAGES = 240
 REQUEST_TIMEOUT_SECONDS = 8
 
 PROVINCE_SHORT_NAMES = {
@@ -51,6 +54,7 @@ _PROVINCE_NAMES = set(PROVINCE_SHORT_NAMES) | set(PROVINCE_SHORT_NAMES.values())
 _REFRESH_LOCK = threading.Lock()
 _REFRESH_RUNNING = False
 _MEMORY = {"loadedAt": 0.0, "mtime": None, "payload": None}
+_HISTORY_MEMORY = {"mtime": None, "payload": None}
 
 
 def configured():
@@ -105,15 +109,20 @@ def _fetch(today=None):
             payload = json.loads(response.read().decode("utf-8"))
         sections = payload.get("SttsApiTblData") if isinstance(payload, dict) else None
         if not isinstance(sections, list) or len(sections) < 2:
-            break
+            return None
         page_rows = sections[1].get("row") or []
         rows.extend(page_rows)
         total = 0
         for entry in sections[0].get("head") or []:
             if isinstance(entry, dict) and "list_total_count" in entry:
                 total = int(entry.get("list_total_count") or 0)
-        if not page_rows or len(rows) >= total:
+        if (total > 0 and len(rows) >= total) or (not total and len(page_rows) < PAGE_SIZE):
             break
+        if not page_rows:
+            return None
+    else:
+        # 페이지 한도 때문에 일부 지역만 받은 자료는 원본을 대체하지 않는다.
+        return None
     regions = _parse_rows(rows)
     if not regions:
         return None
@@ -138,27 +147,54 @@ def _read_cache():
             return None, None
         _MEMORY.update({"mtime": mtime, "payload": payload})
     payload = _MEMORY["payload"] or {}
+    # 기존 운영 수집기가 짧은 기간을 갱신해도 확보한 과거 원본은 유지한다.
+    history_path = CACHE_PATH.with_name("regional_price_index_history.json")
+    try:
+        history_mtime = history_path.stat().st_mtime_ns
+        if _HISTORY_MEMORY["mtime"] != (str(history_path), history_mtime):
+            history = json.loads(history_path.read_text(encoding="utf-8"))
+            _HISTORY_MEMORY.update(mtime=(str(history_path), history_mtime), payload=history)
+        history = _HISTORY_MEMORY["payload"] or {}
+    except (OSError, ValueError):
+        history = {}
     snapshot = payload.get("snapshot")
     if not isinstance(snapshot, dict) or not isinstance(snapshot.get("regions"), dict):
         return None, None
+    snapshot = _merge_snapshots(history.get("snapshot"), snapshot)
     return snapshot, time.time() - float(payload.get("savedAt") or 0)
 
 
+def _merge_snapshots(older, newer):
+    if not isinstance(older, dict) or not isinstance(older.get("regions"), dict):
+        return newer
+    regions = {}
+    for snapshot in (older, newer):
+        for name, points in snapshot.get("regions", {}).items():
+            regions.setdefault(name, {}).update({str(point[0]): point[1] for point in points})
+    return {**older, **newer, "regions": {
+        name: [[day, values[day]] for day in sorted(values)] for name, values in regions.items()
+    }}
+
+
 def _write_cache(snapshot):
+    shared_data.require_writer()
     try:
-        CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        temporary = CACHE_PATH.with_suffix(f".{time.monotonic_ns()}.tmp")
-        temporary.write_text(
-            json.dumps({"savedAt": time.time(), "snapshot": snapshot}, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        temporary.replace(CACHE_PATH)
+        if not isinstance(snapshot, dict) or not snapshot.get('regions'):
+            raise ValueError('empty price index')
+        with persistent_json_store.exclusive_file_lock(CACHE_PATH):
+            previous, _ = _read_cache()
+            snapshot = _merge_snapshots(previous, snapshot)
+            payload = {"savedAt": time.time(), "snapshot": snapshot}
+            persistent_json_store.write_json_atomically(CACHE_PATH, payload, indent=None)
+            persistent_json_store.write_json_atomically(CACHE_PATH.with_name("regional_price_index_history.json"), payload, indent=None)
     except OSError:
         pass
 
 
 def refresh(today=None):
     """지수를 새로 받아 저장한다. 실패하면 None을 돌려준다."""
+    if shared_data.read_only():
+        return _read_cache()[0]
     try:
         snapshot = _fetch(today=today)
     except Exception:
@@ -189,6 +225,8 @@ def _refresh_in_background():
 def latest_snapshot(allow_fetch=False):
     """저장된 지수를 돌려준다. 오래됐으면 뒤에서 새로 받는다."""
     snapshot, age = _read_cache()
+    if shared_data.read_only():
+        return snapshot if age is not None and age <= STALE_CACHE_LIMIT_SECONDS else None
     if snapshot and age is not None and age <= CACHE_TTL_SECONDS:
         return snapshot
     if configured():

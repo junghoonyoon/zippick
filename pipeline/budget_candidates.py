@@ -1660,6 +1660,10 @@ def resolve_apartment_identity(
                 for field, value in identities.items()
             )
         ]
+        if named_matches and not _is_generic_apartment_name(name):
+            id_matches = [entity for entity in id_matches if any(
+                not apartment_identity.conflicts(named, entity) for named in named_matches
+            )]
         if len(id_matches) == 1:
             return {
                 "status": "matched",
@@ -1671,6 +1675,12 @@ def resolve_apartment_identity(
             }
 
     matches = _find_entities(name, region, legal_dong, jibun)
+    # A specific known name at another address is an identity conflict.
+    # Generic names such as 현대 still need their exact address to resolve.
+    if named_matches and not _is_generic_apartment_name(name):
+        matches = [entity for entity in matches if any(
+            not apartment_identity.conflicts(named, entity) for named in named_matches
+        )]
     if identities:
         matches = [
             entity for entity in matches

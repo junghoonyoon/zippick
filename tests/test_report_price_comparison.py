@@ -205,6 +205,23 @@ class ReportPriceComparisonTest(unittest.TestCase):
         self.assertTrue(result["lowData"])
         self.assertEqual(result["peers"][0]["averagePriceEok"], 21.0)
 
+    def test_one_exact_peer_also_searches_other_areas_and_keeps_exact_prices(self):
+        peers = [_complex("같은면적"), _complex("다른면적")]
+        def trades(entity, area):
+            if entity["name"] in ("대상", "같은면적"):
+                return [{**trade, "exclusiveArea": 84.0} for trade in _series([20] * 8)]
+            return [{**trade, "exclusiveArea": 80.0} for trade in _series([20] * 8)] if "~" in area else []
+        with mock.patch.object(report_price_comparison.real_estate_search, "APARTMENT_MASTER", [self.target, *peers]), \
+             mock.patch.object(report_price_comparison, "_entity_coordinates", return_value=(37.5, 127.1)), \
+             mock.patch.object(report_price_comparison, "_peer_distance_meters", return_value=500), \
+             mock.patch.object(report_price_comparison, "_transactions", side_effect=trades):
+            result = report_price_comparison.compare({}, self.target, [], "전용 84㎡", today=TODAY)
+        self.assertEqual(result['method'], 'usual_gap')
+        self.assertTrue(result['areaAdjusted'])
+        self.assertTrue(result['lowData'])
+        self.assertEqual({row['name']: row['averagePriceEok'] for row in result['peers']},
+                         {'같은면적': 20.0, '다른면적': 21.0})
+
     def test_thin_target_uses_the_last_twelve_months_and_is_low_data(self):
         # 이 단지의 최근 6개월 거래가 1건이면 최근 12개월(0~1구간)을 '지금'으로 본다.
         peers = [_complex("비교1"), _complex("비교2")]

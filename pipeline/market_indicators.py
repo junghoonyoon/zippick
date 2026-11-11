@@ -7,9 +7,10 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 import config
+import shared_data
 
 
-CACHE_PATH = config.CACHE_DIR / "market_indicators.json"
+CACHE_PATH = shared_data.cache_path("market_indicators.json")
 CACHE_TTL_SECONDS = 60 * 60 * 12
 BASE_RATE_STAT_CODE = "722Y001"
 BASE_RATE_ITEM_CODE = "0101000"
@@ -28,6 +29,7 @@ def _read_cache():
 
 
 def _write_cache(snapshot):
+    shared_data.require_writer()
     try:
         CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
         temporary = CACHE_PATH.with_suffix(".tmp")
@@ -81,6 +83,9 @@ def _fetch_base_rate(today=None):
 
 
 def latest_snapshot(today=None, refresh=False):
+    if shared_data.read_only():
+        cached = _read_cache()
+        return cached or {"status": "unavailable", "reason": "공용 원본의 금리 자료를 확인하지 못했어요.", "source": SOURCE}
     if not refresh:
         cached = _read_cache()
         if cached:

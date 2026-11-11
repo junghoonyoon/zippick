@@ -16,6 +16,12 @@ import search_server  # noqa: E402
 
 
 class BudgetResultCacheTest(unittest.TestCase):
+    def setUp(self):
+        # Direct cache writes in these unit tests stand in for generated keys.
+        revision = search_server.shared_data.data_revision()
+        for key in ("a" * 64, "b" * 64, "same", "optional-links", "same-search", "failed", "fallback", "missing-signal", "old-formula", "error-signal"):
+            search_server.BUDGET_KEY_SOURCE_REVISIONS[key] = revision
+
     def test_heavy_rate_limit_blocks_repeated_public_requests(self):
         with mock.patch.object(search_server.config, "PUBLIC_RATE_LIMIT_WINDOW_SECONDS", 60), \
              mock.patch.object(search_server.config, "PUBLIC_HEAVY_RATE_LIMIT", 2):
@@ -452,6 +458,7 @@ class BudgetResultCacheTest(unittest.TestCase):
         saved_at = time.time()
         cached = {
             "savedAt": saved_at,
+            "sharedDataRevision": search_server.shared_data.data_revision(),
             "payload": {
                 "candidates": [{
                     "name": "즉시단지",
@@ -510,6 +517,7 @@ class BudgetResultCacheTest(unittest.TestCase):
     def test_condition_change_recalculates_cash_scenarios_after_market_snapshot(self):
         cached = {
             "savedAt": time.time(),
+            "sharedDataRevision": search_server.shared_data.data_revision(),
             "payload": {
                 "candidates": [{
                     "name": "백련산힐스테이트2차",
@@ -601,6 +609,7 @@ class BudgetResultCacheTest(unittest.TestCase):
     def test_market_snapshot_does_not_reuse_signal_from_another_area(self):
         cached = {
             "savedAt": time.time(),
+            "sharedDataRevision": search_server.shared_data.data_revision(),
             "payload": {
                 "candidates": [{
                     "name": "평형분리단지",

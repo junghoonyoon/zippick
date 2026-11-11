@@ -16,6 +16,7 @@ from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import config
+import shared_data
 import kakao_station_distances
 import persistent_json_store
 
@@ -23,7 +24,7 @@ import persistent_json_store
 # 기존 파일명과 달리 인천 교육 접근성 기록도 함께 담는다.
 DATA_PATH = config.ROOT / "data" / "education_environment_seoul_gyeonggi.json"
 OVERLAY_PATH = config.ROOT / "data" / "education_environment_extra_records.json"
-RECORDS_PATH = config.CACHE_DIR / "education_environment_records.json"
+RECORDS_PATH = shared_data.cache_path("education_environment_records.json")
 SCORE_FORMULA_VERSION = "education-env-v1"
 SUPPORTED_REGIONS = {"서울특별시", "경기도", "인천광역시"}
 KAKAO_CATEGORY_RADIUS_METERS = 2000
@@ -143,7 +144,7 @@ def _load_dataset():
         overlay = _read_dataset_file(OVERLAY_PATH)
         cached = _read_dataset_file(RECORDS_PATH)
         records = {}
-        for payload in (base, overlay, cached):
+        for payload in ((cached,) if shared_data.read_only() else (base, overlay, cached)):
             rows = payload.get("records")
             if isinstance(rows, dict):
                 records.update(rows)
@@ -169,6 +170,7 @@ def _load_dataset():
 
 
 def _save_precomputed_records(records):
+    shared_data.require_writer()
     global _DATASET, _DATASET_REVISION
     updates = {
         str(apartment_id): {
@@ -487,6 +489,8 @@ def _score_from_record(record):
 
 
 def education_environment_for_entity(entity, allow_remote_lookup=True):
+    if shared_data.read_only():
+        allow_remote_lookup = False
     if not _region_supported(entity):
         return {"status": "unsupported_region", "score": None}
     dataset = _load_dataset()

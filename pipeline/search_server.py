@@ -17,6 +17,8 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 import config
+import shared_data
+import price_data_collection
 import apartment_leaders
 import redevelopment_occupancy
 import budget_candidates
@@ -59,6 +61,10 @@ BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
 BUDGET_CACHE_SCHEMA_VERSION = 27
 BUDGET_SOURCE_REVISIONS = None
+BUDGET_KEY_SOURCE_REVISIONS = {}
+BUDGET_KEY_SOURCE_REVISIONS_LOCK = threading.Lock()
+_SOURCE_REVISION_LOCK = threading.RLock()
+_LAST_SOURCE_REVISION = None
 BUDGET_JOBS = {}
 BUDGET_JOBS_LOCK = threading.Lock()
 BUDGET_MAX_JOBS = 20
@@ -86,6 +92,7 @@ RATE_LIMIT_ESTIMATE_PATHS = {
     "/api/rone-estimate",
 }
 RATE_LIMIT_MEDIUM_PATHS = {
+    "/api/apartment-price-source",
     "/api/apartment-station-route",
     "/api/search",
     "/api/search/start",
@@ -501,6 +508,7 @@ def _budget_cache_key(arguments):
             except OSError:
                 revisions.append("")
         BUDGET_SOURCE_REVISIONS = revisions
+    source_revision = shared_data.data_revision()
     material = {
         "schema": BUDGET_CACHE_SCHEMA_VERSION,
         "date": datetime.date.today().isoformat(),
@@ -509,9 +517,15 @@ def _budget_cache_key(arguments):
         # 무효화한다. 내용 해시는 실제 로직·데이터가 바뀔 때만 키를 바꾼다.
         "revisions": BUDGET_SOURCE_REVISIONS,
         "futureRevision": future_transformation.data_revision(),
+        "sharedDataRevision": source_revision,
     }
     encoded = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    key = hashlib.sha256(encoded).hexdigest()
+    with BUDGET_KEY_SOURCE_REVISIONS_LOCK:
+        if len(BUDGET_KEY_SOURCE_REVISIONS) > 5000:
+            BUDGET_KEY_SOURCE_REVISIONS.clear()
+        BUDGET_KEY_SOURCE_REVISIONS[key] = source_revision
+    return key
 
 
 def _read_budget_cache(cache_key):
@@ -521,6 +535,8 @@ def _read_budget_cache(cache_key):
     try:
         cached = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        return None
+    if cached.get("sharedDataRevision", "initial") != shared_data.data_revision():
         return None
     saved_at = float(cached.get("savedAt") or 0)
     if time.time() - saved_at > config.BUDGET_RESULT_CACHE_TTL_SECONDS:
@@ -536,6 +552,11 @@ def _read_budget_cache(cache_key):
 
 
 def _write_budget_cache(cache_key, payload):
+    with BUDGET_KEY_SOURCE_REVISIONS_LOCK:
+        source_revision = BUDGET_KEY_SOURCE_REVISIONS.get(cache_key)
+    # A discarded or pre-refresh key must never be labelled with a new version.
+    if source_revision is None or source_revision != shared_data.data_revision():
+        return 0
     if payload.get("error") or int(payload.get("status") or 200) >= 400:
         return 0
     display_rows = _budget_payload_rows(payload)
@@ -547,6 +568,7 @@ def _write_budget_cache(cache_key, payload):
     tmp = path.with_suffix(f".{time.monotonic_ns()}.tmp")
     tmp.write_text(json.dumps({
         "savedAt": saved_at,
+        "sharedDataRevision": source_revision,
         "payload": payload,
     }, ensure_ascii=False), encoding="utf-8")
     tmp.replace(path)
@@ -683,7 +705,7 @@ def _load_market_snapshots():
     """완료 검색 캐시를 단지별 인메모리 스냅샷으로 합친다."""
     global MARKET_SNAPSHOT_SOURCE_DIR, MARKET_SNAPSHOTS_LOADED
     try:
-        source_dir = str(BUDGET_CACHE_DIR.resolve())
+        source_dir = str(BUDGET_CACHE_DIR.resolve()) + ':' + shared_data.data_revision()
     except OSError:
         source_dir = os.fspath(BUDGET_CACHE_DIR)
     with MARKET_SNAPSHOT_LOCK:
@@ -700,6 +722,8 @@ def _load_market_snapshots():
             try:
                 cached = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
+                continue
+            if cached.get('sharedDataRevision', 'initial') != shared_data.data_revision():
                 continue
             saved_at = float(cached.get("savedAt") or 0)
             if not saved_at or now - saved_at > MARKET_SNAPSHOT_MAX_AGE_SECONDS:
@@ -3372,6 +3396,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
+        _observe_source_revision()
         parsed = urlparse(self.path)
         if not self._apply_rate_limit(parsed):
             return
@@ -3512,6 +3537,7 @@ class Handler(BaseHTTPRequestHandler):
         self._json(payload, status)
 
     def do_GET(self):
+        _observe_source_revision()
         parsed = urlparse(self.path)
         if not self._apply_rate_limit(parsed):
             return
@@ -3649,6 +3675,7 @@ class Handler(BaseHTTPRequestHandler):
                 "kakaoLocalConfigured": kakao_station_distances.configured(),
                 "stationDistanceCache": kakao_station_distances.cache_stats(),
                 "budgetPrewarm": dict(BUDGET_PREWARM_STATE),
+                "sharedData": {**shared_data.status(), "dataRevision": shared_data.data_revision()},
                 "operations": _operation_snapshot(),
             })
             return
@@ -3957,7 +3984,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._json(payload, status)
             return
-        if parsed.path == "/api/apartment-report":
+        if parsed.path in ("/api/apartment-report", "/api/apartment-price-source"):
             name = params.get("name", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
             legal_dong = params.get("legal_dong", [""])[0].strip()
@@ -3988,7 +4015,40 @@ class Handler(BaseHTTPRequestHandler):
                     status = 409 if resolution.get("status") == "ambiguous" else 404
                     self._json({"error": "공유한 단지를 정확히 찾지 못했어요."}, status)
                     return
-            self._json(_apartment_report(name, region, target_households, target_price_eok, area_label, legal_dong, jibun, matched))
+            if not matched:
+                matched = budget_candidates._find_entity(name, region, legal_dong, jibun)
+            collection = price_data_collection.request(
+                matched, retry=params.get("retry", [""])[0] == "1")
+            if parsed.path == "/api/apartment-price-source":
+                self._json({"priceDataCollection": collection})
+                return
+            if collection.get("status") == "error":
+                self._json({"error": collection.get("message") or "실거래 원본을 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.",
+                            "priceDataCollection": collection}, 503)
+                return
+            if collection.get("status") != "ready":
+                self._json({"report": {"priceDataCollection": collection,
+                                      "priceComparison": {"status": "loading"}}})
+                return
+            # Other requests can refresh the shared source during calculation.
+            # Do not return a mixture of old and new versions as a finished report.
+            payload = None
+            for _attempt in range(2):
+                start_revision = shared_data.data_revision()
+                payload = _apartment_report(name, region, target_households, target_price_eok, area_label, legal_dong, jibun, matched)
+                end_revision = shared_data.data_revision()
+                if start_revision == end_revision:
+                    collection["sourceRevision"] = end_revision
+                    break
+                _observe_source_revision()
+            else:
+                self._json({"report": {"priceDataCollection": {
+                    "status": "collecting", "message": "새 실거래로 가격을 다시 계산하고 있어요."},
+                    "priceComparison": {"status": "loading"}}})
+                return
+            if isinstance(payload.get("report"), dict):
+                payload["report"]["priceDataCollection"] = collection
+            self._json(payload)
             return
         if parsed.path == "/api/apartment-last-deal":
             name = params.get("name", [""])[0].strip()
@@ -4211,7 +4271,42 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
 
+def _shared_data_changed():
+    """Drop derived memory after the shared transaction source changes."""
+    global MARKET_SNAPSHOTS_LOADED, _LAST_SOURCE_REVISION
+    with _SOURCE_REVISION_LOCK:
+        kakao_station_distances.reset_memory_cache()
+        education_environment.reset_memory_cache()
+        with molit_transactions._MONTH_MEMORY_CACHE_LOCK:
+            molit_transactions._MONTH_MEMORY_CACHE.clear()
+            molit_transactions._MONTH_ADDRESS_INDEX.clear()
+            molit_transactions._MONTH_NAME_INDEX.clear()
+        molit_transactions._PRICE_BAND_MEMORY_CACHE.clear()
+        for name in ("_DISTRICT_MOMENTUM_CACHE", "_DISTRICT_ENTITY_SIGNALS_CACHE",
+                     "_DISTRICT_PEER_ENTITY_SIGNALS_CACHE", "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE",
+                     "_ABSOLUTE_LEADER_CACHE"):
+            cache = getattr(momentum_signals, name, None)
+            if isinstance(cache, dict):
+                cache.clear()
+        with MARKET_SNAPSHOT_LOCK:
+            MARKET_SNAPSHOTS_LOADED = False
+            MARKET_SIGNAL_SNAPSHOTS.clear()
+            MARKET_SIGNAL_SNAPSHOT_KEYS.clear()
+            MARKET_ROW_SNAPSHOTS.clear()
+            MARKET_ROW_SNAPSHOT_KEYS.clear()
+        _LAST_SOURCE_REVISION = shared_data.data_revision()
+
+
+def _observe_source_revision():
+    # Other service processes may publish a collection without our callback.
+    with _SOURCE_REVISION_LOCK:
+        if _LAST_SOURCE_REVISION != shared_data.data_revision():
+            _shared_data_changed()
+
 def main():
+    shared_data.subscribe(_shared_data_changed)
+    price_data_collection.subscribe(_shared_data_changed)
+    shared_data.start()
     # 검색 요청이 들어온 뒤 수백 개 결과 캐시를 다시 읽지 않도록 서버가
     # 준비되는 동안 단지별 시장 스냅샷 인덱스와 가격대를 미리 메모리에 올린다.
     _load_market_snapshots()

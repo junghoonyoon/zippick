@@ -6643,29 +6643,51 @@
         jeonseSourceNote:item?.jeonseSourceNote || "",
         transactionCount:item?.transactionCount || item?.recentDealCount || 0,
         recent3TradeCount:item?.recent3TradeCount || 0,
+        areaLabel:item?.areaLabel || item?.displayAreaLabel || "",
+        displayAreaLabel:item?.displayAreaLabel || item?.areaLabel || "",
+        priceComparison:item?.priceComparison || null,
+        commuteAccessRequested:Boolean(item?.commuteAccessRequested),
+        commuteAccessScore:item?.commuteAccessScore ?? null,
+        commuteAccessReason:item?.commuteAccessReason || "",
+        commuteMatched:Boolean(item?.commuteMatched),
         signals:item?.signals || {},
       };
     }
 
     function syncCandidateReportScores(item) {
-      if (!item?.locationScore) return;
-      const rowsToSync = candidateRowsForLookup().filter(
+      if (!item) return;
+      const rowsToSync = candidateRowsForLookup(false).filter(
         row => sameCandidateScoreIdentity(row, item),
       );
       const previousRowKeys = rowsToSync.map(candidateIdentityKey);
       rowsToSync.forEach(row => {
-        row.locationScore = item.locationScore;
+        if (item.locationScore) row.locationScore = item.locationScore;
+        if (item.priceComparison) row.priceComparison = item.priceComparison;
+        if (item.valuation) row.valuation = item.valuation;
+        if (Array.isArray(item.peers)) row.peers = item.peers;
+        if (item.priceDataCollection) row.priceDataCollection = item.priceDataCollection;
+        if (item.latestTrade) {
+          row.latestTrade = item.latestTrade;
+          for (const key of ["latestDealPriceEok", "latestDealDate", "latestDealExclusiveArea", "latestDealFloor"]) row[key] = item[key];
+        }
         if (item.signals && typeof item.signals === "object") row.signals = item.signals;
         if (item.educationEnvironment) row.educationEnvironment = item.educationEnvironment;
       });
       repaintCandidateScoreBadges(item, candidateIdentityKey(item), previousRowKeys);
+      if (typeof candidateViewMode !== "undefined" && candidateViewMode === "map") {
+        const selected = candidateMapLocatedEntries.find(entry =>
+          candidateIdentityKey(entry.item) === candidateMapSelectedKey && sameCandidateScoreIdentity(entry.item, item));
+        if (selected) selectCandidateMapItem(selected.item, {pan:false, stationRoute:false, preserveSheetState:true});
+      }
     }
 
-    async function refreshLocationScoreSheet(item, onRefresh = null) {
-      if (!item || !locationScoreNeedsRefresh(item)) return;
+    async function refreshLocationScoreSheet(item, onRefresh = null, options = {}) {
+      if (!item || (!options.force && !locationScoreNeedsRefresh(item))) return;
       try {
         const originalKey = candidateIdentityKey(item);
-        const rowsToRefresh = candidateRowsForLookup().filter(
+        const areaKey = zippickReportAreaKey(item);
+        const sourceRevision = item.priceDataCollection?.sourceRevision;
+        const rowsToRefresh = candidateRowsForLookup(false).filter(
           row => sameCandidateScoreIdentity(row, item),
         );
         const previousRowKeys = rowsToRefresh.map(candidateIdentityKey);
@@ -6674,13 +6696,15 @@
           headers:{ "Content-Type":"application/json" },
           body:JSON.stringify(locationScoreRefreshPayload(item)),
         });
-        if (!payload?.candidate?.locationScore) return;
+        if (!payload?.candidate?.locationScore || zippickReportAreaKey(item) !== areaKey
+            || item.priceDataCollection?.sourceRevision !== sourceRevision) return;
         Object.assign(item, payload.candidate);
         rowsToRefresh.forEach(row => Object.assign(row, payload.candidate));
         if (!locationScoreSheet.hidden) {
           locationScoreContent.innerHTML = locationScoreSheetHtml(item);
         }
         repaintCandidateScoreBadges(item, originalKey, previousRowKeys);
+        syncCandidateReportScores(item);
         if (typeof onRefresh === "function") onRefresh(item);
       } catch (_) {}
     }
@@ -13573,7 +13597,7 @@
         <p class="location-score-note">현재 매물 호가는 아직 반영하지 않았어요. 입주 물량은 전세 여건 점수에 반영했어요.</p>`;
     }
 
-    function candidateRowsForLookup() {
+    function candidateRowsForLookup(deduplicate = true) {
       const rows = [
         ...(currentBudgetData?.allCandidates || []),
         ...(currentBudgetData?.candidates || []),
@@ -13583,6 +13607,7 @@
         ...candidateMapEntries.map(entry => entry.item),
         ...candidateMapLocatedEntries.map(entry => entry.item),
       ];
+      if (!deduplicate) return [...new Set(rows.filter(Boolean))];
       const unique = new Map();
       rows.forEach(item => {
         if (!item) return;
@@ -15975,7 +16000,7 @@
         delete preview.dataset.mobileExpanded;
         preview.hidden = false;
         setupCandidateMapPreviewSheet(preview, {
-          mode:candidateMapStationGuide?.candidateKey === key ? previousMode : undefined,
+          mode:options.preserveSheetState || candidateMapStationGuide?.candidateKey === key ? previousMode : undefined,
         });
       }
       const detailSheet = candidateMapQuery("[data-candidate-map-detail-sheet]");
@@ -22631,6 +22656,7 @@
           <h5>${assessment.loading ? '<span class="loading-spinner loading-spinner--small" aria-hidden="true"></span> ' : ""}${esc(assessment.heading)}${assessment.lowData ? ' <span class="zpr-data-badge">자료 적음</span>' : ""}</h5>
           ${assessment.subheading ? `<p class="zpr-price-subtitle">${esc(assessment.subheading)}</p>` : ""}
         </div>
+        ${item?.priceDataCollection?.sourceStatus === "stale" ? '<p class="zpr-score-note">운영 원본에 연결하지 못해 마지막 정상 실거래 자료를 사용하고 있어요. 연결이 복구되면 다시 불러와 주세요.</p>' : ""}
         ${zippickPriceComparisonHtml(item, assessment)}
       </section>`;
     }
@@ -22716,7 +22742,22 @@
       }
       // 성공한 동일 단지·평형 요청은 자료 부족도 완료로 취급한다.
       // 준비해 둔 리포트를 클릭할 때 다시 요청하거나 판단을 바꾸지 않는다.
-      if (item.reportPeerState === "ready" && item.reportPeerResolvedKey === areaKey) return;
+      if (item.reportPeerState === "ready" && item.reportPeerResolvedKey === areaKey) {
+        try {
+          const current = await fetchAptReport(item.name, item.region || "", item);
+          const fresh = current?.report?.priceDataCollection?.sourceRevision;
+          if (fresh && fresh === item.priceDataCollection?.sourceRevision && zippickReportAreaKey(item) === areaKey) return;
+        } catch (error) {
+          if (zippickReportAreaKey(item) !== areaKey) return;
+          item.reportPeerState = "error";
+          item.reportPeerError = error?.error || error?.message || "실거래 원본을 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.";
+          onUpdate();
+          return;
+        }
+        if (zippickReportAreaKey(item) !== areaKey) return;
+        item.reportPeerState = "pending";
+        item.reportPeerAreaKey = "";
+      }
       const criteria = item.priceComparison?.selectionCriteria;
       const currentComparison = criteria?.priceIndependent === true
         && criteria?.maxDistanceMeters === 1000 && criteria?.approvalYearGap === 5
@@ -22764,6 +22805,14 @@
           }
           item.peers = Array.isArray(data?.report?.peers) ? data.report.peers : [];
           item.priceComparison = report.priceComparison || {status:"unavailable"};
+          if (report.priceDataCollection) item.priceDataCollection = report.priceDataCollection;
+          const identityFields = ["apartmentId", "kaptCode", "complexNo", "legalDong", "jibun"];
+          const identityConflict = identityFields.some(key => item[key] && report[key] && String(item[key]) !== String(report[key]));
+          const sameId = identityFields.slice(0, 3).some(key => item[key] && String(item[key]) === String(report[key]));
+          const sameAddress = item.legalDong && item.jibun && item.region && report.region
+            && item.legalDong === report.legalDong && String(item.jibun) === String(report.jibun)
+            && (String(item.region).endsWith(report.region) || String(report.region).endsWith(item.region));
+          if (report.signals && selected && returned && !identityConflict && (sameId || sameAddress)) item.signals = report.signals;
           item.valuation = report.valuation || {status:"unavailable", reason:"선택한 평형의 가격 비교 자료가 없어요."};
           if (data?.report?.liquidityHistory) item.liquidityHistory = data.report.liquidityHistory;
           if (report.commuteProfile) {
@@ -22778,10 +22827,11 @@
           // 선택한 평형·예산 조건으로 이미 계산한 카드 점수를 덮어쓰지 않는다.
           item.reportPeerState = "ready";
           item.reportPeerResolvedKey = areaKey;
-        } catch (_) {
+        } catch (error) {
           if (!stillSelected()) return;
           item.reportPeerState = "error";
-          item.priceComparison = {status:"unavailable"};
+          item.reportPeerError = error?.error || error?.message || "실거래 자료를 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.";
+          item.priceComparison = {status:"error", reason:item.reportPeerError};
           if (item.valuation?.status === "loading" || !zippickValuationMatchesTrade(item)) {
             item.valuation = {status:"unavailable", reason:"선택한 평형의 가격 자료를 불러오지 못했어요. 리포트를 다시 열어 주세요."};
           }
@@ -23865,9 +23915,9 @@
     });
 
     function zippickReportLoadStateHtml(item, state = item?.reportPeerState) {
-      if (state === "error") return `<div class="apt-result-empty" role="alert">선택한 평형의 리포트 자료를 불러오지 못했어요.<br><button type="button" class="candidate-analysis-action" data-candidate-report-retry>다시 불러오기</button></div>`;
+      if (state === "error") return `<div class="apt-result-empty" role="alert">${esc(item?.reportPeerError || "선택한 평형의 리포트 자료를 불러오지 못했어요.")}<br><button type="button" class="candidate-analysis-action" data-candidate-report-retry>다시 불러오기</button></div>`;
       const label = item?.displayAreaLabel || item?.areaLabel || "선택한 평형";
-      return `<div class="apt-result-empty" role="status">${spinnerHtml("default")}${esc(label)}의 거래·가격 비교 자료를 불러오고 있어요…</div>`;
+      return `<div class="apt-result-empty" role="status">${spinnerHtml("default")}${esc(label)}의 실거래를 모으고 가격 비교를 준비하고 있어요…</div>`;
     }
 
     async function loadCandidateReportSheet(sheet, item) {
@@ -27597,7 +27647,6 @@
       const contextParams = aptReportContextParams(context);
       const contextKey = `${contextParams.toString()}|${context?.legalDong || ""}|${context?.jibun || ""}|${context?.apartmentId || ""}|${context?.kaptCode || ""}|${context?.complexNo || ""}`;
       const cacheKey = `area-v2|${name}${region || ""}${contextKey}`;
-      if (aptReportCache.has(cacheKey)) return aptReportCache.get(cacheKey);
       const params = new URLSearchParams({
         name,
         region:region || "",
@@ -27608,17 +27657,45 @@
       if (context?.apartmentId) params.set("apartment_id", context.apartmentId);
       if (context?.kaptCode) params.set("kapt_code", context.kaptCode);
       if (context?.complexNo) params.set("complex_no", context.complexNo);
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
-      const pending = getJson(
-        `/api/apartment-report?${params.toString()}`,
-        { signal:controller.signal },
-      ).then(data => {
+      const fetchBounded = async url => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        try { return await getJson(url, {signal:controller.signal}); }
+        finally { clearTimeout(timeout); }
+      };
+      const cached = aptReportCache.get(cacheKey);
+      if (cached && typeof cached.then === "function") return cached;
+      if (cached?.report?.priceDataCollection?.sourceRevision) {
+        const state = (await fetchBounded(`/api/apartment-price-source?${params.toString()}`))?.priceDataCollection;
+        if (state?.status === "ready" && state.sourceRevision === cached.report.priceDataCollection.sourceRevision) return cached;
+        aptReportCache.delete(cacheKey);
+      }
+      params.set("retry", "1");
+      const sourceParams = new URLSearchParams(params);
+      sourceParams.delete("retry");
+      const pending = (async () => {
+        let data = await fetchBounded(`/api/apartment-report?${params.toString()}`);
+        for (let attempt = 0; attempt < 120; attempt++) {
+          const state = data?.report?.priceDataCollection;
+          if (!["queued", "collecting"].includes(state?.status)) break;
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          const progress = (await fetchBounded(`/api/apartment-price-source?${sourceParams.toString()}`))?.priceDataCollection;
+          if (progress?.status === "error") throw new Error(progress.message || "실거래를 불러오지 못했어요. 잠시 뒤 다시 불러와 주세요.");
+          if (!["ready", "queued", "collecting"].includes(progress?.status)) throw new Error("실거래 수집 상태를 확인하지 못했어요. 다시 불러와 주세요.");
+          if (progress?.status === "ready") {
+            data = await fetchBounded(`/api/apartment-report?${params.toString()}`);
+          } else {
+            data = {report:{priceDataCollection:progress}};
+          }
+        }
+        if (["queued", "collecting"].includes(data?.report?.priceDataCollection?.status)) {
+          throw new Error("실거래 수집이 오래 걸리고 있어요. 잠시 뒤 다시 불러와 주세요.");
+        }
         const scope = data?.report?.tradeAreaScope;
         if (requestedScope && scope && (scope.minSqm !== requestedScope.minSqm || scope.maxSqm !== requestedScope.maxSqm
             || scope.upperInclusive !== requestedScope.upperInclusive)) throw new Error("선택한 평형의 리포트를 다시 조회해 주세요.");
         return data;
-      }).finally(() => clearTimeout(timeout));
+      })();
       aptReportCache.set(cacheKey, pending);
       try {
         const data = await pending;
@@ -29004,7 +29081,7 @@
             if (requestId === aptReportRequestId) closeAptReport();
             return;
           }
-          if (report.reportPeerState !== "ready") throw new Error("선택한 평형의 리포트 자료를 불러오지 못했어요.");
+          if (report.reportPeerState !== "ready") throw new Error(report.reportPeerError || "선택한 평형의 리포트 자료를 불러오지 못했어요.");
           refreshAptSearchTrendCandidate(report);
           syncCandidateReportScores(report);
         } else {
@@ -29036,7 +29113,7 @@
         };
         rerender();
         setAptReportDownloadReady(true);
-        void refreshLocationScoreSheet(report, rerender);
+        void refreshLocationScoreSheet(report, rerender, {force:true});
         ensureZippickDevelopmentInsight(report, rerender);
         void enrichNewsCatalysts([report], rerender);
       } catch (error) {

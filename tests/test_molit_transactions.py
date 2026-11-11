@@ -502,17 +502,16 @@ class MolitTransactionsTest(unittest.TestCase):
         self.assertTrue(command[-1].startswith("https://"))
 
     def test_fetch_month_reads_every_api_page(self):
-        def response_for(name, total_count):
+        def response_for(name, total_count, item_count):
             response = mock.Mock()
+            items = ''.join(f'''<item><aptNm>{name}-{index}</aptNm><dealAmount>100,000</dealAmount>
+                <dealYear>2026</dealYear><dealMonth>6</dealMonth><dealDay>1</dealDay>
+                <excluUseAr>84.8</excluUseAr><floor>10</floor>
+                <umdNm>테스트동</umdNm><jibun>1</jibun></item>''' for index in range(item_count))
             response.text = f"""<?xml version="1.0" encoding="UTF-8"?>
             <response>
               <header><resultCode>000</resultCode><resultMsg>OK</resultMsg></header>
-              <body><totalCount>{total_count}</totalCount><items><item>
-                <aptNm>{name}</aptNm><dealAmount>100,000</dealAmount>
-                <dealYear>2026</dealYear><dealMonth>6</dealMonth><dealDay>1</dealDay>
-                <excluUseAr>84.8</excluUseAr><floor>10</floor>
-                <umdNm>테스트동</umdNm><jibun>1</jibun>
-              </item></items></body>
+              <body><totalCount>{total_count}</totalCount><items>{items}</items></body>
             </response>"""
             response.raise_for_status.return_value = None
             return response
@@ -524,15 +523,16 @@ class MolitTransactionsTest(unittest.TestCase):
                  molit_transactions.requests,
                  "get",
                  side_effect=[
-                     response_for("첫페이지", 1001),
-                     response_for("둘째페이지", 1001),
+                    response_for("첫페이지", 1001, 1000),
+                    response_for("둘째페이지", 1001, 1),
                  ],
              ) as get:
             molit_transactions._mark_success()
             molit_transactions._MONTH_MEMORY_CACHE.clear()
             result = molit_transactions.fetch_month("99999", "202606")
 
-        self.assertEqual([row["apartment"] for row in result], ["첫페이지", "둘째페이지"])
+        self.assertEqual(len(result), 1001)
+        self.assertEqual((result[0]["apartment"], result[-1]["apartment"]), ("첫페이지-0", "둘째페이지-0"))
         self.assertEqual(
             [call.kwargs["params"]["pageNo"] for call in get.call_args_list],
             [1, 2],
@@ -581,7 +581,7 @@ class MolitTransactionsTest(unittest.TestCase):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
         <response>
           <header><resultCode>000</resultCode><resultMsg>OK</resultMsg></header>
-          <body><items><item>
+          <body><totalCount>1</totalCount><items><item>
             <aptNm>산성역 헤리스톤</aptNm>
             <dealAmount>110,076</dealAmount>
             <dealYear>2026</dealYear><dealMonth>7</dealMonth><dealDay>7</dealDay>
