@@ -259,7 +259,16 @@ def _write_cached_month(
 
 
 def _month_memory_key(transaction_kind, lawd_cd, deal_ymd):
-    return (transaction_kind, str(lawd_cd), str(deal_ymd), shared_data.data_revision())
+    # One new month must not evict every other district's already parsed data.
+    # Atomic replacement changes the file identity; replica snapshots hard-link
+    # unchanged files and therefore can safely keep their parsed contents.
+    path = _cache_path(lawd_cd, deal_ymd, transaction_kind)
+    try:
+        info = path.stat()
+        signature = (info.st_dev, info.st_ino, info.st_mtime_ns, info.st_size)
+    except OSError:
+        signature = None
+    return (transaction_kind, str(lawd_cd), str(deal_ymd), str(TRANSACTION_CACHE_DIR), signature)
 
 
 def _read_cached_month_memory(
@@ -482,6 +491,11 @@ def fetch_month(
     deal_ymd,
     transaction_kind=TRANSACTION_KIND_APARTMENT,
 ):
+    # A valid cached month needs no interprocess write lock. The slower path
+    # still checks again under the lock before contacting the official API.
+    cached = _read_cached_month_memory(lawd_cd, deal_ymd, transaction_kind=transaction_kind)
+    if cached is not None:
+        return cached
     memory_key = (transaction_kind, str(lawd_cd), str(deal_ymd))
     lock = _MONTH_FETCH_LOCKS[hash(memory_key) % len(_MONTH_FETCH_LOCKS)]
     with lock:
@@ -642,7 +656,7 @@ def _fetch_month_singleflight(
         transaction_kind=transaction_kind,
     )
     with _MONTH_MEMORY_CACHE_LOCK:
-        _MONTH_MEMORY_CACHE[memory_key] = (time.time(), items)
+        _MONTH_MEMORY_CACHE[_month_memory_key(transaction_kind, lawd_cd, deal_ymd)] = (time.time(), items)
     return items
 
 

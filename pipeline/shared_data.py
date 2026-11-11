@@ -219,12 +219,22 @@ def _manifest_revision(manifest):
     return hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def _validate_snapshot(directory, manifest):
-    # Validate every JSON before publishing. A partial download is never used.
+def _validate_snapshot(directory, manifest, previous=None):
+    # Reuse only unchanged hard links to the last fully validated snapshot.
+    # All newly copied files still need full validation before publication.
+    previous_manifest = persistent_json_store.read_json_object(previous / "source-manifest.json") if previous else {}
     for name, (size, _mtime) in manifest.items():
         path = directory / name
         if path.is_symlink() or not path.is_file() or path.stat().st_size != size:
             raise SharedDataError("공용 원본을 온전히 내려받지 못했어요.")
+        prior = previous / name if previous else None
+        try:
+            unchanged = (prior is not None and previous_manifest.get(name) == manifest[name]
+                         and not prior.is_symlink() and os.path.samefile(path, prior))
+        except OSError:
+            unchanged = False
+        if unchanged:
+            continue
         with path.open(encoding="utf-8") as source:
             value = json.load(source)
         if not isinstance(value, dict):
@@ -291,7 +301,7 @@ def sync_once():
                 if _source_manifest() != manifest:
                     raise SharedDataError("동기화 중 운영 자료가 갱신됐어요. 다음 주기에 다시 받아요.")
                 stage = "validate_snapshot"
-                _validate_snapshot(incoming, manifest)
+                _validate_snapshot(incoming, manifest, previous if previous.exists() else None)
                 persistent_json_store.write_json_atomically(incoming / "source-manifest.json", manifest)
                 destination = generations / version
                 if not destination.exists():

@@ -45,3 +45,30 @@ def test_inflight_momentum_results_are_keyed_to_their_source_version(monkeypatch
     revision[0] = 'second'
     assert momentum_signals._district_benchmark('예시구')['momentumPct'] == 7
     assert calls == ['first', 'second']
+
+
+def test_snapshot_revalidates_changed_files_but_reuses_verified_unchanged_hardlinks(tmp_path, monkeypatch):
+    import os
+    import shared_data
+    previous, incoming = tmp_path / 'previous', tmp_path / 'incoming'
+    previous.mkdir(); incoming.mkdir()
+    name = 'molit_transactions/99999_202610.json'
+    (previous / 'molit_transactions').mkdir(); (incoming / 'molit_transactions').mkdir()
+    payload = json.dumps({'items': []})
+    (previous / name).write_text(payload)
+    os.link(previous / name, incoming / name)
+    manifest = {name: [len(payload.encode()), 1]}
+    (previous / 'source-manifest.json').write_text(json.dumps(manifest))
+    original_load = json.load
+    observed = []
+    def load(stream, *args, **kwargs):
+        observed.append(str(stream.name))
+        return original_load(stream, *args, **kwargs)
+    monkeypatch.setattr(shared_data.json, 'load', load)
+    shared_data._validate_snapshot(incoming, manifest, previous)
+    assert str(incoming / name) not in observed
+    # Replacing the file, even with the same metadata, forces validation.
+    (incoming / name).unlink(); (incoming / name).write_text('{bad json'.ljust(len(payload)))
+    import pytest
+    with pytest.raises(ValueError):
+        shared_data._validate_snapshot(incoming, manifest, previous)

@@ -268,3 +268,15 @@ def test_price_comparison_reuses_old_valid_month_without_an_upstream_call(source
     molit._MONTH_MEMORY_CACHE.clear()
     monkeypatch.setattr(molit, '_official_api_xml', lambda *args: pytest.fail('valid saved month was refetched'))
     assert comparison._transactions(entity(), '84')[0]['dealAmountEok'] == 10
+
+
+def test_cached_month_reuses_memory_without_writer_lock_after_another_month_changes(source, monkeypatch):
+    month = molit._deal_months(6)[0]
+    write_month('99999', month, 'apartment', [trade('대상', '1', month, 10, 10)])
+    first = molit.fetch_month('99999', month)
+    revision = shared_data.data_revision()
+    write_month('88888', month, 'apartment', [])
+    assert shared_data.data_revision() != revision
+    monkeypatch.setattr(molit.persistent_json_store, 'exclusive_file_lock',
+                        lambda *_: pytest.fail('fresh month should not take a write lock'))
+    assert molit.fetch_month('99999', month) is first

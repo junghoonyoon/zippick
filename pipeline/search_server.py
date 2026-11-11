@@ -4294,16 +4294,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
 
-def _shared_data_changed():
-    """Drop derived memory after the shared transaction source changes."""
+def _transaction_data_changed():
+    """Invalidate derived scores; raw month caches are keyed by file identity."""
     global MARKET_SNAPSHOTS_LOADED, _LAST_SOURCE_REVISION
     with _SOURCE_REVISION_LOCK:
-        kakao_station_distances.reset_memory_cache()
-        education_environment.reset_memory_cache()
-        with molit_transactions._MONTH_MEMORY_CACHE_LOCK:
-            molit_transactions._MONTH_MEMORY_CACHE.clear()
-            molit_transactions._MONTH_ADDRESS_INDEX.clear()
-            molit_transactions._MONTH_NAME_INDEX.clear()
         molit_transactions._PRICE_BAND_MEMORY_CACHE.clear()
         for name in ("_DISTRICT_MOMENTUM_CACHE", "_DISTRICT_ENTITY_SIGNALS_CACHE",
                      "_DISTRICT_PEER_ENTITY_SIGNALS_CACHE", "_LEADER_SCOPE_ENTITY_SIGNALS_CACHE",
@@ -4320,15 +4314,27 @@ def _shared_data_changed():
         _LAST_SOURCE_REVISION = shared_data.data_revision()
 
 
+def _shared_data_changed():
+    """A replica snapshot can also change station and school records."""
+    with _SOURCE_REVISION_LOCK:
+        kakao_station_distances.reset_memory_cache()
+        education_environment.reset_memory_cache()
+        _transaction_data_changed()
+
+
 def _observe_source_revision():
-    # Other service processes may publish a collection without our callback.
+    # Other service processes may publish transactions without our callback.
     with _SOURCE_REVISION_LOCK:
         if _LAST_SOURCE_REVISION != shared_data.data_revision():
-            _shared_data_changed()
+            if shared_data.read_only():
+                _shared_data_changed()
+            else:
+                _transaction_data_changed()
+
 
 def main():
     shared_data.subscribe(_shared_data_changed)
-    price_data_collection.subscribe(_shared_data_changed)
+    price_data_collection.subscribe(_transaction_data_changed)
     reconstruction_refresh.start()
     # 검색 요청이 들어온 뒤 수백 개 결과 캐시를 다시 읽지 않도록 서버가
     # 준비되는 동안 단지별 시장 스냅샷 인덱스와 가격대를 미리 메모리에 올린다.
