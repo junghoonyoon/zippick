@@ -8,6 +8,7 @@ import threading
 
 import config
 import apartment_identity
+import apartment_reconstruction
 import education_environment
 import kakao_station_distances
 import location_scores
@@ -2527,6 +2528,7 @@ def _finalize_candidate_rows(
         map_entity = entity
         row["resultSchemaVersion"] = CANDIDATE_RESULT_SCHEMA_VERSION
         row.update(_candidate_identity_fields(row, entity))
+        apartment_reconstruction.attach(row, entity)
         row["displayName"] = _candidate_display_name(row, entity)
         # 첫 화면부터 검수된 네이버 단지명·직링크를 쓴다. 이 작업은 로컬
         # 연결표만 읽으므로 외부 조회 실패가 후보 이름이나 시세 표시를 바꾸지

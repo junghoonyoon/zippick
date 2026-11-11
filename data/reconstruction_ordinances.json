@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "records": {
+    "서울특별시": {
+      "name": "서울특별시 도시계획 조례 제44조·제48조",
+      "sourceUrl": "https://www.law.go.kr/LSW/ordinInfoP.do?ordinSeq=2149501",
+      "effectiveAt": "2026-07-13",
+      "checkedAt": "2026-11-11",
+      "zones": {
+        "제1종일반주거지역": {"floorAreaRatio": 150, "buildingCoverageRatio": 60},
+        "제2종일반주거지역": {"floorAreaRatio": 200, "buildingCoverageRatio": 60},
+        "제3종일반주거지역": {"floorAreaRatio": 250, "buildingCoverageRatio": 50}
+      }
+    }
+  }
+}

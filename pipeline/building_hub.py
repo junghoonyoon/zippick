@@ -9,8 +9,11 @@ import re
 import sqlite3
 from urllib.parse import unquote, urlencode
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+import xml.etree.ElementTree as ET
 
 import config
+import shared_data
 
 
 API_URL = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo"
@@ -23,6 +26,10 @@ TIMEOUT_SECONDS = 15
 
 class BuildingHubError(RuntimeError):
     """조회가 실패했거나 완전한 결과인지 확인할 수 없다."""
+
+    def __init__(self, message, code="invalid_response"):
+        super().__init__(message)
+        self.code = code
 
 
 def _code(value, length, label):
@@ -47,7 +54,8 @@ def _parse_page(payload, parcel):
         response = payload["response"]
         header = response["header"]
         if str(header["resultCode"]).strip() not in ("00", "000", "0"):
-            raise BuildingHubError("건축HUB가 요청을 거절했습니다. 활용신청과 인증키를 확인해 주세요.")
+            code = str(header["resultCode"]).strip()
+            raise BuildingHubError("건축HUB가 요청을 거절했습니다. 활용신청과 인증키를 확인해 주세요.", code)
         body = response["body"]
         total = int(body["totalCount"])
         items = body.get("items") or {}
@@ -88,10 +96,22 @@ def fetch_dong_records(sigungu_cd, bjdong_cd, *, api_key=None, page_size=1000,
     return {"dong": dong, **result}
 
 
-def _fetch_records(filters, *, api_key, page_size, max_pages, opener):
+def fetch_recap_records(sigungu_cd, bjdong_cd, bun, ji, *, plat_gb_cd="0", api_key=None,
+                        page_size=PAGE_SIZE, max_pages=MAX_PAGES, opener=urlopen):
+    """총괄표제부 전체. 동별 표제부를 단지 전체 수치로 대신 사용하지 않는다."""
+    parcel = _parcel(sigungu_cd, bjdong_cd, bun, ji, plat_gb_cd)
+    result = _fetch_records(parcel, api_key=api_key, page_size=page_size,
+                            max_pages=max_pages, opener=opener,
+                            api_url=API_URL.replace("getBrTitleInfo", "getBrRecapTitleInfo"))
+    return {"parcel": parcel, **result, "source": "국토교통부 건축HUB 건축물대장 총괄표제부",
+            "recordType": "recap"}
+
+
+def _fetch_records(filters, *, api_key, page_size, max_pages, opener, api_url=None):
+    shared_data.require_writer()
     key = str(api_key if api_key is not None else config.BUILDING_HUB_API_KEY).strip()
     if not key:
-        raise BuildingHubError("건축HUB 인증키가 없습니다. BUILDING_HUB_API_KEY를 설정해 주세요.")
+        raise BuildingHubError("건축HUB 인증키가 없습니다. BUILDING_HUB_API_KEY를 설정해 주세요.", "missing_key")
     if not 1 <= page_size <= 1000 or not 1 <= max_pages <= 100:
         raise ValueError("페이지 크기 또는 최대 페이지 수가 범위를 벗어났습니다.")
     rows = []
@@ -99,14 +119,23 @@ def _fetch_records(filters, *, api_key, page_size, max_pages, opener):
     for page_no in range(1, max_pages + 1):
         query = urlencode({"serviceKey": unquote(key), **filters, "_type": "json",
                            "numOfRows": page_size, "pageNo": page_no})
-        request = Request(f"{API_URL}?{query}", headers={
+        request = Request(f"{api_url or API_URL}?{query}", headers={
             "Accept": "application/json", "User-Agent": "zippick-building-hub/1.0"})
         try:
             with opener(request, timeout=TIMEOUT_SECONDS) as response:
-                payload = json.loads(response.read().decode("utf-8"))
+                raw = response.read().decode("utf-8")
+                if raw.lstrip().startswith("<"):
+                    error = ET.fromstring(raw)
+                    code = error.findtext(".//returnReasonCode") or error.findtext(".//resultCode")
+                    raise BuildingHubError("건축HUB가 요청을 처리하지 못했습니다.", str(code or "invalid_response"))
+                payload = json.loads(raw)
+        except HTTPError as exc:
+            raise BuildingHubError("건축HUB 연결 요청이 실패했습니다.", str(exc.code)) from None
+        except ET.ParseError:
+            raise BuildingHubError("건축HUB 응답 형식을 확인할 수 없습니다.") from None
         except (OSError, ValueError, UnicodeError) as exc:
             # URL에 인증키가 있으므로 하위 예외 문자열을 사용자에게 보여주지 않는다.
-            raise BuildingHubError("건축HUB에서 자료를 받지 못했습니다. 잠시 뒤 다시 시도해 주세요.") from exc
+            raise BuildingHubError("건축HUB에서 자료를 받지 못했습니다. 잠시 뒤 다시 시도해 주세요.", "connection_error") from None
         total, items = _parse_page(payload, filters)
         if expected_total is not None and total != expected_total:
             raise BuildingHubError("조회 도중 총건수가 바뀌었습니다. 다시 받아 주세요.")
@@ -116,7 +145,7 @@ def _fetch_records(filters, *, api_key, page_size, max_pages, opener):
             break
         if not items:
             raise BuildingHubError("건축HUB가 일부 페이지만 보냈습니다. 저장하지 않았습니다.")
-    if expected_total is None or len(rows) < expected_total:
+    if expected_total is None or len(rows) != expected_total:
         raise BuildingHubError("건축HUB 페이지 제한으로 전체 자료를 받지 못했습니다. 저장하지 않았습니다.")
     ids = [str(row["mgmBldrgstPk"]) for row in rows]
     if len(set(ids)) != len(ids):
@@ -128,6 +157,7 @@ def _fetch_records(filters, *, api_key, page_size, max_pages, opener):
 
 def store_snapshot(snapshot, path=DB_PATH):
     """검증된 한 필지의 조회 이력을 SQLite에 원자적으로 보관한다."""
+    shared_data.require_writer()
     if len(snapshot["records"]) != snapshot["totalCount"]:
         raise ValueError("건축HUB 전체 건수를 확인할 수 없습니다.")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -143,6 +173,7 @@ def store_snapshot(snapshot, path=DB_PATH):
 
 def store_dong_snapshot(snapshot, path=DB_PATH):
     """법정동 단위의 완전한 API 응답을 별도 테이블에 원자적으로 저장한다."""
+    shared_data.require_writer()
     if len(snapshot["records"]) != snapshot["totalCount"]:
         raise ValueError("건축HUB 전체 건수를 확인할 수 없습니다.")
     path.parent.mkdir(parents=True, exist_ok=True)

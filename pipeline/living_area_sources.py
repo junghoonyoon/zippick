@@ -14,6 +14,7 @@ import re
 import sqlite3
 import ssl
 import subprocess
+import process_runtime
 import time
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -206,7 +207,7 @@ def fetch_seoul(*, opener=urlopen, sleep=time.sleep, source_id="seoul-plan-renew
             # Some official chains fail Python 3.14's strict AKI check. Try the
             # platform's independently verified TLS client, never disable TLS
             # validation or fall back to HTTP. Both URLs are fixed above/below.
-            response = subprocess.run(['curl', '--fail', '--silent', '--show-error', '--max-time', '20',
+            response = process_runtime.run(['curl', '--fail', '--silent', '--show-error', '--max-time', '20',
                                        '--request', 'POST', '--data', params.decode(), url],
                                       capture_output=True, timeout=25, check=True)
             return response.stdout.decode('utf-8-sig')

@@ -19,6 +19,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 import config
 import shared_data
 import price_data_collection
+import apartment_reconstruction
+import reconstruction_refresh
 import apartment_leaders
 import redevelopment_occupancy
 import budget_candidates
@@ -85,6 +87,7 @@ RATE_LIMIT_HEAVY_PATHS = {
     "/api/apartment-areas",
     "/api/apartment-report",
     "/api/apartment-location-score",
+    "/api/apartment-reconstruction",
 }
 # 한 후보 카드가 본 단지·동 대장·구 대장 실거래를 함께 부르므로
 # 정상 사용만으로도 호출이 많다. 서버 쪽 6시간 캐시로 가벼워 넓은 한도를 쓴다.
@@ -518,6 +521,7 @@ def _budget_cache_key(arguments):
         "revisions": BUDGET_SOURCE_REVISIONS,
         "futureRevision": future_transformation.data_revision(),
         "sharedDataRevision": source_revision,
+        "reconstructionRevision": apartment_reconstruction.revision(),
     }
     encoded = json.dumps(material, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     key = hashlib.sha256(encoded).hexdigest()
@@ -1233,6 +1237,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
         row["lifestyleChange"] = {"status": "error"}
     row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
     row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
+    apartment_reconstruction.attach(row, entity)
     if molit_transactions.configured():
         try:
             months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
@@ -1435,6 +1440,7 @@ def _apartment_location_score(arguments):
         row["lifestyleChange"] = {"status": "error"}
     row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
     row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
+    apartment_reconstruction.attach(row, entity)
     _apply_jeonse_snapshot(row, entity)
     try:
         row["educationEnvironment"] = education_environment.education_environment_for_entity(
@@ -1469,6 +1475,7 @@ def _apartment_location_score(arguments):
             "educationEnvironment": row.get("educationEnvironment"),
             "lifestyleChange": row.get("lifestyleChange"),
             "futureTransformation": row.get("futureTransformation"),
+            "reconstructionConditions": row.get("reconstructionConditions"),
             "locationScore": row.get("locationScore"),
         },
     }, 200
@@ -3984,6 +3991,22 @@ class Handler(BaseHTTPRequestHandler):
             )
             self._json(payload, status)
             return
+        if parsed.path == "/api/apartment-reconstruction":
+            apartment_id = params.get("apartment_id", [""])[0].strip()
+            name = params.get("name", [""])[0].strip()
+            region = params.get("region", [""])[0].strip()
+            legal_dong = params.get("legal_dong", [""])[0].strip()
+            jibun = params.get("jibun", [""])[0].strip()
+            matches = budget_candidates._find_entities(name, region, legal_dong, jibun) if apartment_id else []
+            entity = next((e for e in matches if str(e.get("apartmentId")) == apartment_id
+                           and not e.get("aggregate")), None)
+            if not entity:
+                self._json({"error": "단지 고유번호와 주소를 확인하지 못했어요."}, 404)
+                return
+            result = reconstruction_refresh.refresh(entity)
+            self._json({"reconstructionConditions": result,
+                        "sharedData": reconstruction_refresh.shared_data.status()})
+            return
         if parsed.path in ("/api/apartment-report", "/api/apartment-price-source"):
             name = params.get("name", [""])[0].strip()
             region = params.get("region", [""])[0].strip()
@@ -4306,7 +4329,7 @@ def _observe_source_revision():
 def main():
     shared_data.subscribe(_shared_data_changed)
     price_data_collection.subscribe(_shared_data_changed)
-    shared_data.start()
+    reconstruction_refresh.start()
     # 검색 요청이 들어온 뒤 수백 개 결과 캐시를 다시 읽지 않도록 서버가
     # 준비되는 동안 단지별 시장 스냅샷 인덱스와 가격대를 미리 메모리에 올린다.
     _load_market_snapshots()
