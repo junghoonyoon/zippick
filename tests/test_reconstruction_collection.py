@@ -260,3 +260,12 @@ def test_broken_project_snapshot_is_retried_and_replaced_only_after_a_complete_f
     assert plan_collector.request() is True
     assert plan_collector._JOB.result(timeout=5)['success'] == 1
     assert plans.for_apartment(ENTITY, day=DAY)['plannedFloorAreaRatio'] == 280
+
+
+def test_nested_district_plan_name_preserves_the_full_name_and_proposal_marker(source):
+    ref = parcels.parse_public_page(public_html(labels=['제3종일반주거지역',
+        '지구단위계획구역(조계사 주변 지구단위계획(안))']), ENTITY, day=DAY)
+    parcels._save(ENTITY, reference=ref)
+    result = reconstruction.analyze(ENTITY, entry(), day=DAY)
+    assert result['planningReference']['districtPlanName'] == '조계사 주변 지구단위계획(안)'
+    assert result['basis'] is None

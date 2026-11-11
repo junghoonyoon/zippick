@@ -156,7 +156,7 @@ def _parcel_reference(entity, context, day, *, allow_expired=False):
               'zoneNames': zones, 'parcelAreaSqm': ref['parcelAreaSqm'], 'sourceUrl': ref['sourceUrl'],
               'checkedAt': ref['checkedAt'], 'zoneCoverageVerified': False}
     if len(plans) == 1:
-        match = re.search(r'\(([^()]+)\)', plans[0])
+        match = re.fullmatch(r'(?:제[0-9]+종)?지구단위계획구역\((.+)\)', plans[0])
         result.update(districtPlanName=match.group(1) if match else plans[0], districtPlanUrl=ref['sourceUrl'])
     if len(zones) == 1:
         try:
