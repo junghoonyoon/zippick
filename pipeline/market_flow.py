@@ -645,21 +645,32 @@ def _write_cache(path, payload):
 
 
 def _refresh_snapshot(reference, period_months, path, refresh_key):
+    next_path = None
     try:
         payload = _build_snapshot(reference, period_months)
-        payload["cachedAt"] = time.time()
-        _write_cache(path, payload)
+        latest_path = _cache_path(reference, period_months)
+        if latest_path != path:
+            # Collection can publish a new raw version while a long build runs.
+            # Never publish mixed versions; keep one latest rebuild queued.
+            next_path = latest_path
+        else:
+            payload["cachedAt"] = time.time()
+            _write_cache(path, payload)
     except Exception:
         # 이전 스냅샷은 계속 보여 주고 다음 요청에서 다시 갱신을 시도한다.
         pass
     finally:
         with REFRESH_LOCK:
             REFRESHING_CACHE_PATHS.discard(refresh_key)
+    if next_path is not None:
+        _schedule_snapshot_refresh(reference, period_months, next_path)
 
 
 def _schedule_snapshot_refresh(reference, period_months, path):
     """같은 기준월의 무거운 실거래 계산은 한 번만 백그라운드로 돌린다."""
-    refresh_key = str(path)
+    # A changed source version must not launch another simultaneous 10-year
+    # calculation for the same window. The active worker schedules the latest.
+    refresh_key = (str(path.parent), reference.isoformat(), int(period_months))
     with REFRESH_LOCK:
         if refresh_key in REFRESHING_CACHE_PATHS:
             return False

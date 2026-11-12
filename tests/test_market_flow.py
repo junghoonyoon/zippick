@@ -264,6 +264,44 @@ class MarketFlowTest(unittest.TestCase):
         self.assertEqual(payload["baseMonth"], "2026-08")
         schedule_refresh.assert_called_once()
 
+    def test_source_version_changes_do_not_start_duplicate_window_calculations(self):
+        reference = datetime.date(2026, 8, 1)
+        with mock.patch.object(market_flow, "REFRESHING_CACHE_PATHS", set()), \
+             mock.patch.object(market_flow.threading, "Thread") as thread:
+            self.assertTrue(market_flow._schedule_snapshot_refresh(reference, 3, Path('/cache/old.json')))
+            for index in range(20):
+                self.assertFalse(market_flow._schedule_snapshot_refresh(reference, 3, Path(f'/cache/version-{index}.json')))
+            self.assertEqual(thread.call_count, 1)
+            self.assertEqual(thread.return_value.start.call_count, 1)
+
+    def test_version_change_discards_mixed_result_and_queues_only_the_latest(self):
+        reference = datetime.date(2026, 8, 1)
+        old, latest = Path('/cache/old.json'), Path('/cache/latest.json')
+        with mock.patch.object(market_flow, "REFRESHING_CACHE_PATHS", {'active'}), \
+             mock.patch.object(market_flow, "_build_snapshot", return_value={'routes': []}), \
+             mock.patch.object(market_flow, "_cache_path", return_value=latest), \
+             mock.patch.object(market_flow, "_write_cache") as write, \
+             mock.patch.object(market_flow, "_schedule_snapshot_refresh") as schedule:
+            market_flow._refresh_snapshot(reference, 3, old, 'active')
+            write.assert_not_called()
+            schedule.assert_called_once_with(reference, 3, latest)
+            self.assertNotIn('active', market_flow.REFRESHING_CACHE_PATHS)
+
+    def test_stable_source_publishes_once_and_releases_the_refresh_slot(self):
+        reference = datetime.date(2026, 8, 1)
+        path = Path('/cache/current.json')
+        with mock.patch.object(market_flow, "REFRESHING_CACHE_PATHS", {'active'}), \
+             mock.patch.object(market_flow, "_build_snapshot", return_value={'routes': []}), \
+             mock.patch.object(market_flow, "_cache_path", return_value=path), \
+             mock.patch.object(market_flow, "_write_cache") as write, \
+             mock.patch.object(market_flow, "_schedule_snapshot_refresh") as schedule:
+            market_flow._refresh_snapshot(reference, 3, path, 'active')
+            self.assertEqual(write.call_count, 1)
+            self.assertEqual(write.call_args.args[0], path)
+            self.assertIn('cachedAt', write.call_args.args[1])
+            schedule.assert_not_called()
+            self.assertNotIn('active', market_flow.REFRESHING_CACHE_PATHS)
+
     def test_saved_snapshot_survives_temporary_upstream_circuit_break(self):
         reference = datetime.date(2026, 8, 1)
         with tempfile.TemporaryDirectory() as cache_root, mock.patch.object(
