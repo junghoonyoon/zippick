@@ -35,7 +35,7 @@ assert.match(zippickLocationHeading(missing,{}),/판단할 수 없어요.*자료
 assert.doesNotMatch(zippickLocationHeading(missing,{}),/10m|가까워요|좋아요/);
 assert.match(zippickLocationHeading({...base,locationScore:{score:40,parts:[product]}},{}),/아쉬워요.*39년차/);
 const schoolOnly={...demand,details:[detail('station',null,5,'누락 역 10m',{status:'missing'}),detail('education',3.8,4,'학교 · 261m 거리')]};
-assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[schoolOnly]}},{}),/학교까지 261m/);
+assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[schoolOnly]}},{}),/학교까지 직선 261m/);
 assert.doesNotMatch(zippickLocationHeading({...base,locationScore:{score:76,parts:[schoolOnly]}},{}),/10m|역은/);
 const weakStation={...demand,points:9,details:[detail('station',1,5,'먼역 · 직선 1,450m')]};
 assert.match(zippickLocationHeading({...base,locationScore:{score:40,parts:[weakStation]}},{}),/아쉬워요.*1,450m.*멀어요/);
@@ -44,11 +44,11 @@ assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[pric
 const unexplainedPrice={...price,points:28,details:[detail('estimate_range',5,8,'가격 자료 확인')]};
 assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[unexplainedPrice,demand,product]}},{}),/347m.*261m/);
 assert.doesNotMatch(zippickLocationHeading({...base,locationScore:{score:76,parts:[unexplainedPrice,demand]}},{}),/점수가.*점이에요/);
-assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[unexplainedPrice]}},{}),/이유는 추가 확인/);
+assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[unexplainedPrice]}},{}),/판단할 수 없어요.*세부 근거가 부족/);
 const down={signals:{momentumPct:16.9,turnoverRatio:.35}};
 assert.match(zippickSignalHeading(down,{}),/아쉬워요.*가격은 올랐지만 거래가 줄었어요/);
 const rising={signals:{momentumPct:10,turnoverRatio:1.3}};
-assert.match(zippickSignalHeading(rising,{peakGuard:{atPeak:true}}),/가격과 거래가 함께 늘었지만.*고점권/);
+assert.match(zippickSignalHeading(rising,{peakGuard:{atPeak:true}}),/가격과 거래가 함께 늘었어요.*다만.*2년 고점권/);
 assert.match(zippickCommuteHeading({}),/판단할 수 없어요.*이동시간 자료가 없어요/);
 assert.match(zippickCommuteHeading({commuteProfile:{hubs:{광화문:{totalMinutes:70}}}}),/아쉬워요.*70분/);
 '''
@@ -69,14 +69,27 @@ const transactionMoney=value=>`${value}억`;
 const zippickJeonsePeerStat=item=>item.peer;
 const zippickLiquidityStat=item=>item.stat;
 const head=html=>html.match(/<h5>(.*?)<\/h5>/s)[1];
-assert.match(head(zippickFundingHtml({jeonseRatioPct:33.4,latestJeonseDepositEok:3,jeonseSalePriceBasisEok:9})),/내 돈이 많이.*33.4%/);
-assert.match(head(zippickFundingHtml({jeonseRatioPct:60,peer:{band:'low'},latestJeonseDepositEok:6,jeonseSalePriceBasisEok:10})),/아쉬워요.*다른 후보보다 낮아요/);
-assert.match(head(zippickLiquidityHtml({stat:{band:'illiquid',windowMonths:24,silentTotal:16}})),/시간이 걸릴.*16개월.*거래가 없/);
-assert.match(head(zippickLiquidityHtml({stat:{band:'no_downturn',windowMonths:24,downMonths:2}})),/판단하기 어려워요.*2개월/);
+const funding=zippickFundingHtml({jeonseRatioPct:33.4,latestJeonseDepositEok:3,jeonseSalePriceBasisEok:9});
+assert.match(head(funding),/내 돈 6억이 필요해요.*세금·중개비는 별도/);
+assert.match(funding,/33.4%/);assert.match(funding,/비교 후보가 없어.*판단하지 않았어요/);
+assert.doesNotMatch(head(funding),/내 돈이 많이|아쉬워요/);
+const low=zippickFundingHtml({jeonseRatioPct:60,peer:{band:'low'},latestJeonseDepositEok:6,jeonseSalePriceBasisEok:10});
+assert.match(head(low),/내 돈 4억이 필요해요/);
+assert.match(low,/다른 후보보다.*낮아/);
+const noData=zippickFundingHtml({});assert.match(head(noData),/계산할 수 없어요/);
+// Use the displayed latest sale as the cash basis, not a different estimated price.
+assert.match(head(zippickFundingHtml({latestDealPriceEok:11,jeonseSalePriceBasisEok:10,latestJeonseDepositEok:6})),/내 돈 5억이 필요해요/);
+const sparse=zippickLiquidityHtml({stat:{band:'illiquid',windowMonths:24,silentTotal:16}});
+assert.match(head(sparse),/판단할 수 없어요.*거래 공백/);
+assert.match(sparse,/16개월/);assert.match(sparse,/앞으로 팔리는 데 걸릴 시간을 뜻하지 않아요/);
+const few=zippickLiquidityHtml({stat:{band:'no_downturn',windowMonths:24,downMonths:2}});
+assert.match(head(few),/판단할 수 없어요.*자료가 부족/);assert.match(few,/2개월/);
 assert.match(head(zippickLiquidityHtml({stat:{band:'unknown',windowMonths:24,downMonths:4,downDeals:12}})),/판단할 수 없어요.*자료가 부족/);
 const fair={band:'fair',windowMonths:24,downMonths:6,downDeals:18,downPerMonth:3,otherPerMonth:6,otherMonths:18,silentMonths:0,ratio:.5};
-assert.match(head(zippickLiquidityHtml({stat:fair})),/아쉬워요.*평소의 50%/);
-assert.match(head(zippickLiquidityHtml({stat:{...fair,band:'weak',downDeals:3}})),/아쉬워요.*6개월.*3건/);
+assert.match(head(zippickLiquidityHtml({stat:fair})),/보통이에요.*50%가 이어졌어요/);
+const weak=zippickLiquidityHtml({stat:{...fair,band:'weak',downDeals:3,downPerMonth:.5,ratio:1/12}});
+assert.match(head(weak),/아쉬워요.*8%만 이어졌어요/);assert.match(weak,/6개월/);assert.match(weak,/3건/);
+assert.match(head(zippickLiquidityHtml({stat:{...fair,band:'strong',ratio:.8}})),/좋아요.*70% 이상/);
 '''
     run=subprocess.run(['node'],input=script,text=True,capture_output=True)
     assert run.returncode==0,run.stderr
