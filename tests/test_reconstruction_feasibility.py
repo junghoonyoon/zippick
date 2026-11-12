@@ -136,7 +136,7 @@ item.reconstructionConditions=model({status:'ready', feasibility:f});
 const html=zippickReconstructionHtml(item);
 assert.ok(html.includes(f.headline));assert.ok(html.includes(f.financialLimitation));
 assert.ok(html.indexOf(f.headline)<html.indexOf('160%'));
-assert.match(html,/건폐율은 현재 건물 배치/);
+assert.match(html,/그 밖의 땅이 모두 녹지나 더 지을 수 있는 땅은 아니/);
 for(const status of ['stale','connection_error','loading']) {
  item.reconstructionConditions.status=status;
  assert.ok(!zippickReconstructionHtml(item).includes(f.headline));

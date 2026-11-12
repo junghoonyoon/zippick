@@ -173,7 +173,7 @@ print(json.dumps(files, sort_keys=True, separators=(",", ":")))
 '''
 
 
-def _ssh_options():
+def _ssh_options(*, fresh=False):
     # Reuse one authenticated connection; every refresh must not open a new login.
     # UNIX socket paths are kept short even when the project path is long.
     digest = hashlib.sha256((str(MIRROR_ROOT) + SOURCE_HOST).encode()).hexdigest()[:10]
@@ -182,9 +182,25 @@ def _ssh_options():
     if directory.is_symlink() or directory.stat().st_uid != os.getuid():
         raise SharedDataError("공용 데이터 연결 보관 위치를 확인해 주세요.")
     directory.chmod(0o700)
-    return ["-oBatchMode=yes", "-oConnectTimeout=8", "-oControlMaster=auto",
-            "-oControlPersist=120", "-oControlPath=" + str(directory / "s"),
+    return ["-oBatchMode=yes", "-oConnectTimeout=8",
+            "-oControlMaster=no" if fresh else "-oControlMaster=auto",
+            "-oControlPersist=120", "-oControlPath=none" if fresh else "-oControlPath=" + str(directory / "s"),
             "-oServerAliveInterval=15", "-oServerAliveCountMax=2"]
+
+
+def _retryable_connection_error(exc):
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return True
+    if isinstance(exc, subprocess.CalledProcessError):
+        diagnostic = exc.stderr or ""
+        if isinstance(diagnostic, bytes):
+            diagnostic = diagnostic.decode("utf-8", errors="replace")
+        diagnostic = diagnostic.lower()
+        if any(word in diagnostic for word in ("permission denied", "host key verification failed", "host identification has changed")):
+            return False
+        return exc.returncode in (10, 12, 30, 35, 255) and any(word in diagnostic for word in (
+            "timed out", "connection closed", "connection reset", "broken pipe", "mux_client", "connection refused"))
+    return isinstance(exc, OSError) and not isinstance(exc, (FileNotFoundError, PermissionError))
 
 
 def _source_manifest():
@@ -196,12 +212,12 @@ def _source_manifest():
     for attempt in range(2):
         try:
             result = process_runtime.run(
-                ["ssh", *_ssh_options(), SOURCE_HOST, command],
+                ["ssh", *_ssh_options(fresh=bool(attempt)), SOURCE_HOST, command],
                 check=True, capture_output=True, timeout=25, text=True,
             )
             break
-        except (OSError, subprocess.SubprocessError):
-            if attempt:
+        except (OSError, subprocess.SubprocessError) as exc:
+            if attempt or not _retryable_connection_error(exc):
                 raise
     manifest = json.loads(result.stdout)
     if not isinstance(manifest, dict) or not all(name in manifest for name in REQUIRED_FILES):
@@ -280,6 +296,28 @@ def _validate_snapshot(directory, manifest, previous=None):
                     raise SharedDataError("공용 원본의 건축물대장 전체 건수를 확인하지 못했어요.")
 
 
+def _connection_error_reason(exc):
+    """Keep public reason codes separate from private command diagnostics."""
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return "connection_timeout"
+    if isinstance(exc, subprocess.CalledProcessError):
+        diagnostic = exc.stderr or ""
+        if isinstance(diagnostic, bytes):
+            diagnostic = diagnostic.decode("utf-8", errors="replace")
+        diagnostic = diagnostic.lower()
+        if "timed out" in diagnostic:
+            return "ssh_timeout"
+        if "permission denied" in diagnostic:
+            return "ssh_auth_failed"
+        if "host key verification failed" in diagnostic or "host identification has changed" in diagnostic:
+            return "ssh_host_key_failed"
+        return "source_transfer_failed"
+    if isinstance(exc, (ValueError, SharedDataError)):
+        return "source_validation_failed"
+    return "connection_failed"
+
+
+
 def sync_once():
     if not read_only():
         return status()
@@ -296,14 +334,20 @@ def sync_once():
                 generations.mkdir(parents=True, exist_ok=True)
                 incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=generations))
                 previous = MIRROR_ROOT / "current"
-                transport = shlex.join(["ssh", *_ssh_options()])
-                command = ["rsync", "-a", "--checksum", "--files-from=-", "-e", transport]
-                if previous.exists():
-                    command.append("--link-dest=" + str(previous.resolve()))
-                command += [SOURCE_HOST + ":" + SOURCE_ROOT.rstrip("/") + "/", str(incoming) + "/"]
                 stage = "download"
-                process_runtime.run(command, input="\n".join(sorted(manifest)) + "\n", text=True,
-                               check=True, capture_output=True, timeout=180)
+                for attempt in range(2):
+                    transport = shlex.join(["ssh", *_ssh_options(fresh=bool(attempt))])
+                    command = ["rsync", "-a", "--checksum", "--files-from=-", "-e", transport]
+                    if previous.exists():
+                        command.append("--link-dest=" + str(previous.resolve()))
+                    command += [SOURCE_HOST + ":" + SOURCE_ROOT.rstrip("/") + "/", str(incoming) + "/"]
+                    try:
+                        process_runtime.run(command, input="\n".join(sorted(manifest)) + "\n", text=True,
+                                            check=True, capture_output=True, timeout=180)
+                        break
+                    except (OSError, subprocess.SubprocessError) as exc:
+                        if attempt or not _retryable_connection_error(exc):
+                            raise
                 stage = "verify_source"
                 if _source_manifest() != manifest:
                     raise SharedDataError("동기화 중 운영 자료가 갱신됐어요. 다음 주기에 다시 받아요.")
@@ -340,6 +384,7 @@ def sync_once():
                 "error": str(exc) if isinstance(exc, SharedDataError) else "공용 원본 연결 또는 자료 검증에 실패했어요. 마지막 정상 자료를 유지해요.",
                 "errorStage": stage, "errorType": type(exc).__name__,
                 "errorCode": getattr(exc, "returncode", None),
+                "errorReason": _connection_error_reason(exc),
             })
         finally:
             if incoming and incoming.exists():

@@ -5327,9 +5327,28 @@
     .zpr-reconstruction h6 { margin:0; font-size:17px; line-height:1.55; color:#191f28; overflow-wrap:anywhere }
     .zpr-reconstruction [data-reconstruction-retry] { justify-self:start; min-height:44px; padding:10px 14px; border:1px solid #d6e4f7; border-radius:10px; background:#fff; color:#2563a6; font:inherit; font-size:14px; font-weight:600; cursor:pointer }
     .zpr-reconstruction-facts { display:grid; gap:10px; margin:0; font-size:14px }
-    .zpr-reconstruction-facts > div { display:flex; justify-content:space-between; gap:16px; align-items:baseline }
+    .zpr-reconstruction-facts > div { display:grid; grid-template-columns:minmax(0,1fr) fit-content(60%); gap:6px 16px; align-items:baseline }
+    .zpr-reconstruction-facts .zpr-reconstruction-visual { grid-column:1 / -1; width:100%; max-width:none; text-align:left; font-size:13px; font-weight:400; line-height:1.6 }
+    .zpr-density-units { display:flex; gap:5px; max-width:420px; margin:4px 0 7px }
+    .zpr-density-unit { position:relative; flex:1; height:28px; border:1px solid #c8d9ef; border-radius:5px; overflow:hidden; background:#f2f4f6 }
+    .zpr-density-unit i { display:block; height:100%; background:#3182f6 }
+    .zpr-density-caption { color:#6b7684; margin:0 }
+    .zpr-density-caption b { color:#333d4b; font-weight:700 }
+    .zpr-density-limit { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:10px 12px; border:1px dashed #c8cfd8; border-radius:8px; color:#6b7684; background:#fafbfc }
+    .zpr-density-limit b { color:#4e5968; font-weight:600 }
+    .zpr-coverage-track { height:16px; margin:4px 0 7px; border-radius:4px; overflow:hidden; background:#eef1f4 }
+    .zpr-coverage-track i { display:block; height:100%; background:#3182f6 }
+    .zpr-coverage-key { display:flex; flex-wrap:wrap; gap:5px 18px; margin-bottom:6px; color:#6b7684 }
+    .zpr-coverage-key span::before { content:""; display:inline-block; width:9px; height:9px; margin-right:5px; border-radius:2px; background:#3182f6 }
+    .zpr-coverage-key span + span::before { background:#e5e8eb }
+    .zpr-renewal-stage { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; padding:12px 0; margin:4px 0; border-bottom:1px solid #eef1f4; font-size:14px }
+    .zpr-renewal-stage > span { color:#4e5968 }
+    .zpr-renewal-stage > strong { color:#333d4b; font-weight:600 }
+    .zpr-renewal-stage > p { grid-column:1 / -1; margin:0; color:#6b7684; font-size:13px; line-height:1.6 }
+    .zpr-reconstruction-facts > .zpr-reconstruction-density + div { margin-top:8px }
+    .zpr-reconstruction-facts .zpr-zone-explain { grid-column:1 / -1; margin:0; text-align:left; font-weight:400; color:#6b7684; font-size:13px; line-height:1.6 }
     .zpr-reconstruction-facts dt { color:#4e5968; overflow-wrap:anywhere }
-    .zpr-reconstruction-facts dd { margin:0; min-width:0; max-width:60%; flex-shrink:1; text-align:right; overflow-wrap:anywhere; font-weight:500; font-variant-numeric:tabular-nums }
+    .zpr-reconstruction-facts dd { margin:0; min-width:0; max-width:100%; text-align:right; overflow-wrap:anywhere; font-weight:500; font-variant-numeric:tabular-nums }
   </style>
 </head>
 <body class="condition-stage-power">
@@ -19935,6 +19954,11 @@
         && plan.identityMatch === "district_dong_parcel_and_name";
       const confirmed = own?.status === "confirmed" && types.some(type => /재건축|reconstruction/.test(type))
         || planMatches && own?.status !== "not_applicable" && own?.status !== "completed_or_cancelled";
+      if (["stale", "connection_error", "invalid_source", "identity_unverified", "access_denied"].includes(model.status)) return {
+        status:"unavailable", confirmed:own?.status === "confirmed" || planMatches, showInTitle:own?.status === "confirmed" || planMatches,
+        headline:"건축 자료를 확인하지 못해 재건축 여건을 판단할 수 없어요",
+        stageLine:model.reason || "최신 공식 자료에 연결하지 못했어요. 아래 버튼으로 다시 불러올 수 있어요.",
+        conditionLine:"마지막 정상 자료가 있으면 수치를 유지해요."};
       if (own?.status === "completed_or_cancelled" || plan.status === "completed") return {
         status:"completed", confirmed:false, showInTitle:false,
         headline:"확인한 정비사업은 종료돼 앞으로의 재건축 기대에 넣지 않아요",
@@ -19980,7 +20004,9 @@
         conditionLine = Number.isFinite(current) && Number.isFinite(target)
           ? `${currentLabel} ${percent(current)}와 ${label} ${percent(target)}를 비교했어요. ${plan.sourceDate ? `계획 자료는 ${plan.sourceDate} 기준이에요. ` : ""}${assessment.reason}` : assessment.reason;
       } else if (model.grade === "not_assessed" && !confirmed) {
-        headline = "현재 확인한 자료에서는 재건축 추진이 확인되지 않았어요";
+        headline = model.profile?.scope === "whole_registered_site"
+          ? "현재 건축 규모는 확인됐지만, 재건축 추진과 더 지을 규모는 아직 알 수 없어요"
+          : "현재 확인한 자료에서는 재건축 추진이 확인되지 않았어요";
         const year = /^(\d{4})/.exec(String(model.profile?.approvedAt || item.approvedAt || item.buildYear || ""))?.[1];
         conditionLine = `${year ? `${year}년에 준공된 단지예요. ` : ""}현재 건축 수치만으로 재건축 대상이나 사업성이 좋다고 판단하지 않아요.`;
       } else {
@@ -20001,15 +20027,12 @@
       return `<section class="zpr-section" data-zpr-reconstruction-section>
         <span class="zpr-kicker" data-zpr-step="단지 변화"></span>
         <h5>${esc(conclusion.headline)}</h5>
-        <p class="zpr-insight"><b>추진 단계</b> · ${esc(conclusion.stageLine)}</p>
-        <p class="zpr-insight"><b>건축 조건</b> · ${esc(conclusion.conditionLine)}</p>
-        ${conclusion.scopeNote ? `<p class="zpr-score-note">${esc(conclusion.scopeNote)}</p>` : ""}
-        ${conclusion.financialLimitation ? `<p class="zpr-score-note"><b>실제 수익성</b> · ${esc(conclusion.financialLimitation)}</p>` : ""}
-        <details class="zpr-details"><summary>건축 수치와 공식 자료 보기</summary>${zippickReconstructionHtml(item, {summarized:true})}</details>
+        ${conclusion.confirmed ? `<div class="zpr-renewal-stage"><span>재건축 추진 단계</span><strong>${esc(conclusion.stage?.stageLabel || "단계 미확인")}</strong><p>${esc(conclusion.stageLine)}</p></div>` : ""}
+        ${zippickReconstructionHtml(item, {summarized:true, stageExplanation:conclusion.confirmed ? "" : conclusion.stageLine})}
       </section>`;
     }
 
-    function zippickReconstructionHtml(item, {summarized = false} = {}) {
+    function zippickReconstructionHtml(item, {summarized = false, stageExplanation = ""} = {}) {
       const model = zippickReconstructionModel(item);
       if (!model) return "";
       const assessment = zippickReconstructionFeasibility(item);
@@ -20042,20 +20065,34 @@
         stale:"정비계획을 최신 상태로 확인하지 못했어요. 마지막 정상 자료가 있으면 함께 보여드려요.",
         out_of_coverage:"이 지역의 정비계획 자료는 아직 연결되지 않았어요.",
         completed:"공식 자료에서 사업 종료를 확인했어요."})[plan?.status] || "";
-      const referenceRows = reference ? `${reference.zoneName && (assessment || !String(model.reason || "").includes(reference.zoneName)) ? `<div><dt>대표 지번 용도지역</dt><dd>${esc(reference.zoneName)}</dd></div>` : ""}${numeric(reference.floorAreaRatio) ? `<div><dt>대표 지번 조례 용적률</dt><dd>${percent(reference.floorAreaRatio)}</dd></div>` : ""}${model.differencePp != null && Number.isFinite(Number(model.differencePp)) ? `<div><dt>조례 기준과 단순 차이</dt><dd>${Number(model.differencePp).toLocaleString("ko-KR", {maximumFractionDigits:2})}%p</dd></div>` : ""}${numeric(reference.buildingCoverageRatio) ? `<div><dt>대표 지번 조례 건폐율</dt><dd>${percent(reference.buildingCoverageRatio)}</dd></div>` : ""}${reference.districtPlanName ? `<div><dt>지구단위계획 구역</dt><dd>${esc(reference.districtPlanName)}</dd></div>` : ""}` : "";
+      const wholeSite = facts.scope === "whole_registered_site";
+      const far = wholeSite && numeric(facts.floorAreaRatio) ? Number(facts.floorAreaRatio) : null;
+      const coverage = wholeSite && numeric(facts.buildingCoverageRatio) && Number(facts.buildingCoverageRatio) <= 100 ? Number(facts.buildingCoverageRatio) : null;
+      const unit = far ? Math.max(100, Math.ceil(far / 600) * 100) : 100;
+      const comparison = assessed && assessment.comparison;
+      const target = comparison && numeric(comparison.referenceFloorAreaRatio) ? Number(comparison.referenceFloorAreaRatio) : null;
+      const compare = far && target && Number(comparison.currentFloorAreaRatio) === far;
+      const comparisonLabel = assessment?.basisKind === "parcel_ordinance" ? "대표 지번 조례 용적률"
+        : ["approved_plan", "project_plan"].includes(assessment?.basisKind) ? "계획 용적률" : "확인된 건축 기준";
+      const farComparison = compare ? `<dd class="zpr-reconstruction-visual"><div class="zpr-coverage-track" aria-hidden="true"><i style="width:${far / Math.max(far, target) * 100}%"></i></div><div class="zpr-density-limit"><span>${esc(comparisonLabel)}</span><b>${percent(target)}</b></div><div class="zpr-coverage-track" aria-hidden="true"><i style="width:${target / Math.max(far, target) * 100}%;background:#b8c5d6"></i></div><p class="zpr-density-caption">두 막대는 같은 눈금이에요.${comparison.siteScopeVerified ? " 같은 땅 범위의 기준을 비교했어요." : " 적용되는 땅의 범위는 다를 수 있어 방향만 비교해요."}</p></dd>` : "";
+      const farVisual = compare ? farComparison : far ? `<dd class="zpr-reconstruction-visual"><div class="zpr-density-units" aria-hidden="true">${Array.from({length:Math.ceil(far / unit)}, (_, index) => `<span class="zpr-density-unit"><i style="width:${Math.round(Math.min(100, Math.max(0, (far - index * unit) / unit * 100)) * 10000) / 10000}%"></i></span>`).join("")}</div><p class="zpr-density-caption">층 면적의 합은 땅 넓이의 약 <b>${(far / 100).toLocaleString("ko-KR", {maximumSignificantDigits:3})}배</b>예요. 한 칸은 땅 넓이 ${unit / 100}배이며, 지하층 등은 제외해요.</p>${!basis && !assessed ? `<div class="zpr-density-limit"><span>단지에 적용할 용적률 한도</span><b>미확인</b></div>` : ""}</dd>` : "";
+      const coverageVisual = coverage ? `<dd class="zpr-reconstruction-visual"><div class="zpr-coverage-track" aria-hidden="true"><i style="width:${coverage}%"></i></div><div class="zpr-coverage-key" aria-hidden="true"><span>건물이 차지한 땅</span><span>그 밖의 땅</span></div><p class="zpr-density-caption">땅 100㎡ 중 약 <b>${coverage.toLocaleString("ko-KR", {maximumSignificantDigits:3})}㎡</b>를 건물이 차지해요.</p></dd>` : "";
+      const referenceRows = reference ? `${reference.zoneName && (assessment || !String(model.reason || "").includes(reference.zoneName)) ? `<div><dt>대표 지번 용도지역</dt><dd>${esc(reference.zoneName)}</dd><dd class="zpr-zone-explain">단지 주소로 쓰는 땅의 건축 기준을 정하는 구분이에요.</dd></div>` : ""}${numeric(reference.floorAreaRatio) ? `<div><dt>대표 지번 조례 용적률</dt><dd>${percent(reference.floorAreaRatio)}</dd></div>` : ""}${model.differencePp != null && Number.isFinite(Number(model.differencePp)) ? `<div><dt>조례 기준과 단순 차이</dt><dd>${Number(model.differencePp).toLocaleString("ko-KR", {maximumFractionDigits:2})}%p</dd></div>` : ""}${numeric(reference.buildingCoverageRatio) ? `<div><dt>대표 지번 조례 건폐율</dt><dd>${percent(reference.buildingCoverageRatio)}</dd></div>` : ""}${reference.districtPlanName ? `<div><dt>지구단위계획 구역</dt><dd>${esc(reference.districtPlanName)}</dd><dd class="zpr-zone-explain">동네별 세부 건축 기준을 따로 정하는 구역이에요.</dd></div>` : ""}` : "";
       return `<div class="zpr-reconstruction" aria-label="재건축 여건">
-        <h6>${esc(assessed ? summarized ? "사업성 판단에 쓴 건축 자료" : assessment.headline : model.heading)}</h6>
-        ${model.status === "loading" ? `<p role="status">${spinnerHtml("default")} ${esc(model.reason)}</p>` : assessment && summarized ? "" : `<p class="zpr-insight">${esc(assessed ? `${assessment.evidenceHeading ? assessment.evidenceHeading + ". " : ""}${assessment.reason}` : model.reason)}</p>`}
+        ${summarized ? "" : `<h6>${esc(assessed ? assessment.headline : model.heading)}</h6>`}
+        ${model.status === "loading" ? `<p role="status">${spinnerHtml("default")} ${esc(model.reason)}</p>` : summarized ? assessed ? `<p class="zpr-insight">${esc(assessment.evidenceHeading || assessment.reason)}</p>` : !facts.scope ? `<p class="zpr-insight">${esc(model.reason)}</p>` : "" : `<p class="zpr-insight">${esc(assessed ? `${assessment.evidenceHeading ? assessment.evidenceHeading + ". " : ""}${assessment.reason}` : model.reason)}</p>`}
         ${facts.scope || reference ? `<dl class="zpr-reconstruction-facts">
-          ${facts.scope ? `<div><dt>용적률 · 땅에 비해 지어진 전체 층 면적</dt><dd>${percent(facts.floorAreaRatio)}</dd></div>
-          <div><dt>건폐율 · 땅에서 건물이 차지하는 비율</dt><dd>${percent(facts.buildingCoverageRatio)}</dd></div>` : ""}
+          ${facts.scope ? `<div class="zpr-reconstruction-density"><dt>현재 용적률 · 땅에 비해 지어진 층 면적</dt><dd>${percent(facts.floorAreaRatio)}</dd>${farVisual}</div>
+          <div><dt>건폐율 · 땅에서 건물이 차지하는 비율</dt><dd>${percent(facts.buildingCoverageRatio)}</dd>${coverageVisual}</div>` : ""}
           ${facts.scope && numeric(facts.landAreaSqm) ? `<div><dt>대지면적 · 단지 전체 땅</dt><dd>${Number(facts.landAreaSqm).toLocaleString("ko-KR")}㎡</dd></div>` : ""}
           ${facts.scope && numeric(facts.households) ? `<div><dt>현재 건축물대장 세대수</dt><dd>${Number(facts.households).toLocaleString("ko-KR")}세대</dd></div>` : ""}
           ${basis ? `<div><dt>${basis.kind === "approved_plan" ? "공식 계획 용적률" : "확인된 건축 기준"}</dt><dd>${percent(basis.floorAreaRatio)}</dd></div><div><dt>현재와의 차이</dt><dd>${Number(model.differencePp).toLocaleString("ko-KR")}％p</dd></div>` : ""}
           ${referenceRows}
         </dl>` : ""}
-        ${facts.buildingCoverageRatio ? '<p class="zpr-score-note">건폐율은 현재 건물 배치를 보는 참고값이에요. 낮다는 이유만으로 사업성이 좋다고 판단하지 않아요.</p>' : ""}
-        ${summarized ? "" : assessment ? `<p class="zpr-score-note">${esc(assessment.financialLimitation)}</p>${assessment.scopeNote && assessment.basisKind !== "project_plan" ? `<p class="zpr-score-note">${esc(assessment.scopeNote)}</p>` : ""}` : `<p class="zpr-score-note">${esc(model.limitation)}</p>`}
+        ${facts.buildingCoverageRatio ? '<p class="zpr-score-note">그 밖의 땅이 모두 녹지나 더 지을 수 있는 땅은 아니에요. 건폐율만으로 사업성이 좋다고 판단하지 않아요.</p>' : ""}
+        ${assessment ? `<p class="zpr-score-note"><b>실제 수익성</b> · ${esc(assessment.financialLimitation)}</p>${assessment.scopeNote && assessment.basisKind !== "project_plan" ? `<p class="zpr-score-note">${esc(assessment.scopeNote)}</p>` : ""}` : `<p class="zpr-score-note">${esc(model.limitation)}</p>`}
+        <details class="zpr-details"><summary>건축 수치와 공식 자료 보기</summary>
+        ${stageExplanation ? `<p class="zpr-score-note">${esc(stageExplanation)}</p>` : ""}
         ${model.planningReferenceStatus === "stale" && model.status !== "stale" ? '<p class="zpr-score-note">건축 기준은 마지막 정상 자료를 보여드려요. 최신 자료는 다시 확인해 주세요.</p>' : ""}
         ${reference?.lawAsOf || reference?.landAsOf ? `<p class="zpr-score-note">${[reference.lawAsOf ? `법령·조례 기준일 ${esc(reference.lawAsOf)}` : "", reference.landAsOf ? `면적 기준일 ${esc(reference.landAsOf)}` : ""].filter(Boolean).join(" · ")}</p>` : ""}
         ${source || basisLink || referenceLink || ordinanceLink || planLink ? `<p class="zpr-score-note">${[source, basisLink, referenceLink, ordinanceLink, planLink].filter(Boolean).join(" · ")}${facts.fetchedAt ? ` · 건축물대장 조회 ${esc(String(facts.fetchedAt).slice(0,10))}` : ""}${reference?.checkedAt ? ` · 토지이음 조회 ${esc(reference.checkedAt)}` : ""}</p>` : ""}
@@ -20072,8 +20109,9 @@
           ${/^https:\/\//.test(plan.sourceUrl || "") ? `<p class="zpr-score-note"><a href="${esc(plan.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(plan.sourceLabel || "서울시 정비사업 자료")} ↗</a>${plan.sourceDate ? ` · 계획 자료 기준 ${esc(plan.sourceDate)}` : ""}${plan.stageSourceDate ? ` · 단계 자료 기준 ${esc(plan.stageSourceDate)}` : ""}${plan.checkedAt ? ` · 자료 조회 ${esc(plan.checkedAt)}` : ""}</p>` : ""}
           ${plan.missingFields?.length ? `<p class="zpr-score-note">공식 자료에서 ${plan.missingFields.map(field => field === "plannedFloorAreaRatio" ? "계획 용적률" : "계획 건폐율").map(esc).join("·")} 수치는 확인되지 않았어요.</p>` : ""}
           ${plan.districtMatchMethod === "official_administrative_successor" ? `<p class="zpr-score-note">행정구역 개편으로 단지 자료의 ${esc(plan.apartmentDistrict)}와 공식 자료의 ${esc(plan.sourceDistrict)} 이름이 달라요. 법정동·지번·단지명을 함께 대조했어요. <a href="https://www.incheon.go.kr/IC01070101" target="_blank" rel="noopener noreferrer">인천시 행정구역 개편 안내 ↗</a></p>` : ""}
-        </div>` : planStatus ? `<p class="zpr-score-note">${esc(planStatus)}</p>${(plan.sourceChecks || []).filter(source => source.checkedAt && /^https:\/\//.test(source.sourceUrl || "")).map(source => `<p class="zpr-score-note"><a href="${esc(source.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(source.sourceLabel)} ↗</a>${source.sourceDate ? ` · 자료 기준 ${esc(source.sourceDate)}` : ""} · 조회 ${esc(String(source.checkedAt).slice(0,10))}</p>`).join("")}` : ""}
+        </div>` : planStatus ? `${stageExplanation && plan?.status === "not_found" ? "" : `<p class="zpr-score-note">${esc(planStatus)}</p>`}${(plan.sourceChecks || []).filter(source => source.checkedAt && /^https:\/\//.test(source.sourceUrl || "")).map(source => `<p class="zpr-score-note"><a href="${esc(source.sourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(source.sourceLabel)} ↗</a>${source.sourceDate ? ` · 자료 기준 ${esc(source.sourceDate)}` : ""} · 조회 ${esc(String(source.checkedAt).slice(0,10))}</p>`).join("")}` : ""}
         ${assessment?.classificationNote ? `<details class="zpr-details"><summary>사업성 건축 조건 판단 기준</summary><p>단지 전체에 적용되는 기준을 먼저 비교해요. 범위를 확인하지 못하면 공식 계획이나 대표 지번의 조례를 참고해요. 건폐율과 오래된 연식만으로 좋다고 판단하지 않아요.</p><p>${esc(assessment.classificationNote)}</p><p>계획 세대수에서 기존 세대수를 뺀 값은 일반분양 물량이 아니에요. 조합원·임대주택 물량과 공사비를 따로 확인해야 해요.</p></details>` : ""}
+        </details>
         ${retry ? `<button type="button" class="candidate-analysis-action" data-reconstruction-retry>${!facts.scope ? "건축물대장" : ["connection_error", "stale", "not_collected"].includes(plan?.status) && !["connection_error", "stale", "not_collected", "access_denied", "invalid_source"].includes(model.status) ? "정비계획" : "건축 기준"} 다시 불러오기</button>` : ""}
       </div>`;
     }

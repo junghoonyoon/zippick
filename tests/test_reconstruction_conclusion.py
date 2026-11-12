@@ -29,7 +29,7 @@ def test_unconfirmed_young_complex_explains_why_without_gray_stars_or_a_hold():
 item.futureTransformation={ownDevelopment:own({status:'not_applicable',projects:[],rating:null})};
 item.reconstructionConditions=model({grade:'not_assessed',profile:{approvedAt:'20160615'},projectPlan:{status:'not_found'}});
 const html=zippickDevelopmentHtml(item)+zippickSectionRatingHtml(item,'단지 변화');
-assert.match(html,/재건축 추진이 확인되지 않았어요/);assert.match(html,/2016년에 준공/);
+assert.match(html,/재건축 추진이 확인되지 않았어요/);assert.doesNotMatch(html,/사업성에 유리/);
 assert.match(html,/추진 미확인/);assert.doesNotMatch(html,/★★★★★|평가 보류|사업성에 유리/);
 assert.equal(zippickVerdictTitle(item,{common:true,title:'기존 매수 판단'}),'기존 매수 판단');
 ''')
@@ -42,7 +42,7 @@ for(const [direction,text] of [['favorable','유리한 건축 조건'],['limited
  item.reconstructionConditions=model({feasibility:condition(direction),projectPlan:plan});
  const html=zippickDevelopmentHtml(item);
  assert.ok(html.includes(text));assert.match(html,/재건축은 초기/);assert.match(html,/추진위원회/);
- assert.match(html,/현재 용적률 160%와 계획 용적률 250%/);
+ assert.match(html,/160%/);assert.match(html,/계획 용적률/);assert.match(html,/250%/);assert.match(html,/같은 눈금/);
  assert.match(html,/실제 수익성/);assert.match(html,/분담금은 판단할 수 없어요/);
  assert.ok(html.indexOf(text)<html.indexOf('건축 수치와 공식 자료 보기'));
  assert.ok(zippickVerdictTitle(item,{common:true,title:'매수 판단'}).includes(text));
@@ -102,3 +102,22 @@ assert.equal(zippickReconstructionConclusion(item).confirmed,true);
 item.futureTransformation={ownDevelopment:own({projects:[{projectTypeLabel:'리모델링'}]})};
 assert.equal(zippickReconstructionConclusion(item),null);
 ''')
+
+
+
+def test_visual_report_has_one_insight_and_keeps_failed_sources_retryable():
+    run_js(FUNCTIONS, SETUP + r"""
+item.futureTransformation={ownDevelopment:own({status:'not_found',projects:[],rating:null})};
+item.reconstructionConditions=model({status:'reference_partial',grade:'not_assessed',projectPlan:{status:'not_found'}});
+let html=zippickReconstructionReportHtml(item);
+assert.match(html,/<h5>현재 건축 규모는 확인됐지만,[^<]*아직 알 수 없어요<\/h5>/);
+assert.equal((html.match(/<h5>/g)||[]).length,1);
+assert.match(html,/zpr-density-units/);assert.match(html,/zpr-coverage-track/);
+assert.match(html,/건축 수치와 공식 자료 보기/);
+for(const status of ['stale','connection_error']){
+ item.reconstructionConditions.status=status;
+ html=zippickReconstructionReportHtml(item);
+ assert.match(html,/건축 자료를 확인하지 못해/);assert.match(html,/data-reconstruction-retry/);
+ assert.doesNotMatch(html,/<h5>현재 건축 규모는 확인됐지만/);
+}
+""")

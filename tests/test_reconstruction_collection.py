@@ -35,6 +35,7 @@ def plan_row(**changes):
 def source(tmp_path, monkeypatch):
     monkeypatch.setenv('ZIPPICK_DATA_MODE', 'isolated')
     monkeypatch.setattr(shared_data, 'cache_path', lambda name: tmp_path / name)
+    monkeypatch.setattr(plan_collector, "_now", lambda: DAY.isoformat()+"T12:00:00+00:00")
     reconstruction._read.cache_clear()
     plans._index.cache_clear()
     return tmp_path

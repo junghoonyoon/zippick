@@ -83,6 +83,23 @@ class SharedDataTest(unittest.TestCase):
         self.assertEqual(shared_data.revision(), original)
         self.assertTrue(result["error"])
 
+    def test_ssh_timeout_has_a_public_reason_code_and_preserves_the_last_good_version(self):
+        self.sync()
+        original = shared_data.revision()
+        error = subprocess.CalledProcessError(255, ['ssh', 'private-command'],
+            stderr='Connection timed out during banner exchange\nprivate-diagnostic')
+        with mock.patch.object(shared_data, '_source_manifest', side_effect=error):
+            result = shared_data.sync_once()
+        self.assertEqual(result['status'], 'stale')
+        self.assertEqual(result['errorReason'], 'ssh_timeout')
+        self.assertEqual(result['errorStage'], 'source_manifest')
+        self.assertEqual(shared_data.revision(), original)
+        self.assertNotIn('private-diagnostic', json.dumps(result))
+        recovered = self.sync()
+        self.assertEqual(recovered['status'], 'ready')
+        self.assertNotIn('errorReason', recovered)
+
+
     def test_first_connection_failure_is_not_reported_as_missing_apartment_data(self):
         with mock.patch.object(shared_data, "_source_manifest", side_effect=OSError("offline")):
             self.assertEqual(shared_data.sync_once()["status"], "unavailable")
@@ -185,6 +202,44 @@ class SharedDataTest(unittest.TestCase):
         with mock.patch.object(shared_data.subprocess, "run", side_effect=[OSError("offline"), response]) as transfer:
             self.assertEqual(shared_data._source_manifest(), self.manifest())
         self.assertEqual(transfer.call_count, 2)
+
+    def test_handshake_timeout_reconnects_without_reusing_the_failed_master(self):
+        response = subprocess.CompletedProcess([], 0, stdout=json.dumps(self.manifest()))
+        error = subprocess.CalledProcessError(255, ['ssh'], stderr='Connection timed out during banner exchange')
+        with mock.patch.object(shared_data.process_runtime, 'run', side_effect=[error, response]) as transfer:
+            self.assertEqual(shared_data._source_manifest(), self.manifest())
+        first, second = (call.args[0] for call in transfer.call_args_list)
+        self.assertIn('-oControlMaster=auto', first)
+        self.assertIn('-oControlMaster=no', second)
+        self.assertIn('-oControlPath=none', second)
+        self.assertNotIn('-oStrictHostKeyChecking=no', second)
+
+    def test_download_reconnects_once_and_publishes_only_a_complete_snapshot(self):
+        self.sync()
+        original = shared_data.revision()
+        error = subprocess.CalledProcessError(255, ['rsync'], stderr='Connection reset by peer')
+        count = 0
+        def flaky(command, **kwargs):
+            nonlocal count
+            count += 1
+            if count == 1:
+                raise error
+            self.assertIn('-oControlPath=none', command[command.index('-e') + 1])
+            return self.copy(command, **kwargs)
+        with mock.patch.object(shared_data, '_source_manifest', return_value=self.manifest(2)), \
+             mock.patch.object(shared_data.process_runtime, 'run', side_effect=flaky):
+            recovered = shared_data.sync_once()
+        self.assertEqual(count, 2)
+        self.assertEqual(recovered['status'], 'ready')
+        self.assertNotEqual(shared_data.revision(), original)
+
+    def test_authentication_and_host_key_errors_do_not_retry(self):
+        for diagnostic in ('Permission denied (publickey)', 'Host key verification failed'):
+            error = subprocess.CalledProcessError(255, ['ssh'], stderr=diagnostic)
+            with mock.patch.object(shared_data.process_runtime, 'run', side_effect=error) as transfer:
+                with self.assertRaises(subprocess.CalledProcessError):
+                    shared_data._source_manifest()
+            self.assertEqual(transfer.call_count, 1)
 
     def test_refresh_reuses_an_authenticated_connection_with_private_socket_permissions(self):
         options = shared_data._ssh_options()

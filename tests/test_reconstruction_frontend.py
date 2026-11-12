@@ -170,3 +170,29 @@ assert.match(html,/단지 전체 건축물대장 조회 결과가 없어요/);
 assert.doesNotMatch(html,/현재 용적률을 확인하지 못했어요/);
 assert.doesNotMatch(html,/0%|NaN|role="status"/);
 ''')
+
+
+
+def test_visuals_use_real_density_and_coverage_without_creating_a_building_limit():
+    run_js(NAMES, HARNESS + r"""
+item.reconstructionConditions=model({status:'reference_partial',grade:'not_assessed',
+ profile:{scope:'whole_registered_site',floorAreaRatio:253.69,buildingCoverageRatio:25.76,
+ landAreaSqm:11112,households:299},planningReference:{zoneName:'제3종일반주거지역',districtPlanName:'지구단위계획구역'}});
+const before=JSON.stringify(item);
+const html=zippickReconstructionHtml(item,{summarized:true});
+assert.match(html,/2.54배/);assert.match(html,/width:53.69[0-9]*%/);
+assert.match(html,/width:25.76%/);assert.match(html,/25.8㎡/);
+assert.match(html,/단지에 적용할 용적률 한도<\/span><b>미확인/);
+assert.match(html,/지하층 등은 제외/);assert.match(html,/그 밖의 땅이 모두 녹지/);
+let pos=-1;
+for(const value of ['253.69%','25.76%','11,112㎡','299세대','제3종일반주거지역','지구단위계획구역']){
+ const next=html.indexOf(value);assert.ok(next>pos,value);pos=next;
+}
+assert.doesNotMatch(html,/300%|늘릴 수 있어요|여지.*0%|일반분양.*확정/);
+assert.equal(JSON.stringify(item),before);
+for(const value of [null,undefined,0,-1,'NaN','Infinity']){
+ item.reconstructionConditions=model({profile:{scope:'whole_registered_site',floorAreaRatio:value,buildingCoverageRatio:value}});
+ const missing=zippickReconstructionHtml(item);
+ assert.doesNotMatch(missing,/class="zpr-density-units"|class="zpr-coverage-track"|NaN|Infinity/);
+}
+""")

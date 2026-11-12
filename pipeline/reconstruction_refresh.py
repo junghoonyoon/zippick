@@ -1,5 +1,8 @@
 """Report-triggered collection always updates the shared production source."""
 import json
+import logging
+import ssl
+import subprocess
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -14,6 +17,38 @@ import collect_reconstruction_ordinance as ordinances
 import collect_seoul_reconstruction_plans as projects
 import collect_regional_reconstruction_plans as regional_projects
 import shared_data
+import process_runtime
+
+
+LOG = logging.getLogger(__name__)
+
+class SourceConnectionError(RuntimeError):
+    def __init__(self, code, stage):
+        super().__init__(code)
+        self.code, self.stage = code, stage
+
+
+
+def _connection_failure(exc, stage):
+    """Expose a safe diagnostic code, never a URL, credential, or raw stderr."""
+    if isinstance(exc, SourceConnectionError):
+        return {"status": "error", "stage": exc.stage, "code": exc.code}
+    cause = exc.reason if isinstance(exc, URLError) else exc
+    if isinstance(cause, ssl.SSLCertVerificationError):
+        code = "tls_verification_failed"
+    elif getattr(exc, "code", None):
+        code = "http_" + str(exc.code)
+    elif isinstance(exc, subprocess.CalledProcessError):
+        code = {60: "tls_verification_failed", 28: "request_timeout",
+                22: "http_error", 6: "dns_failed", 7: "connection_failed"}.get(exc.returncode, "transport_failed")
+    elif isinstance(cause, (TimeoutError, subprocess.TimeoutExpired)):
+        code = "request_timeout"
+    elif isinstance(exc, (ValueError, TypeError, KeyError)):
+        code = "invalid_source_response"
+    else:
+        code = "connection_failed"
+    return {"status": "error", "stage": stage, "code": code}
+
 
 
 _SYNC_POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix="reconstruction-source")
@@ -60,8 +95,23 @@ def _request_primary(entity, *, opener=None):
                        "legal_dong": entity.get("legalDong", ""), "jibun": entity.get("jibun", "")})
     request = Request(f"https://{host}/api/apartment-reconstruction?{query}",
                       headers={"Accept": "application/json", "User-Agent": "Zippick/1.0 shared-source-refresh"})
-    with (opener or urlopen)(request, timeout=8) as response:
-        raw = response.read(1_000_001)
+    try:
+        with (opener or urlopen)(request, timeout=8) as response:
+            raw = response.read(1_000_001)
+    except URLError as exc:
+        if not isinstance(exc.reason, ssl.SSLCertVerificationError):
+            raise
+        # Match the verified system-TLS fallback used by the transaction and
+        # Seoul source readers. Python 3.14 can reject a chain the OS validates.
+        # Keep HTTPS, certificate/hostname verification, identity and size checks.
+        response = process_runtime.run(
+            ["curl", "--fail", "--silent", "--show-error", "--proto", "=https",
+             "--max-time", "8", "--max-filesize", "1000000",
+             "--header", "Accept: application/json",
+             "--user-agent", "Zippick/1.0 shared-source-refresh", request.full_url],
+            capture_output=True, check=True, timeout=10,
+        )
+        raw = response.stdout
     if len(raw) > 1_000_000:
         raise ValueError("oversized source response")
     model = json.loads(raw)["reconstructionConditions"]
@@ -76,8 +126,8 @@ def _request_primary(entity, *, opener=None):
 def _same_facts(local, remote):
     # Filesystem stamps differ between primary and replica. Public judgments
     # and every underlying fact must match before skipping another sync.
-    return ({k: v for k, v in local.items() if k != "sourceRevision"}
-            == {k: v for k, v in remote.items() if k != "sourceRevision"})
+    return ({k: v for k, v in local.items() if k not in ("sourceRevision", "sourceVerification")}
+            == {k: v for k, v in remote.items() if k not in ("sourceRevision", "sourceVerification")})
 
 
 def _loading(entity, reason):
@@ -93,10 +143,14 @@ def refresh(entity):
         return _primary(entity)
     # Replica never calls data providers or writes independent facts. Production
     # collects, then the normal verified snapshot publisher brings the files over.
+    stage = "primary_api"
     try:
         remote = _request_primary(entity)
         if remote.get("status") == "loading":
+            reconstruction.forget_primary_confirmation(entity)
             return _loading(entity, remote.get("reason") or "운영 서버에서 빠진 자료를 수집하고 있어요.")
+        stage = "shared_snapshot"
+        reconstruction.confirm_primary_snapshot(entity, remote)
         local = reconstruction.analyze(entity)
         if _same_facts(local, remote):
             return local
@@ -105,18 +159,31 @@ def refresh(entity):
         with _SYNC_LOCK:
             if _SYNC_JOB is not None and _SYNC_JOB.done():
                 job, _SYNC_JOB = _SYNC_JOB, None
-                if job.result().get("status") != "ready":
-                    raise shared_data.SharedDataError("shared source refresh failed")
+                sync_status = job.result()
+                if sync_status.get("status") != "ready":
+                    raise SourceConnectionError(sync_status.get("errorReason") or "snapshot_sync_failed",
+                                                sync_status.get("errorStage") or "shared_snapshot")
                 local = reconstruction.analyze(entity)
                 if _same_facts(local, remote):
                     return local
             if _SYNC_JOB is None:
                 _SYNC_JOB = _SYNC_POOL.submit(shared_data.sync_once)
         return _loading(entity, "수집한 건축 자료를 공용 원본에서 가져오고 있어요.")
-    except (URLError, OSError, ValueError, TypeError, KeyError, shared_data.SharedDataError):
+    except (URLError, OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError,
+            shared_data.SharedDataError, SourceConnectionError) as exc:
+        reconstruction.forget_primary_confirmation(entity)
+        connection = _connection_failure(exc, stage)
+        LOG.warning("reconstruction source failure apartment=%s stage=%s code=%s type=%s",
+                    entity.get("apartmentId"), connection["stage"], connection["code"], type(exc).__name__)
         result = reconstruction.analyze(entity)
+        sync_failed = connection["stage"] != "primary_api"
+        reason = ("운영 API는 응답했지만 최신 원본 파일을 가져오지 못했어요. 다시 불러오기를 눌러 주세요."
+                  if sync_failed else
+                  "이 기기에서 운영 서버의 인증서를 확인하지 못했어요. 연결 환경을 확인한 뒤 다시 불러오기를 눌러 주세요."
+                  if connection["code"] == "tls_verification_failed" else
+                  "운영 서버의 건축 자료 요청에 실패했어요. 잠시 뒤 다시 불러오기를 눌러 주세요.")
         result.update(status="stale" if result.get("profile", {}).get("scope") else "connection_error",
-                      heading="운영 원본의 건축 자료를 불러오지 못했어요", summary="", grade="unknown",
-                      reason="운영 서버의 자료 수집 또는 연결에 문제가 생겼어요. 잠시 뒤 다시 불러오기를 눌러 주세요.")
+                      heading="건축 자료 동기화 연결이 끊겨 최신 상태를 확인하지 못했어요" if sync_failed else "운영 원본의 건축 자료를 불러오지 못했어요",
+                      summary="", grade="unknown", reason=reason, sourceConnection=connection)
         result["feasibility"] = reconstruction.feasibility(result)
         return result

@@ -7,6 +7,8 @@ import datetime as dt
 import json
 import math
 import re
+import threading
+import time
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -29,6 +31,55 @@ MAX_SOURCE_AGE_DAYS = 180
 # Display convention only, not a legal or financial threshold: a difference
 # within 10% of a verified ceiling is described as limited, without a score.
 LIMITED_HEADROOM_RATIO = 0.10
+
+_SOURCE_CONFIRMATIONS = {}
+_CONFIRMATION_LOCK = threading.RLock()
+
+
+def _confirmation_key(entity):
+    return tuple(str(entity.get(k) or '') for k in ('apartmentId', 'province', 'district', 'legalDong', 'jibun'))
+
+
+def _confirmation_revision():
+    return json.dumps([shared_data.data_revision(), revision()], sort_keys=True)
+
+
+def forget_primary_confirmation(entity):
+    with _CONFIRMATION_LOCK:
+        _SOURCE_CONFIRMATIONS.pop(_confirmation_key(entity), None)
+
+
+def _current_confirmation(entity):
+    with _CONFIRMATION_LOCK:
+        proof = _SOURCE_CONFIRMATIONS.get(_confirmation_key(entity))
+        if proof and proof['expires'] > time.monotonic() and proof['revision'] == _confirmation_revision():
+            return proof
+        _SOURCE_CONFIRMATIONS.pop(_confirmation_key(entity), None)
+    return None
+
+
+def confirm_primary_snapshot(entity, remote):
+    """Confirm only an identical local snapshot against the verified primary API.
+
+    Do not import remote values or clear the global SSH failure. All consumers
+    still calculate from cache_path(); only that complex's freshness is proven.
+    """
+    forget_primary_confirmation(entity)
+    if not shared_data.read_only() or remote.get('status') in ('loading', 'stale', 'connection_error', 'invalid_source', 'identity_unverified', 'access_denied'):
+        return False
+    token = _confirmation_revision()
+    local = analyze(entity, _source_confirmed=True)
+    comparable = lambda model: {k: v for k, v in model.items() if k not in ('sourceRevision', 'sourceVerification')}
+    if comparable(local) != comparable(remote) or token != _confirmation_revision():
+        return False
+    with _CONFIRMATION_LOCK:
+        if len(_SOURCE_CONFIRMATIONS) >= 1000:
+            _SOURCE_CONFIRMATIONS.clear()
+        _SOURCE_CONFIRMATIONS[_confirmation_key(entity)] = {
+            'revision': token, 'expires': time.monotonic() + shared_data.REFRESH_SECONDS,
+            'checkedAt': dt.datetime.now(dt.timezone.utc).isoformat(),
+        }
+    return True
 
 
 def number(value):
@@ -263,7 +314,7 @@ def profile(entity, entry):
             "reason": "" if far and coverage else "공식 자료에서 일부 값이 비어 있거나 면적과 맞지 않아요."}
 
 
-def _load_context(entity, result):
+def _load_context(entity, result, *, source_confirmed=False):
     try:
         context = _read(str(CONTEXT_PATH), _stamp(CONTEXT_PATH))['records'].get(result['apartmentId'])
     except (OSError, ValueError, TypeError):
@@ -282,14 +333,14 @@ def _load_context(entity, result):
                 result['planningSourceStatus'] = ('stale' if shared_context.get('ordinanceReference')
                                                    or shared_context.get('parcelReference')
                                                    else shared_context['lastError'].get('status', 'connection_error'))
-            elif shared_data.read_only() and shared_data.status().get('status') == 'stale':
+            elif not source_confirmed and shared_data.read_only() and shared_data.status().get('status') == 'stale':
                 result['planningSourceStatus'] = 'stale'
     except (OSError, ValueError, TypeError):
         result['planningSourceStatus'] = 'connection_error'
     return context
 
 
-def _conditions(entity, entry=None, context=None, *, day=None):
+def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=False):
     day = day or dt.date.today()
     result = {"version": VERSION, "apartmentId": str(entity.get("apartmentId") or ""),
               "identity": {k: entity.get(k, "") for k in ("apartmentId", "province", "district", "legalDong", "jibun")},
@@ -301,9 +352,9 @@ def _conditions(entity, entry=None, context=None, *, day=None):
     if not parcel(entity) or not result["apartmentId"]:
         result.update(status="identity_unverified", reason="단지 고유번호와 법정동·지번을 확인해야 해요.")
         return result
-    result['projectPlan'] = reconstruction_project_plans.for_apartment(entity, day=day)
+    result['projectPlan'] = reconstruction_project_plans.for_apartment(entity, day=day, _source_confirmed=source_confirmed)
     if context is None:
-        context = _load_context(entity, result)
+        context = _load_context(entity, result, source_confirmed=source_confirmed)
     if result.get('planningSourceStatus') != 'identity_unverified':
         reference = _planning_reference(entity, context, day)
         if reference:
@@ -525,9 +576,15 @@ def feasibility(model):
     return result
 
 
-def analyze(entity, entry=None, context=None, *, day=None):
-    result = _conditions(entity, entry, context, day=day)
+def analyze(entity, entry=None, context=None, *, day=None, _source_confirmed=False):
+    proof = _current_confirmation(entity) if entry is None and context is None else None
+    result = _conditions(entity, entry, context, day=day, source_confirmed=_source_confirmed or bool(proof))
     result['feasibility'] = feasibility(result)
+    if proof and proof['revision'] != _confirmation_revision():
+        forget_primary_confirmation(entity)
+        return analyze(entity, entry, context, day=day)
+    if proof:
+        result['sourceVerification'] = {'method': 'primary_api_same_snapshot', 'checkedAt': proof['checkedAt']}
     return result
 
 

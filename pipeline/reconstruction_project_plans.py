@@ -51,7 +51,7 @@ def _number(value, *, maximum=None):
         return None
 
 
-def for_apartment(entity, *, day=None):
+def for_apartment(entity, *, day=None, _source_confirmed=False):
     day = day or dt.date.today()
     if entity.get('province') != '서울특별시':
         import regional_reconstruction_plans
@@ -91,7 +91,7 @@ def for_apartment(entity, *, day=None):
     from living_area_sources import stage_date
     checked = development.date(str(data.get('checkedAt') or '')[:10])
     stale = (not checked or not 0 <= (day - checked).days <= MAX_AGE_DAYS or data.get('lastError')
-             or (shared_data.read_only() and shared_data.status().get('status') == 'stale'))
+             or (not _source_confirmed and shared_data.read_only() and shared_data.status().get('status') == 'stale'))
     stage_as_of = stage_date(row.get('propel_dt'))
     if stage_as_of and stage_as_of > day.isoformat():
         stage_as_of = None
