@@ -121,3 +121,19 @@ for(const status of ['stale','connection_error']){
  assert.doesNotMatch(html,/<h5>현재 건축 규모는 확인됐지만/);
 }
 """)
+
+
+
+def test_stage_date_and_link_never_come_from_another_stage_source():
+    run_js(FUNCTIONS, SETUP + r"""
+item.futureTransformation={ownDevelopment:own({rating:{state:'ready',sourceStage:'추진위원회승인',checkedAt:'2026-10-20'}})};
+item.reconstructionConditions=model({projectPlan:{...plan,stageLabel:'구역지정',stageAsOf:'2026-06-04'}});
+const c=zippickReconstructionConclusion(item);
+assert.equal(c.stage.sourceStage,'추진위원회승인');
+assert.equal(c.stage.sourceDate,undefined);assert.equal(c.stage.sourceUrl,undefined);
+assert.match(c.stageLine,/확인일 2026-10-20/);assert.doesNotMatch(c.stageLine,/2026-06-04|자료 기준/);
+item.futureTransformation={ownDevelopment:own({status:'not_found',rating:null,projects:[]})};
+const fallback=zippickReconstructionConclusion(item);
+assert.equal(fallback.stage.sourceStage,'구역지정');assert.equal(fallback.stage.sourceDate,'2026-06-04');
+assert.equal(fallback.stage.sourceUrl,plan.sourceUrl);
+""")

@@ -19964,20 +19964,21 @@
         headline:"확인한 정비사업은 종료돼 앞으로의 재건축 기대에 넣지 않아요",
         stageLine:"공식 자료에서 준공 또는 사업 종료가 확인됐어요.",
         conditionLine:"현재 건물의 용적률·건폐율은 건축 정보로만 보여드려요."};
-      const stageSource = own?.rating?.state === "ready" ? own.rating.sourceStage : planMatches ? plan.stageLabel
+      const useOwnStage = own?.rating?.state === "ready";
+      const stageSource = useOwnStage ? own.rating.sourceStage : planMatches ? plan.stageLabel
         : own?.status === "confirmed" ? projects[0]?.stageLabel : "";
       const stageRule = ZIPPICK_DEVELOPMENT_STAGE_RATINGS.find(row => row.stages.includes(String(stageSource || "").replace(/\s+/g, "")));
       const stage = confirmed && stageSource ? {points:stageRule?.points ?? null, stageLabel:stageRule?.label || stageSource,
-        sourceStage:stageSource, sourceUrl:own?.rating?.sourceUrl || plan.stageSourceUrl || plan.sourceUrl,
-        sourceDate:own?.rating?.sourceDate || plan.stageAsOf || plan.stageSourceDate || plan.sourceDate,
-        checkedAt:own?.rating?.checkedAt || plan.checkedAt} : null;
+        sourceStage:stageSource, sourceUrl:useOwnStage ? own.rating.sourceUrl : planMatches ? plan.stageSourceUrl || plan.sourceUrl : projects[0]?.sourceUrl,
+        sourceDate:useOwnStage ? own.rating.sourceDate : planMatches ? plan.stageAsOf || plan.stageSourceDate || plan.sourceDate : projects[0]?.sourceDate,
+        checkedAt:useOwnStage ? own.rating.checkedAt : planMatches ? plan.checkedAt : projects[0]?.checkedAt || own?.checkedAt} : null;
       const stageLead = !confirmed ? "재건축 추진은 미확인이지만"
         : !stage ? "재건축 대상은 확인됐지만"
         : !Number.isFinite(stage.points) ? `재건축은 ‘${stage.stageLabel}’ 단계이고`
         : stage.points <= 2.5 ? "재건축은 초기지만"
         : stage.points <= 3.5 ? "재건축은 진행 중이고"
         : "재건축은 상당히 진행됐고";
-      const check = stage?.checkedAt || own?.checkedAt;
+      const check = stage ? stage.checkedAt : own?.checkedAt;
       const sourceDate = stage?.sourceDate;
       const stageLine = stage ? `${stage.stageLabel} 단계예요. 자료 표기는 ‘${stage.sourceStage}’예요.${sourceDate ? ` 자료 기준 ${sourceDate}.` : check ? ` 확인일 ${check}.` : ""}`
         : confirmed ? "단지와 연결된 공식 재건축 사업은 있지만 현재 단계는 확인하지 못했어요."
