@@ -1,9 +1,10 @@
 {
-  "version": "own-development-stage-v2",
+  "version": "own-development-stage-v3",
   "maxPoints": 5,
   "minimumBuildingAge": 20,
   "maxSourceAgeDays": 366,
   "procedureSourceUrl": "https://cleanup.seoul.go.kr/cleanup/view/redevelop.do",
+  "reconstructionProcedureSourceUrl": "https://cleanup.seoul.go.kr/cleanup/view/rebuild.do",
   "stages": [
     {
       "label": "계획 검토·진단",
@@ -122,6 +123,281 @@
         "construction",
         "철거및착공"
       ]
+    }
+  ],
+  "remodelingProcedureSourceUrl": "https://cleanup.seoul.go.kr/cleanup/view/remodeling.do",
+  "remodelingStages": [
+    {
+      "label": "계획·제안",
+      "points": 1.0,
+      "phase": "planning",
+      "stages": [
+        "계획",
+        "계획검토",
+        "planning",
+        "기획중",
+        "기획완료",
+        "후보지선정",
+        "대상지선정",
+        "대상지선정(추진중)"
+      ]
+    },
+    {
+      "label": "추진 준비",
+      "points": 1.5,
+      "phase": "committee",
+      "stages": [
+        "추진위구성",
+        "추진위원회구성",
+        "추진위원회",
+        "추진위원회승인",
+        "추진위원회구성승인",
+        "추진위승인"
+      ]
+    },
+    {
+      "label": "조합 설립",
+      "points": 2.0,
+      "phase": "association",
+      "stages": [
+        "조합설립",
+        "조합설립인가",
+        "association"
+      ]
+    },
+    {
+      "label": "1차 안전진단",
+      "points": 2.5,
+      "phase": "diagnosis",
+      "stages": [
+        "안전진단(1차)",
+        "1차안전진단",
+        "안전진단1차",
+        "1차안전진단통과",
+        "안전진단(1차)통과"
+      ]
+    },
+    {
+      "label": "도시계획 심의",
+      "points": 3.0,
+      "phase": "review",
+      "stages": [
+        "도시계획위원회심의",
+        "도시계획심의"
+      ]
+    },
+    {
+      "label": "건축 심의",
+      "points": 3.5,
+      "phase": "review",
+      "stages": [
+        "건축심의",
+        "건축위원회심의"
+      ]
+    },
+    {
+      "label": "리모델링 허가·사업계획 승인",
+      "points": 4.0,
+      "phase": "approved",
+      "stages": [
+        "사업계획승인",
+        "사업계획승인(리모델링허가)",
+        "리모델링허가",
+        "행위허가"
+      ]
+    },
+    {
+      "label": "이주·부분철거·2차 안전진단",
+      "points": 4.5,
+      "phase": "move",
+      "stages": [
+        "이주",
+        "이주중",
+        "이주완료",
+        "철거",
+        "철거중",
+        "철거완료",
+        "relocation",
+        "demolition",
+        "이주·해체",
+        "해체",
+        "안전진단(2차)",
+        "2차안전진단",
+        "안전진단2차",
+        "2차안전진단통과",
+        "안전진단(2차)통과"
+      ]
+    },
+    {
+      "label": "착공",
+      "points": 5.0,
+      "phase": "construction",
+      "stages": [
+        "착공",
+        "공사중",
+        "construction",
+        "철거및착공"
+      ]
+    }
+  ],
+  "reconstructionStages": [
+    {
+      "label": "계획 검토·진단",
+      "points": 1,
+      "stages": [
+        "계획",
+        "계획검토",
+        "정비계획수립",
+        "정비계획입안",
+        "안전진단",
+        "안전진단통과",
+        "재건축진단통과",
+        "planning",
+        "정비계획수립중",
+        "예정구역",
+        "안전진단(1차)",
+        "정비계획변경추진중"
+      ],
+      "phase": "planning"
+    },
+    {
+      "label": "후보지·대상지 선정",
+      "points": 1.5,
+      "stages": [
+        "후보지선정",
+        "대상지선정",
+        "대상지선정(추진중)",
+        "신속통합기획선정",
+        "기획중",
+        "기획완료",
+        "신속통합기획착수",
+        "주민공람",
+        "구의회의견청취"
+      ],
+      "phase": "planning"
+    },
+    {
+      "label": "도시계획 심의",
+      "points": 1.5,
+      "phase": "planning",
+      "stages": [
+        "도시계획위원회심의",
+        "도시계획심의"
+      ]
+    },
+    {
+      "label": "정비구역 지정",
+      "points": 2,
+      "stages": [
+        "정비구역지정",
+        "구역지정",
+        "정비계획결정",
+        "정비계획결정고시",
+        "designated"
+      ],
+      "phase": "designation"
+    },
+    {
+      "label": "추진위원회 구성",
+      "points": 2.0,
+      "phase": "committee",
+      "stages": [
+        "추진위구성",
+        "추진위원회구성",
+        "추진위원회"
+      ]
+    },
+    {
+      "label": "추진위원회 승인",
+      "points": 2.5,
+      "stages": [
+        "추진위원회승인",
+        "추진위원회구성승인",
+        "추진위승인",
+        "정비구역지정(추진위승인)"
+      ],
+      "phase": "committee"
+    },
+    {
+      "label": "조합 설립",
+      "points": 3,
+      "stages": [
+        "조합설립",
+        "조합설립인가",
+        "association"
+      ],
+      "phase": "association"
+    },
+    {
+      "label": "건축 심의",
+      "points": 3.0,
+      "phase": "association",
+      "stages": [
+        "건축심의"
+      ]
+    },
+    {
+      "label": "사업시행자 지정",
+      "points": 3.0,
+      "phase": "association",
+      "stages": [
+        "사업시행자지정(신탁사)"
+      ]
+    },
+    {
+      "label": "사업시행 인가",
+      "points": 3.5,
+      "stages": [
+        "사업시행인가",
+        "사업시행계획인가"
+      ],
+      "phase": "approved"
+    },
+    {
+      "label": "관리처분 준비",
+      "points": 3.5,
+      "phase": "management",
+      "stages": [
+        "관리처분",
+        "disposal"
+      ]
+    },
+    {
+      "label": "관리처분 인가",
+      "points": 4,
+      "stages": [
+        "관리처분인가",
+        "관리처분계획인가"
+      ],
+      "phase": "management"
+    },
+    {
+      "label": "이주·철거",
+      "points": 4.5,
+      "stages": [
+        "이주",
+        "이주중",
+        "이주완료",
+        "철거",
+        "철거중",
+        "철거완료",
+        "relocation",
+        "demolition",
+        "이주·해체",
+        "해체"
+      ],
+      "phase": "move"
+    },
+    {
+      "label": "착공",
+      "points": 5,
+      "stages": [
+        "착공",
+        "공사중",
+        "construction",
+        "철거및착공"
+      ],
+      "phase": "construction"
     }
   ]
 }

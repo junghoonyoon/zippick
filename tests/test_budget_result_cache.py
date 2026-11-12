@@ -22,6 +22,13 @@ class BudgetResultCacheTest(unittest.TestCase):
         for key in ("a" * 64, "b" * 64, "same", "optional-links", "same-search", "failed", "fallback", "missing-signal", "old-formula", "error-signal"):
             search_server.BUDGET_KEY_SOURCE_REVISIONS[key] = revision
 
+    def test_list_cache_is_separate_from_complete_report_data(self):
+        arguments = {"budget": "9", "region": "금천구", "all_matches": True}
+        with mock.patch.object(search_server, "BUDGET_SOURCE_REVISIONS", ["unchanged"]):
+            full_key = search_server._budget_cache_key(arguments)
+            list_key = search_server._budget_cache_key({**arguments, "defer_report_data": True})
+        self.assertNotEqual(full_key, list_key)
+
     def test_heavy_rate_limit_blocks_repeated_public_requests(self):
         with mock.patch.object(search_server.config, "PUBLIC_RATE_LIMIT_WINDOW_SECONDS", 60), \
              mock.patch.object(search_server.config, "PUBLIC_HEAVY_RATE_LIMIT", 2):
@@ -130,6 +137,7 @@ class BudgetResultCacheTest(unittest.TestCase):
 
     def test_staged_result_returns_fast_payload_then_completed_enrichment(self):
         def calculate(**arguments):
+            self.assertTrue(arguments["defer_report_data"])
             if arguments.get("fast_mode"):
                 return {"candidates": [{"name": "1차 후보"}], "initialStage": True}
             return {
@@ -357,7 +365,7 @@ class BudgetResultCacheTest(unittest.TestCase):
         self.assertNotIn("enrichmentJobId", payload)
         self.assertEqual(payload["candidates"][0]["name"], "1차 후보")
         self.assertEqual(payload["candidates"][0]["signals"]["status"], "unavailable")
-        calculate.assert_called_once_with(budget="7.9", fast_mode=True)
+        calculate.assert_called_once_with(budget="7.9", fast_mode=True, defer_report_data=True)
 
     def test_staged_job_soft_timeout_keeps_enrichment_running(self):
         job_id = "stuck-job"

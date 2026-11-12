@@ -1191,7 +1191,7 @@ def _absolute_leader_uncached(
     winner_entity = next(
         (
             entity for entity in entities
-            if apartment_leaders._entity_id(entity) == winner.get("apartmentId")
+            if apartment_leaders._entity_id(entity) == winner.get("leaderId")
         ),
         None,
     )
@@ -1272,23 +1272,13 @@ def _cached_district_leader(region):
     item = (payload.get("items") or [None])[0]
     if not item:
         return None
-    apartment_id = item.get("apartmentId")
     leader_entity = next(
         (
             entity for entity in entities
-            if apartment_leaders._entity_id(entity) == apartment_id
+            if apartment_leaders._entity_id(entity) == item.get("leaderId")
         ),
         None,
     )
-    if leader_entity is None:
-        leader_name_key = real_estate_search.compact(item.get("apartmentName"))
-        leader_entity = next(
-            (
-                entity for entity in entities
-                if real_estate_search.compact(entity.get("name")) == leader_name_key
-            ),
-            None,
-        )
     if leader_entity is None:
         return None
     try:

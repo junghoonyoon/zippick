@@ -65,6 +65,16 @@ def verify():
     home = _retry("홈", lambda: _open("/"))
     _assert("real-estate-search" in home or "집픽" in home, "홈 HTML이 예상과 달라요.")
     _assert(home.index('id="leaderEntry"') < home.index('id="flowEntry"'), "온기지도 탭 위치가 달라요.")
+    # A release must carry the reviewed report and the building-information work together.
+    for feature, marker in (
+        ("판단 도장", ".zpr-verdict-tag::before"),
+        ("긍정·부정 판정 색상", ".zpr-verdict-tag.is-hold"),
+        ("분석 불가 안내", "function budgetReportMessageHtml"),
+        ("리모델링 단계별 점수", "const ZIPPICK_REMODELING_STAGE_RATINGS"),
+        ("재건축 건축 조건", "function zippickReconstructionConclusion"),
+        ("건축정보 시각화", ".zpr-density-units"),
+    ):
+        _assert(marker in home, feature + " 기능이 배포본에서 빠졌어요.")
     _assert('function candidateReadonlyScoreBadgeHtml' in home and 'function candidateReadonlyFlowScoreBadgeHtml' in home,
             "클릭 없는 점수 표시 코드가 없어요.")
     _assert('function getBudgetProgress' in home and 'page:"condition-results", budgetState:null' in home,

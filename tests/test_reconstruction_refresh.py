@@ -2,10 +2,9 @@
 import json
 import ssl
 import subprocess
+import threading
 from concurrent.futures import Future
 from urllib.error import HTTPError, URLError
-import process_runtime
-import threading
 from unittest.mock import Mock
 
 import pytest
@@ -13,6 +12,7 @@ import pytest
 import apartment_reconstruction as reconstruction
 import collect_building_register as buildings
 import reconstruction_refresh as refresh
+import process_runtime
 import shared_data
 from test_apartment_reconstruction import DAY, ENTITY, entry, ordinance_context
 

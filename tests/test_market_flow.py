@@ -28,6 +28,11 @@ def trade_rows(values):
 
 
 class MarketFlowTest(unittest.TestCase):
+    def setUp(self):
+        configured = mock.patch.object(market_flow.molit_transactions, "configured", return_value=True)
+        configured.start()
+        self.addCleanup(configured.stop)
+
     def test_incheon_routes_use_three_nodes_and_registered_adjacent_names(self):
         routes = [r for r in market_flow.FLOW_ROUTES if any(
             code.startswith("28") for node in r["nodes"] for code in node[1])]

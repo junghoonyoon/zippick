@@ -283,6 +283,18 @@ class BudgetCandidatesTest(unittest.TestCase):
                 all_matches=True,
                 verified_result_callback=verified_payloads.append,
             )
+            analyzed_before_defer = list(analyzed)
+            deferred = budget_candidates.budget_candidates(
+                "10", region="테스트구", all_matches=True,
+                defer_report_data=True,
+            )
+            self.assertEqual(analyzed, analyzed_before_defer, "list must not build reports")
+            self.assertTrue(deferred["candidateScoreDataReady"])
+            self.assertTrue(all(row["futureTransformation"] == {"status": "pending"}
+                                for row in deferred["candidates"]))
+            for full, lazy in zip(payload["candidates"], deferred["candidates"]):
+                for field in ("name", "areaLabel", "midPriceEok", "policyImpact", "signals", "locationScore", "valuation", "verdict"):
+                    self.assertEqual(full.get(field), lazy.get(field), field)
 
         limit = budget_candidates.FIRST_LOOK_FUTURE_ROW_LIMIT
         verified = verified_payloads[0]["candidates"]

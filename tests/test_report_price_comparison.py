@@ -140,7 +140,7 @@ class ReportPriceComparisonTest(unittest.TestCase):
         self.trades = {"대상": _series([20] * 8), **{c["name"]: _series([22] * 8) for c in [*different, too_small]}}
         result = self._compare([*different, too_small])
         self.assertEqual(result["status"], "ready")
-        self.assertEqual({peer["name"] for peer in result["peers"]}, {"작은단지", "중간단지"})
+        self.assertEqual({peer["name"] for peer in result["peers"]}, {"작은단지", "중간단지", "초소형"})
         self.assertTrue(result["conditionsRelaxed"])
         self.assertTrue(result["lowData"])
 
@@ -158,7 +158,7 @@ class ReportPriceComparisonTest(unittest.TestCase):
         self.assertEqual([peer["name"] for peer in result["peers"]], ["최근4건", "충분"])
         self.assertTrue(result["peers"][0]["lowData"])
         self.assertTrue(result["lowData"])
-        self.assertEqual(result["excludedPeers"], ["최근1건"])
+        self.assertNotIn("최근1건", [peer["name"] for peer in result["peers"]])
 
     def test_peer_without_usual_history_is_left_out_when_others_have_it(self):
         short_history = _complex("신축")
@@ -246,11 +246,31 @@ class ReportPriceComparisonTest(unittest.TestCase):
 
     def test_unavailable_only_when_real_trades_are_missing(self):
         self.trades = {"대상": _series([20] * 8, counts={0: 1, 1: 0, 2: 0, 3: 0}), "비교": _series([22] * 8)}
-        self.assertEqual(self._compare([_complex("비교")])["reasonCode"], "insufficient_recent_trades")
+        result = self._compare([_complex("비교")])
+        self.assertEqual((result["status"], result["method"]), ("ready", "simple"))
+        self.assertTrue(result["lowData"])
         self.trades["대상"] = _series([20] * 8)
         self.assertEqual(self._compare([])["reasonCode"], "insufficient_peers")
         self.target = {**self.target, "households": 0}
-        self.assertEqual(self._compare([])["reasonCode"], "missing_building_criteria")
+        self.assertEqual(self._compare([])["reasonCode"], "insufficient_peers")
+
+    def test_searches_past_first_twelve_candidates_and_relaxes_missing_facts(self):
+        peers = [_complex(f"가{i:02d}") for i in range(13)]
+        peers.append(_complex("뒤에있는단지", households=40, approvedAt=""))
+        self.target = {**self.target, "households": 0, "approvedAt": ""}
+        self.trades = {"대상": _series([20] * 8), "뒤에있는단지": _series([22] * 8, counts={0: 1})}
+        result = self._compare(peers)
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["method"], "simple")
+        self.assertEqual([peer["name"] for peer in result["peers"]], ["뒤에있는단지"])
+        self.assertTrue(result["conditionsRelaxed"])
+        self.assertTrue(result["lowData"])
+
+    def test_searches_past_first_twelve_with_normal_building_facts(self):
+        peers = [_complex(f"가{i:02d}") for i in range(13)] + [_complex("뒤에있는단지")]
+        self.trades = {"대상": _series([20] * 8), "뒤에있는단지": _series([22] * 8)}
+        result = self._compare(peers)
+        self.assertEqual([peer["name"] for peer in result["peers"]], ["뒤에있는단지"])
 
     def test_yearly_gaps_leave_out_the_current_period(self):
         peers = [_complex("비교1"), _complex("비교2")]

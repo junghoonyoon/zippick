@@ -315,7 +315,7 @@ const getJson = (_url, options) => {
  assert.match(timeoutHtml,/실거래 조회 지연/);
  assert.doesNotMatch(timeoutHtml,/거래 자료 확인 필요/);
  assert.match(aptAffordabilityHtml(aptPriceLookupFailure(new Error('network'))),/실거래 조회 실패/);
- assert.match(aptAffordabilityHtml({state:'unavailable',priceStatus:'no_verified_trades'}),/공식 거래 확인 중/);
+ assert.match(aptAffordabilityHtml({state:'unavailable',priceStatus:'no_verified_trades'}),/실거래 확인 필요/);
  assert.match(aptAffordabilityHtml({state:'unavailable',priceStatus:'no_recent_official_trades'}),/최근 공식 거래 없음/);
 })().catch(error => {console.error(error);process.exitCode=1;});
 '''

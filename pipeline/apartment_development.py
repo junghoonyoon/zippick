@@ -44,7 +44,7 @@ def name_keys(value, dong=''):
         previous = None
         while previous != value:
             previous = value
-            value = re.sub(r'(?:소규모)?(?:주택)?(?:재개발|재건축|리모델링)(?:정비)?(?:사업)?(?:조합)?$|정비사업(?:구역)?조합$|정비사업구역$|추진위원회$|조합$|일대$|일원$', '', value)
+            value = re.sub(r'(?:소규모)?(?:주택)?(?:재개발|재건축|리모델링)(?:정비)?(?:주택)?(?:사업)?(?:조합)?$|정비사업(?:구역)?조합$|정비사업구역$|추진위원회$|조합$|일대$|일원$', '', value)
             value = re.sub(r'아파트|신시가지', '', value)
         # Remove administrative words first: 4차아파트 is not a middle phase.
         middle_phase = re.search(r'(\d+)차(?=[가-힣a-z])', value)
@@ -98,10 +98,30 @@ def _age(entity, day):
     return min(years) if years else None
 
 
-def stage_rating(label):
+def project_kind(project):
+    """Choose a procedure only when the official project type is identifiable."""
+    text = ' '.join(str(project.get(key) or '') for key in ('projectTypeLabel', 'projectType', 'name'))
+    remodeling = bool(re.search(r'리모델링|remodeling', text, re.I))
+    reconstruction = bool(re.search(r'재건축|reconstruction', text, re.I))
+    redevelopment = bool(re.search(r'재개발|redevelopment', text, re.I))
+    if sum((remodeling, reconstruction, redevelopment)) > 1:
+        return None
+    if remodeling:
+        return 'remodeling'
+    if reconstruction:
+        return 'reconstruction'
+    if redevelopment or re.search(r'신속통합|가로주택|자율주택|소규모\s*주택정비|정비구역', text, re.I):
+        return 'renewal'
+    return None
+
+
+def stage_rating(label, kind):
     text = re.sub(r'\s+', '', str(label or ''))
-    # Only a completed procedural step earns its published weight.
-    for row in policy()['stages']:
+    # The same stage name can fall at different points in the two procedures.
+    stages = (policy()['remodelingStages'] if kind == 'remodeling'
+              else policy()['reconstructionStages'] if kind == 'reconstruction'
+              else policy()['stages'] if kind == 'renewal' else [])
+    for row in stages:
         if text in row['stages']:
             return row
     return None
@@ -356,15 +376,25 @@ def for_apartment(entity, *, day=None, center=None, registry=None):
         result['projects'] = []
         return result
     result['status'] = 'confirmed'
-    ratings = [stage_rating(row.get('stageLabel')) for row in selected]
-    if any(not r for r in ratings) or len({r['points'] for r in ratings if r}) != 1:
+    kinds = [project_kind(row) for row in selected]
+    kind = kinds[0] if kinds and kinds[0] and len(set(kinds)) == 1 else None
+    ratings = [stage_rating(row.get('stageLabel'), kind) for row in selected]
+    if not kind:
+        conflict = len({value for value in kinds if value}) > 1
         result['rating'] = {'state':'missing', 'points':None, 'scoreText':'평가 보류',
-                            'reason':'공식 자료의 현재 단계를 더 확인해야 해요.'}
+                            'reason':('공식 자료에 서로 다른 사업 종류가 있어 단계별 점수를 매기지 않았어요.'
+                                      if conflict else '사업 종류가 확인되지 않아 단계별 점수를 매길 수 없어요.'),
+                            'code':'project_type_conflict' if conflict else 'project_type_unverified',
+                            'version':policy()['version']}
+    elif any(not r for r in ratings) or len({r['points'] for r in ratings if r}) != 1:
+        result['rating'] = {'state':'missing', 'points':None, 'scoreText':'평가 보류',
+                            'reason':'공식 자료의 현재 단계를 더 확인해야 해요.',
+                            'projectType':kind, 'version':policy()['version']}
     else:
         stage, row = ratings[0], selected[0]
         result['rating'] = {'state':'ready', 'points':stage['points'], 'ratio':stage['points']/5,
             'stars':f"{stage['points']:.1f}", 'scoreText':f"{stage['points']:.1f}/5",
-            'stageLabel':stage['label'], 'sourceStage':row.get('stageLabel'),
+            'stageLabel':stage['label'], 'sourceStage':row.get('stageLabel'), 'projectType':kind,
             'sourceDate':row.get('sourceDate'), 'checkedAt':row.get('checkedAt'),
             'sourceUrl':row['sourceUrl'], 'version':policy()['version']}
     return result

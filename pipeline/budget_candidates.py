@@ -37,7 +37,7 @@ SHORTLIST_EXTENSION_LIMIT = 3
 FIRST_LOOK_FUTURE_ROW_LIMIT = 10
 # v11: 최근 거래를 제외한 매수 판단 밴드 가격대가 모든 후보 응답에 포함된다.
 # v12: 주간 가격지수 보정에 쓰는 거래 목록(valuationTrades)이 후보 응답에 포함된다.
-CANDIDATE_RESULT_SCHEMA_VERSION = 14
+CANDIDATE_RESULT_SCHEMA_VERSION = 16
 _ENTITY_LOOKUP = None
 _PARCEL_LOOKUP = None
 GENERIC_APARTMENT_NAMES = {
@@ -2510,6 +2510,7 @@ def _finalize_candidate_rows(
     progress_callback=None,
     verified_rows_callback=None,
     first_look_rows=None,
+    defer_report_data=False,
 ):
     """Attach the common display, signal, link and verdict result model."""
     if progress_callback:
@@ -2560,7 +2561,11 @@ def _finalize_candidate_rows(
         except Exception:
             row["lifestyleChange"] = {"status": "error"}
         row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
-        if first_look_ids is not None and id(row) not in first_look_ids:
+        if defer_report_data:
+            # 생활권 분석은 목록의 가격·정렬·점수에 쓰이지 않는다.
+            # 화면에 보이는 후보의 리포트 요청에서만 준비한다.
+            row["futureTransformation"] = {"status": "pending"}
+        elif first_look_ids is not None and id(row) not in first_look_ids:
             row["futureTransformation"] = {"status": "pending"}
             deferred_future.append((row, entity))
         else:
@@ -2914,6 +2919,7 @@ def budget_candidates(
     fast_mode=False,
     progress_callback=None,
     verified_result_callback=None,
+    defer_report_data=False,
 ):
     def progress(stage, *, processed=None, total=None):
         if not progress_callback:
@@ -3505,6 +3511,7 @@ def budget_candidates(
         include_naver_links=False,
         progress_callback=progress,
         verified_rows_callback=emit_verified_result,
+        defer_report_data=defer_report_data,
         # `전체` 목록(서버 순서)과 지금 자금으로 검토 가능한 목록의 첫 페이지.
         first_look_rows=[
             *candidates[:FIRST_LOOK_FUTURE_ROW_LIMIT],

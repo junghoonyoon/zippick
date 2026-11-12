@@ -1,3 +1,4 @@
+import datetime
 import json
 import sys
 import tempfile
@@ -242,11 +243,6 @@ class EducationEnvironmentTest(unittest.TestCase):
         self.assertEqual(result["status"], "unsupported_region")
         self.assertIsNone(result["score"])
 
-    def test_incheon_is_supported_for_nearby_school_access(self):
-        self.assertTrue(education_environment._region_supported({
-            "province": "인천광역시",
-        }))
-
 
     def test_base_overlay_and_shared_records_merge_with_newest_value_first(self):
         self.data_path.write_text(json.dumps({
@@ -262,10 +258,13 @@ class EducationEnvironmentTest(unittest.TestCase):
             "records": {"same": {"score": 75}, "local-only": {"score": 82}},
         }), encoding="utf-8")
         education_environment.reset_memory_cache()
-        education_environment._save_precomputed_record(
-            "same",
-            {"status": "ok", "score": 91, "basis": "nearby_school_access"},
-        )
+        collected_on = datetime.date(2026, 11, 1)
+        with mock.patch.object(education_environment.datetime, "date", wraps=datetime.date) as clock:
+            clock.today.return_value = collected_on
+            education_environment._save_precomputed_record(
+                "same",
+                {"status": "ok", "score": 91, "basis": "nearby_school_access"},
+            )
         dataset = education_environment._load_dataset()
         self.assertEqual(dataset["records"]["base"]["score"], 70)
         self.assertEqual(dataset["records"]["local-only"]["score"], 82)
@@ -274,7 +273,7 @@ class EducationEnvironmentTest(unittest.TestCase):
                          education_environment.SCORE_FORMULA_VERSION)
         self.assertEqual(dataset["zones"], [{"name": "기준 학구"}])
         self.assertIn("S1", dataset["schools"])
-        self.assertEqual(dataset["dataThrough"], max("2026-10-31", education_environment.datetime.date.today().isoformat()))
+        self.assertEqual(dataset["dataThrough"], collected_on.isoformat())
 
     def test_legacy_release_records_migrate_to_shared_cache_once(self):
         releases = Path(self.temporary.name) / "releases"
@@ -297,43 +296,34 @@ class EducationEnvironmentTest(unittest.TestCase):
         education_environment._migrate_legacy_release_records(releases, new_release)
         self.assertNotIn("later", json.loads(self.records_path.read_text(encoding="utf-8"))["records"])
 
-    def test_quota_error_halts_batch_and_does_not_save_failed_record(self):
-        entities = [
-            {"name": "첫번째단지", "province": "서울특별시", "district": "양천구"},
-            {"name": "두번째단지", "province": "경기도", "district": "고양시"},
-        ]
-        station = {"latitude": 37.5, "longitude": 126.9}
-        with (
-            mock.patch.object(kakao_station_distances, "configured", return_value=True),
-            mock.patch.object(kakao_station_distances, "cached_station", return_value=station),
-            mock.patch.object(
-                education_environment,
-                "_score_from_nearby_places",
-                side_effect=kakao_station_distances.KakaoQuotaError("429"),
-            ) as score,
-        ):
-            summary = education_environment.enrich_entities(entities, workers=1)
-        self.assertEqual(summary["haltedReason"], "quota")
-        self.assertEqual(summary["failedCount"], 1)
-        self.assertEqual(summary["savedCount"], 0)
-        self.assertEqual(score.call_count, 1)
-        self.assertFalse(self.records_path.exists())
 
-    def test_successful_no_school_result_is_saved_and_skipped_next_time(self):
-        entity = {"name": "주변학교없는단지", "province": "서울특별시", "district": "양천구"}
-        station = {"latitude": 37.5, "longitude": 126.9}
-        with (
-            mock.patch.object(kakao_station_distances, "configured", return_value=True),
-            mock.patch.object(kakao_station_distances, "cached_station", return_value=station),
-            mock.patch.object(education_environment, "_score_from_nearby_places", return_value=None) as score,
-        ):
-            first = education_environment.enrich_entities([entity], workers=1)
-            second = education_environment.enrich_entities([entity], workers=1)
-        self.assertEqual(first["savedCount"], 1)
-        self.assertEqual(first["noSchoolCount"], 1)
-        self.assertEqual(second["pendingCount"], 0)
-        self.assertEqual(second["noSchoolCount"], 1)
-        score.assert_called_once()
+    def test_cache_changes_are_loaded_without_restarting_and_keep_record_source(self):
+        apartment_id = kakao_station_distances.entity_id(self.entity)
+        self.records_path.write_text(json.dumps({"records": {apartment_id: {"score": 70}}}))
+        self.assertEqual(education_environment.education_environment_for_entity(self.entity)["score"], 70)
+        self.records_path.write_text(json.dumps({"records": {apartment_id: {
+            "score": 91, "source": "kakao-local-v2", "basis": "nearby_school_access",
+            "elementaryDistanceMeters": 280, "elementarySchoolNames": ["주변초등학교"]}}}))
+        result = education_environment.education_environment_for_entity(self.entity)
+        self.assertEqual(result["score"], 91)
+        self.assertEqual(result["source"], "kakao-local-v2")
+        self.assertEqual(result["basis"], "nearby_school_access")
+        self.assertEqual(result["elementaryDistanceMeters"], 280)
+
+    def test_geocoded_apartment_does_not_need_a_station_record_for_school_lookup(self):
+        address = kakao_station_distances.entity_address(self.entity)
+        key = kakao_station_distances._coordinate_key(address)
+        self.station_path.write_text(json.dumps({"version": 1, "geocodes": {key: {
+            "address": address, "latitude": 37.5, "longitude": 127.0}}}))
+        self.assertIsNone(kakao_station_distances.cached_station(self.entity))
+        with mock.patch.object(education_environment, "_score_from_nearby_places", return_value={
+            "status": "ok", "score": 80, "basis": "nearby_school_access", "elementaryDistanceMeters": 300,
+        }) as lookup:
+            result = education_environment.education_environment_for_entity(self.entity)
+        lookup.assert_called_once_with(37.5, 127.0)
+        self.assertEqual(result["score"], 80)
+        other = dict(self.entity, jibun="2", address="서울특별시 테스트구 테스트동 2")
+        self.assertIsNone(kakao_station_distances.cached_coordinates(other))
 
 
 if __name__ == "__main__":

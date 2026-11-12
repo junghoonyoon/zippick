@@ -3,7 +3,9 @@ import pytest
 
 import apartment_reconstruction as r
 from test_apartment_reconstruction import DAY, ENTITY, context, entry, ordinance_context
-from test_reconstruction_frontend import HARNESS, NAMES, run_js
+from test_reconstruction_report import HARNESS, NAMES
+from test_report_loading import run_js
+from test_report_renewal_titles import renewal_run
 
 
 @pytest.fixture(autouse=True)
@@ -143,3 +145,27 @@ for(const status of ['stale','connection_error','loading']) {
 }
 ''')
 
+
+def test_stage_and_feasibility_share_a_heading_while_scores_and_order_are_preserved():
+    import json
+    f = analyze()['feasibility']
+    renewal_run('const f=' + json.dumps(f, ensure_ascii=False) + ';' + r'''
+const item=attach(oldApartment());const original=verdict(item), before=zippickDevelopmentHtml(item);
+item.reconstructionConditions={version:'reconstruction-conditions-v1',apartmentId:item.apartmentId,
+ identity:{legalDong:item.legalDong,jibun:item.jibun},status:'ready',profile:{},feasibility:f};
+const after=verdict(item), html=zippickDevelopmentHtml(item);
+for(const key of ['tone','stars','scores','priceTitle','price','reason']) assert.deepEqual(after[key],original[key]);
+assert.ok(after.reviewHeadline.includes(`재건축은 초기지만, ${f.headline}`));
+assert.ok(after.summary.includes(f.headline));assert.equal(after.propertyHeading,original.propertyHeading);
+assert.ok(!after.summary.includes(f.financialLimitation));
+assert.match(html,/<h5>재건축은 초기지만.*사업성에 유리한 건축 조건/);assert.ok(html.includes(f.reason));
+assert.equal((html.match(/<h5>/g)||[]).length,1);
+assert.equal(html.split('단지 변화 별점 기준').length, before.split('단지 변화 별점 기준').length);
+assert.ok(html.indexOf('단지 변화 별점 기준')<html.indexOf('재건축 여건'));
+// Remodeling and terminal projects cannot inherit a reconstruction business conclusion.
+item.futureTransformation.ownDevelopment.rating.projectType='remodeling';
+assert.equal(zippickReconstructionFeasibility(item),null);
+item.futureTransformation.ownDevelopment.rating.projectType='reconstruction';
+item.futureTransformation.ownDevelopment.status='completed_or_cancelled';
+assert.equal(zippickReconstructionFeasibility(item),null);
+''')

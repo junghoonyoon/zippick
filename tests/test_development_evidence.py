@@ -70,8 +70,8 @@ class DevelopmentEvidenceTest(unittest.TestCase):
             "zippickDevelopmentCompletedOfficialZone", "zippickActiveOfficialDevelopmentZones",
             "zippickDevelopmentIdentityKeys", "zippickDevelopmentOfficialZoneSelfMatch", "zippickOwnDevelopmentWord",
             "zippickConfirmedOwnDevelopmentRows",
-            "zippickDevelopmentStageTier", "zippickDevelopmentProjectWord",
-            "zippickDevelopmentRatingView", "zippickDevelopmentRatingBasisHtml",
+            "zippickDevelopmentStageTier", "zippickDevelopmentProjectWord", "zippickDevelopmentPolicyKind",
+            "zippickOwnDevelopmentCopy", "zippickDevelopmentRatingView", "zippickDevelopmentRatingBasisHtml",
             "zippickSectionRatingData", "zippickSectionRatingHtml", "zippickNumberSteps",
         ]
         functions = []
@@ -81,6 +81,8 @@ class DevelopmentEvidenceTest(unittest.TestCase):
             ).group(0))
         constants = re.findall(r"    const ZIPPICK_(?:DEVELOPMENT_PATTERN|DEVELOPMENT_EXCLUDED_PATTERN|MINIMUM_ARTICLE_RECONSTRUCTION_AGE|OWN_DEVELOPMENT_BOUNDARY_TOLERANCE_METERS) = .*?;", html)
         constants.append(re.search(r"    const ZIPPICK_DEVELOPMENT_STAGE_RATINGS = \[.*?\n    \];", html, re.S).group())
+        constants.append(re.search(r"    const ZIPPICK_RECONSTRUCTION_STAGE_RATINGS = \[.*?\n    \];", html, re.S).group())
+        constants.append(re.search(r"    const ZIPPICK_REMODELING_STAGE_RATINGS = \[.*?\n    \];", html, re.S).group())
         script = "\n".join(constants + functions) + r"""
           const assert = require('node:assert/strict');
           function compactText(value) { return String(value || '').replace(/\s+/g, ''); }

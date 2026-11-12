@@ -75,7 +75,7 @@ const simple=peers=>({name:'초록',latestDealPriceEok:99,priceComparison:{statu
 
 
 def test_market_reversals_name_both_time_windows_and_missing_is_not_down():
-    run_functions(['zpNum', 'zpPct', 'zippickMarketVerdict', 'zippickMarketEvidenceText',
+    run_functions(['zpNum', 'zpPct', 'candidateSignalDataUnavailable', 'zippickMarketVerdict', 'zippickMarketEvidenceText',
                    'zippickSignalBarsHtml', 'zippickSignalBarReason', 'zippickTradeCountText'], r'''
       const zippickBarHtml=(label,points,max,reason)=>`<p>${label}: ${reason}</p>`;
       const rebound={signals:{momentumPct:-2.7,recent3Pct:4.1,turnoverRatio:1.67,
@@ -139,7 +139,7 @@ def test_late_chart_update_does_not_replace_a_new_area_selection():
 def test_conditional_verdict_names_strength_and_limitation_without_price_instructions():
     source = HTML.read_text()
     matrix = "const ZIPPICK_MATRIX = " + source.split("const ZIPPICK_MATRIX = ", 1)[1].split(";", 1)[0] + ";"
-    run_functions(["zpNum", "zpPct", "zippickMatrixVerdict", "zippickMarketVerdict", "zippickVerdictTitle"], matrix + """
+    run_functions(["zpNum", "zpPct", "zippickMatrixVerdict", "candidateSignalDataUnavailable", "zippickMarketVerdict", "zippickVerdictTitle"], matrix + """
       const transactionMoney=value=>`${value}억`;
       const zippickPriceCheckBasis=item=>item.basis;
       const zippickLatestTradeDetails=()=>({price:10});

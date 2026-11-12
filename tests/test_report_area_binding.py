@@ -123,7 +123,7 @@ def test_newer_report_trade_replaces_area_and_floor_as_well_as_price_and_date():
             (server.molit_transactions,'latest_transaction_for_apartment',newer),
             (server.momentum_signals,'attach_signals',None), (server.momentum_signals,'district_peer_reports',[]),
             (server.location_scores,'attach_scores',None), (server.market_indicators,'attach',None),
-            (server.price_valuation,'attach_valuations',None),
+            (server.price_valuation,'attach_valuations',None), (server.liquidity_history,'for_apartment',{}),
             (server.future_transformation,'analyze',{}), (server.future_transformation,'public_facts',{}),
         ]:
             stack.enter_context(patch.object(module,name,return_value=value))

@@ -22,9 +22,16 @@ import price_data_collection
 import apartment_reconstruction
 import reconstruction_refresh
 import apartment_leaders
+import apartment_reconstruction
+import reconstruction_refresh
+import collect_reconstruction_ordinance
+import collect_reconstruction_planning
+import collect_seoul_reconstruction_plans
+import collect_building_register
 import redevelopment_occupancy
 import budget_candidates
 import education_environment
+import shared_data
 import location_scores
 import kakao_station_distances
 import listing_review
@@ -39,6 +46,7 @@ import paid_access
 import policy_evaluator
 import purchase_capacity
 import price_valuation
+import liquidity_history
 import real_estate_search
 import relative_area_prices
 import report_store
@@ -61,7 +69,7 @@ BUDGET_CACHE_DIR = config.CACHE_DIR / "budget_candidates"
 BUDGET_CACHE_LOCK = threading.Lock()
 BUDGET_KEY_LOCKS = {}
 BUDGET_KEY_LOCKS_LOCK = threading.Lock()
-BUDGET_CACHE_SCHEMA_VERSION = 27
+BUDGET_CACHE_SCHEMA_VERSION = 28
 BUDGET_SOURCE_REVISIONS = None
 BUDGET_KEY_SOURCE_REVISIONS = {}
 BUDGET_KEY_SOURCE_REVISIONS_LOCK = threading.Lock()
@@ -519,6 +527,9 @@ def _budget_cache_key(arguments):
         # 파일 수정시간은 새 릴리스마다 달라져 내용이 같은 캐시까지 매번
         # 무효화한다. 내용 해시는 실제 로직·데이터가 바뀔 때만 키를 바꾼다.
         "revisions": BUDGET_SOURCE_REVISIONS,
+        "stationRevision": kakao_station_distances.cache_revision(),
+        "educationRevision": education_environment._dataset_revision(),
+        "sharedDataRevision": source_revision,
         "futureRevision": future_transformation.data_revision(),
         "sharedDataRevision": source_revision,
         "reconstructionRevision": apartment_reconstruction.revision(),
@@ -543,6 +554,8 @@ def _read_budget_cache(cache_key):
     if cached.get("sharedDataRevision", "initial") != shared_data.data_revision():
         return None
     saved_at = float(cached.get("savedAt") or 0)
+    if shared_data.read_only() and cached.get("sharedDataRevision") != shared_data.revision():
+        return None
     if time.time() - saved_at > config.BUDGET_RESULT_CACHE_TTL_SECONDS:
         try:
             path.unlink()
@@ -730,6 +743,8 @@ def _load_market_snapshots():
             if cached.get('sharedDataRevision', 'initial') != shared_data.data_revision():
                 continue
             saved_at = float(cached.get("savedAt") or 0)
+            if shared_data.read_only() and cached.get("sharedDataRevision") != shared_data.revision():
+                continue
             if not saved_at or now - saved_at > MARKET_SNAPSHOT_MAX_AGE_SECONDS:
                 continue
             payload = cached.get("payload")
@@ -1216,11 +1231,13 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
     # 교육 접근성은 단지 좌표가 필요하다. 첫 조회에서도 좌표를 먼저 채운다.
     if entity:
         try:
-            if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
+            if not shared_data.read_only() and kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
                 kakao_station_distances.enrich_entities([entity], retry_unavailable=True, limit=1)
         except Exception:
             _record_operation("externalDataFallbacks")
         cached_location = kakao_station_distances.cached_station(entity) or {}
+        row.update(cached_location)
+        cached_location = kakao_station_distances.cached_coordinates(entity) or {}
         latitude = budget_candidates._float_value(cached_location.get("latitude"))
         longitude = budget_candidates._float_value(cached_location.get("longitude"))
         if latitude and longitude:
@@ -1238,6 +1255,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
     row["plannedRail"] = planned_rail.planned_rail_for_candidate(row)
     row["futureTransformation"] = future_transformation.public_facts(future_transformation.analyze(row, entity))
     apartment_reconstruction.attach(row, entity)
+    latest_lookup_status = "lookup_unavailable"
     if molit_transactions.configured():
         try:
             months = molit_transactions._deal_months(momentum_signals.LOOKBACK_MONTHS)
@@ -1289,6 +1307,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             last_deal = molit_transactions.latest_transaction_for_apartment(
                 row["name"], region=row["region"], area_label=area_label, skip_months=0, entity=entity or row,
             )
+            latest_lookup_status = "available" if last_deal else "no_selected_area_trade" if area_label else "no_trade"
             if last_deal:
                 last_date = str(last_deal.get("latestDealDate") or "")
                 if last_date >= str(row.get("latestDealDate") or ""):
@@ -1298,7 +1317,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                     if area and not area_label:
                         row["displayAreaLabel"] = f"{area}㎡"
         except Exception:
-            pass
+            latest_lookup_status = "lookup_failed"
         try:
             row["peers"] = momentum_signals.district_peer_reports(
                 row["name"],
@@ -1358,7 +1377,7 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
                           "dealDate": row.get("latestDealDate"),
                           "exclusiveArea": row.get("latestDealExclusiveArea"),
                           "floor": row.get("latestDealFloor")}
-    row["latestTradeStatus"] = "available" if row.get("latestDealPriceEok") else "no_selected_area_trade"
+    row["latestTradeStatus"] = "available" if row.get("latestDealPriceEok") else latest_lookup_status
     try:
         price_valuation.attach_valuations([row])
     except Exception:
@@ -1367,6 +1386,11 @@ def _apartment_report(name, region, target_households=0, target_price_eok=0, are
             "reason": "가격 판단을 계산하지 못했어요.",
             "modelVersion": price_valuation.MODEL_VERSION,
         }
+    try:
+        row["liquidityHistory"] = liquidity_history.for_apartment(row, entity)
+    except Exception:
+        row["liquidityHistory"] = {"version": liquidity_history.VERSION, "status": "unavailable",
+                                   "reason": "과거 실거래 원본을 불러오지 못했어요.", "months": []}
     return {"report": row, "signalNote": momentum_signals.SIGNAL_NOTE}
 
 
@@ -1399,7 +1423,7 @@ def _apartment_location_score(arguments):
         return {"error": "단지 정보를 정확히 찾지 못했어요."}, status
 
     try:
-        if kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
+        if not shared_data.read_only() and kakao_station_distances.configured() and not kakao_station_distances.cached_station(entity):
             kakao_station_distances.enrich_entities([entity], retry_unavailable=True)
     except Exception:
         _record_operation("externalDataFallbacks")
@@ -1429,6 +1453,8 @@ def _apartment_location_score(arguments):
         "status": entity.get("status") or arguments.get("status") or "",
     }
     cached_location = kakao_station_distances.cached_station(entity) or {}
+    row.update(cached_location)
+    cached_location = kakao_station_distances.cached_coordinates(entity) or {}
     latitude = budget_candidates._float_value(cached_location.get("latitude"))
     longitude = budget_candidates._float_value(cached_location.get("longitude"))
     if latitude and longitude:
@@ -1461,12 +1487,16 @@ def _apartment_location_score(arguments):
             "region": row["region"],
             "legalDong": row.get("legalDong") or "",
             "jibun": row.get("jibun") or "",
+            "apartmentId": row.get("apartmentId") or "",
+            "kaptCode": row.get("kaptCode") or "",
+            "complexNo": row.get("complexNo") or "",
             "households": row.get("households") or 0,
             "buildingAge": row.get("buildingAge") or 0,
             "buildYear": row.get("buildYear") or 0,
             "status": row.get("status") or "",
             "latitude": row.get("latitude"),
             "longitude": row.get("longitude"),
+            **{key: value for key, value in row.items() if key.startswith("nearestStation") or key.startswith("stationDistance")},
             **{
                 field: row.get(field)
                 for field in MARKET_SNAPSHOT_FIELDS
@@ -2301,7 +2331,8 @@ def _apartment_affordability(arguments):
     if strict_identity and market_entity is None:
         return {
             "state": "unavailable",
-            "error": "법정동·지번으로 단지를 정확히 식별하지 못해 실거래를 표시하지 않습니다.",
+            "priceStatus": "identity_unverified",
+            "error": "선택한 단지의 주소를 확인하지 못했어요. 다시 조회해 주세요.",
             "candidate": common_candidate,
             "profileComplete": False,
         }, 200
@@ -3069,6 +3100,9 @@ def _budget_job_snapshot(job_id, *, include_verified=False):
 
 
 def _start_staged_budget_payload(cache_key, candidate_arguments):
+    # 목록은 확정된 가격과 점수까지만 기다린다. 전체 후보의 상세 리포트를
+    # 미리 계산하지 않고, 프런트에서 보이는 후보부터 별도로 준비한다.
+    candidate_arguments = {**candidate_arguments, "defer_report_data": True}
     cached = _cached_budget_payload(cache_key)
     if cached:
         return cached
@@ -3368,6 +3402,9 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[부동산 서버] {fmt % args}")
 
     def _json(self, payload, status=200, extra_headers=None):
+        if isinstance(payload, dict) and shared_data.read_only():
+            payload = {**payload, "sharedData": {**shared_data.status(),
+                                                  "dataRevision": shared_data.data_revision()}}
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -4232,8 +4269,11 @@ class Handler(BaseHTTPRequestHandler):
                 "limit": max(1, min(limit, 12)),
                 "all_matches": all_matches.lower() in {"1", "true", "yes", "on"},
             }
-            cache_key = _budget_cache_key(candidate_arguments)
             staged = params.get("staged", ["false"])[0].strip().lower() in {"1", "true", "yes", "on"}
+            if staged:
+                candidate_arguments["defer_report_data"] = True
+            # 상세 자료를 생략한 목록 캐시를 일반 전체 응답에 재사용하지 않는다.
+            cache_key = _budget_cache_key(candidate_arguments)
             payload = (
                 _start_staged_budget_payload(cache_key, candidate_arguments)
                 if staged

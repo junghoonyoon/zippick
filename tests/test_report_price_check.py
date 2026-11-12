@@ -85,7 +85,7 @@ class ReportPriceCheckTest(unittest.TestCase):
               fairPrice:{lowEok:8.35,centerEok:9.52,highEok:10}}};
           const samhoBand = zippickBuyBandHtml(samho, {});
           if (!samhoBand.includes('zpr-buy-band-marker') || !samhoBand.includes('최근 실거래 9.8억')) process.exit(100);
-          if (!samhoBand.includes('2026-08-31 · 14층') || !samhoBand.includes('같은 단지 거래 기준으로 적정해요')) process.exit(101);
+          if (!samhoBand.includes('2026-08-31 · 14층') || !samhoBand.includes('같은 단지의 비슷한 집 거래와 비교하면 적정한 가격에 거래됐어요')) process.exit(101);
           if (samhoBand.includes('위치를 확인할 수 없어요') || samhoBand.includes('zpr-buy-band-limit')) process.exit(102);
           for (const area of [50,59,59.49,59.99]) {
             if (!zippickBuyBandTradeMatchesArea({...samho,latestDealExclusiveArea:area})) process.exit(103);
@@ -128,7 +128,7 @@ class ReportPriceCheckTest(unittest.TestCase):
         start = html.index("    function zippickPriceCheckBasis(item) {")
         end = html.index("    function zippickReportFinance(item) {", start)
         functions = html[start:end]
-        rating_start = html.index("    function zippickSectionRatingData(item, label) {")
+        rating_start = html.index("    function zippickPriceComparisonStars(shift) {")
         rating_end = html.index("    function zippickOverallRatingHtml", rating_start)
         rating_functions = html[rating_start:rating_end]
         average_start = html.index("    function candidateHeadlinePrice(item) {")
@@ -194,7 +194,7 @@ class ReportPriceCheckTest(unittest.TestCase):
           if (modelBand.includes('<input') || modelBand.includes('입력한 매물')) process.exit(16);
           if (modelBand.includes('집픽이 지키는') || !modelBand.includes('국토교통부 신고 실거래만 썼고, 호가는 반영하지 않았어요.')) process.exit(18);
           // 판정 근거는 비교 대상·범위·최근 거래 위치를 한 문단으로 말한다.
-          if (!modelBand.includes('같은 단지·비슷한 면적·비슷한 층 거래 <b>8건</b>') || !modelBand.includes('9.4억~10.8억') || !modelBand.includes('최근 실거래 12억은 같은 단지 거래 기준으로 비싸요')) process.exit(48);
+          if (!modelBand.includes('같은 단지·비슷한 면적·비슷한 층 거래 <b>8건</b>') || !modelBand.includes('9.4억~10.8억') || !modelBand.includes('12억으로 이 단지의 최근 시세보다 비싸게 거래됐어요')) process.exit(48);
           // 마커와 근거 목록에 있는 거래 정보·한계 문구를 별도 줄로 되풀이하지 않는다.
           if (!modelBand.includes('동·향·수리 상태와 실제 매물 상태는 반영하지 못했어요.')) process.exit(49);
           if (!modelBand.includes('최근 2년 가격 흐름') || !modelBand.includes('data-reused-price-chart')) process.exit(39);
@@ -206,7 +206,7 @@ class ReportPriceCheckTest(unittest.TestCase):
               || !expandedBand.includes('과거 거래 기준으로 비싸요')) process.exit(110);
           if (!expandedBand.includes('zpr-buy-band-marker') || !expandedBand.includes('<strong>적정</strong>')
               || expandedBand.includes('최근 실거래는 적정가격보다') || expandedBand.includes('is-expensive is-current')) process.exit(111);
-          if (!modelBand.includes('같은 단지 거래 기준으로 비싸요') || modelBand.includes('<em>비쌈</em>')) process.exit(11);
+          if (!modelBand.includes('비싸게 거래됐어요') || modelBand.includes('<em>비쌈</em>')) process.exit(11);
           if (!modelBand.includes('왜 이렇게 판단했나요?') || !modelBand.includes('주변 시장 흐름을 +1.2% 반영했어요.')) process.exit(12);
           item.valuation.marketAdjustmentPct = 0;
           const recentTradeBand = zippickBuyBandHtml(item, {});
@@ -232,21 +232,21 @@ class ReportPriceCheckTest(unittest.TestCase):
           // 타이틀이 '가격 주의'인 단지는 밴드도 같은 방향으로 말한다.
           item.latestDealPriceEok = 10;
           const calmBand = zippickBuyBandHtml(item, {});
-          if (!calmBand.includes('같은 단지 거래 기준으로 적정해요') || calmBand.includes('<em>적정</em>')) process.exit(30);
+          if (!calmBand.includes('같은 단지의 비슷한 집 거래와 비교하면 적정한 가격에 거래됐어요') || calmBand.includes('<em>적정</em>')) process.exit(30);
           const peakBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:true}});
-          if (!peakBand.includes('같은 단지 거래 기준으로 적정해요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요')) process.exit(31);
+          if (!peakBand.includes('같은 단지의 비슷한 집 거래와 비교하면 적정한 가격에 거래됐어요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요')) process.exit(31);
           if (peakBand.includes('<em>') || peakBand.includes('적정가격 안에 있어요')) process.exit(32);
           if (!peakBand.includes('요즘 시세대로 사도 2년 중 가장 높은 구간의 값에 사는 거예요. 다음 거래를 지켜보세요.')) process.exit(33);
           const surgeBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:false, surge:true}});
           if (!surgeBand.includes('다만 요즘 시세가 최근 석 달 새 빠르게 올랐어요') || surgeBand.includes('<em>')) process.exit(35);
           item.latestDealPriceEok = 9;
           const cheapPeakBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:true}});
-          if (!cheapPeakBand.includes('같은 단지 거래 기준으로 저렴해요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요') || cheapPeakBand.includes('<em>')) process.exit(36);
+          if (!cheapPeakBand.includes('이 단지에서 저렴한 편이에요. 다만 요즘 시세가 2년 중 가장 높은 구간이에요') || cheapPeakBand.includes('<em>')) process.exit(36);
           item.valuation.floorComparison = {status:'insufficient', targetFloor:1, sampleCount:0};
           item.valuation.marketAdjustmentPct = -2.04;
           item.latestDealFloor = '1';
           const unmatchedFloorBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:false, surge:true}});
-          if (!unmatchedFloorBand.includes('같은 단지 거래 기준으로 저렴해요. 다만 요즘 시세가 최근 석 달 새 빠르게 올랐어요')) process.exit(40);
+          if (!unmatchedFloorBand.includes('이 단지에서 저렴한 편이에요. 다만 요즘 시세가 최근 석 달 새 빠르게 올랐어요')) process.exit(40);
           if (!unmatchedFloorBand.includes('최근 실거래 9억') || !unmatchedFloorBand.includes('같은 단지·비슷한 면적(여러 층)') || unmatchedFloorBand.includes('<em>') || unmatchedFloorBand.includes('층 비교 부족')) process.exit(41);
           if (!unmatchedFloorBand.includes('zpr-buy-band-chart is-reference') || !unmatchedFloorBand.includes('zpr-buy-band-marker')) process.exit(42);
           if (!unmatchedFloorBand.includes('<strong>쌈</strong>') || !unmatchedFloorBand.includes('<strong>적정</strong>') || !unmatchedFloorBand.includes('<strong>비쌈</strong>')) process.exit(45);
@@ -342,7 +342,7 @@ class ReportPriceCheckTest(unittest.TestCase):
           item.valuation.floorComparison = {status:'matched', targetFloor:14, sampleCount:8};
           item.latestDealFloor = '14';
           const expensivePeakBand = zippickBuyBandHtml(item, {peakGuard:{atPeak:true}});
-          if (!expensivePeakBand.includes('같은 단지 거래 기준으로 비싸요') || expensivePeakBand.includes('<em>')) process.exit(37);
+          if (!expensivePeakBand.includes('비싸게 거래됐어요') || expensivePeakBand.includes('<em>')) process.exit(37);
           const tradeAtPeak = zippickBuyBandResultHtml(9.4, 10.8, 10, true, 'peak');
           if (!tradeAtPeak.includes('요즘 시세대로 사도 2년 중 가장 높은 구간의 값에 사는 거예요.')) process.exit(38);
           delete item.valuation;

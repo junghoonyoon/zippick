@@ -1,0 +1,722 @@
+{
+  "observedAt": "2026-11-11",
+  "sourceStatus": "stale",
+  "sourceRevision": "d147b337eb1410ad971432be25b1048e2841a39f704e8da67355a14be83832e6",
+  "report": {
+    "name": "DMC파크뷰자이1단지",
+    "displayName": "DMC파크뷰자이",
+    "region": "서대문구",
+    "apartmentId": "11410120327177",
+    "legalDong": "남가좌동",
+    "jibun": "385",
+    "households": 2127,
+    "buildYear": 2015,
+    "buildingAge": 11,
+    "displayAreaLabel": "59㎡",
+    "tradeAreaScope": {
+      "version": "exclusive-area-v1",
+      "label": "59㎡",
+      "minSqm": 58.0,
+      "maxSqm": 60.0,
+      "upperInclusive": true
+    },
+    "priceIdentityVerified": true,
+    "locationScore": {
+      "status": "ok",
+      "scoreFormulaVersion": "purchase-judgment-v7",
+      "score": 82,
+      "label": "매우 좋음",
+      "coverage": 0.69,
+      "title": "현재 데이터 기준 종합 점수",
+      "summary": "실거래가, 전세 실거래, 입지, 단지 조건, 거래 흐름을 함께 본 점수예요.",
+      "parts": [
+        {
+          "key": "price",
+          "label": "가격 적정성",
+          "points": 23.1,
+          "maxPoints": 30,
+          "score": 77,
+          "reason": "최근 거래가 예상 가격과 잘 맞아요",
+          "basis": "산식: 반영 지표 3/4개 · 77/100 × 30점 = 23.1/30점",
+          "status": "ok",
+          "coverage": 0.83,
+          "details": [
+            {
+              "key": "price_rank",
+              "label": "비교 단지 가격 비교",
+              "points": 7.2,
+              "maxPoints": 10,
+              "score": 72,
+              "reason": "비교 단지 2곳과의 가격 차이가 평소보다 0.1포인트 싸졌음",
+              "status": "ok",
+              "comparisonPeers": [
+                {
+                  "usualRatio": 90.7,
+                  "currentRatio": 82.9,
+                  "shiftPp": -7.8,
+                  "yearlyRatios": {
+                    "2023": 89.0,
+                    "2024": 91.6,
+                    "2025": 90.7
+                  },
+                  "name": "힐스테이트 신촌",
+                  "legalDong": "북아현동",
+                  "households": 1226,
+                  "approvalYear": 2020,
+                  "distanceMeters": 3194,
+                  "areaLabel": "59㎡",
+                  "averagePriceEok": 18.1,
+                  "transactionCount": 3,
+                  "diffPct": 20.7,
+                  "lowData": true,
+                  "tier": 1
+                },
+                {
+                  "usualRatio": 104.5,
+                  "currentRatio": 109.7,
+                  "shiftPp": 5.1,
+                  "yearlyRatios": {
+                    "2024": 101.2,
+                    "2025": 107.9
+                  },
+                  "name": "홍제역 해링턴플레이스",
+                  "legalDong": "홍제동",
+                  "households": 1116,
+                  "approvalYear": 2024,
+                  "distanceMeters": 3303,
+                  "areaLabel": "59㎡",
+                  "averagePriceEok": 13.675,
+                  "transactionCount": 2,
+                  "diffPct": -8.8,
+                  "lowData": true,
+                  "tier": 1
+                }
+              ],
+              "comparisonPeerCount": 2
+            },
+            {
+              "key": "leader_gap",
+              "label": "대장 가격 차이",
+              "points": 4.1,
+              "maxPoints": 7,
+              "score": 58,
+              "reason": "지역 대장보다 8.7% 낮음",
+              "status": "ok"
+            },
+            {
+              "key": "estimate_range",
+              "label": "추정 시세 범위",
+              "points": 8.0,
+              "maxPoints": 8,
+              "score": 100,
+              "reason": "최근 거래 15.2억원 · 예상 가격 안",
+              "status": "ok"
+            },
+            {
+              "key": "recovery",
+              "label": "고점 회복률",
+              "points": null,
+              "maxPoints": 5,
+              "score": null,
+              "reason": "전고점 회복률 데이터 없음",
+              "status": "missing"
+            }
+          ]
+        },
+        {
+          "key": "jeonse",
+          "label": "전세가율·입주물량·투자금",
+          "points": 18.0,
+          "maxPoints": 20,
+          "score": 90,
+          "reason": "같은 평형 전세 거래를 더 확인해야 해요",
+          "basis": "산식: 반영 지표 1/4개 · 90/100 × 20점 = 18/20점",
+          "status": "ok",
+          "coverage": 0.25,
+          "details": [
+            {
+              "key": "jeonse_ratio",
+              "label": "전세가율",
+              "points": null,
+              "maxPoints": 10,
+              "score": null,
+              "reason": "전세 실거래 데이터 없음",
+              "status": "missing"
+            },
+            {
+              "key": "supply_pressure",
+              "label": "입주 물량",
+              "points": 4.5,
+              "maxPoints": 5,
+              "score": 90,
+              "reason": "입주 물량이 적어 공급 부담 낮음 · 2029년 상반기 471세대 · 3년 누적 624세대 (공고 440세대에 조합원분 보정)",
+              "status": "ok"
+            },
+            {
+              "key": "jeonse_freshness",
+              "label": "전세 거래",
+              "points": null,
+              "maxPoints": 3,
+              "score": null,
+              "reason": "전세 거래 건수와 최신성 데이터 없음",
+              "status": "missing"
+            },
+            {
+              "key": "investment_gap",
+              "label": "필요 투자금",
+              "points": null,
+              "maxPoints": 2,
+              "score": null,
+              "reason": "매매가와 전세가 차이 데이터 없음",
+              "status": "missing"
+            }
+          ]
+        },
+        {
+          "key": "demand",
+          "label": "입지·실수요",
+          "points": 29.1,
+          "maxPoints": 30,
+          "score": 97,
+          "reason": "역·학교 접근성이 좋은 편이에요",
+          "basis": "산식: 반영 지표 4/5개 · 97/100 × 30점 = 29.1/30점",
+          "status": "ok",
+          "coverage": 0.83,
+          "details": [
+            {
+              "key": "commute",
+              "label": "직장권 접근성",
+              "points": 8.0,
+              "maxPoints": 8,
+              "score": 100,
+              "reason": "가좌 기준 광화문 25분 이내(약 22분) · 역 수 기준 추정",
+              "status": "ok"
+            },
+            {
+              "key": "station",
+              "label": "역 접근성",
+              "points": 4.5,
+              "maxPoints": 5,
+              "score": 90,
+              "reason": "가좌역 경의중앙선 · 직선 463m",
+              "status": "ok"
+            },
+            {
+              "key": "education",
+              "label": "교육 접근성",
+              "points": 3.8,
+              "maxPoints": 4,
+              "score": 96,
+              "reason": "서울가재울초등학교 · 181m 거리",
+              "status": "ok"
+            },
+            {
+              "key": "representation",
+              "label": "지역 대표성",
+              "points": 3.0,
+              "maxPoints": 3,
+              "score": 100,
+              "reason": "지역 대장 단지",
+              "status": "ok"
+            },
+            {
+              "key": "redevelopment_influence",
+              "label": "주변 정비사업 영향",
+              "points": null,
+              "maxPoints": 4,
+              "score": null,
+              "reason": "정비사업 공간자료를 불러오지 못해 점수에서 뺐어요",
+              "status": "missing",
+              "analysis": {
+                "status": "missing",
+                "projects": [],
+                "reason": "data_unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "key": "product",
+          "label": "상품성·희소성",
+          "points": 8.0,
+          "maxPoints": 10,
+          "score": 80,
+          "reason": "단지 규모와 연식이 좋은 편이에요",
+          "basis": "산식: 반영 지표 2/3개 · 80/100 × 10점 = 8/10점",
+          "status": "ok",
+          "coverage": 0.8,
+          "details": [
+            {
+              "key": "households",
+              "label": "세대수",
+              "points": 5.4,
+              "maxPoints": 6,
+              "score": 90,
+              "reason": "2,127세대 · 2,000~2,999세대 구간",
+              "status": "ok"
+            },
+            {
+              "key": "age",
+              "label": "준공연도",
+              "points": 4.2,
+              "maxPoints": 6,
+              "score": 70,
+              "reason": "2015년 사용승인",
+              "status": "ok"
+            },
+            {
+              "key": "confirmed_change",
+              "label": "확정 변화",
+              "points": null,
+              "maxPoints": 3,
+              "score": null,
+              "reason": "확정 변화 데이터 없음",
+              "status": "missing"
+            }
+          ]
+        },
+        {
+          "key": "market",
+          "label": "거래 유동성·시장 신호",
+          "points": 3.8,
+          "maxPoints": 10,
+          "score": 38,
+          "reason": "거래 흐름은 조심해서 봐야 해요",
+          "basis": "산식: 반영 지표 2/3개 · 38/100 × 10점 = 3.8/10점",
+          "status": "ok",
+          "coverage": 0.6,
+          "details": [
+            {
+              "key": "liquidity",
+              "label": "최근 거래량",
+              "points": 2.3,
+              "maxPoints": 6,
+              "score": 38,
+              "reason": "최근 3개월 거래 2건",
+              "status": "ok"
+            },
+            {
+              "key": "relative_flow",
+              "label": "지역·대장 대비 흐름",
+              "points": null,
+              "maxPoints": 6,
+              "score": null,
+              "reason": "지역 평균·대장 대비 상승률 데이터 없음",
+              "status": "missing"
+            },
+            {
+              "key": "sample_confidence",
+              "label": "표본 신뢰도",
+              "points": 1.1,
+              "maxPoints": 3,
+              "score": 38,
+              "reason": "최근 거래 5건 · 표본 적음",
+              "status": "ok"
+            }
+          ]
+        }
+      ],
+      "verdictCard": {
+        "years": 3,
+        "price": 1525000000,
+        "areaLabel": "59㎡",
+        "breakeven": {
+          "price": 1525000000,
+          "years": 3,
+          "items": [
+            {
+              "key": "acquisition",
+              "label": "취득세",
+              "amount": 50320000
+            },
+            {
+              "key": "brokerage",
+              "label": "중개비 (살 때·팔 때)",
+              "amount": 21360000
+            },
+            {
+              "key": "property_tax",
+              "label": "3년치 보유세",
+              "amount": 6820000,
+              "estimated": true
+            }
+          ],
+          "totalAmount": 78500000,
+          "rate": 0.0515,
+          "ratePercent": 5.1,
+          "uncertainItems": [
+            "양도세"
+          ],
+          "capitalGainsNote": "매도가와 보유·거주 기간, 주택 수에 따라 달라져요",
+          "excludes": [
+            "대출 이자",
+            "이사비",
+            "수리비"
+          ],
+          "headline": "3년 동안 계산에 넣은 비용은 매수가의 5.1%예요"
+        },
+        "trackRecord": {
+          "status": "missing",
+          "reason": "no_move_out_nearby",
+          "message": "500m 안에 이주를 앞둔 재개발 구역이 없어요"
+        },
+        "notes": [],
+        "status": "ok"
+      },
+      "areaAnalysis": {
+        "parts": []
+      },
+      "source": "현재 앱 데이터 기준",
+      "apartmentKey": "dmc파크뷰자이"
+    },
+    "priceComparison": {
+      "status": "ready",
+      "method": "usual_gap",
+      "region": "서대문구",
+      "areaLabel": "59㎡",
+      "periodMonths": 6,
+      "periodWidened": false,
+      "yearlyGaps": [
+        {
+          "year": 2023,
+          "gapPct": -11.0,
+          "peerCount": 1,
+          "tradeCount": 6,
+          "lowData": false
+        },
+        {
+          "year": 2024,
+          "gapPct": -3.6,
+          "peerCount": 2,
+          "tradeCount": 5,
+          "lowData": false
+        },
+        {
+          "year": 2025,
+          "gapPct": -0.7,
+          "peerCount": 2,
+          "tradeCount": 27,
+          "lowData": false
+        }
+      ],
+      "throughMonth": "2026-10",
+      "averagePriceEok": 15.0,
+      "transactionCount": 5,
+      "peerAveragePriceEok": 15.8875,
+      "differencePct": -5.6,
+      "usualGapPct": -3.6,
+      "currentGapPct": -3.7,
+      "shiftPp": -0.1,
+      "position": "similar",
+      "lowData": true,
+      "scope": "district",
+      "selectionMethod": "district",
+      "conditionsRelaxed": false,
+      "areaAdjusted": false,
+      "peers": [
+        {
+          "usualRatio": 90.7,
+          "currentRatio": 82.9,
+          "shiftPp": -7.8,
+          "yearlyRatios": {
+            "2023": 89.0,
+            "2024": 91.6,
+            "2025": 90.7
+          },
+          "name": "힐스테이트 신촌",
+          "legalDong": "북아현동",
+          "households": 1226,
+          "approvalYear": 2020,
+          "distanceMeters": 3194,
+          "areaLabel": "59㎡",
+          "averagePriceEok": 18.1,
+          "transactionCount": 3,
+          "diffPct": 20.7,
+          "lowData": true,
+          "tier": 1
+        },
+        {
+          "usualRatio": 104.5,
+          "currentRatio": 109.7,
+          "shiftPp": 5.1,
+          "yearlyRatios": {
+            "2024": 101.2,
+            "2025": 107.9
+          },
+          "name": "홍제역 해링턴플레이스",
+          "legalDong": "홍제동",
+          "households": 1116,
+          "approvalYear": 2024,
+          "distanceMeters": 3303,
+          "areaLabel": "59㎡",
+          "averagePriceEok": 13.675,
+          "transactionCount": 2,
+          "diffPct": -8.8,
+          "lowData": true,
+          "tier": 1
+        }
+      ],
+      "excludedPeers": [],
+      "selectionCriteria": {
+        "region": "서대문구",
+        "maxDistanceMeters": 1000,
+        "priceIndependent": true,
+        "windowMonths": 6,
+        "historyYears": 4,
+        "thresholdPp": 3.0
+      }
+    },
+    "signals": {
+      "dealCount": 34,
+      "outlierExcludedCount": 0,
+      "comparisonBasis": {
+        "areaLabel": "59㎡",
+        "asOf": "2026-11-11",
+        "recent3Start": "2026-08",
+        "recent3End": "2026-10",
+        "prior3Start": "2026-05",
+        "prior3End": "2026-07",
+        "recent6Start": "2026-05",
+        "recent6End": "2026-10",
+        "prior6Start": "2025-11",
+        "prior6End": "2026-04",
+        "method": "이상 거래 제외 후 면적대별 ㎡당 가격 비교"
+      },
+      "status": "insufficient",
+      "momentumPct": null,
+      "momentumBandMatched": false,
+      "recent3BandMatched": true,
+      "turnoverRatio": 2.5,
+      "turnoverSmoothed": 1.6,
+      "sampleConfidence": null,
+      "isRecentSurge": false,
+      "risePattern": null,
+      "patternChangeCount": 0,
+      "patternUpCount": 0,
+      "patternDownCount": 0,
+      "patternVolatilityPct": null,
+      "recentDealCount": 5,
+      "priorDealCount": 2,
+      "recent3Pct": 0.7,
+      "recent3DealCount": 2,
+      "prior3DealCount": 3,
+      "latestDealDate": "2026-10-05",
+      "latestDealAgeDays": 37,
+      "districtMomentumPct": null,
+      "districtRelativePct": null,
+      "districtComparisonCount": 0,
+      "recoveryPct": null,
+      "currentPpsm": null,
+      "leaderReferencePpsm": null,
+      "leaderReferenceAreaBand": null,
+      "leaderReferenceDealCount": 0,
+      "leaderGapPct": null,
+      "scoreFormulaVersion": 22,
+      "leaderRegion": "남가좌동",
+      "leaderName": "DMC파크뷰자이1단지",
+      "leaderLegalDong": "남가좌동",
+      "leaderJibun": "385",
+      "leaderHouseholds": 2127,
+      "leaderBasis": "locality_84m2_actual_price_v9",
+      "leaderFormulaVersion": 9,
+      "leaderCandidateLimit": null,
+      "leaderCandidateCount": 23,
+      "leaderPriceFinalistCount": null,
+      "leaderScore": 100.0,
+      "leaderPricePoints": 100.0,
+      "leaderLeadershipPoints": 33.3,
+      "leaderLiquidityPoints": 73.2,
+      "leaderAgePoints": 70.0,
+      "leaderStationPoints": 90.0,
+      "leaderScalePoints": 100.0,
+      "leaderScoreCoverage": 100.0,
+      "leaderAnnualDeals": 17,
+      "leaderPrice12m": 167000.0,
+      "leaderPriceBasisLabel": "최근 6개월 전용 84㎡ 실거래 중위가",
+      "leaderRepresentativeArea": 84.97,
+      "leaderRepresentativeMedianPrice12m": 167000.0,
+      "leaderPriceAdjustmentTargetArea": 84.0,
+      "leaderPriceAdjustmentExponent": null,
+      "leaderEligibleCandidateCount": 11,
+      "leaderCurrentPpsm": 2149.8,
+      "leaderBenchmarkPpsm": 1965.4,
+      "leaderBenchmarkAreaBand": 8,
+      "leaderBenchmarkDealCount": 17,
+      "isRegionalLeader": true,
+      "leaderMomentumPct": 7.1,
+      "leaderRelativePct": null,
+      "districtLeaderName": "신촌푸르지오",
+      "districtLeaderRegion": "서대문구",
+      "districtLeaderLegalDong": "북아현동",
+      "districtLeaderJibun": "1011",
+      "districtLeaderHouseholds": 940,
+      "districtLeaderBasis": "district_84m2_actual_price_v9",
+      "isDistrictLeader": false,
+      "score": null,
+      "badges": [
+        {
+          "kind": "insufficient",
+          "label": "거래 표본 부족",
+          "tone": "wait"
+        }
+      ]
+    },
+    "valuation": {
+      "status": "ready",
+      "verdict": "compare_price",
+      "modelVersion": "zippick-current-value-v5",
+      "asOf": "2026-11-11",
+      "areaLabel": "59㎡",
+      "areaScope": {
+        "version": "exclusive-area-v1",
+        "label": "59㎡",
+        "minSqm": 58.0,
+        "maxSqm": 60.0,
+        "upperInclusive": true
+      },
+      "evaluatedTrade": {
+        "dealAmountEok": 15.25,
+        "dealDate": "2026-10-05",
+        "exclusiveArea": 59.981,
+        "floor": "13"
+      },
+      "fairPrice": {
+        "lowEok": 14.68,
+        "centerEok": 15.78,
+        "highEok": 16.88,
+        "widthPct": 14.0,
+        "method": "평가할 거래를 제외한 실거래를 한국부동산원 주간 지수로 오늘 기준에 맞춘 가격대"
+      },
+      "dataQuality": {
+        "level": "low",
+        "sampleCount": 4,
+        "latestTradeDate": "2026-10-05",
+        "latestTradeAgeDays": 37,
+        "marketContextAvailable": true,
+        "periodMonths": 6,
+        "periodWidened": false
+      },
+      "referenceOnly": true,
+      "comparisonSearch": {
+        "periodMonths": 6,
+        "periodWidened": false,
+        "source": "cached",
+        "windows": [
+          {
+            "periodMonths": 6,
+            "sampleCount": 4,
+            "similarFloorCount": 2
+          }
+        ],
+        "reconstructed": true,
+        "selectionPolicy": "recent_period_before_floor"
+      },
+      "comparisonTrades": [
+        {
+          "dealDate": "2026-08-20",
+          "originalPriceEok": 14.95,
+          "floor": "9"
+        },
+        {
+          "dealDate": "2026-07-02",
+          "originalPriceEok": 14.7,
+          "floor": "7"
+        },
+        {
+          "dealDate": "2026-06-17",
+          "originalPriceEok": 15.0,
+          "floor": "13"
+        },
+        {
+          "dealDate": "2026-06-16",
+          "originalPriceEok": 15.0,
+          "floor": "12"
+        }
+      ],
+      "floorComparison": {
+        "status": "insufficient",
+        "targetFloor": 13,
+        "sampleCount": 2,
+        "knownFloorCount": 4,
+        "rule": "앞뒤 3층"
+      },
+      "marketAdjustmentPct": 5.55,
+      "indexAdjustment": {
+        "status": "applied",
+        "source": "한국부동산원 주간 아파트가격동향 매매가격지수",
+        "region": "서울 서대문구",
+        "asOf": "2026-11-02",
+        "centerChangePct": 5.55,
+        "limited": false,
+        "transactions": [
+          {
+            "dealDate": "2026-08-20",
+            "originalPriceEok": 14.95,
+            "adjustedPriceEok": 15.631,
+            "changePct": 4.56,
+            "rawChangePct": 4.56,
+            "floor": "9"
+          },
+          {
+            "dealDate": "2026-07-02",
+            "originalPriceEok": 14.7,
+            "adjustedPriceEok": 15.7787,
+            "changePct": 7.34,
+            "rawChangePct": 7.34,
+            "floor": "7"
+          },
+          {
+            "dealDate": "2026-06-17",
+            "originalPriceEok": 15.0,
+            "adjustedPriceEok": 16.1869,
+            "changePct": 7.91,
+            "rawChangePct": 7.91,
+            "floor": "13"
+          },
+          {
+            "dealDate": "2026-06-16",
+            "originalPriceEok": 15.0,
+            "adjustedPriceEok": 16.1869,
+            "changePct": 7.91,
+            "rawChangePct": 7.91,
+            "floor": "12"
+          }
+        ]
+      },
+      "latestTradeExcluded": true,
+      "market": {
+        "status": "available",
+        "apartment6mPct": null,
+        "district6mPct": null,
+        "peer6mPct": 7.1,
+        "leader6mPct": 7.1,
+        "comparisonCount": 3,
+        "blended6mPct": 7.1
+      },
+      "macro": {
+        "status": "unavailable",
+        "message": "한국은행 기준금리 자료를 지금 불러오지 못했어요. 가격 범위는 실거래와 주변 시세로 계산했어요."
+      },
+      "reasons": [
+        "비슷한 면적의 이전 실거래 4건을 사용했어요.",
+        "평가할 최근 거래는 기준가격 계산에서 뺐어요.",
+        "한국부동산원 서울 서대문구 주간 가격 변화를 거래마다 반영해 가장 최근 주 기준으로 맞췄어요.",
+        "최근 기간에 층이 비슷한 거래가 부족해 같은 면적의 여러 층 거래와 비교했어요. 층별 가격 차이는 보정하지 않았어요.",
+        "확보한 거래로 참고 가격대는 보여드리지만, 현재 매물이 싸거나 비싸다고 단정하지 않아요."
+      ],
+      "limitations": [
+        "최근 거래의 층은 확인했지만 비슷한 층 거래가 부족해 층별 가격을 계산하지 못했어요. 동·향·수리 상태와 실제 매물 상태도 반영하지 못했어요."
+      ]
+    },
+    "latestTrade": {
+      "dealAmountEok": 15.25,
+      "dealDate": "2026-10-05",
+      "exclusiveArea": 59.981,
+      "floor": "13"
+    },
+    "latestDealPriceEok": 15.25,
+    "latestDealDate": "2026-10-05",
+    "latestDealExclusiveArea": 59.981,
+    "latestDealFloor": "13"
+  }
+}

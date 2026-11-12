@@ -16,6 +16,7 @@ import re
 import statistics
 from pathlib import Path
 
+import apartment_identity
 import config
 import kakao_station_distances
 import molit_transactions
@@ -24,6 +25,7 @@ import real_estate_search
 
 SETTINGS_PATH = config.ROOT / "data" / "apartment_leader_settings.json"
 CACHE_DIR = config.CACHE_DIR / "apartment_leaders"
+IDENTITY_SCHEMA_VERSION = "canonical-apartment-identity-v1"
 AREA_BUCKETS = {
     "lt39": {"label": "39㎡ 미만", "low": None, "high": 39},
     "39-49": {"label": "39~49㎡", "low": 39, "high": 50},
@@ -664,7 +666,15 @@ def _base_metrics(
         else station_distance_lower_bound
     )
     return {
-        "apartmentId": _entity_id(entity),
+        # Ranking keys are not registry ids. Detail, map and transaction APIs
+        # must receive the same physical identity as direct apartment search.
+        "leaderId": _entity_id(entity),
+        "apartmentId": str(entity.get("apartmentId") or ""),
+        "kaptCode": str(entity.get("kaptCode") or ""),
+        "complexNo": str(entity.get("complexNo") or ""),
+        "legalDong": entity.get("legalDong", ""),
+        "jibun": apartment_identity.entity_parcel(entity),
+        "lawdCd": entity.get("lawdCd", ""),
         "apartmentName": entity.get("name", ""),
         "marketLeaderName": _market_leader_name(entity.get("name", "")),
         "sido": entity.get("province", ""),
@@ -1220,11 +1230,13 @@ def _cache_path(
 ):
     material = "|".join((
         CALCULATION_VERSION,
+        IDENTITY_SCHEMA_VERSION,
         sido,
         sigungu,
         area_bucket_value,
         reference_month,
         kakao_station_distances.cache_revision(),
+        kakao_station_distances.shared_data.revision(),
     ))
     digest = hashlib.sha256(material.encode("utf-8")).hexdigest()
     return CACHE_DIR / f"{digest}.json"
@@ -1316,7 +1328,7 @@ def apartment_detail(
     found = {}
     for category, items in payload["rankings"].items():
         for item in items:
-            if item.get("apartmentId") == apartment_id:
+            if apartment_id and apartment_id in (item.get("apartmentId"), item.get("leaderId")):
                 found.setdefault("apartment", item)
                 found.setdefault("categoryRanks", {})[category] = item["rank"]
     if not found:

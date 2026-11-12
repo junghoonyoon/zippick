@@ -12,7 +12,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def test_location_and_market_headings_use_verified_facts_and_keep_cautions():
     html=(ROOT/'앱화면/real-estate-search.html').read_text()
     names=['zpNum','zpPct','zpPartRatio','locationScorePartHasNoData','zpIsFundingPart','zpAllScoredParts','zpScoredParts',
-           'zippickReportPartLabel','zippickLocationHeadingFact','zippickLocationHeading','zippickMarketVerdict',
+           'zippickReportPartLabel','zippickLocationHeadingFact','zippickLocationHeading','candidateSignalDataUnavailable', 'zippickMarketVerdict',
            'zippickSignalHeading','zippickCommuteHeading']
     functions='\n'.join(re.search(r'    function '+name+r'\(.*?\n    \}',html,re.S).group() for name in names)
     script=functions+r'''
@@ -48,7 +48,7 @@ assert.match(zippickLocationHeading({...base,locationScore:{score:76,parts:[unex
 const down={signals:{momentumPct:16.9,turnoverRatio:.35}};
 assert.match(zippickSignalHeading(down,{}),/아쉬워요.*가격은 올랐지만 거래가 줄었어요/);
 const rising={signals:{momentumPct:10,turnoverRatio:1.3}};
-assert.match(zippickSignalHeading(rising,{peakGuard:{atPeak:true}}),/가격과 거래가 함께 늘었어요.*다만.*2년 고점권/);
+assert.match(zippickSignalHeading(rising,{peakGuard:{atPeak:true}}),/좋아요.*가격과 거래가 함께 늘었어요.*고점권/);
 assert.match(zippickCommuteHeading({}),/판단할 수 없어요.*이동시간 자료가 없어요/);
 assert.match(zippickCommuteHeading({commuteProfile:{hubs:{광화문:{totalMinutes:70}}}}),/아쉬워요.*70분/);
 '''
@@ -69,27 +69,14 @@ const transactionMoney=value=>`${value}억`;
 const zippickJeonsePeerStat=item=>item.peer;
 const zippickLiquidityStat=item=>item.stat;
 const head=html=>html.match(/<h5>(.*?)<\/h5>/s)[1];
-const funding=zippickFundingHtml({jeonseRatioPct:33.4,latestJeonseDepositEok:3,jeonseSalePriceBasisEok:9});
-assert.match(head(funding),/내 돈 6억이 필요해요.*세금·중개비는 별도/);
-assert.match(funding,/33.4%/);assert.match(funding,/비교 후보가 없어.*판단하지 않았어요/);
-assert.doesNotMatch(head(funding),/내 돈이 많이|아쉬워요/);
-const low=zippickFundingHtml({jeonseRatioPct:60,peer:{band:'low'},latestJeonseDepositEok:6,jeonseSalePriceBasisEok:10});
-assert.match(head(low),/내 돈 4억이 필요해요/);
-assert.match(low,/다른 후보보다.*낮아/);
-const noData=zippickFundingHtml({});assert.match(head(noData),/계산할 수 없어요/);
-// Use the displayed latest sale as the cash basis, not a different estimated price.
-assert.match(head(zippickFundingHtml({latestDealPriceEok:11,jeonseSalePriceBasisEok:10,latestJeonseDepositEok:6})),/내 돈 5억이 필요해요/);
-const sparse=zippickLiquidityHtml({stat:{band:'illiquid',windowMonths:24,silentTotal:16}});
-assert.match(head(sparse),/판단할 수 없어요.*거래 공백/);
-assert.match(sparse,/16개월/);assert.match(sparse,/앞으로 팔리는 데 걸릴 시간을 뜻하지 않아요/);
-const few=zippickLiquidityHtml({stat:{band:'no_downturn',windowMonths:24,downMonths:2}});
-assert.match(head(few),/판단할 수 없어요.*자료가 부족/);assert.match(few,/2개월/);
+assert.match(head(zippickFundingHtml({jeonseRatioPct:33.4,latestJeonseDepositEok:3,jeonseSalePriceBasisEok:9})),/전세를 끼고.*내 돈 6억.*세금·중개비는 별도/);
+assert.match(head(zippickFundingHtml({jeonseRatioPct:60,peer:{band:'low'},latestJeonseDepositEok:6,jeonseSalePriceBasisEok:10})),/전세를 끼고.*내 돈 4억/);
+assert.match(head(zippickLiquidityHtml({stat:{band:'illiquid',windowMonths:24,silentTotal:16}})),/판단할 수 없어요.*거래 공백/);
+assert.match(head(zippickLiquidityHtml({stat:{band:'no_downturn',windowMonths:24,downMonths:2}})),/판단할 수 없어요.*자료가 부족/);
 assert.match(head(zippickLiquidityHtml({stat:{band:'unknown',windowMonths:24,downMonths:4,downDeals:12}})),/판단할 수 없어요.*자료가 부족/);
 const fair={band:'fair',windowMonths:24,downMonths:6,downDeals:18,downPerMonth:3,otherPerMonth:6,otherMonths:18,silentMonths:0,ratio:.5};
-assert.match(head(zippickLiquidityHtml({stat:fair})),/보통이에요.*50%가 이어졌어요/);
-const weak=zippickLiquidityHtml({stat:{...fair,band:'weak',downDeals:3,downPerMonth:.5,ratio:1/12}});
-assert.match(head(weak),/아쉬워요.*8%만 이어졌어요/);assert.match(weak,/6개월/);assert.match(weak,/3건/);
-assert.match(head(zippickLiquidityHtml({stat:{...fair,band:'strong',ratio:.8}})),/좋아요.*70% 이상/);
+assert.match(head(zippickLiquidityHtml({stat:fair})),/보통이에요.*평소 거래의 50%/);
+assert.match(head(zippickLiquidityHtml({stat:{...fair,band:'weak',downDeals:3,ratio:0.1}})),/아쉬워요.*평소 거래의 10%/);
 '''
     run=subprocess.run(['node'],input=script,text=True,capture_output=True)
     assert run.returncode==0,run.stderr

@@ -19,10 +19,13 @@ class PaidReportTest(unittest.TestCase):
         html = (ROOT / '앱화면/real-estate-search.html').read_text()
         matrix = re.search(r'    const ZIPPICK_MATRIX = \[.*?\n    \];', html, re.S).group()
         names = ['zpNum', 'zippickMatrixVerdict', 'zippickPartialVerdict',
-                 'zippickCommonProperty', 'zippickCommonPurchaseVerdict',
-                 'zippickBandPriceEvidence', 'zippickLatestTradeDetails', 'zippickTradeAreaScope',
+                 'zippickDevelopmentVerdictCopy', 'zippickOwnDevelopmentCopy', 'zippickSynthesisSummary', 'zippickMonthlyDeals', 'zippickLiquidityStat', 'zippickLifestylePlanRating', 'zippickLifestyleChangeRatingData', 'zippickFutureSourceIsOfficial', 'zippickCommonProperty', 'zippickCommonPurchaseVerdict',
+                 'zippickBandPriceEvidence', 'zippickPriceComparisonStars', 'zippickLatestTradeDetails', 'zippickTradeAreaScope',
                  'zippickAreaContains', 'zippickBuyBandTradeMatchesArea', 'zippickBuyBandTier',
+                 'zippickValuationMatchesTrade', 'candidateSignalDataUnavailable', 'candidateSignalNumber',
                  'candidateFlowScoreBadgeHtml', 'candidateReadonlyFlowScoreBadgeHtml',
+                 'candidateLocationScoreNumber', 'candidateLocationScoreBadgeHtml', 'candidateReadonlyScoreBadgeHtml',
+                 'candidateMapMarkerScoreText',
                  'signalBadgesHtml', 'candidateZippickReportHtml']
         functions = '\n'.join(re.search(
             r'    function ' + name + r'\([^\n]*\) \{.*?\n    \}', html, re.S,
@@ -32,6 +35,7 @@ class PaidReportTest(unittest.TestCase):
                  'zippickLifestyleChangeHtml', 'zippickFundingHtml', 'zippickDevelopmentHtml',
                  'zippickAlternativesHtml', 'zippickBreakevenHtml', 'zippickSignalLabel',
                  'zippickEvidenceHtml', 'zippickMatrixTableHtml', 'zippickViewingChecklistHtml']
+        functions += '\n' + '\n'.join(re.findall(r'^    const ZP_LIQ_\w+ = .*?;', html, re.M))
         script = matrix + functions + '\n' + '\n'.join(
             f'function {name}() {{ return ""; }}' for name in stubs
         ) + r'''
@@ -51,9 +55,13 @@ assert.match(signalBadgesHtml(zero),/최근 시장 신호 0점/);
 assert.match(signalBadgesHtml({...base,signals:{status:'insufficient',score:''}}),/표본 부족/);
 for (const badge of [candidateFlowScoreBadgeHtml, candidateReadonlyFlowScoreBadgeHtml]) {
   assert.match(badge(zero),/최근 시장 신호 0점/);
-  for (const score of [null,undefined,'']) {
+  for (const score of [null,undefined,'',0,90]) {
     assert.match(badge({...base,signals:{status:'insufficient',score}}),/측정 불가/);
   }
+}
+for (const badge of [candidateLocationScoreBadgeHtml, candidateReadonlyScoreBadgeHtml, candidateMapMarkerScoreText]) {
+  for (const score of [null,undefined,'']) assert.equal(badge({...base,locationScore:{score}}),'');
+  assert.match(badge({...base,locationScore:{score:0}}),/0점/);
 }
 assert.match(candidateZippickReportHtml({...base,signals:{status:'insufficient',score:null}}),/verdict:missing/);
 '''
@@ -152,18 +160,20 @@ let fetchAptReport = async () => ({report:{peers:[{apartmentId:'peer-1'}]}});
     def test_report_uses_matching_price_scenario_and_handles_missing_data(self):
         html = (ROOT / '앱화면/real-estate-search.html').read_text()
         names = ['zpNum', 'zippickPriceCheckBasis', 'zippickReportFinance',
-                 'zippickCommonProperty', 'zippickCommonPurchaseVerdict', 'zippickBandPriceEvidence',
+                 'zippickDevelopmentVerdictCopy', 'zippickOwnDevelopmentCopy', 'zippickSynthesisSummary', 'zippickMonthlyDeals', 'zippickLiquidityStat', 'zippickLifestylePlanRating', 'zippickLifestyleChangeRatingData', 'zippickFutureSourceIsOfficial', 'zippickCommonProperty', 'zippickCommonPurchaseVerdict', 'zippickBandPriceEvidence',
                  'zippickTradeAreaScope', 'zippickAreaContains', 'zippickLatestTradeDetails',
                  'zippickBuyBandTradeMatchesArea', 'zippickBuyBandTier', 'zippickValuationMatchesTrade',
-                 'zippickDecisionHtml', 'zippickCommonDecisionHtml', 'zippickReportPeers']
+                 'zippickDecisionHtml', 'zippickCommonDecisionHtml', 'zippickReportPeers',
+                 'candidateSignalDataUnavailable', 'candidateSignalNumber',
+                 'zippickPriceComparisonStars', 'zippickSectionRatingData', 'zippickSectionRatingHtml', 'zippickOverallRatingHtml']
         functions = '\n'.join(re.search(r'    function '+name+r'\([^\n]*\) \{.*?\n    \}', html, re.S).group() for name in names)
+        functions += '\n' + '\n'.join(re.findall(r'^    const ZP_LIQ_\w+ = .*?;', html, re.M))
         script = functions + r'''
 const assert = require('node:assert/strict');
-const esc=String, zippickPriceBasesHtml=()=>'', zippickDecisionScoresHtml=()=>'', zippickBuyBandHtml=()=>'';
-const zippickOverallRatingHtml=verdict=>verdict.label;
-const metric=(key)=>({key,score:80,status:'ok',reason:'확인됨'});
-const item={apartmentId:'a',name:'A',region:'성동구',areaLabel:'84㎡',
- locationScore:{parts:[{key:'demand',details:[metric('station'),metric('education')]},
+const esc=String, zippickDecisionScoresHtml=()=>'', zippickBuyBandHtml=()=>'';
+const metric=(key,reason='확인됨')=>({key,score:80,status:'ok',reason});
+const item={apartmentId:'a',name:'A',region:'성동구',areaLabel:'84㎡',households:2231,
+ locationScore:{parts:[{key:'demand',details:[metric('station','가까운역 2호선 · 직선 350m'),metric('education','초등학교 · 325m 거리')]},
   {key:'product',details:[metric('households'),metric('age')]}]},
  signals:{recentDealCount:10,priorDealCount:12},
  priceComparison:{status:'ready',method:'usual_gap',shiftPp:5,averagePriceEok:24.21,
@@ -185,11 +195,13 @@ assert.equal(missing.scenarios.length,0);assert.equal(missing.scenario,undefined
 assert(Number.isNaN(missing.required));assert(Number.isNaN(missing.gap));
 const render=value=>zippickDecisionHtml(value,zippickCommonPurchaseVerdict(value,new Date(2026,10,9)));
 const decision=render(item);
-assert.match(decision,/조건부 검토/);assert.match(decision,/단지 조건은 좋지만.*비싸요/);
+assert.match(decision,/<h3 class="zpr-overall-opinion">단지 조건은 좋지만 가격이 부담돼 매수는 신중히 검토하세요\.<\/h3>/);
+assert.match(decision,/zpr-verdict-tag is-conditional/);assert.doesNotMatch(decision,/6\/10/);
+assert.match(decision,/비슷한 주변 단지와 비교하면 평소보다 높아요.*단지 조건<\/strong>.*입지와 단지 조건이 전반적으로 좋아요/s);
 assert.doesNotMatch(decision,/추가 자금|부족한 현금|마련해야|자금 조건/);
 assert.equal(decision,render({...item,policyImpact:{}}));
 assert.equal(decision,render({...item,policyImpact:{cashGapEok:100,missingInputs:['income']}}));
-assert.match(render({...item,locationScore:{}}),/판단 보류.*확인된 항목이 적어요/s);
+assert.match(render({...item,locationScore:{}}),/입지와 단지 자료가 부족해 매수 여부를 판단하기 어려워요.*단지 조건을 판단하기 어려워요/s);
 const candidateHeadlinePrice=()=>({priceEok:24});
 const make=(id,region,price,area=84)=>({...item,apartmentId:id,name:id,region,areaLabel:`${area}㎡`,
  latestDealDate:'2026-10-01',latestDealExclusiveArea:area,latestDealPriceEok:price});

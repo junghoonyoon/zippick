@@ -72,3 +72,17 @@ def test_snapshot_revalidates_changed_files_but_reuses_verified_unchanged_hardli
     import pytest
     with pytest.raises(ValueError):
         shared_data._validate_snapshot(incoming, manifest, previous)
+
+
+def test_replica_api_reports_source_version_with_connection_status(monkeypatch):
+    import io
+    monkeypatch.setattr(search_server.shared_data, "read_only", lambda: True)
+    monkeypatch.setattr(search_server.shared_data, "status", lambda: {"status": "ready"})
+    monkeypatch.setattr(search_server.shared_data, "data_revision", lambda: "version-1")
+    handler = object.__new__(search_server.Handler)
+    handler.send_response = lambda *_: None
+    handler.send_header = lambda *_: None
+    handler.end_headers = lambda: None
+    handler.wfile = io.BytesIO()
+    handler._json({"ok": True})
+    assert json.loads(handler.wfile.getvalue())["sharedData"] == {"status": "ready", "dataRevision": "version-1"}

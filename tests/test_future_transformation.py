@@ -274,7 +274,7 @@ for (const status of ['insufficient_data','stale','error']) {
  assert.match(html,/data-zpr-map-redevelopment="true"/);
  assert.doesNotMatch(html,/0.0 \/ 5/);
  if (status === 'error') {
-   assert.match(html,/생활권 자료를 불러오지 못했어요/);
+   assert.match(html,/주변 변화는 판단할 수 없어요. 자료를 불러오지 못했어요/);
    assert.match(html,/다시 열어 주세요/);
    assert.doesNotMatch(html,/zpr-living-subs/);
    assert.doesNotMatch(html,/확인한 주변 사업/);

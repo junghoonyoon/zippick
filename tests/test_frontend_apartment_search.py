@@ -190,8 +190,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         """
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
         demand, market = json.loads(result.stdout)
-        self.assertIn("역·학교 자료를 불러오지 못해 판단할 수 없어요.", demand)
-        self.assertNotIn("가까워 출퇴근", demand)
+        self.assertIn("역 접근성은 판단할 수 없어요. 학교 접근성은 판단할 수 없어요", demand)
+        self.assertIn("실제 도보 길과 학교 배정은 확인해 주세요", demand)
         self.assertIn("최근 6개월 가격은 12.9% 올랐고 거래는 33% 늘었어요", market)
         self.assertIn("가격 상승을 거래가 뒷받침해 시장 흐름 점수에 유리해요", market)
         self.assertIn("2년 고점권이라 최근 거래보다 비싼 매물은 주의해요", market)
@@ -214,7 +214,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         bars_body = html.split("    function zippickSignalBarsHtml(item) {", 1)[1].split(
             "    function zippickSignalCapsHtml(item) {", 1,
         )[0]
+        availability = re.search(r"    function candidateSignalDataUnavailable\(.*?\n    \}", html, re.S).group()
         script = f"""
+          {availability}
           const esc = value => String(value);
           function zippickBarTone(ratio) {{{tone_body}
           function zippickBarHtml(label, points, maxPoints, reason) {{{bar_body}
@@ -1050,7 +1052,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         """빠진 섹션이 있어도 번호가 이어지고, 번호만 보고 주제를 알 수 있다."""
         html = APP_HTML.read_text(encoding="utf-8")
 
-        self.assertIn("function zippickNumberSteps(html, item)", html)
+        self.assertIn("function zippickNumberSteps(html, item, reportScores)", html)
         self.assertIn("return zippickNumberSteps(`<article class=\"zippick-report\"", html)
         self.assertNotIn('data-zpr-step="매물 가격 비교"', html)
         for label in ("생활권 변화", "단지 조건", "업무지구 이동시간", "자금 조건", "현장 확인"):
@@ -1064,7 +1066,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickDevelopmentHtml(item)}"))
         self.assertLess(report.index("${zippickFundingHtml(item)}"), report.index("${zippickBreakevenHtml(item)}"))
         # 같은 가격대 대안은 '이 돈이면 어디를 살 수 있나'라는 다른 질문이라 가격 비교 밖에 둔다.
-        price_section = html.split("    function zippickPriceEvidenceHtml(item) {", 1)[1].split("    function zippickPersonalFundingHtml", 1)[0]
+        price_section = html.split("    function zippickPriceEvidenceHtml(item, reportAssessment = null) {", 1)[1].split("    function zippickPersonalFundingHtml", 1)[0]
         self.assertNotIn("${zippickAlternativesHtml(item)}", price_section)
         self.assertLess(report.index("${zippickBreakevenHtml(item)}"), report.index("${zippickAlternativesHtml(item)}"))
 
@@ -3129,11 +3131,11 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn("function aptSearchRivalsHtml", html)
         self.assertIn("라이벌 아파트", html)
         self.assertIn("가격, 흐름, 규모를 나란히 보며 비교할", html)
-        self.assertIn("const score = Number(peer.locationScore?.score);", html)
+        self.assertIn("const score = candidateLocationScoreNumber(peer);", html)
         self.assertIn("종합 ${esc(Math.round(score))}점", html)
         self.assertNotIn("peer.locationScore?.score ?? peer.score", html)
         self.assertIn("apt-rival-rate ${rateTone}", html)
-        self.assertIn("const recent3 = Number(peer.recent3Pct);", html)
+        self.assertIn("const recent3 = zpNum(peer.recent3Pct);", html)
         self.assertIn("const latestArea = Number(peer.latestDealExclusiveArea || 0);", html)
         self.assertIn("<span>최근 실거래</span><strong>${priceText}</strong>", html)
         self.assertIn('class="apt-rival-area">· ${latestAreaText}</span>', html)
@@ -3296,7 +3298,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         )
         self.assertIn("budgetBackgroundStatusHtml(data)", render_body)
         self.assertIn("candidateScoreDataReady", render_body)
-        self.assertIn("scoreDataReady ? `<span data-candidate-score-badges>${candidateTopScoreBadgesHtml(item)}</span>`", render_body)
+        self.assertIn("scoreDataReady ? candidateTopScoreBadgesHtml(item)", render_body)
         self.assertIn('const includeVerified = verifiedShown ? "" : "&include_verified=true"', html)
         self.assertIn("if (!verifiedShown && next.verifiedResult) revealVerified(next.verifiedResult)", html)
         self.assertIn("{ preserveSelection:completed.verifiedShown }", load_body)
@@ -3639,7 +3641,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('let candidateMapPresentationMode = "clusters";', html)
         self.assertIn("let candidateMapLastLevel = null;", html)
         self.assertIn("function candidateMapMarkerScoreText(item)", html)
-        self.assertIn("const score = Number(item?.locationScore?.score);", html)
+        self.assertIn("const score = candidateLocationScoreNumber(item);", html)
         self.assertIn("return `${Math.round(score)}점`;", html)
         marker_score_body = re.search(r"function candidateMapMarkerScoreText\b(?P<body>.*?)\n    function appendCandidateMapEntry", html, re.DOTALL).group("body")
         self.assertNotIn("종합점수", marker_score_body)
@@ -4533,8 +4535,8 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         self.assertIn('["jeonse_ratio", "jeonse_freshness", "investment_gap", "station", "education"].includes(String(detail?.key || ""))', html)
         self.assertIn('getJson("/api/apartment-location-score"', html)
         self.assertIn("const originalKey = candidateIdentityKey(item);", html)
-        self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate));", html)
-        self.assertIn("void refreshLocationScoreSheet(item);", html)
+        self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
+        self.assertIn("if (refresh) void refreshLocationScoreSheet(item, request);", html)
         self.assertIn('data-candidate-key="${esc(candidateIdentityKey(item))}"', preview_match.group("body"))
         self.assertIn('const mapPreview = button.closest("[data-candidate-map-preview]");', lookup_match.group("body"))
         self.assertIn('const previewKey = mapPreview.dataset.candidateKey || button.closest("[data-candidate-key]")?.dataset.candidateKey || candidateMapSelectedKey;', lookup_match.group("body"))

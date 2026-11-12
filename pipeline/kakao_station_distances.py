@@ -306,6 +306,24 @@ def cached_station(entity):
     }
 
 
+def cached_coordinates(entity):
+    """Read verified apartment coordinates even if no station was collected yet."""
+    direct = _valid_coordinates(entity.get("latitude"), entity.get("longitude"))
+    if direct:
+        return {"latitude": direct[0], "longitude": direct[1]}
+    record = cached_record(entity) or {}
+    coordinates = _valid_coordinates(record.get("latitude"), record.get("longitude"))
+    if coordinates:
+        return {"latitude": coordinates[0], "longitude": coordinates[1]}
+    address = entity_address(entity)
+    cached = _load_cache()["geocodes"].get(_coordinate_key(address)) or {}
+    if address and cached.get("address") == address:
+        coordinates = _valid_coordinates(cached.get("latitude"), cached.get("longitude"))
+        if coordinates:
+            return {"latitude": coordinates[0], "longitude": coordinates[1]}
+    return None
+
+
 def cache_stats(entities=None):
     payload = _load_cache()
     records = payload.get("records", {})
@@ -781,6 +799,7 @@ def enrich_entities(
     }
     if dry_run or not pending:
         return summary
+    shared_data.require_writer()
     if not configured():
         raise KakaoLocalError("KAKAO_REST_API_KEY 또는 카카오REST키를 설정해 주세요.")
     global _ACTIVE_BATCHES
@@ -894,6 +913,8 @@ def main(argv=None):
     parser.add_argument("--workers", type=int)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
+    if shared_data.read_only() and not args.dry_run:
+        parser.error("로컬은 공용 원본을 읽어요. 거리 수집은 운영 서버에서 실행해 주세요.")
     if not args.all and (not args.sido or not args.sigungu):
         parser.error("지역 단위 실행에는 --sido와 --sigungu가 필요합니다. 전체 수집은 --all을 사용하세요.")
     entities = entities_for_region(

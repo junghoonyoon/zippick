@@ -15,7 +15,7 @@ class FrontendRemoteRegressionTest(unittest.TestCase):
         self.assertIn('params.set("apartment_id", context.apartmentId)', fetch)
         self.assertIn('params.set("kapt_code", context.kaptCode)', fetch)
         self.assertIn('params.set("complex_no", context.complexNo)', fetch)
-        self.assertIn("void refreshLocationScoreSheet(report, rerender, {force:true});", html)
+        self.assertIn("void refreshLocationScoreSheet(report, null, {force:true, onRefresh:rerender});", html)
         self.assertIn("stillSelected() && currentAptReportItem === report", html)
         self.assertIn("rowsToRefresh.forEach(row => Object.assign(row, payload.candidate))", html)
         self.assertIn("repaintCandidateScoreBadges(item, originalKey, previousRowKeys)", html)
@@ -105,7 +105,7 @@ class FrontendRemoteRegressionTest(unittest.TestCase):
     def test_location_heading_labels_school_distance_as_straight_line(self):
         html = APP_HTML.read_text(encoding="utf-8")
         start = html.index("    function zippickLocationHeadingFact(item, part, positive) {")
-        end = html.index("    // 공통 제목:", start)
+        end = html.index("    function zippickLocationHeading(", start)
         heading_body = html[start:end]
         script = f"""
           const zpNum = value => Number(value);
@@ -123,4 +123,4 @@ class FrontendRemoteRegressionTest(unittest.TestCase):
         result = subprocess.run(["node"], input=script, text=True, capture_output=True, check=True)
         good, weak = json.loads(result.stdout)
         self.assertEqual(good, "역은 직선 725m, 학교는 직선 186m로 가까워요")
-        self.assertEqual(weak, "학교까지 직선 186m로 통학 거리를 확인해야 해요")
+        self.assertEqual(weak, "학교까지 직선 186m로 통학 거리가 긴 편이에요")

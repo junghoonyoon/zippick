@@ -506,7 +506,7 @@ def education_environment_for_entity(entity, allow_remote_lookup=True):
         if scored:
             return _with_metadata(scored, dataset)
 
-    station_record = kakao_station_distances.cached_station(entity)
+    station_record = kakao_station_distances.cached_coordinates(entity)
     lat = _float_or_none((station_record or {}).get("latitude"))
     lon = _float_or_none((station_record or {}).get("longitude"))
     if lat is None or lon is None:

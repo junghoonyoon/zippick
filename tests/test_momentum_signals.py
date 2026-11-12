@@ -52,6 +52,24 @@ class MomentumSignalsTest(unittest.TestCase):
         self.assertEqual(signals["leaderMomentumPct"], 3.0)
         self.assertEqual(signals["leaderRelativePct"], 5.0)
 
+    def test_cached_district_leader_uses_rank_identity_for_same_name_complexes(self):
+        other = {"name": "같은이름", "province": "서울특별시", "district": "테스트구",
+                 "legalDong": "첫째동", "apartmentId": "registry-1"}
+        winner = {**other, "legalDong": "둘째동", "apartmentId": "registry-2"}
+        item = {
+            "apartmentName": winner["name"],
+            "apartmentId": winner["apartmentId"],
+            "leaderId": momentum_signals.apartment_leaders._entity_id(winner),
+        }
+        with mock.patch.object(momentum_signals.real_estate_search, "APARTMENT_MASTER", [other, winner]), \
+             mock.patch.object(momentum_signals.apartment_leaders, "get_leaders", return_value={"items": [item]}), \
+             mock.patch.object(momentum_signals, "raw_signals", return_value={"momentumPct": 3.0}) as raw_signals:
+            entity, signals = momentum_signals._cached_district_leader("테스트구")
+
+        self.assertIs(entity, winner)
+        self.assertEqual(signals["momentumPct"], 3.0)
+        raw_signals.assert_called_once_with("같은이름", region="테스트구", cache_only=True, entity=winner)
+
     def test_attach_signals_marks_unavailable_when_api_is_not_configured(self):
         candidates = [{"name": "설정없는단지", "region": "강동구"}]
 

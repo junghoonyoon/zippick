@@ -4,10 +4,11 @@ from pathlib import Path
 
 from test_reconstruction_frontend import HARNESS, NAMES, run_js
 
-STAGES = json.loads((Path(__file__).resolve().parents[1] / 'data/apartment_development_policy.json').read_text())['stages']
+POLICY = json.loads((Path(__file__).resolve().parents[1] / 'data/apartment_development_policy.json').read_text())
+STAGES = POLICY['stages']
 FUNCTIONS = NAMES + ['zippickReconstructionConclusion','zippickReconstructionReportHtml',
                      'zippickDevelopmentHtml','zippickDevelopmentRatingView','zippickSectionRatingHtml','zippickVerdictTitle']
-SETUP = HARNESS + 'const ZIPPICK_DEVELOPMENT_STAGE_RATINGS=' + json.dumps(STAGES, ensure_ascii=False) + ';' + r'''
+SETUP = HARNESS + 'const ZIPPICK_DEVELOPMENT_STAGE_RATINGS=' + json.dumps(STAGES, ensure_ascii=False) + ';const ZIPPICK_RECONSTRUCTION_STAGE_RATINGS=' + json.dumps(POLICY['reconstructionStages'], ensure_ascii=False) + ';' + r'''
 const zippickSectionRatingData=(item,label)=>zippickDevelopmentRatingView(item);
 const condition=(direction='favorable',kind='project_plan')=>({version:'reconstruction-feasibility-v1',
  status:'conditional',direction,basisKind:kind,headline:'건축 조건 판단',reason:'주택을 더 지을 여지가 있어요.',
@@ -45,7 +46,7 @@ for(const [direction,text] of [['favorable','유리한 건축 조건'],['limited
  assert.match(html,/160%/);assert.match(html,/계획 용적률/);assert.match(html,/250%/);assert.match(html,/같은 눈금/);
  assert.match(html,/실제 수익성/);assert.match(html,/분담금은 판단할 수 없어요/);
  assert.ok(html.indexOf(text)<html.indexOf('건축 수치와 공식 자료 보기'));
- assert.ok(zippickVerdictTitle(item,{common:true,title:'매수 판단'}).includes(text));
+ assert.equal(zippickVerdictTitle(item,{common:true,title:'매수 판단'}),'매수 판단');
 }
 ''')
 
@@ -85,7 +86,7 @@ def test_missing_stale_and_failed_sources_never_keep_a_favorable_title():
 item.futureTransformation={ownDevelopment:own()};
 for(const status of ['stale','connection_error','loading']) {
  item.reconstructionConditions=model({status,feasibility:condition()});
- const title=zippickVerdictTitle(item,{common:true,title:'매수 판단'});
+ const title=zippickReconstructionConclusion(item).headline;
  assert.doesNotMatch(title,/유리한/);
  assert.match(title,status==='loading'?/수집하고 있어요/:/판단할 수 없어요/);
 }
