@@ -186,12 +186,49 @@ def _center(apartment_id,province,district,dong,lot,day):
         tmp=CENTER_PATH.with_suffix('.tmp');tmp.write_text(json.dumps(cache,ensure_ascii=False));tmp.replace(CENTER_PATH)
     return point
 
+def shared_station_center(identity, day):
+    """Reuse a shared address lookup, never a keyword-only apartment match."""
+    import kakao_station_distances as stations
+    from living_area import distance
+    if not all(identity.get(k) for k in ('apartmentId', 'province', 'district', 'legalDong', 'jibun', 'name')):
+        return None
+    if not re.fullmatch(r'(?:' + re.escape(identity['legalDong']) + r'\s+)?\d+(?:-\d+)?', str(identity['jibun'])):
+        return None
+    record = stations.cached_record(identity) or {}
+    checked = sources.date(str(record.get('fetchedAt') or '')[:10])
+    if (record.get('source') != 'kakao-local-v2'
+            or record.get('status') not in ('ok', 'station_not_found')
+            or record.get('address') != stations.entity_address(identity)
+            or record.get('apartmentName') != identity['name']
+            or record.get('coordinateMatchType') not in (None, 'address_cache')
+            or not checked or not 0 <= (day - checked).days <= 120):
+        return None
+    # The returned road address must still identify the same province/district.
+    parts = str(record.get('matchedAddress') or '').split()
+    provinces = {'서울특별시': ('서울', '서울특별시'), '경기도': ('경기', '경기도')}
+    if not parts or parts[0] not in provinces.get(identity['province'], ()):
+        return None
+    district = identity['district']
+    readable = re.sub(r'^(수원|성남|안양|안산|고양|용인|부천)(?=.{1,3}구$)', r'\1시 ', district)
+    expected = readable.split()
+    if parts[1:1 + len(expected)] != expected:
+        return None
+    point = {'latitude': record.get('latitude'), 'longitude': record.get('longitude'),
+             'coordinateBasis': 'address_geocode', 'checkedAt': checked.isoformat(),
+             'sourceUrl': 'https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord'}
+    return point if distance(point, point) is not None else None
+
+
 def center_for(identity,day):
     if not supported(identity) or not all(identity.get(k) for k in ('apartmentId','district','legalDong','jibun')):return None
     bound={k:identity.get(k) for k in ('apartmentId','province','district','legalDong','jibun')}
     bound['jibun']=str(bound['jibun'])
     reviewed=audited_center(bound,day)
     if reviewed:return reviewed
+    shared = shared_station_center(identity, day)
+    if shared:return shared
+    import shared_data
+    if shared_data.read_only():return None
     return _center(identity['apartmentId'],identity['province'],identity['district'],identity['legalDong'],str(identity['jibun']),day.isoformat())
 
 def _boundary_project(row, geom, points, projects):

@@ -171,7 +171,7 @@ def test_future_catalogue_does_not_change_historical_report():
     assert len(result['displayProjects'])==3
 
 
-def test_hongje_route_is_visible_without_claiming_new_station_benefit():
+def test_hongje_route_is_visible_without_claiming_new_station_benefit(living_area_geocodes):
     entity={**future.registry_entity('11410120383297'),'apartmentId':'11410120383297'}
     result=living.analyze(entity,day=DAY)
     route=next(p for p in result['transportRoutes'] if p['id']=='gg-rail:650')
@@ -265,7 +265,7 @@ def test_station_import_preserves_explicit_plan_stage(monkeypatch,stage_code,exp
     assert importer.fetch_station_references({'checkedAt':'2026-10-16','lines':[line]})==[]
 
 
-def test_old_pilot_review_does_not_erase_new_metro_station_scores(monkeypatch):
+def test_old_pilot_review_does_not_erase_new_metro_station_scores(monkeypatch, living_area_geocodes):
     import living_area_map as maps
     original=maps.read
     stale=lambda path: {**original(path),'checkedAt':'2020-01-01'} if path.name=='living_area_map_references.json' else original(path)

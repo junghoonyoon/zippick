@@ -285,7 +285,7 @@ def test_living_area_headline_uses_nearest_located_project():
     ('개포 래미안 포레스트', '개포우성6차'),
     ('동대문더퍼스트데시앙', '장안현대'),
 ])
-def test_real_report_headline_is_about_the_selected_apartment(tmp_path, apartment_name, neighboring_project):
+def test_real_report_headline_is_about_the_selected_apartment(tmp_path, apartment_name, neighboring_project, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 
@@ -404,7 +404,7 @@ def test_living_area_headline_says_multiple_projects_contributed_to_housing_scor
     assert result['intro'] == ' '.join(result['briefing']['advice'])
 
 
-def test_forestia_report_leads_with_nearby_housing_and_station_plan(tmp_path):
+def test_forestia_report_leads_with_nearby_housing_and_station_plan(tmp_path, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 
@@ -417,7 +417,7 @@ def test_forestia_report_leads_with_nearby_housing_and_station_plan(tmp_path):
     assert '실제 걸어가는 길과 달라요' in ' '.join(result['briefing']['caveats'])
 
 
-def test_pangyo_valley_xi_2_route_is_not_described_as_a_new_station(tmp_path):
+def test_pangyo_valley_xi_2_route_is_not_described_as_a_new_station(tmp_path, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 
@@ -447,7 +447,7 @@ def test_living_area_headline_uses_korean_particles_for_numbered_complexes_and_p
     assert context._with('대조1 사업') == '과'
 
 
-def test_transport_report_with_unmapped_stations_withholds_instead_of_inventing_score(tmp_path):
+def test_transport_report_with_unmapped_stations_withholds_instead_of_inventing_score(tmp_path, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 
@@ -469,7 +469,7 @@ def test_transport_report_with_unmapped_stations_withholds_instead_of_inventing_
     ('남가좌동현대', '서대문구', '약해요.', '서부선'),
 ])
 def test_real_report_shows_good_and_bad_plan_judgments_without_invented_direct_benefit(
-        tmp_path, name, district, label, rail):
+        tmp_path, name, district, label, rail, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 
@@ -724,7 +724,7 @@ def test_operating_station_gains_half_points_when_its_line_adds_new_stops():
     assert rating.line_extension_inputs([], center) == []
 
 
-def test_miseong_counts_gtx_a_extension_instead_of_withholding_transport(tmp_path):
+def test_miseong_counts_gtx_a_extension_instead_of_withholding_transport(tmp_path, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 
@@ -742,7 +742,7 @@ def test_miseong_counts_gtx_a_extension_instead_of_withholding_transport(tmp_pat
     assert '이미 있는 교통이라 변화 점수에는 넣지 않았어요' not in text
 
 
-def test_no_planned_stop_within_2km_scores_zero_even_while_other_regions_are_unmapped(tmp_path):
+def test_no_planned_stop_within_2km_scores_zero_even_while_other_regions_are_unmapped(tmp_path, living_area_geocodes):
     import future_transformation as transformation
     import real_estate_search
 

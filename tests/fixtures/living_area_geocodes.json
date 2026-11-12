@@ -1,0 +1,133 @@
+{
+  "description": "Captured public address coordinates for deterministic spatial tests. Capture dates do not assert historical plan availability. Not production data.",
+  "rows": [
+    {
+      "name": "개포 래미안 포레스트",
+      "identity": {
+        "province": "서울특별시",
+        "district": "강남구",
+        "legalDong": "개포동",
+        "jibun": "1282",
+        "apartmentId": "11680120414794"
+      },
+      "capturedAt": "2026-10-20",
+      "point": {
+        "latitude": 37.4783842282264,
+        "longitude": 127.054256523217,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "산성역 포레스티아",
+      "identity": {
+        "province": "경기도",
+        "district": "성남수정구",
+        "legalDong": "신흥동",
+        "jibun": "6951",
+        "apartmentId": "41131120411567"
+      },
+      "capturedAt": "2026-10-31",
+      "point": {
+        "latitude": 37.4530754180382,
+        "longitude": 127.146997243895,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "판교밸리자이 2단지",
+      "identity": {
+        "province": "경기도",
+        "district": "성남수정구",
+        "legalDong": "고등동",
+        "jibun": "585",
+        "apartmentId": "41131120442910"
+      },
+      "capturedAt": "2026-10-20",
+      "point": {
+        "latitude": 37.4273553189971,
+        "longitude": 127.101274022377,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "제일풍경채 센텀",
+      "identity": {
+        "province": "경기도",
+        "district": "시흥시",
+        "legalDong": "능곡동",
+        "jibun": "894",
+        "apartmentId": "41390120416211"
+      },
+      "capturedAt": "2026-10-20",
+      "point": {
+        "latitude": 37.3694551354388,
+        "longitude": 126.804762971685,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "신주아파트",
+      "identity": {
+        "province": "서울특별시",
+        "district": "동대문구",
+        "legalDong": "청량리동",
+        "jibun": "205-755",
+        "apartmentId": "11230100248409"
+      },
+      "capturedAt": "2026-10-20",
+      "point": {
+        "latitude": 37.5908667822023,
+        "longitude": 127.041090859324,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "미성아파트",
+      "identity": {
+        "province": "서울특별시",
+        "district": "은평구",
+        "legalDong": "불광동",
+        "jibun": "248",
+        "apartmentId": "11380100000585"
+      },
+      "capturedAt": "2026-10-31",
+      "point": {
+        "latitude": 37.6148205101596,
+        "longitude": 126.928054602465,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "해링턴 스퀘어 신흥역",
+      "identity": {
+        "province": "경기도",
+        "district": "성남중원구",
+        "legalDong": "중앙동",
+        "jibun": "912",
+        "apartmentId": "0371c3e9ac9ab393"
+      },
+      "capturedAt": "2026-10-30",
+      "point": {
+        "latitude": 37.4406402863325,
+        "longitude": 127.149420046675,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    },
+    {
+      "name": "홍제 센트럴 IPARK",
+      "identity": {
+        "province": "서울특별시",
+        "district": "서대문구",
+        "legalDong": "홍제동",
+        "jibun": "473",
+        "apartmentId": "11410120383297"
+      },
+      "capturedAt": "2026-10-26",
+      "point": {
+        "latitude": 37.5845073711945,
+        "longitude": 126.945497402073,
+        "sourceUrl": "https://developers.kakao.com/docs/latest/ko/local/dev-guide#address-coord"
+      }
+    }
+  ]
+}
