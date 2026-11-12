@@ -216,3 +216,18 @@ for(const value of [null,undefined,0,-1,'NaN','Infinity']) {
 item.reconstructionConditions=model({profile:{scope:'single_building',floorAreaRatio:253.69,buildingCoverageRatio:25.76}});
 assert.doesNotMatch(zippickReconstructionHtml(item),/땅 넓이의 약|땅 100㎡ 중/);
 ''')
+
+
+def test_remodeling_keeps_current_building_facts_without_reconstruction_claims():
+    run_js(NAMES, HARNESS + r'''
+item.futureTransformation={ownDevelopment:{version:'apartment-development-v1',apartmentId:item.apartmentId,
+ identity:{legalDong:item.legalDong,jibun:item.jibun},status:'confirmed',projects:[{projectTypeLabel:'리모델링'}],
+ rating:{projectType:'remodeling',state:'ready',sourceStage:'도시계획심의'}}};
+item.reconstructionConditions=model({status:'reference_partial',projectPlan:{status:'not_found'}});
+const before=JSON.stringify(item),html=zippickReconstructionHtml(item);
+assert.match(html,/현재 건물의 규모를 확인했어요/);
+assert.match(html,/160%/);assert.match(html,/18%/);assert.match(html,/40,000㎡/);
+assert.match(html,/리모델링 후 늘어날 면적이나 추가분담금을 뜻하지 않아요/);
+assert.doesNotMatch(html,/재건축|사업성에 유리/);
+assert.equal(JSON.stringify(item),before);
+''')
