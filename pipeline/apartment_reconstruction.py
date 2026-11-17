@@ -133,7 +133,7 @@ def revision():
             _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE)), regional_reconstruction_plans.stamp()]
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=12)
 def _read(path, stamp):
     if stamp is None:
         return {"records": {}}

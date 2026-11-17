@@ -63,8 +63,11 @@ def name_keys(value, dong=''):
 
 
 def entity_keys(entity):
+    phases=identity.phase_numbers(entity.get('name'))
+    aliases=[value for value in entity.get('aliases') or []
+             if not phases or identity.phase_numbers(value)==phases]
     return set().union(*(name_keys(value, entity.get('legalDong')) for value in
-        [entity.get('name'), *(entity.get('aliases') or [])]))
+        [entity.get('name'), *aliases]))
 
 
 def address_parts(value):
