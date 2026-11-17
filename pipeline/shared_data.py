@@ -33,7 +33,7 @@ FACT_FILES = (
     "regional_price_index.json", "market_indicators.json", "regional_price_index_history.json",
     "building_register_records.json", "reconstruction_planning_records.json", "seoul_reconstruction_plans.json",
     "reconstruction_ordinance_verification.json", "price_data_revision.json",
-    "regional_reconstruction_plans.json",
+    "regional_reconstruction_plans.json", "building_register_crosschecks.json",
 )
 REQUIRED_FILES = FACT_FILES[:2]
 _LOCK = threading.RLock()
@@ -157,7 +157,7 @@ def subscribe(callback):
 _MANIFEST_SCRIPT = r'''
 import json, pathlib, re, sys
 root = pathlib.Path(sys.argv[1]).resolve(strict=True)
-names = ["apartment_station_distances.json", "education_environment_records.json", "regional_price_index.json", "market_indicators.json", "regional_price_index_history.json", "building_register_records.json", "reconstruction_planning_records.json", "seoul_reconstruction_plans.json", "reconstruction_ordinance_verification.json", "price_data_revision.json", "regional_reconstruction_plans.json"]
+names = ["apartment_station_distances.json", "education_environment_records.json", "regional_price_index.json", "market_indicators.json", "regional_price_index_history.json", "building_register_records.json", "reconstruction_planning_records.json", "seoul_reconstruction_plans.json", "reconstruction_ordinance_verification.json", "price_data_revision.json", "regional_reconstruction_plans.json", "building_register_crosschecks.json"]
 paths = [root / name for name in names]
 paths += list((root / "molit_transactions").glob("*.json"))
 files = {}
@@ -282,7 +282,7 @@ def _validate_snapshot(directory, manifest, previous=None):
                 regional_reconstruction_plans.validate(value)
             except (ValueError, TypeError):
                 raise SharedDataError("공용 원본의 지역 정비계획 전체 건수를 확인하지 못했어요.") from None
-        if name == "building_register_records.json":
+        if name in ("building_register_records.json", "building_register_crosschecks.json"):
             records = value.get("records")
             if not isinstance(records, dict) or any(not isinstance(entry, dict) for entry in records.values()):
                 raise SharedDataError("공용 원본의 건축물대장 기록 형식이 올바르지 않아요.")

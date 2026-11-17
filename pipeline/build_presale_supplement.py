@@ -61,6 +61,9 @@ OUTPUT_COLUMNS = [
     "입주예정월",
     "최근분양권거래일",
     "출처",
+    "단지고유번호",
+    "필지고유번호",
+    "사용승인일",
 ]
 
 ANNOUNCEMENT_MARKERS = (
@@ -498,19 +501,31 @@ def blank_candidate():
     return {column: "" for column in OUTPUT_COLUMNS}
 
 
+def registered_identity(row):
+    """Keep already verified official identities when regenerating the supplement."""
+    try:
+        approved = dt.date.fromisoformat(str(row.get('사용승인일') or ''))
+    except ValueError:
+        return False
+    return bool(re.fullmatch(r'\d{14}', str(row.get('단지고유번호') or ''))
+                and re.fullmatch(r'\d{19}', str(row.get('필지고유번호') or ''))
+                and approved <= dt.date.today()
+                and 'https://www.data.go.kr/data/15106861/fileData.do' in str(row.get('출처') or ''))
+
+
 def existing_candidates(path):
     candidates = []
     for row in read_csv_rows(path):
         source = row.get("출처") or ""
-        if source and compact(row.get("대표단지명")) not in CURATED_EXISTING_NAME_KEYS:
+        if source and compact(row.get("대표단지명")) not in CURATED_EXISTING_NAME_KEYS and not registered_identity(row):
             continue
         if not usable_name(row.get("대표단지명")):
             continue
         candidate = blank_candidate()
         candidate.update({column: clean_space(row.get(column)) for column in OUTPUT_COLUMNS})
         candidate["_aliases"] = {clean_space(value) for value in source_names(row) if usable_name(value)}
-        candidate["_priority"] = 3
-        candidate["_source_keys"] = {"기존 보강"}
+        candidate["_priority"] = 4 if registered_identity(row) else 3
+        candidate["_source_keys"] = set(source.split("|")) if registered_identity(row) else {"기존 보강"}
         override = CURRENT_PROJECT_OVERRIDES.get(compact(candidate["대표단지명"]))
         if override is not None:
             candidate.update(override)
@@ -710,6 +725,12 @@ def merge_candidates(candidates):
                 right_lawd = existing.get("법정동코드", "")
                 if left_lawd and right_lawd and left_lawd != right_lawd:
                     continue
+                if registered_identity(candidate) or registered_identity(existing):
+                    if (candidate_location and location_key(existing) and candidate_location != location_key(existing)):
+                        continue
+                    if (candidate.get('세대수') and existing.get('세대수')
+                            and str(candidate['세대수']) != str(existing['세대수'])):
+                        continue
                 target = existing
                 break
         if target is None:
@@ -721,6 +742,8 @@ def merge_candidates(candidates):
         target["_aliases"].update(candidate["_aliases"])
         target["_source_keys"].update(candidate["_source_keys"])
         for column in OUTPUT_COLUMNS:
+            if registered_identity(target) and column in ('상태', '입주예정월'):
+                continue
             if not target.get(column) and candidate.get(column):
                 target[column] = candidate[column]
         if not target_had_lawd and candidate_has_lawd:
@@ -730,8 +753,9 @@ def merge_candidates(candidates):
         if candidate_deal_date:
             if candidate_deal_date > target.get("최근분양권거래일"):
                 target["최근분양권거래일"] = candidate_deal_date
-            target["상태"] = "분양권"
-        if month_key(candidate.get("입주예정월")) > month_key(target.get("입주예정월")):
+            if not registered_identity(target):
+                target["상태"] = "분양권"
+        if not registered_identity(target) and month_key(candidate.get("입주예정월")) > month_key(target.get("입주예정월")):
             target["입주예정월"] = candidate["입주예정월"]
     return merged
 

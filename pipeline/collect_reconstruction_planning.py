@@ -108,6 +108,30 @@ def _normal(value):
     return re.sub(r'\s+', '', str(value or '')).replace('번지', '')
 
 
+def _expected_addresses(entity):
+    """Use catalogue-backed spellings, while keeping dong and parcel exact."""
+    lot = apartment_identity.entity_parcel(entity)
+    province = str(entity.get('province') or '')
+    dong = str(entity.get('legalDong') or '')
+    district = str(entity.get('district') or '')
+    city = str(entity.get('city') or '')
+    districts = {district}
+    base = city.removesuffix('시') if city.endswith('시') else ''
+    if base and district.startswith(base) and district != city and district[len(base):].endswith('구'):
+        districts.add(city+' '+district[len(base):])
+    originals = {_normal(' '.join((province, value, dong, lot))) for value in districts}
+    address = _normal(entity.get('address'))
+    suffix = _normal(dong+lot)
+    if province and dong and lot and address and suffix:
+        for value in districts:
+            prefix = _normal(province+value)
+            if address.startswith(prefix) and address.endswith(suffix):
+                middle = address[len(prefix):-len(suffix)]
+                if re.fullmatch(r'[가-힣]+(?:읍|면)', middle):
+                    originals.add(address)
+    return originals
+
+
 def parse_public_page(raw, entity, *, day=None):
     if len(raw) > MAX_BYTES:
         raise PlanningError('invalid_source', 'oversize')
@@ -120,8 +144,8 @@ def parse_public_page(raw, entity, *, day=None):
     parser = _PublicParcel()
     parser.feed(text)
     address = _normal(''.join(parser.address))
-    expected = _normal(' '.join(str(entity.get(k) or '') for k in ('province', 'district', 'legalDong', 'jibun')))
-    if not expected or address != expected:
+    expected = _expected_addresses(entity)
+    if not address or address not in expected:
         raise PlanningError('identity_unverified', 'address_mismatch')
     if not parser.labels:
         raise PlanningError('invalid_source', 'zoning_missing')

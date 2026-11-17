@@ -19,6 +19,7 @@ import config
 import reconstruction_project_plans
 import regional_reconstruction_plans
 import shared_data
+import building_register_single_site
 
 VERSION = "reconstruction-conditions-v1"
 FEASIBILITY_VERSION = "reconstruction-feasibility-v1"
@@ -125,6 +126,7 @@ def _stamp(path):
 
 def revision():
     return [VERSION, FEASIBILITY_VERSION, _stamp(shared_data.cache_path(FACT_FILE)),
+            _stamp(Path(building_register_single_site.__file__)), _stamp(shared_data.cache_path(building_register_single_site.FILE)),
             _stamp(shared_data.cache_path(PLANNING_FILE)), _stamp(CONTEXT_PATH),
             _stamp(ORDINANCES_PATH), _stamp(shared_data.cache_path(reconstruction_project_plans.FILE)),
             _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE)), regional_reconstruction_plans.stamp()]
@@ -369,18 +371,27 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
         except (OSError, ValueError, TypeError):
             result.update(status="connection_error", reason="건축물대장 원본을 읽지 못했어요. 리포트를 다시 열어 주세요.")
             return result
-    if not entry:
-        if shared_data.read_only() and shared_data.status().get("status") in ("stale", "unavailable"):
-            result.update(status="connection_error", reason="운영 원본 연결을 마치지 못해 건축물대장 자료를 가져오지 못했어요. 다시 불러오기를 눌러 주세요.")
-        return result
-    result["status"] = entry.get("status", "not_collected")
-    if not entry.get("snapshot"):
-        result["reason"] = {"connection_error": "건축물대장 연결에 실패했어요. 잠시 뒤 리포트를 다시 열어 주세요.",
-                            "no_records": "이 주소의 단지 전체 건축물대장 조회 결과가 없어요.",
-                            "access_denied": "공식 자료 제공처에서 조회를 허용하지 않아 자료를 받지 못했어요. 연결이 복구되면 다시 확인할 수 있어요."}.get(result["status"], result["reason"])
-        result["errorCode"] = entry.get("errorCode")
-        return result
-    facts = profile(entity, entry)
+    alternative = None
+    if ((not entry or entry.get('status') in ('not_collected', 'no_records'))
+            and not (entry or {}).get('lastError')
+            and (not shared_data.read_only() or source_confirmed or shared_data.status().get('status') == 'ready')):
+        alternative = building_register_single_site.for_entity(entity, parcel(entity), day=day)
+    if alternative is None:
+        if not entry:
+            if shared_data.read_only() and shared_data.status().get("status") in ("stale", "unavailable"):
+                result.update(status="connection_error", reason="운영 원본 연결을 마치지 못해 건축물대장 자료를 가져오지 못했어요. 다시 불러오기를 눌러 주세요.")
+            return result
+        result["status"] = entry.get("status", "not_collected")
+        if not entry.get("snapshot"):
+            result["reason"] = {"connection_error": "건축물대장 연결에 실패했어요. 잠시 뒤 리포트를 다시 열어 주세요.",
+                                "no_records": "이 주소의 단지 전체 건축물대장 조회 결과가 없어요.",
+                                "access_denied": "공식 자료 제공처에서 조회를 허용하지 않아 자료를 받지 못했어요. 연결이 복구되면 다시 확인할 수 있어요."}.get(result["status"], result["reason"])
+            result["errorCode"] = entry.get("errorCode")
+            return result
+        facts = profile(entity, entry)
+    else:
+        entry = entry or {}
+        facts = alternative
     result.update(profile=facts, status=facts["status"])
     if facts["status"] not in ("ready", "partial"):
         result["reason"] = facts["reason"]
