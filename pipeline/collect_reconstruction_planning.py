@@ -117,18 +117,21 @@ def _expected_addresses(entity):
     city = str(entity.get('city') or '')
     districts = {district}
     base = city.removesuffix('시') if city.endswith('시') else ''
-    if base and district.startswith(base) and district != city and district[len(base):].endswith('구'):
+    if (province == '경기도' and base and district.startswith(base) and district != city
+            and not district.startswith(city+' ') and district[len(base):].endswith('구')):
         districts.add(city+' '+district[len(base):])
-    originals = {_normal(' '.join((province, value, dong, lot))) for value in districts}
-    address = _normal(entity.get('address'))
+    if province == '인천광역시' and district in ('인천중구','인천동구','인천서구'):
+        districts.add(district.removeprefix('인천'))
+    prefixes = {_normal(province+value) for value in districts}
     suffix = _normal(dong+lot)
+    originals = {prefix+suffix for prefix in prefixes}
+    address = _normal(entity.get('address'))
     if province and dong and lot and address and suffix:
-        for value in districts:
-            prefix = _normal(province+value)
+        for prefix in prefixes:
             if address.startswith(prefix) and address.endswith(suffix):
                 middle = address[len(prefix):-len(suffix)]
                 if re.fullmatch(r'[가-힣]+(?:읍|면)', middle):
-                    originals.add(address)
+                    originals.update(value+middle+suffix for value in prefixes)
     return originals
 
 

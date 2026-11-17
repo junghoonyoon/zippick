@@ -20,6 +20,7 @@ import reconstruction_project_plans
 import regional_reconstruction_plans
 import shared_data
 import building_register_single_site
+import building_register_crosscheck
 
 VERSION = "reconstruction-conditions-v1"
 FEASIBILITY_VERSION = "reconstruction-feasibility-v1"
@@ -126,7 +127,7 @@ def _stamp(path):
 
 def revision():
     return [VERSION, FEASIBILITY_VERSION, _stamp(shared_data.cache_path(FACT_FILE)),
-            _stamp(Path(building_register_single_site.__file__)), _stamp(shared_data.cache_path(building_register_single_site.FILE)),
+            _stamp(Path(building_register_single_site.__file__)), building_register_crosscheck.revision(),
             _stamp(shared_data.cache_path(PLANNING_FILE)), _stamp(CONTEXT_PATH),
             _stamp(ORDINANCES_PATH), _stamp(shared_data.cache_path(reconstruction_project_plans.FILE)),
             _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE)), regional_reconstruction_plans.stamp()]
@@ -266,7 +267,7 @@ def _planning_reference(entity, context, day, *, allow_expired=False):
     return reference
 
 
-def profile(entity, entry):
+def profile(entity, entry, *, parcel_area=None):
     """Select one exact whole-site register; a parcel alone is insufficient."""
     p = parcel(entity)
     snapshot = entry.get("snapshot") or {}
@@ -288,9 +289,16 @@ def profile(entity, entry):
         if apartment_identity.phase_conflicts(entity.get("name"), r.get("bldNm")):
             continue
         expected, households = number(entity.get("households")), number(r.get("hhldCnt"))
-        if expected and households and expected != households:
-            continue
         named = bool(apartment_development.entity_keys(entity) & apartment_development.name_keys(r.get("bldNm"), entity.get("legalDong")))
+        if expected and households and expected != households:
+            # Corroborate differing household scopes with an independent land
+            # area, exact name and parcel. Never substitute household counts.
+            # A generic suffix does not identify a different physical site.
+            # Keep phase/section numbers and all other name tokens unchanged.
+            canonical = lambda name: re.sub(r'\s+', '', str(name or '')).removesuffix('아파트')
+            exact_name = canonical(entity.get('name')) == canonical(r.get('bldNm'))
+            if not (exact_name and number(parcel_area) and number(parcel_area) == number(r.get('platArea'))):
+                continue
         if not named and not (expected and households == expected):
             continue
         matches.append(r)
@@ -301,17 +309,29 @@ def profile(entity, entry):
     far, coverage = number(r.get("vlRat")), number(r.get("bcRat"))
     land, area = number(r.get("platArea")), number(r.get("vlRatEstmTotArea"))
     build_area = number(r.get("archArea"))
+    field_issues = []
     # Invalid or placeholder zero is unknown, never a favorable low ratio.
     if far and land and area and abs(far - area / land * 100) > 1:
+        field_issues.append({"field": "floorAreaRatio", "code": "area_ratio_mismatch",
+                             "reportedValue": far, "calculatedValue": round(area / land * 100, 2),
+                             "landAreaSqm": land, "numeratorAreaSqm": area})
         far = None
     if coverage and (coverage > 100 or (land and build_area and abs(coverage - build_area / land * 100) > 1)):
+        field_issues.append({"field": "buildingCoverageRatio", "code": "area_ratio_mismatch" if coverage <= 100 else "out_of_range",
+                             "reportedValue": coverage,
+                             "calculatedValue": round(build_area / land * 100, 2) if land and build_area else None,
+                             "landAreaSqm": land, "numeratorAreaSqm": build_area})
         coverage = None
     return {"status": "ready" if far and coverage else "partial",
             "floorAreaRatio": far, "buildingCoverageRatio": coverage, "landAreaSqm": land,
             "floorAreaForRatioSqm": area, "households": number(r.get("hhldCnt")),
+            "mainBuildingCount": number(r.get("mainBldCnt")), "parkingSpaces": number(r.get("totPkngCnt")),
             "registerId": str(r["mgmBldrgstPk"]), "registerName": r.get("bldNm", ""),
             "approvedAt": r.get("useAprDay"), "recordCreatedAt": r.get("crtnDay"),
             "scope": "whole_registered_site", "source": snapshot.get("source"),
+            "fieldIssues": field_issues,
+            "householdScopeDiffers": bool(number(entity.get('households')) and number(r.get('hhldCnt'))
+                                           and number(entity['households']) != number(r['hhldCnt'])),
             "sourceUrl": snapshot.get("sourceUrl"), "fetchedAt": snapshot.get("fetchedAt"),
             "reason": "" if far and coverage else "공식 자료에서 일부 값이 비어 있거나 면적과 맞지 않아요."}
 
@@ -388,7 +408,15 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
                                 "access_denied": "공식 자료 제공처에서 조회를 허용하지 않아 자료를 받지 못했어요. 연결이 복구되면 다시 확인할 수 있어요."}.get(result["status"], result["reason"])
             result["errorCode"] = entry.get("errorCode")
             return result
-        facts = profile(entity, entry)
+        reference = result.get('planningReference') or {}
+        parcel_area = reference.get('parcelAreaSqm') if result.get('planningReferenceStatus') != 'stale' and result.get('planningSourceStatus') not in ('stale', 'connection_error', 'identity_unverified') else None
+        facts = profile(entity, entry, parcel_area=parcel_area)
+        if facts.get('scope') == 'whole_registered_site':
+            try:
+                facts=building_register_crosscheck.apply(entity,facts,building_register_crosscheck.entry_for(entity),day=day)
+            except (OSError,ValueError,TypeError):
+                facts={**facts,'crosscheck':{'status':'connection_error','verifiedFields':[],
+                                          'reason':'다른 공식 대장의 연결을 확인하지 못했어요.'}}
     else:
         entry = entry or {}
         facts = alternative
@@ -431,6 +459,7 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
     if not (complete_identity and _official(basis.get("sourceUrl")) and checked
             and 0 <= (day - checked).days <= MAX_SOURCE_AGE_DAYS and ceiling
             and basis.get("kind") in ("current_limit", "approved_plan") and basis.get("siteScopeVerified") is True
+            and number(basis.get("landAreaSqm")) and facts.get("landAreaSqm")
             and number(basis.get("landAreaSqm")) == facts.get("landAreaSqm")):
         reference = _planning_reference(entity, context, day)
         stale_reference = _planning_reference(entity, context, day, allow_expired=True)

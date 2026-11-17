@@ -78,3 +78,20 @@ def test_regenerating_the_supplement_keeps_verified_identity_and_completed_statu
     assert len(builder.merge_candidates([copy.deepcopy(original),other]))==2
     other=copy.deepcopy(fresh);other['세대수']='9999'
     assert len(builder.merge_candidates([copy.deepcopy(original),other]))==2
+
+
+def test_city_district_alias_and_eup_ri_are_resolved_together():
+    e={'province':'경기도','city':'용인시','district':'용인처인구','legalDong':'전대리','jibun':'전대리 150-28',
+       'cortarNo':'4146125024','address':'경기도 용인처인구 포곡읍 전대리 150-28'}
+    address='경기도 용인시 처인구 포곡읍 전대리 150-28'
+    assert parcels.parse_public_page(public_html(address=address),e)['address']==address
+    for bad in ('경기도 용인시 처인구 모현읍 전대리 150-28','경기도 용인시 처인구 포곡읍 전대리 150-29'):
+        with pytest.raises(parcels.PlanningError):parcels.parse_public_page(public_html(address=bad),e)
+
+@pytest.mark.parametrize('namespace,official',[('인천중구','중구'),('인천동구','동구'),('인천서구','서구')])
+def test_incheon_search_namespace_is_not_an_extra_city_in_the_official_address(namespace,official):
+    e={'province':'인천광역시','city':'인천시','district':namespace,'legalDong':'운서동','jibun':'2843-5',
+       'cortarNo':'2811014700','address':f'인천광역시 {official} 운서동 2843-5'}
+    assert parcels.parse_public_page(public_html(address=e['address']),e)['address']==e['address']
+    with pytest.raises(parcels.PlanningError):
+        parcels.parse_public_page(public_html(address=f'인천광역시 {official} 운서동 2843-6'),e)

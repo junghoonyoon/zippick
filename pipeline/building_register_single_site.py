@@ -40,11 +40,19 @@ def _read(path, stamp):
     return value['records']
 
 
-def for_entity(entity, parcel, *, day):
+def entry_for(entity):
+    """Read the common immutable title/corroboration store once per version."""
     path = shared_data.cache_path(FILE)
     try:
         stat = path.stat()
-        entry = _read(str(path), (stat.st_mtime_ns, stat.st_size)).get(str(entity.get('apartmentId')))
+    except OSError:
+        return None
+    return _read(str(path), (stat.st_mtime_ns, stat.st_size)).get(str(entity.get('apartmentId')))
+
+
+def for_entity(entity, parcel, *, day):
+    try:
+        entry = entry_for(entity)
     except (OSError, ValueError, TypeError):
         return None
     return profile(entity, parcel, entry, day=day)
