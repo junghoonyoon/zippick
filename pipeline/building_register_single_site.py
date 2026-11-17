@@ -1,4 +1,4 @@
-"""Use a title as site data only when it is the site's sole complete building.
+"""Use a sole complete registered title with exact parcel and total households.
 
 This does not combine per-building ratios. A missing/conflicting recap never
 allows a multi-building title snapshot to stand in for a whole-site register.
@@ -109,11 +109,10 @@ def profile(entity, parcel, entry, *, day):
     return {'status':'ready', 'scope':'whole_registered_site', 'recordType':'title',
             'scopeVerification':'sole_complete_title_exact_households_and_name',
             'floorAreaRatio':far, 'buildingCoverageRatio':coverage, 'landAreaSqm':land,
-            'floorAreaForRatioSqm':area, 'households':households, 'mainBuildingCount':1,
-            'residentialBuildingCount':1, 'minFloors':floors, 'maxFloors':floors,
-            'floorScope':'all_residential_buildings', 'approvedAt':row.get('useAprDay'),
+            'floorAreaForRatioSqm':area, 'households':households, 'registeredTitleCount':1,
+            'registeredGroundFloors':floors, 'approvedAt':row.get('useAprDay'),
             'registerId':str(row['mgmBldrgstPk']), 'registerName':row.get('bldNm'),
             'source':snapshot.get('source'), 'sourceUrl':snapshot['sourceUrl'],
             'fetchedAt':snapshot['fetchedAt'], 'referenceMonth':snapshot.get('referenceMonth'),
             'fieldIssues':[], 'fieldSources':{k:dict(provenance) for k in ('floorAreaRatio','buildingCoverageRatio','landAreaSqm')},
-            'reason':'전체 세대수를 포함하는 단일 건물의 공식 대장과 면적 계산이 일치해요.'}
+            'reason':'전체 세대수를 포함하는 공식 표제부와 대지·면적 계산이 일치해요. 대장 건수를 실제 동수로 대신 쓰지 않아요.'}

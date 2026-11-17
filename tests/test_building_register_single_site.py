@@ -29,7 +29,9 @@ def profile(entry=None):return single.profile(ENTITY,r.parcel(ENTITY),entry or s
 def test_complete_single_title_supplies_only_the_reported_whole_site_ratios():
     p=profile()
     assert p['floorAreaRatio']==200 and p['buildingCoverageRatio']==20
-    assert p['mainBuildingCount']==1 and p['households']==100
+    assert p['households']==100 and p['registeredTitleCount']==1
+    assert p.get('mainBuildingCount') is None and p.get('residentialBuildingCount') is None
+    assert p.get('minFloors') is None and p.get('maxFloors') is None
     assert p['scope']=='whole_registered_site' and p['recordType']=='title'
     assert p['fieldSources']['floorAreaRatio']['scope']=='sole_main_building_whole_site'
     assert p['floorAreaForRatioSqm']==20000 and p['landAreaSqm']==10000
