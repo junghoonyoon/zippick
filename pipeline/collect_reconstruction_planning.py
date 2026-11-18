@@ -143,6 +143,15 @@ def parse_public_page(raw, entity, *, day=None):
         text = raw.decode('cp949') if isinstance(raw, bytes) else str(raw)
     except UnicodeDecodeError:
         raise PlanningError('invalid_source', 'encoding') from None
+    # A documented provider error is missing publication, not a licence failure.
+    if (re.search(r'<title>[^<]*토지이용계획[^<]*토지이음[^<]*</title>',text)
+            and re.search(r'var\s+resultCode\s*=\s*[\"\']4008[\"\']',text)
+            and '열람 필지의 승인정보가 없습니다.' in text):
+        raise PlanningError('no_records','parcel_not_published')
+    if (re.search(r'<title>[^<]*토지이용계획[^<]*토지이음[^<]*</title>',text)
+            and re.search(r'var\s+resultCode\s*=\s*[\"\']4017[\"\']',text)
+            and '입력하신 지번이 검색되지 않습니다.' in text):
+        raise PlanningError('no_records','parcel_not_found')
     if '공공누리마크' not in text or '출처표시 조건에 따라 자유이용' not in text:
         raise PlanningError('license_unverified', 'attribution_missing')
     parser = _PublicParcel()

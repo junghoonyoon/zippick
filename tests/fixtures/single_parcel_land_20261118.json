@@ -1,0 +1,637 @@
+[
+  {
+    "entity": {
+      "apartmentId": "11740100001697",
+      "kaptCode": "",
+      "complexNo": "",
+      "name": "코오롱 2차 아파트",
+      "category": "강동구 아파트",
+      "aliases": [
+        "코오롱 2차 아파트 101동",
+        "코오롱2",
+        "성내동 코오롱 2차 아파트",
+        "성내동 코오롱 2차",
+        "성내동 코오롱 2차 아파트 101동",
+        "성내동 코오롱2"
+      ],
+      "province": "서울특별시",
+      "city": "서울시",
+      "district": "강동구",
+      "legalDong": "성내동",
+      "jibun": "595",
+      "cortarNo": "1174010800",
+      "address": "서울특별시 강동구 성내동 595",
+      "dedupeKey": "코오롱2차아파트|서울특별시|강동구|성내동",
+      "households": 78,
+      "approvedAt": "2002-12-21",
+      "plannedMoveInMonth": "",
+      "aggregate": false,
+      "lawdCd": "11740",
+      "status": "",
+      "sectionIdentity": null
+    },
+    "entry": {
+      "identity": {
+        "apartmentId": "11740100001697",
+        "name": "코오롱 2차 아파트",
+        "province": "서울특별시",
+        "district": "강동구",
+        "legalDong": "성내동",
+        "jibun": "595",
+        "cortarNo": "1174010800",
+        "households": 78
+      },
+      "status": "ok",
+      "checkedAt": "2026-11-17T15:33:15.841894+00:00",
+      "snapshot": {
+        "parcel": {
+          "sigunguCd": "11740",
+          "bjdongCd": "10800",
+          "platGbCd": "0",
+          "bun": "0595",
+          "ji": "0000"
+        },
+        "recordType": "title",
+        "source": "국토교통부 건축HUB 건축물대장 표제부",
+        "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+        "fetchedAt": "2026-11-17T15:33:15.841894+00:00",
+        "referenceMonth": "2026-09",
+        "referenceDatePrecision": "month",
+        "archiveName": "zippick-building-title-202609.zip",
+        "records": [
+          {
+            "mgmBldrgstPk": "102619219",
+            "regstrGbCd": "2",
+            "regstrKindCd": "3",
+            "platPlc": "서울특별시 강동구 성내동 595번지",
+            "newPlatPlc": "서울특별시 강동구 올림픽로 572 (성내동)",
+            "bldNm": "코오롱 2차 아파트 101동",
+            "sigunguCd": "11740",
+            "bjdongCd": "10800",
+            "platGbCd": "0",
+            "bun": "0595",
+            "ji": "0000",
+            "bylotCnt": "0",
+            "dongNm": "코오롱 2차 아파트 101동",
+            "mainAtchGbCd": "0",
+            "platArea": "0",
+            "archArea": "2089.15",
+            "bcRat": "58.57",
+            "totArea": "18958.67",
+            "vlRatEstmTotArea": "13110.22",
+            "vlRat": "367.56",
+            "mainPurpsCdNm": "공동주택",
+            "etcPurps": "아파트,업무시설,근생",
+            "hhldCnt": "78",
+            "grndFlrCnt": "18",
+            "ugrndFlrCnt": "3",
+            "atchBldCnt": "0",
+            "atchBldArea": "0",
+            "useAprDay": "20021221",
+            "crtnDay": "20240402"
+          }
+        ],
+        "totalCount": 1
+      }
+    },
+    "parcelReference": {
+      "kind": "parcel_zoning",
+      "pnu": "1174010800105950000",
+      "zoneName": "제3종일반주거지역(2022-05-12)",
+      "zoneNames": [
+        "제3종일반주거지역(2022-05-12)"
+      ],
+      "parcelAreaSqm": 3566.8,
+      "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=1174010800105950000&scale=&selGbn=umd",
+      "checkedAt": "2026-11-15",
+      "zoneCoverageVerified": false
+    }
+  },
+  {
+    "entity": {
+      "apartmentId": "11740100001718",
+      "kaptCode": "",
+      "complexNo": "",
+      "name": "현대코아 아파트",
+      "category": "강동구 아파트",
+      "aliases": [
+        "천호동 현대코아 아파트",
+        "천호동 현대코아"
+      ],
+      "province": "서울특별시",
+      "city": "서울시",
+      "district": "강동구",
+      "legalDong": "천호동",
+      "jibun": "565",
+      "cortarNo": "1174010900",
+      "address": "서울특별시 강동구 천호동 565",
+      "dedupeKey": "현대코아아파트|서울특별시|강동구|천호동",
+      "households": 185,
+      "approvedAt": "1999-02-02",
+      "plannedMoveInMonth": "",
+      "aggregate": false,
+      "lawdCd": "11740",
+      "status": "",
+      "sectionIdentity": null
+    },
+    "entry": {
+      "identity": {
+        "apartmentId": "11740100001718",
+        "name": "현대코아 아파트",
+        "province": "서울특별시",
+        "district": "강동구",
+        "legalDong": "천호동",
+        "jibun": "565",
+        "cortarNo": "1174010900",
+        "households": 185
+      },
+      "status": "ok",
+      "checkedAt": "2026-11-17T15:33:15.841894+00:00",
+      "snapshot": {
+        "parcel": {
+          "sigunguCd": "11740",
+          "bjdongCd": "10900",
+          "platGbCd": "0",
+          "bun": "0565",
+          "ji": "0000"
+        },
+        "recordType": "title",
+        "source": "국토교통부 건축HUB 건축물대장 표제부",
+        "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+        "fetchedAt": "2026-11-17T15:33:15.841894+00:00",
+        "referenceMonth": "2026-09",
+        "referenceDatePrecision": "month",
+        "archiveName": "zippick-building-title-202609.zip",
+        "records": [
+          {
+            "mgmBldrgstPk": "1026120241",
+            "regstrGbCd": "2",
+            "regstrKindCd": "3",
+            "platPlc": "서울특별시 강동구 천호동 565번지",
+            "newPlatPlc": "서울특별시 강동구 천호대로 1095 (천호동)",
+            "bldNm": "현대코아 아파트",
+            "sigunguCd": "11740",
+            "bjdongCd": "10900",
+            "platGbCd": "0",
+            "bun": "0565",
+            "ji": "0000",
+            "bylotCnt": "0",
+            "dongNm": "",
+            "mainAtchGbCd": "0",
+            "platArea": "0",
+            "archArea": "1780.09",
+            "bcRat": "49.3",
+            "totArea": "44200.2",
+            "vlRatEstmTotArea": "28506.93",
+            "vlRat": "789.49",
+            "mainPurpsCdNm": "공동주택",
+            "etcPurps": "아파트,관람집회시설,근린생활시설,판매시설,교육연구및복지시설",
+            "hhldCnt": "185",
+            "grndFlrCnt": "25",
+            "ugrndFlrCnt": "7",
+            "atchBldCnt": "0",
+            "atchBldArea": "0",
+            "useAprDay": "19990202",
+            "crtnDay": "20250225"
+          }
+        ],
+        "totalCount": 1
+      }
+    },
+    "parcelReference": {
+      "kind": "parcel_zoning",
+      "pnu": "1174010900105650000",
+      "zoneName": "일반상업지역",
+      "zoneNames": [
+        "일반상업지역"
+      ],
+      "parcelAreaSqm": 3610.8,
+      "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=1174010900105650000&scale=&selGbn=umd",
+      "checkedAt": "2026-11-15",
+      "zoneCoverageVerified": false,
+      "districtPlanName": "지구단위계획구역",
+      "districtPlanUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=1174010900105650000&scale=&selGbn=umd"
+    }
+  },
+  {
+    "entity": {
+      "apartmentId": "41360120089876",
+      "kaptCode": "",
+      "complexNo": "",
+      "name": "세양청마루",
+      "category": "남양주시 아파트",
+      "aliases": [
+        "덕소리 세양청마루"
+      ],
+      "province": "경기도",
+      "city": "남양주시",
+      "district": "남양주시",
+      "legalDong": "덕소리",
+      "jibun": "덕소리 600-14",
+      "cortarNo": "4136025021",
+      "address": "경기도 남양주시 와부읍 덕소리 600-14",
+      "dedupeKey": "세양청마루|경기도|남양주시|덕소리",
+      "households": 216,
+      "approvedAt": "2007-10-31",
+      "plannedMoveInMonth": "",
+      "aggregate": false,
+      "lawdCd": "41360",
+      "status": "",
+      "sectionIdentity": null
+    },
+    "entry": {
+      "identity": {
+        "apartmentId": "41360120089876",
+        "name": "세양청마루",
+        "province": "경기도",
+        "district": "남양주시",
+        "legalDong": "덕소리",
+        "jibun": "덕소리 600-14",
+        "cortarNo": "4136025021",
+        "households": 216
+      },
+      "status": "ok",
+      "checkedAt": "2026-11-17T15:33:15.841894+00:00",
+      "snapshot": {
+        "parcel": {
+          "sigunguCd": "41360",
+          "bjdongCd": "25021",
+          "platGbCd": "0",
+          "bun": "0600",
+          "ji": "0014"
+        },
+        "recordType": "title",
+        "source": "국토교통부 건축HUB 건축물대장 표제부",
+        "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+        "fetchedAt": "2026-11-17T15:33:15.841894+00:00",
+        "referenceMonth": "2026-09",
+        "referenceDatePrecision": "month",
+        "archiveName": "zippick-building-title-202609.zip",
+        "records": [
+          {
+            "mgmBldrgstPk": "1110117591",
+            "regstrGbCd": "2",
+            "regstrKindCd": "3",
+            "platPlc": "경기도 남양주시 와부읍 덕소리 600-14번지",
+            "newPlatPlc": "경기도 남양주시 덕소로116번길 20 (와부읍 덕소리)",
+            "bldNm": "세양청마루",
+            "sigunguCd": "41360",
+            "bjdongCd": "25021",
+            "platGbCd": "0",
+            "bun": "0600",
+            "ji": "0014",
+            "bylotCnt": "0",
+            "dongNm": "",
+            "mainAtchGbCd": "0",
+            "platArea": "0",
+            "archArea": "6252.6758",
+            "bcRat": "59.41",
+            "totArea": "41567.4018",
+            "vlRatEstmTotArea": "28406.9289",
+            "vlRat": "269.92",
+            "mainPurpsCdNm": "공동주택",
+            "etcPurps": "공동주택, 판매시설, 제2종근린생활시설",
+            "hhldCnt": "216",
+            "grndFlrCnt": "22",
+            "ugrndFlrCnt": "2",
+            "atchBldCnt": "0",
+            "atchBldArea": "0",
+            "useAprDay": "20071031",
+            "crtnDay": "20260318"
+          }
+        ],
+        "totalCount": 1
+      }
+    },
+    "parcelReference": {
+      "kind": "parcel_zoning",
+      "pnu": "4136025021106000014",
+      "zoneName": "제1종일반주거지역, 준주거지역",
+      "zoneNames": [
+        "제1종일반주거지역",
+        "준주거지역"
+      ],
+      "parcelAreaSqm": 10524.0,
+      "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=4136025021106000014&scale=&selGbn=umd",
+      "checkedAt": "2026-11-17",
+      "zoneCoverageVerified": false,
+      "districtPlanName": "와부3지구",
+      "districtPlanUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=4136025021106000014&scale=&selGbn=umd"
+    }
+  },
+  {
+    "entity": {
+      "apartmentId": "41111100052327",
+      "kaptCode": "",
+      "complexNo": "",
+      "name": "노블레스",
+      "category": "수원장안구 아파트",
+      "aliases": [
+        "노블레스아파트",
+        "정자동 노블레스",
+        "정자동 노블레스아파트"
+      ],
+      "province": "경기도",
+      "city": "수원시",
+      "district": "수원장안구",
+      "legalDong": "정자동",
+      "jibun": "45-2",
+      "cortarNo": "4111113000",
+      "address": "경기도 수원장안구 정자동 45-2",
+      "dedupeKey": "노블레스|경기도|수원장안구|정자동",
+      "households": 42,
+      "approvedAt": "2003-04-01",
+      "plannedMoveInMonth": "",
+      "aggregate": false,
+      "lawdCd": "41111",
+      "status": "",
+      "sectionIdentity": null
+    },
+    "entry": {
+      "identity": {
+        "apartmentId": "41111100052327",
+        "name": "노블레스",
+        "province": "경기도",
+        "district": "수원장안구",
+        "legalDong": "정자동",
+        "jibun": "45-2",
+        "cortarNo": "4111113000",
+        "households": 42
+      },
+      "status": "ok",
+      "checkedAt": "2026-11-17T15:33:15.841894+00:00",
+      "snapshot": {
+        "parcel": {
+          "sigunguCd": "41111",
+          "bjdongCd": "13000",
+          "platGbCd": "0",
+          "bun": "0045",
+          "ji": "0002"
+        },
+        "recordType": "title",
+        "source": "국토교통부 건축HUB 건축물대장 표제부",
+        "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+        "fetchedAt": "2026-11-17T15:33:15.841894+00:00",
+        "referenceMonth": "2026-09",
+        "referenceDatePrecision": "month",
+        "archiveName": "zippick-building-title-202609.zip",
+        "records": [
+          {
+            "mgmBldrgstPk": "1084112204",
+            "regstrGbCd": "2",
+            "regstrKindCd": "3",
+            "platPlc": "경기도 수원시 장안구 정자동 45-2번지",
+            "newPlatPlc": "경기도 수원시 장안구 장안로103번길 37 (정자동)",
+            "bldNm": "노블레스아파트",
+            "sigunguCd": "41111",
+            "bjdongCd": "13000",
+            "platGbCd": "0",
+            "bun": "0045",
+            "ji": "0002",
+            "bylotCnt": "0",
+            "dongNm": "노블레스아파트",
+            "mainAtchGbCd": "0",
+            "platArea": "0",
+            "archArea": "885.95",
+            "bcRat": "40.25",
+            "totArea": "7005.96",
+            "vlRatEstmTotArea": "5165.76",
+            "vlRat": "234.7",
+            "mainPurpsCdNm": "공동주택",
+            "etcPurps": "공동주택(아파트), 근린생활시설",
+            "hhldCnt": "42",
+            "grndFlrCnt": "8",
+            "ugrndFlrCnt": "1",
+            "atchBldCnt": "0",
+            "atchBldArea": "0",
+            "useAprDay": "20030401",
+            "crtnDay": "20220909"
+          }
+        ],
+        "totalCount": 1
+      }
+    },
+    "parcelReference": {
+      "kind": "parcel_zoning",
+      "pnu": "4111113000100450002",
+      "zoneName": "제2종일반주거지역",
+      "zoneNames": [
+        "제2종일반주거지역"
+      ],
+      "parcelAreaSqm": 2201.0,
+      "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=4111113000100450002&scale=&selGbn=umd",
+      "checkedAt": "2026-11-17",
+      "zoneCoverageVerified": false
+    }
+  },
+  {
+    "entity": {
+      "apartmentId": "41273120020726",
+      "kaptCode": "",
+      "complexNo": "",
+      "name": "일신건영휴먼빌",
+      "category": "안산단원구 아파트",
+      "aliases": [
+        "일신건영휴먼빌아파트",
+        "선부동 일신건영휴먼빌",
+        "선부동 일신건영휴먼빌아파트"
+      ],
+      "province": "경기도",
+      "city": "안산시",
+      "district": "안산단원구",
+      "legalDong": "선부동",
+      "jibun": "1028-1",
+      "cortarNo": "4127310900",
+      "address": "경기도 안산단원구 선부동 1028-1",
+      "dedupeKey": "일신건영휴먼빌|경기도|안산단원구|선부동",
+      "households": 224,
+      "approvedAt": "2005-06-29",
+      "plannedMoveInMonth": "",
+      "aggregate": false,
+      "lawdCd": "41273",
+      "status": "",
+      "sectionIdentity": null
+    },
+    "entry": {
+      "identity": {
+        "apartmentId": "41273120020726",
+        "name": "일신건영휴먼빌",
+        "province": "경기도",
+        "district": "안산단원구",
+        "legalDong": "선부동",
+        "jibun": "1028-1",
+        "cortarNo": "4127310900",
+        "households": 224
+      },
+      "status": "ok",
+      "checkedAt": "2026-11-17T15:33:15.841894+00:00",
+      "snapshot": {
+        "parcel": {
+          "sigunguCd": "41273",
+          "bjdongCd": "10900",
+          "platGbCd": "0",
+          "bun": "1028",
+          "ji": "0001"
+        },
+        "recordType": "title",
+        "source": "국토교통부 건축HUB 건축물대장 표제부",
+        "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+        "fetchedAt": "2026-11-17T15:33:15.841894+00:00",
+        "referenceMonth": "2026-09",
+        "referenceDatePrecision": "month",
+        "archiveName": "zippick-building-title-202609.zip",
+        "records": [
+          {
+            "mgmBldrgstPk": "11011112662",
+            "regstrGbCd": "2",
+            "regstrKindCd": "3",
+            "platPlc": "경기도 안산시 단원구 선부동 1028-1번지",
+            "newPlatPlc": "경기도 안산시 단원구 선이로 6 (선부동)",
+            "bldNm": "일신건영휴먼빌아파트",
+            "sigunguCd": "41273",
+            "bjdongCd": "10900",
+            "platGbCd": "0",
+            "bun": "1028",
+            "ji": "0001",
+            "bylotCnt": "0",
+            "dongNm": "일신건영휴먼빌아파트",
+            "mainAtchGbCd": "0",
+            "platArea": "0",
+            "archArea": "3489.055",
+            "bcRat": "69.95",
+            "totArea": "36527.661",
+            "vlRatEstmTotArea": "27573.471",
+            "vlRat": "552.84",
+            "mainPurpsCdNm": "공동주택",
+            "etcPurps": "공동주택(아파트)외 3",
+            "hhldCnt": "224",
+            "grndFlrCnt": "15",
+            "ugrndFlrCnt": "2",
+            "atchBldCnt": "0",
+            "atchBldArea": "0",
+            "useAprDay": "20050629",
+            "crtnDay": "20220909"
+          }
+        ],
+        "totalCount": 1
+      }
+    },
+    "parcelReference": {
+      "kind": "parcel_zoning",
+      "pnu": "4127310900110280001",
+      "zoneName": "일반상업지역",
+      "zoneNames": [
+        "일반상업지역"
+      ],
+      "parcelAreaSqm": 4987.6,
+      "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=4127310900110280001&scale=&selGbn=umd",
+      "checkedAt": "2026-11-17",
+      "zoneCoverageVerified": false,
+      "districtPlanName": "지구단위계획구역",
+      "districtPlanUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=4127310900110280001&scale=&selGbn=umd"
+    }
+  },
+  {
+    "entity": {
+      "apartmentId": "41150120277396",
+      "kaptCode": "",
+      "complexNo": "",
+      "name": "아이비타워",
+      "category": "의정부시 아파트",
+      "aliases": [
+        "의정부동 아이비타워"
+      ],
+      "province": "경기도",
+      "city": "의정부시",
+      "district": "의정부시",
+      "legalDong": "의정부동",
+      "jibun": "496-4",
+      "cortarNo": "4115010100",
+      "address": "경기도 의정부시 의정부동 496-4",
+      "dedupeKey": "아이비타워|경기도|의정부시|의정부동",
+      "households": 208,
+      "approvedAt": "2013-10-22",
+      "plannedMoveInMonth": "",
+      "aggregate": false,
+      "lawdCd": "41150",
+      "status": "",
+      "sectionIdentity": null
+    },
+    "entry": {
+      "identity": {
+        "apartmentId": "41150120277396",
+        "name": "아이비타워",
+        "province": "경기도",
+        "district": "의정부시",
+        "legalDong": "의정부동",
+        "jibun": "496-4",
+        "cortarNo": "4115010100",
+        "households": 208
+      },
+      "status": "ok",
+      "checkedAt": "2026-11-17T15:33:15.841894+00:00",
+      "snapshot": {
+        "parcel": {
+          "sigunguCd": "41150",
+          "bjdongCd": "10100",
+          "platGbCd": "0",
+          "bun": "0496",
+          "ji": "0004"
+        },
+        "recordType": "title",
+        "source": "국토교통부 건축HUB 건축물대장 표제부",
+        "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+        "fetchedAt": "2026-11-17T15:33:15.841894+00:00",
+        "referenceMonth": "2026-09",
+        "referenceDatePrecision": "month",
+        "archiveName": "zippick-building-title-202609.zip",
+        "records": [
+          {
+            "mgmBldrgstPk": "10931100202652",
+            "regstrGbCd": "2",
+            "regstrKindCd": "3",
+            "platPlc": "경기도 의정부시 의정부동 496-4번지",
+            "newPlatPlc": "경기도 의정부시 신흥로232번길 5-31 (의정부동)",
+            "bldNm": "아이비타워",
+            "sigunguCd": "41150",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "0496",
+            "ji": "0004",
+            "bylotCnt": "0",
+            "dongNm": "아이비타워",
+            "mainAtchGbCd": "0",
+            "platArea": "0",
+            "archArea": "514.8626",
+            "bcRat": "68.0225",
+            "totArea": "7092.1134",
+            "vlRatEstmTotArea": "6043.4107",
+            "vlRat": "798.4424",
+            "mainPurpsCdNm": "공동주택",
+            "etcPurps": "아파트(도시형생활주택),제1,2종근린생활시설",
+            "hhldCnt": "208",
+            "grndFlrCnt": "15",
+            "ugrndFlrCnt": "2",
+            "atchBldCnt": "0",
+            "atchBldArea": "0",
+            "useAprDay": "20131022",
+            "crtnDay": "20220909"
+          }
+        ],
+        "totalCount": 1
+      }
+    },
+    "parcelReference": {
+      "kind": "parcel_zoning",
+      "pnu": "4115010100104960004",
+      "zoneName": "일반상업지역",
+      "zoneNames": [
+        "일반상업지역"
+      ],
+      "parcelAreaSqm": 756.9,
+      "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=4115010100104960004&scale=&selGbn=umd",
+      "checkedAt": "2026-11-15",
+      "zoneCoverageVerified": false
+    }
+  }
+]

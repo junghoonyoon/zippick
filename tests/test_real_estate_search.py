@@ -125,7 +125,8 @@ class ApartmentSearchSuggestionTest(unittest.TestCase):
         current = next(row for row in jungnang_rows if row["jibun"] == "462")
         self.assertEqual(current["name"], "리버센SK뷰롯데캐슬")
         self.assertEqual(current["households"], 1055)
-        self.assertEqual(current["status"], "")
+        self.assertEqual(current["status"], "사용승인")
+        self.assertTrue(current["apartmentId"].startswith("zippick:register:"))
 
     def test_presale_source_typo_uses_consistent_official_name(self):
         for query in ("선샤인힐스", "션샤인힐스"):

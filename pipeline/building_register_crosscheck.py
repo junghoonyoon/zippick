@@ -271,10 +271,18 @@ def _apply_titles(entity,profile,entry,*,day=None):
             or sum(_number(x.get('hhldCnt')) or 0 for x in res)!=expected_households):
         result['status']='identity_unverified';return out
     floors=[_number(x.get('grndFlrCnt')) for x in res]
+    # One title may cover multiple physical buildings. A title count alone
+    # does not establish the coverage of the residential floor range.
+    names=[str(row.get('dongNm') or '').strip() for row in res]
+    named_buildings=(len(res)>1 and all(names) and len(names)==len(set(names))
+        and not any(re.search(r'[,/·~]|외|및|전체|합계|일괄|통합',name) for name in names))
+    all_main=[row for row in rows if str(row.get('mainAtchGbCd'))=='0']
+    count_verified=bool(_number(profile.get('mainBuildingCount'))==len(all_main))
+    floor_coverage_verified=named_buildings or count_verified
     result.update(status='checked_unresolved',sourceUrl=snapshot['sourceUrl'],checkedAt=snapshot['fetchedAt'],
-                  residentialBuildingCount=len(res),matchedHouseholds=expected_households,
+                  registeredResidentialTitleCount=len(res),matchedHouseholds=expected_households,
                   reason='동별 공식 대장을 대조했지만 단지 전체 비율을 독립적으로 확인할 수 없어 원본의 충돌 값은 계속 제외했어요.')
-    if all(x and x.is_integer() and x<=200 for x in floors):
+    if floor_coverage_verified and all(x and x.is_integer() and x<=200 for x in floors):
         out.update(minFloors=min(floors),maxFloors=max(floors),floorScope='all_residential_buildings',
                    floorSourceUrl=snapshot['sourceUrl'],floorFetchedAt=snapshot['fetchedAt'],residentialBuildingCount=len(res))
         result.update(status='verified_partial',verifiedFields=['minFloors','maxFloors'],

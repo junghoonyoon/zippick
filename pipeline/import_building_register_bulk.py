@@ -97,11 +97,60 @@ def import_archive(path, entities, as_of):
             'preserved': preserved, 'asOf': as_of}
 
 
+TITLE_FIELDS={0:'mgmBldrgstPk',1:'regstrGbCd',3:'regstrKindCd',5:'platPlc',6:'newPlatPlc',7:'bldNm',8:'sigunguCd',9:'bjdongCd',10:'platGbCd',11:'bun',12:'ji',16:'bylotCnt',22:'dongNm',23:'mainAtchGbCd',25:'platArea',26:'archArea',27:'bcRat',28:'totArea',29:'vlRatEstmTotArea',30:'vlRat',35:'mainPurpsCdNm',36:'etcPurps',40:'hhldCnt',43:'grndFlrCnt',44:'ugrndFlrCnt',47:'atchBldCnt',48:'atchBldArea',60:'useAprDay',74:'crtnDay'}
+
+def title_archive_plan(path,entities,as_of):
+    reference=dt.date.fromisoformat(as_of+'-01')
+    if not 0<=(dt.date.today()-reference).days<=180:raise ValueError('invalid title reference month')
+    entities=[e for e in entities if e.get('apartmentId') and not e.get('aggregate') and reconstruction.parcel(e)]
+    parcels={building_register_identity.parcel_key(p):p for e in entities for p in [reconstruction.register_lookup_parcel(e)] if p}
+    rows=collections.defaultdict(list);count=0
+    with zipfile.ZipFile(path) as archive:
+        if archive.namelist()!=['mart_djy_03.txt']:raise ValueError('unexpected title archive')
+        for raw in archive.open('mart_djy_03.txt'):
+            row=raw.decode('utf-8').rstrip('\r\n').split('|')
+            if len(row)!=77:raise ValueError('unexpected title field count')
+            count+=1;key=''.join(row[8:13])
+            if key in parcels:rows[key].append({v:row[i] for i,v in TITLE_FIELDS.items()})
+        if archive.testzip() is not None:raise ValueError('corrupt title archive')
+    if not count:raise ValueError('empty title archive')
+    acquired=dt.datetime.fromtimestamp(Path(path).stat().st_mtime,dt.timezone.utc).isoformat();prepared={}
+    for e in entities:
+        p=reconstruction.register_lookup_parcel(e);records=rows.get(building_register_identity.parcel_key(p),[])
+        if not records:continue
+        ids=[str(row.get('mgmBldrgstPk') or '') for row in records]
+        if any(not k for k in ids) or len(ids)!=len(set(ids)):continue
+        prepared[e['apartmentId']]={'identity':{k:e.get(k,'') for k in ('apartmentId','name','province','district','legalDong','jibun','cortarNo','households')},'status':'ok','checkedAt':acquired,'snapshot':{'parcel':p,'recordType':'title','source':'국토교통부 건축HUB 건축물대장 표제부','sourceUrl':SOURCE_URL,'referenceMonth':as_of,'referenceDatePrecision':'month','fetchedAt':acquired,'totalCount':len(records),'records':records}}
+    return prepared,{'archiveRows':count,'preparedSites':len(prepared)}
+
+
+def import_title_archive(path,entities,as_of):
+    shared_data.require_writer()
+    prepared,result=title_archive_plan(path,entities,as_of)
+    destination=shared_data.cache_path('building_register_crosschecks.json');inserted=preserved=0
+    with store.exclusive_file_lock(destination):
+        data=store.read_json_object(destination)
+        for pk,value in prepared.items():
+            previous=data['records'].get(pk) or {};snapshot=previous.get('snapshot') or {}
+            if snapshot.get('records') or (previous.get('status')=='no_records' and snapshot.get('parcel') in (None,value['snapshot']['parcel'])):
+                preserved+=1;continue
+            old_id=previous.get('identity') or {}
+            if old_id and any(str(old_id.get(k) or '')!=str(value['identity'].get(k) or '') for k in ('apartmentId','province','district','legalDong','jibun','cortarNo')):raise ValueError('stored title identity mismatch')
+            merged={**previous,**value}
+            if previous.get('lastError'):merged['previousFailure']=previous['lastError'];merged.pop('lastError',None)
+            if snapshot:merged['previousSnapshot']=snapshot
+            data['records'][pk]=merged;inserted+=1
+        data['updatedAt']=dt.datetime.now(dt.timezone.utc).isoformat();store.write_json_atomically(destination,data)
+    return {**result,'inserted':inserted,'preserved':preserved}
+
+
 if __name__ == '__main__':
     import argparse
     import real_estate_search
     parser = argparse.ArgumentParser()
     parser.add_argument('archive')
     parser.add_argument('--as-of', required=True)
+    parser.add_argument('--record-type', choices=['recap','title'],default='recap')
     args = parser.parse_args()
-    print(json.dumps(import_archive(args.archive, real_estate_search._search_entities(), args.as_of), ensure_ascii=False))
+    function=import_archive if args.record_type=='recap' else import_title_archive
+    print(json.dumps(function(args.archive, real_estate_search.APARTMENT_MASTER, args.as_of), ensure_ascii=False))

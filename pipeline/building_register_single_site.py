@@ -9,7 +9,7 @@ import math
 from functools import lru_cache
 from pathlib import Path
 import re
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,parse_qs
 
 import shared_data
 import apartment_identity
@@ -52,12 +52,12 @@ def entry_for(entity):
     return _read(str(path), (stat.st_mtime_ns, stat.st_size)).get(str(entity.get('apartmentId')))
 
 
-def for_entity(entity, parcel, *, day):
+def for_entity(entity, parcel, *, day, parcel_reference=None):
     try:
         entry = entry_for(entity)
     except (OSError, ValueError, TypeError):
         return None
-    return profile(entity, parcel, entry, day=day)
+    return profile(entity, parcel, entry, day=day, parcel_reference=parcel_reference)
 
 
 def _basic_identity(entity, parcel, entry, households, day):
@@ -77,7 +77,18 @@ def _basic_identity(entity, parcel, entry, households, day):
     return bool(names & aliases)
 
 
-def profile(entity, parcel, entry, *, day):
+def _single_parcel_land(entity,parcel,reference,day):
+    if not isinstance(reference,dict) or reference.get('kind')!='parcel_zoning' or reference.get('zoneCoverageVerified') is not False:return None
+    url=urlsplit(str(reference.get('sourceUrl') or ''))
+    if (url.scheme!='https' or url.hostname not in ('www.eum.go.kr','eum.go.kr') or url.path!='/web/ar/lu/luLandDet.jsp'
+        or reference.get('pnu') not in building_register_identity.pnu_variants(entity,parcel,day=day)
+        or parse_qs(url.query).get('pnu')!=[reference.get('pnu')]):return None
+    try:checked=dt.date.fromisoformat(str(reference.get('checkedAt')))
+    except ValueError:return None
+    return _number(reference.get('parcelAreaSqm')) if 0<=(day-checked).days<=180 else None
+
+
+def profile(entity, parcel, entry, *, day, parcel_reference=None):
     if not isinstance(entry, dict) or entry.get('status') != 'ok' or entry.get('lastError'):
         return None
     identity = entry.get('identity') or {}
@@ -127,6 +138,10 @@ def profile(entity, parcel, entry, *, day):
     if not households or _number(row.get('hhldCnt')) != households:
         return None
     land, footprint, area = map(_number, (row.get('platArea'), row.get('archArea'), row.get('vlRatEstmTotArea')))
+    independent_land=False
+    if land is None:
+        land=_single_parcel_land(entity,original_parcel,parcel_reference,day)
+        independent_land=land is not None
     far, coverage = _number(row.get('vlRat')), _number(row.get('bcRat'))
     floors = _number(row.get('grndFlrCnt'))
     if (not all((land, footprint, area, far, coverage, floors)) or coverage > 100
@@ -135,6 +150,9 @@ def profile(entity, parcel, entry, *, day):
         return None
     provenance = {'sourceUrl': snapshot['sourceUrl'], 'fetchedAt': snapshot['fetchedAt'],
                   'registerId': str(row['mgmBldrgstPk']), 'scope': 'sole_main_building_whole_site'}
+    field_sources={k:dict(provenance) for k in ('floorAreaRatio','buildingCoverageRatio','landAreaSqm')}
+    if independent_land:
+        field_sources['landAreaSqm']={'sourceUrl':parcel_reference['sourceUrl'],'checkedAt':parcel_reference['checkedAt'],'pnu':parcel_reference['pnu'],'scope':'whole_site_single_parcel_confirmed_by_title','method':'independent_official_parcel_area'}
     return {'status':'ready', 'scope':'whole_registered_site', 'recordType':'title',
             'scopeVerification':'sole_complete_title_exact_households_and_name',
             'floorAreaRatio':far, 'buildingCoverageRatio':coverage, 'landAreaSqm':land,
@@ -143,5 +161,5 @@ def profile(entity, parcel, entry, *, day):
             'registerId':str(row['mgmBldrgstPk']), 'registerName':row.get('bldNm'),
             'source':snapshot.get('source'), 'sourceUrl':snapshot['sourceUrl'],
             'fetchedAt':snapshot['fetchedAt'], 'referenceMonth':snapshot.get('referenceMonth'),
-            'fieldIssues':[], 'fieldSources':{k:dict(provenance) for k in ('floorAreaRatio','buildingCoverageRatio','landAreaSqm')},
+            'fieldIssues':[], 'fieldSources':field_sources,
             'reason':'전체 세대수를 포함하는 공식 표제부와 대지·면적 계산이 일치해요. 대장 건수를 실제 동수로 대신 쓰지 않아요.'}

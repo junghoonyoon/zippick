@@ -172,6 +172,7 @@ APARTMENT_CSV_PATHS = [
     # pipeline/build_incheon_complex_list.py 참고.
     config.ROOT / "data" / "인천광역시_아파트_단지_목록_한국부동산원_20250918.csv",
     config.ROOT / "data" / "분양권_입주예정_아파트_보강.csv",
+    config.ROOT / "data" / "apartment_register_identity_links.csv",
 ]
 
 

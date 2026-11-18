@@ -59,7 +59,12 @@ def pnu_variants(entity,parcel,*,day=None):
 
 def query_entity(entity,*,day=None):
     rows=changes(entity,day=day)
-    if not rows:return dict(entity)
+    if not rows:
+        try:data=_read(revision())
+        except (OSError,ValueError,TypeError):return dict(entity)
+        matches=[v for v in data.get('changes',{}).values() if v.get('toCode')==entity.get('cortarNo') and v.get('toName')==entity.get('legalDong') and str(v.get('toRegion') or '').startswith(str(entity.get('province'))+' ') and v.get('effectiveAt','9999')<=str(day or dt.date.today())]
+        regions={v['toRegion'] for v in matches}
+        return {**entity,'district':next(iter(regions))[len(entity['province'])+1:]} if len(regions)==1 else dict(entity)
     row=rows[-1];out={**entity,'cortarNo':row['toCode'],'legalDong':row['toName'],'district':row['toRegion'][len(entity['province'])+1:]}
     # Retain the exact 읍/면/리 and lot tokens; replace only the verified region/name.
     address=str(entity.get('address') or '')

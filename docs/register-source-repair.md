@@ -10,10 +10,15 @@
 공식적으로 같은 주소인 코드로만 건축물대장을 조회한다. 지번은 바꾸지 않는다.
 하나의 법정동이 여러 구역으로 나뉜 경우에는 자동 연결하지 않는다.
 
-블록 주소를 실제 지번으로 고친 19곳은 `data/apartment_identity_corrections.json`에
+블록 주소나 잘못 연결된 옛 지번을 실제 지번으로 고친 단지는 `data/apartment_identity_corrections.json`에
 원래 단지번호·지역·법정동·세대수와 공식 기본정보 원문을 함께 남긴다.
 공식 주소의 지번과 필지고유번호가 서로 다른 경우는 수정하지 않는다.
 이 보정은 공통 검색 원본에 적용해 카드·지도·리포트가 같은 단지를 사용한다.
+
+공식 단지번호가 아직 없는 경우에도 이름·주소·전체 세대수가 한 총괄대장과
+일치하면 `apartment_register_identity_links.csv`로 내부 식별자를 연결한다.
+`zippick:register:` 접두사는 정부 단지번호와 구분한다. 원문 대장과 해시는
+동명의 JSON에 보존한다. 오래된 다른 지번의 분양권 기록은 합치지 않는다.
 
 ## 이름 없는 표제부
 
@@ -30,9 +35,12 @@
 ```sh
 python pipeline/import_building_register_bulk.py /tmp/official-recap.zip --as-of 2026-09
 python pipeline/repair_register_sources.py migrate-identities --apply
+python pipeline/import_building_register_bulk.py /tmp/official-title.zip --record-type title --as-of 2026-09
 python pipeline/repair_register_sources.py official-basic --source /tmp/official-basic.csv --source-date 2026-08-31 --apply
 python pipeline/repair_register_sources.py title-gaps --limit 1000 --apply
 python pipeline/repair_register_sources.py planning-gaps --limit 1000 --apply
+# 미리 검증한 공개 페이지를 사용할 때는 원문·해시·주소를 다시 대조한다.
+python pipeline/repair_register_sources.py planning-pages --source /tmp/planning-pages/manifest.json --apply
 ```
 
 `repair_register_sources.py`에서 `--apply`를 빼면 대상 건수만 확인한다.

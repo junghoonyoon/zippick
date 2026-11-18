@@ -401,10 +401,17 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
             if result.get('planningSourceStatus') == 'stale':
                 result['planningReferenceStatus'] = 'stale'
             result['limitation'] = '대표 지번의 조례 기준은 참고값이에요. 단지 전체에 실제 적용되는 기준은 따로 확인해야 해요.'
+    fresh_planning = (result.get('planningReferenceStatus') != 'stale'
+                      and result.get('planningSourceStatus') not in ('stale', 'connection_error', 'identity_unverified'))
+    # A manual ordinance reference can coexist with independently measured land.
+    # Keep the parcel evidence separate so the preferred ordinance cannot hide it.
+    parcel_reference = _parcel_reference(entity, context, day) if fresh_planning else None
+    parcel_area = ((parcel_reference or result.get('planningReference') or {}).get('parcelAreaSqm')
+                   if fresh_planning else None)
     if entry is None:
         try:
             path = shared_data.cache_path(FACT_FILE)
-            entry = register_entry(entity, _read(str(path), _stamp(path))["records"], day=day, parcel_area=(result.get("planningReference") or {}).get("parcelAreaSqm") if result.get("planningReferenceStatus")!="stale" and result.get("planningSourceStatus") not in ("stale", "connection_error", "identity_unverified") else None)
+            entry = register_entry(entity, _read(str(path), _stamp(path))["records"], day=day, parcel_area=parcel_area)
         except (OSError, ValueError, TypeError):
             result.update(status="connection_error", reason="건축물대장 원본을 읽지 못했어요. 리포트를 다시 열어 주세요.")
             return result
@@ -412,7 +419,7 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
     if ((not entry or entry.get('status') in ('not_collected', 'no_records'))
             and not (entry or {}).get('lastError')
             and (not shared_data.read_only() or source_confirmed or shared_data.status().get('status') == 'ready')):
-        alternative = building_register_single_site.for_entity(entity, parcel(entity), day=day)
+        alternative = building_register_single_site.for_entity(entity, parcel(entity), day=day, parcel_reference=parcel_reference)
     if alternative is None:
         if not entry:
             if shared_data.read_only() and shared_data.status().get("status") in ("stale", "unavailable"):
@@ -425,8 +432,6 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
                                 "access_denied": "공식 자료 제공처에서 조회를 허용하지 않아 자료를 받지 못했어요. 연결이 복구되면 다시 확인할 수 있어요."}.get(result["status"], result["reason"])
             result["errorCode"] = entry.get("errorCode")
             return result
-        reference = result.get('planningReference') or {}
-        parcel_area = reference.get('parcelAreaSqm') if result.get('planningReferenceStatus') != 'stale' and result.get('planningSourceStatus') not in ('stale', 'connection_error', 'identity_unverified') else None
         facts = profile(entity, entry, parcel_area=parcel_area)
         if facts.get('scope') == 'whole_registered_site':
             try:

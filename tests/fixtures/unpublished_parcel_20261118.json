@@ -1,0 +1,6 @@
+{
+  "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=1150010400104480000&scale=&selGbn=umd",
+  "observedAt": "2026-11-18T00:44:22.854171+00:00",
+  "sha256": "32570121bcdc12b82d5eff6d0d126b930f5a438db5f7d5034a771a275266a6e6",
+  "htmlExcerpt": "<title>토지이용계획 &gt; 토지이용계획 열람 상세보기 | 토지이음</title><script>var resultCode = \"4008\";var errMsg = \"현재 인터넷 서비스가 되지 않는 필지입니다.  해당 시ㆍ군ㆍ구로 문의하여주십시요. (코드:4008/열람 필지의 승인정보가 없습니다.)\";</script>"
+}

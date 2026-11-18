@@ -1,0 +1,6 @@
+{
+  "sourceUrl": "https://www.eum.go.kr/web/ar/lu/luLandDet.jsp?chk=0&isNoScr=script&mode=search&pnu=1150010500107440000&scale=&selGbn=umd",
+  "observedAt": "2026-11-18T00:44:32.939162+00:00",
+  "sha256": "1b350a2f138b40eb9d5479328982b6b5cb811c8240bb33ad29979eb32a16c514",
+  "htmlExcerpt": "<title>토지이용계획 &gt; 토지이용계획 열람 상세보기 | 토지이음</title><script>var resultCode = \"4017\";var errMsg = \"입력하신 지번이 검색되지 않습니다. 다시 확인하여 주시기 바랍니다. (코드:4017)...4017-kr\";</script>"
+}

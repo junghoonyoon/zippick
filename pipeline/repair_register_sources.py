@@ -112,6 +112,50 @@ def collect_title_gaps(entities, *, apply=False, limit=1000):
         current['updatedAt']=dt.datetime.now(dt.timezone.utc).isoformat();store.write_json_atomically(dest,current)
     result['unprocessed']=result['selected']-result['processed'];return result
 
+def import_planning_pages(path, entities, *, apply=False, return_records=False):
+    import collect_reconstruction_planning as collector
+    from urllib.parse import parse_qs,urlsplit
+    path=Path(path);manifest=json.loads(path.read_text());pages=manifest.get('pages')
+    if not isinstance(pages,dict):raise ValueError('invalid planning page manifest')
+    by_id={e['apartmentId']:e for e in entities};prepared={};result=collections.Counter(total=len(pages))
+    fields=('apartmentId','province','district','legalDong','jibun','cortarNo')
+    today=dt.date.today()
+    for pk,item in pages.items():
+        entity=by_id.get(pk)
+        if not entity or any(str((item.get('identity') or {}).get(k) or '')!=str(entity.get(k) or '') for k in fields):result['identityMismatch']+=1;continue
+        name=item.get('file') or ''
+        if Path(name).name!=name or not name.endswith('.html'):raise ValueError('invalid page filename')
+        raw=(path.parent/name).read_bytes()
+        if hashlib.sha256(raw).hexdigest()!=item.get('sha256'):raise ValueError('planning page checksum mismatch')
+        observed=dt.datetime.fromisoformat(item['observedAt']);day=observed.date()
+        if observed.tzinfo is None or not 0<=(today-day).days<=180:raise ValueError('invalid planning observation date')
+        query=identity.query_entity(entity);source=urlsplit(item.get('sourceUrl') or '');expected=urlsplit(collector.SOURCE_URL)
+        if (source.scheme!=expected.scheme or source.netloc!=expected.netloc or source.path!=expected.path
+            or parse_qs(source.query).get('pnu')!=[r.parcel_pnu(query)]):raise ValueError('planning source URL mismatch')
+        model={'identity':{k:entity.get(k,'') for k in fields}}
+        try:
+            reference=collector.parse_public_page(raw,query,day=day);reference['observedAt']=item['observedAt']
+            model['parcelReference']=reference
+            if not r._parcel_reference(entity,model,today):raise ValueError('unverified parsed planning page')
+            result['verified']+=1
+        except collector.PlanningError as exc:
+            model['lastError']={'status':exc.status,'errorCode':exc.code,'checkedAt':item['observedAt']}
+            result['sourceUnverified']+=1;result['classification_'+exc.status]+=1
+        prepared[pk]=model
+    if apply:
+        shared_data.require_writer();destination=shared_data.cache_path(r.PLANNING_FILE)
+        with store.exclusive_file_lock(destination):
+            data=store.read_json_object(destination)
+            for pk,value in prepared.items():
+                previous=data['records'].get(pk) or {};old_id=previous.get('identity') or {}
+                if old_id and any(str(old_id.get(k) or '')!=str(value['identity'].get(k) or '') for k in fields):result['storedIdentityMismatch']+=1;continue
+                data['records'][pk]={**previous,**value}
+                if not value.get('lastError'):data['records'][pk].pop('lastError',None)
+                result['written']+=1
+            data['updatedAt']=dt.datetime.now(dt.timezone.utc).isoformat();store.write_json_atomically(destination,data)
+    return {**result,'records':prepared} if return_records else dict(result)
+
+
 def migrate_identities(entities, *, apply=False):
     corrections=json.loads((Path(__file__).resolve().parents[1]/'data/apartment_identity_corrections.json').read_text())['corrections']
     result=collections.Counter()
@@ -136,16 +180,19 @@ def migrate_identities(entities, *, apply=False):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=['official-basic','title-gaps','planning-gaps','administrative-recaps','migrate-identities']);p.add_argument('--source',type=Path);p.add_argument('--source-date',default='2026-08-31');p.add_argument('--limit',type=int,default=1000);p.add_argument('--apply',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=['official-basic','title-gaps','planning-gaps','administrative-recaps','migrate-identities','planning-pages']);p.add_argument('--source',type=Path);p.add_argument('--source-date',default='2026-08-31');p.add_argument('--limit',type=int,default=1000);p.add_argument('--apply',action='store_true');a=p.parse_args()
     entities=catalogue()
     if a.action=='migrate-identities':
         result=migrate_identities(entities,apply=a.apply)
+    elif a.action=='planning-pages':
+        if not a.source:p.error('--source is required')
+        result=import_planning_pages(a.source,entities,apply=a.apply)
     elif a.action=='official-basic':
         if not a.source:p.error('--source is required')
         result=import_basic(a.source,entities,source_date=a.source_date,apply=a.apply)
     elif a.action=='title-gaps':result=collect_title_gaps(entities,apply=a.apply,limit=a.limit)
     elif a.action=='administrative-recaps':
-        targets=[e for e in entities if identity.changes(e) and r.parcel(e)]
+        targets=[e for e in entities if (identity.changes(e) or e.get('identityCorrection')) and r.parcel(e)]
         if a.apply:
             import collect_building_register
             result=collect_building_register.collect(targets[:a.limit])
