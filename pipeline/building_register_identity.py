@@ -8,9 +8,10 @@ from functools import lru_cache
 import json
 from pathlib import Path
 import re
+import apartment_identity
 
 PATH=Path(__file__).resolve().parents[1]/'data/building_register_code_changes.json'
-VERSION='register-identity-bridge-v1'
+VERSION='register-identity-bridge-v2'
 
 @lru_cache(maxsize=1)
 def _read(stamp):
@@ -21,6 +22,42 @@ def _read(stamp):
 def revision():
     st=PATH.stat();return VERSION,st.st_mtime_ns,st.st_size
 
+def _split_change(entity,data,code,day):
+    """A split needs two independent official records for this exact site."""
+    bound=data.get('parcelChanges',{}).get(str(entity.get('apartmentId') or '')) or {}
+    expected=bound.get('expected') or {}
+    if entity.get('aggregate') or entity.get('sectionIdentity') or not expected:return None
+    if any(str(entity.get(k) or '')!=str(expected.get(k) or '') for k in
+           ('apartmentId','name','province','district','legalDong','jibun','cortarNo','households')):return None
+    row=bound.get('change') or {};proof=bound.get('corroboration') or {}
+    if row not in data.get('ambiguous',{}).get(code,[]):return None
+    basic=proof.get('basic') or {};register=proof.get('register') or {}
+    b=basic.get('record') or {};r=register.get('record') or {}
+    try:
+        if day<dt.date.fromisoformat(basic['sourceDate']) or day<dt.date.fromisoformat(register['referenceMonth']+'-01'):return None
+    except (KeyError,TypeError,ValueError):return None
+    if (basic.get('sourceUrl')!='https://www.data.go.kr/data/15106861/fileData.do'
+        or register.get('sourceUrl')!='https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do'
+        or any(not re.fullmatch(r'[0-9a-f]{64}',str(p.get('sourceSha256') or '')) for p in (basic,register))
+        or register.get('uniqueCandidateCount')!=1):return None
+    lot=apartment_identity.entity_parcel(entity);match=re.fullmatch(r'(산?)(\d{1,4})(?:-(\d{1,4}))?',lot)
+    if not match:return None
+    suffix=('2' if match[1] else '1')+match[2].zfill(4)+(match[3] or '0').zfill(4)
+    if (b.get('단지고유번호')!=str(entity['apartmentId']) or b.get('필지고유번호')!=code+suffix
+        or b.get('주소')!=row['fromRegion']+' '+row['fromName']+' '+lot
+        or str(b.get('세대수'))!=str(entity.get('households'))
+        or str(r.get('hhldCnt'))!=str(entity.get('households'))
+        or not re.fullmatch(r'[1-9]\d*',str(entity.get('households') or ''))
+        or str(r.get('regstrKindCd'))!='1' or '공동주택' not in str(r.get('mainPurpsCdNm'))
+        or not r.get('mgmBldrgstPk')
+        or str(r.get('sigunguCd'))+str(r.get('bjdongCd'))!=row['toCode']
+        or str(r.get('platGbCd'))!=('1' if match[1] else '0')
+        or str(r.get('bun'))!=match[2].zfill(4) or str(r.get('ji'))!=(match[3] or '0').zfill(4)):return None
+    normalize=lambda v:re.sub(r'[^0-9A-Za-z가-힣]','',str(v or '')).removesuffix('아파트')
+    names={normalize(b.get(k)) for k in ('단지명_공시가격','단지명_건축물대장','단지명_도로명주소')}-{''}
+    if normalize(r.get('bldNm')) not in names or apartment_identity.phase_conflicts(entity['name'],r.get('bldNm')):return None
+    return {**row,'parcelScopeVerified':True}
+
 def changes(entity,*,day=None):
     day=day or dt.date.today()
     try:data=_read(revision())
@@ -29,8 +66,8 @@ def changes(entity,*,day=None):
     if not re.fullmatch(r'\d{10}',code) or not province or not name:return []
     result=[];seen=set()
     for _ in range(4):
-        if code in data.get('ambiguous',{}):return []
-        row=data.get('changes',{}).get(code)
+        row=(_split_change(entity,data,code,day) if code in data.get('ambiguous',{})
+             else data.get('changes',{}).get(code))
         if not row:break
         try:effective=dt.date.fromisoformat(row['effectiveAt'])
         except (KeyError,ValueError,TypeError):return []

@@ -179,6 +179,20 @@ def migrate_identities(entities, *, apply=False):
     return dict(result)
 
 
+def planning_targets(entities,planning):
+    targets=[]
+    for e in entities:
+        prior=planning.get(e['apartmentId']) or {};err=prior.get('lastError') or {}
+        changes=identity.changes(e)
+        split=any(row.get('parcelScopeVerified') for row in changes)
+        current_pnu=r.parcel_pnu(identity.query_entity(e))
+        if ((err.get('errorCode') in ('address_mismatch','attribution_missing','network')
+             and (changes or err.get('status')=='connection_error'))
+            or (e.get('identityCorrection') and not prior.get('parcelReference'))
+            or (split and (err or (prior.get('parcelReference') or {}).get('pnu')!=current_pnu))):
+            targets.append(e)
+    return targets
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=['official-basic','title-gaps','planning-gaps','administrative-recaps','migrate-identities','planning-pages']);p.add_argument('--source',type=Path);p.add_argument('--source-date',default='2026-08-31');p.add_argument('--limit',type=int,default=1000);p.add_argument('--apply',action='store_true');a=p.parse_args()
     entities=catalogue()
@@ -198,10 +212,8 @@ def main():
             result=collect_building_register.collect(targets[:a.limit])
         else:result={'targets':len(targets),'selected':min(len(targets),a.limit)}
     else:
-        planning=store.read_json_object(shared_data.cache_path(r.PLANNING_FILE))['records'];targets=[]
-        for e in entities:
-            err=(planning.get(e['apartmentId']) or {}).get('lastError') or {}
-            if (err.get('errorCode') in ('address_mismatch','attribution_missing','network') and (identity.changes(e) or err.get('status')=='connection_error')) or (e.get('identityCorrection') and not (planning.get(e['apartmentId']) or {}).get('parcelReference')):targets.append(e)
+        planning=store.read_json_object(shared_data.cache_path(r.PLANNING_FILE))['records']
+        targets=planning_targets(entities,planning)
         if a.apply:
             import collect_reconstruction_planning
             result=collect_reconstruction_planning.collect(targets[:a.limit],refresh=True)

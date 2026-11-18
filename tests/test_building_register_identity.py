@@ -213,3 +213,36 @@ def test_parcel_correction_provenance_survives_repeated_search_normalization():
         merged=search._merge_entities([once])[0]
         assert merged['identityCorrection']['previousJibun']==original['jibun']
         assert merged['jibun']==once['jibun']
+
+
+def test_split_dong_requires_exact_independently_corroborated_parcel():
+    data=json.loads(bridge.PATH.read_text())
+    assert len(data['parcelChanges'])==19
+    for bound in data['parcelChanges'].values():
+        e=bound['expected'];q=bridge.query_entity(e,day=DAY)
+        assert q['cortarNo']==bound['change']['toCode']
+        assert q['jibun']==e['jibun']
+        assert q['district']==bound['change']['toRegion'][len(e['province'])+1:]
+        proof=bound['corroboration']['register']
+        snapshot={'parcel':r.register_lookup_parcel(e),'recordType':'recap',
+                  'sourceUrl':proof['sourceUrl'],'fetchedAt':DAY.isoformat(),
+                  'referenceMonth':proof['referenceMonth'],'totalCount':1,'records':[proof['record']]}
+        facts=r.profile(e,{'snapshot':snapshot})
+        assert facts['scope']=='whole_registered_site'
+        assert facts['households']==e['households']
+        for key,value in [('jibun','9999'),('households',1),('apartmentId','another'),('name','다른단지')]:
+            assert not bridge.changes({**e,key:value},day=DAY)
+
+@pytest.mark.parametrize('bad',['households','parcel','name','duplicate','source','destination','future'])
+def test_split_parcel_proof_rejects_unverified_or_ambiguous_records(monkeypatch,bad):
+    data=copy.deepcopy(json.loads(bridge.PATH.read_text()));bound=next(iter(data['parcelChanges'].values()));e=bound['expected']
+    proof=bound['corroboration'];row=proof['register']['record']
+    if bad=='households':row['hhldCnt']='1'
+    elif bad=='parcel':row['bun']='9999'
+    elif bad=='name':row['bldNm']='다른단지'
+    elif bad=='duplicate':proof['register']['uniqueCandidateCount']=2
+    elif bad=='source':proof['register']['sourceUrl']='https://example.com/'
+    elif bad=='destination':bound['change']={**bound['change'],'toCode':'9999999999'}
+    elif bad=='future':proof['register']['referenceMonth']='2027-09'
+    monkeypatch.setattr(bridge,'_read',lambda *args:data)
+    assert not bridge.changes(e,day=DAY)

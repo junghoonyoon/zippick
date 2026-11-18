@@ -120,3 +120,14 @@ def test_manual_ordinance_does_not_hide_independent_public_parcel_land(primary,m
         assert result['profile']['floorAreaRatio']==200
         assert result['profile']['landAreaSqm']==10000
         assert result['profile']['fieldSources']['landAreaSqm']['method']=='independent_official_parcel_area'
+
+
+def test_newly_resolved_split_parcel_retries_old_code_absence_once():
+    import building_register_identity as bridge
+    from pathlib import Path
+    data=json.loads(bridge.PATH.read_text());bound=next(iter(data['parcelChanges'].values()));e=bound['expected'];pk=e['apartmentId']
+    old={pk:{'lastError':{'status':'no_records','errorCode':'parcel_not_published'}}}
+    assert repair.planning_targets([e],old)==[e]
+    current={pk:{'parcelReference':{'pnu':r.parcel_pnu(bridge.query_entity(e))}}}
+    assert repair.planning_targets([e],current)==[]
+    assert repair.planning_targets([ENTITY],{ENTITY['apartmentId']:{'lastError':{'status':'no_records','errorCode':'parcel_not_published'}}})==[]

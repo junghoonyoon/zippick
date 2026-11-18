@@ -3764,5 +3764,1489 @@
         "sourceRow": "A203"
       }
     ]
+  },
+  "parcelChanges": {
+    "41590120094502": {
+      "expected": {
+        "apartmentId": "41590120094502",
+        "name": "동탄 푸른마을 포스코더샵2차",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1134",
+        "cortarNo": "4159011800",
+        "households": 1226
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120094502",
+            "필지고유번호": "4159011800111340000",
+            "주소": "경기도 화성시 능동 1134",
+            "단지명_공시가격": "푸른마을포스코더샾2차",
+            "단지명_건축물대장": "푸른마을 포스코더샾2차",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "15",
+            "세대수": "1226",
+            "사용승인일": "2008-05-20",
+            "도로명주소": "동탄공원로 21-12"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100196671",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1134번지",
+            "newPlatPlc": "",
+            "bldNm": "푸른마을 포스코더샾2차",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1134",
+            "ji": "0000",
+            "platArea": "68546.8",
+            "archArea": "9287.2083",
+            "bcRat": "13.55",
+            "totArea": "185551.1439",
+            "vlRatEstmTotArea": "134029.9162",
+            "vlRat": "195.53",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "1226",
+            "mainBldCnt": "16",
+            "atchBldCnt": "7",
+            "atchBldArea": "50190.3814",
+            "useAprDay": "20080520",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120095155": {
+      "expected": {
+        "apartmentId": "41590120095155",
+        "name": "EG the 1 아파트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1109",
+        "cortarNo": "4159011800",
+        "households": 542
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120095155",
+            "필지고유번호": "4159011800111090000",
+            "주소": "경기도 화성시 능동 1109",
+            "단지명_공시가격": "능동역이지더원아파트",
+            "단지명_건축물대장": "능동역 이지더원 아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "10",
+            "세대수": "542",
+            "사용승인일": "2008-05-01",
+            "도로명주소": "동탄원천로 315-34"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100195033",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1109번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄원천로 315-34 (능동)",
+            "bldNm": "능동역 이지더원 아파트",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1109",
+            "ji": "0000",
+            "platArea": "40092",
+            "archArea": "6477.1361",
+            "bcRat": "16.16",
+            "totArea": "78943.5053",
+            "vlRatEstmTotArea": "57805.4803",
+            "vlRat": "144.18",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "542",
+            "mainBldCnt": "11",
+            "atchBldCnt": "4",
+            "atchBldArea": "15894.3149",
+            "useAprDay": "20080501",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120101465": {
+      "expected": {
+        "apartmentId": "41590120101465",
+        "name": "동탄 능동마을 상록예가",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1087",
+        "cortarNo": "4159011800",
+        "households": 707
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120101465",
+            "필지고유번호": "4159011800110870000",
+            "주소": "경기도 화성시 능동 1087",
+            "단지명_공시가격": "동탄능동마을상록예가",
+            "단지명_건축물대장": "동탄 능동마을 상록 예가",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "8",
+            "세대수": "707",
+            "사용승인일": "2008-06-27",
+            "도로명주소": "동탄원천로 315-18"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100212137",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1087번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄원천로 315-18 (능동)",
+            "bldNm": "동탄 능동마을 상록 예가",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1087",
+            "ji": "0000",
+            "platArea": "46776.5",
+            "archArea": "4771.2703",
+            "bcRat": "10.2",
+            "totArea": "98866.8747",
+            "vlRatEstmTotArea": "74838.3803",
+            "vlRat": "159.99",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "707",
+            "mainBldCnt": "9",
+            "atchBldCnt": "8",
+            "atchBldArea": "23952.7994",
+            "useAprDay": "20080627",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120089879": {
+      "expected": {
+        "apartmentId": "41590120089879",
+        "name": "동탄능동마을 주공아파트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1110",
+        "cortarNo": "4159011800",
+        "households": 231
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120089879",
+            "필지고유번호": "4159011800111100000",
+            "주소": "경기도 화성시 능동 1110",
+            "단지명_공시가격": "능동마을주공아파트",
+            "단지명_건축물대장": "동탄능동마을주공아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "6",
+            "세대수": "231",
+            "사용승인일": "2007-12-03",
+            "도로명주소": "동탄지성로 150-11"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100177240",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1110번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄지성로 150-11 (능동)",
+            "bldNm": "동탄능동마을주공아파트",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1110",
+            "ji": "0000",
+            "platArea": "15289.5",
+            "archArea": "3082.996",
+            "bcRat": "20.16",
+            "totArea": "19776.024",
+            "vlRatEstmTotArea": "17086.942",
+            "vlRat": "111.76",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "231",
+            "mainBldCnt": "7",
+            "atchBldCnt": "5",
+            "atchBldArea": "3101.513",
+            "useAprDay": "20071203",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120095156": {
+      "expected": {
+        "apartmentId": "41590120095156",
+        "name": "동탄숲속마을 광명메이루즈",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1116",
+        "cortarNo": "4159011800",
+        "households": 326
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120095156",
+            "필지고유번호": "4159011800111160000",
+            "주소": "경기도 화성시 능동 1116",
+            "단지명_공시가격": "숲속마을광명메이루즈",
+            "단지명_건축물대장": "동탄숲속마을광명메이루즈",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "11",
+            "세대수": "326",
+            "사용승인일": "2008-02-20",
+            "도로명주소": "동탄숲속로 95"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100188410",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1116번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 95 (능동)",
+            "bldNm": "동탄숲속마을광명메이루즈",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1116",
+            "ji": "0000",
+            "platArea": "28812.1",
+            "archArea": "4027.695",
+            "bcRat": "13.98",
+            "totArea": "46099.319",
+            "vlRatEstmTotArea": "34549.888",
+            "vlRat": "119.91",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "326",
+            "mainBldCnt": "12",
+            "atchBldCnt": "6",
+            "atchBldArea": "11544.353",
+            "useAprDay": "20080220",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120090523": {
+      "expected": {
+        "apartmentId": "41590120090523",
+        "name": "동탄숲속마을 능동역 리체 더 포레스트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1126",
+        "cortarNo": "4159011800",
+        "households": 562
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120090523",
+            "필지고유번호": "4159011800111260000",
+            "주소": "경기도 화성시 능동 1126",
+            "단지명_공시가격": "동탄숲속마을능동역리체더포레스트",
+            "단지명_건축물대장": "동탄숲속마을 능동역 리체 더 포레스트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "8",
+            "세대수": "562",
+            "사용승인일": "2008-01-18",
+            "도로명주소": "동탄숲속로 19"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100183105",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1126번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 19 (능동)",
+            "bldNm": "동탄숲속마을 능동역 리체 더 포레스트",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1126",
+            "ji": "0000",
+            "platArea": "43729",
+            "archArea": "5069.4733",
+            "bcRat": "11.59",
+            "totArea": "108169.1054",
+            "vlRatEstmTotArea": "74336.646",
+            "vlRat": "169.99",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "562",
+            "mainBldCnt": "9",
+            "atchBldCnt": "7",
+            "atchBldArea": "34232.8029",
+            "useAprDay": "20080118",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120106572": {
+      "expected": {
+        "apartmentId": "41590120106572",
+        "name": "동탄숲속마을 자연앤 경남아너스빌 3블럭",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1124",
+        "cortarNo": "4159011800",
+        "households": 455
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120106572",
+            "필지고유번호": "4159011800111240000",
+            "주소": "경기도 화성시 능동 1124",
+            "단지명_공시가격": "능동역경남아너스빌아파트",
+            "단지명_건축물대장": "능동역 경남아너스빌 아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "6",
+            "세대수": "455",
+            "사용승인일": "2008-10-24",
+            "도로명주소": "동탄숲속로 69"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100229079",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1124번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 69 (능동)",
+            "bldNm": "능동역 경남아너스빌 아파트",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1124",
+            "ji": "0000",
+            "platArea": "30136.9",
+            "archArea": "3661.439",
+            "bcRat": "11.96",
+            "totArea": "65406.033",
+            "vlRatEstmTotArea": "48199.738",
+            "vlRat": "159.94",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "455",
+            "mainBldCnt": "7",
+            "atchBldCnt": "9",
+            "atchBldArea": "17470.806",
+            "useAprDay": "20081024",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120106571": {
+      "expected": {
+        "apartmentId": "41590120106571",
+        "name": "동탄숲속마을 자연앤 경남아너스빌 5블럭",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1115",
+        "cortarNo": "4159011800",
+        "households": 641
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120106571",
+            "필지고유번호": "4159011800111150000",
+            "주소": "경기도 화성시 능동 1115",
+            "단지명_공시가격": "능동역센트럴경남아너스빌",
+            "단지명_건축물대장": "능동역센트럴경남아너스빌",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "9",
+            "세대수": "641",
+            "사용승인일": "2008-10-24",
+            "도로명주소": "동탄숲속로 103"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100228403",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1115번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 103 (능동)",
+            "bldNm": "능동역센트럴경남아너스빌",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1115",
+            "ji": "0000",
+            "platArea": "42390.4",
+            "archArea": "5034.947",
+            "bcRat": "11.88",
+            "totArea": "91678.611",
+            "vlRatEstmTotArea": "68003.712",
+            "vlRat": "159.98",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "641",
+            "mainBldCnt": "10",
+            "atchBldCnt": "10",
+            "atchBldArea": "24384.228",
+            "useAprDay": "20081024",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120096394": {
+      "expected": {
+        "apartmentId": "41590120096394",
+        "name": "동탄숲속마을 자연앤데시앙아파트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1131",
+        "cortarNo": "4159011800",
+        "households": 1289
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120096394",
+            "필지고유번호": "4159011800111310000",
+            "주소": "경기도 화성시 능동 1131",
+            "단지명_공시가격": "자연앤데시앙",
+            "단지명_건축물대장": "동탄숲속마을 자연앤데시앙아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "20",
+            "세대수": "1289",
+            "사용승인일": "2008-06-20",
+            "도로명주소": "동탄숲속로 68"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100207434",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1131번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 68 (능동)",
+            "bldNm": "동탄숲속마을 자연앤데시앙아파트",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1131",
+            "ji": "0000",
+            "platArea": "68672.4",
+            "archArea": "7996.503",
+            "bcRat": "11.83",
+            "totArea": "165987.522",
+            "vlRatEstmTotArea": "126237.768",
+            "vlRat": "183.83",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "1289",
+            "mainBldCnt": "21",
+            "atchBldCnt": "12",
+            "atchBldArea": "39497.902",
+            "useAprDay": "20080620",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120095157": {
+      "expected": {
+        "apartmentId": "41590120095157",
+        "name": "동탄숲속마을모아미래도1단지",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1132",
+        "cortarNo": "4159011800",
+        "households": 870
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120095157",
+            "필지고유번호": "4159011800111320000",
+            "주소": "경기도 화성시 능동 1132",
+            "단지명_공시가격": "숲속마을모아미래도1단지",
+            "단지명_건축물대장": "동탄숲속마을모아미래도1단지",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "16",
+            "세대수": "870",
+            "사용승인일": "2008-01-23",
+            "도로명주소": "동탄숲속로 96"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100185823",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1132번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 96 (능동)",
+            "bldNm": "동탄숲속마을모아미래도1단지",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1132",
+            "ji": "0000",
+            "platArea": "47747.9",
+            "archArea": "6321.1",
+            "bcRat": "13.24",
+            "totArea": "121538.1",
+            "vlRatEstmTotArea": "83446.13",
+            "vlRat": "174.76",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "870",
+            "mainBldCnt": "17",
+            "atchBldCnt": "6",
+            "atchBldArea": "36514.41",
+            "useAprDay": "20080125",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120090524": {
+      "expected": {
+        "apartmentId": "41590120090524",
+        "name": "동탄숲속마을모아미래도2단지",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1129",
+        "cortarNo": "4159011800",
+        "households": 361
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120090524",
+            "필지고유번호": "4159011800111290000",
+            "주소": "경기도 화성시 능동 1129",
+            "단지명_공시가격": "동탄숲속마을모아미래도2단지",
+            "단지명_건축물대장": "동탄숲속마을모아미래도2단지",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "5",
+            "세대수": "361",
+            "사용승인일": "2008-01-23",
+            "도로명주소": "동탄숲속로 36"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100184031",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1129번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄숲속로 36 (능동)",
+            "bldNm": "동탄숲속마을모아미래도2단지",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1129",
+            "ji": "0000",
+            "platArea": "21709.1",
+            "archArea": "2427.39",
+            "bcRat": "11.18",
+            "totArea": "70798.39",
+            "vlRatEstmTotArea": "47761",
+            "vlRat": "220",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "361",
+            "mainBldCnt": "6",
+            "atchBldCnt": "5",
+            "atchBldArea": "22914.68",
+            "useAprDay": "20080123",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120089880": {
+      "expected": {
+        "apartmentId": "41590120089880",
+        "name": "동탄푸른마을두산위브아파트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1137",
+        "cortarNo": "4159011800",
+        "households": 915
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120089880",
+            "필지고유번호": "4159011800111370000",
+            "주소": "경기도 화성시 능동 1137",
+            "단지명_공시가격": "푸른마을두산위브",
+            "단지명_건축물대장": "동탄푸른마을두산위브아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "11",
+            "세대수": "915",
+            "사용승인일": "2007-12-31",
+            "도로명주소": "동탄공원로 21-40"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100179017",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1137번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄공원로 21-40 (능동)",
+            "bldNm": "동탄푸른마을두산위브아파트",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1137",
+            "ji": "0000",
+            "platArea": "52642.6",
+            "archArea": "6868.74",
+            "bcRat": "13.05",
+            "totArea": "138725.36",
+            "vlRatEstmTotArea": "100623.13",
+            "vlRat": "191.14",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "915",
+            "mainBldCnt": "12",
+            "atchBldCnt": "11",
+            "atchBldArea": "37843.08",
+            "useAprDay": "20071231",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120095158": {
+      "expected": {
+        "apartmentId": "41590120095158",
+        "name": "동탄푸른마을모아미래도",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1151",
+        "cortarNo": "4159011800",
+        "households": 926
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120095158",
+            "필지고유번호": "4159011800111510000",
+            "주소": "경기도 화성시 능동 1151",
+            "단지명_공시가격": "푸른마을모아미래도",
+            "단지명_건축물대장": "동탄푸른마을모아미래도",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "13",
+            "세대수": "926",
+            "사용승인일": "2008-01-24",
+            "도로명주소": "동탄공원로 21-11"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100184410",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1151번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄공원로 21-11 (능동)",
+            "bldNm": "동탄푸른마을모아미래도",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1151",
+            "ji": "0000",
+            "platArea": "55251",
+            "archArea": "7070.28",
+            "bcRat": "12.8",
+            "totArea": "106808.074",
+            "vlRatEstmTotArea": "79903.693",
+            "vlRat": "144.62",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "926",
+            "mainBldCnt": "15",
+            "atchBldCnt": "6",
+            "atchBldArea": "26634.829",
+            "useAprDay": "20080124",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120101466": {
+      "expected": {
+        "apartmentId": "41590120101466",
+        "name": "동탄푸른마을신일해피트리",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1150",
+        "cortarNo": "4159011800",
+        "households": 794
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159710100",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 동탄구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A203"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120101466",
+            "필지고유번호": "4159011800111500000",
+            "주소": "경기도 화성시 능동 1150",
+            "단지명_공시가격": "동탄푸른마을신일해피트리",
+            "단지명_건축물대장": "동탄푸른마을신일해피트리",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "13",
+            "세대수": "794",
+            "사용승인일": "2008-06-27",
+            "도로명주소": "동탄공원로 21-39"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100210834",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 동탄구 능동 1150번지",
+            "newPlatPlc": "경기도 화성시 동탄구 동탄공원로 21-39 (능동)",
+            "bldNm": "동탄푸른마을신일해피트리",
+            "sigunguCd": "41597",
+            "bjdongCd": "10100",
+            "platGbCd": "0",
+            "bun": "1150",
+            "ji": "0000",
+            "platArea": "48537.4",
+            "archArea": "6008.34",
+            "bcRat": "12.37",
+            "totArea": "96721.27",
+            "vlRatEstmTotArea": "69167.91",
+            "vlRat": "142.5",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "794",
+            "mainBldCnt": "14",
+            "atchBldCnt": "7",
+            "atchBldArea": "25995.37",
+            "useAprDay": "20080627",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120446709": {
+      "expected": {
+        "apartmentId": "41590120446709",
+        "name": "서동탄역 양우내안애",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1287",
+        "cortarNo": "4159011800",
+        "households": 447
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159510300",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 병점구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A190"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120446709",
+            "필지고유번호": "4159011800112870000",
+            "주소": "경기도 화성시 능동 1287",
+            "단지명_공시가격": "서동탄역양우내안애",
+            "단지명_건축물대장": "서동탄역 양우내안애",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "6",
+            "세대수": "447",
+            "사용승인일": "2023-06-16",
+            "도로명주소": "서동탄로 71"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "1000000000000001994795",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 병점구 능동 1287번지",
+            "newPlatPlc": "경기도 화성시 병점구 서동탄로 71 (능동)",
+            "bldNm": "서동탄역 양우내안애",
+            "sigunguCd": "41595",
+            "bjdongCd": "10300",
+            "platGbCd": "0",
+            "bun": "1287",
+            "ji": "0000",
+            "platArea": "20455",
+            "archArea": "3763.08",
+            "bcRat": "18.4",
+            "totArea": "59607.2",
+            "vlRatEstmTotArea": "35986.47",
+            "vlRat": "175.93",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "447",
+            "mainBldCnt": "7",
+            "atchBldCnt": "6",
+            "atchBldArea": "23191.02",
+            "useAprDay": "20230616",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590100255215": {
+      "expected": {
+        "apartmentId": "41590100255215",
+        "name": "서동탄역 우남퍼스트빌 아파트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1039",
+        "cortarNo": "4159011800",
+        "households": 700
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159510300",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 병점구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A190"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590100255215",
+            "필지고유번호": "4159011800110390000",
+            "주소": "경기도 화성시 능동 1039",
+            "단지명_공시가격": "서동탄역우남퍼스트빌아파트",
+            "단지명_건축물대장": "서동탄역 우남퍼스트빌 아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "10",
+            "세대수": "700",
+            "사용승인일": "2002-10-25",
+            "도로명주소": "10용사로 286"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "112411097",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 병점구 능동 1039번지",
+            "newPlatPlc": "경기도 화성시 병점구 10용사로 286 (능동)",
+            "bldNm": "서동탄역 우남퍼스트빌 아파트",
+            "sigunguCd": "41595",
+            "bjdongCd": "10300",
+            "platGbCd": "0",
+            "bun": "1039",
+            "ji": "0000",
+            "platArea": "37594.1",
+            "archArea": "6527.843",
+            "bcRat": "17.36",
+            "totArea": "76855.7134",
+            "vlRatEstmTotArea": "72334.707",
+            "vlRat": "192.41",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "700",
+            "mainBldCnt": "10",
+            "atchBldCnt": "6",
+            "atchBldArea": "9009.005",
+            "useAprDay": "",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590100255216": {
+      "expected": {
+        "apartmentId": "41590100255216",
+        "name": "서동탄역 우남퍼스트빌 아파트",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1041",
+        "cortarNo": "4159011800",
+        "households": 413
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159510300",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 병점구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A190"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590100255216",
+            "필지고유번호": "4159011800110410000",
+            "주소": "경기도 화성시 능동 1041",
+            "단지명_공시가격": "서동탄역우남퍼스트빌아파트",
+            "단지명_건축물대장": "서동탄역 우남퍼스트빌 아파트",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "6",
+            "세대수": "413",
+            "사용승인일": "2003-07-19",
+            "도로명주소": "10용사로 286"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "112413319",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 병점구 능동 1041번지",
+            "newPlatPlc": "경기도 화성시 병점구 10용사로 286 (능동)",
+            "bldNm": "서동탄역 우남퍼스트빌 아파트",
+            "sigunguCd": "41595",
+            "bjdongCd": "10300",
+            "platGbCd": "0",
+            "bun": "1041",
+            "ji": "0000",
+            "platArea": "22685",
+            "archArea": "3522.356",
+            "bcRat": "16.29",
+            "totArea": "46462.7221",
+            "vlRatEstmTotArea": "44460.0728",
+            "vlRat": "195.99",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "413",
+            "mainBldCnt": "7",
+            "atchBldCnt": "6",
+            "atchBldArea": "7011.9936",
+            "useAprDay": "20030719",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120360505": {
+      "expected": {
+        "apartmentId": "41590120360505",
+        "name": "서동탄역파크자이",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1282",
+        "cortarNo": "4159011800",
+        "households": 982
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159510300",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 병점구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A190"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120360505",
+            "필지고유번호": "4159011800112820000",
+            "주소": "경기도 화성시 능동 1282",
+            "단지명_공시가격": "서동탄역파크자이",
+            "단지명_건축물대장": "서동탄역파크자이",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "11",
+            "세대수": "982",
+            "사용승인일": "2018-01-30",
+            "도로명주소": "서동탄로 53"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100531773",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 병점구 능동 1282번지",
+            "newPlatPlc": "경기도 화성시 병점구 서동탄로 53 (능동)",
+            "bldNm": "서동탄역파크자이",
+            "sigunguCd": "41595",
+            "bjdongCd": "10300",
+            "platGbCd": "0",
+            "bun": "1282",
+            "ji": "0000",
+            "platArea": "56301.6",
+            "archArea": "9433.1297",
+            "bcRat": "16.75",
+            "totArea": "154944.807",
+            "vlRatEstmTotArea": "109776.476",
+            "vlRat": "194.97",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "982",
+            "mainBldCnt": "12",
+            "atchBldCnt": "9",
+            "atchBldArea": "45636.7344",
+            "useAprDay": "20180130",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    },
+    "41590120375705": {
+      "expected": {
+        "apartmentId": "41590120375705",
+        "name": "서동탄역파크자이2차",
+        "province": "경기도",
+        "district": "화성시",
+        "legalDong": "능동",
+        "jibun": "1283",
+        "cortarNo": "4159011800",
+        "households": 376
+      },
+      "change": {
+        "fromCode": "4159011800",
+        "toCode": "4159510300",
+        "fromName": "능동",
+        "toName": "능동",
+        "fromRegion": "경기도 화성시",
+        "toRegion": "경기도 화성시 병점구",
+        "effectiveAt": "2026-02-01",
+        "sourceUrl": "https://www.mois.go.kr/frt/bbs/type001/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000052&nttId=122595",
+        "sourceFile": "122595-1.xlsx",
+        "sourceSha256": "cece9a7177518f1df4f3948899c1bb4b82aac0bb7514aff717533fd62b7f6697",
+        "sourceRow": "A190"
+      },
+      "corroboration": {
+        "basic": {
+          "sourceUrl": "https://www.data.go.kr/data/15106861/fileData.do",
+          "sourceDate": "2026-08-31",
+          "sourceSha256": "87272863d9c2edcd69d1a5319eb5755c288f13e8d0525dafb92c10a54c3cb00d",
+          "record": {
+            "단지고유번호": "41590120375705",
+            "필지고유번호": "4159011800112830000",
+            "주소": "경기도 화성시 능동 1283",
+            "단지명_공시가격": "서동탄역파크자이2차",
+            "단지명_건축물대장": "서동탄역파크자이2차",
+            "단지명_도로명주소": "",
+            "단지종류": "1",
+            "동수": "5",
+            "세대수": "376",
+            "사용승인일": "2018-09-27",
+            "도로명주소": "서동탄로 11"
+          }
+        },
+        "register": {
+          "sourceUrl": "https://www.hub.go.kr/portal/opn/lps/idx-lgcpt-pvsn-srvc-list.do",
+          "sourceSha256": "71d87f4789fdee7c466726b7f030058a2675a3edbd2ce66c694117cc46c9d963",
+          "referenceMonth": "2026-09",
+          "uniqueCandidateCount": 1,
+          "record": {
+            "mgmBldrgstPk": "11241100577526",
+            "regstrGbCd": "2",
+            "regstrKindCd": "1",
+            "newOldRegstrGbCd": "1",
+            "platPlc": "경기도 화성시 병점구 능동 1283번지",
+            "newPlatPlc": "",
+            "bldNm": "서동탄역파크자이2차",
+            "sigunguCd": "41595",
+            "bjdongCd": "10300",
+            "platGbCd": "0",
+            "bun": "1283",
+            "ji": "0000",
+            "platArea": "22946.5",
+            "archArea": "3723.9943",
+            "bcRat": "16.22",
+            "totArea": "60616.1604",
+            "vlRatEstmTotArea": "42599.4476",
+            "vlRat": "185.64",
+            "mainPurpsCdNm": "공동주택",
+            "hhldCnt": "376",
+            "mainBldCnt": "6",
+            "atchBldCnt": "13",
+            "atchBldArea": "18263.4434",
+            "useAprDay": "20180927",
+            "crtnDay": "20260131"
+          }
+        }
+      }
+    }
   }
 }
