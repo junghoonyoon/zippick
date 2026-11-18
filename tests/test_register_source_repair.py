@@ -131,3 +131,19 @@ def test_newly_resolved_split_parcel_retries_old_code_absence_once():
     current={pk:{'parcelReference':{'pnu':r.parcel_pnu(bridge.query_entity(e))}}}
     assert repair.planning_targets([e],current)==[]
     assert repair.planning_targets([ENTITY],{ENTITY['apartmentId']:{'lastError':{'status':'no_records','errorCode':'parcel_not_published'}}})==[]
+
+
+def test_official_split_dong_display_annotation_keeps_district_and_lot_exact():
+    from pathlib import Path
+    import building_register_identity as bridge,collect_reconstruction_planning as collector
+    from test_reconstruction_collection import public_html
+    fixture=json.loads((Path(__file__).parent/'fixtures/split_dong_address_20261118.json').read_text())
+    bound=json.loads(bridge.PATH.read_text())['parcelChanges'][fixture['apartmentId']]
+    query=bridge.query_entity(bound['expected']);address=fixture['observedVisibleAddress']
+    ref=collector.parse_public_page(public_html(address=address),query)
+    assert ref['pnu']==r.parcel_pnu(query)
+    assert ref['zoneCoverageVerified'] is False
+    for bad in (address.replace('(동탄구)','(병점구)'),address.replace('1126','1127'),address.replace('능동','다른동')):
+        with pytest.raises(collector.PlanningError) as error:collector.parse_public_page(public_html(address=bad),query)
+        assert error.value.code=='address_mismatch'
+    with pytest.raises(collector.PlanningError):collector.parse_public_page(public_html(address=address),{**query,'cortarNo':'4159710200'})

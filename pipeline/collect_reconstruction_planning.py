@@ -126,6 +126,8 @@ def _expected_addresses(entity):
     prefixes = {_normal(province+value) for value in districts}
     suffix = _normal(dong+lot)
     originals = {prefix+suffix for prefix in prefixes}
+    for display_name in building_register_identity.display_dong_names(entity):
+        originals.update(prefix+_normal(display_name+lot) for prefix in prefixes)
     address = _normal(entity.get('address'))
     if province and dong and lot and address and suffix:
         for prefix in prefixes:

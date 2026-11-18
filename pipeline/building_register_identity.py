@@ -94,6 +94,20 @@ def parcel_key(parcel):
 def pnu_variants(entity,parcel,*,day=None):
     return [p['sigunguCd']+p['bjdongCd']+('2' if p['platGbCd']=='1' else '1')+p['bun']+p['ji'] for p in variants(entity,parcel,day=day)]
 
+def display_dong_names(entity,*,day=None):
+    """EUM labels a split dong with its exact, official destination district."""
+    day=day or dt.date.today();name=str(entity.get('legalDong') or '');names=[name]
+    try:data=_read(revision())
+    except (OSError,ValueError,TypeError):return names
+    region=' '.join((str(entity.get('province') or ''),str(entity.get('district') or '')))
+    for choices in data.get('ambiguous',{}).values():
+        for row in choices:
+            if (row.get('toCode')==entity.get('cortarNo') and row.get('toName')==name
+                and row.get('toRegion')==region and row.get('effectiveAt','9999')<=day.isoformat()):
+                district=region.rsplit(' ',1)[-1]
+                if re.fullmatch(r'[가-힣]+구',district):names.append(name+'('+district+')')
+    return list(dict.fromkeys(names))
+
 def query_entity(entity,*,day=None):
     rows=changes(entity,day=day)
     if not rows:
