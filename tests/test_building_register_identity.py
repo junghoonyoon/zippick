@@ -200,3 +200,16 @@ def test_a_newer_empty_api_observation_for_the_same_query_is_not_replaced_by_bul
     monkeypatch.setattr(bulk,'title_archive_plan',lambda *a:({HW['apartmentId']:{'identity':dict(HW),'snapshot':{'parcel':p,'records':[{'mgmBldrgstPk':'old'}]}}},{'preparedSites':1}))
     assert bulk.import_title_archive('unused',[HW],'2026-09')['preserved']==1
     assert json.loads(dest.read_text())['records'][HW['apartmentId']]==entry
+
+
+def test_parcel_correction_provenance_survives_repeated_search_normalization():
+    import real_estate_search as search
+    data=json.loads((Path(__file__).resolve().parents[1]/'data/apartment_identity_corrections.json').read_text())['corrections']
+    for pk,correction in data.items():
+        original={**correction['expected'],'name':correction['record']['단지명_건축물대장'] or correction['record']['단지명_공시가격']}
+        once=apartment_identity.corrected_entity(original)
+        assert once['jibun']==correction['jibun']
+        assert apartment_identity.corrected_entity(once)==once
+        merged=search._merge_entities([once])[0]
+        assert merged['identityCorrection']['previousJibun']==original['jibun']
+        assert merged['jibun']==once['jibun']

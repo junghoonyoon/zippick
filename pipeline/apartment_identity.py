@@ -118,7 +118,12 @@ def corrected_entity(entity):
         correction=corrected_entity._data.get(str(entity.get('apartmentId')))
         if not correction or entity.get('aggregate') or entity.get('sectionIdentity'):return entity
         expected=correction['expected'];row=correction['record']
-        if any(str(expected.get(k) or '')!=str(entity.get(k) or '') for k in ('apartmentId','province','district','legalDong','jibun','cortarNo','households')):return entity
+        if any(str(expected.get(k) or '')!=str(entity.get(k) or '') for k in ('apartmentId','province','district','legalDong','households')):return entity
+        # Search normalization runs more than once. Revalidate an already
+        # corrected parcel and retain its provenance for source migration.
+        actual_pair=tuple(str(entity.get(k) or '') for k in ('jibun','cortarNo'))
+        if actual_pair not in {tuple(str(row.get(k) or '') for k in ('jibun','cortarNo'))
+                               for row in (expected,correction)}:return entity
         if (correction.get('sourceUrl')!='https://www.data.go.kr/data/15106861/fileData.do'
                 or dt.date.fromisoformat(correction['sourceDate'])>dt.date.today()
                 or not re.fullmatch(r'[0-9a-f]{64}',correction.get('sourceSha256',''))):return entity
@@ -132,5 +137,5 @@ def corrected_entity(entity):
         normalize=lambda value:re.sub(r'[^0-9A-Za-z가-힣]','',str(value or '')).removesuffix('아파트')
         source_names={normalize(row.get(k)) for k in ('단지명_공시가격','단지명_건축물대장','단지명_도로명주소')}-{''}
         if not source_names.intersection(normalize(v) for v in [entity.get('name'),*(entity.get('aliases') or [])]):return entity
-        return {**entity,**{k:correction[k] for k in ('jibun','cortarNo','address')},'identityCorrection':{'sourceUrl':correction['sourceUrl'],'sourceDate':correction['sourceDate'],'previousJibun':entity['jibun']}}
+        return {**entity,**{k:correction[k] for k in ('jibun','cortarNo','address')},'identityCorrection':{'sourceUrl':correction['sourceUrl'],'sourceDate':correction['sourceDate'],'previousJibun':expected['jibun']}}
     except (OSError,ValueError,KeyError,TypeError):return entity
