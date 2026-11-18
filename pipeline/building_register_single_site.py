@@ -12,6 +12,8 @@ import re
 from urllib.parse import urlsplit
 
 import shared_data
+import apartment_identity
+import building_register_identity
 
 FILE = 'building_register_crosschecks.json'
 VERSION = 'single-building-site-v1'
@@ -58,6 +60,23 @@ def for_entity(entity, parcel, *, day):
     return profile(entity, parcel, entry, day=day)
 
 
+def _basic_identity(entity, parcel, entry, households, day):
+    source=entry.get('officialBasic') or {}
+    if not isinstance(source,dict):return False
+    record=source.get('record') or {}
+    if not isinstance(record,dict) or source.get('sourceUrl')!='https://www.data.go.kr/data/15106861/fileData.do':return False
+    try:date=dt.date.fromisoformat(str(source.get('sourceDate')))
+    except ValueError:return False
+    if not 0<=(day-date).days<=180 or not re.fullmatch(r'[0-9a-f]{64}',str(source.get('sourceSha256') or '')):return False
+    if (record.get('단지고유번호')!=str(entity.get('apartmentId'))
+        or record.get('필지고유번호') not in building_register_identity.pnu_variants(entity,parcel,day=day)
+        or _number(record.get('세대수'))!=households):return False
+    canonical=lambda text:re.sub(r'[^0-9A-Za-z가-힣]','',str(text or '')).removesuffix('아파트')
+    names={canonical(record.get(k)) for k in ('단지명_공시가격','단지명_건축물대장','단지명_도로명주소')}-{''}
+    aliases={canonical(v) for v in (entity.get('name'),*(entity.get('aliases') or [])) if not apartment_identity.phase_conflicts(entity.get('name'),v)}-{''}
+    return bool(names & aliases)
+
+
 def profile(entity, parcel, entry, *, day):
     if not isinstance(entry, dict) or entry.get('status') != 'ok' or entry.get('lastError'):
         return None
@@ -79,7 +98,7 @@ def profile(entity, parcel, entry, *, day):
         collected = dt.date.fromisoformat(str(snapshot.get('fetchedAt') or '')[:10])
     except ValueError:
         return None
-    if not 0 <= (day-collected).days <= 180 or snapshot.get('parcel') != parcel:
+    if not 0 <= (day-collected).days <= 180 or snapshot.get('parcel') not in building_register_identity.variants(entity, parcel, day=day):
         return None
     if snapshot.get('referenceMonth'):
         try:
@@ -88,6 +107,8 @@ def profile(entity, parcel, entry, *, day):
             return None
         if not 0 <= (day-reference).days <= 180:
             return None
+    original_parcel = parcel
+    parcel = snapshot['parcel']
     rows = snapshot.get('records')
     if (snapshot.get('recordType') not in (None, 'title') or not isinstance(rows, list)
             or len(rows) != 1 or snapshot.get('totalCount') != 1 or not isinstance(rows[0], dict)):
@@ -100,9 +121,9 @@ def profile(entity, parcel, entry, *, day):
         return None
     canonical = lambda text: re.sub(r'[^0-9A-Za-z가-힣]', '', str(text or '')).removesuffix('아파트')
     names = {canonical(x) for x in (entity.get('name'), *(entity.get('aliases') or []))} - {''}
-    if canonical(row.get('bldNm')) not in names:
-        return None
     households = _number(entity.get('households'))
+    if canonical(row.get('bldNm')) not in names:
+        if str(row.get('bldNm') or '').strip() or not households or not _basic_identity(entity,original_parcel,entry,households,day):return None
     if not households or _number(row.get('hhldCnt')) != households:
         return None
     land, footprint, area = map(_number, (row.get('platArea'), row.get('archArea'), row.get('vlRatEstmTotArea')))

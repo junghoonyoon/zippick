@@ -101,3 +101,36 @@ def region_matches(region, entity):
                                     ("province", "city", "district", "legalDong", "address")))
     available = re.sub(r"\s+", "", available)
     return all(token in available for token in normalize(region).split())
+
+
+def corrected_entity(entity):
+    """Apply an exact, independently sourced parcel correction to all UI consumers."""
+    from pathlib import Path
+    import datetime as dt
+    import json
+    path=Path(__file__).resolve().parents[1]/'data/apartment_identity_corrections.json'
+    try:
+        stat=path.stat()
+        if getattr(corrected_entity,'_stamp',None)!=(stat.st_mtime_ns,stat.st_size):
+            data=json.loads(path.read_text())
+            if data.get('version')!='official-parcel-corrections-v1':return entity
+            corrected_entity._data=data['corrections'];corrected_entity._stamp=(stat.st_mtime_ns,stat.st_size)
+        correction=corrected_entity._data.get(str(entity.get('apartmentId')))
+        if not correction or entity.get('aggregate') or entity.get('sectionIdentity'):return entity
+        expected=correction['expected'];row=correction['record']
+        if any(str(expected.get(k) or '')!=str(entity.get(k) or '') for k in ('apartmentId','province','district','legalDong','jibun','cortarNo','households')):return entity
+        if (correction.get('sourceUrl')!='https://www.data.go.kr/data/15106861/fileData.do'
+                or dt.date.fromisoformat(correction['sourceDate'])>dt.date.today()
+                or not re.fullmatch(r'[0-9a-f]{64}',correction.get('sourceSha256',''))):return entity
+        pnu=str(row.get('필지고유번호') or '')
+        lot=parcel_key(correction.get('jibun'))
+        match=re.fullmatch(r'(산?)(\d{1,4})(?:-(\d{1,4}))?',lot)
+        if not match or not re.fullmatch(r'\d{19}',pnu):return entity
+        if pnu!=correction.get('cortarNo','')+('2' if match[1] else '1')+match[2].zfill(4)+(match[3] or '0').zfill(4):return entity
+        if (row.get('단지고유번호')!=str(entity.get('apartmentId')) or row.get('세대수')!=str(entity.get('households'))
+                or row.get('주소')!=correction.get('address') or not correction['address'].endswith(' '+entity['legalDong']+' '+lot)):return entity
+        normalize=lambda value:re.sub(r'[^0-9A-Za-z가-힣]','',str(value or '')).removesuffix('아파트')
+        source_names={normalize(row.get(k)) for k in ('단지명_공시가격','단지명_건축물대장','단지명_도로명주소')}-{''}
+        if not source_names.intersection(normalize(v) for v in [entity.get('name'),*(entity.get('aliases') or [])]):return entity
+        return {**entity,**{k:correction[k] for k in ('jibun','cortarNo','address')},'identityCorrection':{'sourceUrl':correction['sourceUrl'],'sourceDate':correction['sourceDate'],'previousJibun':entity['jibun']}}
+    except (OSError,ValueError,KeyError,TypeError):return entity

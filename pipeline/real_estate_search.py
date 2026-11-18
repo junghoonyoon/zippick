@@ -650,7 +650,7 @@ def _merge_entities(*groups):
                     seen.add(alias_key)
                     deduped.append(alias)
             merged[key]["aliases"] = deduped
-    return list(merged.values())
+    return [apartment_identity.corrected_entity(entity) for entity in merged.values()]
 
 
 def _entity_identity_keys(entity):

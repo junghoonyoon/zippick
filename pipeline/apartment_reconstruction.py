@@ -21,6 +21,7 @@ import regional_reconstruction_plans
 import shared_data
 import building_register_single_site
 import building_register_crosscheck
+import building_register_identity
 
 VERSION = "reconstruction-conditions-v1"
 FEASIBILITY_VERSION = "reconstruction-feasibility-v1"
@@ -126,7 +127,7 @@ def _stamp(path):
 
 
 def revision():
-    return [VERSION, FEASIBILITY_VERSION, _stamp(shared_data.cache_path(FACT_FILE)),
+    return [VERSION, FEASIBILITY_VERSION, building_register_identity.revision(), _stamp(shared_data.cache_path(FACT_FILE)),
             _stamp(Path(building_register_single_site.__file__)), building_register_crosscheck.revision(),
             _stamp(shared_data.cache_path(PLANNING_FILE)), _stamp(CONTEXT_PATH),
             _stamp(ORDINANCES_PATH), _stamp(shared_data.cache_path(reconstruction_project_plans.FILE)),
@@ -199,7 +200,7 @@ def _parcel_reference(entity, context, day, *, allow_expired=False):
     if not (all(identity.get(k) and str(identity[k]) == str(entity.get(k))
                 for k in ('apartmentId', 'district', 'legalDong', 'jibun'))
             and all(not identity.get(k) or str(identity[k]) == str(entity.get(k)) for k in ('province', 'cortarNo'))
-            and ref.get('pnu') == parcel_pnu(entity) and ref.get('scope') == 'representative_parcel'
+            and ref.get('pnu') in building_register_identity.pnu_variants(entity, parcel(entity), day=day) and ref.get('scope') == 'representative_parcel'
             and ref.get('zoneCoverageVerified') is False and ref.get('license') == '공공누리 출처표시'
             and source.scheme == 'https' and source.hostname in ('eum.go.kr', 'www.eum.go.kr')
             and checked and (day - checked).days >= 0 and (allow_expired or (day - checked).days <= MAX_SOURCE_AGE_DAYS)
@@ -273,8 +274,9 @@ def profile(entity, entry, *, parcel_area=None):
     snapshot = entry.get("snapshot") or {}
     if not isinstance(snapshot, dict) or not _official(snapshot.get("sourceUrl")):
         return {"status": "invalid_source", "reason": "공식 건축물대장 원본을 확인하지 못했어요."}
-    if not p or snapshot.get("parcel") != p or snapshot.get("recordType") != "recap":
+    if not p or snapshot.get("parcel") not in building_register_identity.variants(entity, p) or snapshot.get("recordType") != "recap":
         return {"status": "identity_unverified", "reason": "단지 전체의 건축물대장을 연결하지 못했어요."}
+    p = snapshot["parcel"]
     rows = snapshot.get("records", [])
     if not isinstance(rows, list) or any(not isinstance(r, dict) for r in rows) or len(rows) != snapshot.get("totalCount"):
         return {"status": "invalid_source", "reason": "건축물대장 자료가 온전하지 않아 판단할 수 없어요."}
@@ -362,6 +364,21 @@ def _load_context(entity, result, *, source_confirmed=False):
     return context
 
 
+def register_lookup_parcel(entity):
+    parcels=building_register_identity.variants(entity, parcel(entity))
+    return parcels[-1] if parcels else None
+
+
+def register_entry(entity, records, *, day=None, parcel_area=None):
+    parcels=building_register_identity.variants(entity, parcel(entity), day=day)
+    entries=[records.get(building_register_identity.parcel_key(p)) for p in parcels]
+    entries=[entry for entry in entries if entry]
+    for entry in entries:
+        if profile(entity,entry,parcel_area=parcel_area).get('status') in ('ready','partial'):
+            return entry
+    return next((entry for entry in reversed(entries) if (entry.get('snapshot') or {}).get('records')), entries[-1] if entries else None)
+
+
 def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=False):
     day = day or dt.date.today()
     result = {"version": VERSION, "apartmentId": str(entity.get("apartmentId") or ""),
@@ -387,7 +404,7 @@ def _conditions(entity, entry=None, context=None, *, day=None, source_confirmed=
     if entry is None:
         try:
             path = shared_data.cache_path(FACT_FILE)
-            entry = _read(str(path), _stamp(path))["records"].get(parcel_key(entity))
+            entry = register_entry(entity, _read(str(path), _stamp(path))["records"], day=day, parcel_area=(result.get("planningReference") or {}).get("parcelAreaSqm") if result.get("planningReferenceStatus")!="stale" and result.get("planningSourceStatus") not in ("stale", "connection_error", "identity_unverified") else None)
         except (OSError, ValueError, TypeError):
             result.update(status="connection_error", reason="건축물대장 원본을 읽지 못했어요. 리포트를 다시 열어 주세요.")
             return result

@@ -20,6 +20,7 @@ import apartment_identity
 import apartment_reconstruction as reconstruction
 import persistent_json_store as store
 import shared_data
+import building_register_identity
 
 SOURCE_URL = 'https://www.eum.go.kr/web/ar/lu/luLandDet.jsp'
 MAX_BYTES = 3_000_000
@@ -175,6 +176,7 @@ def parse_public_page(raw, entity, *, day=None):
 
 def fetch(entity, *, opener=urlopen, day=None):
     global _LAST_REQUEST
+    entity = building_register_identity.query_entity(entity, day=day)
     pnu = reconstruction.parcel_pnu(entity)
     if not pnu:
         raise PlanningError('identity_unverified', 'parcel_missing')

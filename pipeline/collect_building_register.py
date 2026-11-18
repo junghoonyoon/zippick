@@ -10,6 +10,7 @@ import apartment_reconstruction as reconstruction
 import building_hub
 import persistent_json_store as store
 import shared_data
+import building_register_identity
 
 STOP_CODES = {"20", "21", "22", "30", "31", "32", "99", "401", "403", "429", "missing_key"}
 _POOL = ThreadPoolExecutor(max_workers=2, thread_name_prefix="building-register")
@@ -23,7 +24,8 @@ def request(entity):
     global _BLOCKED_UNTIL
     if shared_data.read_only():
         return False
-    key = reconstruction.parcel_key(entity)
+    lookup = reconstruction.register_lookup_parcel(entity)
+    key = building_register_identity.parcel_key(lookup) if lookup else ""
     if not key or not entity.get("apartmentId"):
         return False
     path = shared_data.cache_path(reconstruction.FACT_FILE)
@@ -92,7 +94,8 @@ def collect(entities, *, refresh=False, fetcher=None):
              "requests": 0, "stoppedCode": None}
     seen = set()
     for entity in entities:
-        key, parcel = reconstruction.parcel_key(entity), reconstruction.parcel(entity)
+        parcel = reconstruction.register_lookup_parcel(entity)
+        key = building_register_identity.parcel_key(parcel) if parcel else ""
         if not key:
             stats["identityMissing"] += 1
             stats["processed"] += 1

@@ -15,6 +15,7 @@ from urllib.parse import parse_qs, urlsplit
 import apartment_identity
 import shared_data
 import building_register_single_site
+import building_register_identity
 
 FILE='building_register_crosschecks.json'
 VERSION='building-register-crosscheck-v2'
@@ -246,8 +247,9 @@ def _apply_titles(entity,profile,entry,*,day=None):
         result['status']='identity_unverified';return out
     expected={'sigunguCd':code[:5],'bjdongCd':code[5:],'platGbCd':'1' if match[1] else '0',
               'bun':match[2].zfill(4),'ji':(match[3] or '0').zfill(4)}
-    if parcel!=expected or not isinstance(rows,list) or len(rows)!=snapshot.get('totalCount'):
+    if parcel not in building_register_identity.variants(entity, expected, day=day) or not isinstance(rows,list) or len(rows)!=snapshot.get('totalCount'):
         result['status']='invalid_source';return out
+    expected=parcel
     if not rows:result['status']='no_records';return out
     ids=[];res=[]
     for row in rows:
