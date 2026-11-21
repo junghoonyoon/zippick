@@ -1,7 +1,7 @@
 """Shared building-register facts and evidence-gated reconstruction conditions.
 
 Ratios describe the whole registered site, never one apartment's floor plan.
-No network requests, scores, probabilities, or assumed zoning ceilings here.
+No network requests or assumed zoning ceilings here.
 """
 import datetime as dt
 import json
@@ -18,6 +18,7 @@ import apartment_development
 import config
 import reconstruction_project_plans
 import regional_reconstruction_plans
+import remodeling_assessment
 import shared_data
 import building_register_single_site
 import building_register_crosscheck
@@ -131,7 +132,7 @@ def revision():
             _stamp(Path(building_register_single_site.__file__)), building_register_crosscheck.revision(),
             _stamp(shared_data.cache_path(PLANNING_FILE)), _stamp(CONTEXT_PATH),
             _stamp(ORDINANCES_PATH), _stamp(shared_data.cache_path(reconstruction_project_plans.FILE)),
-            _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE)), regional_reconstruction_plans.stamp()]
+            _stamp(shared_data.cache_path(ORDINANCE_CHECK_FILE)), regional_reconstruction_plans.stamp(), remodeling_assessment.revision()]
 
 
 @lru_cache(maxsize=12)
@@ -642,6 +643,8 @@ def analyze(entity, entry=None, context=None, *, day=None, _source_confirmed=Fal
     proof = _current_confirmation(entity) if entry is None and context is None else None
     result = _conditions(entity, entry, context, day=day, source_confirmed=_source_confirmed or bool(proof))
     result['feasibility'] = feasibility(result)
+    profile = result['profile'] if result['status'] != 'stale' else {}
+    result['remodelingAssessment'] = remodeling_assessment.evaluate(entity, profile, day=day)
     if proof and proof['revision'] != _confirmation_revision():
         forget_primary_confirmation(entity)
         return analyze(entity, entry, context, day=day)

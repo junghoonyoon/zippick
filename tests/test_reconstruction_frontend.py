@@ -15,7 +15,7 @@ def run_js(names, script):
 import json
 
 
-NAMES = ["zippickOwnDevelopmentModel", "zippickReconstructionModel", "zippickReconstructionFeasibility", "zippickReconstructionHtml", "refreshZippickReconstruction"]
+NAMES = ["zippickOwnDevelopmentModel", "zippickReconstructionModel", "zippickReconstructionFeasibility", "zippickRemodelingAssessmentHtml", "zippickReconstructionHtml", "refreshZippickReconstruction"]
 HARNESS = """
 const esc=value=>String(value).replaceAll('<','&lt;'), spinnerHtml=()=>'<span>loading</span>';
 const item={apartmentId:'complex-3',name:'예시3단지',legalDong:'월계동',jibun:'320-11',areaLabel:'59'};
@@ -195,4 +195,22 @@ for(const value of [null,undefined,0,-1,'NaN','Infinity']){
  const missing=zippickReconstructionHtml(item);
  assert.doesNotMatch(missing,/class="zpr-density-units"|class="zpr-coverage-track"|NaN|Infinity/);
 }
+""")
+
+
+def test_remodeling_rating_displays_even_when_reconstruction_register_is_unverified():
+    run_js(NAMES, HARNESS + """
+item.reconstructionConditions=model({status:'identity_unverified',profile:{},remodelingAssessment:{
+ version:'remodeling-site-v1',status:'rated',stars:3,title:'리모델링은 증축 여건이 보통이에요.',
+ reason:'가장 높은 주거동은 14층이에요.',highestResidentialFloors:{value:14},
+ buildingCoverage:{value:22.63,estimated:true,method:'GIS 건물 도형으로 계산'}
+}});
+let html=zippickReconstructionHtml(item);
+assert.match(html,/★★★☆☆.*3\\/5/);
+assert.match(html,/주거동 최고 14층/);
+assert.match(html,/22.63% \\(추정\\)/);
+item.reconstructionConditions.remodelingAssessment.status='missing';
+assert.doesNotMatch(zippickReconstructionHtml(item),/★★★☆☆/);
+item.reconstructionConditions.apartmentId='other';
+assert.equal(zippickReconstructionHtml(item),'');
 """)

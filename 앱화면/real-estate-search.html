@@ -20773,9 +20773,47 @@
       </section>`;
     }
 
+    function zippickRemodelingAssessmentHtml(assessment) {
+      if (assessment?.version !== "remodeling-site-v1") return "";
+      const coverage = assessment.buildingCoverage;
+      const floor = assessment.highestResidentialFloors;
+      const rated = assessment.status === "rated" && Number.isInteger(assessment.stars)
+        && assessment.stars >= 1 && assessment.stars <= 5;
+      const facts = [
+        floor ? `주거동 최고 ${floor.value}층` : "",
+        coverage ? `건폐율 ${coverage.value.toLocaleString("ko-KR", {maximumFractionDigits:2})}%${coverage.estimated ? " (추정)" : ""}` : ""
+      ].filter(Boolean);
+      const sources = [
+        [floor?.sourceUrl, floor?.method],
+        ...(coverage?.sourceUrls || []).map((url, idx) => [url, idx === 0 ? "건폐율 자료" : "건폐율 보조 자료"]),
+        [assessment.legalSourceUrl, "수직증축 기준"],
+        [assessment.ageSourceUrl, "사용승인 연한 기준"]
+      ].filter(([url]) => /^https:\/\//.test(url || ""));
+      const links = sources.map(([url, label]) =>
+        `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`).join(" · ");
+      return `<div class="zpr-reconstruction" data-zpr-remodeling-assessment aria-label="리모델링 증축 여건">
+        <h6>${esc(assessment.title)}</h6>
+        ${rated ? `<div class="zpr-renewal-stage"><span>리모델링 증축 여건 별점${coverage?.estimated ? " · 추정치 반영" : ""}</span><strong><span aria-hidden="true">${"★".repeat(assessment.stars) + "☆".repeat(5 - assessment.stars)}</span> ${assessment.stars}/5</strong></div>` : ""}
+        ${facts.length ? `<p class="zpr-insight">${esc(facts.join(" · "))}</p>` : ""}
+        <p class="zpr-score-note">${esc(assessment.reason)}</p>
+        <details class="zpr-details"><summary>리모델링 자료와 별점 기준</summary>
+          ${coverage?.method ? `<p>건폐율 근거 · ${esc(coverage.method)}</p>` : ""}
+          <p>기본 3점에 건폐율과 가장 높은 동에서 더 올릴 수 있는 층의 비율을 각각 반영해요. 건폐율이 19% 이하면 1점을 더하고, 49% 이상이면 1점을 빼요. 층수 증가 비율이 20% 이상이면 1점을 더하고, 10% 이하면 1점을 빼요.</p>
+          <p>${links}</p>
+        </details>
+      </div>`;
+    }
+
     function zippickReconstructionHtml(item, {summarized = false, stageExplanation = ""} = {}) {
       const model = zippickReconstructionModel(item);
-      if (!model) return "";
+      if (!model) {
+        const fallback = item?.reconstructionConditions?.remodelingAssessment;
+        const sameAddress = !item?.apartmentId && !item?.reconstructionConditions?.apartmentId
+          && ["name", "province", "district", "legalDong", "jibun"].every(
+            key => item?.[key] && String(item[key]).trim() === String(fallback?.addressIdentity?.[key] || "").trim()
+          );
+        return sameAddress ? zippickRemodelingAssessmentHtml(fallback) : "";
+      }
       const assessment = zippickReconstructionFeasibility(item);
       const own = zippickOwnDevelopmentModel(item);
       const isRemodeling = own?.status === "confirmed" && own.rating?.projectType === "remodeling";
@@ -20831,7 +20869,7 @@
       const farVisual = compare ? farComparison : far ? `<dd class="zpr-reconstruction-visual"><div class="zpr-density-units" aria-hidden="true">${Array.from({length:Math.ceil(far / unit)}, (_, index) => `<span class="zpr-density-unit"><i style="width:${Math.round(Math.min(100, Math.max(0, (far - index * unit) / unit * 100)) * 10000) / 10000}%"></i></span>`).join("")}</div><p class="zpr-density-caption">층 면적의 합은 땅 넓이의 약 <b>${(far / 100).toLocaleString("ko-KR", {maximumSignificantDigits:3})}배</b>예요. 한 칸은 땅 넓이 ${unit / 100}배이며, 지하층 등은 제외해요.</p>${!basis && !assessed ? `<div class="zpr-density-limit"><span>단지에 적용할 용적률 한도</span><b>미확인</b></div>` : ""}</dd>` : "";
       const coverageVisual = coverage ? `<dd class="zpr-reconstruction-visual"><div class="zpr-coverage-track" aria-hidden="true"><i style="width:${coverage}%"></i></div><div class="zpr-coverage-key" aria-hidden="true"><span>건물이 차지한 땅</span><span>그 밖의 땅</span></div><p class="zpr-density-caption">땅 100㎡ 중 약 <b>${coverage.toLocaleString("ko-KR", {maximumSignificantDigits:3})}㎡</b>를 건물이 차지해요.</p></dd>` : "";
       const referenceRows = reference ? `${reference.zoneName && (assessment || !String(model.reason || "").includes(reference.zoneName)) ? `<div><dt>대표 지번 용도지역</dt><dd>${esc(reference.zoneName)}</dd><dd class="zpr-zone-explain">단지 주소로 쓰는 땅의 건축 기준을 정하는 구분이에요.</dd></div>` : ""}${numeric(reference.floorAreaRatio) ? `<div><dt>대표 지번 조례 용적률</dt><dd>${percent(reference.floorAreaRatio)}</dd></div>` : ""}${model.differencePp != null && Number.isFinite(Number(model.differencePp)) ? `<div><dt>조례 기준과 단순 차이</dt><dd>${Number(model.differencePp).toLocaleString("ko-KR", {maximumFractionDigits:2})}%p</dd></div>` : ""}${numeric(reference.buildingCoverageRatio) ? `<div><dt>대표 지번 조례 건폐율</dt><dd>${percent(reference.buildingCoverageRatio)}</dd></div>` : ""}${reference.districtPlanName ? `<div><dt>지구단위계획 구역</dt><dd>${esc(reference.districtPlanName)}</dd><dd class="zpr-zone-explain">동네별 세부 건축 기준을 따로 정하는 구역이에요.</dd></div>` : ""}` : "";
-      return `<div class="zpr-reconstruction" aria-label="${isRemodeling ? "현재 건축 정보" : "재건축 여건"}">
+      return `${model.remodelingAssessment ? zippickRemodelingAssessmentHtml(model.remodelingAssessment) : ""}<div class="zpr-reconstruction" aria-label="${isRemodeling ? "현재 건축 정보" : "재건축 여건"}">
         ${summarized ? "" : `<h6>${esc(assessed ? assessment.headline : displayHeading)}</h6>`}
         ${model.status === "loading" ? `<p role="status">${spinnerHtml("default")} ${esc(model.reason)}</p>` : summarized ? assessed ? `<p class="zpr-insight">${esc([assessment.evidenceHeading, assessment.reason].filter(Boolean).join(". "))}</p>` : !facts.scope ? `<p class="zpr-insight">${esc(model.reason)}</p>` : "" : `<p class="zpr-insight">${esc(assessed ? `${assessment.evidenceHeading ? assessment.evidenceHeading + ". " : ""}${assessment.reason}` : displayReason)}</p>`}
         ${facts.scope || reference ? `<dl class="zpr-reconstruction-facts">
