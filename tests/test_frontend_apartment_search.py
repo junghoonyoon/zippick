@@ -1063,7 +1063,9 @@ class FrontendApartmentSearchTest(unittest.TestCase):
             "    function candidateDisplayName(item) {", 1,
         )[0]
         self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickFundingHtml(item)}"))
-        self.assertLess(report.index("${zippickLifestyleChangeHtml(item)}"), report.index("${zippickDevelopmentHtml(item)}"))
+        lifestyle = report.index("${zippickLifestyleChangeHtml(item)}")
+        self.assertLess(report.index('${showReconstructionFirst ? developmentHtml : ""}'), lifestyle)
+        self.assertLess(lifestyle, report.index('${showReconstructionFirst ? "" : developmentHtml}'))
         self.assertLess(report.index("${zippickFundingHtml(item)}"), report.index("${zippickBreakevenHtml(item)}"))
         # 같은 가격대 대안은 '이 돈이면 어디를 살 수 있나'라는 다른 질문이라 가격 비교 밖에 둔다.
         price_section = html.split("    function zippickPriceEvidenceHtml(item, reportAssessment = null) {", 1)[1].split("    function zippickPersonalFundingHtml", 1)[0]
@@ -1118,7 +1120,7 @@ class FrontendApartmentSearchTest(unittest.TestCase):
         # 고시 전 단계는 기사로만 잡히므로, 통합검색 리포트에서도 뉴스를
         # 보강해야 재건축 추진 단지가 '확인된 개발 없음'으로 나오지 않는다.
         self.assertIn("void enrichNewsCatalysts([report], rerender);", html)
-        self.assertIn("${zippickDevelopmentHtml(item)}", html)
+        self.assertIn("const developmentHtml = zippickDevelopmentHtml(item);", html)
         self.assertIn("${zippickLifestyleChangeHtml(item)}", html)
         self.assertIn("function zippickLifestyleChangeHtml(item)", html)
         self.assertIn("function zippickLifestyleDevelopmentZones(item)", html)

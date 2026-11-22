@@ -20765,7 +20765,7 @@
       const conclusion = zippickReconstructionConclusion(item);
       if (!conclusion) return "";
       return `<section class="zpr-section" data-zpr-reconstruction-section>
-        <span class="zpr-kicker" data-zpr-step="단지 변화"></span>
+        <span class="zpr-kicker" data-zpr-step="${conclusion.confirmed ? "재건축 진행 현황과 평가" : "단지 변화"}"></span>
         <h5>${esc(conclusion.headline)}</h5>
         ${conclusion.confirmed ? `<div class="zpr-renewal-stage"><span>재건축 추진 단계</span><strong>${esc(conclusion.stage?.stageLabel || "단계 미확인")}</strong><p>${esc(conclusion.stageLine)}</p></div>` : ""}
         ${Number.isFinite(conclusion.stage?.points) ? `<details class="zpr-details"><summary>단지 변화 별점 기준</summary><p>재건축의 공식 진행 단계에 가점을 더해요. 분담금·사업성·가격 상승 가능성은 이 별점에 넣지 않았어요.</p><table class="zpr-table"><thead><tr><th>확인한 단계</th><th>별점</th></tr></thead><tbody>${ZIPPICK_RECONSTRUCTION_STAGE_RATINGS.map(stage => `<tr><td>${esc(stage.label)}</td><td>${stage.points.toFixed(1)} / 5</td></tr>`).join("")}</tbody></table><p><a href="https://cleanup.seoul.go.kr/cleanup/view/rebuild.do" target="_blank" rel="noopener">서울시 재건축 절차 안내 ↗</a></p></details>` : ""}
@@ -22179,7 +22179,8 @@
       let step = 0;
       return String(html).replace(/<span class="zpr-kicker" data-zpr-step="([^"]+)"><\/span>/g, (_, label) => {
         step += 1;
-        return `<div class="zpr-section-top"><span class="zpr-kicker">${step}. ${esc(label)}</span>${zippickSectionRatingHtml(item, label, reportScores)}</div>`;
+        const ratingLabel = label === "재건축 진행 현황과 평가" ? "단지 변화" : label;
+        return `<div class="zpr-section-top"><span class="zpr-kicker">${step}. ${esc(label)}</span>${zippickSectionRatingHtml(item, ratingLabel, reportScores)}</div>`;
       });
     }
 
@@ -25310,6 +25311,8 @@
       const verdict = zippickCommonPurchaseVerdict(item);
       const locationBars = zippickCommonPropertyHtml(verdict.property);
       const signalBars = zippickSignalBarsHtml(item);
+      const developmentHtml = zippickDevelopmentHtml(item);
+      const showReconstructionFirst = developmentHtml.includes('data-zpr-step="재건축 진행 현황과 평가"');
       // 별점이 있는 판단 항목을 먼저 보여주고, 비용 계산은 비교 항목 아래에 둔다.
       return zippickNumberSteps(`<article class="zippick-report" aria-label="${esc(candidateDisplayName(item))} 집픽 분석">
         ${zippickReportMapHtml(item)}
@@ -25330,8 +25333,9 @@
           ${(text => text ? `<p class="zpr-insight">${text}</p>` : "")(zippickPriceContext(item))}
         </section>` : ""}
         ${zippickLiquidityHtml(item)}
+        ${showReconstructionFirst ? developmentHtml : ""}
         ${zippickLifestyleChangeHtml(item)}
-        ${zippickDevelopmentHtml(item)}
+        ${showReconstructionFirst ? "" : developmentHtml}
         ${zippickFundingHtml(item)}
         ${zippickBreakevenHtml(item)}
         <section class="zpr-section" aria-label="같은 가격대의 다른 선택지">${zippickAlternativesHtml(item)}</section>
